@@ -39,14 +39,14 @@
         "2": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े. <STREET_NAMES> पर बने रहें.", 
         "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -70,14 +70,14 @@
         "2": "<RELATIVE_DIRECTION> ओर <BEGIN_STREET_NAMES> पर बढ़े.", 
         "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -138,15 +138,6 @@
         "0": "<LENGTH> के लिए जारी रहें.", 
         "1": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें."
       }, 
-      "us_customary_lengths": [
-        "<MILES> मील", 
-        "1 मील", 
-        "एक आधा मील", 
-        "मील का <TENTHS_OF_MILE>/10 हिस्सा", 
-        "मील का 1/10 हिस्सा", 
-        "<FEET> फुट", 
-        "कम से कम 10 फुट"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
@@ -158,6 +149,15 @@
         "एक आधा किलोमीटर", 
         "<METERS> मीटर", 
         "कम से कम 10 मीटर"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> मील", 
+        "1 मील", 
+        "एक आधा मील", 
+        "मील का <TENTHS_OF_MILE>/10 हिस्सा", 
+        "मील का 1/10 हिस्सा", 
+        "<FEET> फुट", 
+        "कम से कम 10 फुट"
       ], 
       "example_phrases": {
         "0": [
@@ -302,12 +302,12 @@
         "1": "<STREET_NAMES> लें.", 
         "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "नौका लें."
@@ -326,12 +326,12 @@
         "1": "<STREET_NAMES> लें.", 
         "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "नौका लें."
@@ -488,11 +488,6 @@
         "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं.", 
         "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "रास्ते", 
-        "साइकिल रास्ते", 
-        "माउंटेन साइकिल पगडंडी"
-      ], 
       "cardinal_directions": [
         "उत्तर", 
         "उत्तर-पूर्व", 
@@ -502,6 +497,11 @@
         "दक्षिण-पश्चिम", 
         "पश्चिम", 
         "उत्तर-पश्चिम"
+      ], 
+      "empty_street_name_labels": [
+        "रास्ते", 
+        "साइकिल रास्ते", 
+        "माउंटेन साइकिल पगडंडी"
       ], 
       "example_phrases": {
         "0": [
@@ -557,11 +557,6 @@
         "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं.", 
         "18": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं."
       }, 
-      "empty_street_name_labels": [
-        "रास्ते", 
-        "साइकिल रास्ते", 
-        "माउंटेन साइकिल पगडंडी"
-      ], 
       "cardinal_directions": [
         "उत्तर", 
         "उत्तर-पूर्व", 
@@ -571,6 +566,11 @@
         "दक्षिण-पश्चिम", 
         "पश्चिम", 
         "उत्तर-पश्चिम"
+      ], 
+      "empty_street_name_labels": [
+        "रास्ते", 
+        "साइकिल रास्ते", 
+        "माउंटेन साइकिल पगडंडी"
       ], 
       "example_phrases": {
         "0": [
@@ -727,15 +727,15 @@
         "6": "<TOWARD_SIGN> की ओर <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.", 
         "7": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "सीधे", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "सीधे", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -773,15 +773,15 @@
         "2": "<TOWARD_SIGN> जाने के लिए और <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.", 
         "3": "<TOWARD_SIGN> जाने के लिए और निकास <NUMBER_SIGN> <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "सीधे", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "सीधे", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -807,15 +807,15 @@
         "2": "<TOWARD_SIGN> जाने के लिए और <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.", 
         "3": "<TOWARD_SIGN> जाने के लिए और निकास <NUMBER_SIGN> <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "सीधे", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "सीधे", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -845,15 +845,15 @@
         "6": "<TOWARD_SIGN> की ओर <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.", 
         "7": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "सीधे", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "सीधे", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -937,11 +937,6 @@
         "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं.", 
         "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "रास्ते", 
-        "साइकिल रास्ते", 
-        "माउंटेन साइकिल पगडंडी"
-      ], 
       "cardinal_directions": [
         "उत्तर", 
         "उत्तर-पूर्व", 
@@ -951,6 +946,11 @@
         "दक्षिण-पश्चिम", 
         "पश्चिम", 
         "उत्तर-पश्चिम"
+      ], 
+      "empty_street_name_labels": [
+        "रास्ते", 
+        "साइकिल रास्ते", 
+        "माउंटेन साइकिल पगडंडी"
       ], 
       "example_phrases": {
         "0": [
@@ -1006,11 +1006,6 @@
         "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं.", 
         "18": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं."
       }, 
-      "empty_street_name_labels": [
-        "रास्ते", 
-        "साइकिल रास्ते", 
-        "माउंटेन साइकिल पगडंडी"
-      ], 
       "cardinal_directions": [
         "उत्तर", 
         "उत्तर-पूर्व", 
@@ -1020,6 +1015,11 @@
         "दक्षिण-पश्चिम", 
         "पश्चिम", 
         "उत्तर-पश्चिम"
+      ], 
+      "empty_street_name_labels": [
+        "रास्ते", 
+        "साइकिल रास्ते", 
+        "माउंटेन साइकिल पगडंडी"
       ], 
       "example_phrases": {
         "0": [
@@ -1079,15 +1079,6 @@
         "0": "<LENGTH> के लिए जारी रहें.", 
         "1": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें."
       }, 
-      "us_customary_lengths": [
-        "<MILES> मील", 
-        "1 मील", 
-        "एक आधा मील", 
-        "मील का <TENTHS_OF_MILE>/10 हिस्सा", 
-        "मील का 1/10 हिस्सा", 
-        "<FEET> फुट", 
-        "कम से कम 10 फुट"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
@@ -1099,6 +1090,15 @@
         "एक आधा किलोमीटर", 
         "<METERS> मीटर", 
         "कम से कम 10 मीटर"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> मील", 
+        "1 मील", 
+        "एक आधा मील", 
+        "मील का <TENTHS_OF_MILE>/10 हिस्सा", 
+        "मील का 1/10 हिस्सा", 
+        "<FEET> फुट", 
+        "कम से कम 10 फुट"
       ], 
       "example_phrases": {
         "0": [
@@ -1274,14 +1274,14 @@
         "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.", 
         "3": "<STREET_NAMES> पर बने रहने के लिए तेज <RELATIVE_DIRECTION> मुड़ें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -1305,14 +1305,14 @@
         "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.", 
         "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -1344,11 +1344,6 @@
         "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.", 
         "18": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए. <STREET_NAMES> पर जारी रहें."
       }, 
-      "empty_street_name_labels": [
-        "रास्ते", 
-        "साइकिल रास्ते", 
-        "माउंटेन साइकिल पगडंडी"
-      ], 
       "cardinal_directions": [
         "उत्तर", 
         "उत्तर-पूर्व", 
@@ -1358,6 +1353,11 @@
         "दक्षिण-पश्चिम", 
         "पश्चिम", 
         "उत्तर-पश्चिम"
+      ], 
+      "empty_street_name_labels": [
+        "रास्ते", 
+        "साइकिल रास्ते", 
+        "माउंटेन साइकिल पगडंडी"
       ], 
       "example_phrases": {
         "0": [
@@ -1776,14 +1776,14 @@
         "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.", 
         "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -1807,14 +1807,14 @@
         "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.", 
         "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -1840,14 +1840,14 @@
         "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.", 
         "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [
@@ -1879,14 +1879,14 @@
         "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.", 
         "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न ले."
       }, 
-      "relative_directions": [
-        "बाएं", 
-        "दाएँ"
-      ], 
       "empty_street_name_labels": [
         "रास्ते", 
         "साइकिल रास्ते", 
         "माउंटेन साइकिल पगडंडी"
+      ], 
+      "relative_directions": [
+        "बाएं", 
+        "दाएँ"
       ], 
       "example_phrases": {
         "0": [

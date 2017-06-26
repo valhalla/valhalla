@@ -39,14 +39,14 @@
         "2": "Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.", 
         "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "слева", 
-        "справа"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "слева", 
+        "справа"
       ], 
       "example_phrases": {
         "0": [
@@ -70,14 +70,14 @@
         "2": "Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.", 
         "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "левее", 
-        "правее"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "левее", 
+        "правее"
       ], 
       "example_phrases": {
         "0": [
@@ -138,15 +138,6 @@
         "0": "Проедьте <LENGTH>.", 
         "1": "Проедьте <LENGTH> по <STREET_NAMES>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> миль", 
-        "1 милю", 
-        "полмили", 
-        "<TENTHS_OF_MILE> десятых мили", 
-        "1 десятую мили", 
-        "<FEET> футов", 
-        "менее 10 футов"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
@@ -158,6 +149,15 @@
         "полкилометра", 
         "<METERS> метров", 
         "менее 10 метров"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> миль", 
+        "1 милю", 
+        "полмили", 
+        "<TENTHS_OF_MILE> десятых мили", 
+        "1 десятую мили", 
+        "<FEET> футов", 
+        "менее 10 футов"
       ], 
       "example_phrases": {
         "0": [
@@ -302,12 +302,12 @@
         "1": "Воспользуйтесь паромом <STREET_NAMES>.", 
         "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "Воспользуйтесь паромом."
@@ -326,12 +326,12 @@
         "1": "Воспользуйтесь паромом <STREET_NAMES>.", 
         "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "Воспользуйтесь паромом."
@@ -488,11 +488,6 @@
         "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.", 
         "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "аллее", 
-        "велосипедной дорожке", 
-        "горной велосипедной тропе"
-      ], 
       "cardinal_directions": [
         "север", 
         "северо-восток", 
@@ -502,6 +497,11 @@
         "юго-запад", 
         "запад", 
         "северо-запад"
+      ], 
+      "empty_street_name_labels": [
+        "аллее", 
+        "велосипедной дорожке", 
+        "горной велосипедной тропе"
       ], 
       "example_phrases": {
         "0": [
@@ -557,11 +557,6 @@
         "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.", 
         "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "аллее", 
-        "велосипедной дорожке", 
-        "горной велосипедной тропе"
-      ], 
       "cardinal_directions": [
         "север", 
         "северо-восток", 
@@ -571,6 +566,11 @@
         "юго-запад", 
         "запад", 
         "северо-запад"
+      ], 
+      "empty_street_name_labels": [
+        "аллее", 
+        "велосипедной дорожке", 
+        "горной велосипедной тропе"
       ], 
       "example_phrases": {
         "0": [
@@ -727,15 +727,15 @@
         "6": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES> в сторону <TOWARD_SIGN>.", 
         "7": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES> в сторону <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "влево", 
-        "прямо", 
-        "вправо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "влево", 
+        "прямо", 
+        "вправо"
       ], 
       "example_phrases": {
         "0": [
@@ -773,15 +773,15 @@
         "2": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>.", 
         "3": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> и остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "влево", 
-        "прямо", 
-        "вправо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "влево", 
+        "прямо", 
+        "вправо"
       ], 
       "example_phrases": {
         "0": [
@@ -807,15 +807,15 @@
         "2": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>.", 
         "3": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> и остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "влево", 
-        "прямо", 
-        "вправо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "влево", 
+        "прямо", 
+        "вправо"
       ], 
       "example_phrases": {
         "0": [
@@ -845,15 +845,15 @@
         "6": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES> в сторону <TOWARD_SIGN>.", 
         "7": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES> в сторону <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "влево", 
-        "прямо", 
-        "вправо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "влево", 
+        "прямо", 
+        "вправо"
       ], 
       "example_phrases": {
         "0": [
@@ -937,11 +937,6 @@
         "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.", 
         "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "аллее", 
-        "велосипедной дорожке", 
-        "горной велосипедной тропе"
-      ], 
       "cardinal_directions": [
         "север", 
         "северо-восток", 
@@ -951,6 +946,11 @@
         "юго-запад", 
         "запад", 
         "северо-запад"
+      ], 
+      "empty_street_name_labels": [
+        "аллее", 
+        "велосипедной дорожке", 
+        "горной велосипедной тропе"
       ], 
       "example_phrases": {
         "0": [
@@ -1006,11 +1006,6 @@
         "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.", 
         "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "аллее", 
-        "велосипедной дорожке", 
-        "горной велосипедной тропе"
-      ], 
       "cardinal_directions": [
         "север", 
         "северо-восток", 
@@ -1020,6 +1015,11 @@
         "юго-запад", 
         "запад", 
         "северо-запад"
+      ], 
+      "empty_street_name_labels": [
+        "аллее", 
+        "велосипедной дорожке", 
+        "горной велосипедной тропе"
       ], 
       "example_phrases": {
         "0": [
@@ -1066,8 +1066,8 @@
       }, 
       "transit_stop_count_labels": {
         "few": "остановки", 
-        "other": "остановок", 
-        "one": "остановка"
+        "one": "остановка", 
+        "other": "остановок"
       }, 
       "example_phrases": {
         "0": [
@@ -1081,15 +1081,6 @@
         "0": "Продолжайте двигаться <LENGTH>.", 
         "1": "Продолжайте двигаться по <STREET_NAMES> <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> миль", 
-        "1 милю", 
-        "полмили", 
-        "<TENTHS_OF_MILE> десятых мили", 
-        "1 десятую мили", 
-        "<FEET> футов", 
-        "менее 10 футов"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
@@ -1101,6 +1092,15 @@
         "полкилометра", 
         "<METERS> метров", 
         "менее 10 метров"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> миль", 
+        "1 милю", 
+        "полмили", 
+        "<TENTHS_OF_MILE> десятых мили", 
+        "1 десятую мили", 
+        "<FEET> футов", 
+        "менее 10 футов"
       ], 
       "example_phrases": {
         "0": [
@@ -1276,14 +1276,14 @@
         "2": "Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.", 
         "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "налево", 
-        "направо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "налево", 
+        "направо"
       ], 
       "example_phrases": {
         "0": [
@@ -1307,14 +1307,14 @@
         "2": "Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.", 
         "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "налево", 
-        "направо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "налево", 
+        "направо"
       ], 
       "example_phrases": {
         "0": [
@@ -1346,11 +1346,6 @@
         "17": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.", 
         "18": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "аллее", 
-        "велосипедная дорожке", 
-        "горной велосипедной тропе"
-      ], 
       "cardinal_directions": [
         "север", 
         "северо-восток", 
@@ -1360,6 +1355,11 @@
         "юго-запад", 
         "запад", 
         "северо-запад"
+      ], 
+      "empty_street_name_labels": [
+        "аллее", 
+        "велосипедная дорожке", 
+        "горной велосипедной тропе"
       ], 
       "example_phrases": {
         "0": [
@@ -1516,8 +1516,8 @@
       ], 
       "transit_stop_count_labels": {
         "few": "остановки", 
-        "other": "остановок", 
-        "one": "остановка"
+        "one": "остановка", 
+        "other": "остановок"
       }, 
       "example_phrases": {
         "0": [
@@ -1662,8 +1662,8 @@
       ], 
       "transit_stop_count_labels": {
         "few": "остановки", 
-        "other": "остановок", 
-        "one": "остановка"
+        "one": "остановка", 
+        "other": "остановок"
       }, 
       "example_phrases": {
         "0": [
@@ -1716,8 +1716,8 @@
       ], 
       "transit_stop_count_labels": {
         "few": "остановки", 
-        "other": "остановок", 
-        "one": "остановка"
+        "one": "остановка", 
+        "other": "остановок"
       }, 
       "example_phrases": {
         "0": [
@@ -1784,14 +1784,14 @@
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.", 
         "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "налево", 
-        "направо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "налево", 
+        "направо"
       ], 
       "example_phrases": {
         "0": [
@@ -1815,14 +1815,14 @@
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.", 
         "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "налево", 
-        "направо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "налево", 
+        "направо"
       ], 
       "example_phrases": {
         "0": [
@@ -1848,14 +1848,14 @@
         "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы попасть на <STREET_NAMES>.", 
         "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "влево", 
-        "вправо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "влево", 
+        "вправо"
       ], 
       "example_phrases": {
         "0": [
@@ -1887,14 +1887,14 @@
         "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы попасть на <STREET_NAMES>.", 
         "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "влево", 
-        "вправо"
-      ], 
       "empty_street_name_labels": [
         "аллее", 
         "велосипедной дорожке", 
         "горной велосипедной тропе"
+      ], 
+      "relative_directions": [
+        "влево", 
+        "вправо"
       ], 
       "example_phrases": {
         "0": [

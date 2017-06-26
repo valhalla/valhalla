@@ -39,14 +39,14 @@
         "2": "Håll <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.", 
         "3": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -70,14 +70,14 @@
         "2": "Håll <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.", 
         "3": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -138,15 +138,6 @@
         "0": "Fortsätt <LENGTH>.", 
         "1": "Fortsätt <LENGTH> på <STREET_NAMES>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> miles", 
-        "1 mile", 
-        "en halv mile", 
-        "<TENTHS_OF_MILE> tiondels mile", 
-        "1 tiondels mile", 
-        "<FEET> fot", 
-        "mindre än 10 fot"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
@@ -158,6 +149,15 @@
         "en halv kilometer", 
         "<METERS> meter", 
         "mindre än 10 meter"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> miles", 
+        "1 mile", 
+        "en halv mile", 
+        "<TENTHS_OF_MILE> tiondels mile", 
+        "1 tiondels mile", 
+        "<FEET> fot", 
+        "mindre än 10 fot"
       ], 
       "example_phrases": {
         "0": [
@@ -302,12 +302,12 @@
         "1": "Ta <STREET_NAMES>.", 
         "2": "Ta <STREET_NAMES> <FERRY_LABEL>."
       }, 
-      "ferry_label": "Färja", 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
       ], 
+      "ferry_label": "Färja", 
       "example_phrases": {
         "0": [
           "Ta färjan."
@@ -326,12 +326,12 @@
         "1": "Ta <STREET_NAMES>.", 
         "2": "Ta <STREET_NAMES> <FERRY_LABEL>."
       }, 
-      "ferry_label": "Färja", 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
       ], 
+      "ferry_label": "Färja", 
       "example_phrases": {
         "0": [
           "Ta färjan."
@@ -488,11 +488,6 @@
         "17": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.", 
         "18": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "gångbanan", 
-        "cykelbanan", 
-        "mountain bike-spåret"
-      ], 
       "cardinal_directions": [
         "norrut", 
         "mot nordost", 
@@ -502,6 +497,11 @@
         "mot sydväst", 
         "västerut", 
         "mot nordväst"
+      ], 
+      "empty_street_name_labels": [
+        "gångbanan", 
+        "cykelbanan", 
+        "mountain bike-spåret"
       ], 
       "example_phrases": {
         "0": [
@@ -557,11 +557,6 @@
         "17": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.", 
         "18": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "gångbanan", 
-        "cykelbanan", 
-        "mountain bike-spåret"
-      ], 
       "cardinal_directions": [
         "norrut", 
         "mot nordost", 
@@ -571,6 +566,11 @@
         "mot sydväst", 
         "västerut", 
         "mot nordväst"
+      ], 
+      "empty_street_name_labels": [
+        "gångbanan", 
+        "cykelbanan", 
+        "mountain bike-spåret"
       ], 
       "example_phrases": {
         "0": [
@@ -727,15 +727,15 @@
         "6": "Håll <RELATIVE_DIRECTION> för att ta <STREET_NAMES> mot <TOWARD_SIGN>.", 
         "7": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> till <STREET_NAMES> mot <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "rakt", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "rakt", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -773,15 +773,15 @@
         "2": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>.", 
         "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>, för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "rakt", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "rakt", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -807,15 +807,15 @@
         "2": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>.", 
         "3": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN>, för att stanna kvar på <STREET_NAMES> mot <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "rakt", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "rakt", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -845,15 +845,15 @@
         "6": "Håll <RELATIVE_DIRECTION> för att ta <STREET_NAMES> mot <TOWARD_SIGN>.", 
         "7": "Håll <RELATIVE_DIRECTION> för att ta avfart <NUMBER_SIGN> till <STREET_NAMES> mot <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "rakt", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "rakt", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -937,11 +937,6 @@
         "17": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.", 
         "18": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "gångbanan", 
-        "cykelbanan", 
-        "mountain bike-spåret"
-      ], 
       "cardinal_directions": [
         "norrut", 
         "mot nordost", 
@@ -951,6 +946,11 @@
         "mot sydväst", 
         "västerut", 
         "mot nordväst"
+      ], 
+      "empty_street_name_labels": [
+        "gångbanan", 
+        "cykelbanan", 
+        "mountain bike-spåret"
       ], 
       "example_phrases": {
         "0": [
@@ -1006,11 +1006,6 @@
         "17": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.", 
         "18": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "gångbanan", 
-        "cykelbanan", 
-        "mountain bike-spåret"
-      ], 
       "cardinal_directions": [
         "norrut", 
         "mot nordost", 
@@ -1020,6 +1015,11 @@
         "mot sydväst", 
         "västerut", 
         "mot nordväst"
+      ], 
+      "empty_street_name_labels": [
+        "gångbanan", 
+        "cykelbanan", 
+        "mountain bike-spåret"
       ], 
       "example_phrases": {
         "0": [
@@ -1065,8 +1065,8 @@
         "0": "Res <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       }, 
       "transit_stop_count_labels": {
-        "other": "hållplatser", 
-        "one": "hållplats"
+        "one": "hållplats", 
+        "other": "hållplatser"
       }, 
       "example_phrases": {
         "0": [
@@ -1080,15 +1080,6 @@
         "0": "Fortsätt <LENGTH>.", 
         "1": "Fortsätt på <STREET_NAMES> <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> miles", 
-        "1 mile", 
-        "en halv mile", 
-        "<TENTHS_OF_MILE> tiondels mile", 
-        "1 tiondels mile", 
-        "<FEET> fot", 
-        "mindre än 10 fot"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
@@ -1100,6 +1091,15 @@
         "en halv kilometer", 
         "<METERS> meter", 
         "mindre än 10 meter"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> miles", 
+        "1 mile", 
+        "en halv mile", 
+        "<TENTHS_OF_MILE> tiondels mile", 
+        "1 tiondels mile", 
+        "<FEET> fot", 
+        "mindre än 10 fot"
       ], 
       "example_phrases": {
         "0": [
@@ -1275,14 +1275,14 @@
         "2": "Sväng skarp <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.", 
         "3": "Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -1306,14 +1306,14 @@
         "2": "Sväng skarp <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.", 
         "3": "Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -1345,11 +1345,6 @@
         "17": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.", 
         "18": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "gångbanan", 
-        "cykelbanan", 
-        "mountain bike-spåret"
-      ], 
       "cardinal_directions": [
         "norrut", 
         "mot nordost", 
@@ -1359,6 +1354,11 @@
         "mot sydväst", 
         "västerut", 
         "mot nordväst"
+      ], 
+      "empty_street_name_labels": [
+        "gångbanan", 
+        "cykelbanan", 
+        "mountain bike-spåret"
       ], 
       "example_phrases": {
         "0": [
@@ -1514,8 +1514,8 @@
         "linbanan"
       ], 
       "transit_stop_count_labels": {
-        "other": "hållplatser", 
-        "one": "hållplats"
+        "one": "hållplats", 
+        "other": "hållplatser"
       }, 
       "example_phrases": {
         "0": [
@@ -1659,8 +1659,8 @@
         "linbanan"
       ], 
       "transit_stop_count_labels": {
-        "other": "hållplatser", 
-        "one": "hållplats"
+        "one": "hållplats", 
+        "other": "hållplatser"
       }, 
       "example_phrases": {
         "0": [
@@ -1712,8 +1712,8 @@
         "linbanan"
       ], 
       "transit_stop_count_labels": {
-        "other": "hållplatser", 
-        "one": "hållplats"
+        "one": "hållplats", 
+        "other": "hållplatser"
       }, 
       "example_phrases": {
         "0": [
@@ -1780,14 +1780,14 @@
         "2": "Sväng <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.", 
         "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -1811,14 +1811,14 @@
         "2": "Sväng <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.", 
         "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -1844,14 +1844,14 @@
         "4": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> till <STREET_NAMES>.", 
         "5": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [
@@ -1883,14 +1883,14 @@
         "4": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> till <STREET_NAMES>.", 
         "5": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "vänster", 
-        "höger"
-      ], 
       "empty_street_name_labels": [
         "gångbanan", 
         "cykelbanan", 
         "mountain bike-spåret"
+      ], 
+      "relative_directions": [
+        "vänster", 
+        "höger"
       ], 
       "example_phrases": {
         "0": [

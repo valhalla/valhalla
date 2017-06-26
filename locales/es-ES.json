@@ -39,14 +39,14 @@
         "2": "Girar levemente a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.", 
         "3": "Girar levemente a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -70,14 +70,14 @@
         "2": "Girar levemente a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>.", 
         "3": "Girar levemente a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -138,15 +138,6 @@
         "0": "Continuar por <LENGTH>.", 
         "1": "Continuar en <STREET_NAMES> por <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> millas", 
-        "1 milla", 
-        "media milla", 
-        "<TENTHS_OF_MILE> décimas de milla", 
-        "1 décima de milla", 
-        "<FEET> pie", 
-        "menos de 10 pies"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
@@ -158,6 +149,15 @@
         "medio kilómetro", 
         "<METERS> metros", 
         "menos de 10 metros"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> millas", 
+        "1 milla", 
+        "media milla", 
+        "<TENTHS_OF_MILE> décimas de milla", 
+        "1 décima de milla", 
+        "<FEET> pie", 
+        "menos de 10 pies"
       ], 
       "example_phrases": {
         "0": [
@@ -302,12 +302,12 @@
         "1": "Tomar la <STREET_NAMES>.", 
         "2": "Tomar la <FERRY_LABEL> <STREET_NAMES>."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "Tomar el Ferry."
@@ -326,12 +326,12 @@
         "1": "Tomar el <STREET_NAMES>.", 
         "2": "Tomar el <FERRY_LABEL> <STREET_NAMES>."
       }, 
-      "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
       ], 
+      "ferry_label": "Ferry", 
       "example_phrases": {
         "0": [
           "Tomar el Ferry."
@@ -488,11 +488,6 @@
         "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.", 
         "18": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la acera", 
-        "la ciclovía", 
-        "el sendero de bicicleta de montaña"
-      ], 
       "cardinal_directions": [
         "norte", 
         "noreste", 
@@ -502,6 +497,11 @@
         "suroeste", 
         "oeste", 
         "noroeste"
+      ], 
+      "empty_street_name_labels": [
+        "la acera", 
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -557,11 +557,6 @@
         "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.", 
         "18": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la acera", 
-        "la ciclovía", 
-        "el sendero de bicicleta de montaña"
-      ], 
       "cardinal_directions": [
         "norte", 
         "noreste", 
@@ -571,6 +566,11 @@
         "suroeste", 
         "oeste", 
         "noroeste"
+      ], 
+      "empty_street_name_labels": [
+        "la acera", 
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -727,15 +727,15 @@
         "6": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> hacia <TOWARD_SIGN>.", 
         "7": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES> hacia <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecho", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecho", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -773,15 +773,15 @@
         "2": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>.", 
         "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecho", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecho", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -807,15 +807,15 @@
         "2": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>.", 
         "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecho", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecho", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -845,15 +845,15 @@
         "6": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> hacia <TOWARD_SIGN>.", 
         "7": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES> salida <TOWARD_SIGN>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecho", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecho", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -937,11 +937,6 @@
         "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.", 
         "18": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la acera", 
-        "la ciclovía", 
-        "el sendero de bicicleta de montaña"
-      ], 
       "cardinal_directions": [
         "norte", 
         "noreste", 
@@ -951,6 +946,11 @@
         "suroeste", 
         "oeste", 
         "noroeste"
+      ], 
+      "empty_street_name_labels": [
+        "la acera", 
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1006,11 +1006,6 @@
         "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.", 
         "18": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la acera", 
-        "la ciclovía", 
-        "el sendero de bicicleta de montaña"
-      ], 
       "cardinal_directions": [
         "norte", 
         "noreste", 
@@ -1020,6 +1015,11 @@
         "suroeste", 
         "oeste", 
         "noroeste"
+      ], 
+      "empty_street_name_labels": [
+        "la acera", 
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1065,8 +1065,8 @@
         "0": "Viajar <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
       }, 
       "transit_stop_count_labels": {
-        "other": "paradas", 
-        "one": "parada"
+        "one": "parada", 
+        "other": "paradas"
       }, 
       "example_phrases": {
         "0": [
@@ -1080,15 +1080,6 @@
         "0": "Continuar por <LENGTH>.", 
         "1": "Continuar en <STREET_NAMES> por <LENGTH>."
       }, 
-      "us_customary_lengths": [
-        "<MILES> miles", 
-        "1 mile", 
-        "a half mile", 
-        "<TENTHS_OF_MILE> tenths of a mile", 
-        "1 tenth of a mile", 
-        "<FEET> feet", 
-        "less than 10 feet"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
@@ -1100,6 +1091,15 @@
         "medio kilómetro", 
         "<METERS> metros", 
         "menos de 10 metros"
+      ], 
+      "us_customary_lengths": [
+        "<MILES> miles", 
+        "1 mile", 
+        "a half mile", 
+        "<TENTHS_OF_MILE> tenths of a mile", 
+        "1 tenth of a mile", 
+        "<FEET> feet", 
+        "less than 10 feet"
       ], 
       "example_phrases": {
         "0": [
@@ -1275,14 +1275,14 @@
         "2": "Giro pronunciado a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.", 
         "3": "Giro pronunciado a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -1306,14 +1306,14 @@
         "2": "Giro pronunciado a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>.", 
         "3": "Giro pronunciado a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -1345,11 +1345,6 @@
         "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> y tomar <STREET_NAMES>.", 
         "18": "Ir en bici hacia el <CARDINAL_DIRECTION> y tomar <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>."
       }, 
-      "empty_street_name_labels": [
-        "la acera", 
-        "la ciclovía", 
-        "el sendero para bicicleta de montaña"
-      ], 
       "cardinal_directions": [
         "norte", 
         "noreste", 
@@ -1359,6 +1354,11 @@
         "suroeste", 
         "oeste", 
         "noroeste"
+      ], 
+      "empty_street_name_labels": [
+        "la acera", 
+        "la ciclovía", 
+        "el sendero para bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1514,8 +1514,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "paradas", 
-        "one": "parada"
+        "one": "parada", 
+        "other": "paradas"
       }, 
       "example_phrases": {
         "0": [
@@ -1659,8 +1659,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "paradas", 
-        "one": "parada"
+        "one": "parada", 
+        "other": "paradas"
       }, 
       "example_phrases": {
         "0": [
@@ -1712,8 +1712,8 @@
         "funicular"
       ], 
       "transit_stop_count_labels": {
-        "other": "paradas", 
-        "one": "parada"
+        "one": "parada", 
+        "other": "paradas"
       }, 
       "example_phrases": {
         "0": [
@@ -1780,14 +1780,14 @@
         "2": "Girar a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.", 
         "3": "Girar a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -1811,14 +1811,14 @@
         "2": "Girar a la <RELATIVE_DIRECTION> en <BEGIN_STREET_NAMES>.", 
         "3": "Girar a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -1844,14 +1844,14 @@
         "4": "Hacer una vuelta en U a la <RELATIVE_DIRECTION> en el cruce de la calle <CROSS_STREET_NAMES> en <STREET_NAMES>.", 
         "5": "Hacer una vuelta en U a la <RELATIVE_DIRECTION> en el cruce de la calle <CROSS_STREET_NAMES> para quedar en <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
@@ -1883,14 +1883,14 @@
         "4": "Hacer un giro en U a la <RELATIVE_DIRECTION> en el cruce de calle <CROSS_STREET_NAMES> en <STREET_NAMES>.", 
         "5": "Hacer un giro en U a la <RELATIVE_DIRECTION> en el cruce de calle <CROSS_STREET_NAMES> para quedar en <STREET_NAMES>."
       }, 
-      "relative_directions": [
-        "izquierda", 
-        "derecha"
-      ], 
       "empty_street_name_labels": [
         "la acera", 
         "la ciclovía", 
         "el sendero de bicicleta de montaña"
+      ], 
+      "relative_directions": [
+        "izquierda", 
+        "derecha"
       ], 
       "example_phrases": {
         "0": [
