@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import json
 import sys
+import io
 from collections import OrderedDict
 
 #if its a number sort by the number, if its one of the top level ones use that
@@ -29,9 +30,10 @@ def sort_dict(parent, d):
   return ordered
 
 #open the original file and sort it
-with open(sys.argv[1], 'r') as f:
-  lang = sort_dict(None, json.load(f))
+with io.open(sys.argv[1], encoding = 'utf-8', mode = 'r') as f:
+  lang = sort_dict(None, json.load(f, encoding = 'utf-8'))
 
 #format it and write it back out
-with open(sys.argv[1], 'w') as f:
-  json.dump(lang, f, indent=2)
+with io.open(sys.argv[1], encoding = 'utf-8', mode = 'w') as f:
+  contents = json.dumps(lang, ensure_ascii = False, encoding = 'utf-8', indent = 2)
+  f.write(unicode(contents))

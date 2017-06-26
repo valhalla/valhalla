@@ -44,7 +44,7 @@
         "rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -75,7 +75,7 @@
         "rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -120,7 +120,7 @@
         "1": "Weiter auf <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -148,7 +148,7 @@
         "less than 10 feet"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -174,7 +174,7 @@
         "1": "Weiter auf <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -298,13 +298,13 @@
     }, 
     "enter_ferry": {
       "phrases": {
-        "0": "Die F\u00e4hre nehmen.", 
+        "0": "Die Fähre nehmen.", 
         "1": "Die <STREET_NAMES> nehmen.", 
         "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen."
       }, 
-      "ferry_label": "F\u00e4hre", 
+      "ferry_label": "Fähre", 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -322,13 +322,13 @@
     }, 
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Die F\u00e4hre nehmen.", 
+        "0": "Die Fähre nehmen.", 
         "1": "Die <STREET_NAMES> nehmen.", 
         "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen."
       }, 
       "ferry_label": "Ferry", 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -389,7 +389,7 @@
         "zweite", 
         "dritte", 
         "vierte", 
-        "f\u00fcnfte", 
+        "fünfte", 
         "sechste", 
         "siebte", 
         "achte", 
@@ -418,16 +418,16 @@
       "phrases": {
         "0": "An der Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
         "1": "An der Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
-        "2": "Auf <BRANCH_SIGN> \u00fcber die Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
-        "3": "Auf <BRANCH_SIGN> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
+        "2": "Auf <BRANCH_SIGN> über die Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
+        "3": "Auf <BRANCH_SIGN> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
         "4": "An der Ausfahrt <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.", 
         "5": "An der Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.", 
-        "6": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> \u00fcber die Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
-        "7": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
+        "6": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
+        "7": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
         "8": "An der Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.", 
-        "10": "Auf <BRANCH_SIGN> \u00fcber die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.", 
+        "10": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.", 
         "12": "An der Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.", 
-        "14": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> \u00fcber die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren."
+        "14": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren."
       }, 
       "relative_directions": [
         "links", 
@@ -489,7 +489,7 @@
         "18": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln. Dann weiter auf <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -497,9 +497,9 @@
         "Norden", 
         "Nordosten", 
         "Osten", 
-        "S\u00fcdosten", 
-        "S\u00fcden", 
-        "S\u00fcdwesten", 
+        "Südosten", 
+        "Süden", 
+        "Südwesten", 
         "Westen", 
         "Nordwesten"
       ], 
@@ -566,9 +566,9 @@
         "Norden", 
         "Nordosten", 
         "Osten", 
-        "S\u00fcdosten", 
-        "S\u00fcden", 
-        "S\u00fcdwesten", 
+        "Südosten", 
+        "Süden", 
+        "Südwesten", 
         "Westen", 
         "Nordwesten"
       ], 
@@ -618,7 +618,7 @@
         "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -641,7 +641,7 @@
         "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -661,16 +661,16 @@
       "phrases": {
         "0": "An der Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
         "1": "An der Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
-        "2": "Auf <BRANCH_SIGN> \u00fcber die Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
-        "3": "Auf <BRANCH_SIGN> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
+        "2": "Auf <BRANCH_SIGN> über die Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
+        "3": "Auf <BRANCH_SIGN> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
         "4": "An der Ausfahrt <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.", 
         "5": "An der Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.", 
-        "6": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> \u00fcber die Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
-        "7": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
+        "6": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <RELATIVE_DIRECTION> abfahren.", 
+        "7": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.", 
         "8": "An der Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.", 
-        "10": "Auf <BRANCH_SIGN> \u00fcber die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.", 
+        "10": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.", 
         "12": "An der Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.", 
-        "14": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> \u00fcber die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren."
+        "14": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren."
       }, 
       "relative_directions": [
         "links", 
@@ -733,7 +733,7 @@
         "Rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -769,9 +769,9 @@
     "keep_to_stay_on": {
       "phrases": {
         "0": "Auf <STREET_NAMES> <RELATIVE_DIRECTION> halten.", 
-        "1": "Auf <STREET_NAMES> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.", 
-        "2": "Auf <STREET_NAMES> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.", 
-        "3": "Auf <STREET_NAMES> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>."
+        "1": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.", 
+        "2": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.", 
+        "3": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "links", 
@@ -779,7 +779,7 @@
         "rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -803,9 +803,9 @@
     "keep_to_stay_on_verbal": {
       "phrases": {
         "0": "Auf <STREET_NAMES> <RELATIVE_DIRECTION> halten.", 
-        "1": "Auf <STREET_NAMES> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.", 
-        "2": "Auf <STREET_NAMES> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.", 
-        "3": "Auf <STREET_NAMES> \u00fcber die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>."
+        "1": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.", 
+        "2": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.", 
+        "3": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "links", 
@@ -813,7 +813,7 @@
         "rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -851,7 +851,7 @@
         "Rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -886,11 +886,11 @@
     }, 
     "merge": {
       "phrases": {
-        "0": "Einf\u00e4deln.", 
-        "1": "Auf <STREET_NAMES> einf\u00e4deln."
+        "0": "Einfädeln.", 
+        "1": "Auf <STREET_NAMES> einfädeln."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -905,11 +905,11 @@
     }, 
     "merge_verbal": {
       "phrases": {
-        "0": "Einf\u00e4deln.", 
-        "1": "Auf <STREET_NAMES> einf\u00e4deln."
+        "0": "Einfädeln.", 
+        "1": "Auf <STREET_NAMES> einfädeln."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -938,7 +938,7 @@
         "18": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln. Dann weiter auf <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -946,9 +946,9 @@
         "Norden", 
         "Nordosten", 
         "Osten", 
-        "S\u00fcdosten", 
-        "S\u00fcden", 
-        "S\u00fcdwesten", 
+        "Südosten", 
+        "Süden", 
+        "Südwesten", 
         "Westen", 
         "Nordwesten"
       ], 
@@ -1007,7 +1007,7 @@
         "18": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1015,9 +1015,9 @@
         "Norden", 
         "Nordosten", 
         "Osten", 
-        "S\u00fcdosten", 
-        "S\u00fcden", 
-        "S\u00fcdwesten", 
+        "Südosten", 
+        "Süden", 
+        "Südwesten", 
         "Westen", 
         "Nordwesten"
       ], 
@@ -1086,11 +1086,11 @@
         "eine halbe Meile", 
         "<TENTHS_OF_MILE> zehntel der Meile", 
         "eine zehntel der Miele", 
-        "<FEET> F\u00fc\u00dfe", 
-        "weniger als 10 F\u00fc\u00dfe"
+        "<FEET> Füße", 
+        "weniger als 10 Füße"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1115,14 +1115,14 @@
     "ramp": {
       "phrases": {
         "0": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen.", 
-        "1": "\u00dcber die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
+        "1": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
         "2": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.", 
-        "3": "\u00dcber die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
+        "3": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
         "4": "Auf die Auffahrt <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.", 
         "5": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen.", 
-        "6": "\u00dcber die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
+        "6": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
         "7": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.", 
-        "8": "\u00dcber die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
+        "8": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
         "9": "Auf die Auffahrt <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
       }, 
       "relative_directions": [
@@ -1166,11 +1166,11 @@
     }, 
     "ramp_straight": {
       "phrases": {
-        "0": "Geradeaus \u00fcber die Auffahrt fahren.", 
-        "1": "Auf <BRANCH_SIGN> geradeaus \u00fcber die Auffahrt fahren.", 
-        "2": "Geradeaus \u00fcber die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
-        "3": "Auf <BRANCH_SIGN> geradeaus \u00fcber die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
-        "4": "Geradeaus \u00fcber die Auffahrt <NAME_SIGN> fahren."
+        "0": "Geradeaus über die Auffahrt fahren.", 
+        "1": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren.", 
+        "2": "Geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
+        "3": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
+        "4": "Geradeaus über die Auffahrt <NAME_SIGN> fahren."
       }, 
       "example_phrases": {
         "0": [
@@ -1192,11 +1192,11 @@
     }, 
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Geradeaus \u00fcber die Auffahrt fahren.", 
-        "1": "Auf <BRANCH_SIGN> geradeaus \u00fcber die Auffahrt fahren.", 
-        "2": "Geradeaus \u00fcber die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
-        "3": "Auf <BRANCH_SIGN> geradeaus \u00fcber die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
-        "4": "Geradeaus \u00fcber die Auffahrt <NAME_SIGN> fahren."
+        "0": "Geradeaus über die Auffahrt fahren.", 
+        "1": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren.", 
+        "2": "Geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
+        "3": "Auf <BRANCH_SIGN> geradeaus über die Auffahrt fahren Richtung <TOWARD_SIGN>.", 
+        "4": "Geradeaus über die Auffahrt <NAME_SIGN> fahren."
       }, 
       "example_phrases": {
         "0": [
@@ -1219,14 +1219,14 @@
     "ramp_verbal": {
       "phrases": {
         "0": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen.", 
-        "1": "\u00dcber die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
+        "1": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
         "2": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.", 
-        "3": "\u00dcber die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
+        "3": "Über die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
         "4": "Auf die Auffahrt <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.", 
         "5": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen.", 
-        "6": "\u00dcber die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
+        "6": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.", 
         "7": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.", 
-        "8": "\u00dcber die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
+        "8": "Über die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.", 
         "9": "Auf die Auffahrt <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
       }, 
       "relative_directions": [
@@ -1280,7 +1280,7 @@
         "rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1311,7 +1311,7 @@
         "rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1346,7 +1346,7 @@
         "18": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln. Dann weiter auf <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1354,9 +1354,9 @@
         "Norden", 
         "Nordosten", 
         "Osten", 
-        "S\u00fcdosten", 
-        "S\u00fcden", 
-        "S\u00fcdwesten", 
+        "Südosten", 
+        "Süden", 
+        "Südwesten", 
         "Westen", 
         "Nordwesten"
       ], 
@@ -1366,10 +1366,10 @@
           "Richtung Norden."
         ], 
         "1": [
-          "Auf Hauptstra\u00dfe Richtung S\u00fcdwesten."
+          "Auf Hauptstraße Richtung Südwesten."
         ], 
         "2": [
-          "Auf A 1 Richtung S\u00fcden. Dann weiter auf B 13."
+          "Auf A 1 Richtung Süden. Dann weiter auf B 13."
         ], 
         "4": [
           "Drive east.", 
@@ -1425,14 +1425,14 @@
         "Norden", 
         "Nordosten", 
         "Osten", 
-        "S\u00fcdosten", 
-        "S\u00fcden", 
-        "S\u00fcdwesten", 
+        "Südosten", 
+        "Süden", 
+        "Südwesten", 
         "Westen", 
         "Nordwesten"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1449,8 +1449,8 @@
         "eine halbe Meile", 
         "<TENTHS_OF_MILE> zehntel der Meile", 
         "eine zehntel der Miele", 
-        "<FEET> F\u00fc\u00dfe", 
-        "weniger als 10 F\u00fc\u00dfe"
+        "<FEET> Füße", 
+        "weniger als 10 Füße"
       ], 
       "example_phrases": {
         "0": [
@@ -1501,11 +1501,11 @@
         "1": "Mit <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> fahren. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       }, 
       "empty_transit_name_labels": [
-        "Stra\u00dfenbahn", 
+        "Straßenbahn", 
         "U-Bahn", 
         "Zug", 
         "Bus", 
-        "F\u00e4hre", 
+        "Fähre", 
         "Kabelbahn", 
         "Luftseilbahn", 
         "Standseilbahn"
@@ -1646,11 +1646,11 @@
         "1": "Mit <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> weiter. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       }, 
       "empty_transit_name_labels": [
-        "Stra\u00dfenbahn", 
+        "Straßenbahn", 
         "U-Bahn", 
         "Zug", 
         "Bus", 
-        "F\u00e4hre", 
+        "Fähre", 
         "Kabelbahn", 
         "Luftseilbahn", 
         "Standseilbahn"
@@ -1675,11 +1675,11 @@
         "1": "Mit <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> weiter fahren."
       }, 
       "empty_transit_name_labels": [
-        "Stra\u00dfenbahn", 
+        "Straßenbahn", 
         "U-Bahn", 
         "Zug", 
         "Bus", 
-        "F\u00e4hre", 
+        "Fähre", 
         "Kabelbahn", 
         "Luftseilbahn", 
         "Standseilbahn"
@@ -1699,11 +1699,11 @@
         "1": "Zu <TRANSIT_NAME> Richtugn <TRANSIT_HEADSIGN> umsteigen. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       }, 
       "empty_transit_name_labels": [
-        "Stra\u00dfenbahn", 
+        "Straßenbahn", 
         "U-Bahn", 
         "Zug", 
         "Bus", 
-        "F\u00e4hre", 
+        "Fähre", 
         "Kabelbahn", 
         "Luftseilbahn", 
         "Standseilbahn"
@@ -1728,11 +1728,11 @@
         "1": "Zu <TRANSIT_NAME> Richtugn <TRANSIT_HEADSIGN> umsteigen."
       }, 
       "empty_transit_name_labels": [
-        "Stra\u00dfenbahn", 
+        "Straßenbahn", 
         "U-Bahn", 
         "Zug", 
         "Bus", 
-        "F\u00e4hre", 
+        "Fähre", 
         "Kabelbahn", 
         "Luftseilbahn", 
         "Standseilbahn"
@@ -1752,11 +1752,11 @@
         "1": "Mit <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> fahren."
       }, 
       "empty_transit_name_labels": [
-        "Stra\u00dfenbahn", 
+        "Straßenbahn", 
         "U-Bahn", 
         "Zug", 
         "Bus", 
-        "F\u00e4hre", 
+        "Fähre", 
         "Kabelbahn", 
         "Luftseilbahn", 
         "Standseilbahn"
@@ -1782,7 +1782,7 @@
         "Rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1813,7 +1813,7 @@
         "Rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1846,7 +1846,7 @@
         "rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 
@@ -1885,7 +1885,7 @@
         "rechts"
       ], 
       "empty_street_name_labels": [
-        "Fu\u00dfweg", 
+        "Fußweg", 
         "Radweg", 
         "Mountainbike Strecke"
       ], 

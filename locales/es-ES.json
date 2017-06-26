@@ -45,8 +45,8 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -76,8 +76,8 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -121,8 +121,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -142,20 +142,20 @@
         "<MILES> millas", 
         "1 milla", 
         "media milla", 
-        "<TENTHS_OF_MILE> d\u00e9cimas de milla", 
-        "1 d\u00e9cima de milla", 
+        "<TENTHS_OF_MILE> décimas de milla", 
+        "1 décima de milla", 
         "<FEET> pie", 
         "menos de 10 pies"
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "metric_lengths": [
-        "<KILOMETERS> kil\u00f3metros", 
-        "1 kil\u00f3metro", 
-        "medio kil\u00f3metro", 
+        "<KILOMETERS> kilómetros", 
+        "1 kilómetro", 
+        "medio kilómetro", 
         "<METERS> metros", 
         "menos de 10 metros"
       ], 
@@ -164,7 +164,7 @@
           "Continuar por 300 pies."
         ], 
         "1": [
-          "Continuar en 10th Avenue por 3 d\u00e9cimas de una milla."
+          "Continuar en 10th Avenue por 3 décimas de una milla."
         ]
       }
     }, 
@@ -175,8 +175,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -219,8 +219,8 @@
       "phrases": {
         "0": "Has llegado a tu destino.", 
         "1": "Has llegado a <DESTINATION>.", 
-        "2": "Tu destino est\u00e1 hacia la <RELATIVE_DIRECTION>.", 
-        "3": "<DESTINATION> est\u00e1 hacia la <RELATIVE_DIRECTION>."
+        "2": "Tu destino está hacia la <RELATIVE_DIRECTION>.", 
+        "3": "<DESTINATION> está hacia la <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -234,11 +234,11 @@
           "Has llegado a 3206 Powelton Avenue."
         ], 
         "2": [
-          "Tu destino est\u00e1 hacia la izquierda.", 
-          "Tu destino est\u00e1 hacia la derecha."
+          "Tu destino está hacia la izquierda.", 
+          "Tu destino está hacia la derecha."
         ], 
         "3": [
-          "Lancaster Brewing Company est\u00e1 a tu izquierda."
+          "Lancaster Brewing Company está a tu izquierda."
         ]
       }
     }, 
@@ -246,8 +246,8 @@
       "phrases": {
         "0": "Has llegado a tu destino.", 
         "1": "Has llegado a <DESTINATION>.", 
-        "2": "Tu destino est\u00e1 a la <RELATIVE_DIRECTION>.", 
-        "3": "<DESTINATION> est\u00e1 a la <RELATIVE_DIRECTION>."
+        "2": "Tu destino está a la <RELATIVE_DIRECTION>.", 
+        "3": "<DESTINATION> está a la <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -261,20 +261,20 @@
           "Has llegado a 32 o6 Powelton Avenue."
         ], 
         "2": [
-          "Tu destino est\u00e1 a la izquierda.", 
-          "Tu destino est\u00e1 a la derecha."
+          "Tu destino está a la izquierda.", 
+          "Tu destino está a la derecha."
         ], 
         "3": [
-          "Lancaster Brewing Company est\u00e1 a la izquierda."
+          "Lancaster Brewing Company está a la izquierda."
         ]
       }
     }, 
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Llegar\u00e1s a tu destino.", 
-        "1": "Llegar\u00e1s a <DESTINATION>.", 
-        "2": "Tu destino estar\u00e1 hacia la <RELATIVE_DIRECTION>.", 
-        "3": "<DESTINATION> estar\u00e1 a la <RELATIVE_DIRECTION>."
+        "0": "Llegarás a tu destino.", 
+        "1": "Llegarás a <DESTINATION>.", 
+        "2": "Tu destino estará hacia la <RELATIVE_DIRECTION>.", 
+        "3": "<DESTINATION> estará a la <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -282,17 +282,17 @@
       ], 
       "example_phrases": {
         "0": [
-          "Llegar\u00e1s a tu destino."
+          "Llegarás a tu destino."
         ], 
         "1": [
-          "Llegar\u00e1s a 32 o6 Powelton Avenue."
+          "Llegarás a 32 o6 Powelton Avenue."
         ], 
         "2": [
-          "Tu destino estar\u00e1 a la izquierda.", 
-          "Tu destino estar\u00e1 a la derecha."
+          "Tu destino estará a la izquierda.", 
+          "Tu destino estará a la derecha."
         ], 
         "3": [
-          "Lancaster Brewing Company estar\u00e1 a la izquierda."
+          "Lancaster Brewing Company estará a la izquierda."
         ]
       }
     }, 
@@ -305,8 +305,8 @@
       "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -329,8 +329,8 @@
       "ferry_label": "Ferry", 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -356,10 +356,10 @@
         "4ta", 
         "5ta", 
         "6ta", 
-        "7\u00ba", 
-        "8\u00ba", 
-        "9\u00ba", 
-        "10\u00ba"
+        "7º", 
+        "8º", 
+        "9º", 
+        "10º"
       ], 
       "example_phrases": {
         "0": [
@@ -372,10 +372,10 @@
           "Entre en la rotonda y tome la 4ta salida.", 
           "Entre en la rotonda y tome la 5ta salida.", 
           "Entre en la rotonda y tome la 6ta salida.", 
-          "Entre en la rotonda y tome la 7\u00ba salida.", 
-          "Entre en la rotonda y tome la 8\u00ba salida.", 
-          "Entre en la rotonda y tome la 9\u00ba salida.", 
-          "Entre en la rotonda y tome la 10\u00ba salida."
+          "Entre en la rotonda y tome la 7º salida.", 
+          "Entre en la rotonda y tome la 8º salida.", 
+          "Entre en la rotonda y tome la 9º salida.", 
+          "Entre en la rotonda y tome la 10º salida."
         ]
       }
     }, 
@@ -391,10 +391,10 @@
         "4ta", 
         "5ta", 
         "6ta", 
-        "7\u00ba", 
-        "8\u00ba", 
-        "9\u00ba", 
-        "10\u00ba"
+        "7º", 
+        "8º", 
+        "9º", 
+        "10º"
       ], 
       "example_phrases": {
         "0": [
@@ -407,10 +407,10 @@
           "Entre en la rotonda y tome la 4ta salida.", 
           "Entre en la rotonda y tomeEnter la 5ta salida.", 
           "Entre en la rotonda y tome la 6ta salida.", 
-          "Entre en la rotonda y tome la 7\u00ba salida.", 
-          "Entre en la rotonda y tome la 8\u00ba salida.", 
-          "Entre en la rotonda y tome la 9\u00ba salida.", 
-          "Entre en la rotonda y tome la 10\u00ba salida."
+          "Entre en la rotonda y tome la 7º salida.", 
+          "Entre en la rotonda y tome la 8º salida.", 
+          "Entre en la rotonda y tome la 9º salida.", 
+          "Entre en la rotonda y tome la 10º salida."
         ]
       }
     }, 
@@ -490,8 +490,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "cardinal_directions": [
         "norte", 
@@ -508,7 +508,7 @@
           "Dirigierse hacia el sureste."
         ], 
         "1": [
-          "Dirigirse hacia el oeste en la v\u00eda del Ferry"
+          "Dirigirse hacia el oeste en la vía del Ferry"
         ], 
         "2": [
           "Dirigirse hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
@@ -517,7 +517,7 @@
           "Conducir hacia el sureste."
         ], 
         "5": [
-          "Conducir hacia el oeste en la v\u00eda del Ferry"
+          "Conducir hacia el oeste en la vía del Ferry"
         ], 
         "6": [
           "Conducir hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
@@ -526,7 +526,7 @@
           "Caminar hacia el sureste."
         ], 
         "9": [
-          "Caminar hacia el oeste en la v\u00eda del Ferry"
+          "Caminar hacia el oeste en la vía del Ferry"
         ], 
         "10": [
           "Caminar hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
@@ -535,7 +535,7 @@
           "Ir en bicicleta hacia el sureste."
         ], 
         "17": [
-          "ir en bicicleta hacia el oeste en la v\u00eda del Ferry"
+          "ir en bicicleta hacia el oeste en la vía del Ferry"
         ], 
         "18": [
           "Ir en bicicleta hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
@@ -559,8 +559,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "cardinal_directions": [
         "norte", 
@@ -577,7 +577,7 @@
           "Dirigirse hacia el sureste."
         ], 
         "1": [
-          "Dirigirse hacia el oeste por la v\u00eda del Ferry"
+          "Dirigirse hacia el oeste por la vía del Ferry"
         ], 
         "2": [
           "Dirigirse hacia el sur en Summerfield Place, New York 1 14."
@@ -586,7 +586,7 @@
           "Conducir hacia el sureste."
         ], 
         "5": [
-          "Conducir hacia el oeste en la v\u00eda del Ferry Lane"
+          "Conducir hacia el oeste en la vía del Ferry Lane"
         ], 
         "6": [
           "Conducir hacia el sur en Summerfield Place, New York 1 14."
@@ -595,7 +595,7 @@
           "Caminar hacia el sureste."
         ], 
         "9": [
-          "Caminar hacia el oeste en la v\u00eda del Ferry"
+          "Caminar hacia el oeste en la vía del Ferry"
         ], 
         "10": [
           "Caminar hacia el sur en Summerfield Place, New York 1 14."
@@ -604,7 +604,7 @@
           "Ir en bicicleta hacia el sureste."
         ], 
         "17": [
-          "Ir en bicicleta hacia el oeste en la v\u00eda del Ferry"
+          "Ir en bicicleta hacia el oeste en la vía del Ferry"
         ], 
         "18": [
           "Ir en bicicleta haia el sur en Summerfield Place, New York 1 14."
@@ -619,8 +619,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la cilov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la cilovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -642,8 +642,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -718,14 +718,14 @@
     }, 
     "keep": {
       "phrases": {
-        "0": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION>.", 
-        "1": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.", 
-        "2": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.", 
-        "3": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES>.", 
-        "4": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "5": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar <NUMBER_SIGN> hacia <TOWARD_SIGN>.", 
-        "6": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> hacia <TOWARD_SIGN>.", 
-        "7": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES> hacia <TOWARD_SIGN>."
+        "0": "En la bifurcación manténgase a la <RELATIVE_DIRECTION>.", 
+        "1": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.", 
+        "2": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.", 
+        "3": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES>.", 
+        "4": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "5": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar <NUMBER_SIGN> hacia <TOWARD_SIGN>.", 
+        "6": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> hacia <TOWARD_SIGN>.", 
+        "7": "En la bifurcación manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES> hacia <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -734,44 +734,44 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
-          "En la bifurcaci\u00f3n mant\u00e9ngase a la izquierda.", 
-          "Siga derecho en la bifurcaci\u00f3n.", 
-          "En la bifurcaci\u00f3n mant\u00e9ngase a la derecha."
+          "En la bifurcación manténgase a la izquierda.", 
+          "Siga derecho en la bifurcación.", 
+          "En la bifurcación manténgase a la derecha."
         ], 
         "1": [
-          "Mant\u00e9ngase a la derecha para tomar la salida 62."
+          "Manténgase a la derecha para tomar la salida 62."
         ], 
         "2": [
-          "Mant\u00e9ngase a la derecha para tomar I 895 sur."
+          "Manténgase a la derecha para tomar I 895 sur."
         ], 
         "3": [
-          "Mant\u00e9ngase a la derecha para tomar la salida 62 en I 895 sur."
+          "Manténgase a la derecha para tomar la salida 62 en I 895 sur."
         ], 
         "4": [
-          "Mant\u00e9ngase a la derecha hacia Annapolis."
+          "Manténgase a la derecha hacia Annapolis."
         ], 
         "5": [
-          "Mant\u00e9ngase a la derecha para tomar la salida 62 hacia Annapolis."
+          "Manténgase a la derecha para tomar la salida 62 hacia Annapolis."
         ], 
         "6": [
-          "Mant\u00e9ngase a la derecha para tomar I 895 sur hacia Annapolis."
+          "Manténgase a la derecha para tomar I 895 sur hacia Annapolis."
         ], 
         "7": [
-          "Mant\u00e9ngase a la derecha para tomar la salida 62 en I 895 sur hacia Annapolis."
+          "Manténgase a la derecha para tomar la salida 62 en I 895 sur hacia Annapolis."
         ]
       }
     }, 
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.", 
-        "1": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES>.", 
-        "2": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>.", 
-        "3": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>."
+        "0": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.", 
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES>.", 
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>.", 
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -780,32 +780,32 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
-          "Mant\u00e9ngase a la izquierda para quedar en I 95 sur.", 
+          "Manténgase a la izquierda para quedar en I 95 sur.", 
           "Siga derecho para quedar en I 95 sur.", 
-          "Mant\u00e9ngase a la derecha para quedar en I 95 sur."
+          "Manténgase a la derecha para quedar en I 95 sur."
         ], 
         "1": [
-          "Mant\u00e9ngase a la izquierda  para tomar la salida 62 para quedar en I 95 sur."
+          "Manténgase a la izquierda  para tomar la salida 62 para quedar en I 95 sur."
         ], 
         "2": [
-          "Mant\u00e9ngase a la izquierda  para quedar en I 95 sur hacia Baltimore."
+          "Manténgase a la izquierda  para quedar en I 95 sur hacia Baltimore."
         ], 
         "3": [
-          "Mant\u00e9ngase a la izquierda para tomar la salida 62 para quedar en I 95 sur hacia Baltimore."
+          "Manténgase a la izquierda para tomar la salida 62 para quedar en I 95 sur hacia Baltimore."
         ]
       }
     }, 
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.", 
-        "1": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES>.", 
-        "2": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>.", 
-        "3": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>."
+        "0": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES>.", 
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES>.", 
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>.", 
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> para quedar en <STREET_NAMES> hacia <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -814,36 +814,36 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
-          "Mant\u00e9ngase a la izquierda para quedar en Interstate 95 sur.", 
+          "Manténgase a la izquierda para quedar en Interstate 95 sur.", 
           "Siga derecho para quedar en Interstate 95 sur.", 
-          "Mant\u00e9ngase a la derecha para quedar en Interstate 95 sur."
+          "Manténgase a la derecha para quedar en Interstate 95 sur."
         ], 
         "1": [
-          "Mant\u00e9ngase a la izquierda para tomar la salida 62 para quedar en Interstate 95 sur."
+          "Manténgase a la izquierda para tomar la salida 62 para quedar en Interstate 95 sur."
         ], 
         "2": [
-          "Mant\u00e9ngase a la izquierda para quedar en I 95 sur toward Baltimore."
+          "Manténgase a la izquierda para quedar en I 95 sur toward Baltimore."
         ], 
         "3": [
-          "Mant\u00e9ngase a la izquierda para tomar la salida 62 para quedar en Interstate 95 sur hacia Baltimore."
+          "Manténgase a la izquierda para tomar la salida 62 para quedar en Interstate 95 sur hacia Baltimore."
         ]
       }
     }, 
     "keep_verbal": {
       "phrases": {
-        "0": "En la bifurcaci\u00f3n mant\u00e9ngase a la <RELATIVE_DIRECTION>.", 
-        "1": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.", 
-        "2": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.", 
-        "3": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES>.", 
-        "4": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
-        "5": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <TOWARD_SIGN>.", 
-        "6": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> hacia <TOWARD_SIGN>.", 
-        "7": "Mant\u00e9ngase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES> salida <TOWARD_SIGN>."
+        "0": "En la bifurcación manténgase a la <RELATIVE_DIRECTION>.", 
+        "1": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN>.", 
+        "2": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES>.", 
+        "3": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES>.", 
+        "4": "Manténgase a la <RELATIVE_DIRECTION> hacia <TOWARD_SIGN>.", 
+        "5": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> hacia <TOWARD_SIGN>.", 
+        "6": "Manténgase a la <RELATIVE_DIRECTION> para tomar <STREET_NAMES> hacia <TOWARD_SIGN>.", 
+        "7": "Manténgase a la <RELATIVE_DIRECTION> para tomar la salida <NUMBER_SIGN> en <STREET_NAMES> salida <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "izquierda", 
@@ -852,35 +852,35 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
-          "En la bifurcaci\u00f3n mant\u00e9ngase a la izquierda.", 
-          "En la bifurcaci\u00f3n siga derecho.", 
-          "En la bifurcaci\u00f3n mant\u00e9ngase a la derecha."
+          "En la bifurcación manténgase a la izquierda.", 
+          "En la bifurcación siga derecho.", 
+          "En la bifurcación manténgase a la derecha."
         ], 
         "1": [
-          "Mant\u00e9ngase a la derecha para tomar la salida 62."
+          "Manténgase a la derecha para tomar la salida 62."
         ], 
         "2": [
-          "Mant\u00e9ngase a la derecha para tomar Interstate 8 95 sur."
+          "Manténgase a la derecha para tomar Interstate 8 95 sur."
         ], 
         "3": [
-          "Mant\u00e9ngase a la derecha para tomar la salida 62 en Interstate 8 95 sur."
+          "Manténgase a la derecha para tomar la salida 62 en Interstate 8 95 sur."
         ], 
         "4": [
-          "Mant\u00e9ngase a la derecha hacia Annapolis."
+          "Manténgase a la derecha hacia Annapolis."
         ], 
         "5": [
-          "Mant\u00e9ngase a la derecha para tomar la salida 62 hacia Annapolis."
+          "Manténgase a la derecha para tomar la salida 62 hacia Annapolis."
         ], 
         "6": [
-          "Mant\u00e9ngase a la derecha para tomar Interstate 8 95 sur hacia Annapolis."
+          "Manténgase a la derecha para tomar Interstate 8 95 sur hacia Annapolis."
         ], 
         "7": [
-          "Mant\u00e9ngase a la derecha para tomar la salida 62 en Interstate 8 95 sur hacia Annapolis."
+          "Manténgase a la derecha para tomar la salida 62 en Interstate 8 95 sur hacia Annapolis."
         ]
       }
     }, 
@@ -891,8 +891,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -910,8 +910,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -939,8 +939,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "cardinal_directions": [
         "norte", 
@@ -1008,8 +1008,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "cardinal_directions": [
         "norte", 
@@ -1091,13 +1091,13 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "metric_lengths": [
-        "<KILOMETERS> kil\u00f3metros", 
-        "1 kil\u00f3metro", 
-        "medio kil\u00f3metro", 
+        "<KILOMETERS> kilómetros", 
+        "1 kilómetro", 
+        "medio kilómetro", 
         "<METERS> metros", 
         "menos de 10 metros"
       ], 
@@ -1108,7 +1108,7 @@
         ], 
         "1": [
           "Continuar en Pennsylvania 7 43 for 6.2 miles.", 
-          "Continuar en Main Street, Vermont 30 por 1 d\u00e9cima de milla."
+          "Continuar en Main Street, Vermont 30 por 1 décima de milla."
         ]
       }
     }, 
@@ -1281,8 +1281,8 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1312,8 +1312,8 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1347,8 +1347,8 @@
       }, 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero para bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero para bicicleta de montaña"
       ], 
       "cardinal_directions": [
         "norte", 
@@ -1366,10 +1366,10 @@
           "Ir hacia el norte."
         ], 
         "1": [
-          "Ir hacia el suroeste sobre la 5\u00ba Avenue.", 
+          "Ir hacia el suroeste sobre la 5º Avenue.", 
           " Ir hacia el oeste por el pasaje", 
-          "Ir hacia el este sobre la ciclov\u00eda", 
-          "Ir hacia el norte sobre el sendero de bici de monta\u00f1a"
+          "Ir hacia el este sobre la ciclovía", 
+          "Ir hacia el norte sobre el sendero de bici de montaña"
         ], 
         "2": [
           "Ir hacia el sur sobre North Prince Street/US 222/PA 272. Continuar en US 222/PA 272."
@@ -1379,7 +1379,7 @@
           "Conducir hacia el norte."
         ], 
         "5": [
-          "Conducir hacia el suroeste sobre la 5\u00ba Avenue."
+          "Conducir hacia el suroeste sobre la 5º Avenue."
         ], 
         "6": [
           "Conducir hacia el sur sobre North Prince Street/US 222/PA 272. Continuar en US 222/PA 272."
@@ -1389,7 +1389,7 @@
           "Caminar hacia el norte."
         ], 
         "9": [
-          "Caminar hacia el suroeste sobre la 5\u00ba Avenue.", 
+          "Caminar hacia el suroeste sobre la 5º Avenue.", 
           "Caminar hacia el oeste por el pasaje"
         ], 
         "10": [
@@ -1400,9 +1400,9 @@
           "En bici hacia el norte."
         ], 
         "17": [
-          "En bici hacia el suroeste sobre 5\u00ba Avenue.", 
-          "En bici hacia el este sobre la ciclov\u00eda", 
-          "En bici hacia el norte por el sendero de bicicleta de monta\u00f1a"
+          "En bici hacia el suroeste sobre 5º Avenue.", 
+          "En bici hacia el este sobre la ciclovía", 
+          "En bici hacia el norte por el sendero de bicicleta de montaña"
         ], 
         "18": [
           "En bici hacia el sur por North Prince Street/US 222/PA 272. Continuar en US 222/PA 272."
@@ -1436,13 +1436,13 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "metric_lengths": [
-        "<KILOMETERS> kil\u00f3metros", 
-        "1 kil\u00f3metro", 
-        "medio kil\u00f3metro", 
+        "<KILOMETERS> kilómetros", 
+        "1 kilómetro", 
+        "medio kilómetro", 
         "<METERS> metros", 
         "menos de 10 metros"
       ], 
@@ -1450,48 +1450,48 @@
         "<MILES> millas", 
         "1 milla", 
         "media milla", 
-        "<TENTHS_OF_MILE> d\u00e9cimas de una milla", 
-        "1 d\u00e9cima de milla", 
+        "<TENTHS_OF_MILE> décimas de una milla", 
+        "1 décima de milla", 
         "<FEET> pies", 
         "menos de 10 pies"
       ], 
       "example_phrases": {
         "0": [
           "Ir hacia el este por media milla.", 
-          "Ir hacia el norte por 1 kil\u00f3metro."
+          "Ir hacia el norte por 1 kilómetro."
         ], 
         "1": [
-          "Ir hacia el soroeste en 5\u00ba Avenue por 1 d\u00e9cima de milla."
+          "Ir hacia el soroeste en 5º Avenue por 1 décima de milla."
         ], 
         "2": [
           "Ir hacia el sur en North Prince Street, U.S. 2 22."
         ], 
         "4": [
           "Conducir hacia el este por media milla.", 
-          "Conducir hacia el norte por 1 kil\u00f3metro."
+          "Conducir hacia el norte por 1 kilómetro."
         ], 
         "5": [
-          "Conducir hacia el suroeste en 5th Avenue por 1 d\u00e9cima de milla."
+          "Conducir hacia el suroeste en 5th Avenue por 1 décima de milla."
         ], 
         "6": [
           "Conducir hacia el sur en North Prince Street, U.S. 2 22."
         ], 
         "8": [
           "Caminar hacia el este por media milla.", 
-          "Caminar hacia el norte por 1 kil\u00f3metro."
+          "Caminar hacia el norte por 1 kilómetro."
         ], 
         "9": [
-          "Caminar hacia el suroeste en 5\u00ba Avenue por 1 d\u00e9cima de milla."
+          "Caminar hacia el suroeste en 5º Avenue por 1 décima de milla."
         ], 
         "10": [
           "Caminar hacia el sur en North Prince Street, U.S. 2 22."
         ], 
         "16": [
           "Ir en bici hacia el este por media milla.", 
-          "Ir en bici hacia el norte por 1 kil\u00f3metro."
+          "Ir en bici hacia el norte por 1 kilómetro."
         ], 
         "17": [
-          "Ir en bici hacia el suroeste en 5\u00ba Avenue por 1 d\u00e9cima de milla."
+          "Ir en bici hacia el suroeste en 5º Avenue por 1 décima de milla."
         ], 
         "18": [
           "Ir en bici hacia el sur en North Prince Street, U.S. 2 22."
@@ -1504,13 +1504,13 @@
         "1": "Tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       }, 
       "empty_transit_name_labels": [
-        "tranv\u00eda", 
+        "tranvía", 
         "metro", 
         "tren", 
-        "\u00f3mnibus", 
+        "ómnibus", 
         "ferry", 
-        "telef\u00e9rico", 
-        "g\u00f3ndola", 
+        "teleférico", 
+        "góndola", 
         "funicular"
       ], 
       "transit_stop_count_labels": {
@@ -1521,7 +1521,7 @@
         "0": [
           "Tomar la the New Haven. (1 parada)", 
           "Tomar el metro. (2 paradas)", 
-          "Tomar el \u00f3mnibus. (12 paradas)"
+          "Tomar el ómnibus. (12 paradas)"
         ], 
         "1": [
           "Tomar la F toward JAMAICA - 179 ST. (10 paradas)", 
@@ -1531,115 +1531,115 @@
     }, 
     "transit_connection_destination": {
       "phrases": {
-        "0": "Salir de la Estaci\u00f3n.", 
+        "0": "Salir de la Estación.", 
         "1": "Salir de <TRANSIT_STOP>.", 
         "2": "Salir de <STATION_LABEL> <TRANSIT_STOP>."
       }, 
-      "station_label": "Estaci\u00f3n", 
+      "station_label": "Estación", 
       "example_phrases": {
         "0": [
-          "Salir de la Estaci\u00f3n."
+          "Salir de la Estación."
         ], 
         "1": [
-          "Salir de la Estaci\u00f3n Embarcadero."
+          "Salir de la Estación Embarcadero."
         ], 
         "2": [
-          "Salir de 8 St - Estaci\u00f3n NYU."
+          "Salir de 8 St - Estación NYU."
         ]
       }
     }, 
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Salir de la Estaci\u00f3n.", 
+        "0": "Salir de la Estación.", 
         "1": "Salir de <TRANSIT_STOP>.", 
         "2": "Salir de la <STATION_LABEL> <TRANSIT_STOP>."
       }, 
-      "station_label": "Estaci\u00f3n", 
+      "station_label": "Estación", 
       "example_phrases": {
         "0": [
-          "Salir de la Estaci\u00f3n."
+          "Salir de la Estación."
         ], 
         "1": [
-          "Salir de la Estaci\u00f3n Embarcadero."
+          "Salir de la Estación Embarcadero."
         ], 
         "2": [
-          "Exit the 8 St - Estaci\u00f3n NYU."
+          "Exit the 8 St - Estación NYU."
         ]
       }
     }, 
     "transit_connection_start": {
       "phrases": {
-        "0": "Entrar a la estaci\u00f3n.", 
+        "0": "Entrar a la estación.", 
         "1": "Entrar en <TRANSIT_STOP>.", 
         "2": "Entrar en <TRANSIT_STOP> <STATION_LABEL>."
       }, 
-      "station_label": "Estaci\u00f3n", 
+      "station_label": "Estación", 
       "example_phrases": {
         "0": [
-          "Entrar en la estaci\u00f3n."
+          "Entrar en la estación."
         ], 
         "1": [
-          "Entrar en la estaci\u00f3n de Embarcadero."
+          "Entrar en la estación de Embarcadero."
         ], 
         "2": [
-          "Entrar en la 8 St - NYU Estaci\u00f3n."
+          "Entrar en la 8 St - NYU Estación."
         ]
       }
     }, 
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Entrar en la estaci\u00f3n.", 
+        "0": "Entrar en la estación.", 
         "1": "Entrar en <TRANSIT_STOP>.", 
         "2": "Entrar en <TRANSIT_STOP> <STATION_LABEL>."
       }, 
-      "station_label": "Estaci\u00f3n", 
+      "station_label": "Estación", 
       "example_phrases": {
         "0": [
-          "Entrar en la estaci\u00f3n."
+          "Entrar en la estación."
         ], 
         "1": [
-          "Entrar en la estaci\u00f3n Embarcadero."
+          "Entrar en la estación Embarcadero."
         ], 
         "2": [
-          "Entrar en la 8 St - NYU Estaci\u00f3n."
+          "Entrar en la 8 St - NYU Estación."
         ]
       }
     }, 
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Trasladarse a la Estaci\u00f3n.", 
+        "0": "Trasladarse a la Estación.", 
         "1": "Trasladarse a la <TRANSIT_STOP>.", 
         "2": "Trasladarse a la <STATION_LABEL> <TRANSIT_STOP>."
       }, 
-      "station_label": "Estaci\u00f3n", 
+      "station_label": "Estación", 
       "example_phrases": {
         "0": [
-          "Trasladarse a la Estaci\u00f3n."
+          "Trasladarse a la Estación."
         ], 
         "1": [
-          "Trasladarse a la Embarcadero Estaci\u00f3n."
+          "Trasladarse a la Embarcadero Estación."
         ], 
         "2": [
-          "Trasladarse a la 8 St - Estaci\u00f3n NYU."
+          "Trasladarse a la 8 St - Estación NYU."
         ]
       }
     }, 
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Trasladarse a la Estaci\u00f3n.", 
+        "0": "Trasladarse a la Estación.", 
         "1": "Trasladarse a la <TRANSIT_STOP>.", 
         "2": "Trasladarse a la <STATION_LABEL> <TRANSIT_STOP>."
       }, 
-      "station_label": "Estaci\u00f3n", 
+      "station_label": "Estación", 
       "example_phrases": {
         "0": [
-          "Trasladarse a la Estaci\u00f3n."
+          "Trasladarse a la Estación."
         ], 
         "1": [
-          "Trasladarse a la Estaci\u00f3n Embarcadero."
+          "Trasladarse a la Estación Embarcadero."
         ], 
         "2": [
-          "Trasladarse a la 8 St - NYU Estaci\u00f3n."
+          "Trasladarse a la 8 St - NYU Estación."
         ]
       }
     }, 
@@ -1649,13 +1649,13 @@
         "1": "Permanecer en la <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       }, 
       "empty_transit_name_labels": [
-        "tranv\u00eda", 
+        "tranvía", 
         "metro", 
         "tren", 
-        "\u00f3mnibus", 
+        "ómnibus", 
         "ferry", 
-        "telef\u00e9rico", 
-        "g\u00f3ndola", 
+        "teleférico", 
+        "góndola", 
         "funicular"
       ], 
       "transit_stop_count_labels": {
@@ -1678,13 +1678,13 @@
         "1": "Permanecer en la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
       }, 
       "empty_transit_name_labels": [
-        "tranv\u00eda", 
+        "tranvía", 
         "metro", 
         "tren", 
-        "\u00f3mnibus", 
+        "ómnibus", 
         "ferry", 
-        "telef\u00e9rico", 
-        "g\u00f3ndola", 
+        "teleférico", 
+        "góndola", 
         "funicular"
       ], 
       "example_phrases": {
@@ -1702,13 +1702,13 @@
         "1": "Trasladarse para tomar la <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       }, 
       "empty_transit_name_labels": [
-        "tranv\u00eda", 
+        "tranvía", 
         "metro", 
         "tren", 
-        "\u00f3mnibus", 
+        "ómnibus", 
         "ferry", 
-        "telef\u00e9rico", 
-        "g\u00f3ndola", 
+        "teleférico", 
+        "góndola", 
         "funicular"
       ], 
       "transit_stop_count_labels": {
@@ -1718,7 +1718,7 @@
       "example_phrases": {
         "0": [
           "Trasladarse para tomar la New Haven. (1 parada)", 
-          "Trasladarse para tomar el tranv\u00eda. (4 paradas)"
+          "Trasladarse para tomar el tranvía. (4 paradas)"
         ], 
         "1": [
           "Trasladarse para tomar F toward JAMAICA - 179 ST. (10 paradas)"
@@ -1731,13 +1731,13 @@
         "1": "Trasladarse para tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
       }, 
       "empty_transit_name_labels": [
-        "tranv\u00eda", 
+        "tranvía", 
         "metro", 
         "tren", 
-        "\u00f3mnibus", 
+        "ómnibus", 
         "ferry", 
-        "telef\u00e9rico", 
-        "g\u00f3ndola", 
+        "teleférico", 
+        "góndola", 
         "funicular"
       ], 
       "example_phrases": {
@@ -1755,13 +1755,13 @@
         "1": "Tomar la <TRANSIT_NAME> hacia <TRANSIT_HEADSIGN>."
       }, 
       "empty_transit_name_labels": [
-        "tranv\u00eda", 
+        "tranvía", 
         "metro", 
         "tren", 
-        "\u00f3mnibus", 
+        "ómnibus", 
         "ferry", 
-        "telef\u00e9rico", 
-        "g\u00f3ndola", 
+        "teleférico", 
+        "góndola", 
         "funicular"
       ], 
       "example_phrases": {
@@ -1786,8 +1786,8 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1817,8 +1817,8 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1850,8 +1850,8 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1889,8 +1889,8 @@
       ], 
       "empty_street_name_labels": [
         "la acera", 
-        "la ciclov\u00eda", 
-        "el sendero de bicicleta de monta\u00f1a"
+        "la ciclovía", 
+        "el sendero de bicicleta de montaña"
       ], 
       "example_phrases": {
         "0": [
@@ -1915,11 +1915,11 @@
     }, 
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> despu\u00e9s <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> después <NEXT_VERBAL_CUE>"
       }, 
       "example_phrases": {
         "0": [
-          "Girar levemente a la derecha en East Fayette Street. Despu\u00e9s doble a la derecha en North Gay Street."
+          "Girar levemente a la derecha en East Fayette Street. Después doble a la derecha en North Gay Street."
         ]
       }
     }

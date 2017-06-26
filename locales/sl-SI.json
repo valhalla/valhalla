@@ -34,63 +34,63 @@
     }, 
     "bear": {
       "phrases": {
-        "0": "Dr\u017eite se <RELATIVE_DIRECTION>.", 
-        "1": "Dr\u017eite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.", 
-        "2": "Dr\u017eite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.", 
-        "3": "Dr\u017eite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "0": "Držite se <RELATIVE_DIRECTION>.", 
+        "1": "Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.", 
+        "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.", 
+        "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
       "relative_directions": [
         "levo", 
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
-          "Dr\u017eite se desno."
+          "Držite se desno."
         ], 
         "1": [
-          "Dr\u017eite se levo, da pridete na Arlen Road."
+          "Držite se levo, da pridete na Arlen Road."
         ], 
         "2": [
-          "Dr\u017eite se desno, da pridete na Belair Road/US 1 Business. Nadaljujte po US 1 Business."
+          "Držite se desno, da pridete na Belair Road/US 1 Business. Nadaljujte po US 1 Business."
         ], 
         "3": [
-          "Dr\u017eite se levo, da ostanete na US 15 South."
+          "Držite se levo, da ostanete na US 15 South."
         ]
       }
     }, 
     "bear_verbal": {
       "phrases": {
-        "0": "Dr\u017eite se <RELATIVE_DIRECTION>.", 
-        "1": "Dr\u017eite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.", 
-        "2": "Dr\u017eite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>.", 
-        "3": "Dr\u017eite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "0": "Držite se <RELATIVE_DIRECTION>.", 
+        "1": "Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.", 
+        "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>.", 
+        "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
       "relative_directions": [
         "levo", 
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
-          "Dr\u017eite se desno."
+          "Držite se desno."
         ], 
         "1": [
-          "Dr\u017eite se levo, da pridete na Arlen Road."
+          "Držite se levo, da pridete na Arlen Road."
         ], 
         "2": [
-          "Dr\u017eite se desno, da pridete na Belair Road, U.S. 1 Business."
+          "Držite se desno, da pridete na Belair Road, U.S. 1 Business."
         ], 
         "3": [
-          "Dr\u017eite se levo, da ostanete na U.S. 15 South."
+          "Držite se levo, da ostanete na U.S. 15 South."
         ]
       }
     }, 
@@ -120,7 +120,7 @@
         "1": "Nadaljujte po <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -144,11 +144,11 @@
         "pol milje", 
         "<TENTHS_OF_MILE> desetink milje", 
         "1 desentinko milje", 
-        "<FEET> \u010devljev", 
-        "Manj kot 10 \u010devljev"
+        "<FEET> čevljev", 
+        "Manj kot 10 čevljev"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -161,7 +161,7 @@
       ], 
       "example_phrases": {
         "0": [
-          "Nadaljujte 300 \u010devljev."
+          "Nadaljujte 300 čevljev."
         ], 
         "1": [
           "Po 10th Avenue nadaljujte 3 desetinke milje."
@@ -174,7 +174,7 @@
         "1": "Nadaljujte po <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -219,7 +219,7 @@
       "phrases": {
         "0": "Prispeli ste na cilj.", 
         "1": "Prispeli ste na <DESTINATION>.", 
-        "2": "Va\u0161 cilj je na <RELATIVE_DIRECTION>.", 
+        "2": "Vaš cilj je na <RELATIVE_DIRECTION>.", 
         "3": "<DESTINATION> je na <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
@@ -234,8 +234,8 @@
           "Prispeli ste na 3206 Powelton Avenue."
         ], 
         "2": [
-          "Va\u0161 cilj je na levi.", 
-          "Va\u0161 cilj je na desni."
+          "Vaš cilj je na levi.", 
+          "Vaš cilj je na desni."
         ], 
         "3": [
           "Lancaster Brewing Company je na levi."
@@ -246,7 +246,7 @@
       "phrases": {
         "0": "Prispeli ste na cilj.", 
         "1": "Prispeli ste na <DESTINATION>.", 
-        "2": "Va\u0161 cilj je na <RELATIVE_DIRECTION>.", 
+        "2": "Vaš cilj je na <RELATIVE_DIRECTION>.", 
         "3": "<DESTINATION> je na <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
@@ -261,8 +261,8 @@
           "Prispeli ste na 32 o6 Powelton Avenue."
         ], 
         "2": [
-          "Va\u0161 cilj je na levi.", 
-          "Va\u0161 cilj je na desni."
+          "Vaš cilj je na levi.", 
+          "Vaš cilj je na desni."
         ], 
         "3": [
           "Lancaster Brewing Company je na levi."
@@ -273,7 +273,7 @@
       "phrases": {
         "0": "Prispeli boste na cilj.", 
         "1": "Prispeli boste na <DESTINATION>.", 
-        "2": "Va\u0161 cilj bo na <RELATIVE_DIRECTION>.", 
+        "2": "Vaš cilj bo na <RELATIVE_DIRECTION>.", 
         "3": "<DESTINATION> bo na <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
@@ -288,8 +288,8 @@
           "Prispeli boste na 32 o6 Powelton Avenue."
         ], 
         "2": [
-          "Va\u0161 cilj bo na levi.", 
-          "Va\u0161 cilj bo na desni."
+          "Vaš cilj bo na levi.", 
+          "Vaš cilj bo na desni."
         ], 
         "3": [
           "Lancaster Brewing Company bo na levi."
@@ -304,7 +304,7 @@
       }, 
       "ferry_label": "Trajekt", 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -328,7 +328,7 @@
       }, 
       "ferry_label": "Trajekt", 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -346,8 +346,8 @@
     }, 
     "enter_roundabout": {
       "phrases": {
-        "0": "Pojdite v kro\u017ei\u0161\u010de.", 
-        "1": "Pojdite v kro\u017ei\u0161\u010de in uporabite <ORDINAL_VALUE>. izhod."
+        "0": "Pojdite v krožišče.", 
+        "1": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod."
       }, 
       "ordinal_values": [
         "1", 
@@ -363,26 +363,26 @@
       ], 
       "example_phrases": {
         "0": [
-          "Pojdite v kro\u017ei\u0161\u010de."
+          "Pojdite v krožišče."
         ], 
         "1": [
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 1. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 2. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 3. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 4. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 5. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 6. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 7. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 8. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 9. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 10. izhod."
+          "Pojdite v krožišče in uporabite 1. izhod.", 
+          "Pojdite v krožišče in uporabite 2. izhod.", 
+          "Pojdite v krožišče in uporabite 3. izhod.", 
+          "Pojdite v krožišče in uporabite 4. izhod.", 
+          "Pojdite v krožišče in uporabite 5. izhod.", 
+          "Pojdite v krožišče in uporabite 6. izhod.", 
+          "Pojdite v krožišče in uporabite 7. izhod.", 
+          "Pojdite v krožišče in uporabite 8. izhod.", 
+          "Pojdite v krožišče in uporabite 9. izhod.", 
+          "Pojdite v krožišče in uporabite 10. izhod."
         ]
       }
     }, 
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "Pojdite v kro\u017ei\u0161\u010de.", 
-        "1": "Pojdite v kro\u017ei\u0161\u010de in uporabite <ORDINAL_VALUE>. izhod."
+        "0": "Pojdite v krožišče.", 
+        "1": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod."
       }, 
       "ordinal_values": [
         "1", 
@@ -398,19 +398,19 @@
       ], 
       "example_phrases": {
         "0": [
-          "Pojdite v kro\u017ei\u0161\u010de."
+          "Pojdite v krožišče."
         ], 
         "1": [
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 1. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 2. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 3. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 4. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 5. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 6. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 7. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 8. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 9. izhod.", 
-          "Pojdite v kro\u017ei\u0161\u010de in uporabite 10. izhod."
+          "Pojdite v krožišče in uporabite 1. izhod.", 
+          "Pojdite v krožišče in uporabite 2. izhod.", 
+          "Pojdite v krožišče in uporabite 3. izhod.", 
+          "Pojdite v krožišče in uporabite 4. izhod.", 
+          "Pojdite v krožišče in uporabite 5. izhod.", 
+          "Pojdite v krožišče in uporabite 6. izhod.", 
+          "Pojdite v krožišče in uporabite 7. izhod.", 
+          "Pojdite v krožišče in uporabite 8. izhod.", 
+          "Pojdite v krožišče in uporabite 9. izhod.", 
+          "Pojdite v krožišče in uporabite 10. izhod."
         ]
       }
     }, 
@@ -489,7 +489,7 @@
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -558,7 +558,7 @@
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -613,47 +613,47 @@
     }, 
     "exit_roundabout": {
       "phrases": {
-        "0": "Zapustite kro\u017ei\u0161\u010de.", 
-        "1": "Iz kro\u017ei\u0161\u010da pojdite na <STREET_NAMES>.", 
-        "2": "Iz kro\u017ei\u0161\u010da pojdite na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>."
+        "0": "Zapustite krožišče.", 
+        "1": "Iz krožišča pojdite na <STREET_NAMES>.", 
+        "2": "Iz krožišča pojdite na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
-          "Zapustite kro\u017ei\u0161\u010de."
+          "Zapustite krožišče."
         ], 
         "1": [
-          "Iz kro\u017ei\u0161\u010da pojdite na Philadelphia Road/MD 7."
+          "Iz krožišča pojdite na Philadelphia Road/MD 7."
         ], 
         "2": [
-          "Iz kro\u017ei\u0161\u010da pojdite na Catoctin Mountain Highway/US 15. Nadaljujte po US 15."
+          "Iz krožišča pojdite na Catoctin Mountain Highway/US 15. Nadaljujte po US 15."
         ]
       }
     }, 
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Zapustite kro\u017ei\u0161\u010de.", 
-        "1": "Iz kro\u017ei\u0161\u010da pojdite na <STREET_NAMES>.", 
-        "2": "Iz kro\u017ei\u0161\u010da pojdite na <BEGIN_STREET_NAMES>."
+        "0": "Zapustite krožišče.", 
+        "1": "Iz krožišča pojdite na <STREET_NAMES>.", 
+        "2": "Iz krožišča pojdite na <BEGIN_STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
-          "Zapustite kro\u017ei\u0161\u010de."
+          "Zapustite krožišče."
         ], 
         "1": [
-          "Iz kro\u017ei\u0161\u010da pojdite na Philadelphia Road, Maryland 7."
+          "Iz krožišča pojdite na Philadelphia Road, Maryland 7."
         ], 
         "2": [
-          "Iz kro\u017ei\u0161\u010da pojdite na Catoctin Mountain Highway, U.S. 15."
+          "Iz krožišča pojdite na Catoctin Mountain Highway, U.S. 15."
         ]
       }
     }, 
@@ -719,13 +719,13 @@
     "keep": {
       "phrases": {
         "0": "Na razcepu pojdite <RELATIVE_DIRECTION>.", 
-        "1": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>.", 
-        "2": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES>.", 
-        "3": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES>.", 
-        "4": "Dr\u017eite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.", 
-        "5": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.", 
-        "6": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
-        "7": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES> proti <TOWARD_SIGN>."
+        "1": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>.", 
+        "2": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES>.", 
+        "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES>.", 
+        "4": "Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.", 
+        "5": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.", 
+        "6": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
+        "7": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES> proti <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "levo", 
@@ -733,7 +733,7 @@
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -744,34 +744,34 @@
           "Na razcepu pojdite desno."
         ], 
         "1": [
-          "Dr\u017eite se desno, da zapeljete na izhod 62."
+          "Držite se desno, da zapeljete na izhod 62."
         ], 
         "2": [
-          "Dr\u017eite se desno, da zapeljete na I 895 South."
+          "Držite se desno, da zapeljete na I 895 South."
         ], 
         "3": [
-          "Dr\u017eite se desno, da zapeljete na izhod 62 in nato na I 895 South."
+          "Držite se desno, da zapeljete na izhod 62 in nato na I 895 South."
         ], 
         "4": [
-          "Dr\u017eite se desno proti Annapolis."
+          "Držite se desno proti Annapolis."
         ], 
         "5": [
-          "Dr\u017eite se desno, da zapeljete na izhod 62 proti Annapolis."
+          "Držite se desno, da zapeljete na izhod 62 proti Annapolis."
         ], 
         "6": [
-          "Dr\u017eite se desno, da zapeljete na I 895 South proti Annapolis."
+          "Držite se desno, da zapeljete na I 895 South proti Annapolis."
         ], 
         "7": [
-          "Dr\u017eite se desno, da zapeljete na izhod 62 in nato na I 895 South proti Annapolis."
+          "Držite se desno, da zapeljete na izhod 62 in nato na I 895 South proti Annapolis."
         ]
       }
     }, 
     "keep_to_stay_on": {
       "phrases": {
         "0": "Pojdite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.", 
-        "1": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES>.", 
-        "2": "Dr\u017eite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
-        "3": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>."
+        "1": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES>.", 
+        "2": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
+        "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "levo", 
@@ -779,7 +779,7 @@
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -790,22 +790,22 @@
           "Pojdite desno, da ostanete na I 95 South."
         ], 
         "1": [
-          "Dr\u017eite se levo, da zapeljete na izhod 62 in ostanete na I 95 South."
+          "Držite se levo, da zapeljete na izhod 62 in ostanete na I 95 South."
         ], 
         "2": [
-          "Dr\u017eite se levo, da ostanete na I 95 South proti Baltimore."
+          "Držite se levo, da ostanete na I 95 South proti Baltimore."
         ], 
         "3": [
-          "Dr\u017eite se levo, da zapeljete na izhod 62 in ostanete na I 95 South proti Baltimore."
+          "Držite se levo, da zapeljete na izhod 62 in ostanete na I 95 South proti Baltimore."
         ]
       }
     }, 
     "keep_to_stay_on_verbal": {
       "phrases": {
         "0": "Pojdite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.", 
-        "1": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES>.", 
-        "2": "Dr\u017eite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
-        "3": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>."
+        "1": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES>.", 
+        "2": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
+        "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "levo", 
@@ -813,7 +813,7 @@
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -824,26 +824,26 @@
           "Pojdite desno, da ostanete on Interstate 95 South."
         ], 
         "1": [
-          "Dr\u017eite se levo, da zapeljete na izhod 62 in ostanete na Interstate 95 South."
+          "Držite se levo, da zapeljete na izhod 62 in ostanete na Interstate 95 South."
         ], 
         "2": [
-          "Dr\u017eite se levo, da ostanete na I 95 South proti Baltimore."
+          "Držite se levo, da ostanete na I 95 South proti Baltimore."
         ], 
         "3": [
-          "Dr\u017eite se levo, da zapeljete na izhod 62 in ostanete na Interstate 95 South proti Baltimore."
+          "Držite se levo, da zapeljete na izhod 62 in ostanete na Interstate 95 South proti Baltimore."
         ]
       }
     }, 
     "keep_verbal": {
       "phrases": {
         "0": "Na razcepu pojdite <RELATIVE_DIRECTION>.", 
-        "1": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>.", 
-        "2": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES>.", 
-        "3": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES>.", 
-        "4": "Dr\u017eite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.", 
-        "5": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.", 
-        "6": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
-        "7": "Dr\u017eite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES> proti <TOWARD_SIGN>."
+        "1": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>.", 
+        "2": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES>.", 
+        "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES>.", 
+        "4": "Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.", 
+        "5": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.", 
+        "6": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES> proti <TOWARD_SIGN>.", 
+        "7": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES> proti <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "levo", 
@@ -851,7 +851,7 @@
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -862,25 +862,25 @@
           "Na razcepu pojdite desno."
         ], 
         "1": [
-          "Dr\u017eite se desno, da zapeljete na izhod 62."
+          "Držite se desno, da zapeljete na izhod 62."
         ], 
         "2": [
-          "Dr\u017eite se desno, da zapeljete na Interstate 8 95 South."
+          "Držite se desno, da zapeljete na Interstate 8 95 South."
         ], 
         "3": [
-          "Dr\u017eite se desno, da zapeljete na izhod 62 in nato na Interstate 8 95 South."
+          "Držite se desno, da zapeljete na izhod 62 in nato na Interstate 8 95 South."
         ], 
         "4": [
-          "Dr\u017eite se desno proti Annapolis."
+          "Držite se desno proti Annapolis."
         ], 
         "5": [
-          "Dr\u017eite se desno, da zapeljete na izhod 62 proti Annapolis."
+          "Držite se desno, da zapeljete na izhod 62 proti Annapolis."
         ], 
         "6": [
-          "Dr\u017eite se desno, da zapeljete na Interstate 8 95 South proti Annapolis."
+          "Držite se desno, da zapeljete na Interstate 8 95 South proti Annapolis."
         ], 
         "7": [
-          "Dr\u017eite se desno, da zapeljete na izhod 62 in nato na Interstate 8 95 South proti Annapolis."
+          "Držite se desno, da zapeljete na izhod 62 in nato na Interstate 8 95 South proti Annapolis."
         ]
       }
     }, 
@@ -890,7 +890,7 @@
         "1": "Zapeljite na <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -909,7 +909,7 @@
         "1": "Zapeljite na <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -938,7 +938,7 @@
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -1007,7 +1007,7 @@
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -1088,11 +1088,11 @@
         "pol milje", 
         "<TENTHS_OF_MILE> desetink milje", 
         "1 desentinko milje", 
-        "<FEET> \u010devljev", 
-        "Manj kot 10 \u010devljev"
+        "<FEET> čevljev", 
+        "Manj kot 10 čevljev"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -1105,7 +1105,7 @@
       ], 
       "example_phrases": {
         "0": [
-          "Nadaljujte 300 \u010devljev.", 
+          "Nadaljujte 300 čevljev.", 
           "Nadaljujte 9 milj."
         ], 
         "1": [
@@ -1116,16 +1116,16 @@
     }, 
     "ramp": {
       "phrases": {
-        "0": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek.", 
-        "1": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek <BRANCH_SIGN>.", 
-        "2": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek proti <TOWARD_SIGN>.", 
-        "3": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
-        "4": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek <NAME_SIGN>.", 
-        "5": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek.", 
-        "6": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek <BRANCH_SIGN>.", 
-        "7": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek proti <TOWARD_SIGN>.", 
-        "8": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
-        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek <NAME_SIGN>."
+        "0": "Zapeljite <RELATIVE_DIRECTION> na priključek.", 
+        "1": "Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN>.", 
+        "2": "Zapeljite <RELATIVE_DIRECTION> na priključek proti <TOWARD_SIGN>.", 
+        "3": "Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
+        "4": "Zapeljite <RELATIVE_DIRECTION> na priključek <NAME_SIGN>.", 
+        "5": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek.", 
+        "6": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN>.", 
+        "7": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek proti <TOWARD_SIGN>.", 
+        "8": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
+        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>."
       }, 
       "relative_directions": [
         "levo", 
@@ -1133,103 +1133,103 @@
       ], 
       "example_phrases": {
         "0": [
-          "Zapeljite levo na priklju\u010dek.", 
-          "Zapeljite desno na priklju\u010dek."
+          "Zapeljite levo na priključek.", 
+          "Zapeljite desno na priključek."
         ], 
         "1": [
-          "Zapeljite desno na priklju\u010dek I 95."
+          "Zapeljite desno na priključek I 95."
         ], 
         "2": [
-          "Zapeljite levo na priklju\u010dek proti JFK."
+          "Zapeljite levo na priključek proti JFK."
         ], 
         "3": [
-          "Zapeljite levo na priklju\u010dek South Conduit Avenue proti JFK."
+          "Zapeljite levo na priključek South Conduit Avenue proti JFK."
         ], 
         "4": [
-          "Zapeljite desno na priklju\u010dek Gettysburg Pike."
+          "Zapeljite desno na priključek Gettysburg Pike."
         ], 
         "5": [
-          "Zavijte levo, da zapeljete na priklju\u010dek.", 
-          "Zavijte desno, da zapeljete na priklju\u010dek."
+          "Zavijte levo, da zapeljete na priključek.", 
+          "Zavijte desno, da zapeljete na priključek."
         ], 
         "6": [
-          "Zavijte levo, da zapeljete na priklju\u010dek PA 283 West."
+          "Zavijte levo, da zapeljete na priključek PA 283 West."
         ], 
         "7": [
-          "Zavijte levo, da zapeljete na priklju\u010dek proti Harrisburg/Harrisburg International Airport."
+          "Zavijte levo, da zapeljete na priključek proti Harrisburg/Harrisburg International Airport."
         ], 
         "8": [
-          "Zavijte levo, da zapeljete na priklju\u010dek PA 283 West proti Harrisburg/Harrisburg International Airport."
+          "Zavijte levo, da zapeljete na priključek PA 283 West proti Harrisburg/Harrisburg International Airport."
         ], 
         "9": [
-          "Zavijte desno, da zapeljete na priklju\u010dek Gettysburg Pike."
+          "Zavijte desno, da zapeljete na priključek Gettysburg Pike."
         ]
       }
     }, 
     "ramp_straight": {
       "phrases": {
-        "0": "Nadaljujte naravnost, da zapeljete na priklju\u010dek.", 
-        "1": "Nadaljujte naravnost, da zapeljete na priklju\u010dek <BRANCH_SIGN>.", 
-        "2": "Nadaljujte naravnost, da zapeljete na priklju\u010dek proti <TOWARD_SIGN>.", 
-        "3": "Nadaljujte naravnost, da zapeljete na priklju\u010dek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
-        "4": "Nadaljujte naravnost, da zapeljete na priklju\u010dek <NAME_SIGN>."
+        "0": "Nadaljujte naravnost, da zapeljete na priključek.", 
+        "1": "Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN>.", 
+        "2": "Nadaljujte naravnost, da zapeljete na priključek proti <TOWARD_SIGN>.", 
+        "3": "Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
+        "4": "Nadaljujte naravnost, da zapeljete na priključek <NAME_SIGN>."
       }, 
       "example_phrases": {
         "0": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek."
+          "Nadaljujte naravnost, da zapeljete na priključek."
         ], 
         "1": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek US 322 East."
+          "Nadaljujte naravnost, da zapeljete na priključek US 322 East."
         ], 
         "2": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek proti Hershey."
+          "Nadaljujte naravnost, da zapeljete na priključek proti Hershey."
         ], 
         "3": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek US 322 East/US 422 East/US 522 East/US 622 East proti Hershey/Palmdale/Palmyra/Campbelltown."
+          "Nadaljujte naravnost, da zapeljete na priključek US 322 East/US 422 East/US 522 East/US 622 East proti Hershey/Palmdale/Palmyra/Campbelltown."
         ], 
         "4": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek Gettysburg Pike."
+          "Nadaljujte naravnost, da zapeljete na priključek Gettysburg Pike."
         ]
       }
     }, 
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Nadaljujte naravnost, da zapeljete na priklju\u010dek.", 
-        "1": "Nadaljujte naravnost, da zapeljete na priklju\u010dek <BRANCH_SIGN>.", 
-        "2": "Nadaljujte naravnost, da zapeljete na priklju\u010dek proti <TOWARD_SIGN>.", 
-        "3": "Nadaljujte naravnost, da zapeljete na priklju\u010dek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
-        "4": "Nadaljujte naravnost, da zapeljete na priklju\u010dek <NAME_SIGN>."
+        "0": "Nadaljujte naravnost, da zapeljete na priključek.", 
+        "1": "Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN>.", 
+        "2": "Nadaljujte naravnost, da zapeljete na priključek proti <TOWARD_SIGN>.", 
+        "3": "Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
+        "4": "Nadaljujte naravnost, da zapeljete na priključek <NAME_SIGN>."
       }, 
       "example_phrases": {
         "0": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek."
+          "Nadaljujte naravnost, da zapeljete na priključek."
         ], 
         "1": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek U.S. 322 East."
+          "Nadaljujte naravnost, da zapeljete na priključek U.S. 322 East."
         ], 
         "2": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek proti Hershey."
+          "Nadaljujte naravnost, da zapeljete na priključek proti Hershey."
         ], 
         "3": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek U.S. 322 East, U.S. 422 East proti Hershey, Palmdale."
+          "Nadaljujte naravnost, da zapeljete na priključek U.S. 322 East, U.S. 422 East proti Hershey, Palmdale."
         ], 
         "4": [
-          "Nadaljujte naravnost, da zapeljete na priklju\u010dek Gettysburg Pike."
+          "Nadaljujte naravnost, da zapeljete na priključek Gettysburg Pike."
         ]
       }
     }, 
     "ramp_verbal": {
       "phrases": {
-        "0": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek.", 
-        "1": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek <BRANCH_SIGN>.", 
-        "2": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek proti <TOWARD_SIGN>.", 
-        "3": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
-        "4": "Zapeljite <RELATIVE_DIRECTION> na priklju\u010dek <NAME_SIGN>.", 
-        "5": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek.", 
-        "6": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek <BRANCH_SIGN>.", 
-        "7": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek proti <TOWARD_SIGN>.", 
-        "8": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
-        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priklju\u010dek <NAME_SIGN>."
+        "0": "Zapeljite <RELATIVE_DIRECTION> na priključek.", 
+        "1": "Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN>.", 
+        "2": "Zapeljite <RELATIVE_DIRECTION> na priključek proti <TOWARD_SIGN>.", 
+        "3": "Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
+        "4": "Zapeljite <RELATIVE_DIRECTION> na priključek <NAME_SIGN>.", 
+        "5": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek.", 
+        "6": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN>.", 
+        "7": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek proti <TOWARD_SIGN>.", 
+        "8": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.", 
+        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>."
       }, 
       "relative_directions": [
         "levo", 
@@ -1237,36 +1237,36 @@
       ], 
       "example_phrases": {
         "0": [
-          "Zapeljite levo na priklju\u010dek.", 
-          "Zapeljite desno na priklju\u010dek."
+          "Zapeljite levo na priključek.", 
+          "Zapeljite desno na priključek."
         ], 
         "1": [
-          "Zapeljite desno na priklju\u010dek Interstate 95."
+          "Zapeljite desno na priključek Interstate 95."
         ], 
         "2": [
-          "Zapeljite levo na priklju\u010dek proti JFK."
+          "Zapeljite levo na priključek proti JFK."
         ], 
         "3": [
-          "Zapeljite levo na priklju\u010dek South Conduit Avenue proti JFK."
+          "Zapeljite levo na priključek South Conduit Avenue proti JFK."
         ], 
         "4": [
-          "Zapeljite desno na priklju\u010dek Gettysburg Pike."
+          "Zapeljite desno na priključek Gettysburg Pike."
         ], 
         "5": [
-          "Zavijte levo, da zapeljete na priklju\u010dek.", 
-          "Zavijte desno, da zapeljete na priklju\u010dek."
+          "Zavijte levo, da zapeljete na priključek.", 
+          "Zavijte desno, da zapeljete na priključek."
         ], 
         "6": [
-          "Zavijte levo, da zapeljete na priklju\u010dek Pennsylvania 2 83 West."
+          "Zavijte levo, da zapeljete na priključek Pennsylvania 2 83 West."
         ], 
         "7": [
-          "Zavijte levo, da zapeljete na priklju\u010dek proti Harrisburg/Harrisburg International Airport."
+          "Zavijte levo, da zapeljete na priključek proti Harrisburg/Harrisburg International Airport."
         ], 
         "8": [
-          "Zavijte levo, da zapeljete na priklju\u010dek Pennsylvania 2 83 West proti Harrisburg, Harrisburg International Airport."
+          "Zavijte levo, da zapeljete na priključek Pennsylvania 2 83 West proti Harrisburg, Harrisburg International Airport."
         ], 
         "9": [
-          "Zavijte desno, da zapeljete na priklju\u010dek Gettysburg Pike."
+          "Zavijte desno, da zapeljete na priključek Gettysburg Pike."
         ]
       }
     }, 
@@ -1282,7 +1282,7 @@
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -1313,7 +1313,7 @@
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -1348,7 +1348,7 @@
         "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -1369,7 +1369,7 @@
         ], 
         "1": [
           "Na 5th Avenue pojdite proti jugozahodu.", 
-          "Na pe\u0161poti pojdite proti zahodu.", 
+          "Na pešpoti pojdite proti zahodu.", 
           "Na kolesarski stezi pojdite proti vzhodu.", 
           "Na stezi za gorsko kolo pojdite proti severu."
         ], 
@@ -1392,7 +1392,7 @@
         ], 
         "9": [
           "Na 5th Avenue pojdite proti jugozahodu.", 
-          "Na pe\u0161poti pojdite proti zahodu."
+          "Na pešpoti pojdite proti zahodu."
         ], 
         "10": [
           "Na North Prince Street/US 222/PA 272 pojdite proti jugu. Nadaljujte po US 222/PA 272."
@@ -1437,7 +1437,7 @@
         "proti severozahodu"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161poti", 
+        "pešpoti", 
         "kolesarski stezi", 
         "stezi za gorsko kolo"
       ], 
@@ -1454,8 +1454,8 @@
         "pol milje", 
         "<TENTHS_OF_MILE> desetink milje", 
         "1 desentinko milje", 
-        "<FEET> \u010devljev", 
-        "Manj kot 10 \u010devljev"
+        "<FEET> čevljev", 
+        "Manj kot 10 čevljev"
       ], 
       "example_phrases": {
         "0": [
@@ -1507,13 +1507,13 @@
       }, 
       "empty_transit_name_labels": [
         "tramvaj", 
-        "podzemno \u017eeleznico", 
+        "podzemno železnico", 
         "vlak", 
         "avtobus", 
         "trajekt", 
         "nihalko", 
-        "kabinsko \u017ei\u010dnico", 
-        "\u017ei\u010dno vzpenja\u010do"
+        "kabinsko žičnico", 
+        "žično vzpenjačo"
       ], 
       "transit_stop_count_labels": {
         "few": "postanki", 
@@ -1524,7 +1524,7 @@
       "example_phrases": {
         "0": [
           "Pojdite na New Haven (1 postanek).", 
-          "Pojdite na podzemno \u017eeleznico (2 postanka).", 
+          "Pojdite na podzemno železnico (2 postanka).", 
           "Pojdite na avtobus (12 postankov)."
         ], 
         "1": [
@@ -1654,13 +1654,13 @@
       }, 
       "empty_transit_name_labels": [
         "tramvaju", 
-        "podzemni \u017eeleznici", 
+        "podzemni železnici", 
         "vlaku", 
         "avtobusu", 
         "trajektu", 
         "nihalki", 
-        "kabinski \u017ei\u010dnici", 
-        "\u017ei\u010dni vzpenja\u010di"
+        "kabinski žičnici", 
+        "žični vzpenjači"
       ], 
       "transit_stop_count_labels": {
         "few": "postanki", 
@@ -1685,13 +1685,13 @@
       }, 
       "empty_transit_name_labels": [
         "tramvaju", 
-        "podzemni \u017eeleznici", 
+        "podzemni železnici", 
         "vlaku", 
         "avtobusu", 
         "trajektu", 
         "nihalki", 
-        "kabinski \u017ei\u010dnici", 
-        "\u017ei\u010dni vzpenja\u010di"
+        "kabinski žičnici", 
+        "žični vzpenjači"
       ], 
       "example_phrases": {
         "0": [
@@ -1709,13 +1709,13 @@
       }, 
       "empty_transit_name_labels": [
         "tramvaj", 
-        "podzemno \u017eeleznico", 
+        "podzemno železnico", 
         "vlak", 
         "avtobus", 
         "trajekt", 
         "nihalko", 
-        "kabinsko \u017ei\u010dnico", 
-        "\u017ei\u010dno vzpenja\u010do"
+        "kabinsko žičnico", 
+        "žično vzpenjačo"
       ], 
       "transit_stop_count_labels": {
         "few": "postanki", 
@@ -1740,13 +1740,13 @@
       }, 
       "empty_transit_name_labels": [
         "tramvaj", 
-        "podzemno \u017eeleznico", 
+        "podzemno železnico", 
         "vlak", 
         "avtobus", 
         "trajekt", 
         "nihalko", 
-        "kabinsko \u017ei\u010dnico", 
-        "\u017ei\u010dno vzpenja\u010do"
+        "kabinsko žičnico", 
+        "žično vzpenjačo"
       ], 
       "example_phrases": {
         "0": [
@@ -1764,13 +1764,13 @@
       }, 
       "empty_transit_name_labels": [
         "tramvaj", 
-        "podzemno \u017eeleznico", 
+        "podzemno železnico", 
         "vlak", 
         "avtobus", 
         "trajekt", 
         "nihalko", 
-        "kabinsko \u017ei\u010dnico", 
-        "\u017ei\u010dno vzpenja\u010do"
+        "kabinsko žičnico", 
+        "žično vzpenjačo"
       ], 
       "example_phrases": {
         "0": [
@@ -1793,7 +1793,7 @@
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -1824,7 +1824,7 @@
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
@@ -1845,79 +1845,79 @@
     }, 
     "uturn": {
       "phrases": {
-        "0": "Polkro\u017eno obrnite <RELATIVE_DIRECTION>.", 
-        "1": "Polkro\u017eno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
-        "2": "Polkro\u017eno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.", 
-        "3": "Pri <CROSS_STREET_NAMES> polkro\u017eno obrnite <RELATIVE_DIRECTION>.", 
-        "4": "Pri <CROSS_STREET_NAMES> polkro\u017eno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
-        "5": "Pri <CROSS_STREET_NAMES> polkro\u017eno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "0": "Polkrožno obrnite <RELATIVE_DIRECTION>.", 
+        "1": "Polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
+        "2": "Polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.", 
+        "3": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.", 
+        "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
+        "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
       "relative_directions": [
         "levo", 
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
-          "Polkro\u017eno obrnite levo."
+          "Polkrožno obrnite levo."
         ], 
         "1": [
-          "Polkro\u017eno obrnite desno na Bunker Hill Road."
+          "Polkrožno obrnite desno na Bunker Hill Road."
         ], 
         "2": [
-          "Polkro\u017eno obrnite levo, da ostanete na Bunker Hill Road."
+          "Polkrožno obrnite levo, da ostanete na Bunker Hill Road."
         ], 
         "3": [
-          "Pri Devonshire Road polkro\u017eno obrnite levo."
+          "Pri Devonshire Road polkrožno obrnite levo."
         ], 
         "4": [
-          "Pr Devonshire Road polkro\u017eno obrnite levo na Jonestown Road/US 22."
+          "Pr Devonshire Road polkrožno obrnite levo na Jonestown Road/US 22."
         ], 
         "5": [
-          "Pri Devonshire Road polkro\u017eno obrnite levo, da ostanete na Jonestown Road/US 22."
+          "Pri Devonshire Road polkrožno obrnite levo, da ostanete na Jonestown Road/US 22."
         ]
       }
     }, 
     "uturn_verbal": {
       "phrases": {
-        "0": "Polkro\u017eno obrnite <RELATIVE_DIRECTION>.", 
-        "1": "Polkro\u017eno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
-        "2": "Polkro\u017eno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.", 
-        "3": "Pri <CROSS_STREET_NAMES> polkro\u017eno obrnite <RELATIVE_DIRECTION>.", 
-        "4": "Pri <CROSS_STREET_NAMES> polkro\u017eno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
-        "5": "Pri <CROSS_STREET_NAMES> polkro\u017eno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "0": "Polkrožno obrnite <RELATIVE_DIRECTION>.", 
+        "1": "Polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
+        "2": "Polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.", 
+        "3": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.", 
+        "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.", 
+        "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
       }, 
       "relative_directions": [
         "levo", 
         "desno"
       ], 
       "empty_street_name_labels": [
-        "pe\u0161pot", 
+        "pešpot", 
         "kolesarsko stezo", 
         "stezo za gorsko kolo"
       ], 
       "example_phrases": {
         "0": [
-          "Polkro\u017eno obrnite levo."
+          "Polkrožno obrnite levo."
         ], 
         "1": [
-          "Polkro\u017eno obrnite desno na Bunker Hill Road."
+          "Polkrožno obrnite desno na Bunker Hill Road."
         ], 
         "2": [
-          "Polkro\u017eno obrnite levo, da ostanete na Bunker Hill Road."
+          "Polkrožno obrnite levo, da ostanete na Bunker Hill Road."
         ], 
         "3": [
-          "Pri Devonshire Road polkro\u017eno obrnite levo."
+          "Pri Devonshire Road polkrožno obrnite levo."
         ], 
         "4": [
-          "Pri Devonshire Road polkro\u017eno obrnite levo na Jonestown Road, U.S. 22."
+          "Pri Devonshire Road polkrožno obrnite levo na Jonestown Road, U.S. 22."
         ], 
         "5": [
-          "Pri Devonshire Road polkro\u017eno obrnite levo, da ostanete na Jonestown Road, U.S. 22."
+          "Pri Devonshire Road polkrožno obrnite levo, da ostanete na Jonestown Road, U.S. 22."
         ]
       }
     }, 
@@ -1927,7 +1927,7 @@
       }, 
       "example_phrases": {
         "0": [
-          "Dr\u017eite se desno, da pridete na East Fayette Street. Nato zavijte desno na North Gay Street."
+          "Držite se desno, da pridete na East Fayette Street. Nato zavijte desno na North Gay Street."
         ]
       }
     }

@@ -129,7 +129,7 @@
           "Continua."
         ], 
         "1": [
-          "Continua su 10\u00b0 Avenue."
+          "Continua su 10° Avenue."
         ]
       }
     }, 
@@ -164,7 +164,7 @@
           "Continua per 300 piedi."
         ], 
         "1": [
-          "Continua su 10\u00b0 Avenue per 3 decimi di miglio."
+          "Continua su 10° Avenue per 3 decimi di miglio."
         ]
       }
     }, 
@@ -183,7 +183,7 @@
           "Continua."
         ], 
         "1": [
-          "Continua su 10\u00b0 Avenue."
+          "Continua su 10° Avenue."
         ]
       }
     }, 
@@ -219,8 +219,8 @@
       "phrases": {
         "0": "Sei arrivato a destinazione.", 
         "1": "Sei arrivato alla destinazione <DESTINATION>.", 
-        "2": "La destinazione \u00e8 sulla <RELATIVE_DIRECTION>.", 
-        "3": "<DESTINATION> \u00e8 sulla <RELATIVE_DIRECTION>."
+        "2": "La destinazione è sulla <RELATIVE_DIRECTION>.", 
+        "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
         "sinistra", 
@@ -234,11 +234,11 @@
           "Sei arrivato a 3206 Powelton Avenue."
         ], 
         "2": [
-          "La destinazione \u00e8 sulla sinistra.", 
-          "La destinazione \u00e8 sulla destra."
+          "La destinazione è sulla sinistra.", 
+          "La destinazione è sulla destra."
         ], 
         "3": [
-          "Lancaster Brewing Company \u00e8 sulla sinistra."
+          "Lancaster Brewing Company è sulla sinistra."
         ]
       }
     }, 
@@ -246,8 +246,8 @@
       "phrases": {
         "0": "Sei arrivato a destinazione.", 
         "1": "Sei arrivato alla destinazione <DESTINATION>.", 
-        "2": "La destinazione \u00e8 sulla <RELATIVE_DIRECTION>.", 
-        "3": "<DESTINATION> \u00e8 sulla <RELATIVE_DIRECTION>."
+        "2": "La destinazione è sulla <RELATIVE_DIRECTION>.", 
+        "3": "<DESTINATION> è sulla <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
         "sinistra", 
@@ -261,11 +261,11 @@
           "Sei arrivato alla destinazione 32 o6 Powelton Avenue."
         ], 
         "2": [
-          "La destinazione \u00e8 sulla sinistra.", 
-          "La destinazione \u00e8 sulla destra."
+          "La destinazione è sulla sinistra.", 
+          "La destinazione è sulla destra."
         ], 
         "3": [
-          "Lancaster Brewing Company \u00e8 sulla sinistra."
+          "Lancaster Brewing Company è sulla sinistra."
         ]
       }
     }, 
@@ -350,32 +350,32 @@
         "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita."
       }, 
       "ordinal_values": [
-        "1\u00b0", 
-        "2\u00b0", 
-        "3\u00b0", 
-        "4\u00b0", 
-        "5\u00b0", 
-        "6\u00b0", 
-        "7\u00b0", 
-        "8\u00b0", 
-        "9\u00b0", 
-        "10\u00b0"
+        "1°", 
+        "2°", 
+        "3°", 
+        "4°", 
+        "5°", 
+        "6°", 
+        "7°", 
+        "8°", 
+        "9°", 
+        "10°"
       ], 
       "example_phrases": {
         "0": [
           "Entra nella rotonda."
         ], 
         "1": [
-          "Entra nella rotonda e prendi la 1\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 2\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 3\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 4\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 5\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 6\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 7\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 8\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 9\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 10\u00b0 uscita."
+          "Entra nella rotonda e prendi la 1° uscita.", 
+          "Entra nella rotonda e prendi la 2° uscita.", 
+          "Entra nella rotonda e prendi la 3° uscita.", 
+          "Entra nella rotonda e prendi la 4° uscita.", 
+          "Entra nella rotonda e prendi la 5° uscita.", 
+          "Entra nella rotonda e prendi la 6° uscita.", 
+          "Entra nella rotonda e prendi la 7° uscita.", 
+          "Entra nella rotonda e prendi la 8° uscita.", 
+          "Entra nella rotonda e prendi la 9° uscita.", 
+          "Entra nella rotonda e prendi la 10° uscita."
         ]
       }
     }, 
@@ -385,32 +385,32 @@
         "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita."
       }, 
       "ordinal_values": [
-        "1\u00b0", 
-        "2\u00b0", 
-        "3\u00b0", 
-        "4\u00b0", 
-        "5\u00b0", 
-        "6\u00b0", 
-        "7\u00b0", 
-        "8\u00b0", 
-        "9\u00b0", 
-        "10\u00b0"
+        "1°", 
+        "2°", 
+        "3°", 
+        "4°", 
+        "5°", 
+        "6°", 
+        "7°", 
+        "8°", 
+        "9°", 
+        "10°"
       ], 
       "example_phrases": {
         "0": [
           "Entra nella rotonda."
         ], 
         "1": [
-          "Entra nella rotonda e prendi la 1\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 2\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 3\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 4\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 5\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 6\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 7\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 8\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 9\u00b0 uscita.", 
-          "Entra nella rotonda e prendi la 10\u00b0 uscita."
+          "Entra nella rotonda e prendi la 1° uscita.", 
+          "Entra nella rotonda e prendi la 2° uscita.", 
+          "Entra nella rotonda e prendi la 3° uscita.", 
+          "Entra nella rotonda e prendi la 4° uscita.", 
+          "Entra nella rotonda e prendi la 5° uscita.", 
+          "Entra nella rotonda e prendi la 6° uscita.", 
+          "Entra nella rotonda e prendi la 7° uscita.", 
+          "Entra nella rotonda e prendi la 8° uscita.", 
+          "Entra nella rotonda e prendi la 9° uscita.", 
+          "Entra nella rotonda e prendi la 10° uscita."
         ]
       }
     }, 
@@ -1366,7 +1366,7 @@
           "Procedi in direzione nord."
         ], 
         "1": [
-          "Procedi in direzione sudovest su 5\u00b0 Avenue.", 
+          "Procedi in direzione sudovest su 5° Avenue.", 
           "Procedi in direzione ovest sulla marciapiedi", 
           "Procedi in direzione est sulla pista ciclabile", 
           "Procedi in direzione nord sulla pista di mountain bike"
@@ -1379,7 +1379,7 @@
           "Guida in direzione nord."
         ], 
         "5": [
-          "Guida in direzione sudovest su 5\u00b0 Avenue."
+          "Guida in direzione sudovest su 5° Avenue."
         ], 
         "6": [
           "Guida in direzione sud su North Prince Street/US 222/PA 272. Continua su US 222/PA 272."
@@ -1389,7 +1389,7 @@
           "Vai a piedi in direzione nord."
         ], 
         "9": [
-          "Vai a piedi in direzione sudovest su 5\u00b0 Avenue.", 
+          "Vai a piedi in direzione sudovest su 5° Avenue.", 
           "Vai a piedi ovest su il marciapiedi"
         ], 
         "10": [
@@ -1400,7 +1400,7 @@
           "Vai in bici in direzione nord."
         ], 
         "17": [
-          "Vai in bici in direzione sudovest su 5\u00b0 Avenue.", 
+          "Vai in bici in direzione sudovest su 5° Avenue.", 
           "Vai in bici in direzione est sulla pista ciclabile", 
           "Vai in bici in direzione nord sulla pista per mountain bike"
         ], 
@@ -1461,7 +1461,7 @@
           "Procedi in direzione nord per 1 chilometro."
         ], 
         "1": [
-          "Procedi in direzione sudovest su 5\u00b0 Avenue per un decimo di miglio."
+          "Procedi in direzione sudovest su 5° Avenue per un decimo di miglio."
         ], 
         "2": [
           "Procedi in direzione sud su North Prince Street, U.S. 2 22."
@@ -1471,7 +1471,7 @@
           "Guida in direzione nord per 1 chilometro."
         ], 
         "5": [
-          "Guida in direzione sudovest su 5\u00b0 Avenue per un decimo di miglio."
+          "Guida in direzione sudovest su 5° Avenue per un decimo di miglio."
         ], 
         "6": [
           "Guida in direzione sud su North Prince Street, U.S. 2 22."
@@ -1481,7 +1481,7 @@
           "Vai a piedi nord per 1 chilometro."
         ], 
         "9": [
-          "Vai a piedi in direzione sudovest su 5\u00b0 Avenue per un decimo di miglio."
+          "Vai a piedi in direzione sudovest su 5° Avenue per un decimo di miglio."
         ], 
         "10": [
           "Vai a piedi in direzione sud su North Prince Street, U.S. 2 22."
@@ -1491,7 +1491,7 @@
           "Vai in bici nord per 1 chilometro."
         ], 
         "17": [
-          "Vai in bici in direzione sudovest su 5\u00b0 Avenue per un decimo di miglio."
+          "Vai in bici in direzione sudovest su 5° Avenue per un decimo di miglio."
         ], 
         "18": [
           "Vai in bici in direzione sud su North Prince Street, U.S. 2 22."
