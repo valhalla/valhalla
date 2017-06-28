@@ -65,6 +65,16 @@ class thor_worker_t {
   prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
   void cleanup();
 
+  std::list<valhalla::odin::TripPath> route(const boost::property_tree::ptree& request,
+             const std::string &request_str,
+             const boost::optional<int> &date_time_type);
+  baldr::json::MapPtr matrix(ACTION_TYPE matrix_type, const boost::property_tree::ptree& request);
+  std::list<valhalla::odin::TripPath> optimized_route(const boost::property_tree::ptree& request,
+                       const std::string &request_str);
+  baldr::json::MapPtr isochrone(const boost::property_tree::ptree& request);
+  odin::TripPath trace_route(const boost::property_tree::ptree& request, const std::string &request_str);
+  baldr::json::MapPtr trace_attributes(const boost::property_tree::ptree& request, const std::string &request_str);
+
  protected:
 
   prime_server::worker_t::result_t jsonify_error(
@@ -96,26 +106,6 @@ class thor_worker_t {
   std::string parse_costing(const boost::property_tree::ptree& request);
   void filter_attributes(const boost::property_tree::ptree& request, AttributesController& controller);
 
-  prime_server::worker_t::result_t route(
-      const boost::property_tree::ptree& request,
-      const std::string &request_str,
-      const boost::optional<int> &date_time_type, const bool header_dnt);
-  prime_server::worker_t::result_t matrix(
-      ACTION_TYPE matrix_type, const boost::property_tree::ptree &request,
-      prime_server::http_request_info_t& request_info);
-  prime_server::worker_t::result_t optimized_route(
-      const boost::property_tree::ptree& request,
-      const std::string &request_str, const bool header_dnt);
-  prime_server::worker_t::result_t isochrone(
-      const boost::property_tree::ptree &request,
-      prime_server::http_request_info_t& request_info);
-  prime_server::worker_t::result_t trace_route(
-      const boost::property_tree::ptree &request,
-      const std::string &request_str, const bool header_dnt);
-  prime_server::worker_t::result_t trace_attributes(
-      const boost::property_tree::ptree &request,
-      const std::string &request_str, prime_server::http_request_info_t& request_info);
-
   valhalla::sif::TravelMode mode;
   boost::property_tree::ptree config;
   boost::optional<std::string> jsonp;
@@ -142,6 +132,7 @@ class thor_worker_t {
 
   const std::function<void ()>* interrupt_callback;
   bool healthcheck;
+  std::vector<uint32_t> optimal_order;
 };
 
 }

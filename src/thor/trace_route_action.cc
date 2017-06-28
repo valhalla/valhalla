@@ -1,5 +1,4 @@
-#include <prime_server/prime_server.hpp>
-using namespace prime_server;
+#include "thor/service.h"
 
 #include <algorithm>
 #include <memory>
@@ -14,7 +13,6 @@ using namespace prime_server;
 #include "baldr/errorcode_util.h"
 #include "meili/map_matcher.h"
 
-#include "thor/service.h"
 #include "thor/route_matcher.h"
 #include "thor/map_matcher.h"
 #include "thor/match_result.h"
@@ -47,10 +45,8 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree &request,
-    const std::string &request_str, const bool header_dnt) {
-  //get time for start of request
-  auto s = std::chrono::system_clock::now();
+odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &request,
+    const std::string &request_str) {
 
   // Parse request
   parse_locations(request);
@@ -67,10 +63,6 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   std::vector<thor::MatchResult> match_results;
   std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
   AttributesController controller;
-
-  worker_t::result_t result { true };
-  // Forward the original request
-  result.messages.emplace_back(request_str);
 
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
@@ -119,22 +111,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
       log_admin(trip_path);
     }
 
-  result.messages.emplace_back(trip_path.SerializeAsString());
-
-  // Get processing time for thor
-  auto e = std::chrono::system_clock::now();
-  std::chrono::duration<float, std::milli> elapsed_time = e - s;
-  //log request if greater than X (ms)
-  if (!healthcheck && !header_dnt
-      && (elapsed_time.count() / shape.size()) > (long_request / 1100)) {
-    LOG_WARN(
-        "thor::trace_route elapsed time (ms)::"
-            + std::to_string(elapsed_time.count()));
-    LOG_WARN("thor::trace_route exceeded threshold::" + request_str);
-    midgard::logging::Log("valhalla_thor_long_request_trace_route",
-                          " [ANALYTICS] ");
-  }
-  return result;
+  return trip_path;
 }
 
 
@@ -175,7 +152,6 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
   try {
     matcher.reset(matcher_factory.Create(trace_config));
   } catch (const std::invalid_argument& ex) {
-    //return jsonify_error({400, 499}, request_info, std::string(ex.what()));
     throw std::runtime_error(std::string(ex.what()));
   }
 

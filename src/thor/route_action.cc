@@ -1,7 +1,5 @@
+#include "thor/service.h"
 #include <cstdint>
-#include <prime_server/prime_server.hpp>
-
-using namespace prime_server;
 
 #include "midgard/logging.h"
 #include "midgard/constants.h"
@@ -10,8 +8,6 @@ using namespace prime_server;
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "proto/trippath.pb.h"
-
-#include "thor/service.h"
 #include "thor/attributes_controller.h"
 
 using namespace valhalla;
@@ -22,43 +18,20 @@ using namespace valhalla::thor;
 
 
 namespace {
-
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
 }
 
 namespace valhalla {
   namespace thor {
 
-  worker_t::result_t thor_worker_t::route(const boost::property_tree::ptree& request, const std::string &request_str, const boost::optional<int> &date_time_type, const bool header_dnt){
+  std::list<valhalla::odin::TripPath> thor_worker_t::route(const boost::property_tree::ptree& request, const std::string &request_str, const boost::optional<int> &date_time_type){
     parse_locations(request);
     auto costing = parse_costing(request);
-
-    worker_t::result_t result{true};
-    //get time for start of request
-    auto s = std::chrono::system_clock::now();
-    // Forward the original request
-    result.messages.emplace_back(request_str);
 
     auto trippaths = (date_time_type && *date_time_type == 2) ?
         path_arrive_by(correlated, costing, request_str) :
         path_depart_at(correlated, costing, date_time_type, request_str);
-    for (const auto &trippath: trippaths) {
-      result.messages.emplace_back(trippath.SerializeAsString());
-    }
 
-    //get processing time for thor
-    auto e = std::chrono::system_clock::now();
-    std::chrono::duration<float, std::milli> elapsed_time = e - s;
-    //log request if greater than X (ms)
-    if (!healthcheck && !header_dnt && (elapsed_time.count() / correlated.size()) > long_request) {
-      LOG_WARN("thor::route trip_path elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-      LOG_WARN("thor::route trip_path exceeded threshold::"+ request_str);
-      midgard::logging::Log("valhalla_thor_long_request_route", " [ANALYTICS] ");
-    }
-    return result;
+    return trippaths;
   }
 
   thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,

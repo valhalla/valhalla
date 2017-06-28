@@ -1,8 +1,6 @@
+#include "thor/service.h"
+
 #include <cstdint>
-#include <prime_server/prime_server.hpp>
-
-using namespace prime_server;
-
 #include <algorithm>
 #include <utility>
 #include <string>
@@ -21,11 +19,10 @@ using namespace prime_server;
 #include "odin/enhancedtrippath.h"
 #include "proto/tripdirections.pb.h"
 #include "proto/trippath.pb.h"
-
-#include "thor/service.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
 
+using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -406,11 +403,9 @@ void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request
  * portion of the route. This includes details for each section of road along the
  * path as well as any intersections along the path.
  */
-worker_t::result_t thor_worker_t::trace_attributes(
+json::MapPtr thor_worker_t::trace_attributes(
     const boost::property_tree::ptree &request,
-    const std::string &request_str, http_request_info_t& request_info) {
-  //get time for start of request
-  auto s = std::chrono::system_clock::now();
+    const std::string &request_str) {
 
   // Parse request
   parse_locations(request);
@@ -487,29 +482,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
     json = serialize(controller, trip_path, id, directions_options, match_results);
   else throw valhalla_exception_t{400, 442};
 
-  //jsonp callback if need be
-  std::ostringstream stream;
-  auto jsonp = request.get_optional<std::string>("jsonp");
-  if (jsonp)
-    stream << *jsonp << '(';
-  stream << *json;
-  if (jsonp)
-    stream << ')';
-
-  // Get processing time for thor
-  auto e = std::chrono::system_clock::now();
-  std::chrono::duration<float, std::milli> elapsed_time = e - s;
-  //log request if greater than X (ms)
-  if (!healthcheck && !request_info.spare && (elapsed_time.count() / shape.size()) > (long_request / 1100)) {
-    LOG_WARN("thor::trace_attributes elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-    LOG_WARN("thor::trace_attributes exceeded threshold::"+ request_str);
-    midgard::logging::Log("valhalla_thor_long_request_trace_attributes", " [ANALYTICS] ");
-  }
-  http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-  response.from_info(request_info);
-  worker_t::result_t result{false};
-  result.messages.emplace_back(response.to_string());
-  return result;
+  return json;
 }
 }
 }

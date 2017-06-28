@@ -15,8 +15,6 @@
 #include "baldr/geojson.h"
 #include "baldr/errorcode_util.h"
 
-#include <prime_server/prime_server.hpp>
-
 #include "thor/service.h"
 #include "thor/isochrone.h"
 
@@ -34,32 +32,65 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
-    //we require correlated locations
-    std::vector<baldr::PathLocation> correlated;
-    correlated.reserve(locations.size());
-    size_t i = 0;
-    do {
-      auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-      if(!path_location)
-        break;
-      try {
-        correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+   std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
+   //we require correlated locations
+   std::vector<baldr::PathLocation> correlated;
+   correlated.reserve(locations.size());
+   size_t i = 0;
+   do {
+     auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
+     if(!path_location)
+       break;
+       try {
+         correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
 
-        auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
+         auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
             [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
               return i.score < j.score;
             });
 
-        for(auto& e : correlated.back().edges) {
-          e.score -= minScoreEdge.score;
-        }
-      }
-      catch (...) {
-        throw valhalla_exception_t{400, 420};
-      }
-    }while(++i);
-    return correlated;
+         for(auto& e : correlated.back().edges) {
+           e.score -= minScoreEdge.score;
+         }
+       }
+       catch (...) {
+         throw valhalla_exception_t{400, 420};
+       }
+   }while(++i);
+     return correlated;
+   }
+
+  worker_t::result_t to_response(json::ArrayPtr array, const boost::property_tree::ptree &request, http_request_info_t& request_info, bool final) {
+    std::ostringstream stream;
+    auto jsonp = request.get_optional<std::string>("jsonp");
+    if(jsonp)
+      stream << *jsonp << '(';
+    stream << *array;
+    if(jsonp)
+      stream << ')';
+
+    worker_t::result_t result{final};
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+    return result;
+  }
+
+  worker_t::result_t to_response(json::MapPtr map, const boost::property_tree::ptree &request, http_request_info_t& request_info, bool final) {
+    std::ostringstream stream;
+    //jsonp callback if need be
+    auto jsonp = request.get_optional<std::string>("jsonp");
+    if(jsonp)
+      stream << *jsonp << '(';
+    stream << *map;
+    if(jsonp)
+      stream << ')';
+
+    worker_t::result_t result{final};
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+    return result;
   }
 }
 
@@ -75,7 +106,8 @@ namespace valhalla {
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config):
       mode(valhalla::sif::TravelMode::kPedestrian),
       config(config), matcher_factory(config), reader(matcher_factory.graphreader()),
-      long_request(config.get<float>("thor.logging.long_request")){
+      long_request(config.get<float>("thor.logging.long_request")),
+      healthcheck(false) {
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -143,8 +175,12 @@ namespace valhalla {
     worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t& interrupt) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
+      auto computed_time = 0;
+      auto elapsed_time = 0.0;
+      size_t order_index = 0;
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
+
       try{
         //get some info about what we need to do
         boost::property_tree::ptree request;
@@ -177,27 +213,77 @@ namespace valhalla {
         astar.set_interrupt(&interrupt);
         bidir_astar.set_interrupt(&interrupt);
         multi_modal_astar.set_interrupt(&interrupt);
-        //what action is it
+
+        worker_t::result_t result{true};
+        std::list<valhalla::odin::TripPath> trippaths;
+        odin::TripPath trippath;
+        //do request specific processing
         switch (action) {
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
-            return matrix(action, request, info);
+            result = to_response(matrix(action, request), request, info, true);
+            elapsed_time = (std::chrono::system_clock::now() - s).count();
+            computed_time = elapsed_time / (correlated_s.size() * correlated_t.size());
+            break;
           case OPTIMIZED_ROUTE:
-            return optimized_route(request, request_str, info.spare);
+            // Forward the original request
+            result.messages.emplace_back(std::move(request_str));
+            trippaths = optimized_route(request, request_str);
+            for (auto& trippath: trippaths) {
+              for (auto& location : *trippath.mutable_location())
+                location.set_original_index(optimal_order[order_index++]);
+              --order_index;
+              result.messages.emplace_back(trippath.SerializeAsString());
+            }
+            elapsed_time = (std::chrono::system_clock::now() - s).count();
+            computed_time = elapsed_time / std::max(correlated_s.size(), correlated_t.size());
+            break;
           case ISOCHRONE:
-            return isochrone(request, info);
+            result = to_response(isochrone(request), request, info, true);
+            elapsed_time = (std::chrono::system_clock::now() - s).count();
+            computed_time = elapsed_time / (correlated_s.size() * correlated_t.size());
+            break;
           case ROUTE:
           case VIAROUTE:
-            return route(request, request_str, date_time_type, info.spare);
+            // Forward the original request
+            result.messages.emplace_back(request_str);
+            trippaths = route(request, request_str, date_time_type);
+            for (auto& trippath: trippaths) {
+              result.messages.emplace_back(trippath.SerializeAsString());
+            }
+            elapsed_time = (std::chrono::system_clock::now() - s).count();
+            computed_time = elapsed_time / correlated.size();
+            break;
           case TRACE_ROUTE:
-            return trace_route(request, request_str, info.spare);
+            // Forward the original request
+            result.messages.emplace_back(request_str);
+            trippath = trace_route(request, request_str);
+            result.messages.emplace_back(trippath.SerializeAsString());
+            elapsed_time = (std::chrono::system_clock::now() - s).count();
+            computed_time = elapsed_time / shape.size();
+            long_request = long_request / 1100;
+            break;
           case TRACE_ATTRIBUTES:
-            return trace_attributes(request, request_str, info);
+            result = to_response(trace_attributes(request, request_str), request, info, true);
+            elapsed_time = (std::chrono::system_clock::now() - s).count();
+            computed_time = elapsed_time / shape.size();
+            long_request = long_request / 1100;
+            break;
           default:
             throw valhalla_exception_t{400, 400}; //this should never happen
         }
+
+        if (!healthcheck && !info.spare && (computed_time > long_request)) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request, false);
+         // LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request elapsed time (ms)::"+ std::to_string(elapsed_time));
+         // LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request exceeded threshold::"+ ss.str());
+         // midgard::logging::Log("valhalla_thor_long_request_"+ACTION_TO_STRING.find(action)->second, " [ANALYTICS] ");
+        }
+
+        return result;
       }
       catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");

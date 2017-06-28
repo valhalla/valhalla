@@ -1,7 +1,5 @@
+#include "thor/service.h"
 #include <cstdint>
-#include <prime_server/prime_server.hpp>
-
-using namespace prime_server;
 
 #include "midgard/logging.h"
 #include "midgard/constants.h"
@@ -9,8 +7,6 @@ using namespace prime_server;
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
-
-#include "thor/service.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
 
@@ -40,11 +36,7 @@ namespace {
      {thor_worker_t::OPTIMIZED_ROUTE, "optimized_route"}
    };
 
-
   constexpr double kMilePerMeter = 0.000621371;
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
   json::ArrayPtr locations(const std::vector<baldr::PathLocation>& correlated) {
     auto input_locs = json::array({});
@@ -110,10 +102,7 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    worker_t::result_t  thor_worker_t::matrix(ACTION_TYPE action, const boost::property_tree::ptree &request, http_request_info_t& request_info) {
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
-
+    json::MapPtr thor_worker_t::matrix(ACTION_TYPE action, const boost::property_tree::ptree &request) {
       parse_locations(request);
       auto costing = parse_costing(request);
 
@@ -163,31 +152,7 @@ namespace valhalla {
       json = serialize(matrix_type, request.get_optional<std::string>("id"), correlated_s, correlated_t,
         time_distances, units, distance_scale);
 
-      //jsonp callback if need be
-      std::ostringstream stream;
-      auto jsonp = request.get_optional<std::string>("jsonp");
-      if(jsonp)
-        stream << *jsonp << '(';
-      stream << *json;
-      if(jsonp)
-        stream << ')';
-
-      //get processing time for thor
-      auto e = std::chrono::system_clock::now();
-      std::chrono::duration<float, std::milli> elapsed_time = e - s;
-      //log request if greater than X (ms)
-      if (!healthcheck && !request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
-        std::stringstream ss;
-        boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("thor::" + matrix_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::" + matrix_type + " matrix request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("valhalla_thor_long_request_matrix", " [ANALYTICS] ");
-      }
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      worker_t::result_t result{false};
-      result.messages.emplace_back(response.to_string());
-      return result;
+      return json;
     }
   }
 }
