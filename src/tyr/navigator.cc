@@ -15,11 +15,10 @@
 #include "midgard/pointll.h"
 #include "baldr/json.h"
 #include "baldr/location.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 #include "tyr/util.h"
 #include "tyr/navigator.h"
 
-using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
@@ -278,7 +277,7 @@ size_t Navigator::FindManeuverIndex(size_t begin_search_index,
   // Validate the begin_search_index
   if ((route_.trip().legs(leg_index_).maneuvers_size() == 0)
       || (begin_search_index > destination_maneuver_index))
-    throw valhalla_exception_t{400, 502};
+    throw valhalla_exception_t{502};
 
   // Check for destination shape index and return destination maneuver index
   if (IsDestinationShapeIndex(shape_index))
@@ -293,7 +292,7 @@ size_t Navigator::FindManeuverIndex(size_t begin_search_index,
       return i;
   }
   // If not found, throw exception
-  throw valhalla_exception_t{400, 502};
+  throw valhalla_exception_t{502};
 }
 
 size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
@@ -306,7 +305,7 @@ size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
   // Validate the rbegin_search_index
   if ((route_.trip().legs(leg_index_).maneuvers_size() == 0)
       || (rbegin_search_index > destination_maneuver_index))
-    throw valhalla_exception_t { 400, 502 };
+    throw valhalla_exception_t { 502 };
 
   // Check for destination shape index and rbegin search index
   // if so, return destination maneuver index
@@ -322,7 +321,7 @@ size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
       return i;
   }
   // If not found, throw exception
-  throw valhalla_exception_t{400, 502};
+  throw valhalla_exception_t{502};
 }
 
 NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {

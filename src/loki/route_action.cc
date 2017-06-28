@@ -8,18 +8,14 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
-using namespace prime_server;
+using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
   void check_locations(const size_t location_count, const size_t max_locations) {
     //check that location size does not exceed max.
     if (location_count > max_locations)
-      throw valhalla_exception_t{400, 150, std::to_string(max_locations)};
+      throw valhalla_exception_t{150, std::to_string(max_locations)};
   }
 
   void check_distance(const GraphReader& reader, const std::vector<Location>& locations, float max_distance){
@@ -30,7 +26,7 @@ namespace {
       auto path_distance = std::prev(location)->latlng_.Distance(location->latlng_);
       max_distance -= path_distance;
       if (max_distance < 0)
-        throw valhalla_exception_t{400, 154};
+        throw valhalla_exception_t{154};
       valhalla::midgard::logging::Log("location_distance::" + std::to_string(path_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }
   }
@@ -44,7 +40,7 @@ namespace valhalla {
       locations = parse_locations(request, "locations");
       //need to check location size here instead of in parse_locations because of locate action needing a different size
       if(locations.size() < 2)
-        throw valhalla_exception_t{400, 120};
+        throw valhalla_exception_t{120};
       parse_costing(request);
     }
 
@@ -63,11 +59,11 @@ namespace valhalla {
             "/costing_options/pedestrian/transit_transfer_max_distance").get_value_or(min_transit_walking_dis);
 
         if (transit_start_end_max_distance < min_transit_walking_dis || transit_start_end_max_distance > max_transit_walking_dis) {
-          throw valhalla_exception_t{400, 155, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+          throw valhalla_exception_t{155, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
                                    " (Meters)"};
         }
         if (transit_transfer_max_distance < min_transit_walking_dis || transit_transfer_max_distance > max_transit_walking_dis) {
-          throw valhalla_exception_t{400, 156, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
+          throw valhalla_exception_t{156, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " + std::to_string(max_transit_walking_dis) +
                                    " (Meters)"};
         }
       }
@@ -82,7 +78,7 @@ namespace valhalla {
       if (boost::optional<int> date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type")) {
         //not yet on this
         if(*date_type == 2 && (*costing == "multimodal" || *costing == "transit"))
-          throw valhalla_exception_t{501, 141};
+          throw valhalla_exception_t{141};
 
         //what kind
         switch(*date_type) {
@@ -91,20 +87,20 @@ namespace valhalla {
           break;
         case 1: //depart
           if(!date_time_value)
-            throw valhalla_exception_t{400, 160};
+            throw valhalla_exception_t{160};
           if (!DateTime::is_iso_local(*date_time_value))
-            throw valhalla_exception_t{400, 162};
+            throw valhalla_exception_t{162};
           locations_array.Begin()->AddMember("date_time", *date_time_value, allocator);
           break;
         case 2: //arrive
           if(!date_time_value)
-            throw valhalla_exception_t{400, 161};
+            throw valhalla_exception_t{161};
           if (!DateTime::is_iso_local(*date_time_value))
-            throw valhalla_exception_t{400, 162};
+            throw valhalla_exception_t{162};
           locations_array.End()->AddMember("date_time", *date_time_value, allocator);
           break;
         default:
-          throw valhalla_exception_t{400, 163};
+          throw valhalla_exception_t{163};
           break;
         }
       }
@@ -129,7 +125,7 @@ namespace valhalla {
         }
       }
       catch(const std::exception&) {
-        throw valhalla_exception_t{400, 171};
+        throw valhalla_exception_t{171};
       }
 
       //are all the locations in the same color regions
@@ -141,7 +137,7 @@ namespace valhalla {
         }
       }
       if(!connected)
-        throw valhalla_exception_t{400, 170};
+        throw valhalla_exception_t{170};
     }
   }
 }

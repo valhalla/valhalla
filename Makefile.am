@@ -117,6 +117,8 @@ CLEANFILES += valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h src/proto/
 lib_LTLIBRARIES = libvalhalla.la
 nobase_include_HEADERS = \
 	valhalla/valhalla.h \
+	valhalla/exception.h \
+	valhalla/service.h \
 	valhalla/midgard/linesegment2.h \
 	valhalla/midgard/tiles.h \
 	valhalla/midgard/gridded_data.h \
@@ -144,7 +146,6 @@ nobase_include_HEADERS = \
 	valhalla/baldr/double_bucket_queue.h \
 	valhalla/baldr/edge_elevation.h \
 	valhalla/baldr/edgeinfo.h \
-	valhalla/baldr/errorcode_util.h \
 	valhalla/baldr/geojson.h \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
@@ -207,8 +208,10 @@ nobase_include_HEADERS = \
 	valhalla/meili/map_matcher_factory.h \
 	valhalla/meili/traffic_segment_matcher.h \
 	valhalla/meili/match_route.h \
+	valhalla/skadi/service.h \
 	valhalla/skadi/sample.h \
 	valhalla/skadi/util.h \
+	valhalla/loki/service.h \
 	valhalla/loki/search.h \
 	valhalla/loki/node_search.h \
 	valhalla/proto/tripcommon.pb.h \
@@ -217,6 +220,7 @@ nobase_include_HEADERS = \
 	valhalla/proto/route.pb.h \
 	valhalla/proto/navigator.pb.h \
 	valhalla/proto/directions_options.pb.h \
+	valhalla/odin/service.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
 	valhalla/odin/narrative_dictionary.h \
@@ -229,6 +233,7 @@ nobase_include_HEADERS = \
 	valhalla/odin/util.h \
 	valhalla/odin/transitrouteinfo.h \
 	valhalla/odin/transitstop.h \
+	valhalla/thor/service.h \
 	valhalla/thor/astar.h \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/bidirectional_astar.h \
@@ -246,9 +251,11 @@ nobase_include_HEADERS = \
 	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
+	valhalla/tyr/service.h \
 	valhalla/tyr/util.h \
 	valhalla/tyr/navigator.h
 libvalhalla_la_SOURCES = \
+	src/service.cc \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
 	src/midgard/gridded_data.cc \
@@ -319,8 +326,15 @@ libvalhalla_la_SOURCES = \
 	src/meili/match_route.cc \
 	src/meili/traffic_segment_matcher.cc \
 	src/skadi/sample.cc \
+	src/skadi/service.cc \
 	src/skadi/util.cc \
 	src/loki/search.cc \
+	src/loki/service.cc \
+	src/loki/locate_action.cc \
+	src/loki/route_action.cc \
+	src/loki/matrix_action.cc \
+	src/loki/isochrone_action.cc \
+	src/loki/trace_route_action.cc \
 	src/loki/node_search.cc \
 	src/proto/tripcommon.pb.cc \
 	src/proto/trippath.pb.cc \
@@ -341,6 +355,7 @@ libvalhalla_la_SOURCES = \
 	src/odin/transitrouteinfo.cc \
 	src/odin/transitstop.cc \
 	src/odin/locales.h \
+	src/odin/service.cc \
 	src/thor/astar.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/costmatrix.cc \
@@ -353,29 +368,6 @@ libvalhalla_la_SOURCES = \
 	src/thor/route_matcher.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
-	src/tyr/util.cc \
-	src/tyr/navigator.cc
-libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
-libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS) $(SERVICE_DEPS_LIBS)
-
-if SERVICES
-nobase_include_HEADERS += \
-	valhalla/meili/service.h \
-	valhalla/skadi/service.h \
-	valhalla/loki/service.h \
-	valhalla/odin/service.h \
-	valhalla/thor/service.h \
-	valhalla/tyr/service.h
-libvalhalla_la_SOURCES += \
-	src/meili/service.cc \
-	src/skadi/service.cc \
-	src/loki/service.cc \
-	src/loki/locate_action.cc \
-	src/loki/route_action.cc \
-	src/loki/matrix_action.cc \
-	src/loki/isochrone_action.cc \
-	src/loki/trace_route_action.cc \
-	src/odin/service.cc \
 	src/thor/service.cc \
 	src/thor/isochrone_action.cc \
 	src/thor/matrix_action.cc \
@@ -383,8 +375,11 @@ libvalhalla_la_SOURCES += \
 	src/thor/route_action.cc \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
+	src/tyr/util.cc \
+	src/tyr/navigator.cc \
 	src/tyr/service.cc
-endif
+libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS) $(SERVICE_DEPS_LIBS)
 
 if DATA_TOOLS
 nobase_include_HEADERS += \
@@ -506,21 +501,13 @@ valhalla_export_edges_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ 
 
 if SERVICES
 bin_PROGRAMS += \
-	valhalla_map_match_service \
 	valhalla_route_service \
-	valhalla_meili_worker \
 	valhalla_skadi_worker \
 	valhalla_loki_worker \
 	valhalla_odin_worker \
 	valhalla_thor_worker \
 	valhalla_elevation_service \
 	valhalla_tyr_worker
-valhalla_map_match_service_SOURCES = src/meili/valhalla_map_match_service.cc
-valhalla_map_match_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_map_match_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-valhalla_meili_worker_SOURCES = src/meili/valhalla_meili_worker.cc
-valhalla_meili_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_meili_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_skadi_worker_SOURCES = src/valhalla_skadi_worker.cc
 valhalla_skadi_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_skadi_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la

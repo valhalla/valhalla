@@ -1,7 +1,4 @@
 #include <cstdint>
-#include <prime_server/prime_server.hpp>
-
-using namespace prime_server;
 
 #include "midgard/logging.h"
 #include "midgard/constants.h"
@@ -19,15 +16,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
-
-
-namespace {
-
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
-}
 
 namespace valhalla {
   namespace thor {
@@ -108,7 +96,7 @@ namespace valhalla {
 
     // All or nothing
     if(path.empty())
-      throw valhalla_exception_t{400, 442};
+      throw valhalla_exception_t{442};
     return path;
   }
 

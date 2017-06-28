@@ -7,14 +7,10 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
-using namespace prime_server;
+using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
   json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
     auto array = json::array({});
     for(const auto& edge : location.edges) {
@@ -132,7 +128,7 @@ namespace valhalla {
     void loki_worker_t::init_locate(rapidjson::Document& request) {
       locations = parse_locations(request, "locations");
       if(locations.size() < 1)
-        throw valhalla_exception_t{400, 120};
+        throw valhalla_exception_t{120};
       if(request.HasMember("costing"))
         parse_costing(request);
       else {

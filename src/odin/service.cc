@@ -8,10 +8,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <prime_server/http_protocol.hpp>
 
 #include "baldr/json.h"
-#include "baldr/errorcode_util.h"
 #include "midgard/logging.h"
 
 #include "proto/directions_options.pb.h"
@@ -20,53 +18,52 @@
 #include "odin/util.h"
 #include "odin/directionsbuilder.h"
 
-using namespace prime_server;
 using namespace valhalla;
+using namespace valhalla::service;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-
-namespace {
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
-
-    //build up the json map
-    auto json_error = json::map({});
-    json_error->emplace("status", exception.status_code_body);
-    json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
-    json_error->emplace("error", std::string(exception.error_code_message));
-    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
-
-    //serialize it
-    std::stringstream ss;
-    if(jsonp)
-      ss << *jsonp << '(';
-    ss << *json_error;
-    if(jsonp)
-      ss << ')';
-
-    worker_t::result_t result{false};
-    http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-
-    return result;
-  }
-}
 
 namespace valhalla {
   namespace odin {
 
-    odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config):
-      config(config){}
+    odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config){}
 
     odin_worker_t::~odin_worker_t(){}
 
+    void odin_worker_t::cleanup(){}
+
+    std::list<TripDirections> odin_worker_t::narrate(boost::property_tree::ptree& request, std::list<TripPath>& legs) const {
+      // Grab language from options and set
+      auto language = request.get_optional<std::string>("directions_options.language");
+      // If language is not found then set to the default language (en-US)
+      if (!language || (odin::get_locales().find(*language) == odin::get_locales().end()))
+        request.put<std::string>("directions_options.language", odin::DirectionsOptions::default_instance().language());
+
+      //see if we can get some options
+      valhalla::odin::DirectionsOptions directions_options;
+      auto options = request.get_child_optional("directions_options");
+      if(options)
+        directions_options = valhalla::odin::GetDirectionsOptions(*options);
+
+      for(auto& leg : legs){
+        //get some annotated directions
+        odin::DirectionsBuilder directions;
+        odin::TripDirections trip_directions;
+        try{
+          trip_directions = directions.Build(directions_options, leg);
+        }
+        catch(...) {
+          throw valhalla_exception_t{202};
+        }
+        LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
+      }
+    }
+
+#ifdef HAVE_HTTP
     worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Odin Request " + std::to_string(info.id));
+      boost::optional<std::string> jsonp;
       try{
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
@@ -77,66 +74,35 @@ namespace valhalla {
           jsonp = request.get_optional<std::string>("jsonp");
         }
         catch(...) {
-          return jsonify_error({500, 200}, info, jsonp);
+          return jsonify_error({200}, info, jsonp);
         }
-
-        // Grab language from options and set
-        auto language = request.get_optional<std::string>("directions_options.language");
-        // If language is not found then set to the default language (en-US)
-        if (!language || (odin::get_locales().find(*language) == odin::get_locales().end())) {
-          request.put<std::string>("directions_options.language", odin::DirectionsOptions::default_instance().language());
-          std::stringstream ss;
-          boost::property_tree::write_json(ss, request, false);
-          // Update request string with language
-          request_str = ss.str();
-        }
-
-        //see if we can get some options
-        valhalla::odin::DirectionsOptions directions_options;
-        auto options = request.get_child_optional("directions_options");
-        if(options)
-          directions_options = valhalla::odin::GetDirectionsOptions(*options);
-
-        //forward the original request
-        worker_t::result_t result{true};
-        result.messages.emplace_back(std::move(request_str));
 
         //for each leg
+        std::list<TripPath> legs;
         for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
           //crack open the path
-          odin::TripPath trip_path;
+          legs.emplace_back();
           try {
-            trip_path.ParseFromArray(leg->data(), static_cast<int>(leg->size()));
+            legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            return jsonify_error({500, 201}, info, jsonp);
+            return jsonify_error({201}, info, jsonp);
           }
-
-          //get some annotated directions
-          odin::DirectionsBuilder directions;
-          odin::TripDirections trip_directions;
-          try{
-            trip_directions = directions.Build(directions_options, trip_path);
-          }
-          catch(...) {
-            return jsonify_error({500, 202}, info, jsonp);
-          }
-
-          LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
-
-          //the protobuf directions
-          result.messages.emplace_back(trip_directions.SerializeAsString());
         }
+
+        //forward the original request
+        std::stringstream ss;
+        boost::property_tree::write_json(ss, request, false);
+        worker_t::result_t result{true};
+        result.messages.emplace_back(ss.str());
+        for(const auto& leg : narrate(request, legs))
+          result.messages.emplace_back(leg.SerializeAsString());
 
         return result;
       }
       catch(const std::exception& e) {
-        return jsonify_error({400, 299, std::string(e.what())}, info, jsonp);
+        return jsonify_error({299, std::string(e.what())}, info, jsonp);
       }
-    }
-
-    void odin_worker_t::cleanup() {
-      jsonp = boost::none;
     }
 
     void run_service(const boost::property_tree::ptree& config) {
@@ -156,5 +122,7 @@ namespace valhalla {
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
     }
+
+#endif
   }
 }

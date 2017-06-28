@@ -1,27 +1,27 @@
 #ifndef __VALHALLA_ODIN_SERVICE_H__
 #define __VALHALLA_ODIN_SERVICE_H__
 
-#include <cstdint>
-#include <boost/property_tree/ptree.hpp>
-#include <prime_server/prime_server.hpp>
-
+#include <valhalla/service.h>
+#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 
 namespace valhalla {
   namespace odin {
 
+#ifdef HAVE_HTTP
     void run_service(const boost::property_tree::ptree& config);
+#endif
 
-    class odin_worker_t {
+    class odin_worker_t : public service::service_worker_t{
      public:
       odin_worker_t(const boost::property_tree::ptree& config);
       virtual ~odin_worker_t();
-      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
-      void cleanup();
+#ifdef HAVE_HTTP
+      virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t& interupt) override;
+#endif
+      virtual void cleanup() override;
 
-     protected:
-
-      boost::property_tree::ptree config;
-      boost::optional<std::string> jsonp;
+      std::list<TripDirections> narrate(boost::property_tree::ptree& request, std::list<TripPath>& legs) const;
     };
   }
 }

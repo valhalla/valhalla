@@ -1,19 +1,9 @@
-#include <prime_server/prime_server.hpp>
-
-using namespace prime_server;
-
 #include "baldr/geojson.h"
 #include "midgard/logging.h"
 
 #include "thor/service.h"
 
 using namespace valhalla::midgard;
-
-namespace {
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-}
 
 namespace valhalla {
   namespace thor {

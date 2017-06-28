@@ -8,7 +8,7 @@
 #include "odin/maneuversbuilder.h"
 #include "odin/narrativebuilder.h"
 #include "odin/narrative_builder_factory.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 namespace {
 // Minimum edge length (~10 feet)
@@ -69,7 +69,7 @@ TripDirections DirectionsBuilder::Build(
     const DirectionsOptions& directions_options, TripPath& trip_path) {
   // Validate trip path node list
   if (trip_path.node_size() < 1) {
-    throw valhalla_exception_t{400, 210};
+    throw valhalla_exception_t{210};
   }
 
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);

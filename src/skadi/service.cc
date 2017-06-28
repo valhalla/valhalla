@@ -11,21 +11,16 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
-#include <prime_server/prime_server.hpp>
-#include <prime_server/http_protocol.hpp>
-
-#include "baldr/json.h"
 #include "midgard/logging.h"
 #include "baldr/location.h"
-#include "baldr/errorcode_util.h"
 #include "midgard/util.h"
 #include "midgard/encoded.h"
 
 #include "skadi/service.h"
 #include "skadi/sample.h"
 
-using namespace prime_server;
 using namespace valhalla;
+using namespace valhalla::service;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::skadi;
@@ -33,15 +28,7 @@ using namespace valhalla::skadi;
 
 namespace {
 
-  const std::unordered_map<std::string, skadi_worker_t::ACTION_TYPE> ACTION{
-    {"/height", skadi_worker_t::HEIGHT}
-  };
-
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
-  boost::property_tree::ptree from_request(const skadi_worker_t::ACTION_TYPE& action, const http_request_t& request) {
+  boost::property_tree::ptree from_request(const http_request_t& request) {
     boost::property_tree::ptree pt;
 
     //throw the json into the ptree
@@ -57,7 +44,7 @@ namespace {
       }
     }
     catch(...) {
-      throw valhalla_exception_t{400, 300};
+      throw valhalla_exception_t{300};
     }
 
     //throw the query params into the ptree
@@ -126,31 +113,6 @@ namespace {
     }
     return array;
   }
-
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
-
-    //build up the json map
-    auto json_error = json::map({});
-    json_error->emplace("status", exception.status_code_body);
-    json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
-    json_error->emplace("error", std::string(exception.error_code_message));
-    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
-
-    //serialize it
-    std::stringstream ss;
-    if(jsonp)
-      ss << *jsonp << '(';
-    ss << *json_error;
-    if(jsonp)
-      ss << ')';
-
-    worker_t::result_t result{false};
-    http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-
-    return result;
-  }
 }
 
 namespace valhalla {
@@ -169,6 +131,7 @@ namespace valhalla {
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Skadi Request " + std::to_string(info.id));
+      boost::optional<std::string> jsonp;
       //request should look like:
       //  http://host:port/height?json={shape:[{lat: ,lon: }],range=false} OR http://host:port/height?json={encoded_polyline:"SOMESTUFF",range:true}
       try{
@@ -177,23 +140,23 @@ namespace valhalla {
 
         //block all but get and post
         if(request.method != method_t::POST && request.method != method_t::GET)
-          return jsonify_error({405, 301}, info, jsonp);
+          return jsonify_error({301}, info, jsonp);
 
-        auto action = ACTION.find(request.path);
-        if(action == ACTION.cend())
-          return jsonify_error({404, 304, action->first}, info, jsonp);
+        auto action = PATH_TO_ACTION.find(request.path);
+        if(action == PATH_TO_ACTION.cend() || action->second != HEIGHT)
+          return jsonify_error({304, action->first}, info, jsonp);
 
         //parse the query's json
-        auto request_pt = from_request(action->second, request);
+        auto request_pt = from_request(request);
         jsonp = request_pt.get_optional<std::string>("jsonp");
-        init_request(action->second, request_pt);
+        init_request(request_pt);
         worker_t::result_t result{false};
         switch (action->second) {
           case HEIGHT:
-            result = elevation(request_pt, info);
+            result = to_response(elevation(request_pt), jsonp, info, true);
             break;
           default:
-            return jsonify_error({501, 305}, info, jsonp);
+            return jsonify_error({305}, info, jsonp);
         }
         //get processing time for skadi
         auto e = std::chrono::system_clock::now();
@@ -213,21 +176,20 @@ namespace valhalla {
       }
       catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({e.status_code, e.error_code, e.extra}, info, jsonp);
+        return jsonify_error(e, info, jsonp);
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({400, 399, std::string(e.what())}, info, jsonp);
+        return jsonify_error({399, std::string(e.what())}, info, jsonp);
       }
     }
 
     void skadi_worker_t::cleanup() {
-      jsonp = boost::none;
       shape.clear();
       encoded_polyline.reset();
     }
 
-    void skadi_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
+    void skadi_worker_t::init_request(const boost::property_tree::ptree& request) {
       //flag healthcheck requests; do not send to logstash
       healthcheck = request.get<bool>("healthcheck", false);
       //get some parameters
@@ -247,21 +209,21 @@ namespace valhalla {
           shape = midgard::decode<std::list<midgard::PointLL> >(*encoded_polyline);
         }//no shape
         else
-          throw valhalla_exception_t{400, 310};
+          throw valhalla_exception_t{310};
 
         //not enough shape
         if (shape.size() < 1)
-          throw valhalla_exception_t{400, 311};
+          throw valhalla_exception_t{311};
       }
       catch (...) {
-        throw valhalla_exception_t{400, 312};
+        throw valhalla_exception_t{312};
       }
 
       //resample the shape
       bool resampled = false;
       if(resample_distance) {
         if(*resample_distance < min_resample)
-          throw valhalla_exception_t{400, 313, " " + std::to_string(min_resample) + " meters"};
+          throw valhalla_exception_t{313, " " + std::to_string(min_resample) + " meters"};
         if(shape.size() > 1) {
           //resample the shape but make sure to keep the first and last shapepoint
           auto last = shape.back();
@@ -276,7 +238,7 @@ namespace valhalla {
 
       //there are limits though
       if(shape.size() > max_shape) {
-        throw valhalla_exception_t{400, 314, " (" + std::to_string(shape.size()) +
+        throw valhalla_exception_t{314, " (" + std::to_string(shape.size()) +
             (resampled ? " after resampling" : "") + "). The limit is " + std::to_string(max_shape)};
       }
     }
@@ -287,7 +249,7 @@ namespace valhalla {
       "range_height": [ [0,303], [8467,275], [25380,198] ]
     }
     */
-    worker_t::result_t skadi_worker_t::elevation(const boost::property_tree::ptree& request, http_request_info_t& request_info) {
+    json::MapPtr skadi_worker_t::elevation(const boost::property_tree::ptree& request) {
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
       if (!healthcheck)
@@ -317,21 +279,7 @@ namespace valhalla {
       if (id)
         json->emplace("id", *id);
 
-      //jsonp callback if need be
-      std::ostringstream stream;
-      auto jsonp = request.get_optional<std::string>("jsonp");
-      if(jsonp)
-        stream << *jsonp << '(';
-      stream << *json;
-      if(jsonp)
-        stream << ')';
-
-      worker_t::result_t result{false};
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-
-      return result;
+      return json;
     }
 
     void run_service(const boost::property_tree::ptree& config) {

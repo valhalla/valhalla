@@ -71,6 +71,7 @@ py-compile
 .libs/
 libvalhalla.la
 date_time_zonespec.csv
+valhalla/valhalla.h
 
 # tests
 test/*.log

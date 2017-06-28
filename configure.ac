@@ -63,7 +63,8 @@ AM_CONDITIONAL([SERVICES], [test x$services = xtrue])
 # then we require prime_server
 AM_COND_IF([SERVICES], [
     PKG_CHECK_MODULES([SERVICE_DEPS], [libprime_server = 0.6.3 libcurl >= 7.35.0])
-])
+    AC_SUBST(HAVE_HTTP_DEFINE, ["#define HAVE_HTTP"])
+],[AC_SUBST(HAVE_HTTP_DEFINE, ["#undef HAVE_HTTP"])])
 
 # if we wanted python bindings
 AC_ARG_ENABLE([python_bindings],
@@ -120,7 +121,7 @@ AM_COND_IF([DATA_TOOLS], [
 # optionally enable coverage information
 CHECK_COVERAGE
 
-AC_CONFIG_FILES([Makefile libvalhalla.pc])
+AC_CONFIG_FILES([Makefile libvalhalla.pc valhalla/valhalla.h])
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a

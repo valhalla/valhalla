@@ -8,23 +8,20 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <prime_server/prime_server.hpp>
-#include <prime_server/http_protocol.hpp>
-
 #include "midgard/pointll.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
 #include "baldr/json.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 #include "odin/util.h"
 #include "proto/tripdirections.pb.h"
 #include "proto/directions_options.pb.h"
 
 #include "tyr/service.h"
 
-using namespace prime_server;
 using namespace valhalla;
+using namespace valhalla::service;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::odin;
@@ -32,8 +29,6 @@ using namespace valhalla::tyr;
 using namespace std;
 
 namespace {
-
-  constexpr int VIAROUTE = 1;
 
   namespace osrm_serializers {
     /*
@@ -226,8 +221,8 @@ namespace {
       return midgard::encode(decoded);
     }
 
-    void serialize(const valhalla::odin::DirectionsOptions& directions_options,
-      const std::list<valhalla::odin::TripDirections>& legs, std::ostringstream& stream) {
+    json::MapPtr serialize(const valhalla::odin::DirectionsOptions& directions_options,
+      const std::list<valhalla::odin::TripDirections>& legs) {
       auto json = json::map
       ({
         {"hint_data", json::map
@@ -246,8 +241,8 @@ namespace {
         {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
         {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
       });
-      //serialize it
-      stream << *json;
+
+      return json;
     }
   }
 
@@ -770,10 +765,9 @@ namespace {
       return legs;
     }
 
-    void serialize(const boost::optional<std::string>& id,
+    json::MapPtr serialize(const boost::optional<std::string>& id,
                    const valhalla::odin::DirectionsOptions& directions_options,
-                   const std::list<valhalla::odin::TripDirections>& directions_legs,
-                   std::ostringstream& stream) {
+                   const std::list<valhalla::odin::TripDirections>& directions_legs) {
 
       //build up the json object
       auto json = json::map
@@ -793,39 +787,8 @@ namespace {
       if (id)
         json->emplace("id", *id);
 
-      //serialize it
-      stream << *json;
+      return json;
     }
-  }
-
-
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
-
-    //build up the json map
-    auto json_error = json::map({});
-    json_error->emplace("status", exception.status_code_body);
-    json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
-    json_error->emplace("error", std::string(exception.error_code_message));
-    json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
-
-    //serialize it
-    std::stringstream ss;
-    if(jsonp)
-      ss << *jsonp << '(';
-    ss << *json_error;
-    if(jsonp)
-      ss << ')';
-
-    worker_t::result_t result{false};
-    http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-
-    return result;
   }
 }
 
@@ -839,6 +802,29 @@ namespace valhalla {
 
     tyr_worker_t::~tyr_worker_t(){}
 
+    void tyr_worker_t::cleanup() {
+      jsonp = boost::none;
+    }
+
+    json::MapPtr tyr_worker_t::serialize(service::ACTION_TYPE action, const boost::property_tree::ptree& request,
+        const std::list<TripDirections>& legs) const {
+      //see if we can get some options
+      valhalla::odin::DirectionsOptions directions_options;
+      auto options = request.get_child_optional("directions_options");
+      if(options)
+        directions_options = valhalla::odin::GetDirectionsOptions(*options);
+
+      if (!healthcheck)
+        midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
+
+      //serialize them
+      if(action == VIAROUTE)
+        return osrm_serializers::serialize(directions_options, legs);
+      else
+        return valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs);
+    }
+
+#ifdef HAVE_HTTP
     worker_t::result_t tyr_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
@@ -855,19 +841,11 @@ namespace valhalla {
           jsonp = request.get_optional<std::string>("jsonp");
         }
         catch(...) {
-          return jsonify_error({500, 500}, info, jsonp);
+          return jsonify_error({500}, info, jsonp);
         }
 
-        //flag healthcheck requests; do not send to logstash
+        //flag healthcheck requests
         healthcheck = request.get<bool>("healthcheck", false);
-        //see if we can get some options
-        valhalla::odin::DirectionsOptions directions_options;
-        auto options = request.get_child_optional("directions_options");
-        if(options)
-          directions_options = valhalla::odin::GetDirectionsOptions(*options);
-
-        if (!healthcheck)
-          midgard::logging::Log("language::" + directions_options.language(), " [ANALYTICS] ");
 
         //get the legs
         std::list<odin::TripDirections> legs;
@@ -877,22 +855,15 @@ namespace valhalla {
             legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            return jsonify_error({500, 501}, info, jsonp);
+            return jsonify_error({501}, info, jsonp);
           }
         }
 
-        //jsonp callback if need be
+        //get the result
         std::ostringstream json_stream;
         auto jsonp = request.get_optional<std::string>("jsonp");
-        if(jsonp)
-          json_stream << *jsonp << '(';
-        //serialize them
-        if(request.get<int>("action") == VIAROUTE)
-          osrm_serializers::serialize(directions_options, legs, json_stream);
-        else
-          valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs, json_stream);
-        if(jsonp)
-          json_stream << ')';
+        auto json = serialize(static_cast<ACTION_TYPE>(request.get<int>("action")), request, legs);
+        auto result = to_response(json, jsonp, info, true);
 
         //log request if greater than X (ms)
         auto trip_directions_length = 0.f;
@@ -912,21 +883,12 @@ namespace valhalla {
           midgard::logging::Log("valhalla_tyr_long_request", " [ANALYTICS] ");
         }
 
-        worker_t::result_t result{false};
-        http_response_t response(200, "OK", json_stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-        response.from_info(info);
-        result.messages.emplace_back(response.to_string());
-
         return result;
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({400, 599, std::string(e.what())}, info, jsonp);
+        return jsonify_error({599, std::string(e.what())}, info, jsonp);
       }
-    }
-
-    void tyr_worker_t::cleanup() {
-      jsonp = boost::none;
     }
 
     void run_service(const boost::property_tree::ptree& config) {
@@ -946,5 +908,6 @@ namespace valhalla {
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
     }
+#endif
   }
 }
