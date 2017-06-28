@@ -199,7 +199,9 @@ bool IsUnroutableNode(const GraphTile &tile, GraphReader& reader,
   // Check all the edges from the current node and count inbound and outbound edges
   for (size_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
     if (diredge->trans_up() || diredge->trans_down() || diredge->shortcut() ||
-        diredge->use() == Use::kTransitConnection) {
+        diredge->use() == Use::kTransitConnection ||
+        diredge->use() == Use::kEgressConnection ||
+        diredge->use() == Use::kPlatformConnection) {
       continue;
     }
     if ((diredge->forwardaccess() & kAutoAccess))

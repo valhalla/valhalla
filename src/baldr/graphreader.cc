@@ -372,7 +372,9 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, idx++) {
       if (directededge->trans_up() || directededge->trans_down() ||
           idx == edgeid.id() || directededge->is_shortcut() ||
-          directededge->use() == Use::kTransitConnection) {
+          directededge->use() == Use::kTransitConnection ||
+          directededge->use() == Use::kEgressConnection ||
+          directededge->use() == Use::kPlatformConnection) {
         continue;
       }
       if (continuing_edge != nullptr) {

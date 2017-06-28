@@ -495,7 +495,9 @@ find_shortest_path(baldr::GraphReader& reader,
       auto other_edge = tile->directededge(nodeinfo->edge_index());
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, ++other_edge, ++other_edgeid) {
         // Skip it if its a shortcut or transit connection
-        if (other_edge->is_shortcut() || other_edge->use() == baldr::Use::kTransitConnection) continue;
+        if (other_edge->is_shortcut() || other_edge->use() == baldr::Use::kTransitConnection ||
+            other_edge->use() == baldr::Use::kEgressConnection ||
+            other_edge->use() == baldr::Use::kPlatformConnection) continue;
 
         // Skip it if its not allowed
         const auto* other_tile = other_edgeid.Tile_Base() != tile->header()->graphid() ? reader.GetGraphTile(other_edgeid) : tile;

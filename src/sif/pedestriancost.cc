@@ -490,7 +490,9 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   // Disallow transit connections (except when set for multi-modal routes)
-  if (!allow_transit_connections_ && edge->use() == Use::kTransitConnection) {
+  if (!allow_transit_connections_ && (edge->use() == Use::kPlatformConnection ||
+      edge->use() == Use::kEgressConnection ||
+      edge->use() == Use::kTransitConnection)) {
     return false;
   }
   return true;
@@ -512,7 +514,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (opp_edge->surface() > minimal_allowed_surface_) ||
         opp_edge->is_shortcut() || IsUserAvoidEdge(opp_edgeid) ||
  //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
-        opp_edge->use() == Use::kTransitConnection) {
+        opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
+        opp_edge->use() == Use::kPlatformConnection) {
     return false;
   }
   return true;
