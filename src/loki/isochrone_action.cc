@@ -1,4 +1,4 @@
-#include "loki/service.h"
+#include "loki/worker.h"
 #include "loki/search.h"
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"

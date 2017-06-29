@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "midgard/logging.h"
 
-#include "loki/service.h"
+#include "loki/worker.h"
 
 
 using namespace valhalla;

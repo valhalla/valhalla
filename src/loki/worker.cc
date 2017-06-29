@@ -14,13 +14,14 @@
 #include "sif/pedestriancost.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
+#include "tyr/actor.h"
 
-#include "loki/service.h"
+#include "loki/worker.h"
 #include "loki/search.h"
 
 using namespace prime_server;
 using namespace valhalla;
-using namespace valhalla::service;
+using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

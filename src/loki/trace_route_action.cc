@@ -1,15 +1,16 @@
-#include "loki/service.h"
+#include "loki/worker.h"
 #include "loki/search.h"
 
 #include "midgard/pointll.h"
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
 #include "baldr/rapidjson_utils.h"
+#include "tyr/actor.h"
 
 #include <cmath>
 
 using namespace valhalla;
-using namespace valhalla::service;
+using namespace valhalla::tyr;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::loki;

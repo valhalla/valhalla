@@ -1,5 +1,5 @@
 #include <cstdint>
-#include "loki/service.h"
+#include "loki/worker.h"
 #include "loki/search.h"
 
 #include "baldr/json.h"

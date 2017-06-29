@@ -14,13 +14,13 @@
 
 #include "proto/directions_options.pb.h"
 #include "proto/trippath.pb.h"
-#include "odin/service.h"
+#include "odin/worker.h"
 #include "odin/util.h"
 #include "odin/directionsbuilder.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
-using namespace valhalla::service;
+using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
@@ -94,7 +94,7 @@ namespace valhalla {
         //narrate them and serialize them along
         auto narrated = narrate(request, legs);
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
-        return to_response(tyr::serialize(action, request, narrated), jsonp, info);
+        return to_response(tyr::serializeDirections(action, request, narrated), jsonp, info);
       }
       catch(const std::exception& e) {
         return jsonify_error({299, std::string(e.what())}, info, jsonp);

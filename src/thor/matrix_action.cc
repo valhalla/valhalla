@@ -1,4 +1,4 @@
-#include "thor/service.h"
+#include "thor/worker.h"
 #include <cstdint>
 
 #include "midgard/logging.h"
@@ -9,9 +9,10 @@
 #include "sif/pedestriancost.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
+#include "tyr/actor.h"
 
 using namespace valhalla;
-using namespace valhalla::service;
+using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

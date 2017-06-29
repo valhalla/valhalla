@@ -16,11 +16,12 @@
 #include "midgard/util.h"
 #include "midgard/encoded.h"
 
-#include "skadi/service.h"
+#include "skadi/worker.h"
 #include "skadi/sample.h"
+#include "tyr/actor.h"
 
 using namespace valhalla;
-using namespace valhalla::service;
+using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::skadi;

@@ -1,4 +1,4 @@
-#include "loki/service.h"
+#include "loki/worker.h"
 #include "loki/search.h"
 
 #include <boost/property_tree/info_parser.hpp>

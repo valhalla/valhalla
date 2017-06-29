@@ -1,4 +1,4 @@
-#include "thor/service.h"
+#include "thor/worker.h"
 
 #include <cstdint>
 #include <algorithm>

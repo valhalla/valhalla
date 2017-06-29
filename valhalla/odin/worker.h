@@ -1,7 +1,7 @@
 #ifndef __VALHALLA_ODIN_SERVICE_H__
 #define __VALHALLA_ODIN_SERVICE_H__
 
-#include <valhalla/service.h>
+#include <valhalla/worker.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 
@@ -12,7 +12,7 @@ namespace valhalla {
     void run_service(const boost::property_tree::ptree& config);
 #endif
 
-    class odin_worker_t : public service::service_worker_t{
+    class odin_worker_t : public service_worker_t{
      public:
       odin_worker_t(const boost::property_tree::ptree& config);
       virtual ~odin_worker_t();

@@ -7,7 +7,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/service.h>
+#include <valhalla/worker.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
@@ -25,6 +25,7 @@
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/tyr/actor.h>
 
 namespace valhalla {
 namespace thor {
@@ -33,7 +34,7 @@ namespace thor {
 void run_service(const boost::property_tree::ptree& config);
 #endif
 
-class thor_worker_t : public service::service_worker_t{
+class thor_worker_t : public service_worker_t{
  public:
   enum SHAPE_MATCH {
     EDGE_WALK = 0,
@@ -55,7 +56,7 @@ class thor_worker_t : public service::service_worker_t{
 
   std::list<odin::TripPath> route(const boost::property_tree::ptree& request,
              const boost::optional<int> &date_time_type);
-  baldr::json::MapPtr matrix(service::ACTION_TYPE matrix_type, const boost::property_tree::ptree& request);
+  baldr::json::MapPtr matrix(tyr::ACTION_TYPE matrix_type, const boost::property_tree::ptree& request);
   std::list<odin::TripPath> optimized_route(const boost::property_tree::ptree& request);
   baldr::json::MapPtr isochrone(const boost::property_tree::ptree& request);
   odin::TripPath trace_route(const boost::property_tree::ptree& request);

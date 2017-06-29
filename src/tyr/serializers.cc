@@ -21,7 +21,7 @@
 
 
 using namespace valhalla;
-using namespace valhalla::service;
+using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::odin;
@@ -1243,7 +1243,7 @@ namespace {
 namespace valhalla {
   namespace tyr {
 
-    json::MapPtr serialize(service::ACTION_TYPE action, const boost::property_tree::ptree& request,
+    json::MapPtr serializeDirections(ACTION_TYPE action, const boost::property_tree::ptree& request,
         const std::list<TripDirections>& legs) {
       //see if we can get some options
       valhalla::odin::DirectionsOptions directions_options;

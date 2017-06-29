@@ -18,9 +18,9 @@ using namespace prime_server;
 
 #include "midgard/logging.h"
 
-#include "loki/service.h"
-#include "thor/service.h"
-#include "odin/service.h"
+#include "loki/worker.h"
+#include "thor/worker.h"
+#include "odin/worker.h"
 
 int main(int argc, char** argv) {
 

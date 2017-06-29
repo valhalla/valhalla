@@ -11,7 +11,7 @@
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/skadi/sample.h>
-#include <valhalla/service.h>
+#include <valhalla/worker.h>
 
 namespace valhalla {
   namespace skadi {
@@ -20,7 +20,7 @@ namespace valhalla {
     void run_service(const boost::property_tree::ptree& config);
 #endif
 
-    class skadi_worker_t : public service::service_worker_t{
+    class skadi_worker_t : public service_worker_t{
      public:
       skadi_worker_t(const boost::property_tree::ptree& config);
       virtual ~skadi_worker_t();

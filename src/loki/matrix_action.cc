@@ -1,4 +1,4 @@
-#include "loki/service.h"
+#include "loki/worker.h"
 #include "loki/search.h"
 
 #include <boost/property_tree/info_parser.hpp>
@@ -8,9 +8,10 @@
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
+#include "tyr/actor.h"
 
 using namespace valhalla;
-using namespace valhalla::service;
+using namespace valhalla::tyr;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 

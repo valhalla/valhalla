@@ -6,13 +6,14 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/service.h>
+#include <valhalla/worker.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/tyr/actor.h>
 
 namespace valhalla {
   namespace loki {
@@ -21,7 +22,7 @@ namespace valhalla {
     void run_service(const boost::property_tree::ptree& config);
 #endif
 
-    class loki_worker_t : public service::service_worker_t {
+    class loki_worker_t : public service_worker_t {
      public:
       loki_worker_t(const boost::property_tree::ptree& config);
 #ifdef HAVE_HTTP
@@ -31,9 +32,9 @@ namespace valhalla {
 
       baldr::json::ArrayPtr locate(rapidjson::Document& request);
       void route(rapidjson::Document& request);
-      void matrix(service::ACTION_TYPE action, rapidjson::Document& request);
+      void matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void isochrones(rapidjson::Document& request);
-      void trace_route(service::ACTION_TYPE action, rapidjson::Document& request);
+      void trace_route(tyr::ACTION_TYPE action, rapidjson::Document& request);
 
      protected:
 
@@ -45,7 +46,7 @@ namespace valhalla {
 
       void init_locate(rapidjson::Document& request);
       void init_route(rapidjson::Document& request);
-      void init_matrix(service::ACTION_TYPE action, rapidjson::Document& request);
+      void init_matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void init_isochrones(rapidjson::Document& request);
       void init_trace(rapidjson::Document& request);
 

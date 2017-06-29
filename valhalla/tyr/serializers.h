@@ -6,14 +6,15 @@
 #include <string>
 #include <iostream>
 
-#include <valhalla/service.h>
+#include <valhalla/worker.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/route.pb.h>
+#include <valhalla/tyr/actor.h>
 
 namespace valhalla {
   namespace tyr {
 
-    baldr::json::MapPtr serialize(service::ACTION_TYPE action, const boost::property_tree::ptree& request, const std::list<odin::TripDirections>& directions_legs);
+    baldr::json::MapPtr serializeDirections(ACTION_TYPE action, const boost::property_tree::ptree& request, const std::list<odin::TripDirections>& directions_legs);
 
     /**
      * Transfers the JSON route information returned from a route request into

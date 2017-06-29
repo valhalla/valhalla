@@ -15,11 +15,12 @@
 #include "baldr/geojson.h"
 #include "exception.h"
 
-#include "thor/service.h"
+#include "thor/worker.h"
 #include "thor/isochrone.h"
+#include "tyr/actor.h"
 
 using namespace valhalla;
-using namespace valhalla::service;
+using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::meili;
@@ -144,9 +145,7 @@ namespace valhalla {
         healthcheck = request.get<bool>("healthcheck", false);
         // Initialize request - get the PathALgorithm to use
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
-        boost::optional<int> date_time_type;
-        if (request.find("date_time.type") != request.not_found())
-          date_time_type = request.get<float>("date_time.type");
+        boost::optional<int> date_time_type = request.get_optional<int>("date_time.type");
         // Allow the request to be aborted
         astar.set_interrupt(&interrupt);
         bidir_astar.set_interrupt(&interrupt);

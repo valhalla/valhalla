@@ -118,7 +118,7 @@ lib_LTLIBRARIES = libvalhalla.la
 nobase_include_HEADERS = \
 	valhalla/valhalla.h \
 	valhalla/exception.h \
-	valhalla/service.h \
+	valhalla/worker.h \
 	valhalla/midgard/linesegment2.h \
 	valhalla/midgard/tiles.h \
 	valhalla/midgard/gridded_data.h \
@@ -208,10 +208,10 @@ nobase_include_HEADERS = \
 	valhalla/meili/map_matcher_factory.h \
 	valhalla/meili/traffic_segment_matcher.h \
 	valhalla/meili/match_route.h \
-	valhalla/skadi/service.h \
+	valhalla/skadi/worker.h \
 	valhalla/skadi/sample.h \
 	valhalla/skadi/util.h \
-	valhalla/loki/service.h \
+	valhalla/loki/worker.h \
 	valhalla/loki/search.h \
 	valhalla/loki/node_search.h \
 	valhalla/proto/tripcommon.pb.h \
@@ -220,7 +220,7 @@ nobase_include_HEADERS = \
 	valhalla/proto/route.pb.h \
 	valhalla/proto/navigator.pb.h \
 	valhalla/proto/directions_options.pb.h \
-	valhalla/odin/service.h \
+	valhalla/odin/worker.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
 	valhalla/odin/narrative_dictionary.h \
@@ -233,7 +233,7 @@ nobase_include_HEADERS = \
 	valhalla/odin/util.h \
 	valhalla/odin/transitrouteinfo.h \
 	valhalla/odin/transitstop.h \
-	valhalla/thor/service.h \
+	valhalla/thor/worker.h \
 	valhalla/thor/astar.h \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/bidirectional_astar.h \
@@ -252,9 +252,10 @@ nobase_include_HEADERS = \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
 	valhalla/tyr/serializers.h \
-	valhalla/tyr/navigator.h
+	valhalla/tyr/navigator.h \
+	valhalla/tyr/actor.h
 libvalhalla_la_SOURCES = \
-	src/service.cc \
+	src/worker.cc \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
 	src/midgard/gridded_data.cc \
@@ -325,10 +326,10 @@ libvalhalla_la_SOURCES = \
 	src/meili/match_route.cc \
 	src/meili/traffic_segment_matcher.cc \
 	src/skadi/sample.cc \
-	src/skadi/service.cc \
+	src/skadi/worker.cc \
 	src/skadi/util.cc \
 	src/loki/search.cc \
-	src/loki/service.cc \
+	src/loki/worker.cc \
 	src/loki/locate_action.cc \
 	src/loki/route_action.cc \
 	src/loki/matrix_action.cc \
@@ -354,7 +355,7 @@ libvalhalla_la_SOURCES = \
 	src/odin/transitrouteinfo.cc \
 	src/odin/transitstop.cc \
 	src/odin/locales.h \
-	src/odin/service.cc \
+	src/odin/worker.cc \
 	src/thor/astar.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/costmatrix.cc \
@@ -367,7 +368,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/route_matcher.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
-	src/thor/service.cc \
+	src/thor/worker.cc \
 	src/thor/isochrone_action.cc \
 	src/thor/matrix_action.cc \
 	src/thor/optimized_route_action.cc \
@@ -375,7 +376,8 @@ libvalhalla_la_SOURCES = \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
 	src/tyr/serializers.cc \
-	src/tyr/navigator.cc 
+	src/tyr/navigator.cc \
+	src/tyr/actor.cc
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
 libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS) $(SERVICE_DEPS_LIBS)
 
