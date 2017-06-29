@@ -67,13 +67,9 @@ namespace valhalla {
     };
 
 #ifdef HAVE_HTTP
-    const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-    const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-    const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
     worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp = boost::none);
-    worker_t::result_t to_response(baldr::json::ArrayPtr array, const boost::optional<std::string>& jsonp, http_request_info_t& request_info, bool final);
-    worker_t::result_t to_response(baldr::json::MapPtr map, const boost::optional<std::string>& jsonp, http_request_info_t& request_info, bool final);
+    worker_t::result_t to_response(baldr::json::ArrayPtr array, const boost::optional<std::string>& jsonp, http_request_info_t& request_info);
+    worker_t::result_t to_response(baldr::json::MapPtr map, const boost::optional<std::string>& jsonp, http_request_info_t& request_info);
 #endif
 
     class service_worker_t {

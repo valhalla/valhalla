@@ -44,8 +44,7 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &request,
-    const std::string &request_str) {
+odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &request) {
 
   // Parse request
   parse_locations(request);

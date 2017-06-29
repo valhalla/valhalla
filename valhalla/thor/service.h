@@ -24,8 +24,7 @@
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/meili/map_matcher_factory.h>
-
-using namespace valhalla::service; //REMOVE THIS
+#include <valhalla/proto/trippath.pb.h>
 
 namespace valhalla {
 namespace thor {
@@ -54,15 +53,13 @@ class thor_worker_t : public service::service_worker_t{
 #endif
   virtual void cleanup() override;
 
-  std::list<valhalla::odin::TripPath> route(const boost::property_tree::ptree& request,
-             const std::string &request_str,
+  std::list<odin::TripPath> route(const boost::property_tree::ptree& request,
              const boost::optional<int> &date_time_type);
-  baldr::json::MapPtr matrix(ACTION_TYPE matrix_type, const boost::property_tree::ptree& request);
-  std::list<valhalla::odin::TripPath> optimized_route(const boost::property_tree::ptree& request,
-                       const std::string &request_str);
+  baldr::json::MapPtr matrix(service::ACTION_TYPE matrix_type, const boost::property_tree::ptree& request);
+  std::list<odin::TripPath> optimized_route(const boost::property_tree::ptree& request);
   baldr::json::MapPtr isochrone(const boost::property_tree::ptree& request);
-  odin::TripPath trace_route(const boost::property_tree::ptree& request, const std::string &request_str);
-  baldr::json::MapPtr trace_attributes(const boost::property_tree::ptree& request, const std::string &request_str);
+  odin::TripPath trace_route(const boost::property_tree::ptree& request);
+  baldr::json::MapPtr trace_attributes(const boost::property_tree::ptree& request);
 
  protected:
 
@@ -74,17 +71,15 @@ class thor_worker_t : public service::service_worker_t{
   thor::PathAlgorithm* get_path_algorithm(
       const std::string& routetype, const baldr::PathLocation& origin,
       const baldr::PathLocation& destination);
-  valhalla::odin::TripPath route_match(const AttributesController& controller);
-  std::pair<valhalla::odin::TripPath, std::vector<thor::MatchResult>> map_match(
+  odin::TripPath route_match(const AttributesController& controller);
+  std::pair<odin::TripPath, std::vector<thor::MatchResult>> map_match(
       const AttributesController& controller, bool trace_attributes_action = false);
 
-  std::list<valhalla::odin::TripPath> path_arrive_by(
+  std::list<odin::TripPath> path_arrive_by(
+      std::vector<baldr::PathLocation>& correlated, const std::string &costing);
+  std::list<odin::TripPath> path_depart_at(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
-      const std::string &request_str);
-  std::list<valhalla::odin::TripPath> path_depart_at(
-      std::vector<baldr::PathLocation>& correlated, const std::string &costing,
-      const boost::optional<int> &date_time_type,
-      const std::string &request_str);
+      const boost::optional<int> &date_time_type);
 
   void parse_locations(const boost::property_tree::ptree& request);
   void parse_shape(const boost::property_tree::ptree& request);
@@ -93,8 +88,6 @@ class thor_worker_t : public service::service_worker_t{
   void filter_attributes(const boost::property_tree::ptree& request, AttributesController& controller);
 
   valhalla::sif::TravelMode mode;
-  boost::property_tree::ptree config;
-  boost::optional<std::string> jsonp;
   std::vector<baldr::Location> locations;
   std::vector<midgard::PointLL> shape;
   std::vector<baldr::PathLocation> correlated;

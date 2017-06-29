@@ -292,7 +292,7 @@ namespace valhalla {
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           case LOCATE:
-            result = to_response(locate(request_rj), jsonp, info, false);
+            result = to_response(locate(request_rj), jsonp, info);
             break;
           case ONE_TO_MANY:
           case MANY_TO_ONE:

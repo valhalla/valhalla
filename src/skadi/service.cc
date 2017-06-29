@@ -126,6 +126,7 @@ namespace valhalla {
 
     skadi_worker_t::~skadi_worker_t(){}
 
+#ifdef HAVE_HTTP
     worker_t::result_t skadi_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
@@ -143,17 +144,17 @@ namespace valhalla {
           return jsonify_error({301}, info, jsonp);
 
         auto action = PATH_TO_ACTION.find(request.path);
-        if(action == PATH_TO_ACTION.cend() || action->second != HEIGHT)
+        if(action == PATH_TO_ACTION.cend())
           return jsonify_error({304, action->first}, info, jsonp);
 
         //parse the query's json
         auto request_pt = from_request(request);
         jsonp = request_pt.get_optional<std::string>("jsonp");
         init_request(request_pt);
-        worker_t::result_t result{false};
+        worker_t::result_t result;
         switch (action->second) {
           case HEIGHT:
-            result = to_response(elevation(request_pt), jsonp, info, true);
+            result = to_response(elevation(request_pt), jsonp, info);
             break;
           default:
             return jsonify_error({305}, info, jsonp);
@@ -183,6 +184,25 @@ namespace valhalla {
         return jsonify_error({399, std::string(e.what())}, info, jsonp);
       }
     }
+
+    void run_service(const boost::property_tree::ptree& config) {
+      //gets requests from the http server
+      auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
+      //or returns just location information back to the server
+      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
+
+      //listen for requests
+      zmq::context_t context;
+      skadi_worker_t skadi_worker(config);
+      prime_server::worker_t worker(context, upstream_endpoint, "ipc://TODO", loopback_endpoint, interrupt_endpoint,
+        std::bind(&skadi_worker_t::work, std::ref(skadi_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+        std::bind(&skadi_worker_t::cleanup, std::ref(skadi_worker)));
+      worker.work();
+
+      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+    }
+#endif
 
     void skadi_worker_t::cleanup() {
       shape.clear();
@@ -282,22 +302,5 @@ namespace valhalla {
       return json;
     }
 
-    void run_service(const boost::property_tree::ptree& config) {
-      //gets requests from the http server
-      auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
-      //or returns just location information back to the server
-      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
-      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
-
-      //listen for requests
-      zmq::context_t context;
-      skadi_worker_t skadi_worker(config);
-      prime_server::worker_t worker(context, upstream_endpoint, "ipc://TODO", loopback_endpoint, interrupt_endpoint,
-        std::bind(&skadi_worker_t::work, std::ref(skadi_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-        std::bind(&skadi_worker_t::cleanup, std::ref(skadi_worker)));
-      worker.work();
-
-      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
-    }
   }
 }

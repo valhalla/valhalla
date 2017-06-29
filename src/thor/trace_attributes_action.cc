@@ -400,8 +400,7 @@ void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request
  * path as well as any intersections along the path.
  */
 json::MapPtr thor_worker_t::trace_attributes(
-    const boost::property_tree::ptree &request,
-    const std::string &request_str) {
+    const boost::property_tree::ptree &request) {
 
   // Parse request
   parse_locations(request);

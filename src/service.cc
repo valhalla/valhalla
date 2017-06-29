@@ -77,11 +77,13 @@ namespace valhalla {
       {101, 405},
       {106, 404},
       {107, 501},
+
       {110, 400},
       {111, 400},
       {112, 400},
       {113, 400},
       {114, 400},
+
       {120, 400},
       {121, 400},
       {122, 400},
@@ -89,9 +91,16 @@ namespace valhalla {
       {124, 400},
       {125, 400},
       {126, 400},
+
+      {130, 400},
+      {131, 400},
+      {132, 400},
+      {133, 400},
+
       {140, 400},
       {141, 501},
       {142, 501},
+
       {150, 400},
       {151, 400},
       {152, 400},
@@ -101,58 +110,79 @@ namespace valhalla {
       {156, 400},
       {157, 400},
       {158, 400},
+
       {160, 400},
       {161, 400},
       {162, 400},
       {163, 400},
+
       {170, 400},
       {171, 400},
+
       {199, 400},
+
       {200, 500},
       {201, 500},
       {202, 500},
+
       {210, 400},
       {211, 400},
       {212, 400},
       {213, 400},
+
       {220, 400},
+
       {230, 400},
       {231, 400},
       {232, 400},
+
       {299, 400},
+
       {300, 400},
       {301, 405},
       {304, 404},
       {305, 501},
+
       {310, 400},
       {311, 400},
       {312, 400},
       {313, 400},
       {314, 400},
+
       {399, 400},
+
       {400, 400},
       {401, 500},
-      {410, 400},
+
       {420, 400},
       {421, 400},
       {422, 400},
       {423, 400},
+      {424, 400},
+
       {430, 400},
+
       {440, 400},
       {441, 400},
       {442, 400},
       {443, 400},
       {444, 400},
       {445, 400},
+
       {499, 400},
-      {499, 500},
+
       {500, 500},
       {501, 500},
       {502, 400},
+
       {599, 400},
     };
 
 #ifdef HAVE_HTTP
+    const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+    const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+    const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+
     worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
       //get the http status
       auto status = ERROR_TO_STATUS.find(exception.code)->second;
@@ -182,7 +212,7 @@ namespace valhalla {
       return result;
     }
 
-    worker_t::result_t to_response(baldr::json::ArrayPtr array, const boost::optional<std::string>& jsonp, http_request_info_t& request_info, bool final) {
+    worker_t::result_t to_response(baldr::json::ArrayPtr array, const boost::optional<std::string>& jsonp, http_request_info_t& request_info) {
       std::ostringstream stream;
       //jsonp callback if need be
       if(jsonp)
@@ -191,14 +221,14 @@ namespace valhalla {
       if(jsonp)
         stream << ')';
 
-      worker_t::result_t result{final};
+      worker_t::result_t result{false};
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());
       return result;
     }
 
-    worker_t::result_t to_response(baldr::json::MapPtr map, const boost::optional<std::string>& jsonp, http_request_info_t& request_info, bool final) {
+    worker_t::result_t to_response(baldr::json::MapPtr map, const boost::optional<std::string>& jsonp, http_request_info_t& request_info) {
       std::ostringstream stream;
       //jsonp callback if need be
       if(jsonp)
@@ -207,7 +237,7 @@ namespace valhalla {
       if(jsonp)
         stream << ')';
 
-      worker_t::result_t result{final};
+      worker_t::result_t result{false};
       http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());

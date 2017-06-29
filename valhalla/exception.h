@@ -78,8 +78,6 @@ namespace valhalla {
     // skadi project 3xx
     {300,"Failed to parse json request"},
     {301,"Try a POST or GET request instead"},
-    {302,"The config actions for Skadi are incorrectly loaded"},
-    {303,"Path action not supported"},
     {304,"Try any of"},
     {305,"Not Implemented"},
 
@@ -94,10 +92,6 @@ namespace valhalla {
     // thor project 4xx
     {400,"Unknown action"},
     {401,"Failed to parse intermediate request format"},
-
-    {410,"Insufficiently specified required parameter 'locations'"},
-    {411,"Insufficiently specified required parameter 'shape'"},
-    {412,"No costing method found"},
 
     {420,"Failed to parse correlated location"},
     {421,"Failed to parse location"},

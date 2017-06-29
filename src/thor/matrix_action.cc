@@ -11,6 +11,7 @@
 #include "thor/timedistancematrix.h"
 
 using namespace valhalla;
+using namespace valhalla::service;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

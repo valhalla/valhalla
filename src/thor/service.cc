@@ -51,7 +51,7 @@ namespace {
          }
        }
        catch (...) {
-         throw valhalla_exception_t{400, 420};
+         throw valhalla_exception_t{420};
        }
    }while(++i);
      return correlated;
@@ -69,7 +69,7 @@ namespace valhalla {
 
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config):
       mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), matcher_factory(config), reader(matcher_factory.graphreader()),
+      matcher_factory(config), reader(matcher_factory.graphreader()),
       long_request(config.get<float>("thor.logging.long_request")),
       healthcheck(false) {
       // Register edge/node costing methods
@@ -111,12 +111,10 @@ namespace valhalla {
 
     thor_worker_t::~thor_worker_t(){}
 
+#ifdef HAVE_HTTP
     worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t& interrupt) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
-      auto computed_time = 0;
-      auto elapsed_time = 0.0;
-      size_t order_index = 0;
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
 
@@ -125,6 +123,7 @@ namespace valhalla {
         boost::property_tree::ptree request;
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
+        boost::optional<std::string> jsonp;
         try {
           boost::property_tree::read_json(stream, request);
           jsonp = request.get_optional<std::string>("jsonp");
@@ -154,72 +153,61 @@ namespace valhalla {
         multi_modal_astar.set_interrupt(&interrupt);
 
         worker_t::result_t result{true};
-        std::list<valhalla::odin::TripPath> trippaths;
-        odin::TripPath trippath;
+        double denominator = 0;
+        size_t order_index = 0;
         //do request specific processing
         switch (action) {
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
-            result = to_response(matrix(action, request), request, info, true);
-            elapsed_time = (std::chrono::system_clock::now() - s).count();
-            computed_time = elapsed_time / (correlated_s.size() * correlated_t.size());
+            result = to_response(matrix(action, request), jsonp, info);
+            denominator = correlated_s.size() * correlated_t.size();
             break;
           case OPTIMIZED_ROUTE:
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
-            trippaths = optimized_route(request, request_str);
-            for (auto& trippath: trippaths) {
+            for (auto& trippath : optimized_route(request)) {
               for (auto& location : *trippath.mutable_location())
                 location.set_original_index(optimal_order[order_index++]);
               --order_index;
               result.messages.emplace_back(trippath.SerializeAsString());
             }
-            elapsed_time = (std::chrono::system_clock::now() - s).count();
-            computed_time = elapsed_time / std::max(correlated_s.size(), correlated_t.size());
+            denominator = std::max(correlated_s.size(), correlated_t.size());
             break;
           case ISOCHRONE:
-            result = to_response(isochrone(request), request, info, true);
-            elapsed_time = (std::chrono::system_clock::now() - s).count();
-            computed_time = elapsed_time / (correlated_s.size() * correlated_t.size());
+            result = to_response(isochrone(request), jsonp, info);
+            denominator = correlated_s.size() * correlated_t.size();
             break;
           case ROUTE:
           case VIAROUTE:
             // Forward the original request
-            result.messages.emplace_back(request_str);
-            trippaths = route(request, request_str, date_time_type);
-            for (auto& trippath: trippaths) {
+            result.messages.emplace_back(std::move(request_str));
+            for (const auto& trippath : route(request, date_time_type))
               result.messages.emplace_back(trippath.SerializeAsString());
-            }
-            elapsed_time = (std::chrono::system_clock::now() - s).count();
-            computed_time = elapsed_time / correlated.size();
+            denominator = correlated.size();
             break;
           case TRACE_ROUTE:
             // Forward the original request
-            result.messages.emplace_back(request_str);
-            trippath = trace_route(request, request_str);
-            result.messages.emplace_back(trippath.SerializeAsString());
-            elapsed_time = (std::chrono::system_clock::now() - s).count();
-            computed_time = elapsed_time / shape.size();
-            long_request = long_request / 1100;
+            result.messages.emplace_back(std::move(request_str));
+            result.messages.emplace_back(trace_route(request).SerializeAsString());
+            denominator = shape.size() / 1100;
             break;
           case TRACE_ATTRIBUTES:
-            result = to_response(trace_attributes(request, request_str), request, info, true);
-            elapsed_time = (std::chrono::system_clock::now() - s).count();
-            computed_time = elapsed_time / shape.size();
-            long_request = long_request / 1100;
+            result = to_response(trace_attributes(request), jsonp, info);
+            denominator = shape.size() / 1100;
             break;
           default:
             throw valhalla_exception_t{400}; //this should never happen
         }
 
-        if (!healthcheck && !info.spare && (computed_time > long_request)) {
+        double elapsed_time = (std::chrono::system_clock::now() - s).count();
+        if (!healthcheck && !info.spare && elapsed_time / denominator > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request, false);
-         // LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request elapsed time (ms)::"+ std::to_string(elapsed_time));
-         // LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request exceeded threshold::"+ ss.str());
-         // midgard::logging::Log("valhalla_thor_long_request_"+ACTION_TO_STRING.find(action)->second, " [ANALYTICS] ");
+          LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request elapsed time (ms)::"+ std::to_string(elapsed_time));
+          LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("valhalla_thor_long_request_"+ACTION_TO_STRING.find(action)->second, " [ANALYTICS] ");
         }
 
         return result;
@@ -233,6 +221,27 @@ namespace valhalla {
         return jsonify_error({499, std::string(e.what())}, info);
       }
     }
+
+    void run_service(const boost::property_tree::ptree& config) {
+      //gets requests from thor proxy
+      auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
+      //sends them on to odin
+      auto downstream_endpoint = config.get<std::string>("odin.service.proxy") + "_in";
+      //or returns just location information back to the server
+      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
+
+      //listen for requests
+      zmq::context_t context;
+      thor_worker_t thor_worker(config);
+      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint, interrupt_endpoint,
+        std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+        std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
+      worker.work();
+
+      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+    }
+#endif
 
     // Get the costing options if in the config or get the empty default.
     // Creates the cost in the cost factory
@@ -290,9 +299,7 @@ namespace valhalla {
 
         correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->size());
         correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
-      }//we need something
-      else
-        throw valhalla_exception_t{410};
+      }
 
       //type - 0: current, 1: depart, 2: arrive
       if (request.find("date_time.type") == request.not_found())
@@ -312,16 +319,13 @@ namespace valhalla {
     void thor_worker_t::parse_shape(const boost::property_tree::ptree& request) {
       //we require locations
       auto request_shape = request.get_child("shape");
-
-      for(const auto& pt : request_shape) {
-        try{
+      try{
+        for(const auto& pt : request_shape)
           shape.push_back(baldr::Location::FromPtree(pt.second).latlng_);
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse shape");
-        }
       }
-
+      catch (...) {
+        throw valhalla_exception_t{424};
+      }
     }
 
     void thor_worker_t::parse_trace_config(const boost::property_tree::ptree& request) {
@@ -377,7 +381,6 @@ namespace valhalla {
     }
 
     void thor_worker_t::cleanup() {
-      jsonp = boost::none;
       astar.Clear();
       bidir_astar.Clear();
       multi_modal_astar.Clear();
@@ -390,26 +393,6 @@ namespace valhalla {
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())
         reader.Clear();
-    }
-
-    void run_service(const boost::property_tree::ptree& config) {
-      //gets requests from thor proxy
-      auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
-      //sends them on to odin
-      auto downstream_endpoint = config.get<std::string>("odin.service.proxy") + "_in";
-      //or returns just location information back to the server
-      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
-      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
-
-      //listen for requests
-      zmq::context_t context;
-      thor_worker_t thor_worker(config);
-      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint, interrupt_endpoint,
-        std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-        std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
-      worker.work();
-
-      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
     }
 
   }

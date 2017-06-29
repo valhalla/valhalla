@@ -863,7 +863,7 @@ namespace valhalla {
         std::ostringstream json_stream;
         auto jsonp = request.get_optional<std::string>("jsonp");
         auto json = serialize(static_cast<ACTION_TYPE>(request.get<int>("action")), request, legs);
-        auto result = to_response(json, jsonp, info, true);
+        auto result = to_response(json, jsonp, info);
 
         //log request if greater than X (ms)
         auto trip_directions_length = 0.f;

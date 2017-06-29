@@ -17,7 +17,7 @@ using namespace valhalla::thor;
 namespace valhalla {
   namespace thor {
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(const boost::property_tree::ptree& request, const std::string &request_str) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(const boost::property_tree::ptree& request) {
     parse_locations(request);
     auto costing = parse_costing(request);
 
@@ -55,7 +55,7 @@ namespace valhalla {
     for (size_t i = 0; i< optimal_order.size(); i++)
       best_order.emplace_back(correlated[optimal_order[i]]);
 
-    auto trippaths = path_depart_at(best_order, costing, date_time_type, request_str);
+    auto trippaths = path_depart_at(best_order, costing, date_time_type);
 
     return trippaths;
   }
