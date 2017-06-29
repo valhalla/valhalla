@@ -125,7 +125,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 //  LOG_TRACE(shape_json);
 
   if (shape.empty() || (trip_path_->node_size() < 2))
-    throw valhalla_exception_t{400, 213};
+    throw valhalla_exception_t{213};
   const auto& orig = trip_path_->GetOrigin();
   const auto& dest = trip_path_->GetDestination();
   std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);

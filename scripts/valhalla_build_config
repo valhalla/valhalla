@@ -115,17 +115,6 @@ config = {
       'cache_size': 100240
     }
   },
-  'tyr': {
-    'logging': {
-      'type': 'std_out',
-      'color': True,
-      'long_request': 100.0,
-      'file_name': 'path_to_some_file.log'
-    },
-    'service': {
-      'proxy': 'ipc:///tmp/tyr'
-    }
-  },
   'httpd': {
     'service': {
       'listen': 'tcp://*:8002',
@@ -320,17 +309,6 @@ help_text = {
     'grid': {
       'size': 'TODO: Resolution of the grid used in finding match candidates',
       'cache_size': 'TODO: number of grids to keep in cache'
-    }
-  },
-  'tyr': {
-    'logging': {
-      'type': 'Type of logger either std_out or file',
-      'color': 'User colored log level in std_out logger',
-      'file_name': 'Output log file for the file logger',
-      'long_request': 'Value used in processing to determine whether it took too long'
-    },
-    'service': {
-      'proxy': 'IPC linux domain socket file location'
     }
   },
   'httpd': {

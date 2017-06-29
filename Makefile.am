@@ -251,8 +251,7 @@ nobase_include_HEADERS = \
 	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
-	valhalla/tyr/service.h \
-	valhalla/tyr/util.h \
+	valhalla/tyr/serializers.h \
 	valhalla/tyr/navigator.h
 libvalhalla_la_SOURCES = \
 	src/service.cc \
@@ -375,9 +374,8 @@ libvalhalla_la_SOURCES = \
 	src/thor/route_action.cc \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
-	src/tyr/util.cc \
-	src/tyr/navigator.cc \
-	src/tyr/service.cc
+	src/tyr/serializers.cc \
+	src/tyr/navigator.cc 
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
 libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS) $(SERVICE_DEPS_LIBS)
 
@@ -473,7 +471,6 @@ bin_PROGRAMS = \
 	valhalla_benchmark_adjacency_list \
 	valhalla_run_matrix \
 	valhalla_export_edges
-
 valhalla_run_map_match_SOURCES = src/meili/valhalla_run_map_match.cc
 valhalla_run_map_match_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_run_map_match_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -506,8 +503,7 @@ bin_PROGRAMS += \
 	valhalla_loki_worker \
 	valhalla_odin_worker \
 	valhalla_thor_worker \
-	valhalla_elevation_service \
-	valhalla_tyr_worker
+	valhalla_elevation_service 
 valhalla_skadi_worker_SOURCES = src/valhalla_skadi_worker.cc
 valhalla_skadi_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_skadi_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
@@ -520,9 +516,6 @@ valhalla_odin_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $
 valhalla_thor_worker_SOURCES = src/valhalla_thor_worker.cc
 valhalla_thor_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_thor_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-valhalla_tyr_worker_SOURCES = src/valhalla_tyr_worker.cc
-valhalla_tyr_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_tyr_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_elevation_service_SOURCES = src/valhalla_elevation_service.cc
 valhalla_elevation_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_elevation_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
@@ -648,7 +641,6 @@ check_PROGRAMS = \
 	test/maneuversbuilder \
 	test/narrativebuilder \
 	test/navigator \
-	test/util_tyr \
 	test/enhancedtrippath \
 	test/sign \
 	test/signs \
@@ -825,9 +817,6 @@ test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ 
 test_narrativebuilder_SOURCES = test/narrativebuilder.cc test/test.cc
 test_narrativebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_narrativebuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_util_tyr_SOURCES = test/util_tyr.cc test/test.cc
-test_util_tyr_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_util_tyr_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_navigator_SOURCES = test/navigator.cc test/test.cc
 test_navigator_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_navigator_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

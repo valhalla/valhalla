@@ -17,6 +17,7 @@
 #include "odin/service.h"
 #include "odin/util.h"
 #include "odin/directionsbuilder.h"
+#include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace valhalla::service;
@@ -77,7 +78,7 @@ namespace valhalla {
           return jsonify_error({200}, info, jsonp);
         }
 
-        //for each leg
+        //parse each leg
         std::list<TripPath> legs;
         for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
           //crack open the path
@@ -90,15 +91,10 @@ namespace valhalla {
           }
         }
 
-        //forward the original request
-        std::stringstream ss;
-        boost::property_tree::write_json(ss, request, false);
-        worker_t::result_t result{true};
-        result.messages.emplace_back(ss.str());
-        for(const auto& leg : narrate(request, legs))
-          result.messages.emplace_back(leg.SerializeAsString());
-
-        return result;
+        //narrate them and serialize them along
+        auto narrated = narrate(request, legs);
+        ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
+        return to_response(tyr::serialize(action, request, narrated), jsonp, info);
       }
       catch(const std::exception& e) {
         return jsonify_error({299, std::string(e.what())}, info, jsonp);

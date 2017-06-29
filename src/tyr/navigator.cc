@@ -16,7 +16,7 @@
 #include "baldr/json.h"
 #include "baldr/location.h"
 #include "exception.h"
-#include "tyr/util.h"
+#include "tyr/serializers.h"
 #include "tyr/navigator.h"
 
 using namespace valhalla::baldr;
