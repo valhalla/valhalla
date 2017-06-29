@@ -104,15 +104,13 @@ namespace valhalla {
     void run_service(const boost::property_tree::ptree& config) {
       //gets requests from odin proxy
       auto upstream_endpoint = config.get<std::string>("odin.service.proxy") + "_out";
-      //sends them on to tyr
-      auto downstream_endpoint = config.get<std::string>("tyr.service.proxy") + "_in";
       //or returns just location information back to the server
       auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
       auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
 
       //listen for requests
       zmq::context_t context;
-      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint, interrupt_endpoint,
+      prime_server::worker_t worker(context, upstream_endpoint, "ipc:///dev/null", loopback_endpoint, interrupt_endpoint,
         std::bind(&odin_worker_t::work, odin_worker_t(config), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
       worker.work();
 
