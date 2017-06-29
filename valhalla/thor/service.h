@@ -7,13 +7,10 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <prime_server/prime_server.hpp>
-#include <prime_server/http_protocol.hpp>
-
+#include <valhalla/service.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
@@ -28,27 +25,17 @@
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/meili/map_matcher_factory.h>
 
+using namespace valhalla::service; //REMOVE THIS
 
 namespace valhalla {
 namespace thor {
 
+#ifdef HAVE_HTTP
 void run_service(const boost::property_tree::ptree& config);
+#endif
 
-class thor_worker_t {
+class thor_worker_t : public service::service_worker_t{
  public:
-  enum ACTION_TYPE {
-    ROUTE = 0,
-    VIAROUTE = 1,
-    LOCATE = 2,
-    ONE_TO_MANY = 3,
-    MANY_TO_ONE = 4,
-    MANY_TO_MANY = 5,
-    SOURCES_TO_TARGETS = 6,
-    OPTIMIZED_ROUTE = 7,
-    ISOCHRONE = 8,
-    TRACE_ROUTE = 9,
-    TRACE_ATTRIBUTES = 10
-  };
   enum SHAPE_MATCH {
     EDGE_WALK = 0,
     MAP_SNAP = 1,
@@ -62,8 +49,10 @@ class thor_worker_t {
   static const std::unordered_map<std::string, SHAPE_MATCH> STRING_TO_MATCH;
   thor_worker_t(const boost::property_tree::ptree& config);
   virtual ~thor_worker_t();
-  prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
-  void cleanup();
+#ifdef HAVE_HTTP
+  virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t& interrupt) override;
+#endif
+  virtual void cleanup() override;
 
   std::list<valhalla::odin::TripPath> route(const boost::property_tree::ptree& request,
              const std::string &request_str,
@@ -77,9 +66,6 @@ class thor_worker_t {
 
  protected:
 
-  prime_server::worker_t::result_t jsonify_error(
-      const baldr::valhalla_exception_t& exception,
-      prime_server::http_request_info_t& request_info) const;
   std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
                 baldr::PathLocation& destination);
   void log_admin(odin::TripPath&);

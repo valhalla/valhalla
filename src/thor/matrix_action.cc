@@ -16,28 +16,9 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
-namespace std {
-  template <>
-  struct hash<thor_worker_t::ACTION_TYPE>
-  {
-    std::size_t operator()(const thor_worker_t::ACTION_TYPE& a) const {
-      return std::hash<int>()(a);
-    }
-  };
-}
-
 namespace {
 
-  const std::unordered_map<thor_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
-     {thor_worker_t::ONE_TO_MANY, "one_to_many"},
-     {thor_worker_t::MANY_TO_ONE, "many_to_one"},
-     {thor_worker_t::MANY_TO_MANY, "many_to_many"},
-     {thor_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"},
-     {thor_worker_t::OPTIMIZED_ROUTE, "optimized_route"}
-   };
-
   constexpr double kMilePerMeter = 0.000621371;
-
   json::ArrayPtr locations(const std::vector<baldr::PathLocation>& correlated) {
     auto input_locs = json::array({});
     for(size_t i = 0; i < correlated.size(); i++) {

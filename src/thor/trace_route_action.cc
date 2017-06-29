@@ -6,11 +6,10 @@
 #include <vector>
 #include <unordered_map>
 
-
+#include "exception.h"
 #include "midgard/logging.h"
 #include "baldr/geojson.h"
 #include "baldr/pathlocation.h"
-#include "baldr/errorcode_util.h"
 #include "meili/map_matcher.h"
 
 #include "thor/route_matcher.h"
@@ -66,7 +65,7 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
 
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
-    throw valhalla_exception_t{400, 445};
+    throw valhalla_exception_t{445};
   else {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
@@ -75,9 +74,9 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
         try {
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
-            throw valhalla_exception_t{400, 443};
-        } catch (const valhalla_exception_t& e) {
-          throw valhalla_exception_t{400, 443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
+            throw;
+        } catch (...) {
+          throw valhalla_exception_t{443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
@@ -87,8 +86,8 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
           trip_match = map_match(controller);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
-        } catch(const valhalla_exception_t& e) {
-          throw valhalla_exception_t{e.status_code, e.error_code, e.extra};
+        } catch(...) {
+          throw valhalla_exception_t { 442 };
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
@@ -102,8 +101,8 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
             trip_match = map_match(controller);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
-          } catch(const valhalla_exception_t& e) {
-            throw valhalla_exception_t{e.status_code, e.error_code, e.extra};
+          } catch(...) {
+            throw valhalla_exception_t { 442 };
           }
         }
         break;
@@ -411,7 +410,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
                                              destination, std::list<PathLocation>{},
                                              interrupt_callback, &route_discontinuities);
   } else {
-    throw baldr::valhalla_exception_t { 400, 442 };
+    throw;
   }
   return {trip_path, match_results};
 }

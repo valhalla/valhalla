@@ -13,7 +13,6 @@
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "baldr/json.h"
-#include "baldr/errorcode_util.h"
 #include "baldr/rapidjson_utils.h"
 
 #include "loki/service.h"
@@ -21,6 +20,7 @@
 
 using namespace prime_server;
 using namespace valhalla;
+using namespace valhalla::service;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -28,25 +28,7 @@ using namespace valhalla::loki;
 
 namespace {
 
-  const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> PATH_TO_ACTION{
-    {"/route", loki_worker_t::ROUTE},
-    {"/viaroute", loki_worker_t::VIAROUTE},
-    {"/locate", loki_worker_t::LOCATE},
-    {"/one_to_many", loki_worker_t::ONE_TO_MANY},
-    {"/many_to_one", loki_worker_t::MANY_TO_ONE},
-    {"/many_to_many", loki_worker_t::MANY_TO_MANY},
-    {"/sources_to_targets", loki_worker_t::SOURCES_TO_TARGETS},
-    {"/optimized_route", loki_worker_t::OPTIMIZED_ROUTE},
-    {"/isochrone", loki_worker_t::ISOCHRONE},
-    {"/trace_route", loki_worker_t::TRACE_ROUTE},
-    {"/trace_attributes", loki_worker_t::TRACE_ATTRIBUTES}
-  };
-
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
-  rapidjson::Document from_request(const loki_worker_t::ACTION_TYPE& action, const http_request_t& request) {
+  rapidjson::Document from_request(const ACTION_TYPE& action, const http_request_t& request) {
     rapidjson::Document d;
     auto& allocator = d.GetAllocator();
     //parse the input
@@ -61,7 +43,7 @@ namespace {
       d.SetObject();
     //if parsing failed
     if (d.HasParseError())
-      throw valhalla_exception_t{400, 100};
+      throw valhalla_exception_t{100};
 
     //throw the query params into the ptree
     for(const auto& kv : request.query) {
@@ -84,11 +66,11 @@ namespace {
     }
 
     //if its osrm compatible lets make the location object conform to our standard input
-    if(action == loki_worker_t::VIAROUTE) {
+    if(action == VIAROUTE) {
       auto& array = rapidjson::Pointer("/locations").Set(d, rapidjson::Value{rapidjson::kArrayType});
       auto loc = GetOptionalFromRapidJson<rapidjson::Value::Array>(d, "/loc");
       if (! loc)
-        throw valhalla_exception_t{400, 110};
+        throw valhalla_exception_t{110};
       for(const auto& location : *loc) {
         Location l = Location::FromCsv(location.GetString());
         rapidjson::Value ele{rapidjson::kObjectType};
@@ -101,78 +83,18 @@ namespace {
 
     return d;
   }
-
-  worker_t::result_t to_response(json::ArrayPtr array, rapidjson::Document& request, http_request_info_t& request_info, bool final) {
-    std::ostringstream stream;
-    //jsonp callback if need be
-    auto jsonp = GetOptionalFromRapidJson<std::string>(request, "/jsonp");
-    if(jsonp)
-      stream << *jsonp << '(';
-    stream << *array;
-    if(jsonp)
-      stream << ')';
-
-    worker_t::result_t result{final};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-    return result;
-  }
-
-  worker_t::result_t to_response(json::MapPtr map, rapidjson::Document& request, http_request_info_t& request_info, bool final) {
-    std::ostringstream stream;
-    //jsonp callback if need be
-    auto jsonp = GetOptionalFromRapidJson<std::string>(request, "/jsonp");
-    if(jsonp)
-      stream << *jsonp << '(';
-    stream << *map;
-    if(jsonp)
-      stream << ')';
-
-    worker_t::result_t result{final};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-    response.from_info(request_info);
-    result.messages.emplace_back(response.to_string());
-    return result;
-  }
 }
 
 namespace valhalla {
   namespace loki {
-    worker_t::result_t loki_worker_t::jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info) const {
-
-      //build up the json map
-      auto json_error = json::map({});
-      json_error->emplace("status", exception.status_code_body);
-      json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
-      json_error->emplace("error", std::string(exception.error_code_message));
-      json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
-
-      //serialize it
-      std::stringstream ss;
-      if(jsonp)
-        ss << *jsonp << '(';
-      ss << *json_error;
-      if(jsonp)
-        ss << ')';
-
-      worker_t::result_t result{false};
-      http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-
-      return result;
-    }
-
-
     std::vector<baldr::Location> loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
-      unsigned location_parse_error_code, boost::optional<baldr::valhalla_exception_t> required_exception) {
+      unsigned location_parse_error_code, boost::optional<valhalla_exception_t> required_exception) {
       std::vector<baldr::Location> parsed;
       auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
       if (request_locations) {
         for(const auto& location : *request_locations) {
           try { parsed.push_back(baldr::Location::FromRapidJson(location, default_reachability, default_radius)); }
-          catch (...) { throw valhalla_exception_t{400, location_parse_error_code}; }
+          catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
           if(parsed.back().minimum_reachability_ > max_reachability)
             parsed.back().minimum_reachability_ = max_reachability;
           if(parsed.back().radius_ > max_radius)
@@ -190,7 +112,7 @@ namespace valhalla {
       //using the costing we can determine what type of edge filtering to use
       auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing");
       if (!costing)
-        throw valhalla_exception_t{400, 124};
+        throw valhalla_exception_t{124};
       else if (!healthcheck)
         valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
 
@@ -219,14 +141,14 @@ namespace valhalla {
         node_filter = c->GetNodeFilter();
       }
       catch(const std::runtime_error&) {
-        throw valhalla_exception_t{400, 125, "'" + *costing + "'"};
+        throw valhalla_exception_t{125, "'" + *costing + "'"};
       }
 
       // See if we have avoids and take care of them
       auto avoid_locations = parse_locations(request, "avoid_locations", 133, boost::none);
       if(!avoid_locations.empty()) {
         if(avoid_locations.size() > max_avoid_locations)
-          throw valhalla_exception_t{400, 157, std::to_string(max_avoid_locations)};
+          throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
         try {
           auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
           std::unordered_set<uint64_t> avoids;
@@ -321,24 +243,34 @@ namespace valhalla {
       factory.Register("transit", sif::CreateTransitCost);
     }
 
+    void loki_worker_t::cleanup() {
+      locations.clear();
+      sources.clear();
+      targets.clear();
+      shape.clear();
+      if(reader.OverCommitted())
+        reader.Clear();
+    }
+
+#ifdef HAVE_HTTP
     worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
-
+      boost::optional<std::string> jsonp;
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
 
         //block all but get and post
         if(request.method != method_t::POST && request.method != method_t::GET)
-          return jsonify_error({405, 101}, info);
+          return jsonify_error({101}, info);
 
         //is the request path action in the action set?
         auto action = PATH_TO_ACTION.find(request.path);
         if (action == PATH_TO_ACTION.cend() || actions.find(request.path) == actions.cend())
-          return jsonify_error({404, 106, action_str}, info);
+          return jsonify_error({106, action_str}, info);
 
         //parse the query's json
         auto request_rj = from_request(action->second, request);
@@ -360,7 +292,7 @@ namespace valhalla {
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           case LOCATE:
-            result = to_response(locate(request_rj), request_rj, info, false);
+            result = to_response(locate(request_rj), jsonp, info, false);
             break;
           case ONE_TO_MANY:
           case MANY_TO_ONE:
@@ -381,7 +313,7 @@ namespace valhalla {
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
-            return jsonify_error({501, 107}, info);
+            return jsonify_error({107}, info);
         }
         //get processing time for loki
         auto e = std::chrono::system_clock::now();
@@ -398,22 +330,12 @@ namespace valhalla {
       }
       catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({e.status_code, e.error_code, e.extra}, info);
+        return jsonify_error(e, info, jsonp);
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({400, 199, std::string(e.what())}, info);
+        return jsonify_error({199, std::string(e.what())}, info, jsonp);
       }
-    }
-
-    void loki_worker_t::cleanup() {
-      jsonp = boost::none;
-      locations.clear();
-      sources.clear();
-      targets.clear();
-      shape.clear();
-      if(reader.OverCommitted())
-        reader.Clear();
     }
 
     void run_service(const boost::property_tree::ptree& config) {
@@ -435,5 +357,6 @@ namespace valhalla {
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
     }
+#endif
   }
 }

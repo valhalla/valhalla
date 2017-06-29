@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <exception>
 #include "midgard/logging.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 #include "thor/map_matcher.h"
 
@@ -91,7 +91,7 @@ std::vector<PathInfo> MapMatcher::FormPath(
 
   // Throw exception if not trace attributes action and disconnected path
   if (!trace_attributes_action && !disconnected_edges.empty())
-      throw valhalla_exception_t{400, 442};
+      throw valhalla_exception_t{442};
 
   return path;
 }

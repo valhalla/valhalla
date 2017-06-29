@@ -14,11 +14,12 @@
 #include "baldr/directededge.h"
 #include "midgard/logging.h"
 #include "midgard/constants.h"
-#include "baldr/errorcode_util.h"
+#include "baldr/edge_elevation.h"
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 #include "proto/tripdirections.pb.h"
 #include "proto/trippath.pb.h"
+#include "exception.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
 
@@ -26,15 +27,10 @@ using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::sif;
 using namespace valhalla::odin;
 using namespace valhalla::thor;
 
-
 namespace {
-  const headers_t::value_type CORS { "Access-Control-Allow-Origin", "*" };
-  const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
-  const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
   json::MapPtr serialize(const AttributesController& controller,
       const valhalla::odin::TripPath& trip_path,
@@ -425,7 +421,7 @@ json::MapPtr thor_worker_t::trace_attributes(
   filter_attributes(request, controller);
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
-    throw valhalla_exception_t{400, 445};
+    throw valhalla_exception_t{445};
   else {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
@@ -434,9 +430,9 @@ json::MapPtr thor_worker_t::trace_attributes(
         try {
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
-            throw valhalla_exception_t{400, 443};
-        } catch (const valhalla_exception_t& e) {
-          throw valhalla_exception_t{400, 443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
+            throw;
+        } catch (...) {
+          throw valhalla_exception_t{443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
@@ -446,8 +442,8 @@ json::MapPtr thor_worker_t::trace_attributes(
           trip_match = map_match(controller, true);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
-        } catch (const valhalla_exception_t& e) {
-          throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
+        } catch (...) {
+          throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
@@ -461,8 +457,8 @@ json::MapPtr thor_worker_t::trace_attributes(
             trip_match = map_match(controller, true);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
-          } catch (const valhalla_exception_t& e) {
-            throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
+          } catch (...) {
+            throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
         }
         break;
@@ -480,7 +476,7 @@ json::MapPtr thor_worker_t::trace_attributes(
   json::MapPtr json;
   if (trip_path.node().size() > 0)
     json = serialize(controller, trip_path, id, directions_options, match_results);
-  else throw valhalla_exception_t{400, 442};
+  else throw valhalla_exception_t{442};
 
   return json;
 }

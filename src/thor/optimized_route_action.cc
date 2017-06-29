@@ -1,6 +1,5 @@
 #include "thor/service.h"
 
-#include "baldr/json.h"
 #include "midgard/logging.h"
 #include "midgard/constants.h"
 #include "sif/autocost.h"
@@ -14,7 +13,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
-
 
 namespace valhalla {
   namespace thor {
@@ -42,7 +40,7 @@ namespace valhalla {
       // If any location is completely unreachable then we cant have a connected path
       if(i % correlated.size() == 0) {
         if(!reachable)
-          throw valhalla_exception_t{400, 441, " at index " + std::to_string(i / correlated.size())};
+          throw valhalla_exception_t{441, " at index " + std::to_string(i / correlated.size())};
         reachable = false;
       }
       reachable = reachable || td[i].time != kMaxCost;

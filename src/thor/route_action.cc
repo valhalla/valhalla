@@ -16,7 +16,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
-
 namespace valhalla {
   namespace thor {
 
@@ -78,7 +77,7 @@ namespace valhalla {
 
     // All or nothing
     if(path.empty())
-      throw valhalla_exception_t{400, 442};
+      throw valhalla_exception_t{442};
     return path;
   }
 
