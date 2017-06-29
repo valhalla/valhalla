@@ -580,9 +580,11 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   uint32_t idx = pred.opp_local_idx();
   // Ignore name inconsistency when entering a link to avoid double penalizing.
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+  if (!edge->link() && edge->use() != Use::kEgressConnection &&
+      edge->use() != Use::kPlatformConnection &&
+      !node->name_consistency(idx, edge->localedgeidx())) {
     // Slight maneuver penalty
-    penalty += maneuver_penalty_;
+      penalty += maneuver_penalty_;
   }
 
   // Costs for crossing an intersection.
@@ -620,7 +622,9 @@ Cost PedestrianCost::TransitionCostReverse(
   }
 
   // Ignore name inconsistency when entering a link to avoid double penalizing.
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+  if (!edge->link() && edge->use() != Use::kEgressConnection &&
+      edge->use() != Use::kPlatformConnection &&
+      !node->name_consistency(idx, edge->localedgeidx())) {
     // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
