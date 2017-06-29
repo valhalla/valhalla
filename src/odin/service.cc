@@ -46,18 +46,18 @@ namespace valhalla {
       if(options)
         directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
-      for(auto& leg : legs){
-        //get some annotated directions
-        odin::DirectionsBuilder directions;
-        odin::TripDirections trip_directions;
-        try{
-          trip_directions = directions.Build(directions_options, leg);
+      //get some annotated directions
+      std::list<TripDirections> narrated;
+      try{
+        for(auto& leg : legs) {
+          narrated.emplace_back(odin::DirectionsBuilder().Build(directions_options, leg));
+          LOG_INFO("maneuver_count::" + std::to_string(narrated.back().maneuver_size()));
         }
-        catch(...) {
-          throw valhalla_exception_t{202};
-        }
-        LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
       }
+      catch(...) {
+        throw valhalla_exception_t{202};
+      }
+      return narrated;
     }
 
 #ifdef HAVE_HTTP
