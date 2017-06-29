@@ -10,7 +10,7 @@
 -j '{"locations":[{"lat":37.852732,"lon":-122.269934},{"lat":37.868001,"lon":-122.258088}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2017-07-11T08:00"}}'
 -j '{"locations":[{"lat":37.747202,"lon":-122.419255},{"lat":37.791227,"lon":-122.392293}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2017-07-11T08:00"}}'
 -j '{"locations":[{"lat":37.791227,"lon":-122.392293},{"lat":37.747202,"lon":-122.419255}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2017-07-11T08:00"}}'
--j '{"locations":[{"lat":37.576,"lon":-122.343},{"lat":37.397761,"lon":-122.093477}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2017-07-11T08:00"}}'
+-j '{"locations":[{"lat":37.576283,"lon":-122.342976},{"lat":37.397761,"lon":-122.093477}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2017-07-11T08:00"}}'
 -j '{"locations":[{"lat":37.397761,"lon":-122.093477},{"lat":37.576283,"lon":-122.342976}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2017-07-11T08:00"}}'
 -j '{"locations":[{"lat":37.787617,"lon":-122.222707},{"lat":37.791227,"lon":-122.392293}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2017-07-11T08:00"}}'
 -j '{"locations":[{"lat":37.791227,"lon":-122.392293},{"lat":37.787617,"lon":-122.222707}],"costing":"multimodal","directions_options":{"units":"miles"},"date_time":{"type":1,"value":"2017-07-11T08:00"}}'
