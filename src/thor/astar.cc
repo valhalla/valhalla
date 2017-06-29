@@ -370,16 +370,27 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
-    // destination is in a forward direction along the edge
-    // TODO - if this doesn't make the cost go negative!
+    // destination is in a forward direction along the edge. Add back in
+    // the edge score/penalty to account for destination edges farther from
+    // the input location lat,lon.
     auto p = destinations_.find(edgeid);
     if (p != destinations_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
-        // a trivial route passes along a single edge, meaning that the
-        // destination point must be on this edge, and so the distance
-        // remaining must be zero.
-        cost.secs -= p->second.secs;
-        dist = 0.0;
+        // Find the destination edge and update cost.
+        for (const auto& destination_edge : destination.edges) {
+          if (destination_edge.id == edgeid) {
+            // a trivial route passes along a single edge, meaning that the
+            // destination point must be on this edge, and so the distance
+            // remaining must be zero.
+            Cost dest_cost = costing->EdgeCost(tile->directededge(destination_edge.id)) *
+                                            (1.0f - destination_edge.dist);
+            cost.secs -= p->second.secs;
+            cost.cost -= dest_cost.cost;
+            cost.cost += destination_edge.score * 10;
+            cost.cost = std::max(0.0f, cost.cost);
+            dist = 0.0;
+          }
+        }
       }
     }
 
