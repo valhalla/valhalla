@@ -29,7 +29,7 @@ namespace valhalla {
 #endif
       virtual void cleanup() override;
 
-      baldr::json::MapPtr elevation(const boost::property_tree::ptree& request);
+      baldr::json::MapPtr height(const boost::property_tree::ptree& request);
 
      protected:
 

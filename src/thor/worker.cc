@@ -175,7 +175,7 @@ namespace valhalla {
             denominator = std::max(correlated_s.size(), correlated_t.size());
             break;
           case ISOCHRONE:
-            result = to_response(isochrone(request), jsonp, info);
+            result = to_response(isochrones(request), jsonp, info);
             denominator = correlated_s.size() * correlated_t.size();
             break;
           case ROUTE:

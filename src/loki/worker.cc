@@ -29,6 +29,7 @@ using namespace valhalla::loki;
 
 namespace {
 
+#ifdef HAVE_HTTP
   rapidjson::Document from_request(const ACTION_TYPE& action, const http_request_t& request) {
     rapidjson::Document d;
     auto& allocator = d.GetAllocator();
@@ -84,6 +85,7 @@ namespace {
 
     return d;
   }
+#endif
 }
 
 namespace valhalla {
@@ -309,7 +311,7 @@ namespace valhalla {
             break;
           case TRACE_ATTRIBUTES:
           case TRACE_ROUTE:
-            trace_route(action->second, request_rj);
+            trace(action->second, request_rj);
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           default:

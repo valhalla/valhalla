@@ -102,7 +102,7 @@ namespace valhalla {
       locations_from_shape(request);
     }
 
-    void loki_worker_t::trace_route(ACTION_TYPE action, rapidjson::Document& request) {
+    void loki_worker_t::trace(ACTION_TYPE action, rapidjson::Document& request) {
       init_trace(request);
       std::string costing = request["costing"].GetString();
       if (costing == "multimodal")

@@ -10,7 +10,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
   namespace thor {
 
-    json::MapPtr thor_worker_t::isochrone(const boost::property_tree::ptree &request) {
+    json::MapPtr thor_worker_t::isochrones(const boost::property_tree::ptree &request) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
 

@@ -4,7 +4,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <memory>
 #include <unordered_map>
-#include "baldr/json.h"
 
 namespace valhalla {
   namespace tyr {
@@ -71,14 +70,14 @@ namespace valhalla {
     class actor_t {
      public:
       actor_t(const boost::property_tree::ptree& config);
-      std::string route(const std::string& request_str);
-      baldr::json::ArrayPtr locate(const std::string& request_str);
-      thor::thor_worker_t matrix(const std::string& request_str);
+      std::string route(ACTION_TYPE action, const std::string& request_str);
+      std::string locate(const std::string& request_str);
+      std::string matrix(ACTION_TYPE action, const std::string& request_str);
       std::string optimized_route(const std::string& request_str);
-      void isochrone();
+      std::string isochrone(const std::string& request_str);
       std::string trace_route(const std::string& request_str);
-      thor::thor_worker_t trace_attributes(const std::string& request_str);
-      void height();
+      std::string trace_attributes(const std::string& request_str);
+      std::string height(const std::string& request_str);
      protected:
       struct pimpl_t;
       std::shared_ptr<pimpl_t> pimpl;

@@ -34,7 +34,7 @@ namespace valhalla {
       void route(rapidjson::Document& request);
       void matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void isochrones(rapidjson::Document& request);
-      void trace_route(tyr::ACTION_TYPE action, rapidjson::Document& request);
+      void trace(tyr::ACTION_TYPE action, rapidjson::Document& request);
 
      protected:
 

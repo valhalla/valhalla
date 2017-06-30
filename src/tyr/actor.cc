@@ -3,11 +3,13 @@
 #include "loki/worker.h"
 #include "thor/worker.h"
 #include "odin/worker.h"
+#include "skadi/worker.h"
 #include "tyr/serializers.h"
 #include "baldr/rapidjson_utils.h"
 
 #include <boost/property_tree/json_parser.hpp>
 
+using namespace valhalla;
 using namespace valhalla::loki;
 using namespace valhalla::thor;
 using namespace valhalla::odin;
@@ -22,6 +24,24 @@ namespace {
     return pt;
   }
 
+  //TODO: delete this and move everything to rapidjson
+  boost::property_tree::ptree to_ptree(const std::string str) {
+    std::stringstream ss;
+    ss << str;
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_json(ss, pt);
+    return pt;
+  }
+
+  rapidjson::Document to_document(const std::string& request) {
+    rapidjson::Document d;
+    auto& allocator = d.GetAllocator();
+    d.Parse(request.c_str());
+    if (d.HasParseError())
+      throw valhalla_exception_t{100};
+    return d;
+  }
+
 }
 
 namespace valhalla {
@@ -29,19 +49,20 @@ namespace valhalla {
 
     struct actor_t::pimpl_t {
       pimpl_t(const boost::property_tree::ptree& config):
-        loki_worker(config), thor_worker(config), odin_worker(config) {
+        loki_worker(config), thor_worker(config), odin_worker(config), skadi_worker(config) {
       }
       loki::loki_worker_t loki_worker;
       thor::thor_worker_t thor_worker;
       odin::odin_worker_t odin_worker;
+      skadi::skadi_worker_t skadi_worker;
     };
 
     actor_t::actor_t(const boost::property_tree::ptree& config): pimpl(new pimpl_t(config)) {
     }
 
-    std::string actor_t::route(const std::string& request_str) {
+    std::string actor_t::route(ACTION_TYPE action, const std::string& request_str) {
       //parse the request
-      rapidjson::Document request;
+      auto request = to_document(request_str);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.route(request);
       //route between the locations in the graph to find the best path
@@ -51,86 +72,104 @@ namespace valhalla {
       //get some directions back from them
       auto directions = pimpl->odin_worker.narrate(request_pt, legs);
       //serialize them out to json string
-      auto action = static_cast<ACTION_TYPE>(GetFromRapidJson<int>(request, "action", 0));
       auto json = tyr::serializeDirections(action, request_pt, directions);
       std::stringstream ss;
       ss << *json;
       return ss.str();
     }
 
-    baldr::json::ArrayPtr actor_t::locate(const std::string& request_str) {
+    std::string actor_t::locate(const std::string& request_str) {
       //parse the request
-      rapidjson::Document request;
+      auto request = to_document(request_str);
       //check the request and locate the locations in the graph
-      pimpl->loki_worker.locate(request);
-      auto request_pt = to_ptree(request);
-
-      return result;
+      auto json = pimpl->loki_worker.locate(request);
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
     }
 
-    thor::thor_worker_t actor_t::matrix(const std::string& request_str) {
+    std::string actor_t::matrix(ACTION_TYPE action, const std::string& request_str) {
       //parse the request
-      rapidjson::Document request;
+      auto request = to_document(request_str);
       //check the request and locate the locations in the graph
-      auto action = static_cast<ACTION_TYPE>(GetFromRapidJson<int>(request, "action", 0));
       pimpl->loki_worker.matrix(action, request);
       auto request_pt = to_ptree(request);
-
-      auto matrix = pimpl->thor_worker.matrix(matrix_type, request_pt);
-
-      return result;
+      //compute the matrix
+      auto json = pimpl->thor_worker.matrix(action, request_pt);
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
     }
 
     std::string actor_t::optimized_route(const std::string& request_str) {
       //parse the request
-      rapidjson::Document request;
+      auto request = to_document(request_str);
       //check the request and locate the locations in the graph
-      auto action = static_cast<ACTION_TYPE>(GetFromRapidJson<int>(request, "action", 0));
-      pimpl->loki_worker.matrix(action, request);
+      pimpl->loki_worker.matrix(OPTIMIZED_ROUTE, request);
       auto request_pt = to_ptree(request);
+      //compute compute all pairs and then the shortest path through them all
       auto legs = pimpl->thor_worker.optimized_route(request_pt);
       //get some directions back from them
       auto directions = pimpl->odin_worker.narrate(request_pt, legs);
       //serialize them out to json string
-      auto json = tyr::serializeDirections(action, request_pt, directions);
+      auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
       ss << *json;
       return ss.str();
     }
 
-    void actor_t::isochrone() { throw valhalla_exception_t{107}; }
+    std::string actor_t::isochrone(const std::string& request_str) {
+      //parse the request
+      auto request = to_document(request_str);
+      //check the request and locate the locations in the graph
+      pimpl->loki_worker.isochrones(request);
+      auto request_pt = to_ptree(request);
+      //compute the isochrones
+      auto json = pimpl->thor_worker.isochrones(request_pt);
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
+    }
 
     std::string actor_t::trace_route(const std::string& request_str) {
       //parse the request
-      rapidjson::Document request;
+      auto request = to_document(request_str);
       //check the request and locate the locations in the graph
-      auto action = static_cast<ACTION_TYPE>(GetFromRapidJson<int>(request, "action", 0));
-      pimpl->loki_worker.trace_route(action, request);
+      pimpl->loki_worker.trace(TRACE_ROUTE, request);
+      //route between the locations in the graph to find the best path
       auto request_pt = to_ptree(request);
-      auto legs = pimpl->thor_worker.trace_route(request_pt);
+      std::list<TripPath> legs{pimpl->thor_worker.trace_route(request_pt)};
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(request_pt, legs)
+      auto directions = pimpl->odin_worker.narrate(request_pt, legs);
       //serialize them out to json string
-      auto json = tyr::serializeDirections(action, request_pt, directions);
+      auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
       ss << *json;
       return ss.str();
     }
 
-    thor::thor_worker_t actor_t::trace_attributes(const std::string& request_str) {
+    std::string actor_t::trace_attributes(const std::string& request_str) {
       //parse the request
-      rapidjson::Document request;
+      auto request = to_document(request_str);
       //check the request and locate the locations in the graph
-      auto action = static_cast<ACTION_TYPE>(GetFromRapidJson<int>(request, "action", 0));
-      pimpl->loki_worker.trace_route(action, request);
-      //route between the locations in the graph to find the best path
+      pimpl->loki_worker.trace(TRACE_ATTRIBUTES, request);
+      //get the path and turn it into attribution along it
       auto request_pt = to_ptree(request);
-      auto attributes = pimpl->thor_worker.trace_attributes(request_pt);
-
-      return result;
+      auto json = pimpl->thor_worker.trace_attributes(request_pt);
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
     }
 
-    void actor_t::height() { throw valhalla_exception_t{107}; }
+    std::string actor_t::height(const std::string& request_str) {
+      //parse the request
+      auto request_pt = to_ptree(request_str);
+      //get the height at each point
+      auto json = pimpl->skadi_worker.height(request_pt);
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
+    }
 
   }
 }

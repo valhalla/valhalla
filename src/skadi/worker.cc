@@ -155,7 +155,7 @@ namespace valhalla {
         worker_t::result_t result;
         switch (action->second) {
           case HEIGHT:
-            result = to_response(elevation(request_pt), jsonp, info);
+            result = to_response(height(request_pt), jsonp, info);
             break;
           default:
             return jsonify_error({305}, info, jsonp);
@@ -270,7 +270,7 @@ namespace valhalla {
       "range_height": [ [0,303], [8467,275], [25380,198] ]
     }
     */
-    json::MapPtr skadi_worker_t::elevation(const boost::property_tree::ptree& request) {
+    json::MapPtr skadi_worker_t::height(const boost::property_tree::ptree& request) {
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
       if (!healthcheck)
