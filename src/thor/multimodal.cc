@@ -372,12 +372,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
             operator_id = GetOperatorId(tile, departure->routeid(), operators);
 
             // Add transfer penalty and operator change penalty
-            newcost.cost += transfer_cost.cost;
             if (pred.transit_operator() > 0 &&
                 pred.transit_operator() != operator_id) {
               // TODO - create a configurable operator change penalty
               newcost.cost += 300;
             }
+            else newcost.cost += transfer_cost.cost;
           }
 
           // Change mode and costing to transit. Add edge cost.
