@@ -1,9 +1,10 @@
 #include <sstream>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "worker.h"
+#include "baldr/location.h"
 
-namespace valhalla {
-
+namespace {
   // Credits: http://werkzeug.pocoo.org/
   const std::unordered_map<unsigned, std::string> HTTP_STATUS_CODES {
     // 1xx
@@ -137,8 +138,6 @@ namespace valhalla {
 
     {299, 400},
 
-    {300, 400},
-    {301, 405},
     {304, 404},
     {305, 501},
 
@@ -176,8 +175,71 @@ namespace valhalla {
 
     {599, 400},
   };
+}
+
+namespace valhalla {
 
 #ifdef HAVE_HTTP
+  rapidjson::Document from_request(const http_request_t& request) {
+    //block all but get and post
+    if(request.method != method_t::POST && request.method != method_t::GET)
+      throw valhalla_exception_t{101};
+
+    rapidjson::Document d;
+    auto& allocator = d.GetAllocator();
+    //parse the input
+    const auto& json = request.query.find("json");
+    if (json != request.query.end() && json->second.size() && json->second.front().size())
+      d.Parse(json->second.front().c_str());
+    //no json parameter, check the body
+    else if(!request.body.empty())
+      d.Parse(request.body.c_str());
+    //no json at all
+    else
+      d.SetObject();
+    //if parsing failed
+    if (d.HasParseError())
+      throw valhalla_exception_t{100};
+
+    //throw the query params into the ptree
+    for(const auto& kv : request.query) {
+      //skip json or empty entries
+      if(kv.first == "json" || kv.first.empty() || kv.second.empty() || kv.second.front().empty())
+        continue;
+
+      //turn single value entries into single key value
+      if(kv.second.size() == 1) {
+        d.AddMember({kv.first, allocator}, {kv.second.front(), allocator}, allocator);
+        continue;
+      }
+
+      //make an array of values for this key
+      rapidjson::Value array{rapidjson::kArrayType};
+      for(const auto& value : kv.second) {
+        array.PushBack({value, allocator}, allocator);
+      }
+      d.AddMember({kv.first, allocator}, array, allocator);
+    }
+
+    //if its osrm compatible lets make the location object conform to our standard input
+    if(request.path == "/viaroute") {
+      auto& array = rapidjson::Pointer("/locations").Set(d, rapidjson::Value{rapidjson::kArrayType});
+      auto loc = GetOptionalFromRapidJson<rapidjson::Value::Array>(d, "/loc");
+      if (! loc)
+        throw valhalla_exception_t{110};
+      for(const auto& location : *loc) {
+        baldr::Location l = baldr::Location::FromCsv(location.GetString());
+        rapidjson::Value ele{rapidjson::kObjectType};
+        ele.AddMember("lon", l.latlng_.first, allocator)
+            .AddMember("lat", l.latlng_.second, allocator);
+        array.PushBack(ele, allocator);
+      }
+      d.RemoveMember("loc");
+    }
+
+    return d;
+  }
+
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};

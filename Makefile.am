@@ -638,8 +638,6 @@ check_PROGRAMS = \
 	test/geojson_writer \
 	test/util_skadi \
 	test/sample \
-	test/skadi_service \
-	test/loki_service \
 	test/maneuversbuilder \
 	test/narrativebuilder \
 	test/navigator \
@@ -650,7 +648,6 @@ check_PROGRAMS = \
 	test/narrative_dictionary \
 	test/edgestatus \
 	test/optimizer \
-	test/thor_service \
 	test/attributes_controller \
 	test/astar \
 	test/serializers \

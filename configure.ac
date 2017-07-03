@@ -48,7 +48,7 @@ AX_BOOST_IOSTREAMS
 AC_SUBST(BOOST_CPPFLAGS, "$BOOST_CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS")
 AC_SUBST(RAPIDJSON_CPPFLAGS, "$RAPIDJSON_CPPFLAGS -DRAPIDJSON_HAS_STDSTRING")
 
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0])
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libcurl >= 7.35.0])
 
 # if we wanted services
 AC_ARG_ENABLE([services],
@@ -62,7 +62,7 @@ AM_CONDITIONAL([SERVICES], [test x$services = xtrue])
 
 # then we require prime_server
 AM_COND_IF([SERVICES], [
-    PKG_CHECK_MODULES([SERVICE_DEPS], [libprime_server = 0.6.3 libcurl >= 7.35.0])
+    PKG_CHECK_MODULES([SERVICE_DEPS], [libprime_server = 0.6.3])
     AC_SUBST(HAVE_HTTP_DEFINE, ["#define HAVE_HTTP"])
 ],[AC_SUBST(HAVE_HTTP_DEFINE, ["#undef HAVE_HTTP"])])
 

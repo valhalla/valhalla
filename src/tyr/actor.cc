@@ -163,9 +163,9 @@ namespace valhalla {
 
     std::string actor_t::height(const std::string& request_str) {
       //parse the request
-      auto request_pt = to_ptree(request_str);
+      auto request_rj = to_document(request_str);
       //get the height at each point
-      auto json = pimpl->skadi_worker.height(request_pt);
+      auto json = pimpl->skadi_worker.height(request_rj);
       std::stringstream ss;
       ss << *json;
       return ss.str();

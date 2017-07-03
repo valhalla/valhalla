@@ -9,8 +9,6 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-
   void check_distance(const std::vector<Location>& locations, float matrix_max_distance, float& max_location_distance) {
     //see if any locations pairs are unreachable or too far apart
     for(auto source = locations.begin(); source != locations.end() - 1; ++source){

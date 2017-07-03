@@ -76,8 +76,6 @@ namespace valhalla {
     {299,"Unknown"},
 
     // skadi project 3xx
-    {300,"Failed to parse json request"},
-    {301,"Try a POST or GET request instead"},
     {304,"Try any of"},
     {305,"Not Implemented"},
 

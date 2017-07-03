@@ -10,6 +10,7 @@
 #include <valhalla/valhalla.h>
 #include <valhalla/exception.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 
 #ifdef HAVE_HTTP
 #include <prime_server/prime_server.hpp>
@@ -20,6 +21,7 @@ using namespace prime_server;
 namespace valhalla {
 
 #ifdef HAVE_HTTP
+  rapidjson::Document from_request(const http_request_t& request);
   worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp = boost::none);
   worker_t::result_t to_response(baldr::json::ArrayPtr array, const boost::optional<std::string>& jsonp, http_request_info_t& request_info);
   worker_t::result_t to_response(baldr::json::MapPtr map, const boost::optional<std::string>& jsonp, http_request_info_t& request_info);

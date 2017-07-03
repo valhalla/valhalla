@@ -19,74 +19,12 @@
 #include "loki/worker.h"
 #include "loki/search.h"
 
-using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
-
-namespace {
-
-#ifdef HAVE_HTTP
-  rapidjson::Document from_request(const ACTION_TYPE& action, const http_request_t& request) {
-    rapidjson::Document d;
-    auto& allocator = d.GetAllocator();
-    //parse the input
-    const auto& json = request.query.find("json");
-    if (json != request.query.end() && json->second.size() && json->second.front().size())
-      d.Parse(json->second.front().c_str());
-    //no json parameter, check the body
-    else if(!request.body.empty())
-      d.Parse(request.body.c_str());
-    //no json at all
-    else
-      d.SetObject();
-    //if parsing failed
-    if (d.HasParseError())
-      throw valhalla_exception_t{100};
-
-    //throw the query params into the ptree
-    for(const auto& kv : request.query) {
-      //skip json or empty entries
-      if(kv.first == "json" || kv.first.empty() || kv.second.empty() || kv.second.front().empty())
-        continue;
-
-      //turn single value entries into single key value
-      if(kv.second.size() == 1) {
-        d.AddMember({kv.first, allocator}, {kv.second.front(), allocator}, allocator);
-        continue;
-      }
-
-      //make an array of values for this key
-      rapidjson::Value array{rapidjson::kArrayType};
-      for(const auto& value : kv.second) {
-        array.PushBack({value, allocator}, allocator);
-      }
-      d.AddMember({kv.first, allocator}, array, allocator);
-    }
-
-    //if its osrm compatible lets make the location object conform to our standard input
-    if(action == VIAROUTE) {
-      auto& array = rapidjson::Pointer("/locations").Set(d, rapidjson::Value{rapidjson::kArrayType});
-      auto loc = GetOptionalFromRapidJson<rapidjson::Value::Array>(d, "/loc");
-      if (! loc)
-        throw valhalla_exception_t{110};
-      for(const auto& location : *loc) {
-        Location l = Location::FromCsv(location.GetString());
-        rapidjson::Value ele{rapidjson::kObjectType};
-        ele.AddMember("lon", l.latlng_.first, allocator)
-            .AddMember("lat", l.latlng_.second, allocator);
-        array.PushBack(ele, allocator);
-      }
-      d.RemoveMember("loc");
-    }
-
-    return d;
-  }
-#endif
-}
 
 namespace valhalla {
   namespace loki {
@@ -266,17 +204,13 @@ namespace valhalla {
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
 
-        //block all but get and post
-        if(request.method != method_t::POST && request.method != method_t::GET)
-          return jsonify_error({101}, info);
-
         //is the request path action in the action set?
         auto action = PATH_TO_ACTION.find(request.path);
         if (action == PATH_TO_ACTION.cend() || actions.find(request.path) == actions.cend())
           return jsonify_error({106, action_str}, info);
 
         //parse the query's json
-        auto request_rj = from_request(action->second, request);
+        auto request_rj = from_request(request);
         jsonp = GetOptionalFromRapidJson<std::string>(request_rj, "/jsonp");
         //let further processes more easily know what kind of request it was
         rapidjson::SetValueByPointer(request_rj, "/action", action->second);

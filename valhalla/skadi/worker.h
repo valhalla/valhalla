@@ -29,13 +29,13 @@ namespace valhalla {
 #endif
       virtual void cleanup() override;
 
-      baldr::json::MapPtr height(const boost::property_tree::ptree& request);
+      baldr::json::MapPtr height(rapidjson::Document& request);
 
      protected:
 
-      void init_request(const boost::property_tree::ptree& request);
+      void init_request(rapidjson::Document& request);
 
-      std::list<midgard::PointLL> shape;
+      std::vector<midgard::PointLL> shape;
       boost::optional<std::string> encoded_polyline;
       bool range;
       skadi::sample sample;
@@ -43,6 +43,7 @@ namespace valhalla {
       float min_resample;
       float long_request;
       bool healthcheck;
+      std::string action_str;
   };
  }
 }

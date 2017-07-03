@@ -23,7 +23,6 @@
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
 
-using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
