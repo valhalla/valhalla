@@ -66,7 +66,7 @@ namespace valhalla {
       //check the request and locate the locations in the graph
       pimpl->loki_worker.route(request);
       //route between the locations in the graph to find the best path
-      auto date_time_type = GetOptionalFromRapidJson<int>(request, "date_time.type");
+      auto date_time_type = GetOptionalFromRapidJson<int>(request, "/date_time.type");
       auto request_pt = to_ptree(request);
       auto legs = pimpl->thor_worker.route(request_pt, date_time_type);
       //get some directions back from them

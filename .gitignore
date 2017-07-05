@@ -177,6 +177,7 @@ test/bicyclecost
 test/pedestriancost
 test/transitcost
 test/truckcost
+test/actor
 test_requests/duane_routes.txt
 run_route_scripts/results/20*
 EdgeInfoBuilder_TestWriteRead.gph
