@@ -195,6 +195,9 @@ class LabelSet
 
 using labelset_ptr_t = std::shared_ptr<LabelSet>;
 
+/**
+ * Find the shortest paths between an origin and a set of destinations.
+ */
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
@@ -202,10 +205,9 @@ find_shortest_path(baldr::GraphReader& reader,
                    labelset_ptr_t labelset,
                    const midgard::DistanceApproximator& approximator,
                    const float search_radius,
-                   sif::cost_ptr_t costing = nullptr,
-                   std::shared_ptr<const sif::EdgeLabel> edgelabel = nullptr,
-                   const float turn_cost_table[181] = nullptr);
-
+                   sif::cost_ptr_t costing,
+                   std::shared_ptr<const sif::EdgeLabel> edgelabel,
+                   const float turn_cost_table[181]);
 
 class RoutePathIterator:
       public std::iterator<std::forward_iterator_tag, const Label>
