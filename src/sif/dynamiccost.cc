@@ -59,7 +59,8 @@ DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
                          const TravelMode mode)
     : allow_transit_connections_(false),
       allow_destination_only_(true),
-      travel_mode_(mode) {
+      travel_mode_(mode),
+      score_multiplier(pt.get<float>("score_multiplier", 10.f)){
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) /
