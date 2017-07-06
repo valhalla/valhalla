@@ -398,7 +398,7 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       } else  if (segment.turn_channel && traffic_segments.size() > 0 &&
                   traffic_segments.back().end_time == -1) {
         traffic_segments.back().end_time = start_time;
-        if (length > 0) {
+        if (length > 0 && traffic_segments.back().start_time > 0.0) {
           traffic_segments.back().length = (start_length - prior_start_acc_length) + length / 2;
         }
       }
