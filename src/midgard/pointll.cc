@@ -270,14 +270,6 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
   return pts[idx0].Heading(pts[idx1]);
 }
 
-// Test whether this point is to the left of a segment from p1 to p2. Uses a
-// 2-D cross product and tests the sign (> 0 indicates the point is to the
-// left).
-float PointLL::IsLeft(const PointLL& p1, const PointLL& p2) const {
-  return (p2.x() - p1.x()) * (   y() - p1.y()) -
-             (x() - p1.x()) * (p2.y() - p1.y());
-}
-
 // Tests whether this point is within a convex polygon. Iterate through the
 // edges - to be inside the point must be to the same side of each edge.
 template <class container_t>

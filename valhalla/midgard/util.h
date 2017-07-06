@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <memory>
 #include <limits>
+#include <vector>
 
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
@@ -34,8 +35,6 @@ struct ranged_default_t {
     return value;
   }
 };
-
-
 
 // Intersection cases.
 enum IntersectCase {
@@ -130,17 +129,14 @@ T sqr(const T a) {
 }
 
 /**
- * Trim the front of a polyline (represented as a list or vector of Point2).
- * Returns the trimmed portion of the polyline. The supplied polyline is
- * altered (the trimmed part is removed).
- * @param  pts    List of points. This is modified - the result is the
- *                remaining points after trimming the front.
- * @param  dist   Distance to trim.
- * @return Returns a list of points along the supplied polyline. The total
- *         length of the returned polyline is dist.
+ * Normalize a ratio and clamp to range [0, 1]. Protect against division by 0.
+ * @param  num  Numerator
+ * @param  den  Denominator
+ * @return Returns the ration clamped to range [0,1]
  */
-template <class container_t>
-container_t trim_front(container_t& pts, const float dist);
+inline float normalize(const float num, const float den) {
+  return 0.f == den ? 0.0f : std::min(std::max(num / den, 0.0f), 1.0f);
+}
 
 // Compute the length of the polyline represented by a set of lat,lng points.
 // Avoids having to copy the points into a polyline, polyline should really just extend
@@ -152,6 +148,113 @@ float length(const container_t& pts) {
    length += p->Distance(*std::prev(p));
  return length;
 }
+
+/**
+ * Compute the length of a polyline between the 2 specified iterators.
+ * @param  begin  Starting point (iterator) within the polyline container.
+ * @param  end    Ending point (iterator) within the polyline container.
+ * @return Returns the length of the polyline.
+ */
+template <typename iterator_t>
+float length(const iterator_t& begin, const iterator_t& end) {
+  if (begin == end) {
+    return 0.0f;
+  }
+
+  float length = 0.0f;
+  for (auto vertex = std::next(begin); vertex != end; vertex++) {
+    length += std::prev(vertex)->Distance(*vertex);
+  }
+  return length;
+}
+
+/**
+ * Create a new polyline by trimming an input polyline by a specified
+ * percentage from the start iterator and a specified percentage from
+ * the end iterator.
+ * @param  begin  Starting point (iterator) within the polyline container.
+ * @param  end    Ending point (iterator) within the polyline container.
+ * @param  source Percentage of total length to trim from the front.
+ * @param  target Percentage of total length to trim from the end.
+ * @return Returns a new polyline.
+ */
+template <typename iterator_t>
+std::vector<typename iterator_t::value_type> trim_polyline(const iterator_t& begin,
+               const iterator_t& end, float source, float target) {
+  // Detect invalid cases
+  if (target < source || target < 0.f || 1.f < source || begin == end) {
+    return {};
+  }
+
+  // Clamp source and target to range [0, 1]
+  source = std::min(std::max(source, 0.f), 1.f);
+  target = std::min(std::max(target, 0.f), 1.f);
+
+  float total_length = length(begin, end),
+  prev_vertex_length = 0.f,
+       source_length = total_length * source,
+       target_length = total_length * target;
+
+  // An state indicating if the position of current vertex is larger
+  // than source and smaller than target
+  bool open = false;
+
+  // Iterate segments and add to output container (clip)
+  std::vector<typename iterator_t::value_type> clip;
+  iterator_t prev_vertex = begin;
+  for (auto vertex = std::next(begin); vertex != end; vertex++) {
+    const auto segment_length = prev_vertex->Distance(*vertex),
+                vertex_length = prev_vertex_length + segment_length;
+
+    // Open if source is located at current segment
+    if (!open && source_length < vertex_length) {
+      const auto offset = normalize(source_length - prev_vertex_length, segment_length);
+      clip.push_back(prev_vertex->along_segment(*vertex, offset));
+      open = true;
+    }
+
+    // Open -> Close if target is located at current segment
+    if (open && target_length < vertex_length) {
+      const auto offset = normalize(target_length - prev_vertex_length, segment_length);
+      clip.push_back(prev_vertex->along_segment(*vertex, offset));
+      open = false;
+      break;
+    }
+
+    // Add the end vertex of current segment if it is in open state
+    if (open) {
+      clip.push_back(*vertex);
+    }
+
+    prev_vertex = vertex;
+    prev_vertex_length = vertex_length;
+  }
+  // assert(clip.size() != 1) because when opening state, the source
+  // vertex was inserted and then followed by either target vertex
+  // inserted or current vertex inserted
+
+  if (clip.empty()) {
+    // assert(1.f == source && 1.f == target)
+    clip.push_back(*prev_vertex);
+    clip.push_back(*prev_vertex);
+  }
+
+  // So here we have assert(1 < clip.size())
+  return clip;
+}
+
+/**
+ * Trim the front of a polyline (represented as a list or vector of Point2).
+ * Returns the trimmed portion of the polyline. The supplied polyline is
+ * altered (the trimmed part is removed).
+ * @param  pts    List of points. This is modified - the result is the
+ *                remaining points after trimming the front.
+ * @param  dist   Distance to trim.
+ * @return Returns a list of points along the supplied polyline. The total
+ *         length of the returned polyline is dist.
+ */
+template <class container_t>
+container_t trim_front(container_t& pts, const float dist);
 
 //useful in converting from one iteratable map to another
 //for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string> >(some_ptree)

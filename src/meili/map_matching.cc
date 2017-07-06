@@ -3,10 +3,8 @@
 
 #include "meili/candidate_search.h"
 #include "meili/routing.h"
-#include "meili/geometry_helpers.h"
 #include "meili/match_result.h"
 #include "meili/map_matching.h"
-
 
 namespace {
 
