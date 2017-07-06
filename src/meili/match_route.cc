@@ -193,9 +193,9 @@ EdgeSegment::Shape(baldr::GraphReader& graphreader) const
     const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
     const auto& shape = edgeinfo.shape();
     if (edge->forward()) {
-      return helpers::ClipLineString(shape.cbegin(), shape.cend(), source, target);
+      return midgard::trim_polyline(shape.cbegin(), shape.cend(), source, target);
     } else {
-      return helpers::ClipLineString(shape.crbegin(), shape.crend(), source, target);
+      return midgard::trim_polyline(shape.crbegin(), shape.crend(), source, target);
     }
   }
   return {};
