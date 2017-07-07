@@ -74,7 +74,7 @@ config = {
   },
   'meili': {
     'mode': 'auto',
-    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy'],
+    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy', 'sigma_z', 'beta'],
     'verbose': False,
     'default': {
       'sigma_z': 4.07,
