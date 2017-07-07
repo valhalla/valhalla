@@ -4,8 +4,6 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
-#include "baldr/errorcode_util.h"
-
 #include "thor/route_matcher.h"
 
 using namespace valhalla::baldr;

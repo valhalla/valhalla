@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "midgard/logging.h"
 
-#include "loki/service.h"
+#include "loki/worker.h"
 
 
 using namespace valhalla;
@@ -17,12 +17,12 @@ using namespace prime_server;
 
 namespace {
   const std::vector<http_request_t> requests {
-    http_request_t(OPTIONS, ""),
-    http_request_t(HEAD, ""),
-    http_request_t(PUT, ""),
-    http_request_t(DELETE, ""),
-    http_request_t(TRACE, ""),
-    http_request_t(CONNECT, ""),
+    http_request_t(OPTIONS, "/route"),
+    http_request_t(HEAD, "/route"),
+    http_request_t(PUT, "/route"),
+    http_request_t(DELETE, "/route"),
+    http_request_t(TRACE, "/route"),
+    http_request_t(CONNECT, "/route"),
     http_request_t(GET, ""),
     http_request_t(POST, ""),
     http_request_t(GET, "/route?json={"),

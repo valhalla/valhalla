@@ -1,5 +1,4 @@
-#include <prime_server/prime_server.hpp>
-using namespace prime_server;
+#include "thor/worker.h"
 
 #include <algorithm>
 #include <memory>
@@ -7,14 +6,12 @@ using namespace prime_server;
 #include <vector>
 #include <unordered_map>
 
-
+#include "exception.h"
 #include "midgard/logging.h"
 #include "baldr/geojson.h"
 #include "baldr/pathlocation.h"
-#include "baldr/errorcode_util.h"
 #include "meili/map_matcher.h"
 
-#include "thor/service.h"
 #include "thor/route_matcher.h"
 #include "thor/map_matcher.h"
 #include "thor/match_result.h"
@@ -47,10 +44,7 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree &request,
-    const std::string &request_str, const bool header_dnt) {
-  //get time for start of request
-  auto s = std::chrono::system_clock::now();
+odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &request) {
 
   // Parse request
   parse_locations(request);
@@ -68,13 +62,9 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
   AttributesController controller;
 
-  worker_t::result_t result { true };
-  // Forward the original request
-  result.messages.emplace_back(request_str);
-
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
-    throw valhalla_exception_t{400, 445};
+    throw valhalla_exception_t{445};
   else {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
@@ -83,9 +73,9 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
         try {
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
-            throw valhalla_exception_t{400, 443};
-        } catch (const valhalla_exception_t& e) {
-          throw valhalla_exception_t{400, 443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
+            throw;
+        } catch (...) {
+          throw valhalla_exception_t{443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
@@ -95,8 +85,8 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
           trip_match = map_match(controller);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
-        } catch(const valhalla_exception_t& e) {
-          throw valhalla_exception_t{e.status_code, e.error_code, e.extra};
+        } catch(...) {
+          throw valhalla_exception_t { 442 };
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
@@ -110,8 +100,8 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
             trip_match = map_match(controller);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
-          } catch(const valhalla_exception_t& e) {
-            throw valhalla_exception_t{e.status_code, e.error_code, e.extra};
+          } catch(...) {
+            throw valhalla_exception_t { 442 };
           }
         }
         break;
@@ -119,22 +109,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
       log_admin(trip_path);
     }
 
-  result.messages.emplace_back(trip_path.SerializeAsString());
-
-  // Get processing time for thor
-  auto e = std::chrono::system_clock::now();
-  std::chrono::duration<float, std::milli> elapsed_time = e - s;
-  //log request if greater than X (ms)
-  if (!healthcheck && !header_dnt
-      && (elapsed_time.count() / shape.size()) > (long_request / 1100)) {
-    LOG_WARN(
-        "thor::trace_route elapsed time (ms)::"
-            + std::to_string(elapsed_time.count()));
-    LOG_WARN("thor::trace_route exceeded threshold::" + request_str);
-    midgard::logging::Log("valhalla_thor_long_request_trace_route",
-                          " [ANALYTICS] ");
-  }
-  return result;
+  return trip_path;
 }
 
 
@@ -175,7 +150,6 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
   try {
     matcher.reset(matcher_factory.Create(trace_config));
   } catch (const std::invalid_argument& ex) {
-    //return jsonify_error({400, 499}, request_info, std::string(ex.what()));
     throw std::runtime_error(std::string(ex.what()));
   }
 
@@ -435,7 +409,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
                                              destination, std::list<PathLocation>{},
                                              interrupt_callback, &route_discontinuities);
   } else {
-    throw baldr::valhalla_exception_t { 400, 442 };
+    throw;
   }
   return {trip_path, match_results};
 }

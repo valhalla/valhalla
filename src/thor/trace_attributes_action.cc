@@ -1,8 +1,6 @@
+#include "thor/worker.h"
+
 #include <cstdint>
-#include <prime_server/prime_server.hpp>
-
-using namespace prime_server;
-
 #include <algorithm>
 #include <utility>
 #include <string>
@@ -16,28 +14,22 @@ using namespace prime_server;
 #include "baldr/directededge.h"
 #include "midgard/logging.h"
 #include "midgard/constants.h"
-#include "baldr/errorcode_util.h"
+#include "baldr/edge_elevation.h"
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 #include "proto/tripdirections.pb.h"
 #include "proto/trippath.pb.h"
-
-#include "thor/service.h"
+#include "exception.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::sif;
 using namespace valhalla::odin;
 using namespace valhalla::thor;
 
-
 namespace {
-  const headers_t::value_type CORS { "Access-Control-Allow-Origin", "*" };
-  const headers_t::value_type JSON_MIME { "Content-type", "application/json;charset=utf-8" };
-  const headers_t::value_type JS_MIME { "Content-type", "application/javascript;charset=utf-8" };
 
   json::MapPtr serialize(const AttributesController& controller,
       const valhalla::odin::TripPath& trip_path,
@@ -406,11 +398,8 @@ void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request
  * portion of the route. This includes details for each section of road along the
  * path as well as any intersections along the path.
  */
-worker_t::result_t thor_worker_t::trace_attributes(
-    const boost::property_tree::ptree &request,
-    const std::string &request_str, http_request_info_t& request_info) {
-  //get time for start of request
-  auto s = std::chrono::system_clock::now();
+json::MapPtr thor_worker_t::trace_attributes(
+    const boost::property_tree::ptree &request) {
 
   // Parse request
   parse_locations(request);
@@ -430,7 +419,7 @@ worker_t::result_t thor_worker_t::trace_attributes(
   filter_attributes(request, controller);
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
-    throw valhalla_exception_t{400, 445};
+    throw valhalla_exception_t{445};
   else {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
@@ -439,9 +428,9 @@ worker_t::result_t thor_worker_t::trace_attributes(
         try {
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
-            throw valhalla_exception_t{400, 443};
-        } catch (const valhalla_exception_t& e) {
-          throw valhalla_exception_t{400, 443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
+            throw;
+        } catch (...) {
+          throw valhalla_exception_t{443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
@@ -451,8 +440,8 @@ worker_t::result_t thor_worker_t::trace_attributes(
           trip_match = map_match(controller, true);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
-        } catch (const valhalla_exception_t& e) {
-          throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
+        } catch (...) {
+          throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
@@ -466,8 +455,8 @@ worker_t::result_t thor_worker_t::trace_attributes(
             trip_match = map_match(controller, true);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
-          } catch (const valhalla_exception_t& e) {
-            throw valhalla_exception_t{400, 444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
+          } catch (...) {
+            throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
         }
         break;
@@ -485,31 +474,9 @@ worker_t::result_t thor_worker_t::trace_attributes(
   json::MapPtr json;
   if (trip_path.node().size() > 0)
     json = serialize(controller, trip_path, id, directions_options, match_results);
-  else throw valhalla_exception_t{400, 442};
+  else throw valhalla_exception_t{442};
 
-  //jsonp callback if need be
-  std::ostringstream stream;
-  auto jsonp = request.get_optional<std::string>("jsonp");
-  if (jsonp)
-    stream << *jsonp << '(';
-  stream << *json;
-  if (jsonp)
-    stream << ')';
-
-  // Get processing time for thor
-  auto e = std::chrono::system_clock::now();
-  std::chrono::duration<float, std::milli> elapsed_time = e - s;
-  //log request if greater than X (ms)
-  if (!healthcheck && !request_info.spare && (elapsed_time.count() / shape.size()) > (long_request / 1100)) {
-    LOG_WARN("thor::trace_attributes elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-    LOG_WARN("thor::trace_attributes exceeded threshold::"+ request_str);
-    midgard::logging::Log("valhalla_thor_long_request_trace_attributes", " [ANALYTICS] ");
-  }
-  http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-  response.from_info(request_info);
-  worker_t::result_t result{false};
-  result.messages.emplace_back(response.to_string());
-  return result;
+  return json;
 }
 }
 }

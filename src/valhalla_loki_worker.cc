@@ -3,7 +3,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "loki/service.h"
+#include "loki/worker.h"
 
 int main(int argc, char** argv) {
 
