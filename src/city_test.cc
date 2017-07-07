@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
   // Exit here or continue and run routes?
 //  return EXIT_SUCCESS;
 
-  CostFactory<DynamicCost> factory(pt.get_child("sif", boost::property_tree::ptree{}));
+  CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
   factory.Register("auto_shorter", CreateAutoShorterCost);
   factory.Register("bus", CreateBusCost);

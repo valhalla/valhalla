@@ -48,7 +48,7 @@ class CostFactory {
    * @param config  Property tree with configuration / cost options
    */
   cost_ptr_t Create(const std::string& name,
-                    boost::property_tree::ptree config) const {
+                    const boost::property_tree::ptree& config) const {
     auto itr = factory_funcs_.find(name);
     if (itr == factory_funcs_.end()) {
       throw std::runtime_error("No costing method found for '" + name + "'");
