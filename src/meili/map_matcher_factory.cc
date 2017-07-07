@@ -32,7 +32,6 @@ namespace meili {
 MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root)
     : config_(root.get_child("meili")),
       graphreader_(root.get_child("mjolnir")),
-      cost_factory_(root.get_child("sif", boost::property_tree::ptree{})),
       candidatequery_(graphreader_,
                       local_tile_size()/root.get<size_t>("meili.grid.size"),
                       local_tile_size()/root.get<size_t>("meili.grid.size")),

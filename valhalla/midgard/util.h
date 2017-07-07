@@ -198,6 +198,15 @@ bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
   return (!negative && diff <= epsilon) || (negative && diff >= -epsilon);
 }
 
+template <class T>
+bool similar(const T a, const T b, const double similarity = .99) {
+  if(a == 0 || b == 0)
+    return a == b;
+  if((a < 0) != (b < 0))
+    return false;
+  return (double)std::min(a, b) / (double)std::max(a, b) >= similarity;
+}
+
 /**
  * A means by which you can get some information about the current processes memory footprint
  */

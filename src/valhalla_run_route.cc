@@ -579,7 +579,7 @@ int main(int argc, char *argv[]) {
   auto t0 = std::chrono::high_resolution_clock::now();
 
   // Construct costing
-  CostFactory<DynamicCost> factory(pt.get_child("sif", boost::property_tree::ptree{}));
+  CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
   factory.Register("auto_shorter", CreateAutoShorterCost);
   factory.Register("bus", CreateBusCost);

@@ -366,7 +366,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     // Perhaps need to adjust score?
-    cost.cost += edge.score * costing->GetScoreMultiplier();
+    cost.cost += edge.score;
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
@@ -386,7 +386,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
                                             (1.0f - destination_edge.dist);
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
-            cost.cost += destination_edge.score * costing->GetScoreMultiplier();
+            cost.cost += destination_edge.score;
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
           }
@@ -446,7 +446,7 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    destinations_[edge.id].cost += edge.score * costing->GetScoreMultiplier();
+    destinations_[edge.id].cost += edge.score;
 
     // Get the tile relative density
     density = tile->header()->density();

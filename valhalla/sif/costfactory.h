@@ -30,9 +30,7 @@ class CostFactory {
   /**
    * Constructor
    */
-  CostFactory(const boost::property_tree::ptree& config)
-    : score_multiplier(config.get("score_multiplier", 10.f)) {
-  }
+  CostFactory() { }
 
   /**
    * Register the callback to create this type of cost
@@ -55,8 +53,6 @@ class CostFactory {
     if (itr == factory_funcs_.end()) {
       throw std::runtime_error("No costing method found for '" + name + "'");
     }
-    //TODO: allow different multipliers for different costing names
-    config.put("score_multiplier", score_multiplier);
     //create the cost using the function pointer
     return itr->second(config);
   }
@@ -75,7 +71,6 @@ class CostFactory {
   }
  private:
   std::map<std::string, factory_function_t> factory_funcs_;
-  float score_multiplier;
 };
 
 }

@@ -74,8 +74,7 @@ namespace valhalla {
 
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config):
       mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), factory(config.get_child("sif", boost::property_tree::ptree{})),
-      matcher_factory(config), reader(matcher_factory.graphreader()),
+      config(config), matcher_factory(config), reader(matcher_factory.graphreader()),
       long_request(config.get<float>("thor.logging.long_request")),
       healthcheck(false){
       // Register edge/node costing methods

@@ -216,8 +216,7 @@ namespace valhalla {
     }
 
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):
-        config(config), factory(config.get_child("sif", boost::property_tree::ptree{})),
-        reader(config.get_child("mjolnir")), connectivity_map(config.get_child("mjolnir")),
+        config(config), reader(config.get_child("mjolnir")), connectivity_map(config.get_child("mjolnir")),
         long_request(config.get<float>("loki.logging.long_request")),
         max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
         max_time(config.get<size_t>("service_limits.isochrone.max_time")),

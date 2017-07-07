@@ -24,7 +24,7 @@ namespace baldr{
       bool found = false;
       for(const auto& other_edge : other.edges) {
         if(edge.id == other_edge.id && edge.sos == other_edge.sos && midgard::equal<float>(edge.dist, other_edge.dist) &&
-            midgard::equal<float>(edge.score, other_edge.score, .1f) && edge.projected.ApproximatelyEqual(other_edge.projected)){
+            midgard::similar<float>(edge.score + 1, other_edge.score + 1) && edge.projected.ApproximatelyEqual(other_edge.projected)){
           found = true;
           break;
         }

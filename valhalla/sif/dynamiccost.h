@@ -353,22 +353,6 @@ class DynamicCost {
             user_avoid_edges_.find(edgeid) != user_avoid_edges_.end());
   }
 
-  /**
-   * Set the edge score multiplier for this costing
-   * @param multiplier the multiplier to use on the edge score
-   */
-  virtual void SetScoreMultiplier(float multiplier) {
-    score_multiplier = multiplier;
-  }
-
-  /**
-   * Get the edge score multiplier for this costing
-   * @return multiplier the multiplier used on the edge score
-   */
-  virtual float GetScoreMultiplier() const {
-    return score_multiplier;
-  }
-
  protected:
   // Flag indicating whether transit connections are allowed.
   bool allow_transit_connections_;
@@ -386,9 +370,6 @@ class DynamicCost {
 
   // User specified edges to avoid
   std::unordered_set<baldr::GraphId> user_avoid_edges_;
-
-  // A multiplier to penalize edge scores
-  float score_multiplier;
 };
 
 typedef std::shared_ptr<DynamicCost> cost_ptr_t;

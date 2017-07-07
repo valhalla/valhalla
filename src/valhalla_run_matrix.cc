@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) {
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
   // Construct costing
-  CostFactory<DynamicCost> factory(pt.get_child("sif", boost::property_tree::ptree{}));
+  CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
   factory.Register("auto_shorter", CreateAutoShorterCost);
   factory.Register("bus", CreateBusCost);
