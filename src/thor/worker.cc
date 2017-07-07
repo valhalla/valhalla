@@ -78,6 +78,7 @@ namespace valhalla {
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
       factory.Register("bus", CreateBusCost);
       factory.Register("bicycle", sif::CreateBicycleCost);
+      factory.Register("low_stress_bicycle", sif::CreateLowStressBicycleCost);
       factory.Register("hov", sif::CreateHOVCost);
       factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("transit", sif::CreateTransitCost);

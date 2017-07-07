@@ -128,9 +128,6 @@ constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
 // Maximum number of edges allowed in a turn restriction mask
 constexpr uint32_t kMaxTurnRestrictionEdges = 8;
 
-// Maximum speed (kph)
-constexpr float kMaxSpeed = 255.0f;
-
 // Maximum lane count
 constexpr uint32_t kMaxLaneCount = 15;
 
