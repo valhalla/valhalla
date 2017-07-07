@@ -50,9 +50,6 @@ config = {
       'proxy': 'ipc:///tmp/skadi'
     }
   },
-  'sif': {
-    'score_multiplier': 10.0
-  },
   'thor': {
     'logging': {
       'type': 'std_out',
@@ -265,9 +262,6 @@ help_text = {
     'service': {
       'proxy': 'IPC linux domain socket file location'
     }
-  },
-  'sif': {
-    'score_multiplier': 'This is multiplied by the score of every edge that loki finds for a given input location in the graph. The score is simply distance and is used to compute seconds of penalty for a given location'
   },
   'thor': {
     'logging': {
