@@ -114,11 +114,12 @@ namespace baldr {
     {151,"Exceeded max time"},
     {152,"Exceeded max contours"},
     {153,"Too many shape points"},
-    {154,"Path distance exceeds the max distance limit"},
+    {154,"Too many points exceed the max distance limit"},
     {155,"Outside the valid walking distance at the beginning or end of a multimodal route"},
     {156,"Outside the valid walking distance between stops of a multimodal route"},
     {157,"Exceeded max avoid locations"},
     {158,"Input trace option is out of bounds"},
+    {159,"Ignore list not found"},
 
     {160,"Date and time required for origin for date_type of depart at"},
     {161,"Date and time required for destination for date_type of arrive by"},

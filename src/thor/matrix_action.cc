@@ -32,6 +32,9 @@ namespace std {
 
 namespace {
 
+  // TODO: Maybe find a better spot to put this or reconsider if it is necessary.
+  using ignore_list_t = std::unordered_map<uint32_t, std::unordered_set<uint32_t>>;
+
   const std::unordered_map<thor_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
      {thor_worker_t::ONE_TO_MANY, "one_to_many"},
      {thor_worker_t::MANY_TO_ONE, "many_to_one"},
@@ -105,6 +108,25 @@ namespace {
     return json;
   }
 
+  ignore_list_t parse_ignore_list (const boost::property_tree::ptree& request) {
+    ignore_list_t ignore_list {};
+    auto ignore_list_json = request.get_child_optional("ignore_list");
+
+    if (ignore_list_json) {
+      for (const auto& pair : *ignore_list_json) {
+        uint32_t source = pair.second.get<uint32_t>("source");
+        uint32_t target = pair.second.get<uint32_t>("target");
+        ignore_list[source].emplace(target);
+      }
+    }
+    // TODO: Do we need to check this?
+    else {
+      throw valhalla_exception_t {500, 159};
+    }
+
+    return ignore_list;
+  }
+
 }
 
 namespace valhalla {
@@ -116,6 +138,7 @@ namespace valhalla {
 
       parse_locations(request);
       auto costing = parse_costing(request);
+      auto ignore_list = parse_ignore_list (request);
 
       const auto& matrix_type = ACTION_TO_STRING.find(action)->second;
       if (!healthcheck)
@@ -132,13 +155,13 @@ namespace valhalla {
       std::vector<TimeDistance> time_distances;
       auto costmatrix = [&]() {
         thor::CostMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
-                                    mode, max_matrix_distance.find(costing)->second);
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode,
+                                     max_matrix_distance.find(costing)->second, ignore_list);
       };
       auto timedistancematrix = [&]() {
         thor::TimeDistanceMatrix matrix;
         return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
-                                    mode, max_matrix_distance.find(costing)->second);
+                                    mode, max_matrix_distance.find(costing)->second, ignore_list);
       };
       switch (source_to_target_algorithm) {
         case SELECT_OPTIMAL:

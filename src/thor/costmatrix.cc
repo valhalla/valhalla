@@ -103,7 +103,8 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
         const std::vector<PathLocation>& target_location_list,
         GraphReader& graphreader,
         const std::shared_ptr<DynamicCost>* mode_costing,
-        const TravelMode mode, const float max_matrix_distance) {
+        const TravelMode mode, const float max_matrix_distance,
+        const ignore_list_t& ignore_list) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -119,7 +120,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
-  Initialize(source_location_list, target_location_list);
+  Initialize(source_location_list, target_location_list, ignore_list);
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -184,7 +185,8 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 // remaining locations set.
 void CostMatrix::Initialize(
         const std::vector<PathLocation>& source_locations,
-        const std::vector<PathLocation>& target_locations) {
+        const std::vector<PathLocation>& target_locations,
+        const ignore_list_t& ignore_list) {
   // Add initial status
   const uint32_t kMaxThreshold = std::numeric_limits<int>::max();
   for (uint32_t i = 0; i < source_count_; i++) {
@@ -200,9 +202,16 @@ void CostMatrix::Initialize(
   Cost trivial_cost(0.0f, 0.0f);
   Cost max_cost(kMaxCost, kMaxCost);
   for (uint32_t i = 0; i < source_count_; i++) {
+    auto bad_targets = ignore_list.find(i);
     for (uint32_t j = 0; j < target_count_; j++) {
       if (source_locations[i].latlng_ == target_locations[j].latlng_) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
+        best_connection_.back().found = true;
+      } else if (bad_targets != ignore_list.end() &&
+                 bad_targets->second.find(j) != bad_targets->second.end()) {
+        // We want this to return empty (not 0) in the json so we must mark it
+        // as found, but with a cost of kMaxCost.
+        best_connection_.emplace_back(empty, empty, max_cost, kMaxCost);
         best_connection_.back().found = true;
       } else {
         best_connection_.emplace_back(empty, empty, max_cost, kMaxCost);

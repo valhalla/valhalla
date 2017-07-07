@@ -26,7 +26,7 @@ namespace thor {
 // thresholds for quick rejection
 constexpr float kTimeDistCostThresholdAutoDivisor = 112.0f; // 400 km distance threshold will result in a cost threshold of ~2600 (1 hour)
 constexpr float kTimeDistCostThresholdBicycleDivisor = 19.0f; // 200 km distance threshold will result in a cost threshold of ~10800 (3 hours)
-constexpr float kTimeDistCostThresholdPedestrianDivisor = 7.0f; // 200 km distance threshold will result in a cost threshold of ~28800 (8 hours)
+constexpr float kTimeDistCostThresholdPedestrianDivisor = 9.0f; // 200 km distance threshold will result in a cost threshold of ~21600 (6 hours)
 
 // Structure to hold information about each destination.
 struct Destination {
@@ -63,52 +63,62 @@ class TimeDistanceMatrix {
   /**
    * One to many time and distance cost matrix. Computes time and distance
    * matrix from one origin location to many other locations.
-   * @param  origin        Location of the origin.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
-   * @param  mode          Travel mode to use.
+   * @param  origin                Location of the origin.
+   * @param  locations             List of locations.
+   * @param  graphreader           Graph reader for accessing routing graph.
+   * @param  costing               Costing methods.
+   * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  ignore_list           List of source + target pairs to ignore. (return empty)
+   * @param  origin_ignore_id      The id of the origin inside the ignore_list
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> OneToMany(const baldr::PathLocation& origin,
           const std::vector<baldr::PathLocation>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+          const sif::TravelMode mode, const float max_matrix_distance,
+          const ignore_list_t& ignore_list = {},
+          const uint32_t origin_ignore_id = 0);
 
   /**
    * Many to one time and distance cost matrix. Computes time and distance
    * matrix from many locations to one destination location.
-   * @param  dest          Location of the destination.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
-   * @param  mode          Travel mode to use.
+   * @param  dest                  Location of the destination.
+   * @param  locations             List of locations.
+   * @param  graphreader           Graph reader for accessing routing graph.
+   * @param  costing               Costing methods.
+   * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  ignore_list           List of source + target pairs to ignore. (return empty)
+   * @param  dest_ignore_id        The id of the destination inside the ignore_list
    * @return time/distance to the destination index from all other locations
    */
   std::vector<TimeDistance> ManyToOne(const baldr::PathLocation& dest,
           const std::vector<baldr::PathLocation>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+          const sif::TravelMode mode, const float max_matrix_distance,
+          const ignore_list_t& ignore_list = {},
+          const uint32_t dest_ignore_id = 0);
 
   /**
    * Many to many time and distance cost matrix. Computes time and distance
    * matrix from many locations to many locations.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
-   * @param  mode          Travel mode to use.
+   * @param  locations             List of locations.
+   * @param  graphreader           Graph reader for accessing routing graph.
+   * @param  costing               Costing methods.
+   * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  ignore_list           List of source + target pairs to ignore. (return empty)
    * @return time/distance between all pairs of locations
    */
   std::vector<TimeDistance> ManyToMany(
           const std::vector<baldr::PathLocation>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+          const sif::TravelMode mode, const float max_matrix_distance,
+          const ignore_list_t& ignore_list = {});
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -119,6 +129,7 @@ class TimeDistanceMatrix {
    * @param  costing               Costing methods.
    * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  ignore_list           List of source + target pairs to ignore. (return empty)
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> SourceToTarget(
@@ -126,7 +137,8 @@ class TimeDistanceMatrix {
           const std::vector<baldr::PathLocation>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+          const sif::TravelMode mode, const float max_matrix_distance,
+          const ignore_list_t& ignore_list = {});
 
   /**
    * Clear the temporary information generated during time+distance
@@ -194,20 +206,26 @@ class TimeDistanceMatrix {
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    * @param  costing       Costing method.
+   * @param  ignore_ids    The ids of the destinations to ignore
    */
   void SetDestinations(baldr::GraphReader& graphreader,
                        const std::vector<baldr::PathLocation>& locations,
-                       const std::shared_ptr<sif::DynamicCost>& costing);
+                       const std::shared_ptr<sif::DynamicCost>& costing,
+                       const std::unordered_set<uint32_t>& ignore_ids);
 
   /**
    * Set destinations for the many to one time+distance matrix computation.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  locations     List of locations.
-   * @param  costing       Costing method.
+   * @param  graphreader           Graph reader for accessing routing graph.
+   * @param  locations             List of locations.
+   * @param  costing               Costing method.
+   * @param  ignore_list           List of source + target pairs to ignore. (return empty)
+   * @param  dest_ignore_id        The id of the destination inside the ignore_list
    */
   void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
             const std::vector<baldr::PathLocation>& locations,
-            const std::shared_ptr<sif::DynamicCost>& costing);
+            const std::shared_ptr<sif::DynamicCost>& costing,
+            const ignore_list_t& ignore_list,
+            const uint32_t dest_ignore_id);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
