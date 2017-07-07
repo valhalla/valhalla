@@ -1473,7 +1473,10 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
       return true;
     }
 
-    // TODO - Do we handle station transfer????
+    // Combine for station transfer
+    if (prev_edge->IsPlatformConnectionUse() && curr_edge->IsPlatformConnectionUse()) {
+      return true;
+    }
 
     // If the expected order of transit connection types was not found
     // then do not combine
