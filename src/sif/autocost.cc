@@ -236,7 +236,7 @@ class AutoCost : public DynamicCost {
   // We expose it within the source file for testing purposes
  public:
   VehicleType type_;                // Vehicle type: car (default), motorcycle, etc
-  float speedfactor_[256];
+  float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16];        // Density factor
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
   float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
@@ -332,7 +332,7 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
-  for (uint32_t s = 1; s < 255; s++) {
+  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
 
@@ -589,7 +589,7 @@ class AutoShorterCost : public AutoCost {
   virtual float AStarCostFactor() const;
 
  protected:
-  float adjspeedfactor_[256];
+  float adjspeedfactor_[kMaxSpeedKph + 1];
 };
 
 
@@ -598,7 +598,7 @@ AutoShorterCost::AutoShorterCost(const boost::property_tree::ptree& pt)
     : AutoCost(pt) {
   // Create speed cost table that reduces the impact of speed
   adjspeedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
-  for (uint32_t s = 1; s < 255; s++) {
+  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     adjspeedfactor_[s] = (kSecPerHour * 0.001f) / sqrtf(static_cast<float>(s));
   }
 }

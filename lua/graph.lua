@@ -345,13 +345,13 @@ shared = {
 }
 
 dedicated = {
-["opposite_track"] = 2,
-["track"] = 2
+["opposite_lane"] = 2,
+["lane"] = 2
 }
 
 separated = {
-["opposite_lane"] = 3,
-["lane"] = 3
+["opposite_track"] = 3,
+["track"] = 3
 }
 
 oneway = {
