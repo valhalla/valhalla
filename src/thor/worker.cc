@@ -13,15 +13,14 @@
 #include "midgard/constants.h"
 #include "baldr/json.h"
 #include "baldr/geojson.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
-#include <prime_server/prime_server.hpp>
-
-#include "thor/service.h"
+#include "thor/worker.h"
 #include "thor/isochrone.h"
+#include "tyr/actor.h"
 
-using namespace prime_server;
 using namespace valhalla;
+using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::meili;
@@ -30,37 +29,34 @@ using namespace valhalla::thor;
 
 namespace {
   constexpr double kMilePerMeter = 0.000621371;
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
-    //we require correlated locations
-    std::vector<baldr::PathLocation> correlated;
-    correlated.reserve(locations.size());
-    size_t i = 0;
-    do {
-      auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-      if(!path_location)
-        break;
-      try {
-        correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+   std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
+   //we require correlated locations
+   std::vector<baldr::PathLocation> correlated;
+   correlated.reserve(locations.size());
+   size_t i = 0;
+   do {
+     auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
+     if(!path_location)
+       break;
+       try {
+         correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
 
-        auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
+         auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
             [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
               return i.score < j.score;
             });
 
-        for(auto& e : correlated.back().edges) {
-          e.score -= minScoreEdge.score;
-        }
-      }
-      catch (...) {
-        throw valhalla_exception_t{400, 420};
-      }
-    }while(++i);
-    return correlated;
-  }
+         for(auto& e : correlated.back().edges) {
+           e.score -= minScoreEdge.score;
+         }
+       }
+       catch (...) {
+         throw valhalla_exception_t{420};
+       }
+   }while(++i);
+     return correlated;
+   }
 }
 
 namespace valhalla {
@@ -74,8 +70,9 @@ namespace valhalla {
 
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config):
       mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), matcher_factory(config), reader(matcher_factory.graphreader()),
-      long_request(config.get<float>("thor.logging.long_request")){
+      matcher_factory(config), reader(matcher_factory.graphreader()),
+      long_request(config.get<float>("thor.logging.long_request")),
+      healthcheck(false) {
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -115,52 +112,30 @@ namespace valhalla {
 
     thor_worker_t::~thor_worker_t(){}
 
-    worker_t::result_t thor_worker_t::jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info) const {
-
-       //build up the json map
-      auto json_error = json::map({});
-      json_error->emplace("status", exception.status_code_body);
-      json_error->emplace("status_code", static_cast<uint64_t>(exception.status_code));
-      json_error->emplace("error", std::string(exception.error_code_message));
-      json_error->emplace("error_code", static_cast<uint64_t>(exception.error_code));
-
-      //serialize it
-      std::stringstream ss;
-      if(jsonp)
-        ss << *jsonp << '(';
-      ss << *json_error;
-      if(jsonp)
-        ss << ')';
-
-      worker_t::result_t result{false};
-      http_response_t response(exception.status_code, exception.status_code_body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-
-      return result;
-    }
-
+#ifdef HAVE_HTTP
     worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t& interrupt) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
+
       try{
         //get some info about what we need to do
         boost::property_tree::ptree request;
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
+        boost::optional<std::string> jsonp;
         try {
           boost::property_tree::read_json(stream, request);
           jsonp = request.get_optional<std::string>("jsonp");
         }
         catch(const std::exception& e) {
           valhalla::midgard::logging::Log("500::" + std::string(e.what()), " [ANALYTICS] ");
-          return jsonify_error({500, 499, std::string(e.what())}, info);
+          return jsonify_error({499, std::string(e.what())}, info);
         }
         catch(...) {
           valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
-          return jsonify_error({500, 401}, info);
+          return jsonify_error({401}, info);
         }
 
         // Set the interrupt function
@@ -170,44 +145,102 @@ namespace valhalla {
         healthcheck = request.get<bool>("healthcheck", false);
         // Initialize request - get the PathALgorithm to use
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
-        boost::optional<int> date_time_type;
-        if (request.find("date_time.type") != request.not_found())
-          date_time_type = request.get<float>("date_time.type");
+        boost::optional<int> date_time_type = request.get_optional<int>("date_time.type");
         // Allow the request to be aborted
         astar.set_interrupt(&interrupt);
         bidir_astar.set_interrupt(&interrupt);
         multi_modal_astar.set_interrupt(&interrupt);
-        //what action is it
+
+        worker_t::result_t result{true};
+        double denominator = 0;
+        size_t order_index = 0;
+        //do request specific processing
         switch (action) {
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
-            return matrix(action, request, info);
+            result = to_response(matrix(action, request), jsonp, info);
+            denominator = correlated_s.size() * correlated_t.size();
+            break;
           case OPTIMIZED_ROUTE:
-            return optimized_route(request, request_str, info.spare);
+            // Forward the original request
+            result.messages.emplace_back(std::move(request_str));
+            for (auto& trippath : optimized_route(request)) {
+              for (auto& location : *trippath.mutable_location())
+                location.set_original_index(optimal_order[order_index++]);
+              --order_index;
+              result.messages.emplace_back(trippath.SerializeAsString());
+            }
+            denominator = std::max(correlated_s.size(), correlated_t.size());
+            break;
           case ISOCHRONE:
-            return isochrone(request, info);
+            result = to_response(isochrones(request), jsonp, info);
+            denominator = correlated_s.size() * correlated_t.size();
+            break;
           case ROUTE:
           case VIAROUTE:
-            return route(request, request_str, date_time_type, info.spare);
+            // Forward the original request
+            result.messages.emplace_back(std::move(request_str));
+            for (const auto& trippath : route(request, date_time_type))
+              result.messages.emplace_back(trippath.SerializeAsString());
+            denominator = correlated.size();
+            break;
           case TRACE_ROUTE:
-            return trace_route(request, request_str, info.spare);
+            // Forward the original request
+            result.messages.emplace_back(std::move(request_str));
+            result.messages.emplace_back(trace_route(request).SerializeAsString());
+            denominator = shape.size() / 1100;
+            break;
           case TRACE_ATTRIBUTES:
-            return trace_attributes(request, request_str, info);
+            result = to_response(trace_attributes(request), jsonp, info);
+            denominator = shape.size() / 1100;
+            break;
           default:
-            throw valhalla_exception_t{400, 400}; //this should never happen
+            throw valhalla_exception_t{400}; //this should never happen
         }
+
+        double elapsed_time = (std::chrono::system_clock::now() - s).count();
+        if (!healthcheck && !info.spare && elapsed_time / denominator > long_request) {
+          std::stringstream ss;
+          boost::property_tree::json_parser::write_json(ss, request, false);
+          LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request elapsed time (ms)::"+ std::to_string(elapsed_time));
+          LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request exceeded threshold::"+ ss.str());
+          midgard::logging::Log("valhalla_thor_long_request_"+ACTION_TO_STRING.find(action)->second, " [ANALYTICS] ");
+        }
+
+        return result;
       }
       catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({e.status_code, e.error_code, e.extra}, info);
+        return jsonify_error(e, info);
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({400, 499, std::string(e.what())}, info);
+        return jsonify_error({499, std::string(e.what())}, info);
       }
     }
+
+    void run_service(const boost::property_tree::ptree& config) {
+      //gets requests from thor proxy
+      auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
+      //sends them on to odin
+      auto downstream_endpoint = config.get<std::string>("odin.service.proxy") + "_in";
+      //or returns just location information back to the server
+      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
+      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
+
+      //listen for requests
+      zmq::context_t context;
+      thor_worker_t thor_worker(config);
+      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint, interrupt_endpoint,
+        std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+        std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
+      worker.work();
+
+      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+    }
+#endif
 
     // Get the costing options if in the config or get the empty default.
     // Creates the cost in the cost factory
@@ -248,26 +281,24 @@ namespace valhalla {
       if(request_locations) {
         for(const auto& location : *request_locations) {
           try{ locations.push_back(baldr::Location::FromPtree(location.second)); }
-          catch (...) { throw valhalla_exception_t{400, 421}; }
+          catch (...) { throw valhalla_exception_t{421}; }
         }
         correlated = store_correlated_locations(request, locations);
       }//if we have a sources and targets request here we will divy up the correlated amongst them
       else if(request_sources && request_targets) {
         for(const auto& s : *request_sources) {
           try{ locations.push_back(baldr::Location::FromPtree(s.second)); }
-          catch (...) { throw valhalla_exception_t{400, 422}; }
+          catch (...) { throw valhalla_exception_t{422}; }
         }
         for(const auto& t : *request_targets) {
           try{ locations.push_back(baldr::Location::FromPtree(t.second)); }
-          catch (...) { throw valhalla_exception_t{400, 423}; }
+          catch (...) { throw valhalla_exception_t{423}; }
         }
         correlated = store_correlated_locations(request, locations);
 
         correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->size());
         correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
-      }//we need something
-      else
-        throw valhalla_exception_t{400, 410};
+      }
 
       //type - 0: current, 1: depart, 2: arrive
       if (request.find("date_time.type") == request.not_found())
@@ -287,16 +318,13 @@ namespace valhalla {
     void thor_worker_t::parse_shape(const boost::property_tree::ptree& request) {
       //we require locations
       auto request_shape = request.get_child("shape");
-
-      for(const auto& pt : request_shape) {
-        try{
+      try{
+        for(const auto& pt : request_shape)
           shape.push_back(baldr::Location::FromPtree(pt.second).latlng_);
-        }
-        catch (...) {
-          throw std::runtime_error("Failed to parse shape");
-        }
       }
-
+      catch (...) {
+        throw valhalla_exception_t{424};
+      }
     }
 
     void thor_worker_t::parse_trace_config(const boost::property_tree::ptree& request) {
@@ -352,7 +380,6 @@ namespace valhalla {
     }
 
     void thor_worker_t::cleanup() {
-      jsonp = boost::none;
       astar.Clear();
       bidir_astar.Clear();
       multi_modal_astar.Clear();
@@ -365,26 +392,6 @@ namespace valhalla {
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())
         reader.Clear();
-    }
-
-    void run_service(const boost::property_tree::ptree& config) {
-      //gets requests from thor proxy
-      auto upstream_endpoint = config.get<std::string>("thor.service.proxy") + "_out";
-      //sends them on to odin
-      auto downstream_endpoint = config.get<std::string>("odin.service.proxy") + "_in";
-      //or returns just location information back to the server
-      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
-      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
-
-      //listen for requests
-      zmq::context_t context;
-      thor_worker_t thor_worker(config);
-      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint, interrupt_endpoint,
-        std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-        std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
-      worker.work();
-
-      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
     }
 
   }

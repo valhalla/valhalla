@@ -8,30 +8,34 @@
 #include <prime_server/prime_server.hpp>
 #include <prime_server/http_protocol.hpp>
 
+#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/skadi/sample.h>
+#include <valhalla/worker.h>
 
 namespace valhalla {
   namespace skadi {
 
+#ifdef HAVE_HTTP
     void run_service(const boost::property_tree::ptree& config);
+#endif
 
-    class skadi_worker_t {
+    class skadi_worker_t : public service_worker_t{
      public:
-      enum ACTION_TYPE {HEIGHT = 0};
       skadi_worker_t(const boost::property_tree::ptree& config);
       virtual ~skadi_worker_t();
-      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
-      void cleanup();
+#ifdef HAVE_HTTP
+      virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t& interrupt) override;
+#endif
+      virtual void cleanup() override;
+
+      baldr::json::MapPtr height(rapidjson::Document& request);
 
      protected:
 
-      void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request);
+      void init_request(rapidjson::Document& request);
 
-      prime_server::worker_t::result_t elevation(const boost::property_tree::ptree& request, prime_server::http_request_info_t& request_info);
-
-      boost::optional<std::string> jsonp;
-      std::list<midgard::PointLL> shape;
+      std::vector<midgard::PointLL> shape;
       boost::optional<std::string> encoded_polyline;
       bool range;
       skadi::sample sample;
@@ -39,6 +43,7 @@ namespace valhalla {
       float min_resample;
       float long_request;
       bool healthcheck;
+      std::string action_str;
   };
  }
 }

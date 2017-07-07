@@ -1,4 +1,4 @@
-#include "loki/service.h"
+#include "loki/worker.h"
 #include "loki/search.h"
 
 #include <boost/property_tree/info_parser.hpp>
@@ -8,36 +8,14 @@
 #include "baldr/datetime.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
+#include "tyr/actor.h"
 
-using namespace prime_server;
+using namespace valhalla;
+using namespace valhalla::tyr;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
-namespace std {
-  template <>
-  struct hash<loki_worker_t::ACTION_TYPE>
-  {
-    std::size_t operator()(const loki_worker_t::ACTION_TYPE& a) const {
-      return std::hash<int>()(a);
-    }
-  };
-}
-
 namespace {
-
-  // TODO: Separate matrix actions to be deprecated and replaced by sources_to_targets action
-  const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
-     {loki_worker_t::ONE_TO_MANY, "one_to_many"},
-     {loki_worker_t::MANY_TO_ONE, "many_to_one"},
-     {loki_worker_t::MANY_TO_MANY, "many_to_many"},
-     {loki_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"},
-     {loki_worker_t::OPTIMIZED_ROUTE, "optimized_route"}
-   };
-
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
   void check_distance(const std::vector<Location>& sources, const std::vector<Location>& targets, float matrix_max_distance, float& max_location_distance) {
     //see if any locations pairs are unreachable or too far apart
     for(const auto& source : sources){
@@ -53,7 +31,7 @@ namespace {
         }
 
         if (path_distance > matrix_max_distance)
-          throw valhalla_exception_t{400, 154};
+          throw valhalla_exception_t{154};
       }
     }
   }
@@ -65,16 +43,16 @@ namespace valhalla {
     void loki_worker_t::init_matrix(ACTION_TYPE action, rapidjson::Document& request) {
       //we require sources and targets
       try {
-        sources = parse_locations(request, "sources", 131, valhalla_exception_t{400, 112});
-        targets = parse_locations(request, "targets", 132, valhalla_exception_t{400, 112});
+        sources = parse_locations(request, "sources", 131, valhalla_exception_t{112});
+        targets = parse_locations(request, "targets", 132, valhalla_exception_t{112});
       }//deprecated using locations
       catch(const valhalla_exception_t& e) {
         if(request.HasMember("locations"))
-          locations = parse_locations(request, "locations", 130, valhalla_exception_t{400, 112});
+          locations = parse_locations(request, "locations", 130, valhalla_exception_t{112});
         else
           throw e;
         if (locations.size() < 2)
-          throw valhalla_exception_t{400, 120};
+          throw valhalla_exception_t{120};
         //create new sources and targets ptree from locations
         rapidjson::Value sources_child{rapidjson::kArrayType}, targets_child{rapidjson::kArrayType};
         auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/locations");
@@ -105,9 +83,9 @@ namespace valhalla {
       }
 
       //sanitize
-      if(sources.size() < 1) throw valhalla_exception_t{400, 121};
+      if(sources.size() < 1) throw valhalla_exception_t{121};
       for(auto& s : sources) s.heading_.reset();
-      if(targets.size() < 1) throw valhalla_exception_t{400, 122};
+      if(targets.size() < 1) throw valhalla_exception_t{122};
       for(auto& t : targets) t.heading_.reset();
 
       //no locations!
@@ -121,12 +99,12 @@ namespace valhalla {
       init_matrix(action, request);
       std::string costing = request["costing"].GetString();
       if (costing == "multimodal")
-        throw valhalla_exception_t{400, 140, ACTION_TO_STRING.find(action)->second};
+        throw valhalla_exception_t{140, ACTION_TO_STRING.find(action)->second};
 
       //check that location size does not exceed max.
       auto max = max_matrix_locations.find(costing)->second;
       if (sources.size() > max || targets.size() > max)
-        throw valhalla_exception_t{400, 150, std::to_string(max)};
+        throw valhalla_exception_t{150, std::to_string(max)};
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
@@ -158,7 +136,7 @@ namespace valhalla {
         }
       }
       catch(const std::exception&) {
-        throw valhalla_exception_t{400, 171};
+        throw valhalla_exception_t{171};
       }
 
 
@@ -171,7 +149,7 @@ namespace valhalla {
         }
       }
       if(!connected)
-        throw valhalla_exception_t{400, 170};
+        throw valhalla_exception_t{170};
       if (!healthcheck)
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }

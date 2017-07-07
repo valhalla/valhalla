@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "thor/costmatrix.h"
 #include "midgard/logging.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -163,7 +163,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     // Protect against edge cases that may lead to never breaking out of
     // this loop. This should never occur but lets make sure.
     if (n >= kMaxMatrixIterations) {
-      throw valhalla_exception_t{400, 430};
+      throw valhalla_exception_t{430};
     }
     n++;
   }

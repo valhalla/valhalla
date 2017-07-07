@@ -6,52 +6,51 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <prime_server/prime_server.hpp>
-#include <prime_server/http_protocol.hpp>
-
+#include <valhalla/worker.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/connectivity_map.h>
-#include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/tyr/actor.h>
 
 namespace valhalla {
   namespace loki {
 
+#ifdef HAVE_HTTP
     void run_service(const boost::property_tree::ptree& config);
-    class loki_worker_t {
+#endif
+
+    class loki_worker_t : public service_worker_t {
      public:
-      enum ACTION_TYPE {ROUTE = 0, VIAROUTE = 1, LOCATE = 2, ONE_TO_MANY = 3, MANY_TO_ONE = 4, MANY_TO_MANY = 5,
-                        SOURCES_TO_TARGETS = 6, OPTIMIZED_ROUTE = 7, ISOCHRONE = 8, TRACE_ROUTE = 9, TRACE_ATTRIBUTES = 10};
       loki_worker_t(const boost::property_tree::ptree& config);
-      prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
-      void cleanup();
+#ifdef HAVE_HTTP
+      virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t& interrupt) override;
+#endif
+      virtual void cleanup() override;
 
       baldr::json::ArrayPtr locate(rapidjson::Document& request);
       void route(rapidjson::Document& request);
-      void matrix(ACTION_TYPE action, rapidjson::Document& request);
+      void matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void isochrones(rapidjson::Document& request);
-      void trace_route(ACTION_TYPE action, rapidjson::Document& request);
+      void trace(tyr::ACTION_TYPE action, rapidjson::Document& request);
 
      protected:
 
-      prime_server::worker_t::result_t jsonify_error(const baldr::valhalla_exception_t& exception, prime_server::http_request_info_t& request_info) const;
       std::vector<baldr::Location> parse_locations(const rapidjson::Document& request, const std::string& node, unsigned location_parse_error_code = 130,
-        boost::optional<baldr::valhalla_exception_t> required_exception = baldr::valhalla_exception_t{400, 110});
+        boost::optional<valhalla_exception_t> required_exception = valhalla_exception_t{110});
       void parse_trace(rapidjson::Document& request);
       void parse_costing(rapidjson::Document& request);
       void locations_from_shape(rapidjson::Document& request);
 
       void init_locate(rapidjson::Document& request);
       void init_route(rapidjson::Document& request);
-      void init_matrix(ACTION_TYPE action, rapidjson::Document& request);
+      void init_matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void init_isochrones(rapidjson::Document& request);
       void init_trace(rapidjson::Document& request);
 
       boost::property_tree::ptree config;
-      boost::optional<std::string> jsonp;
       std::vector<baldr::Location> locations;
       std::vector<baldr::Location> sources;
       std::vector<baldr::Location> targets;

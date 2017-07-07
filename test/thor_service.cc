@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "thor/service.h"
+#include "thor/worker.h"
 #include "midgard/logging.h"
 #include <unistd.h>
 

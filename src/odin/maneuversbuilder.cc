@@ -19,7 +19,7 @@
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
 #include "baldr/verbal_text_formatter_factory.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 #include "proto/tripdirections.pb.h"
 #include "proto/directions_options.pb.h"
@@ -125,7 +125,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 //  LOG_TRACE(shape_json);
 
   if (shape.empty() || (trip_path_->node_size() < 2))
-    throw valhalla_exception_t{400, 213};
+    throw valhalla_exception_t{213};
   const auto& orig = trip_path_->GetOrigin();
   const auto& dest = trip_path_->GetDestination();
   std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
@@ -148,18 +148,18 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
 
   // Validate trip path node list
   if (trip_path_->node_size() < 1) {
-    throw valhalla_exception_t{400, 210};
+    throw valhalla_exception_t{210};
   }
 
   // Check for a single node
   if (trip_path_->node_size() == 1) {
     // TODO - handle origin and destination are the same
-    throw valhalla_exception_t{400, 211};
+    throw valhalla_exception_t{211};
   }
 
   // Validate location count
   if (trip_path_->location_size() < 2) {
-    throw valhalla_exception_t{400, 212};
+    throw valhalla_exception_t{212};
   }
 
   LOG_INFO(
@@ -1454,7 +1454,7 @@ TripDirections_Maneuver_CardinalDirection ManeuversBuilder::DetermineCardinalDir
   } else if ((heading > 293) && (heading < 337)) {
     return TripDirections_Maneuver_CardinalDirection_kNorthWest;
   }
-  throw valhalla_exception_t{400, 220};
+  throw valhalla_exception_t{220};
 }
 
 bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
