@@ -57,34 +57,9 @@ namespace {
     edges.erase(edge_itr, edges.end());
   }
 
-  bool is_connected(const valhalla::baldr::GraphId& a, const valhalla::baldr::GraphId& b, valhalla::baldr::GraphReader& reader) {
-    //we have to find this node
-    const valhalla::baldr::GraphTile* tile;
-    auto node_b = reader.GetOpposingEdge(b, tile)->endnode();
-    //from edges that leave this node
-    //NOTE: whats the effect if we cant check if its connected
-    if(!reader.GetGraphTile(a, tile))
-      return false;
-    auto node_a = tile->directededge(a)->endnode();
-    if(node_a == node_b)
-      return true;
-    //check the transition edges from the end node
-    //NOTE: whats the effect if we cant check if its connected
-    if(!reader.GetGraphTile(node_a, tile))
-      return false;
-    for(const auto& edge : tile->GetDirectedEdges(node_a)) {
-      if((edge.trans_down() || edge.trans_up()) && edge.endnode() == node_b) {
-        return true;
-      }
-    }
-    //not connected
-    return false;
-  }
-
   //is this edge considered an internal type, an edge that can be ignored for the purposes of ots's
   bool is_internal(const valhalla::baldr::DirectedEdge* edge) {
-    return edge->IsTransition() || edge->roundabout() ||
-      edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
+    return edge->roundabout() || edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
   }
   bool is_turn_channel(const valhalla::baldr::DirectedEdge* edge) {
     return edge->use() == valhalla::baldr::Use::kTurnChannel;
@@ -127,14 +102,12 @@ namespace {
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
           merged.back().turn_channel = merged.back().turn_channel && is_turn_channel(directed_edge);
-          if(!directed_edge->IsTransition() && (merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id))
+          if(merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id)
             merged.back().way_ids.push_back(way_id);
         }//new one
         else {
           merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge),
                     is_turn_channel(directed_edge), {way_id}});
-          if(directed_edge->IsTransition())
-            merged.back().way_ids.clear();
         }
       }
     }
@@ -222,7 +195,7 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   for(auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend(); begin_edge = end_edge, end_edge += 1) {
     //find the end of the this block
     while(end_edge != edges.cend()) {
-      if(!is_connected(std::prev(end_edge)->edgeid, end_edge->edgeid, matcher->graphreader()))
+      if (!matcher->graphreader().AreEdgesConnectedForward(std::prev(end_edge)->edgeid, end_edge->edgeid))
         break;
       ++end_edge;
     }

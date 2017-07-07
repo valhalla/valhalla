@@ -94,7 +94,7 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
     // Successive segments must be adjacent and no loop absolutely!
     if (prev_segment->edgeid == segment->edgeid) {
       if (prev_segment->target != segment->source) {
-        LOG_ERROR("Found disconnected segments at " + std::to_string(segment - segment_begin));
+        LOG_ERROR("CASE 1: Found disconnected segments at " + std::to_string(segment - segment_begin));
         LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
 
         // A temporary fix here: this exception is due to a few of
@@ -118,16 +118,15 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
         return false;
       }
     } else {
-      const auto endnodeid = graphreader.edge_endnode(prev_segment->edgeid, tile),
-               startnodeid = graphreader.edge_startnode(segment->edgeid, tile);
-      if (!(prev_segment->target == 1.f && segment->source == 0.f && endnodeid == startnodeid)) {
-        LOG_ERROR("Found disconnected segments at " + std::to_string(segment - segment_begin));
+      // Make sure edges are connected (could be on different levels)
+      if (!(prev_segment->target == 1.f && segment->source == 0.f &&
+            graphreader.AreEdgesConnectedForward(prev_segment->edgeid, segment->edgeid, tile))) {
+        LOG_ERROR("CASE 2: Found disconnected segments at " + std::to_string(segment - segment_begin));
         LOG_ERROR(RouteToString(graphreader, segment_begin, segment_end, tile));
         return false;
       }
     }
   }
-
   return true;
 }
 
@@ -190,7 +189,7 @@ EdgeSegment::Shape(baldr::GraphReader& graphreader) const
 {
   const baldr::GraphTile* tile = nullptr;
   const auto edge = graphreader.directededge(edgeid, tile);
-  if (edge && !edge->trans_up() && !edge->trans_down()) {
+  if (edge) {
     const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
     const auto& shape = edgeinfo.shape();
     if (edge->forward()) {
@@ -199,7 +198,6 @@ EdgeSegment::Shape(baldr::GraphReader& graphreader) const
       return midgard::trim_polyline(shape.crbegin(), shape.crend(), source, target);
     }
   }
-
   return {};
 }
 
@@ -208,8 +206,7 @@ bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& o
 {
   if (edgeid != other.edgeid) {
     if (target == 1.f && other.source == 0.f) {
-      const auto endnode = graphreader.edge_endnode(edgeid);
-      return endnode.Is_Valid() && endnode == graphreader.edge_startnode(other.edgeid);
+      return graphreader.AreEdgesConnectedForward(edgeid, other.edgeid);
     } else {
       return false;
     }
