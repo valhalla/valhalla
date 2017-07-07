@@ -30,6 +30,8 @@ constexpr float SIDE_OF_STREET_SNAP = 5.f;
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
 constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
+//a scale factor to apply to the score so that we bias towards closer results more
+constexpr float SCORE_SCALE = 10.f;
 
 
 //TODO: move this to midgard and test the crap out of it
@@ -310,7 +312,7 @@ struct bin_handler_t {
 
   void correlate_node(const Location& location, const GraphId& found_node, const candidate_t& candidate, PathLocation& correlated, std::vector<PathLocation::PathEdge>& filtered){
     //we need this because we might need to go to different levels
-    auto score = location.latlng_.Distance(candidate.point);
+    auto score = candidate.sq_distance * SCORE_SCALE;
     std::function<void (const GraphId& node_id, bool transition)> crawl;
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       //now that we have a node we can pass back all the edges leaving and entering it
@@ -365,7 +367,7 @@ struct bin_handler_t {
 
   void correlate_edge(const Location& location, const candidate_t& candidate, PathLocation& correlated, std::vector<PathLocation::PathEdge>& filtered) {
     //now that we have an edge we can pass back all the info about it
-    auto score = location.latlng_.Distance(candidate.point);
+    auto score = candidate.sq_distance * SCORE_SCALE;
     if(candidate.edge != nullptr){
       //we need the ratio in the direction of the edge we are correlated to
       double partial_length = 0;
