@@ -9,7 +9,6 @@
 #include "sif/dynamiccost.h"
 #include "sif/costconstants.h"
 
-#include "meili/geometry_helpers.h"
 #include "meili/routing.h"
 
 namespace valhalla {

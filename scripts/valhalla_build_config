@@ -77,7 +77,7 @@ config = {
   },
   'meili': {
     'mode': 'auto',
-    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy'],
+    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy', 'sigma_z', 'beta'],
     'verbose': False,
     'default': {
       'sigma_z': 4.07,
@@ -170,6 +170,12 @@ config = {
       'max_transit_walking_distance': 10000
     },
     'bicycle': {
+      'max_distance': 500000.0,
+      'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+      'max_matrix_locations': 50
+    },
+    'low_stress_bicycle': {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
@@ -380,6 +386,12 @@ help_text = {
       'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
     'bicycle': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+    },
+    'low_stress_bicycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',

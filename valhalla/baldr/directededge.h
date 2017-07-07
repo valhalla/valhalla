@@ -112,7 +112,7 @@ class DirectedEdge {
   /**
    * Get the weighted grade factor
    * @return  Returns the weighted grade factor (0-15).
-   *          where 0 is a 10% grade and 15 is 15%
+   *          where 0 is a -10% grade and 15 is 15%
    */
   uint32_t weighted_grade() const {
     return weighted_grade_;
@@ -508,7 +508,7 @@ class DirectedEdge {
   void set_reverseaccess(const uint32_t modes);
 
   /**
-   * Gets the speed in KPH.
+   * Gets the average speed in KPH.
    * @return  Returns the speed in KPH.
    */
   uint32_t speed() const {
@@ -516,7 +516,7 @@ class DirectedEdge {
   }
 
   /**
-   * Sets the speed in KPH.
+   * Sets the average speed in KPH.
    * @param  speed  Speed in KPH.
    */
   void set_speed(const uint32_t speed);

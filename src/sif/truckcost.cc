@@ -255,7 +255,7 @@ class TruckCost : public DynamicCost {
 
  public:
   VehicleType type_;                // Vehicle type: tractor trailer
-  float speedfactor_[256];
+  float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16];        // Density factor
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
   float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
@@ -341,7 +341,7 @@ TruckCost::TruckCost(const boost::property_tree::ptree& pt)
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
-  for (uint32_t s = 1; s < 255; s++) {
+  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
   for (uint32_t d = 0; d < 16; d++) {
