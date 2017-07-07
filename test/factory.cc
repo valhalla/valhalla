@@ -16,7 +16,7 @@ namespace {
     factory.Register("bicycle", CreateBicycleCost);
     factory.Register("pedestrian", CreatePedestrianCost);
     //TODO: then ask for some
-    //factory.Create
+    auto car = factory.Create("auto", boost::property_tree::ptree{});
   }
 }
 
