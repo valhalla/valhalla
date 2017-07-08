@@ -145,10 +145,6 @@ namespace valhalla {
         // Initialize request - get the PathALgorithm to use
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
         boost::optional<int> date_time_type = request.get_optional<int>("date_time.type");
-        // Allow the request to be aborted
-        astar.set_interrupt(interrupt);
-        bidir_astar.set_interrupt(interrupt);
-        multi_modal_astar.set_interrupt(interrupt);
 
         worker_t::result_t result{true};
         double denominator = 0;
