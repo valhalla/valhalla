@@ -50,7 +50,7 @@ class thor_worker_t : public service_worker_t{
   thor_worker_t(const boost::property_tree::ptree& config);
   virtual ~thor_worker_t();
 #ifdef HAVE_HTTP
-  virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t& interrupt) override;
+  virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt) override;
 #endif
   virtual void cleanup() override;
 
@@ -110,7 +110,6 @@ class thor_worker_t : public service_worker_t{
   std::unordered_set<std::string> trace_customizable;
   boost::property_tree::ptree trace_config;
 
-  const std::function<void ()>* interrupt_callback;
   bool healthcheck;
   std::vector<uint32_t> optimal_order;
 };

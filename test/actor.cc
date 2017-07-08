@@ -18,9 +18,9 @@ namespace {
     return pt;
   }
 
-  void test_actor() {
-    //fake config
-    auto conf = json_to_pt(R"({
+  boost::property_tree::ptree make_conf() {
+    //fake up config against pine grove traffic extract
+    return json_to_pt(R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "loki":{
         "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
@@ -50,7 +50,10 @@ namespace {
         "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
       }
     })");
+  }
 
+  void test_actor() {
+    auto conf = make_conf();
     tyr::actor_t actor(conf);
 
     auto route_json = actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
@@ -67,12 +70,34 @@ namespace {
 
   }
 
+  void test_interrupt() {
+    auto conf = make_conf();
+    tyr::actor_t actor(conf);
+    struct test_exception_t {};
+
+    try {
+      actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+        {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})", []()->void{throw test_exception_t{};});
+      throw std::logic_error("this should have thrown already");
+    } catch (const test_exception_t& e) { }
+
+    try {
+      actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
+        {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})", []()->void{throw test_exception_t{};});
+      throw std::logic_error("this should have thrown already");
+    } catch (const test_exception_t& e) { }
+
+    //TODO: test the rest of them
+  }
+
 }
 
 int main() {
   test::suite suite("actor");
 
   suite.test(TEST_CASE(test_actor));
+
+  suite.test(TEST_CASE(test_interrupt));
 
   return suite.tear_down();
 }

@@ -5,8 +5,6 @@
 #include <list>
 #include <string>
 #include <boost/property_tree/ptree.hpp>
-#include <prime_server/prime_server.hpp>
-#include <prime_server/http_protocol.hpp>
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
@@ -25,7 +23,7 @@ namespace valhalla {
       skadi_worker_t(const boost::property_tree::ptree& config);
       virtual ~skadi_worker_t();
 #ifdef HAVE_HTTP
-      virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t& interrupt) override;
+      virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt) override;
 #endif
       virtual void cleanup() override;
 

@@ -183,7 +183,7 @@ namespace valhalla {
     }
 
 #ifdef HAVE_HTTP
-    worker_t::result_t skadi_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
+    worker_t::result_t skadi_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
@@ -197,6 +197,9 @@ namespace valhalla {
         auto action = PATH_TO_ACTION.find(request.path);
         if(action == PATH_TO_ACTION.cend())
           return jsonify_error(valhalla_exception_t{304, action_str}, info, jsonp);
+
+        // Set the interrupt function
+        service_worker_t::set_interrupt(interrupt_function);
 
         //parse the query's json
         auto request_rj = from_request(request);

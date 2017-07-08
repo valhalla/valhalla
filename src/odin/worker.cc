@@ -61,7 +61,7 @@ namespace valhalla {
     }
 
 #ifdef HAVE_HTTP
-    worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
+    worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Odin Request " + std::to_string(info.id));
       boost::optional<std::string> jsonp;
@@ -77,6 +77,9 @@ namespace valhalla {
         catch(...) {
           return jsonify_error({200}, info, jsonp);
         }
+
+        // Set the interrupt function
+        service_worker_t::set_interrupt(interrupt_function);
 
         //parse each leg
         std::list<TripPath> legs;

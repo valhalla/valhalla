@@ -107,14 +107,12 @@ namespace valhalla {
       } else {
         source_to_target_algorithm = SELECT_OPTIMAL;
       }
-
-      interrupt_callback = nullptr;
     }
 
     thor_worker_t::~thor_worker_t(){}
 
 #ifdef HAVE_HTTP
-    worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t& interrupt) {
+    worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
@@ -140,7 +138,7 @@ namespace valhalla {
         }
 
         // Set the interrupt function
-        interrupt_callback = &interrupt;
+        service_worker_t::set_interrupt(interrupt_function);
 
         //flag healthcheck requests; do not send to logstash
         healthcheck = request.get<bool>("healthcheck", false);
@@ -148,9 +146,9 @@ namespace valhalla {
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
         boost::optional<int> date_time_type = request.get_optional<int>("date_time.type");
         // Allow the request to be aborted
-        astar.set_interrupt(&interrupt);
-        bidir_astar.set_interrupt(&interrupt);
-        multi_modal_astar.set_interrupt(&interrupt);
+        astar.set_interrupt(interrupt);
+        bidir_astar.set_interrupt(interrupt);
+        multi_modal_astar.set_interrupt(interrupt);
 
         worker_t::result_t result{true};
         double denominator = 0;
