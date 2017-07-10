@@ -207,7 +207,7 @@ class EnhancedTripPath_Node : public TripPath_Node {
   bool IsTollBooth() const;
   bool IsTransitEgress() const;
   bool IsTransitStation() const;
-  bool IsMultiUseTransitPlatform() const;
+  bool IsTransitPlatform() const;
   bool IsBikeShare() const;
   bool IsParking() const;
   bool IsMotorwayJunction() const;

@@ -984,8 +984,8 @@ bool EnhancedTripPath_Node::IsTransitStation() const {
   return (type() == TripPath_Node_Type_kTransitStation);
 }
 
-bool EnhancedTripPath_Node::IsMultiUseTransitPlatform() const {
-  return (type() == TripPath_Node_Type_kMultiUseTransitPlatform);
+bool EnhancedTripPath_Node::IsTransitPlatform() const {
+  return (type() == TripPath_Node_Type_kTransitPlatform);
 }
 
 bool EnhancedTripPath_Node::IsBikeShare() const {

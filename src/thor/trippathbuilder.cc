@@ -271,10 +271,12 @@ TripPath_Node_Type GetTripPathNodeType(const NodeType node_type) {
       return TripPath_Node_Type_kBollard;
     case NodeType::kTollBooth:
       return TripPath_Node_Type_kTollBooth;
-    case NodeType::kTransitEgress: // need to handle the new uses in odin
-    case NodeType::kTransitStation: // need to handle the new uses in odin
-    case NodeType::kMultiUseTransitPlatform: // need to handle the new uses in odin
-      return TripPath_Node_Type_kMultiUseTransitPlatform;
+    case NodeType::kTransitEgress:
+      return TripPath_Node_Type_kTransitEgress;
+    case NodeType::kTransitStation:
+      return TripPath_Node_Type_kTransitStation;
+    case NodeType::kMultiUseTransitPlatform:
+      return TripPath_Node_Type_kTransitPlatform;
     case NodeType::kBikeShare:
       return TripPath_Node_Type_kBikeShare;
     case NodeType::kParking:

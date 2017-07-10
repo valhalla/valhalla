@@ -225,7 +225,7 @@ message TripPath {
       // TODO - for now there is no differentiation between bus and rail stops...
       kTransitEgress = 4;           // Transit egress
       kTransitStation = 5;          // Transit station
-      kMultiUseTransitPlatform = 6; // Multi-use transit platform (rail and bus)
+      kTransitPlatform = 6;         // Transit platform (rail and bus)
       kBikeShare = 7;               // Bike share location
       kParking = 8;                 // Parking location
       kMotorwayJunction = 9;        // Highway = motorway_junction
