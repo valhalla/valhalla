@@ -33,20 +33,23 @@ namespace valhalla {
   thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
         const baldr::PathLocation& origin, const baldr::PathLocation& destination) {
     if (routetype == "multimodal" || routetype == "transit") {
+      multi_modal_astar.set_interrupt(interrupt);
       return &multi_modal_astar;
-    } else {
-      // Use A* if any origin and destination edges are the same - otherwise
-      // use bidirectional A*. Bidirectional A* does not handle trivial cases
-      // with oneways.
-      for (auto& edge1 : origin.edges) {
-        for (auto& edge2 : destination.edges) {
-          if (edge1.id == edge2.id) {
-            return &astar;
-          }
+    }
+
+    // Use A* if any origin and destination edges are the same - otherwise
+    // use bidirectional A*. Bidirectional A* does not handle trivial cases
+    // with oneways.
+    for (auto& edge1 : origin.edges) {
+      for (auto& edge2 : destination.edges) {
+        if (edge1.id == edge2.id) {
+          astar.set_interrupt(interrupt);
+          return &astar;
         }
       }
-      return &bidir_astar;
     }
+    bidir_astar.set_interrupt(interrupt);
+    return &bidir_astar;
   }
 
   std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
@@ -131,7 +134,7 @@ namespace valhalla {
 
         // Form output information based on path edges
         auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path,
-                                                      *origin, *destination, throughs, interrupt_callback);
+                                                      *origin, *destination, throughs, interrupt);
         path.clear();
 
         // Keep the protobuf path
@@ -197,7 +200,7 @@ namespace valhalla {
 
         // Form output information based on path edges
         auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path,
-                                                      *origin, *destination, throughs, interrupt_callback);
+                                                      *origin, *destination, throughs, interrupt);
         path.clear();
 
         // Keep the protobuf path

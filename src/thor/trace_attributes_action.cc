@@ -428,8 +428,8 @@ json::MapPtr thor_worker_t::trace_attributes(
         try {
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
-            throw;
-        } catch (...) {
+            throw std::exception{};
+        } catch (const std::exception& e) {
           throw valhalla_exception_t{443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
         break;
@@ -440,7 +440,7 @@ json::MapPtr thor_worker_t::trace_attributes(
           trip_match = map_match(controller, true);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
-        } catch (...) {
+        } catch (const std::exception& e) {
           throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
         break;
@@ -455,7 +455,7 @@ json::MapPtr thor_worker_t::trace_attributes(
             trip_match = map_match(controller, true);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
-          } catch (...) {
+          } catch (const std::exception& e) {
             throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
         }

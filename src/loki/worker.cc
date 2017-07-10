@@ -195,7 +195,7 @@ namespace valhalla {
     }
 
 #ifdef HAVE_HTTP
-    worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t&) {
+    worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
@@ -220,6 +220,9 @@ namespace valhalla {
         //let further processes know about tracking
         auto do_not_track = request.headers.find("DNT");
         info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
+
+        // Set the interrupt function
+        service_worker_t::set_interrupt(interrupt_function);
 
         worker_t::result_t result{true};
         //do request specific processing

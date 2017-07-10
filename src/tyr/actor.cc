@@ -51,6 +51,18 @@ namespace valhalla {
       pimpl_t(const boost::property_tree::ptree& config):
         loki_worker(config), thor_worker(config), odin_worker(config), skadi_worker(config) {
       }
+      void set_interrupts(const std::function<void ()>& interrupt_function) {
+        loki_worker.set_interrupt(interrupt_function);
+        thor_worker.set_interrupt(interrupt_function);
+        odin_worker.set_interrupt(interrupt_function);
+        skadi_worker.set_interrupt(interrupt_function);
+      }
+      void cleanup() {
+        loki_worker.cleanup();
+        thor_worker.cleanup();
+        odin_worker.cleanup();
+        skadi_worker.cleanup();
+      }
       loki::loki_worker_t loki_worker;
       thor::thor_worker_t thor_worker;
       odin::odin_worker_t odin_worker;
@@ -60,7 +72,13 @@ namespace valhalla {
     actor_t::actor_t(const boost::property_tree::ptree& config): pimpl(new pimpl_t(config)) {
     }
 
-    std::string actor_t::route(ACTION_TYPE action, const std::string& request_str) {
+    void actor_t::cleanup() {
+      pimpl->cleanup();
+    }
+
+    std::string actor_t::route(ACTION_TYPE action, const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
       //check the request and locate the locations in the graph
@@ -78,7 +96,9 @@ namespace valhalla {
       return ss.str();
     }
 
-    std::string actor_t::locate(const std::string& request_str) {
+    std::string actor_t::locate(const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
       //check the request and locate the locations in the graph
@@ -88,7 +108,9 @@ namespace valhalla {
       return ss.str();
     }
 
-    std::string actor_t::matrix(ACTION_TYPE action, const std::string& request_str) {
+    std::string actor_t::matrix(ACTION_TYPE action, const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
       //check the request and locate the locations in the graph
@@ -101,7 +123,9 @@ namespace valhalla {
       return ss.str();
     }
 
-    std::string actor_t::optimized_route(const std::string& request_str) {
+    std::string actor_t::optimized_route(const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
       //check the request and locate the locations in the graph
@@ -118,7 +142,9 @@ namespace valhalla {
       return ss.str();
     }
 
-    std::string actor_t::isochrone(const std::string& request_str) {
+    std::string actor_t::isochrone(const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
       //check the request and locate the locations in the graph
@@ -131,7 +157,9 @@ namespace valhalla {
       return ss.str();
     }
 
-    std::string actor_t::trace_route(const std::string& request_str) {
+    std::string actor_t::trace_route(const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
       //check the request and locate the locations in the graph
@@ -148,7 +176,9 @@ namespace valhalla {
       return ss.str();
     }
 
-    std::string actor_t::trace_attributes(const std::string& request_str) {
+    std::string actor_t::trace_attributes(const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
       //check the request and locate the locations in the graph
@@ -161,7 +191,9 @@ namespace valhalla {
       return ss.str();
     }
 
-    std::string actor_t::height(const std::string& request_str) {
+    std::string actor_t::height(const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
       //parse the request
       auto request_rj = to_document(request_str);
       //get the height at each point
