@@ -68,10 +68,18 @@ valhalla/proto/tripdirections.pb.h: src/proto/tripdirections.pb.cc
 	-mkdir -p valhalla/proto && mv src/proto/tripdirections.pb.h valhalla/proto
 src/proto/tripdirections.pb.cc:
 	@echo " PROTOC tripdirections.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/tripdirections.proto
+valhalla/proto/route.pb.h: src/proto/route.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/route.pb.h valhalla/proto
+src/proto/route.pb.cc:
+	@echo " PROTOC route.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/route.proto
+valhalla/proto/navigator.pb.h: src/proto/navigator.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/navigator.pb.h valhalla/proto
+src/proto/navigator.pb.cc:
+	@echo " PROTOC navigator.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/navigator.proto
 
-BUILT_SOURCES = genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h valhalla/proto/tripcommon.pb.h valhalla/proto/trippath.pb.h valhalla/proto/directions_options.pb.h valhalla/proto/tripdirections.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc
+BUILT_SOURCES = genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h valhalla/proto/tripcommon.pb.h valhalla/proto/trippath.pb.h valhalla/proto/directions_options.pb.h valhalla/proto/tripdirections.pb.h valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/route.pb.cc src/proto/navigator.pb.cc
 nodist_libvalhalla_la_SOURCES = genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h
-CLEANFILES = $(EXTRA_PROGRAMS) genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h valhalla/proto/tripcommon.pb.h valhalla/proto/trippath.pb.h valhalla/proto/directions_options.pb.h valhalla/proto/tripdirections.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc
+CLEANFILES = $(EXTRA_PROGRAMS) genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h valhalla/proto/tripcommon.pb.h valhalla/proto/trippath.pb.h valhalla/proto/directions_options.pb.h valhalla/proto/tripdirections.pb.h valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/route.pb.cc src/proto/navigator.pb.cc
 
 #data tools protobuffs
 if DATA_TOOLS
@@ -99,20 +107,6 @@ BUILT_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h va
 nodist_libvalhalla_la_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
 CLEANFILES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/osmformat.pb.cc src/proto/fileformat.pb.cc src/proto/transit.pb.cc src/proto/tile.pb.cc src/proto/segment.pb.cc
 endif
-
-#embedded device protobuffs
-#if EMBEDDED
-valhalla/proto/route.pb.h: src/proto/route.pb.cc
-	-mkdir -p valhalla/proto && mv src/proto/route.pb.h valhalla/proto
-src/proto/route.pb.cc:
-	@echo " PROTOC route.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/route.proto
-valhalla/proto/navigator.pb.h: src/proto/navigator.pb.cc
-	-mkdir -p valhalla/proto && mv src/proto/navigator.pb.h valhalla/proto
-src/proto/navigator.pb.cc:
-	@echo " PROTOC navigator.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/navigator.proto
-BUILT_SOURCES += valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h
-CLEANFILES += valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h src/proto/route.pb.cc src/proto/navigator.pb.cc
-#endif
 
 lib_LTLIBRARIES = libvalhalla.la
 nobase_include_HEADERS = \
