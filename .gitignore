@@ -57,6 +57,7 @@ valhalla_skadi_worker
 valhalla_thor_worker
 valhalla_tyr_worker
 valhalla_associate_segments
+valhalla_fetch_transit
 valhalla/proto
 src/proto
 genfiles/
@@ -70,6 +71,7 @@ py-compile
 .libs/
 libvalhalla.la
 date_time_zonespec.csv
+valhalla/valhalla.h
 
 # tests
 test/*.log
@@ -145,6 +147,8 @@ test/utrecht
 test/countryaccess
 test/maneuversbuilder
 test/narrativebuilder
+test/util_tyr
+test/navigator
 test/enhancedtrippath
 test/sign
 test/signs
@@ -173,6 +177,7 @@ test/bicyclecost
 test/pedestriancost
 test/transitcost
 test/truckcost
+test/actor
 test_requests/duane_routes.txt
 run_route_scripts/results/20*
 EdgeInfoBuilder_TestWriteRead.gph

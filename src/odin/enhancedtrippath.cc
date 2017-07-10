@@ -5,14 +5,13 @@
 #include "midgard/util.h"
 #include "midgard/logging.h"
 #include "midgard/constants.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 #include "proto/trippath.pb.h"
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 
 using namespace valhalla::midgard;
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace odin {
@@ -83,7 +82,7 @@ std::string EnhancedTripPath::GetStateCode(int node_index) {
 const ::valhalla::odin::Location& EnhancedTripPath::GetOrigin() const {
   // Validate location count
   if (location_size() < 2) {
-    throw valhalla_exception_t{400, 212};
+    throw valhalla_exception_t{212};
   }
 
   return location(0);
@@ -92,7 +91,7 @@ const ::valhalla::odin::Location& EnhancedTripPath::GetOrigin() const {
 const ::valhalla::odin::Location& EnhancedTripPath::GetDestination() const {
   // Validate location count
   if (location_size() < 2) {
-    throw valhalla_exception_t{400, 212};
+    throw valhalla_exception_t{212};
   }
 
   return location(location_size() - 1);

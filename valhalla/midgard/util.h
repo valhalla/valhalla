@@ -11,8 +11,12 @@
 #include <unordered_set>
 #include <memory>
 #include <limits>
+#include <vector>
 
+#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/distanceapproximator.h>
 
 
 namespace valhalla {
@@ -32,8 +36,6 @@ struct ranged_default_t {
   }
 };
 
-
-
 // Intersection cases.
 enum IntersectCase {
   kWithin,
@@ -48,7 +50,10 @@ enum IntersectCase {
  * @param  speed  in km per hour.
  * @return the computed time in seconds.
  */
-int GetTime(const float length, const float speed);
+inline int GetTime(const float length, const float speed) {
+  return (speed > 0.0f) ?
+          static_cast<int>((length / (speed * kHourPerSec) + 0.5f)) : 0;
+}
 
 /**
  * Computes the turn degree based on the specified "from heading" and
@@ -58,36 +63,184 @@ int GetTime(const float length, const float speed);
  * @return the computed turn degree. For example, if one would make a perfect
  *         right turn - the returned value would be 90.
  */
-uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading);
+inline uint32_t GetTurnDegree(const uint32_t from_heading,
+                              const uint32_t to_heading) {
+  return (((to_heading - from_heading) + 360) % 360);
+}
 
 /**
- * Degrees to radians conversion
- * @param   d   Angle in degrees.
- * @return  Returns the angle in radians.
+ * Compute the turn degree (from 0 to 180) - used in meili (map-matching)
+ * @param inbound  Inbound heading
+ * @param outbound Outbound heading
+ * @return  Returns the turn degree (0-180 degrees).
  */
-//float degrees_to_radians(const float d);
-/**
- * Radians to degrees conversion
- * @param   r   Angle in radians.
- * @return   Returns the angle in degrees.
- */
-//float radians_to_degrees(const float r);
-/**
- * Get a random number between 0 and 1
- */
-float rand01();
+inline uint8_t get_turn_degree180(const uint16_t inbound, const uint16_t outbound) {
+  // TODO - do we need bounds checking here?
+  if (!(inbound < 360 && outbound < 360)) {
+    throw std::invalid_argument("expect angles to be within [0, 360)");
+  }
+  const auto turn = std::abs(inbound - outbound);
+  return 180 < turn ? 360 - turn : turn;
+}
 
 /**
- * Fast inverse sqrt method. Originally used in Quake III
- * @param   x  Value to find inverse sqrt for
- * @return  Returns 1/sqrtf(x)
+ * Expand an input lat,lon bounding box by the specified distance in meters.
+ * @param   box     Bounding box.
+ * @param   meters  Meters to expand the bounds
+ * @return  Returns the bounding box.
  */
-float FastInvSqrt(float x);
+inline AABB2<PointLL> ExpandMeters(const AABB2<PointLL>& box, const float meters) {
+  if (meters < 0.f) {
+    throw std::invalid_argument("expect non-negative meters");
+  }
+
+  // Find the delta latitude and delta longitude (max of the delta at the
+  // minimum and maximum latitude)
+  float dlat  = meters / kMetersPerDegreeLat;
+  float dlng1 = (meters / DistanceApproximator::MetersPerLngDegree(box.miny()));
+  float dlng2 = (meters / DistanceApproximator::MetersPerLngDegree(box.maxy()));
+  float dlng = std::max(dlng1, dlng2);
+  return { box.minx() - dlng, box.miny() - dlat, box.maxx() + dlng, box.maxy() + dlat };
+}
+
+/**
+ * Create a lat,lon bounding box around the specified point - with a distance
+ * from the center specified in meters.
+ * @param  pt  Lat,lon point to use as the bounding box center.
+ * @param  meters  Distance in meters from center to edge.
+ * @return Returns the bounding box.
+ */
+inline AABB2<PointLL> ExpandMeters(const PointLL& pt, const float meters) {
+  if (meters < 0.f) {
+    throw std::invalid_argument("expect non-negative meters");
+  }
+
+  float dlat = meters / kMetersPerDegreeLat;
+  float dlng = meters / DistanceApproximator::MetersPerLngDegree(pt.lat());
+  PointLL minpt(pt.lng() - dlng, pt.lat() - dlat);
+  PointLL maxpt(pt.lng() + dlng, pt.lat() + dlat);
+  return { minpt, maxpt };
+}
 
 // Convenience method.
 template<class T>
 T sqr(const T a) {
   return a * a;
+}
+
+/**
+ * Normalize a ratio and clamp to range [0, 1]. Protect against division by 0.
+ * @param  num  Numerator
+ * @param  den  Denominator
+ * @return Returns the ration clamped to range [0,1]
+ */
+inline float normalize(const float num, const float den) {
+  return 0.f == den ? 0.0f : std::min(std::max(num / den, 0.0f), 1.0f);
+}
+
+// Compute the length of the polyline represented by a set of lat,lng points.
+// Avoids having to copy the points into a polyline, polyline should really just extend
+// A container class like vector or list
+template <class container_t>
+float length(const container_t& pts) {
+ float length = 0.0f;
+ for(auto p = std::next(pts.cbegin()); p != pts.end(); ++p)
+   length += p->Distance(*std::prev(p));
+ return length;
+}
+
+/**
+ * Compute the length of a polyline between the 2 specified iterators.
+ * @param  begin  Starting point (iterator) within the polyline container.
+ * @param  end    Ending point (iterator) within the polyline container.
+ * @return Returns the length of the polyline.
+ */
+template <typename iterator_t>
+float length(const iterator_t& begin, const iterator_t& end) {
+  if (begin == end) {
+    return 0.0f;
+  }
+
+  float length = 0.0f;
+  for (auto vertex = std::next(begin); vertex != end; vertex++) {
+    length += std::prev(vertex)->Distance(*vertex);
+  }
+  return length;
+}
+
+/**
+ * Create a new polyline by trimming an input polyline by a specified
+ * percentage from the start iterator and a specified percentage from
+ * the end iterator.
+ * @param  begin  Starting point (iterator) within the polyline container.
+ * @param  end    Ending point (iterator) within the polyline container.
+ * @param  source Percentage of total length to trim from the front.
+ * @param  target Percentage of total length to trim from the end.
+ * @return Returns a new polyline.
+ */
+template <typename iterator_t>
+std::vector<typename iterator_t::value_type> trim_polyline(const iterator_t& begin,
+               const iterator_t& end, float source, float target) {
+  // Detect invalid cases
+  if (target < source || target < 0.f || 1.f < source || begin == end) {
+    return {};
+  }
+
+  // Clamp source and target to range [0, 1]
+  source = std::min(std::max(source, 0.f), 1.f);
+  target = std::min(std::max(target, 0.f), 1.f);
+
+  float total_length = length(begin, end),
+  prev_vertex_length = 0.f,
+       source_length = total_length * source,
+       target_length = total_length * target;
+
+  // An state indicating if the position of current vertex is larger
+  // than source and smaller than target
+  bool open = false;
+
+  // Iterate segments and add to output container (clip)
+  std::vector<typename iterator_t::value_type> clip;
+  iterator_t prev_vertex = begin;
+  for (auto vertex = std::next(begin); vertex != end; vertex++) {
+    const auto segment_length = prev_vertex->Distance(*vertex),
+                vertex_length = prev_vertex_length + segment_length;
+
+    // Open if source is located at current segment
+    if (!open && source_length < vertex_length) {
+      const auto offset = normalize(source_length - prev_vertex_length, segment_length);
+      clip.push_back(prev_vertex->along_segment(*vertex, offset));
+      open = true;
+    }
+
+    // Open -> Close if target is located at current segment
+    if (open && target_length < vertex_length) {
+      const auto offset = normalize(target_length - prev_vertex_length, segment_length);
+      clip.push_back(prev_vertex->along_segment(*vertex, offset));
+      open = false;
+      break;
+    }
+
+    // Add the end vertex of current segment if it is in open state
+    if (open) {
+      clip.push_back(*vertex);
+    }
+
+    prev_vertex = vertex;
+    prev_vertex_length = vertex_length;
+  }
+  // assert(clip.size() != 1) because when opening state, the source
+  // vertex was inserted and then followed by either target vertex
+  // inserted or current vertex inserted
+
+  if (clip.empty()) {
+    // assert(1.f == source && 1.f == target)
+    clip.push_back(*prev_vertex);
+    clip.push_back(*prev_vertex);
+  }
+
+  // So here we have assert(1 < clip.size())
+  return clip;
 }
 
 /**
@@ -103,17 +256,6 @@ T sqr(const T a) {
 template <class container_t>
 container_t trim_front(container_t& pts, const float dist);
 
-// Compute the length of the polyline represented by a set of lat,lng points.
-// Avoids having to copy the points into a polyline, polyline should really just extend
-// A container class like vector or list
-template <class container_t>
-float length(const container_t& pts) {
- float length = 0.0f;
- for(auto p = std::next(pts.cbegin()); p != pts.end(); ++p)
-   length += p->Distance(*std::prev(p));
- return length;
-}
-
 //useful in converting from one iteratable map to another
 //for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string> >(some_ptree)
 /*
@@ -121,11 +263,26 @@ float length(const container_t& pts) {
  * @return the converted map of another type
  */
 template <class T1, class T2>
-T2 ToMap(const T1& inmap) {
+inline T2 ToMap(const T1& inmap) {
   T2 outmap;
   for(const auto& key_value : inmap)
     outmap[key_value.first] = key_value.second.data();
   return outmap;
+}
+
+//useful in converting from one iterable set to another
+//for example ToSet<boost::property_tree::ptree, std::unordered_set<std::string> >(some_ptree)
+/*
+ * @param inset the set to be converted
+ * @return the converted set of another type
+ */
+template <class T1, class T2>
+inline T2 ToSet(const T1& inset) {
+  T2 outset;
+  for (const auto& item : inset) {
+    outset.emplace(item.second.template get_value<typename T2::value_type>());
+  }
+  return outset;
 }
 
 /**
@@ -142,6 +299,15 @@ bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
   //if its non-negative it better be less than epsilon, if its negative then it better be bigger than epsilon
   bool negative = diff < static_cast<T>(0);
   return (!negative && diff <= epsilon) || (negative && diff >= -epsilon);
+}
+
+template <class T>
+bool similar(const T a, const T b, const double similarity = .99) {
+  if(a == 0 || b == 0)
+    return a == b;
+  if((a < 0) != (b < 0))
+    return false;
+  return (double)std::min(a, b) / (double)std::max(a, b) >= similarity;
 }
 
 /**

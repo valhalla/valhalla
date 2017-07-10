@@ -26,13 +26,12 @@ constexpr float NODE_SNAP = 5.f;
 //5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
 //data for the roads it might want half that) but its better to assume on street than not
 constexpr float SIDE_OF_STREET_SNAP = 5.f;
-//if you are this far away from the edge we are considering and you set a heading we will
-//ignore it because its not really useful at this distance from the geometry
-constexpr float NO_HEADING = 30.f;
 //how much of the shape should be sampled to get heading
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
 constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
+//a scale factor to apply to the score so that we bias towards closer results more
+constexpr float SCORE_SCALE = 10.f;
 
 
 //TODO: move this to midgard and test the crap out of it
@@ -90,8 +89,8 @@ float tangent_angle(size_t index, const PointLL& point, const std::vector<PointL
 
 bool heading_filter(const DirectedEdge* edge, const EdgeInfo& info,
   const Location& location, const PointLL& point, float distance, size_t index) {
-  //if its far enough away from the edge, the heading is pretty useless
-  if(!location.heading_ || distance > NO_HEADING)
+  //no heading means we filter nothing
+  if(!location.heading_)
     return false;
 
   //get the angle of the shape from this point
@@ -311,11 +310,9 @@ struct bin_handler_t {
     return reaches[itr->second];
   }
 
-  void correlate_node(const Location& location, const GraphId& found_node, const candidate_t& candidate, PathLocation& correlated){
-    auto score = location.latlng_.Distance(candidate.point);
-    std::list<PathLocation::PathEdge> heading_filtered;
-
+  void correlate_node(const Location& location, const GraphId& found_node, const candidate_t& candidate, PathLocation& correlated, std::vector<PathLocation::PathEdge>& filtered){
     //we need this because we might need to go to different levels
+    auto score = candidate.sq_distance * SCORE_SCALE;
     std::function<void (const GraphId& node_id, bool transition)> crawl;
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       //now that we have a node we can pass back all the edges leaving and entering it
@@ -342,7 +339,7 @@ struct bin_handler_t {
           PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), score, PathLocation::NONE, get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
           if(heading_filter(edge, info, location, candidate.point, score, index))
-            heading_filtered.emplace_back(std::move(path_edge));
+            filtered.emplace_back(std::move(path_edge));
           else if(correlated_edges.insert(path_edge.id).second)
             correlated.edges.push_back(std::move(path_edge));
         }
@@ -357,7 +354,7 @@ struct bin_handler_t {
           PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), score, PathLocation::NONE, get_reach(other_edge)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
           if(heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location, candidate.point, score, index))
-            heading_filtered.emplace_back(std::move(path_edge));
+            filtered.emplace_back(std::move(path_edge));
           else if(correlated_edges.insert(path_edge.id).second)
             correlated.edges.push_back(std::move(path_edge));
         }
@@ -366,28 +363,11 @@ struct bin_handler_t {
 
     //start where we are and crawl from there
     crawl(found_node, true);
-
-    //if we have nothing because of heading we'll just ignore it
-    if(correlated.edges.size() == 0 && heading_filtered.size())
-      for(auto& path_edge : heading_filtered)
-        if(correlated_edges.insert(path_edge.id).second)
-          correlated.edges.push_back(std::move(path_edge));
-
-    //if it was a through location with a heading its pretty confusing.
-    //does the user want to come into and exit the location at the preferred
-    //angle? for now we are just saying that they want it to exit at the
-    //heading provided. this means that if it was node snapped we only
-    //want the outbound edges
-    if(location.stoptype_ == Location::StopType::THROUGH && location.heading_) {
-      auto new_end = std::remove_if(correlated.edges.begin(), correlated.edges.end(),
-        [](const PathLocation::PathEdge& e) { return e.end_node(); });
-      correlated.edges.erase(new_end, correlated.edges.end());
-    }
   }
 
-  void correlate_edge(const Location& location, const candidate_t& candidate, PathLocation& correlated) {
+  void correlate_edge(const Location& location, const candidate_t& candidate, PathLocation& correlated, std::vector<PathLocation::PathEdge>& filtered) {
     //now that we have an edge we can pass back all the info about it
-    auto score = location.latlng_.Distance(candidate.point);
+    auto score = candidate.sq_distance * SCORE_SCALE;
     if(candidate.edge != nullptr){
       //we need the ratio in the direction of the edge we are correlated to
       double partial_length = 0;
@@ -401,9 +381,8 @@ struct bin_handler_t {
       //side of street
       auto side = candidate.get_side(location.latlng_, score);
       //correlate the edge we found
-      std::list<PathLocation::PathEdge> heading_filtered;
       if(heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point, score, candidate.index))
-        heading_filtered.emplace_back(candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge));
+        filtered.emplace_back(candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge));
       else if(correlated_edges.insert(candidate.edge_id).second)
         correlated.edges.push_back(PathLocation::PathEdge{candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge)});
       //correlate its evil twin
@@ -412,16 +391,10 @@ struct bin_handler_t {
       const DirectedEdge* other_edge;
       if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
         if(heading_filter(other_edge, *candidate.edge_info, location, candidate.point, score, candidate.index))
-          heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, candidate.point, score, flip_side(side), get_reach(other_edge));
+          filtered.emplace_back(opposing_edge_id, 1 - length_ratio, candidate.point, score, flip_side(side), get_reach(other_edge));
         else if(correlated_edges.insert(opposing_edge_id).second)
           correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, candidate.point, score, flip_side(side), get_reach(other_edge)});
       }
-
-      //if we have nothing because of heading we'll just ignore it
-      if(correlated.edges.size() == 0 && heading_filtered.size())
-        for(auto& path_edge : heading_filtered)
-          if(correlated_edges.insert(path_edge.id).second)
-            correlated.edges.push_back(std::move(path_edge));
     }
   }
 
@@ -648,6 +621,7 @@ struct bin_handler_t {
       correlated_edges.clear();
       //go through getting all the results for this one
       PathLocation correlated(pp.location);
+      std::vector<PathLocation::PathEdge> filtered;
       for (const auto& candidate : pp.reachable) {
         //this may be at a node, either because it was the closest thing or from snap tolerance
         bool front = candidate.point == candidate.edge_info->shape().front() ||
@@ -659,20 +633,36 @@ struct bin_handler_t {
           const GraphTile* other_tile;
           auto opposing_edge = reader.GetOpposingEdge(candidate.edge_id, other_tile);
           if(!other_tile) continue; //TODO: do an edge snap instead, but you'll only get one direction
-          correlate_node(pp.location, opposing_edge->endnode(), candidate, correlated);
+          correlate_node(pp.location, opposing_edge->endnode(), candidate, correlated, filtered);
         }//it was the end node
         else if((back && candidate.edge->forward()) || (front && !candidate.edge->forward())) {
-          correlate_node(pp.location, candidate.edge->endnode(), candidate, correlated);
+          correlate_node(pp.location, candidate.edge->endnode(), candidate, correlated, filtered);
         }//it was along the edge
         else {
-          correlate_edge(pp.location, candidate, correlated);
+          correlate_edge(pp.location, candidate, correlated, filtered);
         }
       }
+
+      //if we have nothing because of heading we'll just ignore it
+      if(correlated.edges.size() == 0 && filtered.size())
+        for(auto& path_edge : filtered)
+          if(correlated_edges.insert(path_edge.id).second)
+            correlated.edges.push_back(std::move(path_edge));
+
+      //if it was a through location with a heading its pretty confusing.
+      //does the user want to come into and exit the location at the preferred
+      //angle? for now we are just saying that they want it to exit at the
+      //heading provided. this means that if it was node snapped we only
+      //want the outbound edges
+      if(pp.location.stoptype_ == Location::StopType::THROUGH && pp.location.heading_) {
+        auto new_end = std::remove_if(correlated.edges.begin(), correlated.edges.end(),
+          [](const PathLocation::PathEdge& e) { return e.end_node(); });
+        correlated.edges.erase(new_end, correlated.edges.end());
+      }
+
       //if we found nothing that is no good but if its batch maybe throwing makes no sense?
       if(correlated.edges.size() != 0)
         searched.insert({pp.location, correlated});
-      //else
-      //  throw std::runtime_error("No suitable edges near location");
     }
     //give back all the results
     return searched;

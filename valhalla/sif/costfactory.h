@@ -30,9 +30,7 @@ class CostFactory {
   /**
    * Constructor
    */
-  CostFactory()
-    : factory_funcs_() {
-  }
+  CostFactory() { }
 
   /**
    * Register the callback to create this type of cost

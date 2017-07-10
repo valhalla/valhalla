@@ -333,6 +333,32 @@ class GraphReader {
   bool AreEdgesConnected(const GraphId& edge1, const GraphId& edge2);
 
   /**
+   * Convenience method to determine if 2 directed edges are connected from
+   * end node of edge1 to the start node of edge2.
+   * @param   edge1  GraphId of first directed edge.
+   * @param   edge2  GraphId of second directed edge.
+   * @param   tile    Reference to a pointer to a const tile.
+   * @return  Returns true if the directed edges are directly connected
+   *          at a node, false if not.
+   */
+  bool AreEdgesConnectedForward(const GraphId& edge1, const GraphId& edge2,
+                                const GraphTile*& tile);
+
+  /**
+   * Convenience method to determine if 2 directed edges are connected from
+   * end node of edge1 to the start node of edge2.
+   * @param   edge1  GraphId of first directed edge.
+   * @param   edge2  GraphId of second directed edge.
+   * @return  Returns true if the directed edges are directly connected
+   *          at a node, false if not.
+   */
+  bool AreEdgesConnectedForward(const GraphId& edge1, const GraphId& edge2) {
+    const GraphTile* NO_TILE = nullptr;
+    return AreEdgesConnectedForward(edge1, edge2, NO_TILE);
+  }
+
+
+  /**
    * Gets the shortcut edge that includes the specified edge.
    * @param  edgeid  Graph Id of a directed edge.
    * @return Returns the graph Id of the shortcut directed edge that include

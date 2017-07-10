@@ -94,32 +94,6 @@ MapMatcherFactory::MergeConfig(const std::string& name,
   return config;
 }
 
-
-boost::property_tree::ptree&
-MapMatcherFactory::MergeConfig(const std::string& name,
-                               boost::property_tree::ptree& preferences)
-{
-  const auto mode_config = config_.get_child_optional(name);
-  if (mode_config) {
-    for (const auto& child : *mode_config) {
-      auto pchild = preferences.get_child_optional(child.first);
-      if (!pchild) {
-        preferences.put_child(child.first, child.second);
-      }
-    }
-  }
-
-  for (const auto& child : config_.get_child("default")) {
-    auto pchild = preferences.get_child_optional(child.first);
-    if (!pchild) {
-      preferences.put_child(child.first, child.second);
-    }
-  }
-
-  return preferences;
-}
-
-
 sif::cost_ptr_t MapMatcherFactory::get_costing(const boost::property_tree::ptree& request,
                                           const std::string& costing) {
   std::string method_options = "costing_options." + costing;

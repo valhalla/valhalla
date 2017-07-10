@@ -5,6 +5,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <random>
 
 #define TEST_CASE(x) #x, x
 
@@ -48,6 +49,12 @@ void assert_throw(function_t func, const std::string& message)
   if (!thrown) {
     throw std::runtime_error(message);
   }
+}
+
+// Return a random number between 0 and 1
+inline float rand01(std::mt19937& gen) {
+  std::uniform_real_distribution<> dis(0, 1);
+  return static_cast<float>(dis(gen));
 }
 
 }

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "thor/costmatrix.h"
 #include "midgard/logging.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -163,7 +163,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     // Protect against edge cases that may lead to never breaking out of
     // this loop. This should never occur but lets make sure.
     if (n >= kMaxMatrixIterations) {
-      throw valhalla_exception_t{400, 430};
+      throw valhalla_exception_t{430};
     }
     n++;
   }
@@ -713,7 +713,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score * 10.0f;
+      cost.cost += edge.score;
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and

@@ -73,8 +73,8 @@ config = {
     }
   },
   'meili': {
-    'mode': 'multimodal',
-    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy'],
+    'mode': 'auto',
+    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy', 'sigma_z', 'beta'],
     'verbose': False,
     'default': {
       'sigma_z': 4.07,
@@ -113,17 +113,6 @@ config = {
     'grid': {
       'size': 500,
       'cache_size': 100240
-    }
-  },
-  'tyr': {
-    'logging': {
-      'type': 'std_out',
-      'color': True,
-      'long_request': 100.0,
-      'file_name': 'path_to_some_file.log'
-    },
-    'service': {
-      'proxy': 'ipc:///tmp/tyr'
     }
   },
   'httpd': {
@@ -172,6 +161,12 @@ config = {
       'max_matrix_distance': 200000.0,
       'max_matrix_locations': 50
     },
+    'low_stress_bicycle': {
+      'max_distance': 500000.0,
+      'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+      'max_matrix_locations': 50
+    },
     'multimodal': {
       'max_distance': 500000.0,
       'max_locations': 50,
@@ -197,6 +192,7 @@ config = {
     'isochrone': {
       'max_contours': 4,
       'max_time': 120,
+      'max_distance': 25000.0,
       'max_locations': 1
     },
     'trace': {
@@ -321,17 +317,6 @@ help_text = {
       'cache_size': 'TODO: number of grids to keep in cache'
     }
   },
-  'tyr': {
-    'logging': {
-      'type': 'Type of logger either std_out or file',
-      'color': 'User colored log level in std_out logger',
-      'file_name': 'Output log file for the file logger',
-      'long_request': 'Value used in processing to determine whether it took too long'
-    },
-    'service': {
-      'proxy': 'IPC linux domain socket file location'
-    }
-  },
   'httpd': {
     'service': {
       'listen': 'The protocol, host location and port your service will bind to',
@@ -378,6 +363,12 @@ help_text = {
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
       'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
+    'low_stress_bicycle': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+    },
     'multimodal': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
@@ -403,6 +394,7 @@ help_text = {
     'isochrone': {
       'max_contours': 'Maximum number of input contours to allow',
       'max_time': 'Maximum time value for any one contour',
+      'max_distance':'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations'
     },
     'trace': {

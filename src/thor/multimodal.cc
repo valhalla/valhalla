@@ -1,7 +1,7 @@
 #include <map>
 #include <algorithm>
 #include "baldr/datetime.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 #include "midgard/logging.h"
 #include "thor/multimodal.h"
 
@@ -121,7 +121,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // of a multimodal route (TODO - add methods to costing to support this).
     if (mindist > 2000) {
       // Throw an exception so the message is returned in the service
-      throw valhalla_exception_t{400, 440};
+      throw valhalla_exception_t{440};
     } else {
       // Allow routing but disable use of transit
       disable_transit = true;

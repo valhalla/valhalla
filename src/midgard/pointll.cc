@@ -124,19 +124,24 @@ float PointLL::Heading(const PointLL& ll2) const {
 // Finds the closest point to the supplied polyline as well as the distance
 // squared to that point and the index of the segment where the closest point
 // lies.
-std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>& pts) const {
+std::tuple<PointLL, float, int> PointLL::ClosestPoint(
+    const std::vector<PointLL>& pts, size_t begin_index) const {
   PointLL closest {};
-  size_t closest_segment;
+  int closest_segment = -1;
   float mindistsqr = std::numeric_limits<float>::max();
+  size_t process_size = 0;
 
-  // If there are no points we are done
-  if (pts.size() == 0)
+  if (begin_index < pts.size())
+    process_size = (pts.size() - begin_index);
+
+  // If there are no points to process we are done
+  if (process_size == 0)
     return std::make_tuple(std::move(closest), std::move(mindistsqr),
                            std::move(closest_segment));
 
-  // If there is one point we are done
-  if (pts.size() == 1)
-    return std::make_tuple(pts.front(), DistanceSquared(pts.front()), 0);
+  // If there is one point to process we are done
+  if (process_size == 1)
+    return std::make_tuple(pts[begin_index], sqrt(DistanceSquared(pts[begin_index])), begin_index);
 
   // Longitude (x) is scaled by the cos of the latitude so that distances are
   // correct in lat,lon space
@@ -144,7 +149,7 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
 
   DistanceApproximator approx(*this);
   PointLL point;
-  for (size_t index = 0; index < pts.size() - 1; ++index) {
+  for (size_t index = begin_index; index < pts.size() - 1; ++index) {
     // Get the current segment
     const PointLL& u = pts[index];
     const PointLL& v = pts[index + 1];
@@ -175,7 +180,7 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
     // Check if this point is better
     const auto sq_distance = approx.DistanceSquared(point);
     if (sq_distance < mindistsqr) {
-      closest_segment = index;
+      closest_segment = static_cast<int>(index);
       mindistsqr = sq_distance;
       closest = std::move(point);
     }
@@ -263,14 +268,6 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
   // Only 2 points or the length of polyline is less than the specified
   // distance. Return heading from first to last point.
   return pts[idx0].Heading(pts[idx1]);
-}
-
-// Test whether this point is to the left of a segment from p1 to p2. Uses a
-// 2-D cross product and tests the sign (> 0 indicates the point is to the
-// left).
-float PointLL::IsLeft(const PointLL& p1, const PointLL& p2) const {
-  return (p2.x() - p1.x()) * (   y() - p1.y()) -
-             (x() - p1.x()) * (p2.y() - p1.y());
 }
 
 // Tests whether this point is within a convex polygon. Iterate through the

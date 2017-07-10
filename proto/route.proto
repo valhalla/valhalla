@@ -1,0 +1,118 @@
+package valhalla;
+
+message Route {
+
+  message Location {
+    optional float lat = 1;
+    optional float lon = 2;
+    optional string type = 3;
+    optional uint32 heading = 4;        // 0-359
+    optional string name = 5;
+    optional string street = 6;
+    optional string city = 7;
+    optional string state = 8;
+    optional string postal_code = 9;
+    optional string country = 10;
+    optional string date_time = 11;
+    optional string side_of_street = 12;
+    optional uint32 original_index = 13;
+  }
+
+  message Summary {
+    optional float length = 1;          // kilometers or miles based on units
+    optional uint32 time = 2;           // seconds
+    optional float min_lat = 3;
+    optional float min_lon = 4;
+    optional float max_lat = 5;
+    optional float max_lon = 6;
+  }
+
+  message TransitStop {
+    optional string type = 1;                  // The type of stop (station or simple stop)
+    optional string onestop_id = 2;            // Unique Transitland ID
+    optional string name = 3;                  // The name of the stop
+    optional string arrival_date_time = 4;     // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+    optional string departure_date_time = 5;   // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+    optional bool is_parent_stop = 6;          // true if this is a parent stop
+    optional bool assumed_schedule = 7;        // true if the times are based on an assumed schedule
+    optional float lat = 8;                    // Latitude of the transit stop
+    optional float lon = 9;                    // Longitude of the transit stop
+  }
+
+  message TransitInfo {
+    optional string onestop_id = 1;
+    optional string short_name = 2;
+    optional string long_name = 3;
+    optional string headsign = 4;
+    optional uint32 color = 5;
+    optional uint32 text_color = 6;
+    optional string description = 7;
+    optional string operator_onestop_id = 8;
+    optional string operator_name = 9;
+    optional string operator_url = 10;
+    repeated TransitStop transit_stops = 11;
+  }
+
+  message Maneuver {
+  
+    message Sign {
+
+      message Element {
+        optional string text = 1;              // The actual sign element text
+        optional uint32 consecutive_count = 2; // The frequency of this sign element within a set a consecutive signs
+      }
+
+      repeated Element exit_number_elements = 1;  // The list of exit numbers, example: 67B
+      repeated Element exit_branch_elements = 2;  // The list of exit branch street names, example: I 95 North
+      repeated Element exit_toward_elements = 3;  // The list of exit toward locations, example: New York
+      repeated Element exit_name_elements   = 4;  // The list of exit names - not used much in US, example: Gettysburg Pike
+    }
+
+    optional uint32 type = 1;                                // Maneuver type
+    optional string instruction = 2;                         // instruction
+    repeated string street_names = 3;                        // street names
+    optional float length = 4;                               // kilometers or miles based on units
+    optional uint32 time = 5;                                // seconds
+    optional string begin_cardinal_direction = 6;            // CardinalDirection
+    optional uint32 begin_heading = 7;                       // 0-360 
+    optional uint32 begin_shape_index = 8;                   // inclusive index
+    optional uint32 end_shape_index = 9;                     // inclusive index
+    optional bool toll = 10;                                 // has portions toll
+    optional bool rough = 11;                                // has portions unpaved(rough)
+    optional string verbal_transition_alert_instruction = 12;// verbal transition alert instruction
+    optional string verbal_pre_transition_instruction = 13;  // verbal pre-transition instruction
+    optional string verbal_post_transition_instruction = 14; // verbal post-transition instruction
+    repeated string begin_street_names = 15;                 // begin street names
+    optional Sign sign = 16;                                 // associated sign information, for example: exit number
+    optional uint32 roundabout_exit_count = 17;              // which spoke to exit roundabout after entering
+    optional string depart_instruction = 18;                 // depart instruction - used with transit
+    optional string verbal_depart_instruction = 19;          // verbal depart instruction - used with transit
+    optional string arrive_instruction = 20;                 // arrive instruction - used with transit
+    optional string verbal_arrive_instruction = 21;          // verbal arrive instruction - used with transit
+    optional TransitInfo transit_info = 22;                  // transit attributes including a list of transit stops
+    optional bool verbal_multi_cue = 23;                     // verbal multi-cue flag
+    optional string travel_mode = 24;                        // travel mode
+    optional string travel_type = 25;                        // travel type
+  }
+  
+  message Leg {
+    optional Summary summary = 1;
+    repeated Maneuver maneuvers = 2;
+    optional string shape = 3;
+  }
+
+  message Trip {
+    repeated Location locations = 1;
+    optional Summary summary = 2;
+    repeated Leg legs = 3;
+    optional string status_message = 4;
+    optional uint32 status = 5;
+    optional string units = 6;
+    optional string language = 7;
+    optional string id = 8;
+  }
+  
+  optional Trip trip = 1;
+  
+}
+

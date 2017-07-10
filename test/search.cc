@@ -101,31 +101,31 @@ void make_tile() {
 
   //B
   {
-    tile.directededges().emplace_back(add_edge(b, d, 0, 0, false));
-    tile.directededges().emplace_back(add_edge(b, a, 2, 0, true));
+    tile.directededges().emplace_back(add_edge(b, d, 0, 0, false)); //0
+    tile.directededges().emplace_back(add_edge(b, a, 2, 0, true));  //1
     tile.nodes().emplace_back(add_node(b, 2));
   }
 
   //A
   {
-    tile.directededges().emplace_back(add_edge(a, b, 2, 1, false));
-    tile.directededges().emplace_back(add_edge(a, d, 3, 1, true));
-    tile.directededges().emplace_back(add_edge(a, c, 1, 0, false));
+    tile.directededges().emplace_back(add_edge(a, b, 2, 1, false)); //2
+    tile.directededges().emplace_back(add_edge(a, d, 3, 1, true));  //3
+    tile.directededges().emplace_back(add_edge(a, c, 1, 0, false)); //4
     tile.nodes().emplace_back(add_node(a, 3));
   }
 
   //C
   {
-    tile.directededges().emplace_back(add_edge(c, a, 1, 2, true));
-    tile.directededges().emplace_back(add_edge(c, d, 4, 2, false));
+    tile.directededges().emplace_back(add_edge(c, a, 1, 2, true)); //5
+    tile.directededges().emplace_back(add_edge(c, d, 4, 2, false));//6
     tile.nodes().emplace_back(add_node(c, 2));
   }
 
   //D
   {
-    tile.directededges().emplace_back(add_edge(d, b, 0, 0, true));
-    tile.directededges().emplace_back(add_edge(d, a, 3, 1, false));
-    tile.directededges().emplace_back(add_edge(d, c, 4, 1, true));
+    tile.directededges().emplace_back(add_edge(d, b, 0, 0, true)); //7
+    tile.directededges().emplace_back(add_edge(d, a, 3, 1, false));//8
+    tile.directededges().emplace_back(add_edge(d, c, 4, 1, true)); //9
     tile.nodes().emplace_back(add_node(d, 3));
   }
 
@@ -146,7 +146,8 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
   conf.put("tile_dir", tile_dir);
 
   valhalla::baldr::GraphReader reader(conf);
-  const auto p = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter).at(location);
+  const auto results = Search({location}, reader, PassThroughEdgeFilter, PassThroughNodeFilter);
+  const auto p = results.at(location);
 
   if((p.edges.front().begin_node() || p.edges.front().end_node()) != expected_node)
     throw std::runtime_error(expected_node ? "Should've snapped to node" : "Shouldn't've snapped to node");
@@ -156,9 +157,10 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
     throw std::runtime_error("Found wrong point");
 
   valhalla::baldr::PathLocation answer(location);
+  DistanceApproximator approx(location.latlng_);
   for(const auto& expected_edge : expected_edges) {
     answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.dist,
-      expected_point, location.latlng_.Distance(expected_point), expected_edge.sos});
+      expected_point, approx.DistanceSquared(expected_point) * 10.f, expected_edge.sos});
   }
   //note that this just checks that p has the edges that answer has
   //p can have more edges than answer has and that wont fail this check!
@@ -215,10 +217,10 @@ void test_edge_search() {
   //set a point 40% along the edge runs with the shape direction
   answer = a.second.AffineCombination(.6f, .4f, d.second);
   auto ratio = a.second.Distance(answer) / a.second.Distance(d.second);
-  search({answer}, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE} });
+  x = {answer};
+  search(x, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE} });
 
   //with heading
-  x = {answer};
   x.heading_ = 90;
   search(x, false, answer, { PE{{t, l, 3}, ratio, answer, 0, S::NONE} });
   x.heading_ = 0;

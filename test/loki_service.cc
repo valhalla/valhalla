@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "midgard/logging.h"
 
-#include "loki/service.h"
+#include "loki/worker.h"
 
 
 using namespace valhalla;
@@ -17,12 +17,12 @@ using namespace prime_server;
 
 namespace {
   const std::vector<http_request_t> requests {
-    http_request_t(OPTIONS, ""),
-    http_request_t(HEAD, ""),
-    http_request_t(PUT, ""),
-    http_request_t(DELETE, ""),
-    http_request_t(TRACE, ""),
-    http_request_t(CONNECT, ""),
+    http_request_t(OPTIONS, "/route"),
+    http_request_t(HEAD, "/route"),
+    http_request_t(PUT, "/route"),
+    http_request_t(DELETE, "/route"),
+    http_request_t(TRACE, "/route"),
+    http_request_t(CONNECT, "/route"),
     http_request_t(GET, ""),
     http_request_t(POST, ""),
     http_request_t(GET, "/route?json={"),
@@ -132,7 +132,7 @@ namespace {
         "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
                         "max_matrix_distance": 200000.0, "max_matrix_locations": 50,
                         "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 },
-        "isochrone": { "max_contours": 4, "max_time": 120, "max_locations": 1},
+        "isochrone": { "max_contours": 4, "max_time": 120, "max_distance": 25000, "max_locations": 1},
         "trace": { "max_distance": 65000.0, "max_gps_accuracy": 100.0, "max_shape": 16000, "max_search_radius": 100 },
         "max_avoid_locations": 0,
         "max_reachability": 100,

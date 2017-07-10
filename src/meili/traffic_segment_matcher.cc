@@ -1,13 +1,46 @@
 #include <algorithm>
-#include <boost/property_tree/json_parser.hpp>
-
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "meili/traffic_segment_matcher.h"
-
 #include <cstdio>
 
+#include <boost/property_tree/json_parser.hpp>
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
+#include "meili/traffic_segment_matcher.h"
+
+
 namespace {
+
+  boost::property_tree::ptree parse_json(const std::string& json, const std::unordered_set<std::string> customizable, boost::property_tree::ptree& match_config) {
+    boost::property_tree::ptree request;
+    try { std::stringstream stream(json); boost::property_tree::read_json(stream, request); }
+    catch (...) { throw std::runtime_error("Couln't parse json input"); }
+
+    if(customizable.empty())
+      return request;
+
+    auto match_options = request.get_child_optional("match_options");
+    if (!match_options)
+      return request;
+
+    for (const auto& kv : *match_options) {
+      if (customizable.find(kv.first) != customizable.end() && !kv.second.data().empty()){
+        //mode is a string
+        if(kv.first == "mode")
+          match_config.put<std::string>(kv.first, kv.second.data());
+        //anything else is float
+        else {
+          try {
+            match_config.put<float>(kv.first, std::stof(kv.second.data()));
+          }
+          catch (...) {
+            throw std::out_of_range("Invalid argument: " + kv.first + " is out of float range.");
+          }
+        }
+      }
+    }
+
+    return request;
+  }
 
   void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
     //merging the edges that are the same into the final edges record
@@ -24,34 +57,12 @@ namespace {
     edges.erase(edge_itr, edges.end());
   }
 
-  bool is_connected(const valhalla::baldr::GraphId& a, const valhalla::baldr::GraphId& b, valhalla::baldr::GraphReader& reader) {
-    //we have to find this node
-    const valhalla::baldr::GraphTile* tile;
-    auto node_b = reader.GetOpposingEdge(b, tile)->endnode();
-    //from edges that leave this node
-    //NOTE: whats the effect if we cant check if its connected
-    if(!reader.GetGraphTile(a, tile))
-      return false;
-    auto node_a = tile->directededge(a)->endnode();
-    if(node_a == node_b)
-      return true;
-    //check the transition edges from the end node
-    //NOTE: whats the effect if we cant check if its connected
-    if(!reader.GetGraphTile(node_a, tile))
-      return false;
-    for(const auto& edge : tile->GetDirectedEdges(node_a)) {
-      if((edge.trans_down() || edge.trans_up()) && edge.endnode() == node_b) {
-        return true;
-      }
-    }
-    //not connected
-    return false;
-  }
-
   //is this edge considered an internal type, an edge that can be ignored for the purposes of ots's
   bool is_internal(const valhalla::baldr::DirectedEdge* edge) {
-    return edge->IsTransition() || edge->roundabout() ||
-      edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
+    return edge->roundabout() || edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
+  }
+  bool is_turn_channel(const valhalla::baldr::DirectedEdge* edge) {
+    return edge->use() == valhalla::baldr::Use::kTurnChannel;
   }
 
   struct merged_traffic_segment_t {
@@ -59,6 +70,7 @@ namespace {
     valhalla::baldr::GraphId begin_edge;
     valhalla::baldr::GraphId end_edge;
     bool internal;
+    bool turn_channel;
     const valhalla::baldr::TrafficSegment* operator->() const { return &segment; }
     valhalla::baldr::TrafficSegment* operator->() { return &segment; }
     std::vector<uint64_t> way_ids;
@@ -89,13 +101,13 @@ namespace {
           merged.back()->end_percent_ = segment.end_percent_;
           merged.back()->ends_segment_ = segment.ends_segment_;
           merged.back().internal = merged.back().internal && is_internal(directed_edge);
-          if(!directed_edge->IsTransition() && (merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id))
+          merged.back().turn_channel = merged.back().turn_channel && is_turn_channel(directed_edge);
+          if(merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id)
             merged.back().way_ids.push_back(way_id);
         }//new one
         else {
-          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge), {way_id}});
-          if(directed_edge->IsTransition())
-            merged.back().way_ids.clear();
+          merged.emplace_back(merged_traffic_segment_t{segment, edge, edge, is_internal(directed_edge),
+                    is_turn_channel(directed_edge), {way_id}});
         }
       }
     }
@@ -124,29 +136,34 @@ namespace meili {
 // Threshold speed below which we assume a queue occurs (meters/sec)
 constexpr float kQueueSpeedThreshold = 2.0f;  // approx 4.3 MPH
 
-TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config) {
+TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& config): matcher_factory(config),
+  customizable(midgard::ToSet<boost::property_tree::ptree, std::unordered_set<std::string> >(config.get_child("meili.customizable"))) {
 }
 
 std::string TrafficSegmentMatcher::match(const std::string& json) {
+  // Try to parse json
+  boost::property_tree::ptree match_config;
+  auto request = parse_json(json, customizable, match_config);
+
   // Create a matcher
   std::shared_ptr<MapMatcher> matcher;
   float default_accuracy, default_search_radius;
   try {
-    matcher.reset(matcher_factory.Create("auto")); //TODO: get the mode from the request
+    matcher.reset(matcher_factory.Create(match_config));
     default_accuracy = matcher->config().get<float>("gps_accuracy");
     default_search_radius = matcher->config().get<float>("search_radius");
   }
   catch (...) { throw std::runtime_error("Couldn't create traffic matcher using configuration."); }
 
   // Populate a measurement measurements to pass to the map matcher
-  auto measurements = parse_measurements(json, default_accuracy, default_search_radius);
+  auto measurements = parse_measurements(request, default_accuracy, default_search_radius);
   if(measurements.empty())
     return R"({"segments":[]})";
 
   // Create the vector of matched path results
   auto match_results = matcher->OfflineMatch(measurements);
   if (match_results.size() != measurements.size())
-    throw std::runtime_error("Sequence size not equal to match result size");
+    throw std::runtime_error("Sequence size not equal to match result size.");
 
   // Get the edges associated with the entire connected trace path
   auto interpolations = interpolate_matches(match_results, matcher);
@@ -178,7 +195,7 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   for(auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend(); begin_edge = end_edge, end_edge += 1) {
     //find the end of the this block
     while(end_edge != edges.cend()) {
-      if(!is_connected(std::prev(end_edge)->edgeid, end_edge->edgeid, matcher->graphreader()))
+      if (!matcher->graphreader().AreEdgesConnectedForward(std::prev(end_edge)->edgeid, end_edge->edgeid))
         break;
       ++end_edge;
     }
@@ -278,7 +295,6 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
   //loop over each set of interpolations
   std::vector<traffic_segment_t> traffic_segments;
   for(const auto& markers : interpolations) {
-
     /*printf("\nInterpolations:\n");
     for(const auto& marker : markers)
       print(marker);*/
@@ -292,6 +308,8 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
     printf("\nReported Segments:\n");*/
 
     //go over the segments and move the interpolation markers accordingly
+    float prior_start_acc_length = 0.0f;
+    float prior_end_acc_length = 0.0f;
     auto left = markers.cbegin(), right = markers.cbegin();
     for(const auto& segment : merged_segments){
       //move the left marker right until its adjacent to the segment begin
@@ -308,8 +326,9 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
 
       //skip any segments composed entirely of transition edges (should only be one edge really)
       //they should have no valid segment id, be marked internal and also have no way ids
-      if(!segment->segment_id_.Is_Valid() && segment.internal && segment.way_ids.empty())
+      if(!segment->segment_id_.Is_Valid() && segment.internal && segment.way_ids.empty()) {
         continue;
+      }
 
       //interpolate the length and time at the start
       double start_time = -1;
@@ -333,12 +352,33 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
         end_time = prev->epoch_time + (right->epoch_time - prev->epoch_time) * ratio;
       }
 
-      //if we didnt have a start or end time then we are past where we had interpolations
-      if(start_time == -1 && end_time == -1)
-        break;
-
       //figure out the total length of the segment
       int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
+
+      // Special cases for turn channels:
+      //   if the prior segment is a turn channel set a valid length and start
+      //       time if this segment has a valid end
+      //   if this segment is a turn channel set the prior segment end time to
+      //       the start of this turn channel segment and set the prior
+      //       segment length
+      size_t idx = &segment - &merged_segments[0];
+      if (segment->ends_segment_ && idx > 0 && merged_segments[idx-1].turn_channel && start_length == -1) {
+        // Set the segment start time to the end time of the turn channel
+        if (traffic_segments.size() > 0 && end_length != -1) {
+          start_time = traffic_segments.back().end_time;
+          length = (end_length - prior_end_acc_length) + traffic_segments.back().length / 2;
+        }
+      } else  if (segment.turn_channel && traffic_segments.size() > 0 &&
+                  traffic_segments.back().end_time == -1) {
+        traffic_segments.back().end_time = start_time;
+        if (length > 0 && traffic_segments.back().start_time > 0.0) {
+          traffic_segments.back().length = (start_length - prior_start_acc_length) + length / 2;
+        }
+      }
+
+      // Store prior start and end accumulated length
+      prior_start_acc_length = start_length; //left->total_distance;
+      prior_end_acc_length = end_length; // right->total_distance;
 
       //compute queue length (skip if this is a partial segment)
       int queue_length = (length == -1) ? 0 :
@@ -352,6 +392,11 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
 
       //print(traffic_segments.back());
 
+      // Break out of the loop once we are past where we have interpolations
+      // (e.g. for a long edge with many segments).
+      if (idx > 0 && right->epoch_time == -1)
+        break;
+
       //if the right side of this was the end of this edge then at least we need to start from the next edge
       if(segment->end_percent_ == 1.f) {
         ++right;
@@ -363,17 +408,12 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
   return traffic_segments;
 }
 
-std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const std::string& json,
+std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree request,
   float default_accuracy, float default_search_radius) {
-  //try to parse json
-  boost::property_tree::ptree request;
-  try { std::stringstream stream(json); boost::property_tree::read_json(stream, request); }
-  catch (...) { throw std::runtime_error("Couln't parse json input"); }
-
   //check for required parameters
   auto trace_pts = request.get_child_optional("trace");
   if (!trace_pts)
-    throw std::runtime_error("Missing required json array 'trace'");
+    throw std::runtime_error("Missing required json array 'trace'.");
 
   // Populate a measurement sequence to pass to the map matcher
   std::vector<Measurement> measurements;
@@ -386,14 +426,15 @@ std::vector<meili::Measurement> TrafficSegmentMatcher::parse_measurements(const 
       measurements.emplace_back(PointLL{lon, lat}, accuracy, default_search_radius, epoch_time);
     }
   }
-  catch (...) { throw std::runtime_error("Missing parameters, trace points require lat, lon and time"); }
+  catch (...) { throw std::runtime_error("Missing parameters, trace points require lat, lon and time."); }
+
   //not enough data
   if(measurements.size() < 2)
-    throw std::runtime_error("2 or more trace points are required");
+    throw std::runtime_error("2 or more trace points are required.");
   //out of order data, should we reorder?
   for(size_t i = 1; i < measurements.size(); ++i)
     if(measurements[i - 1].epoch_time() > measurements[i].epoch_time())
-      throw std::runtime_error("Trace points must be in chronological order");
+      throw std::runtime_error("Trace points must be in chronological order.");
   //same time different place?
   auto remove_itr = std::remove_if(measurements.begin(), measurements.end(),[&measurements](const Measurement& m){
     return &measurements.back() != &m && m.epoch_time() == (&m + 1)->epoch_time();

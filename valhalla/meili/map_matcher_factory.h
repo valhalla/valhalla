@@ -42,9 +42,6 @@ public:
   boost::property_tree::ptree
   MergeConfig(const std::string&, const boost::property_tree::ptree&);
 
-  boost::property_tree::ptree&
-  MergeConfig(const std::string&, boost::property_tree::ptree&);
-
   void ClearFullCache();
 
   void ClearCache();

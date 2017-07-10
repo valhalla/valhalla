@@ -230,6 +230,60 @@ void TestIterable() {
     throw std::logic_error("cumulative product failed");
 }
 
+void TestTrimPolyline()
+{
+  using Point = valhalla::midgard::Point2;
+
+  std::vector<Point> line{{0,0}, {0, 0}, {20, 20}, {31, 1}, {31,1}, {12, 23}, {7, 2}, {7,2}};
+  auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
+  test::assert_bool(length(clip.begin(), clip.end()) == length(line.begin(), line.end()),
+                    "Should not clip anything if range is [0, 1]");
+
+  clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.1f),
+                    "10% portion should be clipped");
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 1.f);
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.5f),
+                    "50% portion should be clipped");
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 0.7f);
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.2f),
+                    "0.2 portion should be clipped");
+
+  clip = trim_polyline(line.begin(), line.end(), 0.65f, 0.7f);
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.05f),
+                    "5% portion should be clipped");
+
+  clip = trim_polyline(line.begin(), line.end(), 0.4999f, 0.5f);
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f),
+                    "0.1% portion should be clipped");
+
+  test::assert_bool(trim_polyline(line.begin(), line.end(), 0.65f, 0.5f).empty(),
+                    "nothing should be clipped since [0.65, 0.5]");
+
+  test::assert_bool(trim_polyline(line.begin(), line.end(), -2.f, -1.f).empty(),
+                    "nothing should be clipped since negative [-2, -1]");
+
+  test::assert_bool(trim_polyline(line.begin(), line.end(), 0.f, 0.f).back() == Point(0, 0),
+                    "nothing should be clipped since empty set [0, 0]");
+
+  test::assert_bool(trim_polyline(line.begin(), line.end(), -1.f, 0.f).back() == Point(0, 0),
+                    "nothing should be clipped since out of range [-1, 0]");
+
+  test::assert_bool(trim_polyline(line.begin(), line.end(), 1.f, 1.f).front() == Point(7, 2),
+                    "nothing should be clipped since [1, 1]");
+
+  test::assert_bool(trim_polyline(line.begin(), line.end(), 1.f, 2.f).front() == Point(7, 2),
+                    "nothing should be clipped since out of range [1, 2]");
+
+  test::assert_bool(trim_polyline(line.begin(), line.end(), 1.001f, 2.f).empty(),
+                    "nothing should be clipped since out of range [1.001, 2]");
+
+  test::assert_bool(trim_polyline(line.begin(), line.end(), 0.5f, 0.1f).empty(),
+                    "nothing should be clipped since empty set [0.5, 0.1]");
+}
+
 void TestTrimFront() {
   std::vector<Point2> pts = { { -1.0f, -1.0f }, { -1.0f, 1.0f}, { 0.0f, 1.0f },
          { 1.0f, 1.0f }, { 4.0f,  5.0f }, { 5.0f, 5.0f } };
@@ -279,6 +333,17 @@ void TestTrimFront() {
   }
 }
 
+void TestExpandLocation() {
+  // Expand to create a box approx 200x200 meters
+  PointLL loc(-77.0f, 39.0f);
+  AABB2<PointLL> box = ExpandMeters(loc, 100);
+  float area = (box.Height() * kMetersPerDegreeLat) *
+                box.Width() * DistanceApproximator::MetersPerLngDegree(loc.lat());
+  if (area < 199.0f * 199.0f || area > 201.0f * 201.0f) {
+    throw std::logic_error("ExpandLocation: area of the bounding box is incorrect " + std::to_string(area));
+  }
+}
+
 }
 
 int main() {
@@ -301,6 +366,10 @@ int main() {
   suite.test(TEST_CASE(TestResample));
 
   suite.test(TEST_CASE(TestIterable));
+
+  suite.test(TEST_CASE(TestTrimPolyline));
+
+  suite.test(TEST_CASE(TestExpandLocation));
 
   // trim_front of a polyline
   suite.test(TEST_CASE(TestTrimFront));

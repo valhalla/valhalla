@@ -18,7 +18,7 @@ using namespace prime_server;
 
 #include "midgard/logging.h"
 
-#include "skadi/service.h"
+#include "skadi/worker.h"
 
 int main(int argc, char** argv) {
 

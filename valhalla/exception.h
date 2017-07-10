@@ -1,85 +1,12 @@
-#ifndef __VALHALLA_BALDR_ERRORCODE_UTIL_H__
-#define __VALHALLA_BALDR_ERRORCODE_UTIL_H__
+#ifndef __VALHALLA_EXCEPTION_H__
+#define __VALHALLA_EXCEPTION_H__
 
-#include <functional>
 #include <string>
 #include <stdexcept>
 #include <unordered_map>
-#include <unordered_set>
-#include <cstdint>
-#include <sstream>
-#include <boost/property_tree/ptree.hpp>
+#include <boost/optional.hpp>
 
 namespace valhalla {
-namespace baldr {
-
-  // Credits: http://werkzeug.pocoo.org/
-  const std::unordered_map<unsigned, std::string> kHttpStatusCodes {
-    // 1xx
-    {100,"Continue"},
-    {101,"Switching Protocols"},
-    {102,"Processing"},
-
-    // 2xx
-    {200,"OK"},
-    {201,"Created"},
-    {202,"Accepted"},
-    {203,"Non Authoritative Information"},
-    {204,"No Content"},
-    {205,"Reset Content"},
-    {206,"Partial Content"},
-    {207,"Multi Status"},
-    {226,"IM Used"},  // see RFC 322
-
-    // 3xx
-    {300,"Multiple Choices"},
-    {301,"Moved Permanently"},
-    {302,"Found"},
-    {303,"See Other"},
-    {304,"Not Modified"},
-    {305,"Use Proxy"},
-    {307,"Temporary Redirect"},
-
-    // 4xx
-    {400,"Bad Request"},
-    {401,"Unauthorized"},
-    {402,"Payment Required"},  // unuse
-    {403,"Forbidden"},
-    {404,"Not Found"},
-    {405,"Method Not Allowed"},
-    {406,"Not Acceptable"},
-    {407,"Proxy Authentication Required"},
-    {408,"Request Timeout"},
-    {409,"Conflict"},
-    {410,"Gone"},
-    {411,"Length Required"},
-    {412,"Precondition Failed"},
-    {413,"Request Entity Too Large"},
-    {414,"Request URI Too Long"},
-    {415,"Unsupported Media Type"},
-    {416,"Requested Range Not Satisfiable"},
-    {417,"Expectation Failed"},
-    {418,"I\'m a teapot"},  // see RFC 232
-    {422,"Unprocessable Entity"},
-    {423,"Locked"},
-    {424,"Failed Dependency"},
-    {426,"Upgrade Required"},
-    {428,"Precondition Required"},  // see RFC 658
-    {429,"Too Many Requests"},
-    {431,"Request Header Fields Too Large"},
-    {449,"Retry With"},  // proprietary MS extensio
-
-    // 5xx
-    {500,"Internal Server Error"},
-    {501,"Not Implemented"},
-    {502,"Bad Gateway"},
-    {503,"Service Unavailable"},
-    {504,"Gateway Timeout"},
-    {505,"HTTP Version Not Supported"},
-    {507,"Insufficient Storage"},
-    {510,"Not Extended"},
-  };
-
   const std::unordered_map<unsigned, std::string> error_codes {
     // loki project 1xx
     {100,"Failed to parse json request"},
@@ -105,7 +32,7 @@ namespace baldr {
     {131,"Failed to parse source"},
     {132,"Failed to parse target"},
     {133,"Failed to parse avoid"},
-    
+
     {140,"Action does not support multimodal costing"},
     {141,"Arrive by for multimodal not implemented yet"},
     {142,"Arrive by not implemented for isochrones"},
@@ -149,10 +76,6 @@ namespace baldr {
     {299,"Unknown"},
 
     // skadi project 3xx
-    {300,"Failed to parse json request"},
-    {301,"Try a POST or GET request instead"},
-    {302,"The config actions for Skadi are incorrectly loaded"},
-    {303,"Path action not supported"},
     {304,"Try any of"},
     {305,"Not Implemented"},
 
@@ -167,10 +90,6 @@ namespace baldr {
     // thor project 4xx
     {400,"Unknown action"},
     {401,"Failed to parse intermediate request format"},
-
-    {410,"Insufficiently specified required parameter 'locations'"},
-    {411,"Insufficiently specified required parameter 'shape'"},
-    {412,"No costing method found"},
 
     {420,"Failed to parse correlated location"},
     {421,"Failed to parse location"},
@@ -192,34 +111,27 @@ namespace baldr {
     // tyr project 5xx
     {500,"Failed to parse intermediate request format"},
     {501,"Failed to parse TripDirections"},
+    {502,"Maneuver index not found for specified shape index"},
 
     {599,"Unknown"}
   };
 
   struct valhalla_exception_t: public std::runtime_error {
-    valhalla_exception_t(unsigned status_code, unsigned error_code, const boost::optional<std::string>& extra=boost::none)
+    valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra=boost::none)
       :std::runtime_error(""),
-      error_code(error_code),
-      status_code(status_code),
+       code(code),
       extra(extra){
-      auto code_itr = error_codes.find(error_code);
-      error_code_message = (code_itr == error_codes.cend() ? "" : code_itr->second);
-      error_code_message += (extra ? ":" + *extra : "");
-      code_itr = kHttpStatusCodes.find(status_code);
-      status_code_body = code_itr == kHttpStatusCodes.cend() ? "" : code_itr->second;
-
+      auto code_itr = error_codes.find(code);
+      message = (code_itr == error_codes.cend() ? "" : code_itr->second);
+      message += (extra ? ":" + *extra : "");
     }
     const char* what() const noexcept override {
-      return error_code_message.c_str();
+      return message.c_str();
     }
-    unsigned error_code;
-    unsigned status_code;
-    std::string error_code_message;
-    std::string status_code_body;
+    unsigned code;
+    std::string message;
     boost::optional<std::string> extra;
   };
-
-}
 }
 
-#endif //__VALHALLA_BALDR_ERRORCODE_UTIL_H__
+#endif //__VALHALLA_EXCEPTION_H__

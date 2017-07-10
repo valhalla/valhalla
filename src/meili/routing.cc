@@ -9,7 +9,6 @@
 #include "sif/dynamiccost.h"
 #include "sif/costconstants.h"
 
-#include "meili/geometry_helpers.h"
 #include "meili/routing.h"
 
 namespace valhalla {
@@ -205,24 +204,13 @@ IsEdgeAllowed(const baldr::DirectedEdge* edge,
               const std::shared_ptr<const sif::EdgeLabel>& pred_edgelabel,
               const baldr::GraphTile* tile)
 {
-  if (costing && pred_edgelabel) {
-    // Do not allow 2 transition edges in succession...
-    // TODO - if we can update the expansion logic to be more like
-    // thor we can remove this check.
-    if (edge->IsTransition() && (pred_edgelabel->use() == baldr::Use::kTransitionUp ||
-        pred_edgelabel->use() == baldr::Use::kTransitionDown)) {
-      return false;
-    }
+  if (pred_edgelabel) {
     // TODO let sif do this?
     // Still on the same edge and the predecessor's show-up here
     // means it was allowed so we give it a pass directly
-    return edgeid == pred_edgelabel->edgeid()
-        // Transition edges are exceptions here because
-        // costing::Allowed only considers non-transition edges
-        || edge->IsTransition()
-        || costing->Allowed(edge, *pred_edgelabel, tile, edgeid);
+    return edgeid == pred_edgelabel->edgeid() ||
+        costing->Allowed(edge, *pred_edgelabel, tile, edgeid);
   }
-
   return true;
 }
 
@@ -254,7 +242,7 @@ void set_origin(baldr::GraphReader& reader,
       // the origin node but won't check the destination node
       const auto nodeinfo = reader.nodeinfo(nodeid, tile);
       if (!nodeinfo) continue;
-      if (costing && !costing->Allowed(nodeinfo)) continue;
+      if (!costing->Allowed(nodeinfo)) continue;
 
       labelset->put(nodeid, travelmode, edgelabel);
     } else if (edge.end_node()) {
@@ -265,7 +253,7 @@ void set_origin(baldr::GraphReader& reader,
       // the origin node but won't check the destination node
       const auto nodeinfo = reader.nodeinfo(nodeid, tile);
       if (!nodeinfo) continue;
-      if (costing && !costing->Allowed(nodeinfo)) continue;
+      if (!costing->Allowed(nodeinfo)) continue;
 
       labelset->put(nodeid, travelmode, edgelabel);
     } else {
@@ -308,14 +296,14 @@ void set_destinations(baldr::GraphReader& reader,
 // Need the graphreader to get the tile of edgelabel
 inline uint16_t
 get_inbound_edgelabel_heading(baldr::GraphReader& graphreader,
-                              const baldr::GraphTile* tile,
                               const sif::EdgeLabel& edgelabel,
-                              const baldr::NodeInfo& nodeinfo)
+                              const baldr::NodeInfo* nodeinfo)
 {
   const auto idx = edgelabel.opp_local_idx();
   if (idx < 8) {
-    return nodeinfo.heading(idx);
+    return nodeinfo->heading(idx);
   } else {
+    const baldr::GraphTile* tile = nullptr;
     const auto directededge = graphreader.directededge(edgelabel.edgeid(), tile);
     const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
     const auto& shape = edgeinfo.shape();
@@ -335,14 +323,14 @@ get_inbound_edgelabel_heading(baldr::GraphReader& graphreader,
 
 
 inline uint16_t
-get_outbound_edge_heading(const baldr::GraphTile* tile,
-                          const baldr::DirectedEdge* outbound_edge,
-                          const baldr::NodeInfo& nodeinfo)
+get_outbound_edge_heading(const baldr::DirectedEdge* outbound_edge,
+                          const baldr::NodeInfo* nodeinfo)
 {
   const auto idx = outbound_edge->localedgeidx();
   if (idx < 8) {
-    return nodeinfo.heading(idx);
+    return nodeinfo->heading(idx);
   } else {
+    const baldr::GraphTile* tile = nullptr;
     const auto edgeinfo = tile->edgeinfo(outbound_edge->edgeinfo_offset());
     const auto& shape = edgeinfo.shape();
     if (shape.size() >= 2) {
@@ -359,16 +347,14 @@ get_outbound_edge_heading(const baldr::GraphTile* tile,
   }
 }
 
-
-inline bool
-isTransition(baldr::GraphReader& graphreader, const baldr::GraphId& edgeid, const baldr::GraphTile* tile)
-{
-  const auto edge = graphreader.directededge(edgeid, tile);
-  return edge && edge->IsTransition();
-}
-
-
-// find_shortest_path uses a heuristic function (lambda) that estimates cost
+// find_shortest_path(s) from an origin to a set of destination.
+//
+// Uses an "expand" lambda method to expand all edges from a node. Any
+// transition edges immediately move to the end node of the transition edge
+// and expand any edges from that node. In this manner, no transition edges
+// get added to the label set.
+//
+// Also uses a heuristic function (lambda) that estimates cost
 // from current node (incorporated in the approximator) to a cluster of
 // destinations within a circle formed by the search radius around the lnglat
 // (the location of next measurement).
@@ -400,6 +386,16 @@ find_shortest_path(baldr::GraphReader& reader,
                    std::shared_ptr<const sif::EdgeLabel> edgelabel,
                    const float turn_cost_table[181])
 {
+  float label_cost, label_turn_cost;
+  std::shared_ptr<const sif::EdgeLabel> pred_edgelabel;
+  const sif::TravelMode travelmode = costing->travel_mode();
+
+  // Destinations along edges
+  std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>> edge_dests;
+
+  // Destinations at nodes
+  std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>> node_dests;
+
   // Lambda for heuristic
   float search_rad2 = search_radius * search_radius;
   const auto heuristic = [&approximator, &search_radius, &search_rad2](const PointLL& lnglat) {
@@ -407,26 +403,101 @@ find_shortest_path(baldr::GraphReader& reader,
     return (d2 < search_rad2) ? 0.0f : sqrtf(d2) - search_radius;
   };
 
-  // Destinations at nodes
-  std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>> node_dests;
+  // Lambda method to expand along edges from this node. This method have to be
+  // set-up to be called recursively (for transition edges) so we set up a
+  // function reference.
+  std::function<void(const baldr::GraphId&, const uint32_t, const bool)> expand;
+  expand = [&reader, &approximator, &pred_edgelabel, &labelset, &edge_dests,
+            &destinations, &search_radius, &search_rad2, &costing, &travelmode, &label_cost,
+            &label_turn_cost, &turn_cost_table, &heuristic, &expand]
+           (const baldr::GraphId& node, const uint32_t label_idx, const bool from_transition) {
+    // Get the node's info. The tile will be guaranteed to be nodeid's tile
+    // in this block. Return if node is not found or is not allowed by costing
+    const baldr::GraphTile* tile = reader.GetGraphTile(node);
+    if (tile == nullptr) {
+      return;
+    }
+    const baldr::NodeInfo* nodeinfo = tile->node(node);
+    if (!costing->Allowed(nodeinfo)) {
+      return;
+    }
 
-  // Destinations along edges
-  std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>> edge_dests;
+    // Get the inbound edge heading (clamped to range [0,360])
+    const auto inbound_hdg = (pred_edgelabel) ?
+             get_inbound_edgelabel_heading(reader, *pred_edgelabel, nodeinfo) : 0;
+
+    // Expand from end node in forward direction.
+    baldr::GraphId edgeid = { node.tileid(), node.level(), nodeinfo->edge_index() };
+    const baldr::DirectedEdge* directededge = tile->directededge(edgeid);
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid) {
+      // Skip it if its a shortcut or transit connection
+      if (directededge->is_shortcut() ||
+          directededge->use() == baldr::Use::kTransitConnection) {
+        continue;
+      }
+
+      // Immediately expand from end node of transition edges unless expand is
+      // called from a transition edge (disallow 2 successive transition edges)
+      if (directededge->IsTransition()) {
+        if (!from_transition) {
+          expand(directededge->endnode(), label_idx, true);
+        }
+        continue;
+      }
+
+      // Skip it if its not allowed
+      if (!IsEdgeAllowed(directededge, edgeid, costing, pred_edgelabel, tile)) {
+        continue;
+      }
+
+      // Turn cost based on turn degree
+      float turn_cost = label_turn_cost;
+      if (pred_edgelabel) {
+        // Get outbound heading (clamped to range [0,360])
+        const auto outbound_hdg = get_outbound_edge_heading(directededge, nodeinfo);
+        turn_cost += turn_cost_table[midgard::get_turn_degree180(inbound_hdg, outbound_hdg)];
+      }
+
+      // If destinations found along the edge, add segments to each
+      // destination to the queue
+      const auto it = edge_dests.find(edgeid);
+      if (it != edge_dests.end()) {
+        for (const auto dest : it->second) {
+          for (const auto& edge : destinations[dest].edges) {
+            if (edge.id == edgeid) {
+              // Heuristic cost from a destination to itself must be 0, so sortcost = cost
+              const float cost = label_cost + directededge->length() * edge.dist;
+              labelset->put(dest, edgeid, 0.f, edge.dist,
+                           cost, turn_cost, cost, label_idx,
+                           directededge, travelmode, nullptr);
+            }
+          }
+        }
+      }
+
+      // Get the end node tile and nodeinfo (to compute heuristic)
+      const baldr::GraphTile* endtile = directededge->leaves_tile() ?
+                    reader.GetGraphTile(directededge->endnode()) : tile;
+      if (endtile != nullptr) {
+        const auto end_nodeinfo = endtile->node(directededge->endnode());
+        const float cost = label_cost + directededge->length(),
+                sortcost = cost + heuristic(end_nodeinfo->latlng());
+        labelset->put(directededge->endnode(), edgeid, 0.f, 1.f,
+                      cost, turn_cost, sortcost, label_idx,
+                      directededge, travelmode, nullptr);
+      }
+    }
+  };
 
   // Load destinations
   set_destinations(reader, destinations, node_dests, edge_dests);
-
-  const sif::TravelMode travelmode = costing? costing->travel_mode() : static_cast<sif::TravelMode>(0);
 
   // Load origin to the queue of the labelset
   set_origin(reader, destinations, origin_idx, labelset, travelmode, costing, edgelabel);
 
   std::unordered_map<uint16_t, uint32_t> results;
-
-  const baldr::GraphTile* tile = nullptr;
-
   while (true) {
-    const auto label_idx = labelset->pop();
+    uint32_t label_idx = labelset->pop();
     if (label_idx == baldr::kInvalidLabel) {
       // Exhausted labels without finding all destinations
       break;
@@ -437,29 +508,12 @@ find_shortest_path(baldr::GraphReader& reader,
     // reallocated)
     const auto& label = labelset->label(label_idx);
 
-    // So we cache the costs that will be used during expanding
-    const auto label_cost = label.cost;
-    const auto label_turn_cost = label.turn_cost;
-
-    // Find the first non-transition edgelabel
-    // Note only use edgelabel to determine if edge is allowed or not
-    auto pred_edgelabel = label.edgelabel;
-    {
-      auto pred_idx = label_idx;
-      auto pred_edgeid = label.edgeid;
-      while (pred_idx != baldr::kInvalidLabel
-             && pred_edgeid.Is_Valid()
-             && isTransition(reader, pred_edgeid, tile)) {
-        const auto& pred_label = labelset->label(pred_idx);
-        pred_idx = pred_label.predecessor;
-        pred_edgeid = pred_label.edgeid;
-        pred_edgelabel = pred_label.edgelabel;
-      }
-    }
-
-    if (label.nodeid.Is_Valid()) {
-      const auto nodeid = label.nodeid;
-
+    // So we cache values that will be used during expanding
+    label_cost = label.cost;
+    label_turn_cost = label.turn_cost;
+    pred_edgelabel = label.edgelabel;
+    const auto nodeid = label.nodeid;
+    if (nodeid.Is_Valid()) {
       // If this node is a destination, path to destinations at this
       // node is found: remember them and remove this node from the
       // destination list
@@ -476,77 +530,8 @@ find_shortest_path(baldr::GraphReader& reader,
         break;
       }
 
-      // The tile will be guaranteed to be nodeid's tile in this block
-      const auto nodeinfo = reader.nodeinfo(nodeid, tile);
-
-      // Continue if end node not found or is not allowed by costing
-      if (!nodeinfo || nodeinfo->edge_count() <= 0 ||
-          (costing && !costing->Allowed(nodeinfo))) {
-        continue;
-      }
-
-      // Need the graphreader to get the tile of edgelabel
-      const auto inbound_heading = (pred_edgelabel && turn_cost_table)?
-                                   get_inbound_edgelabel_heading(reader, tile, *pred_edgelabel, *nodeinfo) : 0;
-      // TODO: test it assert(0 <= inbound_heading && inbound_heading < 360);
-
-      // Expand current node
-      baldr::GraphId other_edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
-      auto other_edge = tile->directededge(nodeinfo->edge_index());
-      for (size_t i = 0; i < nodeinfo->edge_count(); i++, ++other_edge, ++other_edgeid) {
-        // Skip it if its a shortcut or transit connection
-        if (other_edge->is_shortcut() || other_edge->use() == baldr::Use::kTransitConnection ||
-            other_edge->use() == baldr::Use::kEgressConnection ||
-            other_edge->use() == baldr::Use::kPlatformConnection) continue;
-
-        // Skip it if its not allowed
-        const auto* other_tile = other_edgeid.Tile_Base() != tile->header()->graphid() ? reader.GetGraphTile(other_edgeid) : tile;
-        if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, other_tile)) continue;
-
-        // Turn cost only for non transition edges
-        float turn_cost = label_turn_cost;
-        if (pred_edgelabel && turn_cost_table && !other_edge->IsTransition()) {
-          const auto other_heading = get_outbound_edge_heading(other_tile, other_edge, *nodeinfo);
-          // TODO: test it assert(0 <= other_heading && other_heading < 360);
-          const auto turn_degree = helpers::get_turn_degree180(inbound_heading, other_heading);
-          // TODO: test it assert(0 <= turn_degree && turn_degree <= 180);
-          turn_cost += turn_cost_table[turn_degree];
-        }
-
-        // If destinations found along the edge, add segments to each
-        // destination to the queue
-        const auto it = edge_dests.find(other_edgeid);
-        if (it != edge_dests.end()) {
-          for (const auto dest : it->second) {
-            for (const auto& edge : destinations[dest].edges) {
-              if (edge.id == other_edgeid) {
-                const float cost = label_cost + other_edge->length() * edge.dist,
-                        sortcost = cost + 0.f;  // The heuristic cost from a destination to itself must be 0
-                labelset->put(dest, other_edgeid,
-                             0.f, edge.dist,
-                             cost, turn_cost, sortcost,
-                             label_idx,
-                             other_edge, travelmode, nullptr);
-              }
-            }
-          }
-        }
-
-        // Get the end node tile and nodeinfo (to compute heuristic)
-        const baldr::GraphTile* endtile = other_edge->leaves_tile() ?
-                      reader.GetGraphTile(other_edge->endnode()) : tile;
-        if (endtile == nullptr) {
-          continue;
-        }
-        const auto other_nodeinfo = endtile->node(other_edge->endnode());
-        const float cost = label_cost + other_edge->length(),
-                sortcost = cost + heuristic(other_nodeinfo->latlng());
-        labelset->put(other_edge->endnode(), other_edgeid,
-                     0.f, 1.f,
-                     cost, turn_cost, sortcost,
-                     label_idx,
-                     other_edge, travelmode, nullptr);
-      }
+      // Expand edges from this node
+      expand(nodeid, label_idx, false);
     } else { // assert(label.dest != kInvalidDestination)
       const auto dest = label.dest;
 
@@ -573,6 +558,7 @@ find_shortest_path(baldr::GraphReader& reader,
       if (dest == origin_idx) {
         for (const auto& origin_edge : destinations[origin_idx].edges) {
           // The tile will be guaranteed to be directededge's tile in this loop
+          const baldr::GraphTile* tile = nullptr;
           const auto directededge = reader.directededge(origin_edge.id, tile);
 
           // Skip if edge is not allowed
@@ -583,9 +569,8 @@ find_shortest_path(baldr::GraphReader& reader,
 
           // U-turn cost
           float turn_cost = label_turn_cost;
-          if (pred_edgelabel && turn_cost_table
-              && pred_edgelabel->edgeid() != origin_edge.id
-              && pred_edgelabel->opp_local_idx() == directededge->localedgeidx()) {
+          if (pred_edgelabel && pred_edgelabel->edgeid() != origin_edge.id &&
+              pred_edgelabel->opp_local_idx() == directededge->localedgeidx()) {
             turn_cost += turn_cost_table[0];
           }
 
@@ -598,8 +583,7 @@ find_shortest_path(baldr::GraphReader& reader,
                         sortcost = cost + 0.f; // The heuristic cost from a destination to itself must be 0
                 labelset->put(other_dest, origin_edge.id,
                              origin_edge.dist, other_edge.dist,
-                             cost, turn_cost, sortcost,
-                             label_idx,
+                             cost, turn_cost, sortcost, label_idx,
                              directededge, travelmode, nullptr);
               }
             }
@@ -614,10 +598,8 @@ find_shortest_path(baldr::GraphReader& reader,
           const auto nodeinfo = endtile->node(directededge->endnode());
           const float cost = label_cost + directededge->length() * (1.f - origin_edge.dist),
                   sortcost = cost + heuristic(nodeinfo->latlng());
-          labelset->put(directededge->endnode(), origin_edge.id,
-                       origin_edge.dist, 1.f,
-                       cost, turn_cost, sortcost,
-                       label_idx,
+          labelset->put(directededge->endnode(), origin_edge.id, origin_edge.dist, 1.f,
+                       cost, turn_cost, sortcost, label_idx,
                        directededge, travelmode, nullptr);
         }
       }
@@ -626,7 +608,6 @@ find_shortest_path(baldr::GraphReader& reader,
   // TODO - do we need to clear since it is constructed prior to each call??
   labelset->clear_queue();
   labelset->clear_status();
-
   return results;
 }
 

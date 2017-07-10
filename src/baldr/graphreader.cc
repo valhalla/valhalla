@@ -322,7 +322,7 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
       uint32_t n = 0, id = 0;
       const DirectedEdge* de = GetGraphTile(n1)->GetDirectedEdges(n1.id(), n, id);
       for (uint32_t i = 0; i < n; i++, de++) {
-        if ((de->trans_up() || de->trans_down()) && de->endnode() == n2) {
+        if (de->IsTransition() && de->endnode() == n2) {
           return true;
         }
       }
@@ -357,6 +357,39 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
     return true;
   }
   return false;
+}
+
+// Convenience method to determine if 2 directed edges are connected from
+// end node of edge1 to the start node of edge2.
+bool GraphReader::AreEdgesConnectedForward(const GraphId& edge1, const GraphId& edge2,
+                                           const GraphTile*& tile) {
+  // Get end node of edge1
+  GraphId endnode = edge_endnode(edge1, tile);
+  if (endnode.Tile_Base() != edge1.Tile_Base()) {
+    tile = GetGraphTile(endnode);
+    if (tile == nullptr) {
+      return false;
+    }
+  }
+
+  // If edge2 is on a different tile level transition to the node on that level
+  if (edge2.level() != endnode.level()) {
+    for (const auto& edge : tile->GetDirectedEdges(endnode)) {
+      if (edge.IsTransition() && edge.endnode().level() == edge2.level()) {
+        endnode = edge.endnode();
+        tile = GetGraphTile(endnode);
+        if (tile == nullptr) {
+          return false;
+        }
+        break;
+      }
+    }
+  }
+
+  // Check if edge2's Id is an outgoing directed edge of the node
+  const NodeInfo* node = tile->node(endnode);
+  return (node->edge_index() <= edge2.id() &&
+          edge2.id() < (node->edge_index() + node->edge_count()));
 }
 
 // Get the shortcut edge that includes this edge.

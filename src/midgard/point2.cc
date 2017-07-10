@@ -14,27 +14,6 @@ constexpr float EPSILON = .00002f;
 namespace valhalla {
 namespace midgard {
 
-float Point2::x() const {
-  return first;
-}
-
-float Point2::y() const {
-  return second;
-}
-
-void Point2::set_x(const float x) {
-  first = x;
-}
-
-void Point2::set_y(const float y) {
-  second = y;
-}
-
-void Point2::Set(const float x, const float y) {
-  first = x;
-  second = y;
-}
-
 bool Point2::ApproximatelyEqual(const Point2& p) const {
   return equal<first_type>(first, p.first, EPSILON) && equal<second_type>(second, p.second, EPSILON);
 }
@@ -78,7 +57,7 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
     return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
   // If there is one point we are done
   if(pts.size() == 1)
-    return std::make_tuple(pts.front(), DistanceSquared(pts.front()), 0);
+    return std::make_tuple(pts.front(), sqrt(DistanceSquared(pts.front())), 0);
 
   // Iterate through the pts
   bool beyond_end = true;   // Need to test past the end point?
@@ -150,15 +129,7 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
       idx = static_cast<int>(pts.size() - 2);
     }
   }
-  return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
-}
-
-// Test whether this point is to the left of a segment from p1 to p2. Uses a
-// 2-D cross product and tests the sign (> 0 indicates the point is to the
-// left).
-float Point2::IsLeft(const Point2& p1, const Point2& p2) const {
-  return (p2.x() - p1.x()) * (   y() - p1.y()) -
-             (x() - p1.x()) * (p2.y() - p1.y());
+  return std::make_tuple(std::move(closest), std::move(sqrt(mindist)), std::move(idx));
 }
 
 // Tests whether this point is within a polygon. Iterate through the

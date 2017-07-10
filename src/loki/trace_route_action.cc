@@ -1,39 +1,21 @@
-#include "loki/service.h"
+#include "loki/worker.h"
 #include "loki/search.h"
 
 #include "midgard/pointll.h"
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
 #include "baldr/rapidjson_utils.h"
+#include "tyr/actor.h"
 
-#include <boost/property_tree/json_parser.hpp>
-#include <math.h>
-#include <unordered_map>
+#include <cmath>
 
-using namespace prime_server;
 using namespace valhalla;
+using namespace valhalla::tyr;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::loki;
 
-namespace std {
-  template <>
-  struct hash<loki_worker_t::ACTION_TYPE>
-  {
-    std::size_t operator()(const loki_worker_t::ACTION_TYPE& a) const {
-      return std::hash<int>()(a);
-    }
-  };
-}
-
 namespace {
-
-const std::unordered_map<loki_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
-  {loki_worker_t::TRACE_ROUTE, "trace_route"},
-  {loki_worker_t::TRACE_ATTRIBUTES, "trace_attributes"}
-};
-
-
 void check_shape(const std::vector<PointLL>& shape, unsigned int max_shape,
                  float max_factor = 1.0f) {
   // Adjust max - this enables max edge_walk shape count to be larger
@@ -41,10 +23,10 @@ void check_shape(const std::vector<PointLL>& shape, unsigned int max_shape,
 
   // Must have at least two points
   if (shape.size() < 2)
-    throw valhalla_exception_t{400, 123};
+    throw valhalla_exception_t{123};
   // Validate shape is not larger than the configured max
   else if (shape.size() > max_shape)
-    throw valhalla_exception_t{400, 153, "(" + std::to_string(shape.size()) +"). The limit is " + std::to_string(max_shape)};
+    throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) +"). The limit is " + std::to_string(max_shape)};
 
   valhalla::midgard::logging::Log(
       "trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
@@ -60,7 +42,7 @@ void check_distance(const std::vector<PointLL>& shape, float max_distance,
   auto crow_distance = shape.front().Distance(shape.back());
 
   if (crow_distance > max_distance)
-    throw valhalla_exception_t { 400, 154 };
+    throw valhalla_exception_t { 154 };
 
   valhalla::midgard::logging::Log(
       "location_distance::" + std::to_string(crow_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
@@ -68,7 +50,7 @@ void check_distance(const std::vector<PointLL>& shape, float max_distance,
 
 void check_gps_accuracy(const float input_gps_accuracy, const float max_gps_accuracy) {
   if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f)
-    throw valhalla_exception_t { 400, 158 };
+    throw valhalla_exception_t { 158 };
 
   valhalla::midgard::logging::Log(
       "gps_accuracy::" + std::to_string(input_gps_accuracy) + "meters", " [ANALYTICS] ");
@@ -76,7 +58,7 @@ void check_gps_accuracy(const float input_gps_accuracy, const float max_gps_accu
 
 void check_search_radius(const float input_search_radius, const float max_search_radius) {
   if (input_search_radius > max_search_radius || input_search_radius < 0.f)
-    throw valhalla_exception_t { 400, 158 };
+    throw valhalla_exception_t { 158 };
 
   valhalla::midgard::logging::Log(
       "search_radius::" + std::to_string(input_search_radius) + "meters", " [ANALYTICS] ");
@@ -84,7 +66,7 @@ void check_search_radius(const float input_search_radius, const float max_search
 
 void check_turn_penalty_factor(const float input_turn_penalty_factor) {
   if (input_turn_penalty_factor < 0.f)
-    throw valhalla_exception_t { 400, 158 };
+    throw valhalla_exception_t { 158 };
 }
 }
 
@@ -120,16 +102,11 @@ namespace valhalla {
       locations_from_shape(request);
     }
 
-    worker_t::result_t loki_worker_t::trace_route(ACTION_TYPE action, rapidjson::Document& request, http_request_info_t& request_info) {
+    void loki_worker_t::trace(ACTION_TYPE action, rapidjson::Document& request) {
       init_trace(request);
       std::string costing = request["costing"].GetString();
       if (costing == "multimodal")
-        return jsonify_error({400, 140, ACTION_TO_STRING.find(action)->second}, request_info);
-
-      //pass it on to thor
-      worker_t::result_t result{true};
-      result.messages.emplace_back(rapidjson::to_string(request));
-      return result;
+        throw valhalla_exception_t{140, ACTION_TO_STRING.find(action)->second};
     }
 
     void loki_worker_t::parse_trace(rapidjson::Document& request) {
@@ -162,13 +139,12 @@ namespace valhalla {
           //TODO:Add support
         }*/
         else
-          throw valhalla_exception_t{400, 126};
+          throw valhalla_exception_t{126};
       }
       catch (const std::exception& e) {
         //TODO: pass on e.what() to generic exception
-        throw valhalla_exception_t{400, 114};
+        throw valhalla_exception_t{114};
       }
-
     }
 
     void loki_worker_t::locations_from_shape(rapidjson::Document& request) {
@@ -190,7 +166,7 @@ namespace valhalla {
         rapidjson::Pointer("/correlated_1").Set(request, projections.at(locations.back()).ToRapidJson(1, allocator));
       }
       catch(const std::exception&) {
-        throw valhalla_exception_t{400, 171};
+        throw valhalla_exception_t{171};
       }
     }
 
