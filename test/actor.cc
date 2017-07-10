@@ -56,13 +56,21 @@ namespace {
     auto conf = make_conf();
     tyr::actor_t actor(conf);
 
-    auto route_json = actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+    actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
       {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
+    actor.cleanup();
+    auto route_json = actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+          {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
+    actor.cleanup();
     auto route = json_to_pt(route_json);
     route_json.find("Tulpehocken");
 
+    actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
+      {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
+    actor.cleanup();
     auto attributes_json = actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
       {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
+    actor.cleanup();
     auto attributes = json_to_pt(attributes_json);
     attributes_json.find("Tulpehocken");
 

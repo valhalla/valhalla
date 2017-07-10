@@ -72,6 +72,10 @@ namespace valhalla {
     actor_t::actor_t(const boost::property_tree::ptree& config): pimpl(new pimpl_t(config)) {
     }
 
+    void actor_t::cleanup() {
+      pimpl->cleanup();
+    }
+
     std::string actor_t::route(ACTION_TYPE action, const std::string& request_str, const std::function<void ()>& interrupt) {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
@@ -89,8 +93,6 @@ namespace valhalla {
       auto json = tyr::serializeDirections(action, request_pt, directions);
       std::stringstream ss;
       ss << *json;
-      //cleanup
-      pimpl->cleanup();
       return ss.str();
     }
 
@@ -103,8 +105,6 @@ namespace valhalla {
       auto json = pimpl->loki_worker.locate(request);
       std::stringstream ss;
       ss << *json;
-      //cleanup
-      pimpl->cleanup();
       return ss.str();
     }
 
@@ -120,8 +120,6 @@ namespace valhalla {
       auto json = pimpl->thor_worker.matrix(action, request_pt);
       std::stringstream ss;
       ss << *json;
-      //cleanup
-      pimpl->cleanup();
       return ss.str();
     }
 
@@ -141,8 +139,6 @@ namespace valhalla {
       auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
       ss << *json;
-      //cleanup
-      pimpl->cleanup();
       return ss.str();
     }
 
@@ -158,8 +154,6 @@ namespace valhalla {
       auto json = pimpl->thor_worker.isochrones(request_pt);
       std::stringstream ss;
       ss << *json;
-      //cleanup
-      pimpl->cleanup();
       return ss.str();
     }
 
@@ -179,8 +173,6 @@ namespace valhalla {
       auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
       ss << *json;
-      //cleanup
-      pimpl->cleanup();
       return ss.str();
     }
 
@@ -196,8 +188,6 @@ namespace valhalla {
       auto json = pimpl->thor_worker.trace_attributes(request_pt);
       std::stringstream ss;
       ss << *json;
-      //cleanup
-      pimpl->cleanup();
       return ss.str();
     }
 
@@ -210,8 +200,6 @@ namespace valhalla {
       auto json = pimpl->skadi_worker.height(request_rj);
       std::stringstream ss;
       ss << *json;
-      //cleanup
-      pimpl->cleanup();
       return ss.str();
     }
 
