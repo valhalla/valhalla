@@ -211,6 +211,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       continue;
     }
 
+    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform || nodeinfo->type() == NodeType::kTransitStation) {
+
+      if (processed_tiles.find(tile->id().tileid()) == processed_tiles.end()) {
+        tc->AddToExcludeList(tile);
+        processed_tiles.emplace(tile->id().tileid());
+      }
+
+      //check if excluded.
+      if (tc->IsExcluded(tile, nodeinfo))
+        continue;
+    }
+
     // Set local time. TODO: adjust for time zone.
     uint32_t localtime = start_time + pred.cost().secs;
 
@@ -229,15 +241,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
         transfer_cost = tc->TransferCost();
       }
-
-      if (processed_tiles.find(tile->id().tileid()) == processed_tiles.end()) {
-        tc->AddToExcludeList(tile);
-        processed_tiles.emplace(tile->id().tileid());
-      }
-
-      //check if excluded.
-      if (tc->IsExcluded(tile, nodeinfo))
-        continue;
 
       // Add transfer time to the local time when entering a stop
       // as a pedestrian. This is a small added cost on top of
