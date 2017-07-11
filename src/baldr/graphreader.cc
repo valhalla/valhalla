@@ -159,7 +159,7 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
   size_t max_cache_size = pt.get<size_t>("max_cache_size", DEFAULT_MAX_CACHE_SIZE);
 
   // wrap tile cache with thread-safe version
-  if (pt.get<bool>("memory_optimized_cache", false)) {
+  if (pt.get<bool>("global_synchronized_cache", false)) {
     if (!globalTileCache_)
       globalTileCache_.reset(new SimpleTileCache(max_cache_size));
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
