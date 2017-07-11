@@ -448,7 +448,7 @@ class EdgeLabel {
     return deadend_;
   }
 
- private:
+ protected:
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
 
