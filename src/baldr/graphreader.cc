@@ -55,38 +55,38 @@ std::shared_ptr<const GraphReader::tile_extract_t> GraphReader::get_extract_inst
 }
 
 // Constructor.
-TileCache::TileCache(size_t max_size)
+SimpleTileCache::SimpleTileCache(size_t max_size)
       : cache_size_(0), max_cache_size_(max_size)
 {
 }
 
 // Reserves enough cache to hold (max_cache_size / tile_size) items.
-void TileCache::Reserve(size_t tile_size)
+void SimpleTileCache::Reserve(size_t tile_size)
 {
   cache_.reserve(max_cache_size_ / tile_size);
 }
 
 // Checks if tile exists in the cache.
-bool TileCache::Contains(const GraphId& graphid) const
+bool SimpleTileCache::Contains(const GraphId& graphid) const
 {
   return cache_.find(graphid) != cache_.end();
 }
 
 // Lets you know if the cache is too large.
-bool TileCache::OverCommitted() const
+bool SimpleTileCache::OverCommitted() const
 {
   return max_cache_size_ < cache_size_;
 }
 
 // Clears the cache.
-void TileCache::Clear()
+void SimpleTileCache::Clear()
 {
   cache_size_ = 0;
   cache_.clear();
 }
 
 // Get a pointer to a graph tile object given a GraphId.
-const GraphTile* TileCache::Get(const GraphId& graphid) const
+const GraphTile* SimpleTileCache::Get(const GraphId& graphid) const
 {
   auto cached = cache_.find(graphid);
   if(cached != cache_.end()) {
@@ -96,15 +96,15 @@ const GraphTile* TileCache::Get(const GraphId& graphid) const
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile* TileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size)
+const GraphTile* SimpleTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size)
 {
   cache_size_ += size;
   return &cache_.emplace(graphid, tile).first->second;
 }
 
 // Constructor.
-SynchronizedTileCache::SynchronizedTileCache(std::mutex& mutex, size_t max_size)
-      : TileCache(max_size), mutex_ref_(mutex)
+SynchronizedTileCache::SynchronizedTileCache(TileCache& cache, std::mutex& mutex)
+      : cache_(cache), mutex_ref_(mutex)
 {
 }
 
@@ -112,95 +112,61 @@ SynchronizedTileCache::SynchronizedTileCache(std::mutex& mutex, size_t max_size)
 void SynchronizedTileCache::Reserve(size_t tile_size)
 {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  TileCache::Reserve(tile_size);
+  cache_.Reserve(tile_size);
 }
 
 // Checks if tile exists in the cache.
 bool SynchronizedTileCache::Contains(const GraphId& graphid) const
 {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  return TileCache::Contains(graphid);
+  return cache_.Contains(graphid);
 }
 
 // Lets you know if the cache is too large.
 bool SynchronizedTileCache::OverCommitted() const
 {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  return TileCache::OverCommitted();
+  return cache_.OverCommitted();
 }
 
 // Clears the cache.
 void SynchronizedTileCache::Clear()
 {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  TileCache::Clear();
+  cache_.Clear();
 }
 
 // Get a pointer to a graph tile object given a GraphId.
 const GraphTile* SynchronizedTileCache::Get(const GraphId& graphid) const
 {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  return TileCache::Get(graphid);
+  return cache_.Get(graphid);
 }
 
 // Puts a copy of a tile of into the cache.
 const GraphTile* SynchronizedTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size)
 {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  return TileCache::Put(graphid, tile, size);
+  return cache_.Put(graphid, tile, size);
 }
-
-// Puts a copy of a tile of into the cache without locking.
-const GraphTile* SynchronizedTileCache::PutNoLock(const GraphId& graphid, const GraphTile& tile, size_t size)
-{
-  return TileCache::Put(graphid, tile, size);
-}
-
-// Constructor.
-CopyForwardingTileCache::CopyForwardingTileCache(size_t max_size)
-      : SynchronizedTileCache(mutex_, max_size)
-{
-  std::lock_guard<std::mutex> lock(mutex_);
-  members_.insert(this);
-  LOG_DEBUG("CopyForwardingTileCache(): " + std::to_string(members_.size()) + " members");
-}
-
-// Destructor.
-CopyForwardingTileCache::~CopyForwardingTileCache()
-{
-  std::lock_guard<std::mutex> lock(mutex_);
-  members_.erase(this);
-  LOG_DEBUG("~CopyForwardingTileCache(): " + std::to_string(members_.size()) + " members");
-}
-
-// Puts a copy of a tile of into all caches.
-const GraphTile* CopyForwardingTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size)
-{
-  std::lock_guard<std::mutex> lock(mutex_);
-  // Put into current cache
-  const GraphTile* result = PutNoLock(graphid, tile, size);
-  // Put into neighbor's caches
-  for (auto * cache : members_)
-    if (cache != this)
-        cache->PutNoLock(graphid, tile, size);
-
-  return result;
-}
-
-std::mutex CopyForwardingTileCache::mutex_;
-std::unordered_set<CopyForwardingTileCache*> CopyForwardingTileCache::members_;
 
 // Constructs tile cache.
 TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& pt)
 {
+  static std::mutex globalCacheMutex_;
+  static std::shared_ptr<TileCache> globalTileCache_;
+
   size_t max_cache_size = pt.get<size_t>("max_cache_size", DEFAULT_MAX_CACHE_SIZE);
 
-  // copy forwarding cache optimized for memory use
-  if (pt.get<bool>("memory_optimized_cache", false))
-    return new CopyForwardingTileCache(max_cache_size);
+  // wrap tile cache with thread-safe version
+  if (pt.get<bool>("memory_optimized_cache", false)) {
+    if (!globalTileCache_)
+      globalTileCache_.reset(new SimpleTileCache(max_cache_size));
+    return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
+  }
 
   // default
-  return new TileCache(max_cache_size);
+  return new SimpleTileCache(max_cache_size);
 }
 
 // Constructor using separate tile files
@@ -227,7 +193,7 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   std::string file_location = tile_dir_ + "/" +
             GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
-  return stat(file_location.c_str(), &buffer) == 0;
+  return stat(file_location.c_str(), &buffer) == 0 || stat((file_location + ".gz").c_str(), &buffer) == 0;
 }
 
 bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid) {
@@ -242,7 +208,7 @@ bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const Gra
   std::string file_location = pt.get<std::string>("tile_dir") + "/" +
             GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
-  return stat(file_location.c_str(), &buffer) == 0;
+  return stat(file_location.c_str(), &buffer) == 0 || stat((file_location + ".gz").c_str(), &buffer) == 0;
 }
 
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
