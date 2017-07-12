@@ -347,6 +347,7 @@ shared = {
 dedicated = {
 ["opposite_lane"] = 2,
 ["lane"] = 2
+["buffer"] = 2
 }
 
 separated = {
@@ -994,6 +995,8 @@ function filter_tags_generic(kv)
         use = 20
      elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
         use = 20
+     elseif kv["highway"] == "living_street" then
+        use = 23
      elseif (kv["highway"] == "footway" and kv["footway"] == "sidewalk") then
         use = 24
      elseif kv["highway"] == "footway" then
