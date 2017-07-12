@@ -130,6 +130,10 @@ class NavigatorTest : public Navigator {
     return Navigator::used_instructions_;
   }
 
+  NavigationStatus_RouteState GetRouteState () {
+    return route_state_;
+  }
+
 };
 
 void TryTopLevelSetRoute(const std::string& route_json_str,
@@ -356,6 +360,20 @@ void TestTopLevelLegSetRoute() {
 
   TryTopLevelLegSetRoute(route_json_str, expected_leg_maneuver_count,
       expected_leg_shape);
+
+  // Test runtime error
+
+  std::string runtimeErrorTest = R"({trip:20})";
+  NavigatorTest nt;
+  NavigationStatus status = nt.SetRoute(runtimeErrorTest);
+  if (status.route_state() != NavigationStatus_RouteState_kInvalid) {
+    throw std::runtime_error ("Invalid route did not return an invalid state.");
+  }
+
+  if (nt.GetRouteState() != NavigationStatus_RouteState_kInvalid) {
+    throw std::runtime_error ("Invalid route did not cause an internal invalid state.");
+  }
+
 }
 
 void TryRouteLegCount(NavigatorTest& nav, int expected_leg_count) {
