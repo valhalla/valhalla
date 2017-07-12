@@ -1549,9 +1549,11 @@ namespace valhalla {
         throw std::runtime_error ("String to document parsing failed.");
 
       // Grab the trip object from JSON
-      auto json_trip = GetOptionalFromRapidJson<rapidjson::Value::Object> (d, "/trip");
-      if (!json_trip) {
+      auto json_trip_iter = d.FindMember("trip");
+      if (json_trip_iter == d.MemberEnd()) {
         return;
+      } else if (!json_trip_iter->value.IsObject()) {
+        throw std::runtime_error ("trip is not an object.");
       }
 
       if (proto_route.has_trip())
@@ -1562,8 +1564,8 @@ namespace valhalla {
 
 
       // Set the locations
-      auto locations_iter = json_trip->FindMember("locations");
-      if (locations_iter != json_trip->end()) {
+      auto locations_iter = json_trip_iter->value.FindMember("locations");
+      if (locations_iter != json_trip_iter->value.MemberEnd()) {
         if (!locations_iter->value.IsArray()) {
           throw std::runtime_error ("locations is not an array.");
         }
@@ -1578,8 +1580,8 @@ namespace valhalla {
       }
 
       // Set the summary
-      auto summary_iter = json_trip->FindMember("summary");
-      if (summary_iter != json_trip->end()) {
+      auto summary_iter = json_trip_iter->value.FindMember("summary");
+      if (summary_iter != json_trip_iter->value.MemberEnd()) {
         if (!summary_iter->value.IsObject()) {
           throw std::runtime_error ("summary is not an object.");
         }
@@ -1587,8 +1589,8 @@ namespace valhalla {
       }
 
       // Set the legs
-      auto legs_iter = json_trip->FindMember("legs");
-      if (legs_iter != json_trip->end()) {
+      auto legs_iter = json_trip_iter->value.FindMember("legs");
+      if (legs_iter != json_trip_iter->value.MemberEnd()) {
         if (!legs_iter->value.IsArray()) {
           throw std::runtime_error ("legs is not an array.");
         }
@@ -1603,8 +1605,8 @@ namespace valhalla {
       }
 
       // Set the status_message
-      auto status_message_iter = json_trip->FindMember("status_message");
-      if (status_message_iter != json_trip->end()) {
+      auto status_message_iter = json_trip_iter->value.FindMember("status_message");
+      if (status_message_iter != json_trip_iter->value.MemberEnd()) {
         if (!status_message_iter->value.IsString()) {
           throw std::runtime_error ("status_message is not a string.");
         }
@@ -1612,8 +1614,8 @@ namespace valhalla {
       }
 
       // Set the status
-      auto status_iter = json_trip->FindMember("status");
-      if (status_iter != json_trip->end()) {
+      auto status_iter = json_trip_iter->value.FindMember("status");
+      if (status_iter != json_trip_iter->value.MemberEnd()) {
         if (!status_iter->value.IsUint()) {
           throw std::runtime_error ("status is not a Uint.");
         }
@@ -1621,8 +1623,8 @@ namespace valhalla {
       }
 
       // Set the units
-      auto units_iter = json_trip->FindMember("units");
-      if (units_iter != json_trip->end()) {
+      auto units_iter = json_trip_iter->value.FindMember("units");
+      if (units_iter != json_trip_iter->value.MemberEnd()) {
         if (!units_iter->value.IsString()) {
           throw std::runtime_error ("units is not a string.");
         }
@@ -1630,8 +1632,8 @@ namespace valhalla {
       }
 
       // Set the language
-      auto language_iter = json_trip->FindMember("language");
-      if (language_iter != json_trip->end()) {
+      auto language_iter = json_trip_iter->value.FindMember("language");
+      if (language_iter != json_trip_iter->value.MemberEnd()) {
         if (!language_iter->value.IsString()) {
           throw std::runtime_error ("language is not a string.");
         }
@@ -1639,8 +1641,8 @@ namespace valhalla {
       }
 
       // Set the id
-      auto id_iter = json_trip->FindMember("id");
-      if (id_iter != json_trip->end()) {
+      auto id_iter = json_trip_iter->value.FindMember("id");
+      if (id_iter != json_trip_iter->value.MemberEnd()) {
         if (!id_iter->value.IsString()) {
           throw std::runtime_error ("id is not a string.");
         }
