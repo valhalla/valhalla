@@ -112,11 +112,29 @@ bool WalkTransitLines(const GraphId& n_graphId, GraphReader& reader,
           //get new end node and start over if needed.
           n_info = endnodetile->node(currentNode);
 
-          const TransitStop* transit_stop = endnodetile->GetTransitStop(
-              n_info->stop_index());
-
           // are we done?
-          if (endnodetile->GetName(transit_stop->one_stop_offset()) == end_name) {
+          std::string station_name;
+          //stations are in the same tile as platforms and the tests contain the station
+          //onestop ids and not the platforms
+          uint32_t z = 0;
+          while (z < n_info->edge_count()) {
+
+            const DirectedEdge* de =
+                endnodetile->directededge(n_info->edge_index() + z);
+
+            //get the station node
+            if (de->use() == Use::kPlatformConnection) {
+
+              const TransitStop* transit_station = endnodetile->GetTransitStop(
+                  endnodetile->node(de->endnode())->stop_index());
+
+              station_name = endnodetile->GetName(transit_station->one_stop_offset());
+              break;
+            }
+            z++;
+          }
+
+          if (station_name == end_name) {
             bDone = true;
             break;
           }
@@ -150,6 +168,8 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
   uint32_t failure_count = 0;
   GraphReader reader_transit_level(pt);
 
+  std::unordered_multimap<std::string, std::string> passed_tests;
+
   // Iterate through the tiles in the queue and find any that include stops
   for(; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
@@ -166,17 +186,51 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
+      std::string station_name;
       // all should be multiuseplatform, but check just to be sure.
       if (nodeinfo.type() == NodeType::kMultiUseTransitPlatform) {
 
-        const TransitStop* transit_stop = transit_tile->GetTransitStop(
-            nodeinfo.stop_index());
+        //stations are in the same tile as platforms and the tests contain the station
+        //onestop ids and not the platforms
+        uint32_t j = 0;
+        while (j < nodeinfo.edge_count()) {
+
+          const DirectedEdge* de =
+              transit_tile->directededge(nodeinfo.edge_index() + j);
+
+          //get the station node
+          if (de->use() == Use::kPlatformConnection) {
+            const TransitStop* transit_station = transit_tile->GetTransitStop(
+                transit_tile->node(de->endnode())->stop_index());
+
+            station_name = transit_tile->GetName(transit_station->one_stop_offset());
+            break;
+          }
+          j++;
+        }
 
         OneStopTest ost;
-        ost.origin = transit_tile->GetName(transit_stop->one_stop_offset());
+        ost.origin = station_name;
         auto p = std::equal_range(onestoptests.begin(), onestoptests.end(), ost);
+
         for (auto t = p.first; t != p.second; ++t) {
 
+          //has this test passed already?
+          //don't want to run again for another platform under a station.
+          bool bfound = false;
+          auto tests = passed_tests.equal_range(t->origin);
+          for (auto it = tests.first; it != tests.second; ++it) {
+            if (it->second == (t->destination + t->date_time + t->route_id)) {
+              bfound = true;
+              break;
+            }
+          }
+
+          if (bfound)
+            continue;
+
+          const TransitStop* transit_stop = transit_tile->GetTransitStop(
+                      nodeinfo.stop_index());
           GraphId currentNode = GraphId(transit_tile->id().tileid(),transit_tile->id().level(), i);
           GraphId tileid = transit_tile->id();
           std::unordered_multimap<GraphId,uint64_t> visited_map;
@@ -200,6 +254,8 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
           }
           LOG_DEBUG("Test from " + t->origin + " to " + t->destination + " @ " +
                    t->date_time + " route id " + t->route_id + " passed.");
+          passed_tests.emplace(t->origin, (t->destination + t->date_time + t->route_id));
+
         }
       }
     }
