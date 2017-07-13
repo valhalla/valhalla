@@ -169,6 +169,7 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
   GraphReader reader_transit_level(pt);
 
   std::unordered_multimap<std::string, std::string> passed_tests;
+  std::unordered_multimap<std::string, std::string> failed_tests;
 
   // Iterate through the tiles in the queue and find any that include stops
   for(; tile_start != tile_end; ++tile_start) {
@@ -220,7 +221,7 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
           bool bfound = false;
           auto tests = passed_tests.equal_range(t->origin);
           for (auto it = tests.first; it != tests.second; ++it) {
-            if (it->second == (t->destination + t->date_time + t->route_id)) {
+            if (it->second == (t->destination + " @ " + t->date_time + " " + t->route_id)) {
               bfound = true;
               break;
             }
@@ -246,18 +247,41 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
                                   tileid, lock, visited_map, t->date_time,
                                   t->destination, t->route_id)) {
 
-              LOG_ERROR("Test from " + t->origin + " to " + t->destination + " @ " +
+              LOG_DEBUG("Test from " + t->origin + " to " + t->destination + " @ " +
                         t->date_time + " route id " + t->route_id + " failed.");
-              failure_count++;
+              failed_tests.emplace(t->origin, (t->destination + " @ " + t->date_time + " " + t->route_id));
               continue;
             }
           }
           LOG_DEBUG("Test from " + t->origin + " to " + t->destination + " @ " +
                    t->date_time + " route id " + t->route_id + " passed.");
-          passed_tests.emplace(t->origin, (t->destination + t->date_time + t->route_id));
+          passed_tests.emplace(t->origin, (t->destination + " @ " + t->date_time + " " + t->route_id));
 
         }
       }
+    }
+
+    std::set<std::string> failures;
+    for ( auto p = failed_tests.begin(); p != failed_tests.end(); ++p ) {
+      bool bfound = false;
+      auto tests = passed_tests.equal_range(p->first);
+       for (auto it = tests.first; it != tests.second; ++it) {
+         if (it->second == (p->second)) {
+           bfound = true;
+           break;
+         }
+       }
+
+       if (bfound)
+         continue;
+       else { // only report a failure one time.  A station has multiple platforms and we could of
+         //walked the transit lines of the wrong platform.
+         if (failures.find(p->first + p->second) == failures.end()) {
+           failure_count++;
+           LOG_ERROR("Test from " + p->first + " to " + p->second + " failed.");
+           failures.emplace(p->first + p->second);
+         }
+       }
     }
   }
   // Send back the statistics
