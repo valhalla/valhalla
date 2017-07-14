@@ -10,12 +10,12 @@
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
 
+#include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
-#include <valhalla/odin/transitstop.h>
 
 using namespace valhalla::baldr;
 
@@ -227,8 +227,14 @@ class Maneuver {
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
 
-  const TransitStop& transit_connection_stop() const;
-  void set_transit_connection_stop(const TransitStop& transit_connection_stop);
+  const TransitEgressInfo& transit_connection_egress_info() const;
+  void set_transit_connection_egress_info(const TransitEgressInfo& transit_connection_egress_info);
+
+  const TransitStationInfo& transit_connection_station_info() const;
+  void set_transit_connection_station_info(const TransitStationInfo& transit_connection_station_info);
+
+  const TransitPlatformInfo& transit_connection_platform_info() const;
+  void set_transit_connection_platform_info(const TransitPlatformInfo& transit_connection_platform_info);
 
   bool IsTransit() const;
 
@@ -239,11 +245,11 @@ class Maneuver {
 
   std::string GetTransitDepartureTime() const;
 
-  const std::list<TransitStop>& GetTransitStops() const;
+  const std::list<TransitPlatformInfo>& GetTransitStops() const;
 
   size_t GetTransitStopCount() const;
 
-  void InsertTransitStop(TransitStop&& transit_stop);
+  void InsertTransitStop(const TransitPlatformInfo& transit_stop);
 
   const std::string& depart_instruction() const;
   void set_depart_instruction(const std::string& depart_instruction);
@@ -317,7 +323,10 @@ class Maneuver {
 
   // Transit connection flag and the associated stop
   bool transit_connection_;
-  TransitStop transit_connection_stop_; // TODO determine how we want to handle in the future
+
+  TransitEgressInfo transit_connection_egress_info_;
+  TransitStationInfo transit_connection_station_info_;
+  TransitPlatformInfo transit_connection_platform_info_;
 
   // The transit route info including list of stops
   TransitRouteInfo transit_info_;

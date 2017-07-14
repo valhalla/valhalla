@@ -136,7 +136,9 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
   // lambda to indicate whether a directed edge should be included
   auto include_edge = [&old_to_new](const DirectedEdge* directededge,
         const GraphId& base_node, const uint8_t current_level) {
-    if (directededge->use() == Use::kTransitConnection) {
+    if (directededge->use() == Use::kTransitConnection ||
+        directededge->use() == Use::kEgressConnection ||
+        directededge->use() == Use::kPlatformConnection) {
       // Transit connection edges should live on the lowest class level
       // where a new node exists
       uint8_t lowest_level;
@@ -231,7 +233,9 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       // Need to set nodeb for use in AddEdgeInfo
       uint32_t density2 = 32;
       GraphId nodeb;
-      if (directededge->use() == Use::kTransitConnection) {
+      if (directededge->use() == Use::kTransitConnection ||
+          directededge->use() == Use::kEgressConnection ||
+          directededge->use() == Use::kPlatformConnection) {
         nodeb = directededge->endnode();
       } else {
         auto new_nodes = find_nodes(old_to_new, directededge->endnode());
@@ -415,7 +419,9 @@ bool CreateNodeAssociations(GraphReader& reader) {
         // Update the flag for the level of this edge (skip transit
         // connection edges)
         const DirectedEdge* directededge = tile->directededge(edgeid);
-        if (directededge->use() != Use::kTransitConnection) {
+        if (directededge->use() != Use::kTransitConnection &&
+            directededge->use() != Use::kEgressConnection &&
+            directededge->use() != Use::kPlatformConnection) {
           levels[TileHierarchy::get_level(directededge->classification())] = true;
         }
       }
@@ -492,7 +498,7 @@ void UpdateTransitConnections(GraphReader& reader) {
          DirectedEdge directededge = tilebuilder.directededge(idx);
 
         // Update the end node of any transit connection edge
-        if (directededge.use() == Use::kTransitConnection) {
+         if (directededge.use() == Use::kTransitConnection) {
           // Get the updated end node
           auto f = find_nodes(old_to_new, directededge.endnode());
           GraphId new_end_node;

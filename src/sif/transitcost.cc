@@ -209,7 +209,7 @@ class TransitCost : public DynamicCost {
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->trans_up() || edge->trans_down() || edge->is_shortcut() ||
+      if (edge->IsTransition() || edge->is_shortcut() ||
           edge->use() >= Use::kFerry ||
          !(edge->forwardaccess() & kPedestrianAccess))
         return 0.0f;

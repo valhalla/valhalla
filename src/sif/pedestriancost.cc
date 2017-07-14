@@ -259,7 +259,7 @@ class PedestrianCost : public DynamicCost {
      // Throw back a lambda that checks the access for this type of costing
      auto access_mask = access_mask_;
      return [access_mask](const baldr::DirectedEdge* edge) {
-       return !(edge->trans_up() || edge->trans_down() || edge->is_shortcut() ||
+       return !(edge->IsTransition() || edge->is_shortcut() ||
            edge->use() >= Use::kRail ||
           !(edge->forwardaccess() & access_mask));
      };
@@ -490,7 +490,9 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   // Disallow transit connections (except when set for multi-modal routes)
-  if (!allow_transit_connections_ && edge->use() == Use::kTransitConnection) {
+  if (!allow_transit_connections_ && (edge->use() == Use::kPlatformConnection ||
+      edge->use() == Use::kEgressConnection ||
+      edge->use() == Use::kTransitConnection)) {
     return false;
   }
   return true;
@@ -512,7 +514,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (opp_edge->surface() > minimal_allowed_surface_) ||
         opp_edge->is_shortcut() || IsUserAvoidEdge(opp_edgeid) ||
  //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
-        opp_edge->use() == Use::kTransitConnection) {
+        opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
+        opp_edge->use() == Use::kPlatformConnection) {
     return false;
   }
   return true;
@@ -577,9 +580,11 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   uint32_t idx = pred.opp_local_idx();
   // Ignore name inconsistency when entering a link to avoid double penalizing.
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+  if (!edge->link() && edge->use() != Use::kEgressConnection &&
+      edge->use() != Use::kPlatformConnection &&
+      !node->name_consistency(idx, edge->localedgeidx())) {
     // Slight maneuver penalty
-    penalty += maneuver_penalty_;
+      penalty += maneuver_penalty_;
   }
 
   // Costs for crossing an intersection.
@@ -617,7 +622,9 @@ Cost PedestrianCost::TransitionCostReverse(
   }
 
   // Ignore name inconsistency when entering a link to avoid double penalizing.
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+  if (!edge->link() && edge->use() != Use::kEgressConnection &&
+      edge->use() != Use::kPlatformConnection &&
+      !node->name_consistency(idx, edge->localedgeidx())) {
     // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }

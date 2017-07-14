@@ -675,22 +675,22 @@ namespace {
 
                 // type
                 if (transit_stop.has_type()) {
-                  if (transit_stop.type() == TripDirections_TransitStop_Type_kStation) {
+                  if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {
                     json_transit_stop->emplace("type", std::string("station"));
                   } else {
                     json_transit_stop->emplace("type", std::string("stop"));
                   }
                 }
 
-                // onestop_id
-                if (transit_stop.has_onestop_id()) {
-                    json_transit_stop->emplace("onestop_id", transit_stop.onestop_id());
-                    valhalla::midgard::logging::Log("transit_stopid::" + transit_stop.onestop_id(), " [ANALYTICS] ");
+                // onestop_id - using the station onestop_id
+                if (transit_stop.has_station_onestop_id()) {
+                    json_transit_stop->emplace("onestop_id", transit_stop.station_onestop_id());
+                    valhalla::midgard::logging::Log("transit_stopid::" + transit_stop.station_onestop_id(), " [ANALYTICS] ");
                 }
 
-                // name
-                if (transit_stop.has_name()) {
-                    json_transit_stop->emplace("name", transit_stop.name());
+                // name - using the station name
+                if (transit_stop.has_station_name()) {
+                    json_transit_stop->emplace("name", transit_stop.station_name());
                 }
 
                 // arrival_date_time
@@ -701,11 +701,6 @@ namespace {
                 // departure_date_time
                 if (transit_stop.has_departure_date_time()) {
                     json_transit_stop->emplace("departure_date_time", transit_stop.departure_date_time());
-                }
-
-                // is_parent_stop
-                if (transit_stop.has_is_parent_stop()) {
-                    json_transit_stop->emplace("is_parent_stop", transit_stop.is_parent_stop());
                 }
 
                 // assumed_schedule

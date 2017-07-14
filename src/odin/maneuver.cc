@@ -7,11 +7,12 @@
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
 
+#include "proto/tripcommon.pb.h"
 #include "proto/tripdirections.pb.h"
 #include "proto/directions_options.pb.h"
 #include "odin/maneuver.h"
+
 #include "odin/transitrouteinfo.h"
-#include "odin/transitstop.h"
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
@@ -68,7 +69,6 @@ Maneuver::Maneuver()
       bicycle_type_(TripPath_BicycleType_kRoad),
       transit_type_(TripPath_TransitType_kRail),
       transit_connection_(false),
-      transit_connection_stop_(TripPath_TransitStopInfo_Type_kStop, "", "", "", "", false, false, 0.0f, 0.0f),
       rail_(false),
       bus_(false),
       fork_(false),
@@ -606,14 +606,31 @@ void Maneuver::set_transit_connection(bool transit_connection) {
   transit_connection_ = transit_connection;
 }
 
-const TransitStop& Maneuver::transit_connection_stop() const {
-  return transit_connection_stop_;
+const TransitEgressInfo& Maneuver::transit_connection_egress_info() const {
+  return transit_connection_egress_info_;
 }
 
-void Maneuver::set_transit_connection_stop(
-    const TransitStop& transit_connection_stop) {
-  transit_connection_stop_ = transit_connection_stop;
-  LOG_TRACE("set_transit_connection_stop=" + transit_connection_stop_.ToParameterString());
+void Maneuver::set_transit_connection_egress_info(
+    const TransitEgressInfo& transit_connection_egress_info) {
+  transit_connection_egress_info_ = transit_connection_egress_info;
+}
+
+const TransitStationInfo& Maneuver::transit_connection_station_info() const {
+  return transit_connection_station_info_;
+}
+
+void Maneuver::set_transit_connection_station_info(
+    const TransitStationInfo& transit_connection_station_info) {
+  transit_connection_station_info_ = transit_connection_station_info;
+}
+
+const TransitPlatformInfo& Maneuver::transit_connection_platform_info() const {
+  return transit_connection_platform_info_;
+}
+
+void Maneuver::set_transit_connection_platform_info(
+    const TransitPlatformInfo& transit_connection_platform_info) {
+  transit_connection_platform_info_ = transit_connection_platform_info;
 }
 
 bool Maneuver::rail() const {
@@ -647,14 +664,14 @@ TransitRouteInfo* Maneuver::mutable_transit_info() {
 }
 
 std::string Maneuver::GetTransitArrivalTime() const {
-  return transit_info_.transit_stops.back().arrival_date_time;
+  return transit_info_.transit_stops.back().arrival_date_time();
 }
 
 std::string Maneuver::GetTransitDepartureTime() const {
-  return transit_info_.transit_stops.front().departure_date_time;
+  return transit_info_.transit_stops.front().departure_date_time();
 }
 
-const std::list<TransitStop>& Maneuver::GetTransitStops() const {
+const std::list<TransitPlatformInfo>& Maneuver::GetTransitStops() const {
   return transit_info_.transit_stops;
 }
 
@@ -664,9 +681,10 @@ size_t Maneuver::GetTransitStopCount() const {
           (transit_info_.transit_stops.size() - 1) : 0;
 }
 
-void Maneuver::InsertTransitStop(TransitStop&& transit_stop) {
-  transit_info_.transit_stops.push_front(std::move(transit_stop));
-  LOG_TRACE("InsertTransitStop=" + transit_info_.transit_stops.front().ToParameterString());
+void Maneuver::InsertTransitStop(const TransitPlatformInfo& transit_platform) {
+  transit_info_.transit_stops.push_front(transit_platform);
+  //TODO
+//  LOG_TRACE("InsertTransitPlatform=" + transit_info_.transit_platforms.front().ToParameterString());
 }
 
 const std::string& Maneuver::depart_instruction() const {
@@ -1032,7 +1050,7 @@ std::string Maneuver::ToParameterString() const {
   // Transit TODO
   // Transit connection flag and the associated stop
 //  transit_connection_;
-//  TransitStop transit_connection_stop_;
+//  TransitPlatformInfo transit_connection_stop_;
 
   // The transit info including list of stops
 //  TransitInfo transit_info_;

@@ -57,8 +57,9 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
       GraphId g_id(endnodetile->id().tileid(), endnodetile->id().level(), n_info->edge_index() + j);
 
       if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
-          !(de->trans_up() || de->trans_down() || de->IsTransitLine() ||
-              de->is_shortcut() || de->use() == Use::kTransitConnection)) {
+          !(de->IsTransition() || de->IsTransitLine() ||
+              de->is_shortcut() || de->use() == Use::kTransitConnection ||
+              de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
         // get the edge info offset
         auto current_offset = endnodetile->edgeinfo(de->edgeinfo_offset());
         if (end_wayid == current_offset.wayid()) {
@@ -115,7 +116,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
               endnodetile->directededge(n_info->edge_index() + k);
 
           // only look at transition edges.
-          if (de->edgeinfo_offset() == 0 && (de->trans_up() || de->trans_down())) {
+          if (de->edgeinfo_offset() == 0 && de->IsTransition()) {
 
             const GraphTile* temp_endnodetile = endnodetile;
 
@@ -139,8 +140,9 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId, GraphReader& reader, GraphId
 
               // only look at non transition edges.
               if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
-                  !(de->trans_up() || de->trans_down() || de->IsTransitLine() ||
-                      de->is_shortcut() || de->use() == Use::kTransitConnection)) {
+                  !(de->IsTransition() || de->IsTransitLine() ||
+                    de->is_shortcut() || de->use() == Use::kTransitConnection ||
+                    de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
                 auto current_offset = temp_endnodetile->edgeinfo(de->edgeinfo_offset());
 
                 if (end_wayid == current_offset.wayid()) {
@@ -262,8 +264,9 @@ void build(const std::string& complex_restriction_file,
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        if (directededge.trans_up() || directededge.trans_down() || directededge.IsTransitLine() ||
-            directededge.is_shortcut() || directededge.use() == Use::kTransitConnection)
+        if (directededge.IsTransition() || directededge.IsTransitLine() ||
+            directededge.is_shortcut() || directededge.use() == Use::kTransitConnection ||
+            directededge.use() == Use::kEgressConnection || directededge.use() == Use::kPlatformConnection)
           continue;
         auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
         //    |      |       |
