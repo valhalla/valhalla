@@ -799,7 +799,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
   const auto* start_edge = tile->directededge(0);
   for(const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount(); ++edge) {
     //dont bin these
-    if(edge->is_shortcut() || edge->trans_up() || edge->trans_down() || edge->use() == Use::kTransitConnection ||
+    if(edge->is_shortcut() || edge->IsTransition() || edge->use() == Use::kTransitConnection ||
        edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection)
       continue;
 

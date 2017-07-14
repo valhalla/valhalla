@@ -259,7 +259,7 @@ class PedestrianCost : public DynamicCost {
      // Throw back a lambda that checks the access for this type of costing
      auto access_mask = access_mask_;
      return [access_mask](const baldr::DirectedEdge* edge) {
-       return !(edge->trans_up() || edge->trans_down() || edge->is_shortcut() ||
+       return !(edge->IsTransition() || edge->is_shortcut() ||
            edge->use() >= Use::kRail ||
           !(edge->forwardaccess() & access_mask));
      };
