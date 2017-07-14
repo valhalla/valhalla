@@ -24,7 +24,7 @@
 #include <valhalla/midgard/aabb2.h>
 
 #include <memory>
-#include "signinfo.h"
+#include <valhalla/baldr/signinfo.h>
 
 namespace valhalla {
 namespace baldr {
