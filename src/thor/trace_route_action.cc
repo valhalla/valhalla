@@ -128,7 +128,7 @@ odin::TripPath thor_worker_t::route_match(const AttributesController& controller
     trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
                                              path_infos, correlated.front(),
                                              correlated.back(), std::list<PathLocation>{},
-                                             interrupt_callback);
+                                             interrupt);
   }
 
   return trip_path;
@@ -153,7 +153,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
     throw std::runtime_error(std::string(ex.what()));
   }
 
-  matcher->set_interrupt(interrupt_callback);
+  matcher->set_interrupt(interrupt);
   std::vector<meili::Measurement> sequence;
   for (const auto& coord : shape) {
     sequence.emplace_back(coord,
@@ -407,7 +407,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
     trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
                                              mode_costing, path_edges, origin,
                                              destination, std::list<PathLocation>{},
-                                             interrupt_callback, &route_discontinuities);
+                                             interrupt, &route_discontinuities);
   } else {
     throw;
   }

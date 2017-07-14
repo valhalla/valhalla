@@ -15,21 +15,66 @@ namespace valhalla {
 namespace baldr {
 
 /**
+ * Tile cache interface.
+ */
+class TileCache {
+ public:
+  /**
+  * Destructor.
+  */
+  virtual ~TileCache() = default;
+
+  /**
+   * Reserves enough cache to hold (max_cache_size / tile_size) items.
+   * @param tile_size appeoximate size of one tile
+   */
+  virtual void Reserve(size_t tile_size) = 0;
+
+  /**
+   * Checks if tile exists in the cache.
+   * @param graphid  the graphid of the tile
+   * @return true if tile exists in the cache
+   */
+  virtual bool Contains(const GraphId& graphid) const = 0;
+
+  /**
+   * Puts a copy of a tile of into the cache.
+   * @param graphid  the graphid of the tile
+   * @param tile the graph tile
+   * @param size size of the tile in memory
+   */
+  virtual const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) = 0;
+
+  /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  virtual const GraphTile* Get(const GraphId& graphid) const = 0;
+
+  /**
+   * Lets you know if the cache is too large.
+   * @return true if the cache is over committed with respect to the limit
+   */
+  virtual bool OverCommitted() const = 0;
+
+  /**
+   * Clears the cache.
+   */
+  virtual void Clear() = 0;
+};
+
+/**
  * Class that manages simple tile cache.
  * It is NOT thread-safe!
  */
-class TileCache {
+class SimpleTileCache : public TileCache {
  public:
   /**
   * Constructor.
   * @param max_size  maximum size of the cache
   */
-  TileCache(size_t max_size);
-
-  /**
-  * Destructor.
-  */
-  virtual ~TileCache() = default;
+  SimpleTileCache(size_t max_size);
 
   /**
    * Reserves enough cache to hold (max_cache_size / tile_size) items.
@@ -92,7 +137,7 @@ class SynchronizedTileCache : public TileCache {
   * @param max_size  maximum size of the cache
   * @param mutex reference to an external mutex
   */
-  SynchronizedTileCache(std::mutex& mutex, size_t max_size);
+  SynchronizedTileCache(TileCache& cache, std::mutex& mutex);
   /**
    * Reserves enough cache to hold (max_cache_size / tile_size) items.
    * @param tile_size appeoximate size of one tile
@@ -132,47 +177,9 @@ class SynchronizedTileCache : public TileCache {
    */
   void Clear() override;
 
- protected:
-  /**
-   * Puts a copy of a tile of into the cache without locking.
-   * @param graphid  the graphid of the tile
-   * @param tile the graph tile
-   * @param size size of the tile in memory
-   */
-  const GraphTile* PutNoLock(const GraphId& graphid, const GraphTile& tile, size_t size);
-
  private:
+  TileCache& cache_;
   std::mutex& mutex_ref_;
-};
-
-/**
- * Cache that fowards copies of tiles to other instances.
- * It is thread-safe.
- */
-class CopyForwardingTileCache final : public SynchronizedTileCache {
- public:
-  /**
-  * Constructor.
-  * @param max_size  maximum size of the cache
-  */
-  CopyForwardingTileCache(size_t max_size);
-
-  /**
-  * Destructor.
-  */
-  ~CopyForwardingTileCache();
-
-  /**
-   * Puts a copy of a tile of into all caches.
-   * @param graphid  the graphid of the tile
-   * @param tile the graph tile
-   * @param size size of the tile in memory
-   */
-  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) override;
-
- private:
-  static std::mutex mutex_;
-  static std::unordered_set<CopyForwardingTileCache*> members_;
 };
 
 /**

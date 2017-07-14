@@ -5,7 +5,6 @@
 #include <fstream>
 
 #include "baldr/admin.h"
-#include <boost/shared_array.hpp>
 #include <memory>
 
 using namespace std;

@@ -13,11 +13,11 @@ using namespace valhalla::baldr;
 
 namespace {
 
-class test_cache : public TileCache {
+class test_cache : public SimpleTileCache {
  public:
-  using TileCache::TileCache;
-  using TileCache::cache_size_;
-  using TileCache::max_cache_size_;
+  using SimpleTileCache::SimpleTileCache;
+  using SimpleTileCache::cache_size_;
+  using SimpleTileCache::max_cache_size_;
 };
 
 test_cache make_cache(size_t cache_size) {

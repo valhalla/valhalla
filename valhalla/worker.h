@@ -29,7 +29,9 @@ namespace valhalla {
 
   class service_worker_t {
    public:
-    virtual ~service_worker_t(){};
+    service_worker_t();
+
+    virtual ~service_worker_t();
 
 #ifdef HAVE_HTTP
     /**
@@ -40,13 +42,23 @@ namespace valhalla {
      * @param  interrupt     a function that may be called periodically and will throw when processing should be interrupted
      * @return result_t      the finished bit of work to be either send back to the client or forwarded on to the next pipeline stage
      */
-    virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const worker_t::interrupt_function_t& interrupt) = 0;
+    virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt) = 0;
 #endif
 
     /**
      * After forwarding the completed work on this is called to reset any internal state or reclaim any memory
      */
     virtual void cleanup() = 0;
+
+    /**
+     * A function which may or may not be called periodically and show throw if computation is supposed to be halted
+     * @param  interrupt    the function to be called which should throw
+     */
+    virtual void set_interrupt(const std::function<void ()>& interrupt) final;
+
+   protected:
+    const std::function<void ()>* interrupt;
+
   };
 }
 
