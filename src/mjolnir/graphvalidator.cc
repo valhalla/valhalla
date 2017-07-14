@@ -242,7 +242,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 
   // No matching opposing edge found - log error cases
   if (opp_index == absurd_index) {
-    if (edge.trans_up() || edge.trans_down()) {
+    if (edge.IsTransition()) {
       LOG_ERROR("No match found to a transition edge");
     }
     else if (edge.use() == Use::kTransitConnection ||
@@ -428,7 +428,7 @@ void validate(const boost::property_tree::ptree& pt,
           // node. Set the deadend flag and internal flag (if the opposing
           // edge is internal then make sure this edge is as well)
           std::string end_node_iso;
-          uint64_t wayid = (directededge.trans_down() || directededge.trans_up()) ?
+          uint64_t wayid = directededge.IsTransition() ?
                  0 : tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
           uint32_t opp_index = GetOpposingEdgeIndex(node, directededge,
                  wayid, tile, endnode_tile, problem_ways, dupcount,

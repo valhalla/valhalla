@@ -324,7 +324,7 @@ struct bin_handler_t {
       const auto* end_edge = start_edge + node->edge_count();
       for(const auto* edge = start_edge; edge < end_edge; ++edge) {
         //if this is an edge leaving this level then we should go do that level awhile
-        if(follow_transitions && (edge->trans_down() || edge->trans_up())) {
+        if(follow_transitions && edge->IsTransition()) {
           crawl(edge->endnode(), false);
           continue;
         }

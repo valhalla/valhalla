@@ -155,7 +155,7 @@ GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge,
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, ++edgeid) {
-    if (directededge->trans_down() || directededge->trans_up() ||
+    if (directededge->IsTransition() ||
         directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
         directededge->use() == Use::kPlatformConnection) {
@@ -397,7 +397,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
   for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transition edges and transit connections.
     const DirectedEdge* directededge = tile->directededge(edge_id);
-    if (directededge->trans_up() || directededge->trans_down() ||
+    if (directededge->IsTransition() ||
         directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
         directededge->use() == Use::kPlatformConnection) {
