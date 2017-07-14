@@ -170,6 +170,8 @@ namespace valhalla {
       default_radius = config.get<unsigned long>("loki.service_defaults.radius");
       max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
       max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
+      max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");
+      max_best_paths_shape = config.get<size_t>("service_limits.trace.max_best_paths_shape");
 
 
       // Register edge/node costing methods

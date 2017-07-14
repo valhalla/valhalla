@@ -60,6 +60,7 @@ namespace {
     http_request_t(GET, R"(/sources_to_targets?json={"sources":[{"lon":0}]})"),
     http_request_t(GET, R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}]})"),
     http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}]})"),
+    http_request_t(POST, "/trace_attributes", R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180},{"lat":37.8077410,"lon":-122.4198780},{"lat":37.8077360,"lon":-122.4199390},{"lat":37.8077390,"lon":-122.4199980},{"lat":37.8077450,"lon":-122.4200490}],"shape_match":"map_snap","best_paths":5,"costing":"pedestrian","directions_options":{"units":"miles"}})"),
   };
 
   const std::vector<std::pair<uint16_t,std::string> > responses {
@@ -69,8 +70,8 @@ namespace {
     {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
-    {404, R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/one_to_many' '\/many_to_one' '\/many_to_many' '\/sources_to_targets' '\/optimized_route' '\/isochrone' ","status_code":404,"status":"Not Found"})"},
-    {404, R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/one_to_many' '\/many_to_one' '\/many_to_many' '\/sources_to_targets' '\/optimized_route' '\/isochrone' ","status_code":404,"status":"Not Found"})"},
+    {404, R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/one_to_many' '\/many_to_one' '\/many_to_many' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' ","status_code":404,"status":"Not Found"})"},
+    {404, R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/one_to_many' '\/many_to_one' '\/many_to_many' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' ","status_code":404,"status":"Not Found"})"},
     {400, R"({"error_code":100,"error":"Failed to parse json request","status_code":400,"status":"Bad Request"})"},
     {400, R"({"error_code":100,"error":"Failed to parse json request","status_code":400,"status":"Bad Request"})"},
     {400, R"({"error_code":110,"error":"Insufficiently specified required parameter 'locations'","status_code":400,"status":"Bad Request"})"},
@@ -102,6 +103,7 @@ namespace {
     {400, R"({"error_code":131,"error":"Failed to parse source","status_code":400,"status":"Bad Request"})"},
     {400, R"({"error_code":132,"error":"Failed to parse target","status_code":400,"status":"Bad Request"})"},
     {400, R"({"error_code":157,"error":"Exceeded max avoid locations:0","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":158,"error":"Input trace option is out of bounds:(5). The best_paths limit is 4","status_code":400,"status":"Bad Request"})"},
   };
 
 
@@ -120,7 +122,7 @@ namespace {
     boost::property_tree::ptree config;
     std::stringstream json; json << R"({
       "mjolnir": { "tile_dir": "test/tiles" },
-      "loki": { "actions": [ "locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone" ],
+      "loki": { "actions": [ "locate", "route", "one_to_many", "many_to_one", "many_to_many", "sources_to_targets", "optimized_route", "isochrone", "trace_route", "trace_attributes" ],
                   "logging": { "long_request": 100.0 },
                   "service": { "proxy": "ipc:///tmp/test_loki_proxy" }, 
                 "service_defaults": { "minimum_reachability": 50, "radius": 0} },
@@ -133,7 +135,7 @@ namespace {
                         "max_matrix_distance": 200000.0, "max_matrix_locations": 50,
                         "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 },
         "isochrone": { "max_contours": 4, "max_time": 120, "max_distance": 25000, "max_locations": 1},
-        "trace": { "max_distance": 65000.0, "max_gps_accuracy": 100.0, "max_shape": 16000, "max_search_radius": 100 },
+        "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
         "max_avoid_locations": 0,
         "max_reachability": 100,
         "max_radius": 200

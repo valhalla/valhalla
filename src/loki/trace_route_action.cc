@@ -48,6 +48,21 @@ void check_distance(const std::vector<PointLL>& shape, float max_distance,
       "location_distance::" + std::to_string(crow_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 }
 
+void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
+
+  // Validate the best paths count is not larger than the configured best paths max
+  if (best_paths > max_best_paths)
+    throw valhalla_exception_t { 158, "(" + std::to_string(best_paths) + "). The best_paths limit is " + std::to_string(max_best_paths) };
+}
+
+void check_best_paths_shape(const std::vector<PointLL>& shape,
+    size_t max_best_paths_shape) {
+
+  // Validate shape is not larger than the configured best paths shape max
+  if (shape.size() > max_best_paths_shape)
+    throw valhalla_exception_t { 153, "(" + std::to_string(shape.size()) + "). The best paths shape limit is " + std::to_string(max_best_paths_shape) };
+}
+
 void check_gps_accuracy(const float input_gps_accuracy, const float max_gps_accuracy) {
   if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f)
     throw valhalla_exception_t { 158 };
@@ -87,6 +102,12 @@ namespace valhalla {
       // Validate shape count and distance (for now, just send max_factor for distance)
       check_shape(shape, max_shape);
       check_distance(shape, max_distance.find("trace")->second, max_factor);
+
+      // Validate best paths and best paths shape
+      unsigned int best_paths = rapidjson::GetValueByPointerWithDefault(request, "/best_paths", 1).GetUint();
+      check_best_paths(best_paths, max_best_paths);
+      check_best_paths_shape(shape, max_best_paths_shape);
+
       // Validate optional trace options
       auto input_gps_accuracy = GetOptionalFromRapidJson<float>(request, "/trace_options/gps_accuracy");
       auto input_search_radius = GetOptionalFromRapidJson<float>(request, "/trace_options/search_radius");

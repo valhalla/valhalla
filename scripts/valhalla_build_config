@@ -199,7 +199,9 @@ config = {
       'max_distance': 200000.0,
       'max_gps_accuracy': 100.0,
       'max_search_radius': 100,
-      'max_shape': 16000
+      'max_shape': 16000,
+      'max_best_paths': 4,
+      'max_best_paths_shape': 100
     },
     'max_avoid_locations': 50,
     'max_reachability': 100,
@@ -401,7 +403,9 @@ help_text = {
       'max_distance': 'Maximum input shape distance in meters',
       'max_gps_accuracy': 'Maximum input gps accuracy in meters',
       'max_search_radius': 'Maximum upper bounds of the search radius in meters',
-      'max_shape': 'Maximum number of input shape points'
+      'max_shape': 'Maximum number of input shape points',
+      'max_best_paths': 'Maximum number of best paths',
+      'max_best_paths_shape': 'Maximum number of input shape points when requesting multiple paths'
     },
     'max_avoid_locations': 'Maximum number of avoid locations to allow in request',
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',
