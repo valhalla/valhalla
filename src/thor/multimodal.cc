@@ -387,7 +387,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
             // This should favor transit over pedestrian
             // TODO: weight initial waiting time instead, to prefer transit
             // options that eventually arrives earlier even if slower because of earlier departure
-            newcost.cost -= departure - localtime;
+            newcost.cost -= departure->departure_time() - localtime;
           }
           mode_ = TravelMode::kPublicTransit;
           has_transit = true;
