@@ -50,9 +50,13 @@ void check_distance(const std::vector<PointLL>& shape, float max_distance,
 
 void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
 
+  // Validate the best paths count is not less than 1
+  if (best_paths < 1)
+    throw valhalla_exception_t { 158, "(" + std::to_string(best_paths) + "). The best_paths lower limit is 1" };
+
   // Validate the best paths count is not larger than the configured best paths max
   if (best_paths > max_best_paths)
-    throw valhalla_exception_t { 158, "(" + std::to_string(best_paths) + "). The best_paths limit is " + std::to_string(max_best_paths) };
+    throw valhalla_exception_t { 158, "(" + std::to_string(best_paths) + "). The best_paths upper limit is " + std::to_string(max_best_paths) };
 }
 
 void check_best_paths_shape(const std::vector<PointLL>& shape,
