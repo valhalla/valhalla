@@ -139,7 +139,8 @@ odin::TripPath thor_worker_t::route_match(const AttributesController& controller
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
 std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_match(
-    const AttributesController& controller, bool trace_attributes_action) {
+    const AttributesController& controller, bool trace_attributes_action,
+    uint32_t best_paths) {
   odin::TripPath trip_path;
   std::vector<thor::MatchResult> match_results;
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
@@ -164,7 +165,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
   // Create the vector of matched path results
   std::vector<meili::MatchResult> results;
   if (sequence.size() > 0) {
-    results = (matcher->OfflineMatch(sequence));
+    results = (matcher->OfflineMatch(sequence, best_paths));
   }
 
 

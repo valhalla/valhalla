@@ -315,8 +315,8 @@ MapMatcher::~MapMatcher() {}
 
 
 std::vector<MatchResult>
-MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
-{
+MapMatcher::OfflineMatch(
+    const std::vector<Measurement>& measurements, uint32_t k) {
   mapmatching_.Clear();
 
   const auto begin = measurements.begin(),
