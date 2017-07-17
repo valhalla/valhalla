@@ -195,6 +195,7 @@ namespace {
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
       //get the edges along that route shape
+      actor.cleanup();
       auto walked = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}"));
       std::vector<uint64_t> walked_edges;
