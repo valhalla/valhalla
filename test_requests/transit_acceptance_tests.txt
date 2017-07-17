@@ -130,7 +130,6 @@ s-c29p8bsc63-eastboundnrailwayathorne,s-c29pdh2sej-northbounddraperatdouglas,r-c
 s-c29r2xr7bb-southboundvedderatmanuel,s-c29r2eqkgu-southboundvedderatwren,r-c29-1
 s-c0z4ew5pf0-southboundcliffeat4thst<111270,s-c0z4t695xp-eastboundcomoxatnordin,r-c0z4s-34
 s-c342q0uv4p-eastboundvictoriaat10thave,s-c3484w1h9y-eastbound7590blockdallas,r-c348-17
-s-c342tr6hgq-northboundwestsydeatmorven,s-c342ve4s6v-northboundwestsydeatsunvalley,r-c342t-14
 s-c2g5cbz01q-westboundharveyatcooper,s-c2fgmz08se-westbankexchange<140004,r-c2g5-97
 s-c2g5bcjb2g-eastboundhwy97atrichter,s-c2g5f3tff4-eastboundhwy97natbanks,r-c2g5-97
 s-c2g5f3j1xd-northbound1900blockbaron,s-c2g5g1zrfe-eastboundhwy33watroxby,r-c2g5-8

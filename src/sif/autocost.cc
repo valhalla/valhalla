@@ -210,7 +210,7 @@ class AutoCost : public DynamicCost {
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->trans_up() || edge->trans_down() || edge->is_shortcut() ||
+      if (edge->IsTransition() || edge->is_shortcut() ||
          !(edge->forwardaccess() & kAutoAccess))
         return 0.0f;
       else {
@@ -695,7 +695,7 @@ class BusCost : public AutoCost {
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->trans_up() || edge->trans_down() ||
+      if (edge->IsTransition() ||
          !(edge->forwardaccess() & kBusAccess))
         return 0.0f;
       else {
@@ -866,7 +866,7 @@ class HOVCost : public AutoCost {
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->trans_up() || edge->trans_down() ||
+      if (edge->IsTransition() ||
          !(edge->forwardaccess() & kHOVAccess))
         return 0.0f;
       else {

@@ -48,14 +48,14 @@ OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
 
 void Parse() {
   boost::property_tree::ptree conf;
-  conf.add_child("mjolnir", boost::property_tree::ptree{}).put("tile_dir", "test/data/parser_tiles");
+  conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"}, ways_file,
                                        way_nodes_file, access_file, restriction_file);
 }
 
 void TestBike() {
   boost::property_tree::ptree conf;
-  conf.add_child("mjolnir", boost::property_tree::ptree{}).put("tile_dir", "test/data/parser_tiles");
+  conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
@@ -128,7 +128,7 @@ void TestBike() {
 
 void TestBus() {
   boost::property_tree::ptree conf;
-  conf.add_child("mjolnir", boost::property_tree::ptree{}).put("tile_dir", "test/data/parser_tiles");
+  conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 

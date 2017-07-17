@@ -160,6 +160,7 @@ test/astar
 test/trip_path_controller
 test/data/bin_tiles/bin/*
 test/data/amsterdam_tiles
+test/data/mapmatch_utrecht_tiles
 test/search
 test/search_tiles/
 test/node_search

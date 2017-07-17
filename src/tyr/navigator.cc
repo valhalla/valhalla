@@ -36,9 +36,13 @@ Navigator::Navigator() {
 NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
   NavigationStatus nav_status;
 
-  // TODO: place in try catch block and return
-  //       NavigationStatus_RouteState_kInvalid if there is an issue
-  jsonToProtoRoute (route_json_str, route_);
+  try {
+    jsonToProtoRoute (route_json_str, route_);
+  } catch (const std::runtime_error& e) {
+    nav_status.set_route_state(NavigationStatus_RouteState_kInvalid);
+    route_state_ = NavigationStatus_RouteState_kInvalid;
+    return nav_status;
+  }
 
   leg_index_ = 0;
   maneuver_index_ = 0;

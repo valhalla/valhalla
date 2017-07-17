@@ -554,7 +554,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     bool has_transit = pred.has_transit();
     GraphId prior_stop = pred.prior_stopid();
     uint32_t operator_id = pred.transit_operator();
-    if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
+    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
       // Get the transfer penalty when changing stations
       if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
         transfer_cost = tc->TransferCost();
@@ -685,12 +685,12 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
             operator_id = GetOperatorId(tile, departure->routeid(), operators);
 
             // Add transfer penalty and operator change penalty
-            newcost.cost += transfer_cost.cost;
             if (pred.transit_operator() > 0 &&
                 pred.transit_operator() != operator_id) {
               // TODO - create a configurable operator change penalty
               newcost.cost += 300;
             }
+            else newcost.cost += transfer_cost.cost;
           }
 
           // Change mode and costing to transit. Add edge cost.
@@ -726,12 +726,12 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
         if (mode_ == TravelMode::kPedestrian) {
           walking_distance += directededge->length();
 
-          // Prevent going from one transit connection directly to another
+          // Prevent going from one egress connection directly to another
           // at a transit stop - this is like entering a station and exiting
           // without getting on transit
-          if (nodeinfo->type() == NodeType::kMultiUseTransitStop &&
-              pred.use()   == Use::kTransitConnection &&
-              directededge->use()  == Use::kTransitConnection)
+          if (nodeinfo->type() == NodeType::kTransitEgress &&
+              pred.use()   == Use::kEgressConnection &&
+              directededge->use()  == Use::kEgressConnection)
                 continue;
         }
       }

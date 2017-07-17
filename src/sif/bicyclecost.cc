@@ -411,7 +411,7 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     uint32_t b = static_cast<uint32_t>(type_);
     return [b](const baldr::DirectedEdge* edge) {
-      if ( edge->trans_up() || edge->trans_down() || edge->is_shortcut() ||
+      if ( edge->IsTransition() || edge->is_shortcut() ||
           !(edge->forwardaccess() & kBicycleAccess) ||
            edge->use() == Use::kSteps ||
            edge->surface() > kWorstAllowedSurface[b]) {
@@ -604,7 +604,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
 
   // Disallow transit connections
   // (except when set for multi-modal routes (FUTURE)
-  if (edge->use() == Use::kTransitConnection /* && !allow_transit_connections_*/) {
+  if (edge->use() == Use::kTransitConnection || edge->use() == Use::kEgressConnection ||
+      edge->use() == Use::kPlatformConnection /* && !allow_transit_connections_*/) {
     return false;
   }
 
@@ -625,6 +626,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Do not allow transit connection edges.
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
         opp_edge->is_shortcut() || opp_edge->use() == Use::kTransitConnection ||
+        opp_edge->use() == Use::kEgressConnection || opp_edge->use() == Use::kPlatformConnection ||
        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
        IsUserAvoidEdge(opp_edgeid)) {

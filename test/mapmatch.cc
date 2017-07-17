@@ -14,6 +14,7 @@
 #include "baldr/json.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/polyline2.h"
+#include "mjolnir/util.h"
 
 using namespace valhalla;
 
@@ -32,26 +33,9 @@ namespace {
     return pt;
   }
 
-  std::string json_escape(const std::string& unescaped) {
-    std::stringstream ss;
-    baldr::json::OstreamVisitor v(ss);
-    v(unescaped);
-    std::string escaped = ss.str().substr(1);
-    escaped.pop_back();
-    return escaped;
-  }
-
-  template <class container_t>
-  std::string print(const container_t& container) {
-    std::string output;
-    for(const auto& e : container)
-      output += std::to_string(e) + ",";
-    return output;
-  }
-
   //fake config
   const auto conf = json_to_pt(R"({
-    "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
+    "mjolnir":{"tile_dir":"test/data/mapmatch_utrecht_tiles", "concurrency": 1},
     "loki":{
       "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
@@ -81,6 +65,23 @@ namespace {
     }
   })");
 
+  std::string json_escape(const std::string& unescaped) {
+    std::stringstream ss;
+    baldr::json::OstreamVisitor v(ss);
+    v(unescaped);
+    std::string escaped = ss.str().substr(1);
+    escaped.pop_back();
+    return escaped;
+  }
+
+  template <class container_t>
+  std::string print(const container_t& container) {
+    std::string output;
+    for(const auto& e : container)
+      output += std::to_string(e) + ",";
+    return output;
+  }
+
   template <typename T>
   struct ring_queue_t {
     ring_queue_t(size_t limit):limit(limit), i(0) {
@@ -106,10 +107,6 @@ namespace {
     iterator end() { return v.end(); }
     const_iterator end() const { return v.end(); }
   };
-
-  template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
-  }
 
   std::vector<midgard::PointLL> resample_at_1hz(const boost::property_tree::ptree& edges, const std::vector<midgard::PointLL>& shape) {
     std::vector<midgard::PointLL> resampled;
@@ -183,7 +180,7 @@ namespace {
 
   //TODO: add a bunch
   std::vector<std::string> test_cases {
-    R"("locations":[{"lat":40.54660,"lon":-76.38277},{"lat":40.55070,"lon":-76.38616}])"
+    R"("locations":[{"lat":52.106716,"lon":5.123384},{"lat":52.099945,"lon":5.106733}])"
   };
 
   void test_matcher() {
@@ -201,7 +198,7 @@ namespace {
       for(const auto& edge : walked.get_child("edges"))
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
       //simulate gps from the route shape
-      auto simulation = simulate_gps(walked.get_child("edges"), shape, 4.f, 200.f);
+      auto simulation = simulate_gps(walked.get_child("edges"), shape, 10.f, 200.f);
       //std::cout << print(simulation) << std::endl;
       auto encoded_simulation = midgard::encode(simulation);
       //get a trace-attributes from the simulated gps
@@ -217,10 +214,19 @@ namespace {
     }
   }
 
+
+  void make_tiles() {
+    //make tiles for utrecht
+    mjolnir::build_tile_set(conf, {"test/data/utrecht_netherlands.osm.pbf"}, "mapmatch_test_");
+  }
+
 }
 
-int main() {
+int main(int argc, char* argv[]) {
   test::suite suite("map matcher");
+
+  if(argc < 2)
+    suite.test(TEST_CASE(make_tiles));
 
   suite.test(TEST_CASE(test_matcher));
 

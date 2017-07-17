@@ -368,14 +368,14 @@ class NarrativeBuilder {
    * stop count and language rules.
    *
    * @param stop_count Specified stop count of transit line.
-   * @param transit_stop_count_labels Map of stop count labels.
+   * @param transit_platform_count_labels Map of stop count labels.
    *
-   * @return the transit stop count label based on the value of the specified
+   * @return the transit platform count label based on the value of the specified
    * stop count and language rules.
    */
-  std::string FormTransitStopCountLabel(
+  std::string FormTransitPlatformCountLabel(
       size_t stop_count,
-      const std::unordered_map<std::string, std::string>& transit_stop_count_labels);
+      const std::unordered_map<std::string, std::string>& transit_platform_count_labels);
 
   /**
    * Returns the plural category based on the value of the specified

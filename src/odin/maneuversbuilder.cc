@@ -284,7 +284,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // if the transit connection stop is a simple stop (not a station)
       if ((curr_man->type() == TripDirections_Maneuver_Type_kTransitConnectionStart)
           && next_man->IsTransit()
-          && curr_man->transit_connection_stop().type == TripDirections_TransitStop_Type_kStop) {
+          && curr_man->transit_connection_platform_info().type() == TransitPlatformInfo_Type_kStop) {
         LOG_TRACE("+++ Combine: Collapse the TransitConnectionStart Maneuver +++");
         curr_man = CollapseTransitConnectionStartManeuver(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
@@ -294,7 +294,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // if the transit connection stop is a simple stop (not a station)
       else if ((next_man->type() == TripDirections_Maneuver_Type_kTransitConnectionDestination)
           && curr_man->IsTransit()
-          && next_man->transit_connection_stop().type == TripDirections_TransitStop_Type_kStop) {
+          && next_man->transit_connection_platform_info().type() == TransitPlatformInfo_Type_kStop) {
         LOG_TRACE("+++ Combine: Collapse the TransitConnectionDestination Maneuver +++");
         next_man = CollapseTransitConnectionDestinationManeuver(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
@@ -876,24 +876,18 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Transit connection
-  if (prev_edge->IsTransitConnectionUse()) {
+  if (prev_edge->IsTransitConnection()) {
     maneuver.set_transit_connection(true);
-    // If current edge is transit then mark maneuver as transit connection start
-    if (curr_edge
+
+    // If previous edge is transit connection platform
+    // and current edge is transit then mark maneuver as transit connection start
+    if (prev_edge->IsPlatformConnectionUse()
+        && curr_edge
         && (curr_edge->travel_mode() == TripPath_TravelMode_kTransit)) {
       maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionStart);
       LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_START");
       auto* node = trip_path_->GetEnhancedNode(node_index);
-      maneuver.set_transit_connection_stop(
-          TransitStop(node->transit_stop_info().type(),
-                      node->transit_stop_info().onestop_id(),
-                      node->transit_stop_info().name(),
-                      node->transit_stop_info().arrival_date_time(),
-                      node->transit_stop_info().departure_date_time(),
-                      node->transit_stop_info().is_parent_stop(),
-                      node->transit_stop_info().assumed_schedule(),
-                      node->transit_stop_info().ll().lat(),
-                      node->transit_stop_info().ll().lng()));
+      maneuver.set_transit_connection_platform_info(node->transit_platform_info());
     }
     // else mark it as transit connection destination
     else {
@@ -992,17 +986,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // Insert transit stop into the transit maneuver
   if (prev_edge->travel_mode() == TripPath_TravelMode_kTransit) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
-    maneuver.InsertTransitStop(
-        std::move(
-            TransitStop(node->transit_stop_info().type(),
-                        node->transit_stop_info().onestop_id(),
-                        node->transit_stop_info().name(),
-                        node->transit_stop_info().arrival_date_time(),
-                        node->transit_stop_info().departure_date_time(),
-                        node->transit_stop_info().is_parent_stop(),
-                        node->transit_stop_info().assumed_schedule(),
-                        node->transit_stop_info().ll().lat(),
-                        node->transit_stop_info().ll().lng())));
+    maneuver.InsertTransitStop(node->transit_platform_info());
   }
 
 }
@@ -1073,32 +1057,14 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       && prev_edge
       && (prev_edge->travel_mode() == TripPath_TravelMode_kTransit)) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
-    maneuver.set_transit_connection_stop(
-        TransitStop(node->transit_stop_info().type(),
-                    node->transit_stop_info().onestop_id(),
-                    node->transit_stop_info().name(),
-                    node->transit_stop_info().arrival_date_time(),
-                    node->transit_stop_info().departure_date_time(),
-                    node->transit_stop_info().is_parent_stop(),
-                    node->transit_stop_info().assumed_schedule(),
-                    node->transit_stop_info().ll().lat(),
-                    node->transit_stop_info().ll().lng()));
+    maneuver.set_transit_connection_platform_info(node->transit_platform_info());
+    LOG_TRACE("TripDirections_Maneuver_Type_kTransitConnectionDestination set_transit_connection_platform_info");
   }
 
   // Insert first transit stop
   if (maneuver.travel_mode() == TripPath_TravelMode_kTransit) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
-    maneuver.InsertTransitStop(
-        std::move(
-            TransitStop(node->transit_stop_info().type(),
-                        node->transit_stop_info().onestop_id(),
-                        node->transit_stop_info().name(),
-                        node->transit_stop_info().arrival_date_time(),
-                        node->transit_stop_info().departure_date_time(),
-                        node->transit_stop_info().is_parent_stop(),
-                        node->transit_stop_info().assumed_schedule(),
-                        node->transit_stop_info().ll().lat(),
-                        node->transit_stop_info().ll().lng())));
+    maneuver.InsertTransitStop(node->transit_platform_info());
   }
 
   // Set the begin intersecting edge name consistency
@@ -1490,12 +1456,32 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit connection
-  if (maneuver.transit_connection() && prev_edge->IsTransitConnectionUse()
-      && !(maneuver.transit_connection_stop().name.empty())
-      && (maneuver.transit_connection_stop().name
-          == prev_node->transit_stop_info().name())) {
-    return true;
-  } else if (maneuver.transit_connection() || prev_edge->IsTransitConnectionUse()) {
+  // If maneuver and prev edge are transit connections
+  if (maneuver.transit_connection() && prev_edge->IsTransitConnection()) {
+
+    // Logic for a transit entrance in reverse
+    if (prev_edge->IsEgressConnectionUse() && curr_edge->IsPlatformConnectionUse()) {
+      return true;
+    } else if (prev_edge->IsTransitConnectionUse() && curr_edge->IsEgressConnectionUse()) {
+      return true;
+    }
+
+    // Logic for a transit exit in reverse
+    if (prev_edge->IsEgressConnectionUse() && curr_edge->IsTransitConnectionUse()) {
+      return true;
+    } else if (prev_edge->IsPlatformConnectionUse() && curr_edge->IsEgressConnectionUse()) {
+      return true;
+    }
+
+    // Combine for station transfer
+    if (prev_edge->IsPlatformConnectionUse() && curr_edge->IsPlatformConnectionUse()) {
+      return true;
+    }
+
+    // If the expected order of transit connection types was not found
+    // then do not combine
+    return false;
+  } else if (maneuver.transit_connection() || prev_edge->IsTransitConnection()) {
     return false;
   }
 

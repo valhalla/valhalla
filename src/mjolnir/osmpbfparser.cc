@@ -285,8 +285,4 @@ void Parser::parse(std::ifstream& file, const Interest interest, Callback& callb
   delete [] unpack_buffer;
 }
 
-void Parser::free() {
-  google::protobuf::ShutdownProtobufLibrary();
-}
-
 }

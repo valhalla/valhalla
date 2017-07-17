@@ -198,16 +198,10 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
       pt.get<std::string>("import_level") : "";
 
-  auto active_feed_version_import_level  = pt.get_optional<std::string>("import_level") ? "&active_feed_version_import_level=" +
-      pt.get<std::string>("import_level") : "";
-
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().rbegin()->second;
   curler_t curler;
-
-  auto request = url("/api/v1/feeds.geojson?per_page=false", pt);
-  request += active_feed_version_import_level;
-  auto feeds = curler(request, "features");
+  auto feeds = curler(url("/api/v1/feeds.geojson?per_page=false", pt), "features");
   for(const auto& feature : feeds.get_child("features")) {
 
     auto onestop_feed = feature.second.get_optional<std::string>("properties.onestop_id");
@@ -254,11 +248,11 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
     auto max_y = std::min(bbox.maxy(), PointLL(bbox.minx(), bbox.maxy()).MidPoint(bbox.maxpt()).second);
     bbox = AABB2<PointLL>(bbox.minx(), min_y, bbox.maxx(), max_y);
     //stop count
-    auto request = url((boost::format("/api/v1/stops?total=true&per_page=0&bbox=%1%,%2%,%3%,%4%")
+    auto request = url((boost::format("/api/v1/stop_stations?total=true&per_page=0&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     request += import_level;
 
-    auto stops_total = curler(request, "meta.total").get<size_t>("meta.total");
+    auto stations_total = curler(request, "meta.total").get<size_t>("meta.total");
     /*
     //route count
     request = url((boost::format("/api/v1/routes?total=true&per_page=0&bbox=%1%,%2%,%3%,%4%")
@@ -270,9 +264,9 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
     auto pairs_total = curler(request, "meta.total").get<size_t>("meta.total");
     */
     //we have anything we want it
-    if(stops_total > 0/* || routes_total > 0|| pairs_total > 0*/) {
-      prioritized.push(weighted_tile_t{tile, stops_total + 10/* + routes_total * 1000 + pairs_total*/}); //TODO: factor in stop pairs as well
-      LOG_INFO(GraphTile::FileSuffix(tile) + " should have " + std::to_string(stops_total) +  " stops "/* +
+    if(stations_total > 0/* || routes_total > 0|| pairs_total > 0*/) {
+      prioritized.push(weighted_tile_t{tile, stations_total + 10/* + routes_total * 1000 + pairs_total*/}); //TODO: factor in stop pairs as well
+      LOG_INFO(GraphTile::FileSuffix(tile) + " should have " + std::to_string(stations_total) +  " stations "/* +
           std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs"*/);
     }
   }
@@ -287,33 +281,127 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
     set(value); \
 }
 
-void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
-    const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter) {
-  for(const auto& stop_pt : response.get_child("stops")) {
-    const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
+void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>& nodes,
+                       std::unordered_map<std::string, uint64_t>& platforms,
+                       const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter) {
+
+  for(const auto& station_pt : response.get_child("stop_stations")) {
+
+    const auto& ll_pt = station_pt.second.get_child("geometry.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
     auto lat = ll_pt.back().second.get_value<float>();
-    if(!filter.Contains({lon, lat}))
+    std::string onestop_id = station_pt.second.get<std::string>("onestop_id");
+
+    if(!filter.Contains({lon, lat}) || station_pt.second.get_child("stop_egresses").size() == 0 ||
+        station_pt.second.get_child("stop_platforms").size() == 0 ||
+        onestop_id.find('>') != std::string::npos || onestop_id.find('<') != std::string::npos)
       continue;
-    auto* stop = tile.add_stops();
-    stop->set_lon(lon);
-    stop->set_lat(lat);
-    set_no_null(std::string, stop_pt.second, "onestop_id", "null", stop->set_onestop_id);
-    set_no_null(std::string, stop_pt.second, "name", "null", stop->set_name);
-    stop->set_wheelchair_boarding(stop_pt.second.get<bool>("wheelchair_boarding", true));
-    set_no_null(uint64_t, stop_pt.second, "tags.osm_way_id", 0, stop->set_osm_way_id);
-    GraphId stop_id = tile_id;
-    stop_id.fields.id = stops.size();
-    stop->set_graphid(stop_id);
 
-    auto tz = stop_pt.second.get<std::string>("timezone", "null");
+    // add egresses first.
+    GraphId prev_type_graphid;
+    for(const auto& egress_pt : station_pt.second.get_child("stop_egresses")) {
+      const auto& ll_pt = egress_pt.second.get_child("geometry.coordinates");
+      auto lon = ll_pt.front().second.get_value<float>();
+      auto lat = ll_pt.back().second.get_value<float>();
+      auto* node = tile.add_nodes();
+
+      node->set_lon(lon);
+      node->set_lat(lat);
+      set_no_null(std::string, egress_pt.second, "onestop_id", "null", node->set_onestop_id);
+      node->set_type(static_cast<uint32_t>(NodeType::kTransitEgress));
+      set_no_null(std::string, egress_pt.second, "name", "null", node->set_name);
+      node->set_wheelchair_boarding(egress_pt.second.get<bool>("wheelchair_boarding", true));
+      set_no_null(uint64_t, egress_pt.second, "osm_way_id", 0, node->set_osm_way_id);
+      node->set_generated(egress_pt.second.get<bool>("generated", true));
+
+      auto traversability = egress_pt.second.get<std::string>("directionality", "null");
+      node->set_traversability(static_cast<uint32_t>(Traversability::kBoth));
+
+      //null (both; can enter and exit the egress)
+      //enter (can enter the egress from street)
+      //exit (can exit egress from street)
+      if (traversability == "enter")
+        node->set_traversability(static_cast<uint32_t>(Traversability::kForward));
+      else if (traversability == "exit")
+        node->set_traversability(static_cast<uint32_t>(Traversability::kBackward));
+
+      GraphId egress_id = tile_id;
+      egress_id.fields.id = nodes.size();
+      node->set_graphid(egress_id);
+
+      // we want to set the previous id to the first egress in the
+      // list so that when we write to the valhalla tile we know
+      // where to start.
+      if (!prev_type_graphid.Is_Valid())
+        prev_type_graphid = egress_id;
+
+      auto tz = egress_pt.second.get<std::string>("timezone", "null");
+      if (tz != "null")
+        node->set_timezone(tz);
+
+      nodes.emplace(node->onestop_id(), egress_id);
+      if(nodes.size() == kMaxGraphId) {
+        LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest");
+        return;
+      }
+    }
+
+    auto* node = tile.add_nodes();
+    // stations next.
+    node->set_lon(lon);
+    node->set_lat(lat);
+    set_no_null(std::string, station_pt.second, "onestop_id", "null", node->set_onestop_id);
+    node->set_type(static_cast<uint32_t>(NodeType::kTransitStation));
+    set_no_null(std::string, station_pt.second, "name", "null", node->set_name);
+    node->set_wheelchair_boarding(station_pt.second.get<bool>("wheelchair_boarding", true));
+    GraphId station_id = tile_id;
+    station_id.fields.id = nodes.size();
+    node->set_graphid(station_id);
+
+    auto tz = station_pt.second.get<std::string>("timezone", "null");
     if (tz != "null")
-      stop->set_timezone(tz);
+      node->set_timezone(tz);
 
-    stops.emplace(stop->onestop_id(), stop_id);
-    if(stops.size() == kMaxGraphId) {
-      LOG_ERROR("Hit the maximum number of stops allowed and skipping the rest");
-      break;
+    node->set_prev_type_graphid(prev_type_graphid);
+    nodes.emplace(node->onestop_id(), station_id);
+    if(nodes.size() == kMaxGraphId) {
+      LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest");
+      return;
+    }
+
+    // finally add the platforms
+    for(const auto& platforms_pt : station_pt.second.get_child("stop_platforms")) {
+      const auto& ll_pt = platforms_pt.second.get_child("geometry.coordinates");
+      auto lon = ll_pt.front().second.get_value<float>();
+      auto lat = ll_pt.back().second.get_value<float>();
+      auto* node = tile.add_nodes();
+
+      node->set_lon(lon);
+      node->set_lat(lat);
+      set_no_null(std::string, platforms_pt.second, "onestop_id", "null", node->set_onestop_id);
+      node->set_type(static_cast<uint32_t>(NodeType::kMultiUseTransitPlatform));
+      set_no_null(std::string, platforms_pt.second, "name", "null", node->set_name);
+      node->set_wheelchair_boarding(platforms_pt.second.get<bool>("wheelchair_boarding", true));
+      GraphId platform_id = tile_id;
+      platform_id.fields.id = nodes.size();
+      node->set_graphid(platform_id);
+
+      auto tz = platforms_pt.second.get<std::string>("timezone", "null");
+      if (tz != "null")
+        node->set_timezone(tz);
+
+      node->set_prev_type_graphid(station_id);
+      std::string onestop = node->onestop_id();
+      if (onestop.back() == '<') {
+        onestop.pop_back();
+      }
+
+      nodes.emplace(node->onestop_id(), platform_id);
+      platforms.emplace(onestop, platform_id);
+      if(nodes.size() == kMaxGraphId) {
+        LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest");
+        return;
+      }
     }
   }
 }
@@ -416,16 +504,26 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
     auto* pair = tile.add_stop_pairs();
 
     //origin
-    pair->set_origin_onestop_id(pair_pt.second.get<std::string>("origin_onestop_id"));
-    auto origin = stops.find(pair->origin_onestop_id());
+    auto origin_id = pair_pt.second.get<std::string>("origin_onestop_id");
+
+    if (origin_id.find("<") == std::string::npos)
+      pair->set_origin_onestop_id(origin_id + "<" );
+    else pair->set_origin_onestop_id(origin_id);
+
+    auto origin = stops.find(origin_id);
     if(origin != stops.cend())
       pair->set_origin_graphid(origin->second);
     else
       dangles = true;
 
     //destination
-    pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
-    auto destination = stops.find(pair->destination_onestop_id());
+    auto destination_id = pair_pt.second.get<std::string>("destination_onestop_id");
+
+    if (destination_id.find("<") == std::string::npos)
+      pair->set_destination_onestop_id(destination_id + "<" );
+    else pair->set_destination_onestop_id(destination_id);
+
+    auto destination = stops.find(destination_id);
     if(destination != stops.cend())
       pair->set_destination_graphid(destination->second);
     else
@@ -587,8 +685,8 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
   if(!tile.SerializeToOstream(&stream))
     LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " + std::to_string(tile.ByteSize()));
 
-  if (tile.routes_size() && tile.stops_size() && tile.stop_pairs_size() && tile.shapes_size()) {
-    LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
+  if (tile.routes_size() && tile.nodes_size() && tile.stop_pairs_size() && tile.shapes_size()) {
+    LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.nodes_size()) + " nodes " +
              std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.shapes_size()) + " shapes " +
              std::to_string(tile.stop_pairs_size()) + " stop pairs");
   } else {
@@ -635,23 +733,25 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::string prefix = transit_tile.string();
     LOG_INFO("Fetching " + transit_tile.string());
 
-    //pull out all the STOPS (you see what we did there?)
-    std::unordered_map<std::string, uint64_t> stops;
-    boost::optional<std::string> request = url((boost::format("/api/v1/stops?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+    // all the nodes...stations, platforms, and egresses
+    std::unordered_map<std::string, uint64_t> nodes;
+    // just the platforms
+    std::unordered_map<std::string, uint64_t> platforms;
+    boost::optional<std::string> request = url((boost::format("/api/v1/stop_stations?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     request = *request + import_level;
 
     do {
       //grab some stuff
-      response = curler(*request, "stops");
+      response = curler(*request, "stop_stations");
       //copy stops in, keeping map of stopid to graphid
-      get_stops(tile, stops, current, response, filter);
+      get_stop_stations(tile, nodes, platforms, current, response, filter);
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
 
     } while(request && (request = *request + api_key));
     //um yeah.. we need these
-    if(stops.size() == 0) {
+    if(nodes.size() == 0) {
       LOG_WARN(transit_tile.string() + " had no stops and will not be stored");
       continue;
     }
@@ -715,15 +815,16 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
-    for(const auto& stop : stops) {
+    for(const auto& platform : platforms) {
+
       request = url((boost::format("/api/v1/schedule_stop_pairs?active=true&total=false&per_page=%1%&origin_onestop_id=%2%&service_from_date=%3%-%4%-%5%")
-        % pt.get<std::string>("per_page") % url_encode(stop.first) % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
+        % pt.get<std::string>("per_page") % url_encode(platform.first) % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
       request = *request + import_level;
       do {
         //grab some stuff
         response = curler(*request, "schedule_stop_pairs");
         //copy pairs in, noting if any dont have stops
-        dangles = get_stop_pairs(tile, uniques, shapes, response, stops, routes) || dangles;
+        dangles = get_stop_pairs(tile, uniques, shapes, response, platforms, routes) || dangles;
         //if stop pairs is large save to a path with an incremented extension
         if (tile.stop_pairs_size() >= 500000) {
           LOG_INFO("Writing " + transit_tile.string());
@@ -858,10 +959,10 @@ void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
         if(neighbor_id != current) {
           auto neighbor_file_name = tile_name(neighbor_id);
           auto neighbor = read_pbf(neighbor_file_name, lock);
-          for(const auto& stop : neighbor.stops()) {
-            auto stop_itr = needed.find(stop.onestop_id());
-            if(stop_itr != needed.cend()) {
-              stop_itr->second.value = stop.graphid();
+          for(const auto& node : neighbor.nodes()) {
+            auto platform_itr = needed.find(node.onestop_id());
+            if(platform_itr != needed.cend()) {
+              platform_itr->second.value = node.graphid();
               ++found;
             }
           }
@@ -964,10 +1065,10 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(
         }
 
         if (spp.stop_pairs_size() == 0) {
-          if (transit.stops_size() > 0) {
+          if (transit.nodes_size() > 0) {
             LOG_ERROR("Tile " + fname +
                       " has 0 schedule stop pairs but has " +
-                      std::to_string(transit.stops_size()) + " stops");
+                      std::to_string(transit.nodes_size()) + " stops");
           }
           departures.clear();
           return departures;
@@ -1336,105 +1437,332 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   // Get Transit PBF data for this tile
   Transit transit = read_pbf(tile, lock);
 
+  std::set<uint64_t> added_stations;
+  std::set<uint64_t> added_egress;
+
   tilebuilder_transit.AddAdmin("None","None","","");
 
-  // Iterate through the stops and their edges
+  // Data looks like the following.
+  // Egress1_for_Station_A
+  // Egress2_for_Station_A
+  // Station_A
+  // Platform1_for_Station_A
+  // Platform2_for_Station_A
+  // Egress_for_Station_B
+  // Station_B
+  // Platform_for_Station_B
+  // . . . and so on
+
+  //  tiles will look like the following with N egresses and N platforms.
+  //  osm--------->egress--------->station--------->platform
+  //  node<---------node<-----------node<-------------node
+
+  // osm and egress nodes are connected by transitconnections.
+  // egress and stations are connected by egressconnections.
+  // stations and platforms are connected by platformconnections
+
+  // Iterate through the platform and their edges
   uint32_t nadded = 0;
   uint32_t transitedges = 0;
   for (const auto& stop_edges : stop_edge_map) {
-    // Get the stop information
-    GraphId stopid = stop_edges.second.origin_pbf_graphid;
-    uint32_t stop_index = stopid.id();
-    const Transit_Stop& stop = transit.stops(stop_index);
-    std::string origin_id = stop.onestop_id();
-    if (GraphId(stop.graphid()) != stopid) {
-      LOG_ERROR("Stop key not equal!");
+    // Get the platform information
+    GraphId platform_pbf_id = stop_edges.second.origin_pbf_graphid;
+    uint32_t platform_index = platform_pbf_id.id();
+    const Transit_Node& platform = transit.nodes(platform_index);
+    std::string origin_id = platform.onestop_id();
+    if (GraphId(platform.graphid()) != platform_pbf_id) {
+      LOG_ERROR("Platform key not equal!");
     }
-    PointLL stopll = { stop.lon(), stop.lat() };
-    const std::string& tz = stop.has_timezone() ? stop.timezone() : "";
+
+    LOG_DEBUG("Transit Platform: " + platform.name() + " index= " +
+              std::to_string(platform_index));
+
+    // Get the Valhalla graphId of the origin node (transit stop)
+    GraphId platform_graphid = GetGraphId(platform_pbf_id, all_tiles);
+    PointLL platform_ll = { platform.lon(), platform.lat() };
+
+    //the prev_type_graphid is actually the station or parent in
+    //platforms
+    GraphId parent = GraphId(platform.prev_type_graphid());
+    const Transit_Node& station = transit.nodes(parent.id());
+
+    GraphId station_pbf_id = GraphId(station.graphid());
+    // Get the Valhalla graphId of the station node
+    GraphId station_graphid = GetGraphId(station_pbf_id, all_tiles);
+
+    PointLL station_ll = { station.lon(), station.lat() };
+    // Build the station node if it has not already been added.
+    if (added_stations.find(platform.prev_type_graphid()) == added_stations.end()) {
+
+      // Build the station node
+      uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
+      auto s_access = stop_access.find(station_pbf_id);
+      if (s_access != stop_access.end()) {
+        n_access &= ~s_access->second;
+      }
+
+      NodeInfo station_node(station_ll, RoadClass::kServiceOther, n_access,
+                          NodeType::kTransitStation, false);
+      station_node.set_stop_index(station_pbf_id.id());
+
+      const std::string& tz = station.has_timezone() ? station.timezone() : "";
+      uint32_t timezone = 0;
+      if (!tz.empty())
+        timezone = DateTime::get_tz_db().to_index(tz);
+
+      if (timezone == 0) {
+        //fallback to tz database.
+        timezone = (tile_within_one_tz) ?
+                    tz_polys.begin()->first :
+                    GetMultiPolyId(tz_polys, station_ll);
+        if (timezone == 0)
+          LOG_WARN("Timezone not found for station " + station.name());
+      }
+      station_node.set_timezone(timezone);
+
+      LOG_DEBUG("Transit Platform: " + platform.name() + " index= " +
+                std::to_string(platform_index));
+
+      // set the index to the first egress.
+      // loop over egresses add the DE to the station from the egress
+      // there is always at least one egress and they are before the stations in the pbf
+      GraphId eg = GraphId(station.prev_type_graphid());
+      uint32_t index = eg.id();
+
+      while (true) {
+        const Transit_Node& egress = transit.nodes(index);
+        if (static_cast<NodeType>(egress.type()) != NodeType::kTransitEgress)
+          break;
+
+        GraphId egress_pbf_id = GraphId(egress.graphid());
+        // Get the Valhalla graphId of the origin node (transit stop)
+        GraphId egress_graphid = GetGraphId(egress_pbf_id, all_tiles);
+
+        DirectedEdge directededge;
+        directededge.set_endnode(station_graphid);
+        PointLL egress_ll = { egress.lon(), egress.lat() };
+
+        // Build the egress node
+        uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
+        auto s_access = stop_access.find(egress_pbf_id);
+        if (s_access != stop_access.end()) {
+          n_access &= ~s_access->second;
+        }
+
+        const std::string& tz = egress.has_timezone() ? egress.timezone() : "";
+        uint32_t timezone = 0;
+        if (!tz.empty())
+          timezone = DateTime::get_tz_db().to_index(tz);
+
+        if (timezone == 0) {
+          //fallback to tz database.
+          timezone = (tile_within_one_tz) ?
+                      tz_polys.begin()->first :
+                      GetMultiPolyId(tz_polys, egress_ll);
+          if (timezone == 0)
+            LOG_WARN("Timezone not found for egress " + egress.name());
+        }
+
+        NodeInfo egress_node(egress_ll, RoadClass::kServiceOther, n_access,
+                             NodeType::kTransitEgress, false);
+        egress_node.set_stop_index(index);
+        egress_node.set_timezone(timezone);
+        egress_node.set_edge_index(tilebuilder_transit.directededges().size());
+        egress_node.set_connecting_wayid(egress.osm_way_id());
+
+        // add the egress connection
+        // Make sure length is non-zero
+        float length = std::max(1.0f, egress_ll.Distance(station_ll));
+        directededge.set_length(length);
+        directededge.set_use(Use::kEgressConnection);
+        directededge.set_speed(5);
+        directededge.set_classification(RoadClass::kServiceOther);
+        directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - egress_node.edge_index());
+        directededge.set_forwardaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+        directededge.set_reverseaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+        directededge.set_named(false);
+
+        // Add edge info to the tile and set the offset in the directed edge
+        bool added = false;
+        std::vector<std::string> names;
+        std::list<PointLL> shape = { egress_ll, station_ll };
+
+        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, shape, names, added);
+        directededge.set_edgeinfo_offset(edge_info_offset);
+        directededge.set_forward(true);
+
+        // Add to list of directed edges
+        tilebuilder_transit.directededges().emplace_back(std::move(directededge));
+
+        // set the count to 1 DE
+        // osm connections will be added later.
+        egress_node.set_edge_count(1);
+        // Add the egress node
+        tilebuilder_transit.nodes().emplace_back(std::move(egress_node));
+        index++;
+      }
+
+      station_node.set_edge_index(tilebuilder_transit.directededges().size());
+      // now add the DE to the egress from the station
+      // index now points to the station.
+      for (int j = eg.id(); j < index; j++) {
+
+        const Transit_Node& egress = transit.nodes(j);
+        PointLL egress_ll = { egress.lon(), egress.lat() };
+        GraphId egress_pbf_id = GraphId(egress.graphid());
+
+        // Get the Valhalla graphId of the origin node (transit stop)
+        GraphId egress_graphid = GetGraphId(egress_pbf_id, all_tiles);
+        DirectedEdge directededge;
+        directededge.set_endnode(egress_graphid);
+
+        // add the platform connection
+        // Make sure length is non-zero
+        float length = std::max(1.0f, station_ll.Distance(egress_ll));
+        directededge.set_length(length);
+        directededge.set_use(Use::kEgressConnection);
+        directededge.set_speed(5);
+        directededge.set_classification(RoadClass::kServiceOther);
+        directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - station_node.edge_index());
+        directededge.set_forwardaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+        directededge.set_reverseaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+        directededge.set_named(false);
+        // Add edge info to the tile and set the offset in the directed edge
+        bool added = false;
+        std::vector<std::string> names;
+        std::list<PointLL> shape = { station_ll, egress_ll };
+
+        // TODO - these need to be valhalla graph Ids
+        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, shape, names, added);
+        directededge.set_edgeinfo_offset(edge_info_offset);
+        directededge.set_forward(true);
+
+        // Add to list of directed edges
+        tilebuilder_transit.directededges().emplace_back(std::move(directededge));
+      }
+
+      // point to first platform
+      // there is always one platform
+      index++;
+      int count = 0;
+      //now add the DE from the station to all the platforms.
+      //the platforms follow the egresses in the pbf.
+      //index is currently set to the first platform for this station.
+      while (true) {
+
+        if (index == transit.nodes_size())
+          break;
+
+        const Transit_Node& platform = transit.nodes(index);
+        if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform)
+          break;
+
+        GraphId platform_pbf_id = GraphId(platform.graphid());
+
+        // Get the Valhalla graphId of the origin node (transit stop)
+        GraphId platform_graphid = GetGraphId(platform_pbf_id, all_tiles);
+
+        DirectedEdge directededge;
+        directededge.set_endnode(platform_graphid);
+
+        PointLL platform_ll = { platform.lon(), platform.lat() };
+
+        // add the egress connection
+        // Make sure length is non-zero
+        float length = std::max(1.0f, station_ll.Distance(platform_ll));
+        directededge.set_length(length);
+        directededge.set_use(Use::kPlatformConnection);
+        directededge.set_speed(5);
+        directededge.set_classification(RoadClass::kServiceOther);
+        directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - station_node.edge_index());
+        directededge.set_forwardaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+        directededge.set_reverseaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+        directededge.set_named(false);
+
+        // Add edge info to the tile and set the offset in the directed edge
+        bool added = false;
+        std::vector<std::string> names;
+        std::list<PointLL> shape = { station_ll, platform_ll };
+
+        // TODO - these need to be valhalla graph Ids
+        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, shape, names, added);
+        directededge.set_edgeinfo_offset(edge_info_offset);
+        directededge.set_forward(true);
+
+        // Add to list of directed edges
+        tilebuilder_transit.directededges().emplace_back(std::move(directededge));
+        index++;
+      }
+
+      // Get the directed edge count, log an error if no directed edges are added
+      uint32_t edge_count = tilebuilder_transit.directededges().size() - station_node.edge_index();
+      if (edge_count == 0) {
+        // Set the edge index to 0
+        station_node.set_edge_index(0);
+        no_dir_edge_count++;
+      }
+
+      // Add the node
+      station_node.set_edge_count(edge_count);
+      tilebuilder_transit.nodes().emplace_back(std::move(station_node));
+      added_stations.emplace(platform.prev_type_graphid());
+    }
+
+    // Build the platform node
+    uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
+    auto s_access = stop_access.find(platform_pbf_id);
+    if (s_access != stop_access.end()) {
+      n_access &= ~s_access->second;
+    }
+
+    const std::string& tz = platform.has_timezone() ? platform.timezone() : "";
     uint32_t timezone = 0;
     if (!tz.empty())
       timezone = DateTime::get_tz_db().to_index(tz);
 
     if (timezone == 0) {
-
       //fallback to tz database.
       timezone = (tile_within_one_tz) ?
                   tz_polys.begin()->first :
-                  GetMultiPolyId(tz_polys, stopll);
+                  GetMultiPolyId(tz_polys, platform_ll);
       if (timezone == 0)
-        LOG_WARN("Timezone not found for stop " + stop.name());
+        LOG_WARN("Timezone not found for platform " + platform.name());
     }
 
-    LOG_DEBUG("Transit Stop: " + stop.name() + " stop index= " +
-              std::to_string(stop_index));
+    NodeInfo platform_node(platform_ll, RoadClass::kServiceOther, n_access,
+                        NodeType::kMultiUseTransitPlatform, false);
+    platform_node.set_mode_change(true);
+    platform_node.set_stop_index(platform_index);
+    platform_node.set_timezone(timezone);
+    platform_node.set_edge_index(tilebuilder_transit.directededges().size());
 
-    // Get the Valhalla graphId of the origin node (transit stop)
-    GraphId origin_node = GetGraphId(stopid, all_tiles);
+    //Add DE to the station from the platform
+    DirectedEdge directededge;
+    directededge.set_endnode(station_graphid);
 
-    // Build the node info. Use generic transit stop type
-    uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
+    // add the platform connection
+    // Make sure length is non-zero
+    float length = std::max(1.0f, platform_ll.Distance(station_ll));
+    directededge.set_length(length);
+    directededge.set_use(Use::kPlatformConnection);
+    directededge.set_speed(5);
+    directededge.set_classification(RoadClass::kServiceOther);
+    directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - platform_node.edge_index());
+    directededge.set_forwardaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+    directededge.set_reverseaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+    directededge.set_named(false);
+    // Add edge info to the tile and set the offset in the directed edge
+    bool added = false;
+    std::vector<std::string> names;
+    std::list<PointLL> shape = { platform_ll, station_ll };
 
-    auto s_access = stop_access.find(stopid);
-    if (s_access != stop_access.end()) {
-      n_access &= ~s_access->second;
-    }
-    // TODO - parent/child stop types
-    NodeInfo node(stopll, RoadClass::kServiceOther, n_access,
-                        NodeType::kMultiUseTransitStop, false);
-    node.set_mode_change(true);
-    node.set_stop_index(stop_index);
-    node.set_edge_index(tilebuilder_transit.directededges().size());
-    node.set_timezone(timezone);
-    node.set_connecting_wayid(stop.osm_way_id());
+    // TODO - these need to be valhalla graph Ids
+    uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, shape, names, added);
+    directededge.set_edgeinfo_offset(edge_info_offset);
+    directededge.set_forward(true);
 
- /** TODO - future when we get egress, station, platform hierarchy
-    // Add any intra-station connections - these are always in the same tile?
-    for (const auto& endstopid : stop_edges.second.intrastation) {
-
-      const Stop& endstop = stops[endstopid.id()];
-      if (endstopid != endstop.pbf_graphid) {
-        LOG_ERROR("End stop key not equal");
-      }
-
-      GraphId endnode = GetGraphId(endstop.pbf_graphid);
-      if (!endnode.Is_Valid()) {
-        continue;
-      }
-
-      DirectedEdge directededge;
-      directededge.set_endnode(endstop.pbf_graphid);
-
-      // Make sure length is non-zero
-      float length = std::max(1.0f, stop.ll().Distance(endstop.ll()));
-      directededge.set_length(length);
-      directededge.set_use(Use::kTransitConnection);
-      directededge.set_speed(5);
-      directededge.set_classification(RoadClass::kServiceOther);
-      directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
-      directededge.set_forwardaccess(kPedestrianAccess);  // TODO - bikes?
-      directededge.set_reverseaccess(kPedestrianAccess);  // TODO - bikes?
-
-      LOG_DEBUG("Add parent/child directededge - endnode stop id = " +
-               std::to_string(endstop.key) + " GraphId: " +
-               std::to_string(endstop.graphid.tileid()) + "," +
-               std::to_string(endstop.graphid.id()));
-
-      // Add edge info to the tile and set the offset in the directed edge
-      bool added = false;
-      std::vector<std::string> names;
-      std::list<PointLL> shape = { stop.ll(), endstop.ll() };
-
-      // TODO - these need to be valhalla graph Ids
-      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(0, stop.pbf_graphid,
-                     endstop.pbf_graphid, 0, shape, names, added);
-      directededge.set_edgeinfo_offset(edge_info_offset);
-      directededge.set_forward(added);
-
-      // Add to list of directed edges
-      tilebuilder.directededges().emplace_back(std::move(directededge));
-    }
-**/
+    // Add to list of directed edges
+    tilebuilder_transit.directededges().emplace_back(std::move(directededge));
 
     // Add transit lines
     // level 3
@@ -1449,39 +1777,39 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Find the lat,lng of the end stop
       PointLL endll;
       std::string endstopname;
-      GraphId end_stop_graphid = transitedge.dest_pbf_graphid;
+      GraphId end_platform_graphid = transitedge.dest_pbf_graphid;
       std::string dest_id;
 
-      if (end_stop_graphid.Tile_Base() == tileid) {
+      if (end_platform_graphid.Tile_Base() == tileid) {
         // End stop is in the same pbf transit tile
-        const Transit_Stop& endstop = transit.stops(end_stop_graphid.id());
-        endstopname = endstop.name();
-        endll = {endstop.lon(), endstop.lat()};
-        dest_id = endstop.onestop_id();
+        const Transit_Node& endplatform = transit.nodes(end_platform_graphid.id());
+        endstopname = endplatform.name();
+        endll = {endplatform.lon(), endplatform.lat()};
+        dest_id = endplatform.onestop_id();
 
       } else {
         // Get Transit PBF data for this tile
         // Get transit pbf tile
-        std::string file_name = GraphTile::FileSuffix(GraphId(end_stop_graphid.tileid(), end_stop_graphid.level(),0));
+        std::string file_name = GraphTile::FileSuffix(GraphId(end_platform_graphid.tileid(), end_platform_graphid.level(),0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
         const std::string file = transit_dir + '/' + file_name;
         Transit endtransit = read_pbf(file, lock);
-        const Transit_Stop& endstop = endtransit.stops(end_stop_graphid.id());
-        endstopname = endstop.name();
-        endll = {endstop.lon(), endstop.lat()};
-        dest_id = endstop.onestop_id();
+        const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
+        endstopname = endplatform.name();
+        endll = {endplatform.lon(), endplatform.lat()};
+        dest_id = endplatform.onestop_id();
       }
 
       // Add the directed edge
       DirectedEdge directededge;
       directededge.set_endnode(endnode);
-      directededge.set_length(stopll.Distance(endll));
+      directededge.set_length(platform_ll.Distance(endll));
       Use use = GetTransitUse(route_types[transitedge.routeid]);
       directededge.set_use(use);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
-      directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - node.edge_index());
+      directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - platform_node.edge_index());
       directededge.set_forwardaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
       directededge.set_reverseaccess((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
       directededge.set_lineid(transitedge.lineid);
@@ -1513,11 +1841,11 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // TODO - if we separate transit edges based on more than just routeid
       // we will need to do something to differentiate edges (maybe use
       // lineid) so the shape doesn't get messed up.
-      auto shape = GetShape(stopll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
+      auto shape = GetShape(platform_ll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
                             transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
 
       uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(transitedge.routeid,
-           origin_node, endnode, 0, shape, names, added);
+                                                                  platform_graphid, endnode, 0, shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
@@ -1527,16 +1855,16 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     }
 
     // Get the directed edge count, log an error if no directed edges are added
-    uint32_t edge_count = tilebuilder_transit.directededges().size() - node.edge_index();
+    uint32_t edge_count = tilebuilder_transit.directededges().size() - platform_node.edge_index();
     if (edge_count == 0) {
       // Set the edge index to 0
-      node.set_edge_index(0);
+      platform_node.set_edge_index(0);
       no_dir_edge_count++;
     }
 
     // Add the node
-    node.set_edge_count(edge_count);
-    tilebuilder_transit.nodes().emplace_back(std::move(node));
+    platform_node.set_edge_count(edge_count);
+    tilebuilder_transit.nodes().emplace_back(std::move(platform_node));
   }
 
   // Log the number of added nodes and edges
@@ -1566,10 +1894,8 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
   GraphReader reader_transit_level(pt);
   auto database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
-  sqlite3 *tz_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database)
-    LOG_WARN("Time zone db not found.  Not saving time zone information from db.");
-  else if (!tz_db_handle)
+  sqlite3 *tz_db_handle = GetDBHandle(*database);
+  if (!tz_db_handle)
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
 
   const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
@@ -1610,21 +1936,18 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     lock.unlock();
 
     std::unordered_map<GraphId, uint16_t> stop_access;
-    std::unordered_multimap<GraphId, GraphId> children;
-    for (uint32_t i = 0; i < transit.stops_size(); i++) {
-      const Transit_Stop& stop = transit.stops(i);
+    // add Transit nodes in order.
+    for (uint32_t i = 0; i < transit.nodes_size(); i++) {
 
-      if (!stop.wheelchair_boarding())
-        stop_access[GraphId(stop.graphid())] |= kWheelchairAccess;
+      const Transit_Node& node = transit.nodes(i);
+
+      if (!node.wheelchair_boarding())
+        stop_access[GraphId(node.graphid())] |= kWheelchairAccess;
 
       // Store stop information in TransitStops
-      tilebuilder_transit.AddTransitStop( { tilebuilder_transit.AddName(stop.onestop_id()),
-                                            tilebuilder_transit.AddName(stop.name()) } );
-
-      /** TODO - parent/child relationships
-      if (stop.type == 0 && stop.parent.Is_Valid()) {
-        children.emplace(stop.parent, stop.pbf_graphid);
-      }       **/
+      tilebuilder_transit.AddTransitStop( { tilebuilder_transit.AddName(node.onestop_id()),
+                                            tilebuilder_transit.AddName(node.name()),
+                                            node.generated(), node.traversability() } );
     }
 
     //Get all the shapes for this tile and calculate the distances
@@ -1669,27 +1992,20 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
                                  stats);
 
     // Form departures and egress/station/platform hierarchy
-    for (uint32_t i = 0; i < transit.stops_size(); i++) {
-      const Transit_Stop& stop = transit.stops(i);
-      GraphId stop_pbf_graphid = GraphId(stop.graphid());
-      StopEdges stopedges;
-      stopedges.origin_pbf_graphid = stop_pbf_graphid;
+    for (uint32_t i = 0; i < transit.nodes_size(); i++) {
+      const Transit_Node& platform = transit.nodes(i);
+      if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform)
+        continue;
 
-      /** TODO - Identify any parent-child edge connections
-      if (stop.type == 1) {
-        // Station - identify any children.
-        auto range = children.equal_range(stop.pbf_graphid);
-        for(auto kv = range.first; kv != range.second; ++kv)
-          stopedges.intrastation.push_back(kv->second);
-      } else if (stop.parent != 0) {
-        stopedges.intrastation.push_back(stop.parent);
-      } **/
+      GraphId platform_pbf_graphid = GraphId(platform.graphid());
+      StopEdges stopedges;
+      stopedges.origin_pbf_graphid = platform_pbf_graphid;
 
       // TODO - perhaps replace this code with use of headsign below
       // to solve problem of a trip that doesn't go the whole way to
       // the end of the route line
       std::map<std::pair<uint32_t, GraphId>, uint32_t> unique_transit_edges;
-      auto range = departures.equal_range(stop_pbf_graphid);
+      auto range = departures.equal_range(platform_pbf_graphid);
        for(auto key = range.first; key != range.second; ++key) {
          Departure dep = key->second;
 
@@ -1738,12 +2054,11 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
 
       // Add to stop edge map - track edges that need to be added. This is
       // sorted by graph Id so the stop nodes are added in proper order
-      stop_edge_map.insert({stop_pbf_graphid, stopedges});
+      stop_edge_map.insert({platform_pbf_graphid, stopedges});
     }
 
     // Add routes to the tile. Get vector of route types.
     std::vector<uint32_t> route_types = AddRoutes(transit, tilebuilder_transit);
-
     auto filter = tiles.TileBounds(tile_id.tileid());
     bool tile_within_one_tz = false;
     std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
@@ -1761,7 +2076,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
                stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
-             std::to_string(transit.stops_size()) + " stops, " +
+             std::to_string(transit.nodes_size()) + " stops, " +
              std::to_string(transit.shapes_size()) + " shapes, " +
              std::to_string(route_types.size()) + " routes, and " +
              std::to_string(departures.size()) + " departures");

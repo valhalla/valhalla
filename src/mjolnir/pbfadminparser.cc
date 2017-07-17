@@ -166,9 +166,6 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
     OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES | OSMPBF::Interest::CHANGESETS), callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes");
 
-  //done with pbf
-  OSMPBF::Parser::free();
-
   // Return OSM data
   return osmdata;
 }

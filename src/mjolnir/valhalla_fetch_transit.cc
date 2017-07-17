@@ -30,7 +30,7 @@
 #include "midgard/encoded.h"
 #include "mjolnir/admin.h"
 
-#include "proto/transit.pb.h"
+#include "proto/transit_fetch.pb.h"
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
@@ -227,7 +227,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
     set(value); \
 }
 
-void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
+void get_stops(Transit_Fetch& tile, std::unordered_map<std::string, uint64_t>& stops,
     const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter,
     bool tile_within_one_tz, const std::unordered_map<uint32_t, multi_polygon_type>& tz_polys) {
   for(const auto& stop_pt : response.get_child("stops")) {
@@ -259,34 +259,34 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
   }
 }
 
-void get_routes(Transit& tile, std::unordered_map<std::string, size_t>& routes,
+void get_routes(Transit_Fetch& tile, std::unordered_map<std::string, size_t>& routes,
     const std::unordered_map<std::string, std::string>& websites,
     const std::unordered_map<std::string, std::string>& short_names, const ptree& response) {
   for(const auto& route_pt : response.get_child("routes")) {
     auto* route = tile.add_routes();
     set_no_null(std::string, route_pt.second, "onestop_id", "null", route->set_onestop_id);
     std::string vehicle_type = route_pt.second.get<std::string>("vehicle_type", "null");
-    Transit_VehicleType type = Transit_VehicleType::Transit_VehicleType_kRail;
+    Transit_Fetch_VehicleType type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kRail;
     if (vehicle_type == "tram" || vehicle_type == "tram_service")
-      type = Transit_VehicleType::Transit_VehicleType_kTram;
+      type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kTram;
     else if (vehicle_type == "metro")
-      type = Transit_VehicleType::Transit_VehicleType_kMetro;
+      type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kMetro;
     else if (vehicle_type == "rail" || vehicle_type == "suburban_railway")
-      type = Transit_VehicleType::Transit_VehicleType_kRail;
+      type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kRail;
     else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
              vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
              vehicle_type == "bus_service" || vehicle_type == "shuttle_bus" ||
              vehicle_type == "demand_and_response_bus_service" ||
              vehicle_type == "regional_bus_service")
-      type = Transit_VehicleType::Transit_VehicleType_kBus;
+      type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kBus;
     else if (vehicle_type == "ferry")
-      type = Transit_VehicleType::Transit_VehicleType_kFerry;
+      type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kFerry;
     else if (vehicle_type == "cablecar")
-      type = Transit_VehicleType::Transit_VehicleType_kCableCar;
+      type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kCableCar;
     else if (vehicle_type == "gondola")
-      type = Transit_VehicleType::Transit_VehicleType_kGondola;
+      type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kGondola;
     else if (vehicle_type == "funicular")
-      type = Transit_VehicleType::Transit_VehicleType_kFunicular;
+      type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kFunicular;
     else {
       LOG_ERROR("Skipping unsupported vehicle_type: " + vehicle_type + " for route " + route->onestop_id());
       tile.mutable_routes()->RemoveLast();
@@ -320,7 +320,7 @@ void get_routes(Transit& tile, std::unordered_map<std::string, size_t>& routes,
   }
 }
 
-void get_stop_patterns(Transit& tile, std::unordered_map<std::string, size_t>& shapes, const ptree& response) {
+void get_stop_patterns(Transit_Fetch& tile, std::unordered_map<std::string, size_t>& shapes, const ptree& response) {
   for(const auto& shape_pt : response.get_child("route_stop_patterns")) {
     auto* shape = tile.add_shapes();
     auto shape_id = shape_pt.second.get<std::string>("onestop_id");
@@ -349,7 +349,7 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> lines;
 };
 
-bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unordered_map<std::string, size_t>& shapes,
+bool get_stop_pairs(Transit_Fetch& tile, unique_transit_t& uniques, const std::unordered_map<std::string, size_t>& shapes,
                     const ptree& response, const std::unordered_map<std::string, uint64_t>& stops,
                     const std::unordered_map<std::string, size_t>& routes) {
   bool dangles = false;
@@ -514,7 +514,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const std::unorder
   return dangles;
 }
 
-void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile) {
+void write_pbf(const Transit_Fetch& tile, const boost::filesystem::path& transit_tile) {
   //check for empty stop pairs and routes.
   if(tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
     LOG_WARN(transit_tile.string() + " had no data and will not be stored");
@@ -574,7 +574,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
         pt.get<std::string>("import_level") : "";
 
-    Transit tile;
+    Transit_Fetch tile;
     auto file_name = GraphTile::FileSuffix(current);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
     boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
@@ -736,7 +736,7 @@ std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& 
   return dangling;
 }
 
-Transit read_pbf(const std::string& file_name, std::mutex& lock) {
+Transit_Fetch read_pbf(const std::string& file_name, std::mutex& lock) {
   lock.lock();
   std::fstream file(file_name, std::ios::in | std::ios::binary);
   if(!file) {
@@ -749,7 +749,7 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   google::protobuf::io::CodedInputStream cs(static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
   cs.SetTotalBytesLimit(limit, limit);
-  Transit transit;
+  Transit_Fetch transit;
   if(!transit.ParseFromCodedStream(&cs))
     throw std::runtime_error("Couldn't load " + file_name);
   return transit;

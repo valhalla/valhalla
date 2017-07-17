@@ -1273,9 +1273,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   callback.reset(nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes contained in routable ways");
 
-  //done with pbf
-  OSMPBF::Parser::free();
-
   //we need to sort the refs so that we easily iterate over them for building edges
   //so we line them first by way index then by shape index of the node
   LOG_INFO("Sorting osm way node references by way index and node shape index...");

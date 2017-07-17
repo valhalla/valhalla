@@ -135,13 +135,13 @@ constexpr auto kBranchSignTag = "<BRANCH_SIGN>";
 constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
 constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
-constexpr auto kTransitStopTag = "<TRANSIT_STOP>";
+constexpr auto kTransitPlatformTag = "<TRANSIT_STOP>";
 constexpr auto kStationLabelTag = "<STATION_LABEL>";
 constexpr auto kTimeTag = "<TIME>";
 constexpr auto kTransitNameTag = "<TRANSIT_NAME>";
 constexpr auto kTransitHeadSignTag = "<TRANSIT_HEADSIGN>";
-constexpr auto kTransitStopCountTag = "<TRANSIT_STOP_COUNT>";
-constexpr auto kTransitStopCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
+constexpr auto kTransitPlatformCountTag = "<TRANSIT_STOP_COUNT>";
+constexpr auto kTransitPlatformCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 
 }
 

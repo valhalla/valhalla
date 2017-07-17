@@ -95,6 +95,10 @@ valhalla/proto/transit.pb.h: src/proto/transit.pb.cc
 	-mkdir -p valhalla/proto && mv src/proto/transit.pb.h valhalla/proto
 src/proto/transit.pb.cc:
 	@echo " PROTOC transit.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/transit.proto
+valhalla/proto/transit_fetch.pb.h: src/proto/transit_fetch.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/transit_fetch.pb.h valhalla/proto
+src/proto/transit_fetch.pb.cc:
+	@echo " PROTOC transit_fetch.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/transit_fetch.proto
 valhalla/proto/tile.pb.h: src/proto/tile.pb.cc
 	-mkdir -p valhalla/proto && mv src/proto/tile.pb.h valhalla/proto
 src/proto/tile.pb.cc:
@@ -103,9 +107,9 @@ valhalla/proto/segment.pb.h: src/proto/segment.pb.cc
 	-mkdir -p valhalla/proto && mv src/proto/segment.pb.h valhalla/proto
 src/proto/segment.pb.cc:
 	@echo " PROTOC segment.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/segment.proto
-BUILT_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
-nodist_libvalhalla_la_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
-CLEANFILES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/osmformat.pb.cc src/proto/fileformat.pb.cc src/proto/transit.pb.cc src/proto/tile.pb.cc src/proto/segment.pb.cc
+BUILT_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/transit_fetch.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
+nodist_libvalhalla_la_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/transit_fetch.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
+CLEANFILES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/transit_fetch.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/osmformat.pb.cc src/proto/fileformat.pb.cc src/proto/transit.pb.cc src/proto/transit_fetch.pb.cc src/proto/tile.pb.cc src/proto/segment.pb.cc
 endif
 
 lib_LTLIBRARIES = libvalhalla.la
@@ -226,7 +230,6 @@ nobase_include_HEADERS = \
 	valhalla/odin/signs.h \
 	valhalla/odin/util.h \
 	valhalla/odin/transitrouteinfo.h \
-	valhalla/odin/transitstop.h \
 	valhalla/thor/worker.h \
 	valhalla/thor/astar.h \
 	valhalla/thor/astarheuristic.h \
@@ -347,7 +350,6 @@ libvalhalla_la_SOURCES = \
 	src/odin/signs.cc \
 	src/odin/util.cc \
 	src/odin/transitrouteinfo.cc \
-	src/odin/transitstop.cc \
 	src/odin/locales.h \
 	src/odin/worker.cc \
 	src/thor/astar.cc \
@@ -549,7 +551,7 @@ valhalla_build_admins_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS
 valhalla_build_transit_SOURCES = src/mjolnir/valhalla_build_transit.cc src/proto/transit.pb.cc
 valhalla_build_transit_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_build_transit_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
-valhalla_fetch_transit_SOURCES = src/mjolnir/valhalla_fetch_transit.cc  src/proto/transit.pb.cc
+valhalla_fetch_transit_SOURCES = src/mjolnir/valhalla_fetch_transit.cc  src/proto/transit_fetch.pb.cc
 valhalla_fetch_transit_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_fetch_transit_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
 valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc src/proto/transit.pb.cc

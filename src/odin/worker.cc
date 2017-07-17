@@ -37,8 +37,10 @@ namespace valhalla {
       // Grab language from options and set
       auto language = request.get_optional<std::string>("directions_options.language");
       // If language is not found then set to the default language (en-US)
-      if (!language || (odin::get_locales().find(*language) == odin::get_locales().end()))
-        request.put<std::string>("directions_options.language", odin::DirectionsOptions::default_instance().language());
+      if (!language || (odin::get_locales().find(*language) == odin::get_locales().end())) {
+        auto default_language = odin::DirectionsOptions::default_instance().language();
+        request.put<std::string>("directions_options.language", default_language);
+      }
 
       //see if we can get some options
       valhalla::odin::DirectionsOptions directions_options;
