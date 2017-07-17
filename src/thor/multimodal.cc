@@ -344,7 +344,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           // Update trip Id and block Id
           tripid  = departure->tripid();
           blockid = departure->blockid();
-          has_transit = true;
 
           // There is no cost to remain on the same trip or valid blockId
           if ( tripid == pred.tripid() ||
@@ -380,9 +379,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
             }
           }
 
-          // Change mode and costing to transit. Add edge cost.
-          mode_ = TravelMode::kPublicTransit;
+          // Add edge cost. Change mode and costing to transit.
           newcost += tc->EdgeCost(directededge, departure, localtime);
+          if(!has_transit) {
+            // If first transit line taken, don't count waiting time into duration cost
+            // but keep it into duration otherwise next localtime will be wrong
+            // This should favor transit over pedestrian
+            // TODO: weight initial waiting time instead, to prefer transit
+            // options that eventually arrives earlier even if slower because of earlier departure
+            newcost.cost -= departure - localtime;
+          }
+          mode_ = TravelMode::kPublicTransit;
+          has_transit = true;
         } else {
           // No matching departures found for this edge
           continue;
