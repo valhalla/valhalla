@@ -134,14 +134,14 @@ namespace {
   }
 
   std::vector<midgard::PointLL> simulate_gps(const boost::property_tree::ptree& edges, const std::vector<midgard::PointLL>& shape,
-      float smoothing = .5f, float accuracy = 5.f, size_t sample_rate = 1) {
+      float smoothing = 30, float accuracy = 5.f, size_t sample_rate = 1) {
     //resample the coords along a given edge at one second intervals
     auto resampled = resample_at_1hz(edges, shape);
 
     //a way to get noise but only allow for slow change
     std::default_random_engine generator;
     std::uniform_real_distribution<float> distribution(-1, 1);
-    ring_queue_t<std::pair<float, float> > noises(std::ceil(shape.size() * smoothing));
+    ring_queue_t<std::pair<float, float> > noises(smoothing);
     auto get_noise = [&]() {
       //we generate a vector whose magnitude is no more than accuracy
       auto lon_adj = distribution(generator);
@@ -205,6 +205,7 @@ namespace {
       auto route = json_to_pt(actor.route(tyr::ROUTE, test_case));
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
+      //std::cout << print(shape) << std::endl;
       //get the edges along that route shape
       auto walked = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}"));
@@ -212,7 +213,7 @@ namespace {
       for(const auto& edge : walked.get_child("edges"))
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
       //simulate gps from the route shape
-      auto simulation = simulate_gps(walked.get_child("edges"), shape, 2.f, 100.f);
+      auto simulation = simulate_gps(walked.get_child("edges"), shape, 50, 100.f);
       auto encoded_simulation = midgard::encode(simulation);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
@@ -221,9 +222,8 @@ namespace {
       for(const auto& edge : matched.get_child("edges"))
         matched_edges.push_back(edge.second.get<uint64_t>("id"));
       //because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
-      auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin(), matched_edges.end());
-      auto matched_it = std::search(matched_edges.begin(), matched_edges.end(), walked_edges.begin(), walked_edges.end());
-      if(walked_it == walked_edges.end() && matched_it == matched_edges.end()) {
+      auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() + 1, matched_edges.end() - 1);
+      if(walked_it == walked_edges.end()) {
         std::cout << "route shape: " << print(shape) << std::endl;
         std::cout << "faked gps: " << print(simulation) << std::endl;
         throw std::logic_error("The match did not match the walk.\nExpected: " + print(walked_edges) + "\nGot:      " + print(matched_edges));
