@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
 namespace mjolnir {
@@ -22,6 +23,11 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value,
  * @param  s
  * @return string string with no quotes.
 */std::string remove_double_quotes(const std::string& s);
+
+/**
+ * Build an entire valhalla tileset give a config file and some input pbfs
+ */
+void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files);
 
 }
 }

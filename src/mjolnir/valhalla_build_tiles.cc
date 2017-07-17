@@ -1,30 +1,20 @@
 #include <string>
 #include <vector>
 
-#include "mjolnir/graphvalidator.h"
-#include "mjolnir/pbfgraphparser.h"
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/transitbuilder.h"
-#include "mjolnir/graphenhancer.h"
-#include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/shortcutbuilder.h"
-#include "mjolnir/restrictionbuilder.h"
-#include "baldr/tilehierarchy.h"
+#include "mjolnir/util.h"
 #include "config.h"
 
 using namespace valhalla::mjolnir;
 
-#include <ostream>
+#include <iostream>
 #include <boost/program_options.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 
-#include "midgard/point2.h"
-#include "midgard/aabb2.h"
-#include "midgard/polyline2.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 
 namespace bpo = boost::program_options;
 
@@ -90,56 +80,9 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  //set up the directories and purge old tiles
+  //build some tiles
   pt.get_child("mjolnir").erase("tile_extract");
-  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  for(const auto& level : valhalla::baldr::TileHierarchy::levels()) {
-    auto level_dir = tile_dir + "/" + std::to_string(level.first);
-    if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
-      LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-      boost::filesystem::remove_all(level_dir);
-    }
-  }
-
-  //check for transit level.
-  auto level_dir = tile_dir + "/" +
-      std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level+1);
-  if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
-    LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-    boost::filesystem::remove_all(level_dir);
-  }
-
-  boost::filesystem::create_directories(tile_dir);
-
-  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the PBFParser class
-  auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files, "ways.bin",
-                                        "way_nodes.bin", "access.bin", "complex_restrictions.bin");
-
-  // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(pt, osm_data, "ways.bin", "way_nodes.bin", "complex_restrictions.bin");
-
-  // Enhance the local level of the graph. This adds information to the local
-  // level that is usable across all levels (density, administrative
-  // information (and country based attribution), edge transition logic, etc.
-  GraphEnhancer::Enhance(pt, "access.bin");
-
-  // Add transit
-  TransitBuilder::Build(pt);
-
-  // Builds additional hierarchies based on the config file. Connections
-  // (directed edges) are formed between nodes at adjacent levels.
-  HierarchyBuilder::Build(pt);
-
-  // Build shortcuts
-  ShortcutBuilder::Build(pt);
-
-  // Build the Complex Restrictions
-  RestrictionBuilder::Build(pt,"complex_restrictions.bin", osm_data.end_map);
-
-  // Validate the graph and add information that cannot be added until
-  // full graph is formed.
-  GraphValidator::Validate(pt);
+  build_tile_set(pt, input_files);
 
   return EXIT_SUCCESS;
 }
