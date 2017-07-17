@@ -180,7 +180,7 @@ Note also that, because calculating the coverage requires compiler support, you 
 
 Command Line Tools
 ------------------
-####valhalla_run_route
+#### valhalla_run_route
 A C++ application that will create a route path with guidance instructions for the specified route request.
 
 ```bash
