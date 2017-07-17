@@ -165,7 +165,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
   // Create the vector of matched path results
   std::vector<meili::MatchResult> results;
   if (sequence.size() > 0) {
-    results = (matcher->OfflineMatch(sequence, best_paths));
+    results = matcher->OfflineMatch(sequence, best_paths);
   }
 
 
