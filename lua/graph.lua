@@ -1043,17 +1043,6 @@ function filter_tags_generic(kv)
 
   kv["use"] = use
 
-  local cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
-  local cycle_lane_left = cycle_lane_right
-
-  if cycle_lane_right == 0 then
-    cycle_lane_right = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or buffer[kv["cycleway:right:buffer"]] or 0
-    cycle_lane_left = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or buffer[kv["cycleway:left:buffer"]] or 0
-  end
-
-  kv["cycle_lane_right"] = cycle_lane_right
-  kv["cycle_lane_left"] = cycle_lane_left
-
   local cycle_lane_right_opposite = bike_reverse[kv["cycleway"]] or "false"
   local cycle_lane_left_opposite = cycle_lane_right_opposite
 
@@ -1061,6 +1050,31 @@ function filter_tags_generic(kv)
     cycle_lane_right_opposite = bike_reverse[kv["cycleway:right"]]
     cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]]
   end
+
+  local cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
+  local cycle_lane_left = cycle_lane_right
+
+  if cycle_lane_right == 0 then
+    cycle_lane_right = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or buffer[kv["cycleway:right:buffer"]] or 0
+    cycle_lane_left = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or buffer[kv["cycleway:left:buffer"]] or 0
+
+    --If there is a oneway but it is specified that bikes are not one way and that there is a bike lane on one of the sides of the road
+    --then we want that bike lane to act as a two way bike lane
+    if oneway_norm == "true" and oneway_bike == "false" and cycle_lane_right_opposite == "false" and cycle_lane_left_opposite == "false" then
+      --We have no way of storing a special "two way bicycle lane" besides just having both the left and the right lane
+      --set with one of them in an opposing direction so that is what we do here
+      if cycle_lane_right ~= 0 then
+        cycle_lane_left = cycle_lane_right
+        cycle_lane_left_opposite = "true"
+      elseif cycle_lane_left ~=0 then
+        cycle_lane_right = cycle_lane_left
+        cycle_lane_right_opposite = "true"
+      end
+    end
+  end
+
+  kv["cycle_lane_right"] = cycle_lane_right
+  kv["cycle_lane_left"] = cycle_lane_left
 
   kv["cycle_lane_right_opposite"] = cycle_lane_right_opposite
   kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
