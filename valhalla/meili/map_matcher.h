@@ -45,7 +45,7 @@ public:
   { return mapmatching_; }
 
   std::vector<MatchResult>
-  OfflineMatch(const std::vector<Measurement>& measurements);
+  OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k = 1);
 
   /**
    * Set a callback that will throw when the map-matching should be aborted

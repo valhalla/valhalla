@@ -74,7 +74,8 @@ class thor_worker_t : public service_worker_t{
       const baldr::PathLocation& destination);
   odin::TripPath route_match(const AttributesController& controller);
   std::pair<odin::TripPath, std::vector<thor::MatchResult>> map_match(
-      const AttributesController& controller, bool trace_attributes_action = false);
+      const AttributesController& controller, bool trace_attributes_action = false,
+      uint32_t best_paths = 1);
 
   std::list<odin::TripPath> path_arrive_by(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing);

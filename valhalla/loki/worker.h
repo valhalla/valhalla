@@ -80,6 +80,8 @@ namespace valhalla {
       size_t max_shape;
       float max_gps_accuracy;
       float max_search_radius;
+      unsigned int max_best_paths;
+      size_t max_best_paths_shape;
       bool healthcheck;
     };
   }
