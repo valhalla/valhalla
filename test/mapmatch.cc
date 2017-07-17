@@ -2,6 +2,7 @@
 
 #include <random>
 #include <utility>
+#include <iostream>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -178,17 +179,30 @@ namespace {
     return simulated;
   }
 
-  //TODO: add a bunch
-  std::vector<std::string> test_cases {
-    R"("locations":[{"lat":52.106716,"lon":5.123384},{"lat":52.099945,"lon":5.106733}])"
-  };
-
   void test_matcher() {
-    tyr::actor_t actor(conf, true);
+    //make 100 test cases
+    std::vector<std::string> test_cases;
+    std::default_random_engine generator;
+    std::uniform_real_distribution<float> distribution(0, 1);
+    for(int i = 0; i < 100; ++i) {
+      PointLL start,end;
+      float distance = 0;
+      do {
+        //get two points in and around utrecht
+        start = PointLL(5.0819f + .053f * distribution(generator), 52.0698f + .0334f * distribution(generator));
+        end = PointLL(5.0819f + .053f * distribution(generator), 52.0698f + .0334f * distribution(generator));
+        distance = start.Distance(end);
+        //try again if they are too close or too far apart
+      }while(distance < 1000 || distance > 2000);
+      test_cases.emplace_back(R"({"costing":"auto","locations":[{"lat":)" + std::to_string(start.second) + R"(,"lon":)" + std::to_string(start.first) +
+    R"(},{"lat":)" + std::to_string(end.second) + R"(,"lon":)" + std::to_string(end.first) + "}]}");
+    }
+
     //some edges should have no matches and most will have no segments
+    tyr::actor_t actor(conf, true);
     for(const auto& test_case : test_cases) {
       //get a route shape
-      auto route = json_to_pt(actor.route(tyr::ROUTE, R"({"costing":"auto",)" + test_case + "}"));
+      auto route = json_to_pt(actor.route(tyr::ROUTE, test_case));
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
       //get the edges along that route shape
@@ -198,8 +212,7 @@ namespace {
       for(const auto& edge : walked.get_child("edges"))
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
       //simulate gps from the route shape
-      auto simulation = simulate_gps(walked.get_child("edges"), shape, 10.f, 200.f);
-      //std::cout << print(simulation) << std::endl;
+      auto simulation = simulate_gps(walked.get_child("edges"), shape, 2.f, 100.f);
       auto encoded_simulation = midgard::encode(simulation);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
@@ -207,10 +220,14 @@ namespace {
       std::vector<uint64_t> matched_edges;
       for(const auto& edge : matched.get_child("edges"))
         matched_edges.push_back(edge.second.get<uint64_t>("id"));
-      //see if we go what we paid for
-      if(walked_edges.size() != matched_edges.size() ||
-        !std::equal(walked_edges.cbegin(), walked_edges.cend(), matched_edges.cbegin()))
+      //because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
+      auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin(), matched_edges.end());
+      auto matched_it = std::search(matched_edges.begin(), matched_edges.end(), walked_edges.begin(), walked_edges.end());
+      if(walked_it == walked_edges.end() && matched_it == matched_edges.end()) {
+        std::cout << "route shape: " << print(shape) << std::endl;
+        std::cout << "faked gps: " << print(simulation) << std::endl;
         throw std::logic_error("The match did not match the walk.\nExpected: " + print(walked_edges) + "\nGot:      " + print(matched_edges));
+      }
     }
   }
 
