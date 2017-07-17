@@ -892,8 +892,10 @@ void enhance(const boost::property_tree::ptree& pt,
 
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
-  sqlite3 *admin_db_handle = GetDBHandle(*database);
-  if (!admin_db_handle)
+  sqlite3 *admin_db_handle = database ? GetDBHandle(*database) : nullptr;
+  if (!database)
+    LOG_WARN("Admin db not found.  Not saving admin information.");
+  else if (!admin_db_handle)
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
 
   std::unordered_map<std::string, std::vector<int>> country_access = GetCountryAccess(admin_db_handle);

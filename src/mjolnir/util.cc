@@ -45,7 +45,7 @@ std::string remove_double_quotes(const std::string& s) {
   return ret;
 }
 
-void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files) {
+void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files, const std::string& bin_file_prefix) {
   //cannot allow this when building tiles
   if(config.get_child("mjolnir").get_optional<std::string>("tile_extract"))
     throw std::runtime_error("Tiles cannot be directly built into a tar extract");
@@ -72,16 +72,17 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
-  auto osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, "ways.bin",
-                                        "way_nodes.bin", "access.bin", "complex_restrictions.bin");
+  auto osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, bin_file_prefix + "ways.bin",
+      bin_file_prefix + "way_nodes.bin", bin_file_prefix + "access.bin", bin_file_prefix + "complex_restrictions.bin");
 
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(config, osm_data, "ways.bin", "way_nodes.bin", "complex_restrictions.bin");
+  GraphBuilder::Build(config, osm_data, bin_file_prefix + "ways.bin", bin_file_prefix + "way_nodes.bin",
+      bin_file_prefix + "complex_restrictions.bin");
 
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
-  GraphEnhancer::Enhance(config, "access.bin");
+  GraphEnhancer::Enhance(config, bin_file_prefix + "access.bin");
 
   // Add transit
   TransitBuilder::Build(config);
@@ -94,7 +95,7 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
   ShortcutBuilder::Build(config);
 
   // Build the Complex Restrictions
-  RestrictionBuilder::Build(config,"complex_restrictions.bin", osm_data.end_map);
+  RestrictionBuilder::Build(config, bin_file_prefix + "complex_restrictions.bin", osm_data.end_map);
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.

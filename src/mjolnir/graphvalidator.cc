@@ -82,7 +82,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
                               uint32_t& dupcount, std::string& endnodeiso,
                               const uint32_t transit_level) {
   if (!end_tile) {
-    LOG_WARN("End tile invalid.")
+    LOG_WARN("End tile invalid.");
     return kMaxEdgesPerNode;
   }
   // Get the tile at the end node and get the node info
@@ -238,7 +238,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
       // Log error - no opposing edge for a transit connection
       LOG_ERROR("No opposing transit connection edge: endstop = " +
               std::to_string(nodeinfo->stop_index()) + " has " +
-              std::to_string(nodeinfo->edge_count()))
+              std::to_string(nodeinfo->edge_count()));
     } else if (edge.IsTransitLine()) {
       // TODO - add this when opposing transit edges with unique line Ids
       // are present

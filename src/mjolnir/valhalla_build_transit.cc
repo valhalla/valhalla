@@ -312,7 +312,7 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
 
     stops.emplace(stop->onestop_id(), stop_id);
     if(stops.size() == kMaxGraphId) {
-      LOG_ERROR("Hit the maximum number of stops allowed and skipping the rest")
+      LOG_ERROR("Hit the maximum number of stops allowed and skipping the rest");
       break;
     }
   }
@@ -1566,8 +1566,10 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
   GraphReader reader_transit_level(pt);
   auto database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
-  sqlite3 *tz_db_handle = GetDBHandle(*database);
-  if (!tz_db_handle)
+  sqlite3 *tz_db_handle = database ? GetDBHandle(*database) : nullptr;
+  if (!database)
+    LOG_WARN("Time zone db not found.  Not saving time zone information from db.");
+  else if (!tz_db_handle)
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
 
   const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;

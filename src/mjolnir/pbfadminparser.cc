@@ -148,7 +148,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   }
 
   // Parse each input file for relations
-  LOG_INFO("Parsing relations...")
+  LOG_INFO("Parsing relations...");
   for (auto& file_handle : file_handles)
     OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS | OSMPBF::Interest::CHANGESETS), callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) + " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");

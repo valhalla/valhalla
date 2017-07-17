@@ -27,7 +27,7 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value,
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs
  */
-void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files);
+void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files, const std::string& bin_file_prefix = "");
 
 }
 }
