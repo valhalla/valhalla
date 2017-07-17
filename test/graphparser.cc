@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
@@ -298,7 +299,7 @@ void Baltimore(const std::string& config_file) {
   auto res = osmdata.restrictions.equal_range(98040438);
 
   if (res.first == osmdata.restrictions.end())
-    throw std::runtime_error("Failed to find 98040438 restrictions.");
+    throw std::runtime_error("Failed to find 98040438 restriction.");
 
   for (auto r = res.first; r != res.second; ++r) {
     if (r->second.to() == 6003340) {

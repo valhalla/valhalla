@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "test.h"
 #include "loki/node_search.h"
 

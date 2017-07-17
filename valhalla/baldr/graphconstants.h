@@ -128,9 +128,6 @@ constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
 // Maximum number of edges allowed in a turn restriction mask
 constexpr uint32_t kMaxTurnRestrictionEdges = 8;
 
-// Maximum speed (kph)
-constexpr float kMaxSpeed = 255.0f;
-
 // Maximum lane count
 constexpr uint32_t kMaxLaneCount = 15;
 
@@ -153,23 +150,27 @@ constexpr uint32_t kMaxAddedTime = 255;
 
 // Node types.
 enum class NodeType : uint8_t {
-  kStreetIntersection = 0,    // Regular intersection of 2 roads
-  kGate = 1,                  // Gate or rising bollard
-  kBollard = 2,               // Bollard (fixed obstruction)
-  kTollBooth = 3,             // Toll booth / fare collection
+  kStreetIntersection = 0,      // Regular intersection of 2 roads
+  kGate = 1,                    // Gate or rising bollard
+  kBollard = 2,                 // Bollard (fixed obstruction)
+  kTollBooth = 3,               // Toll booth / fare collection
   // TODO - for now there is no differentiation between bus and rail stops...
-  kMultiUseTransitStop = 6,   // Multi-use transit stop (rail and bus)
-  kBikeShare = 7,             // Bike share location
-  kParking = 8,               // Parking location
-  kMotorWayJunction = 9,      // Highway = motorway_junction
-  kBorderControl = 10         // Border control
+  kTransitEgress = 4,           // Transit egress
+  kTransitStation = 5,          // Transit station
+  kMultiUseTransitPlatform = 6, // Multi-use transit platform (rail and bus)
+  kBikeShare = 7,               // Bike share location
+  kParking = 8,                 // Parking location
+  kMotorWayJunction = 9,        // Highway = motorway_junction
+  kBorderControl = 10           // Border control
 };
 const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
   {static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
   {static_cast<uint8_t>(NodeType::kGate), "gate"},
   {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
   {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
-  {static_cast<uint8_t>(NodeType::kMultiUseTransitStop), "multi_use_transit_stop"},
+  {static_cast<uint8_t>(NodeType::kTransitEgress), "transit_egress"},
+  {static_cast<uint8_t>(NodeType::kTransitStation), "transit_station"},
+  {static_cast<uint8_t>(NodeType::kMultiUseTransitPlatform), "multi_use_transit_platform"},
   {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
   {static_cast<uint8_t>(NodeType::kParking), "parking"},
   {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
@@ -246,11 +247,11 @@ enum class Use : uint8_t {
   kRailFerry = 42,
 
   // Transit specific uses. Must be last in the list
-  kRail = 50,              // Rail line
-  kBus = 51,               // Bus line
-  kRailConnection = 52,    // Connection to a rail stop
-  kBusConnection = 53,     // Connection to a bus stop
-  kTransitConnection = 54  // Connection to multi-use transit stop
+  kRail = 50,               // Rail line
+  kBus = 51,                // Bus line
+  kEgressConnection = 52,   // Connection to a egress node
+  kPlatformConnection = 53, // Connection to a platform node
+  kTransitConnection = 54   // Connection to multi-use transit stop
 };
 const std::unordered_map<uint8_t, std::string> UseStrings = {
   {static_cast<uint8_t>(Use::kRoad), "road"},
@@ -276,8 +277,8 @@ const std::unordered_map<uint8_t, std::string> UseStrings = {
   {static_cast<uint8_t>(Use::kFerry), "ferry"},
   {static_cast<uint8_t>(Use::kRail), "rail"},
   {static_cast<uint8_t>(Use::kBus), "bus"},
-  {static_cast<uint8_t>(Use::kRailConnection), "rail_connection"},
-  {static_cast<uint8_t>(Use::kBusConnection), "bus_connnection"},
+  {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
+  {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
   {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
 };
 inline std::string to_string(Use u) {

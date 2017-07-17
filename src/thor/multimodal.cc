@@ -1,7 +1,7 @@
 #include <map>
 #include <algorithm>
 #include "baldr/datetime.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 #include "midgard/logging.h"
 #include "thor/multimodal.h"
 
@@ -122,7 +122,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // of a multimodal route (TODO - add methods to costing to support this).
     if (mindist > 2000) {
       // Throw an exception so the message is returned in the service
-      throw valhalla_exception_t{400, 440};
+      throw valhalla_exception_t{440};
     } else {
       // Allow routing but disable use of transit
       disable_transit = true;
@@ -212,6 +212,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       continue;
     }
 
+    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform || nodeinfo->type() == NodeType::kTransitStation) {
+
+      if (processed_tiles.find(tile->id().tileid()) == processed_tiles.end()) {
+        tc->AddToExcludeList(tile);
+        processed_tiles.emplace(tile->id().tileid());
+      }
+
+      //check if excluded.
+      if (tc->IsExcluded(tile, nodeinfo))
+        continue;
+    }
+
     // Set local time. TODO: adjust for time zone.
     uint32_t localtime = start_time + pred.cost().secs;
 
@@ -224,21 +236,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     bool has_transit = pred.has_transit();
     GraphId prior_stop = pred.prior_stopid();
     uint32_t operator_id = pred.transit_operator();
-    if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
+    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
 
       // Get the transfer penalty when changing stations
       if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
         transfer_cost = tc->TransferCost();
       }
-
-      if (processed_tiles.find(tile->id().tileid()) == processed_tiles.end()) {
-        tc->AddToExcludeList(tile);
-        processed_tiles.emplace(tile->id().tileid());
-      }
-
-      //check if excluded.
-      if (tc->IsExcluded(tile, nodeinfo))
-        continue;
 
       // Add transfer time to the local time when entering a stop
       // as a pedestrian. This is a small added cost on top of
@@ -372,12 +375,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
             operator_id = GetOperatorId(tile, departure->routeid(), operators);
 
             // Add transfer penalty and operator change penalty
-            newcost.cost += transfer_cost.cost;
             if (pred.transit_operator() > 0 &&
                 pred.transit_operator() != operator_id) {
               // TODO - create a configurable operator change penalty
               newcost.cost += 300;
             }
+            else newcost.cost += transfer_cost.cost;
           }
 
           // Add edge cost. Change mode and costing to transit.
@@ -426,10 +429,11 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
           // Prevent going from one transit connection directly to another
           // at a transit stop - this is like entering a station and exiting
           // without getting on transit
-          if (nodeinfo->type() == NodeType::kMultiUseTransitStop &&
+          if (nodeinfo->type() == NodeType::kTransitEgress &&
               pred.use()   == Use::kTransitConnection &&
               directededge->use()  == Use::kTransitConnection)
                 continue;
+
         }
       }
 
@@ -447,18 +451,19 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // (cost from the dest. location to the end of the edge)
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
-        newcost -= p->second;
+        newcost.secs -= p->second.secs;  // Should properly handle elapsed time
+        newcost.cost += p->second.cost;  // Need this to handle the edge score
       }
 
       // Do not allow transit connection edges if transit is disabled. Also,
       // prohibit entering the same station as the prior.
-      if (directededge->use() == Use::kTransitConnection &&
+      if (directededge->use() == Use::kPlatformConnection &&
          (disable_transit || directededge->endnode() == pred.prior_stopid())) {
         continue;
       }
 
       // Test if exceeding maximum transfer walking distance
-      if (directededge->use() == Use::kTransitConnection &&
+      if (directededge->use() == Use::kPlatformConnection &&
           pred.prior_stopid().Is_Valid() &&
           walking_distance_ > max_transfer_distance) {
         continue;
@@ -578,7 +583,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     }
 
     // Return true if we reach a transit stop
-    if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
+    if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
       return true;
     }
 

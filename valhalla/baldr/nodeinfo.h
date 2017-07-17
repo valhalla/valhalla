@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_NODEINFO_H_
 #define VALHALLA_BALDR_NODEINFO_H_
 
+#include <cstdint>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
@@ -206,7 +207,7 @@ class NodeInfo {
    * @return  Returns true if this node is a transit node.
    */
   bool is_transit() const {
-    return type() == NodeType::kMultiUseTransitStop;
+    return (type() == NodeType::kMultiUseTransitPlatform);
   }
 
   /**

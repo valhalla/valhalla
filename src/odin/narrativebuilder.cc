@@ -9,7 +9,7 @@
 
 #include "midgard/logging.h"
 #include "baldr/verbal_text_formatter.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 #include "odin/narrativebuilder.h"
 #include "odin/narrative_dictionary.h"
@@ -1015,7 +1015,7 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
         subset = &dictionary_.sharp_subset;
         break;
       default:
-        throw valhalla_exception_t{400, 230};
+        throw valhalla_exception_t{230};
   }
 
   std::string instruction;
@@ -1096,7 +1096,7 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(
         subset = &dictionary_.sharp_verbal_subset;
         break;
       default:
-        throw valhalla_exception_t{400, 230};
+        throw valhalla_exception_t{230};
   }
 
   std::string instruction;
@@ -2716,7 +2716,7 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_platform_info().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_start_subset.station_label;
@@ -2734,7 +2734,7 @@ std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
   instruction = dictionary_.transit_connection_start_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
   // If enabled, form articulated prepositions
@@ -2756,7 +2756,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_platform_info().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_start_verbal_subset.station_label;
@@ -2774,7 +2774,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
   instruction = dictionary_.transit_connection_start_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
   // If enabled, form articulated prepositions
@@ -2796,7 +2796,7 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_platform_info().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_transfer_subset.station_label;
@@ -2814,7 +2814,7 @@ std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
   instruction = dictionary_.transit_connection_transfer_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
   // If enabled, form articulated prepositions
@@ -2836,7 +2836,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_platform_info().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_transfer_verbal_subset.station_label;
@@ -2854,7 +2854,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
   instruction = dictionary_.transit_connection_transfer_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
   // If enabled, form articulated prepositions
@@ -2876,7 +2876,7 @@ std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_platform_info().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_destination_subset.station_label;
@@ -2894,7 +2894,7 @@ std::string NarrativeBuilder::FormTransitConnectionDestinationInstruction(
   instruction = dictionary_.transit_connection_destination_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
   // If enabled, form articulated prepositions
@@ -2916,7 +2916,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
   instruction.reserve(kInstructionInitialCapacity);
 
   // Assign transit stop
-  std::string transit_stop = maneuver.transit_connection_stop().name;
+  std::string transit_stop = maneuver.transit_connection_platform_info().name();
 
   // Assign station label
   std::string station_label = dictionary_.transit_connection_destination_verbal_subset.station_label;
@@ -2934,7 +2934,7 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionDestinationInstruction(
   instruction = dictionary_.transit_connection_destination_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop);
   boost::replace_all(instruction, kStationLabelTag, station_label);
 
   // If enabled, form articulated prepositions
@@ -2953,7 +2953,7 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_stop_name = maneuver.GetTransitStops().front().name;
+  std::string transit_stop_name = maneuver.GetTransitStops().front().name();
 
   if (!transit_stop_name.empty()) {
     phrase_id = 1;
@@ -2963,7 +2963,7 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
   instruction = dictionary_.depart_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop_name);
   boost::replace_all(instruction, kTimeTag,
       get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
 
@@ -2982,7 +2982,7 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_stop_name = maneuver.GetTransitStops().front().name;
+  std::string transit_stop_name = maneuver.GetTransitStops().front().name();
 
   if (!transit_stop_name.empty()) {
     phrase_id = 1;
@@ -2992,7 +2992,7 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
   instruction = dictionary_.depart_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop_name);
   boost::replace_all(instruction, kTimeTag,
       get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
 
@@ -3011,7 +3011,7 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_stop_name = maneuver.GetTransitStops().back().name;
+  std::string transit_stop_name = maneuver.GetTransitStops().back().name();
 
   if (!transit_stop_name.empty()) {
     phrase_id = 1;
@@ -3021,7 +3021,7 @@ std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
   instruction = dictionary_.arrive_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop_name);
   boost::replace_all(instruction, kTimeTag,
       get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.GetLocale()));
 
@@ -3040,7 +3040,7 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string transit_stop_name = maneuver.GetTransitStops().back().name;
+  std::string transit_stop_name = maneuver.GetTransitStops().back().name();
 
   if (!transit_stop_name.empty()) {
     phrase_id = 1;
@@ -3050,7 +3050,7 @@ std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
   instruction = dictionary_.arrive_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopTag, transit_stop_name);
+  boost::replace_all(instruction, kTransitPlatformTag, transit_stop_name);
   boost::replace_all(instruction, kTimeTag,
       get_localized_time(maneuver.GetTransitArrivalTime(), dictionary_.GetLocale()));
 
@@ -3072,7 +3072,7 @@ std::string NarrativeBuilder::FormTransitInstruction(
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
   auto stop_count = maneuver.GetTransitStopCount();
-  auto stop_count_label = FormTransitStopCountLabel(
+  auto stop_count_label = FormTransitPlatformCountLabel(
       stop_count, dictionary_.transit_subset.transit_stop_count_labels);
 
   if (!transit_headsign.empty()) {
@@ -3089,8 +3089,8 @@ std::string NarrativeBuilder::FormTransitInstruction(
       FormTransitName(maneuver,
                       dictionary_.transit_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
-  boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
-  boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
+  boost::replace_all(instruction, kTransitPlatformCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
+  boost::replace_all(instruction, kTransitPlatformCountLabelTag, stop_count_label);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -3142,7 +3142,7 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
   auto stop_count = maneuver.GetTransitStopCount();
-  auto stop_count_label = FormTransitStopCountLabel(
+  auto stop_count_label = FormTransitPlatformCountLabel(
       stop_count, dictionary_.transit_remain_on_subset.transit_stop_count_labels);
 
   if (!transit_headsign.empty()) {
@@ -3160,8 +3160,8 @@ std::string NarrativeBuilder::FormTransitRemainOnInstruction(
           maneuver,
           dictionary_.transit_remain_on_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
-  boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
-  boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
+  boost::replace_all(instruction, kTransitPlatformCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
+  boost::replace_all(instruction, kTransitPlatformCountLabelTag, stop_count_label);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -3216,7 +3216,7 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
   uint8_t phrase_id = 0;
   std::string transit_headsign = maneuver.transit_info().headsign;
   auto stop_count = maneuver.GetTransitStopCount();
-  auto stop_count_label = FormTransitStopCountLabel(
+  auto stop_count_label = FormTransitPlatformCountLabel(
       stop_count, dictionary_.transit_transfer_subset.transit_stop_count_labels);
 
   if (!transit_headsign.empty()) {
@@ -3234,8 +3234,8 @@ std::string NarrativeBuilder::FormTransitTransferInstruction(
           maneuver,
           dictionary_.transit_transfer_subset.empty_transit_name_labels));
   boost::replace_all(instruction, kTransitHeadSignTag, transit_headsign);
-  boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
-  boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
+  boost::replace_all(instruction, kTransitPlatformCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
+  boost::replace_all(instruction, kTransitPlatformCountLabelTag, stop_count_label);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -3459,7 +3459,7 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   instruction.reserve(kInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   auto stop_count = maneuver.GetTransitStopCount();
-  auto stop_count_label = FormTransitStopCountLabel(
+  auto stop_count_label = FormTransitPlatformCountLabel(
       stop_count,
       dictionary_.post_transition_transit_verbal_subset
           .transit_stop_count_labels);
@@ -3468,8 +3468,8 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   instruction = dictionary_.post_transition_transit_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
-  boost::replace_all(instruction, kTransitStopCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
-  boost::replace_all(instruction, kTransitStopCountLabelTag, stop_count_label);
+  boost::replace_all(instruction, kTransitPlatformCountTag, std::to_string(stop_count)); //TODO: locale specific numerals
+  boost::replace_all(instruction, kTransitPlatformCountLabelTag, stop_count_label);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -3479,7 +3479,7 @@ std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
   return instruction;
 }
 
-std::string NarrativeBuilder::FormTransitStopCountLabel(
+std::string NarrativeBuilder::FormTransitPlatformCountLabel(
     size_t stop_count,
     const std::unordered_map<std::string, std::string>& transit_stop_count_labels) {
   const auto plural_category = GetPluralCategory(stop_count);
@@ -3650,7 +3650,7 @@ std::string NarrativeBuilder::FormRelativeTwoDirection(
       return relative_directions.at(1); // "right"
     }
     default: {
-      throw valhalla_exception_t{400, 231};
+      throw valhalla_exception_t{231};
     }
   }
 }
@@ -3669,7 +3669,7 @@ std::string NarrativeBuilder::FormRelativeThreeDirection(
       return relative_directions.at(2); // "right"
     }
     default: {
-      throw valhalla_exception_t{400, 232};
+      throw valhalla_exception_t{232};
     }
   }
 }
@@ -3856,6 +3856,19 @@ void NarrativeBuilder_itIT::FormArticulatedPrepositions(
   for (const auto& item : NarrativeBuilder_itIT::articulated_prepositions_) {
     boost::replace_all(instruction, item.first, item.second);
   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+std::string NarrativeBuilder_ruRU::GetPluralCategory(size_t count) {
+  size_t rem10 = count % 10, rem100 = count % 100;
+
+  // http://www.unicode.org/cldr/charts/29/supplemental/language_plural_rules.html#ru
+  if (rem10 == 1 && rem100 != 11) {
+    return kPluralCategoryOneKey;
+  } else if ((rem10 > 1 && rem10 < 5) && !(rem100 > 11 && rem100 < 15 )) {
+    return kPluralCategoryFewKey;
+  }
+  return kPluralCategoryOtherKey;
 }
 
 

@@ -1,6 +1,7 @@
 // -*- mode: c++ -*-
 #ifndef MMP_MAP_MATCHER_FACTORY_H_
 #define MMP_MAP_MATCHER_FACTORY_H_
+#include <cstdint>
 
 #include <string>
 
@@ -40,9 +41,6 @@ public:
 
   boost::property_tree::ptree
   MergeConfig(const std::string&, const boost::property_tree::ptree&);
-
-  boost::property_tree::ptree&
-  MergeConfig(const std::string&, boost::property_tree::ptree&);
 
   void ClearFullCache();
 

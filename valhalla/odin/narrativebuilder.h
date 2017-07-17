@@ -1,6 +1,7 @@
 #ifndef VALHALLA_ODIN_NARRATIVEBUILDER_H_
 #define VALHALLA_ODIN_NARRATIVEBUILDER_H_
 
+#include <cstdint>
 #include <vector>
 
 #include <valhalla/baldr/verbal_text_formatter.h>
@@ -367,14 +368,14 @@ class NarrativeBuilder {
    * stop count and language rules.
    *
    * @param stop_count Specified stop count of transit line.
-   * @param transit_stop_count_labels Map of stop count labels.
+   * @param transit_platform_count_labels Map of stop count labels.
    *
-   * @return the transit stop count label based on the value of the specified
+   * @return the transit platform count label based on the value of the specified
    * stop count and language rules.
    */
-  std::string FormTransitStopCountLabel(
+  std::string FormTransitPlatformCountLabel(
       size_t stop_count,
-      const std::unordered_map<std::string, std::string>& transit_stop_count_labels);
+      const std::unordered_map<std::string, std::string>& transit_platform_count_labels);
 
   /**
    * Returns the plural category based on the value of the specified
@@ -626,6 +627,31 @@ class NarrativeBuilder_itIT : public NarrativeBuilder {
 
  private:
   static const std::unordered_map<std::string, std::string> articulated_prepositions_;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////
+class NarrativeBuilder_ruRU : public NarrativeBuilder {
+
+ public:
+    NarrativeBuilder_ruRU(const DirectionsOptions& directions_options,
+        const EnhancedTripPath* trip_path,
+        const NarrativeDictionary& dictionary) :
+        NarrativeBuilder(directions_options, trip_path, dictionary) {
+    }
+
+ protected:
+
+  /**
+   * Returns the plural category based on the value of the specified
+   * count and the language rules.
+   *
+   * @param count Specified value to determine plural category.
+   *
+   * @return the plural category based on the value of the specified
+   * count and the language rules.
+   */
+  std::string GetPluralCategory(size_t count) override;
 
 };
 

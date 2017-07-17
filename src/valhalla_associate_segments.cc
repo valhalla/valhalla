@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cmath>
 #include "midgard/logging.h"
 #include "baldr/graphreader.h"
 #include "baldr/merge.h"
@@ -48,7 +50,7 @@ std::string to_string(const vm::PointLL &p) {
 
 std::string to_string(const vb::GraphId &i) {
   std::ostringstream out;
-  out << "GraphId(" << i.tileid() << ", " << i.level() << ", " << i.id() << ")";
+  out << "OSMLR GraphId(" << i.tileid() << ", " << i.level() << ", " << i.id() << ")";
   return out.str();
 }
 } // namespace std
@@ -99,7 +101,8 @@ struct CandidateEdge {
 uint16_t bearing(const std::vector<vm::PointLL> &shape) {
   // OpenLR says to use 20m along the edge, but we could use the
   // GetOffsetForHeading function, which adapts it to the road class.
-  float heading = vm::PointLL::HeadingAlongPolyline(shape, 20);
+  float heading = shape.size() >= 2 ?
+      vm::PointLL::HeadingAlongPolyline(shape, 20) : 0.0f;
   assert(heading >= 0.0);
   assert(heading < 360.0);
   return uint16_t(std::round(heading));
@@ -182,10 +185,9 @@ private:
 
   vb::GraphReader m_reader;
   vs::TravelMode m_travel_mode;
-  std::shared_ptr<vt::PathAlgorithm> m_path_algo;
+  std::shared_ptr<vt::AStarPathAlgorithm> m_path_algo;
   std::shared_ptr<vs::DynamicCost> m_costing;
   std::shared_ptr<vj::GraphTileBuilder> m_tile_builder;
-  const vb::GraphTile* m_tile;
 
   // Statistics
   uint32_t success_count_;
@@ -205,9 +207,9 @@ private:
 // segments.
 bool allow_edge_pred(const vb::DirectedEdge *edge) {
   return (!edge->trans_up() && !edge->trans_down() && !edge->is_shortcut() &&
-           edge->use() != vb::Use::kTransitConnection &&
-           edge->use() != vb::Use::kTurnChannel && !edge->internal() &&
-           edge->use() != vb::Use::kFerry && !edge->roundabout() &&
+           edge->classification() != vb::RoadClass::kServiceOther &&
+          (edge->use() == vb::Use::kRoad || edge->use() == vb::Use::kRamp) &&
+          !edge->roundabout() && !edge->internal() &&
           (edge->forwardaccess() & vb::kVehicularAccess) != 0);
 }
 
@@ -381,9 +383,11 @@ private:
   const vb::GraphTile *m_last_tile;
 };
 
-// Find nodes within a specified distance of lat,lon location
+// Find nodes on the specified level that are within a specified distance
+// from the lat,lon location
 std::vector<vb::GraphId> find_nearby_nodes(vb::GraphReader& reader,
-                              const float dist, const vm::PointLL& pt) {
+                              const float dist, const vm::PointLL& pt,
+                              const uint8_t level) {
   // Create a bounding box
   float meters_per_lng = vm::DistanceApproximator::MetersPerLngDegree(pt.lat());
   float delta_lng = kNodeDistanceTolerance / meters_per_lng;
@@ -392,14 +396,14 @@ std::vector<vb::GraphId> find_nearby_nodes(vb::GraphReader& reader,
                               {pt.lng() + delta_lng, pt.lat() + delta_lat});
   auto nodes = vl::nodes_in_bbox(bbox, reader);
 
-  // Remove nodes on the local level (TODO-make this configurable?)
-  std::vector<vb::GraphId> non_local_nodes;
+  // Remove nodes that are not on the specified level
+  std::vector<vb::GraphId> level_nodes;
   for (const auto node : nodes) {
-    if (node.level() < 2) {
-      non_local_nodes.emplace_back(node);
+    if (node.level() == level) {
+      level_nodes.emplace_back(node);
     }
   }
-  return non_local_nodes;
+  return level_nodes;
 }
 
 // Add edges from each node
@@ -417,12 +421,11 @@ std::vector<CandidateEdge> GetEdgesFromNodes(vb::GraphReader& reader,
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
-      // Skip non-regular edges
+      // Skip non-regular edges - must be a road or ramp
       if (directededge->trans_up() || directededge->trans_down() ||
           directededge->is_shortcut() || directededge->roundabout() ||
-          directededge->use() == vb::Use::kTransitConnection ||
-          directededge->use() == vb::Use::kTurnChannel ||
-          directededge->internal() || directededge->use() == vb::Use::kFerry) {
+         (directededge->use() != vb::Use::kRoad && directededge->use() != vb::Use::kRamp) ||
+          directededge->internal()) {
         continue;
       }
 
@@ -485,8 +488,7 @@ edge_association::edge_association(const bpt::ptree &pt)
     m_reader(pt.get_child("mjolnir")),
     m_travel_mode(vs::TravelMode::kDrive),
     m_path_algo(new vt::AStarPathAlgorithm()),
-    m_costing(new DistanceOnlyCost(m_travel_mode)),
-    m_tile(nullptr) {
+    m_costing(new DistanceOnlyCost(m_travel_mode)) {
 }
 
 // Get a list of candidate edges for the location.
@@ -497,7 +499,7 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
   std::vector<CandidateEdge> edges;
   if (lrp.at_node()) {
     // Find nearby nodes and get allowed edges
-    auto nodes = find_nearby_nodes(m_reader, kNodeDistanceTolerance, ll);
+    auto nodes = find_nearby_nodes(m_reader, kNodeDistanceTolerance, ll, level);
     edges = GetEdgesFromNodes(m_reader, nodes, ll, origin);
   } else {
     // Use edge search with loki
@@ -644,7 +646,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
   // with low node tolerance, but as node search tolerance is raised we get
   // fallback cases where we shouldn't
   if (segment.lrps(0).at_node() && segment.lrps(size-1).at_node()) {
-    LOG_INFO("Fall back to A*: " + std::to_string(segment_id) + " value = " +
+    LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) + " value = " +
                   std::to_string(segment_id.value));
   }
 
@@ -668,6 +670,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
 
     // make sure there's no state left over from previous paths
     m_path_algo->Clear();
+    m_path_algo->set_max_label_count(100);
     auto path = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
 
     if (path.empty()) {
@@ -784,10 +787,10 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
   if (edges.empty()) {
     size_t n = segment.lrps_size();
     if (segment.lrps(0).at_node() && segment.lrps(n-1).at_node()) {
-      LOG_INFO("No match from nodes: " + std::to_string(segment_id) + " value = " +
+      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) + " value = " +
                     std::to_string(segment_id.value));
     } else {
-      LOG_INFO("No match along edge: " + std::to_string(segment_id) + " value = " +
+      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) + " value = " +
               std::to_string(segment_id.value));
     }
     return false;
@@ -814,8 +817,14 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
   return true;
 }
 
-void edge_association::add_tile(const std::string &file_name) {
-  //read the osmlr tile
+void edge_association::add_tile(const std::string& file_name) {
+  // Return if this tile does not exist in the Valhalla tile set
+  auto base_id = vb::GraphTile::GetTileId(file_name);
+  if (!m_reader.DoesTileExist(base_id)) {
+    return;
+  }
+
+  // Read the OSMLR tile
   pbf::Tile tile;
   {
     std::ifstream in(file_name);
@@ -824,14 +833,12 @@ void edge_association::add_tile(const std::string &file_name) {
     }
   }
 
-  //get a tile builder ready for this tile
-  auto base_id = vb::GraphTile::GetTileId(file_name);
+  // Get a tile builder ready for this tile
   m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.tile_dir(),
                        base_id, false));
   m_tile_builder->InitializeTrafficSegments();
-  m_tile = m_reader.GetGraphTile(base_id);
 
-  //do the matching of the segments in this osmlr tile
+  // Match the segments in this OSMLR tile
   std::cout.precision(16);
   uint64_t entry_id = 0;
   MatchType match_type = MatchType::kWalk;
@@ -853,9 +860,9 @@ void edge_association::add_tile(const std::string &file_name) {
     entry_id += 1;
   }
 
-  //finish this tile
-  m_reader.Clear();
+  // Finish this tile
   m_tile_builder->UpdateTrafficSegments();
+  m_reader.Clear();
 }
 
 // Add OSMLR segment associations to each tile in the list. Any "local"
@@ -1005,7 +1012,10 @@ int main(int argc, char** argv) {
       }
     }
   }
-  //std::random_shuffle(osmlr_tiles.begin(), osmlr_tiles.end());
+
+  // Shuffle the list to minimize the chance of adjacent tiles being access
+  // by different threads at the same time
+  std::random_shuffle(osmlr_tiles.begin(), osmlr_tiles.end());
 
   //configure logging
   vm::logging::Configure({{"type","std_err"},{"color","true"}});

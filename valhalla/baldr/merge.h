@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_MERGE_H_
 #define VALHALLA_BALDR_MERGE_H_
 
+#include <cstdint>
 #include <deque>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -54,8 +55,6 @@ private:
   std::function<void(const path &)> m_func;
 };
 
-path make_single_edge_path(GraphReader &reader, GraphId edge_id);
-
 } // namespace detail
 
 /**
@@ -89,6 +88,11 @@ void merge(TileSet &tiles, GraphReader &reader,
     for (uint32_t i = 0; i < node_count; ++i, ++node_id) {
       e.explore(node_id);
     }
+
+    // Clear cache if over committed
+    if (reader.OverCommitted()) {
+      reader.Clear();
+    }
   }
 
   // Iterate over tiles. Handle single edges that remain.
@@ -98,9 +102,23 @@ void merge(TileSet &tiles, GraphReader &reader,
     GraphId edge_id(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < num_edges; ++i, ++edge_id) {
       if (!tracker.get(edge_id)) {
-        auto p = detail::make_single_edge_path(reader, edge_id);
-        func(p);
+        // Store single edge paths if the edge is allowed.
+        auto* edge = tile->directededge(edge_id);
+        if (edge_allowed_pred(edge)) {
+          // Store the single edge path if the start node is valid. It can be
+          // invalid if the end node tile is null (as in a regional extract)
+          auto end_nodes = reader.GetDirectedEdgeNodes(tile, edge);
+          path p(segment(end_nodes.first, edge_id, end_nodes.second));
+          if (p.m_start.Is_Valid()) {
+            func(p);
+          }
+        }
       }
+    }
+
+    // Clear cache if over committed
+    if (reader.OverCommitted()) {
+      reader.Clear();
     }
   }
 }

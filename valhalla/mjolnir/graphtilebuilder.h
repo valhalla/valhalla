@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 #define VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 
+#include <cstdint>
 #include <boost/functional/hash.hpp>
 #include <fstream>
 #include <iostream>

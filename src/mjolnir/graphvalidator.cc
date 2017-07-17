@@ -90,6 +90,17 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   const NodeInfo* nodeinfo = end_tile->node(endnode.id());
   bool sametile = (startnode.tileid() == endnode.tileid());
 
+  // The following can happen for transit nodes that do not connect to osm data
+  // and have no transit lines.  This can happen when we are using a subset of
+  // transit data.
+  if (nodeinfo->edge_count() == 0) {
+      LOG_DEBUG("End node has no connections " +
+                std::to_string(endnode.tileid()) + "," +
+                std::to_string(endnode.level()) + "," +
+                std::to_string(endnode.id()));
+      return kMaxEdgesPerNode;
+  }
+
   // Set the end node iso.  Used for country crossings.
   endnodeiso = end_tile->admin(nodeinfo->admin_index())->country_iso();
 
@@ -135,6 +146,17 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
     if (edge.use() == Use::kTransitConnection ||
         directededge->use() == Use::kTransitConnection) {
       continue;
+    }
+    if ((edge.use() == Use::kPlatformConnection &&
+         directededge->use() == Use::kPlatformConnection) ||
+        (edge.use() == Use::kEgressConnection &&
+         directededge->use() == Use::kEgressConnection)) {
+      auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
+      auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();
+      if (ShapesMatch(shape1, shape2)) {
+        opp_index = i;
+        continue;
+      }
     }
 
     // After this point should just have regular edges, shortcut edges, and
@@ -220,12 +242,14 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 
   // No matching opposing edge found - log error cases
   if (opp_index == absurd_index) {
-    if (edge.trans_up() || edge.trans_down()) {
+    if (edge.IsTransition()) {
       LOG_ERROR("No match found to a transition edge");
     }
-    else if (edge.use() == Use::kTransitConnection) {
+    else if (edge.use() == Use::kTransitConnection ||
+             edge.use() == Use::kEgressConnection ||
+             edge.use() == Use::kPlatformConnection) {
       // Log error - no opposing edge for a transit connection
-      LOG_ERROR("No opposing transit connection edge: endstop = " +
+      LOG_ERROR("No opposing transit/egress/platform connection edge: endstop = " +
               std::to_string(nodeinfo->stop_index()) + " has " +
               std::to_string(nodeinfo->edge_count()))
     } else if (edge.IsTransitLine()) {
@@ -404,13 +428,15 @@ void validate(const boost::property_tree::ptree& pt,
           // node. Set the deadend flag and internal flag (if the opposing
           // edge is internal then make sure this edge is as well)
           std::string end_node_iso;
-          uint64_t wayid = (directededge.trans_down() || directededge.trans_up()) ?
+          uint64_t wayid = directededge.IsTransition() ?
                  0 : tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
           uint32_t opp_index = GetOpposingEdgeIndex(node, directededge,
                  wayid, tile, endnode_tile, problem_ways, dupcount,
                  end_node_iso, transit_level);
           directededge.set_opp_index(opp_index);
-          if (directededge.use() == Use::kTransitConnection)
+          if (directededge.use() == Use::kTransitConnection ||
+              directededge.use() == Use::kEgressConnection ||
+              directededge.use() == Use::kPlatformConnection)
               directededge.set_opp_local_idx(opp_index);
 
           // Mark a country crossing if country ISO codes do not match

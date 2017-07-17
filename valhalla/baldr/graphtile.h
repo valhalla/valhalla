@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHTILE_H_
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
+#include <cstdint>
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileheader.h>
@@ -22,7 +23,6 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
 
-#include <boost/shared_array.hpp>
 #include <memory>
 #include "signinfo.h"
 
@@ -403,7 +403,7 @@ class GraphTile {
  protected:
 
   // Graph tile memory, this must be shared so that we can put it into cache
-  boost::shared_ptr<std::vector<char>> graphtile_;
+  std::shared_ptr<std::vector<char>> graphtile_;
 
   // Header information for the tile
   GraphTileHeader* header_;

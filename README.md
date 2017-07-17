@@ -59,16 +59,8 @@ Get Valhalla from Personal Package Archive (PPA)
 If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly and easily via PPA. Try the following:
 
 ```bash
-# get some dependencies in other ppas
-if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
-  sudo add-apt-repository -y ppa:kevinkreiser/libsodium
-  sudo add-apt-repository -y ppa:kevinkreiser/libpgm
-  sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
-  sudo add-apt-repository -y ppa:kevinkreiser/czmq
-fi
 # grab all of the valhalla software from ppa
-sudo add-apt-repository -y ppa:kevinkreiser/prime-server
-sudo add-apt-repository -y ppa:valhalla-routing/valhalla
+sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
 sudo apt-get install -y valhalla-bin
 ```
@@ -81,13 +73,7 @@ Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual
 To install on a Debian or Ubuntu system you need to install its dependencies with:
 
 ```bash
-if [[ $(grep -cF trusty /etc/lsb-release) > 0 ]]; then
- sudo add-apt-repository -y ppa:kevinkreiser/libsodium
- sudo add-apt-repository -y ppa:kevinkreiser/libpgm
- sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
- sudo add-apt-repository -y ppa:kevinkreiser/czmq
-fi
-sudo add-apt-repository -y ppa:kevinkreiser/prime-server
+sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
 sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
 #if you plan to compile with data building support, see below for more info
@@ -101,6 +87,8 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 
     # install dependencies (czmq is required by prime_server)
     brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config lua czmq
+    # you also need to be able to link sqlite3 (at least on some versions of macOS and only if you want datatools)
+    brew link sqlite3
 
     # clone and build prime_server https://github.com/kevinkreiser/prime_server#build-and-install
 
@@ -119,6 +107,7 @@ sudo make install
 Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
 
 * `--enable-data-tools=no` will disable building any of the components (library bits, executables and tests) which can be used to create the data that the services run on. This can be useful in embedded situations where you really don't need some of the dependencies above.
+* `--enable-services=no` will disable building any of the components (library bits, executables and tests) which can be used to run valhalla as an http service. This can be useful in embedded situations where you really don't need some of the dependencies above (prime_server et al).
 * `--enable-static=yes` will enable building of static libvalhalla.la which could be useful for embedded applications
 * `--enable-python-bindings=no` will disable python bindings for valhalla. Embedded applications would probably rather turn this off.
 
@@ -191,7 +180,7 @@ Note also that, because calculating the coverage requires compiler support, you 
 
 Command Line Tools
 ------------------
-####valhalla_run_route
+#### valhalla_run_route
 A C++ application that will create a route path with guidance instructions for the specified route request.
 
 ```bash

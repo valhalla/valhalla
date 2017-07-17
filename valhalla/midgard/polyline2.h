@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MIDGARD_POLYLINE2_H_
 #define VALHALLA_MIDGARD_POLYLINE2_H_
 
+#include <cstdint>
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
@@ -57,11 +58,11 @@ class Polyline2 {
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
-   * squared to that point and the index of the segment where the closest
+   * to that point and the index of the segment where the closest
    * point lies.
    * @param   pts     List of points on the polyline.
    * @return  tuple of <Closest point along the polyline,
-   *                    Distance squared (meters) of the closest point,
+   *                    Distance in meters of the closest point,
    *                    Index of the segment of the polyline which contains
    *                      the closest point >
    */

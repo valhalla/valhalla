@@ -39,6 +39,9 @@ class Measurement
   float sq_search_radius() const
   { return search_radius_ * search_radius_; }
 
+  float sq_gps_accuracy() const
+  { return gps_accuracy_ * gps_accuracy_; }
+
   float gps_accuracy() const
   { return gps_accuracy_; }
 

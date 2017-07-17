@@ -62,6 +62,7 @@ const std::string kEdgeDensity = "edge.density";
 const std::string kEdgeSpeedLimit = "edge.speed_limit";
 const std::string kEdgeTruckSpeed = "edge.truck_speed";
 const std::string kEdgeTruckRoute = "edge.truck_route";
+const std::string kEdgeTrafficSegments = "edge.traffic_segments";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
@@ -74,14 +75,23 @@ const std::string kNodeElapsedTime = "node.elapsed_time";
 const std::string kNodeaAdminIndex = "node.admin_index";
 const std::string kNodeType = "node.type";
 const std::string kNodeFork = "node.fork";
-const std::string kNodeTransitStopInfoType = "node.transit_stop_info.type";
-const std::string kNodeTransitStopInfoOnestopId = "node.transit_stop_info.onestop_id";
-const std::string kNodetransitStopInfoName = "node.transit_stop_info.name";
-const std::string kNodeTransitStopInfoArrivalDateTime = "node.transit_stop_info.arrival_date_time";
-const std::string kNodeTransitStopInfoDepartureDateTime = "node.transit_stop_info.departure_date_time";
-const std::string kNodeTransitStopInfoIsParentStop = "node.transit_stop_info.is_parent_stop";
-const std::string kNodeTransitStopInfoAssumedSchedule = "node.transit_stop_info.assumed_schedule";
-const std::string kNodeTransitStopInfoLatLon = "node.transit_stop_info.lat_lon";
+const std::string kNodeTransitPlatformInfoType = "node.transit_platform_info.type";
+const std::string kNodeTransitPlatformInfoOnestopId = "node.transit_platform_info.onestop_id";
+const std::string kNodeTransitPlatformInfoName = "node.transit_platform_info.name";
+const std::string kNodeTransitPlatformInfoStationOnestopId = "node.transit_platform_info.station_onestop_id";
+const std::string kNodeTransitPlatformInfoStationName = "node.transit_platform_info.station_name";
+const std::string kNodeTransitPlatformInfoArrivalDateTime = "node.transit_platform_info.arrival_date_time";
+const std::string kNodeTransitPlatformInfoDepartureDateTime = "node.transit_platform_info.departure_date_time";
+const std::string kNodeTransitPlatformInfoIsParentStop = "node.transit_platform_info.is_parent_stop";
+const std::string kNodeTransitPlatformInfoAssumedSchedule = "node.transit_platform_info.assumed_schedule";
+const std::string kNodeTransitPlatformInfoLatLon = "node.transit_platform_info.lat_lon";
+const std::string kNodeTransitStationInfoOnestopId = "node.transit_station_info.onestop_id";
+const std::string kNodeTransitStationInfoName = "node.transit_station_info.name";
+const std::string kNodeTransitStationInfoLatLon = "node.transit_station_info.lat_lon";
+const std::string kNodeTransitEgressInfoOnestopId = "node.transit_egress_info.onestop_id";
+const std::string kNodeTransitEgressInfoName = "node.transit_egress_info.name";
+const std::string kNodeTransitEgressInfoLatLon = "node.transit_egress_info.lat_lon";
+
 const std::string kNodeTimeZone = "node.time_zone";
 
 // Top level: osm chnageset, admin list, and full shape keys
@@ -94,6 +104,8 @@ const std::string kShape = "shape";
 const std::string kMatchedPoint = "matched.point";
 const std::string kMatchedType = "matched.type";
 const std::string kMatchedEdgeIndex = "matched.edge_index";
+const std::string kMatchedBeginRouteDiscontinuity = "matched.begin_route_discontinuity";
+const std::string kMatchedEndRouteDiscontinuity = "matched.end_route_discontinuity";
 const std::string kMatchedDistanceAlongEdge = "matched.distance_along_edge";
 const std::string kMatchedDistanceFromTracePoint = "matched.distance_from_trace_point";
 

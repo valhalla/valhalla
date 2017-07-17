@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <fstream>
 
-#include "skadi/service.h"
+#include "skadi/worker.h"
 #include "pixels.h"
 
 using namespace valhalla;

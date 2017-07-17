@@ -1,6 +1,7 @@
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
+#include <cstdint>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/transitdeparture.h>

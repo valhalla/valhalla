@@ -82,6 +82,12 @@ class TileHierarchy {
    */
   static uint8_t get_level(const RoadClass roadclass);
 
+  /**
+   * Gets the maximum level supported in the hierarchy.
+   * @return  Returns the max. level.
+   */
+  static uint8_t get_max_level();
+
  private:
   static std::map<uint8_t, TileLevel> levels_;
   static TileLevel transit_level_;

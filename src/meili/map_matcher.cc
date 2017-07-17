@@ -1,9 +1,8 @@
+#include <cmath>
 #include "midgard/distanceapproximator.h"
 
-#include "meili/graph_helpers.h"
 #include "meili/routing.h"
 #include "meili/geometry_helpers.h"
-#include "meili/graph_helpers.h"
 #include "meili/match_route.h"
 #include "meili/map_matcher.h"
 
@@ -59,7 +58,7 @@ InterpolateMeasurement(const MapMatching& mapmatching,
   Interpolation best_interp;
 
   for (auto segment = begin; segment != end; segment++) {
-    const auto directededge = helpers::edge_directededge(mapmatching.graphreader(), segment->edgeid, tile);
+    const auto directededge = mapmatching.graphreader().directededge(segment->edgeid, tile);
     if (!directededge) {
       continue;
     }
@@ -316,8 +315,8 @@ MapMatcher::~MapMatcher() {}
 
 
 std::vector<MatchResult>
-MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements)
-{
+MapMatcher::OfflineMatch(
+    const std::vector<Measurement>& measurements, uint32_t k) {
   mapmatching_.Clear();
 
   const auto begin = measurements.begin(),
@@ -379,7 +378,7 @@ MapMatcher::AppendMeasurement(const Measurement& measurement)
   }
   const auto& candidates = candidatequery_.Query(
       measurement.lnglat(),
-      measurement.sq_search_radius(),
+      std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()),
       mapmatching_.costing()->GetEdgeFilter());
   return mapmatching_.AppendState(measurement, candidates.begin(), candidates.end());
 }

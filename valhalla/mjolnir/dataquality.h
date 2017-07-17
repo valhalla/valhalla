@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_DATAQUALITY_H
 #define VALHALLA_MJOLNIR_DATAQUALITY_H
 
+#include <cstdint>
 #include <algorithm>
 #include <unordered_set>
 #include <map>

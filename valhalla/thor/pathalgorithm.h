@@ -29,7 +29,9 @@ class PathAlgorithm {
   /**
    * Constructor
    */
-  PathAlgorithm():interrupt(nullptr) { }
+  PathAlgorithm()
+     : interrupt(nullptr) {
+  }
 
   /**
    * Destructor
@@ -59,10 +61,12 @@ class PathAlgorithm {
 
   /**
    * Set a callback that will throw when the path computation should be aborted
-   *
-   * @param interrupt_callback  the function to periodically call to see if we should abort
+   * @param interrupt_callback  the function to periodically call to see if
+   *                            we should abort
    */
-  void set_interrupt(const std::function<void ()>* interrupt_callback) { interrupt = interrupt_callback; }
+  void set_interrupt(const std::function<void ()>* interrupt_callback) {
+    interrupt = interrupt_callback;
+  }
 
  protected:
   const std::function<void()>* interrupt;

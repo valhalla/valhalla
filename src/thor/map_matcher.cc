@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <exception>
 #include "midgard/logging.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 #include "thor/map_matcher.h"
 
@@ -46,6 +46,11 @@ std::vector<PathInfo> MapMatcher::FormPath(
     const GraphTile* tile = matcher->graphreader().GetGraphTile(edge_id);
     directededge = tile->directededge(edge_id);
 
+    // Skip transition edges
+    if (directededge->IsTransition()) {
+      continue;
+    }
+
     // Check if connected to prior edge
     if (prior_edge.Is_Valid() && !matcher->graphreader().AreEdgesConnected(prior_edge, edge_id)) {
       disconnected_edges.emplace_back(prior_edge, edge_id);
@@ -86,7 +91,7 @@ std::vector<PathInfo> MapMatcher::FormPath(
 
   // Throw exception if not trace attributes action and disconnected path
   if (!trace_attributes_action && !disconnected_edges.empty())
-      throw valhalla_exception_t{400, 442};
+      throw valhalla_exception_t{442};
 
   return path;
 }

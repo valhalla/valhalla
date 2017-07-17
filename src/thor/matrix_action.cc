@@ -1,6 +1,5 @@
-#include <prime_server/prime_server.hpp>
-
-using namespace prime_server;
+#include "thor/worker.h"
+#include <cstdint>
 
 #include "midgard/logging.h"
 #include "midgard/constants.h"
@@ -8,43 +7,20 @@ using namespace prime_server;
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
-
-#include "thor/service.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
+#include "tyr/actor.h"
 
 using namespace valhalla;
+using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
-namespace std {
-  template <>
-  struct hash<thor_worker_t::ACTION_TYPE>
-  {
-    std::size_t operator()(const thor_worker_t::ACTION_TYPE& a) const {
-      return std::hash<int>()(a);
-    }
-  };
-}
-
 namespace {
 
-  const std::unordered_map<thor_worker_t::ACTION_TYPE, std::string> ACTION_TO_STRING {
-     {thor_worker_t::ONE_TO_MANY, "one_to_many"},
-     {thor_worker_t::MANY_TO_ONE, "many_to_one"},
-     {thor_worker_t::MANY_TO_MANY, "many_to_many"},
-     {thor_worker_t::SOURCES_TO_TARGETS, "sources_to_targets"},
-     {thor_worker_t::OPTIMIZED_ROUTE, "optimized_route"}
-   };
-
-
   constexpr double kMilePerMeter = 0.000621371;
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
   json::ArrayPtr locations(const std::vector<baldr::PathLocation>& correlated) {
     auto input_locs = json::array({});
     for(size_t i = 0; i < correlated.size(); i++) {
@@ -109,12 +85,9 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    worker_t::result_t  thor_worker_t::matrix(ACTION_TYPE action, const boost::property_tree::ptree &request, http_request_info_t& request_info) {
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
-
+    json::MapPtr thor_worker_t::matrix(ACTION_TYPE action, const boost::property_tree::ptree &request) {
       parse_locations(request);
-      parse_costing(request);
+      auto costing = parse_costing(request);
 
       const auto& matrix_type = ACTION_TO_STRING.find(action)->second;
       if (!healthcheck)
@@ -131,68 +104,38 @@ namespace valhalla {
       std::vector<TimeDistance> time_distances;
       auto costmatrix = [&]() {
         thor::CostMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+                                    mode, max_matrix_distance.find(costing)->second);
       };
       auto timedistancematrix = [&]() {
         thor::TimeDistanceMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing, mode);
+        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+                                    mode, max_matrix_distance.find(costing)->second);
       };
       switch (source_to_target_algorithm) {
-      case SELECT_OPTIMAL:
-        if (correlated_s.size() + correlated_t.size() > 100) {
-          time_distances = timedistancematrix();
-        } else {
-          time_distances = costmatrix();
-        }
-        /** TODO - test performance of TimeDistanceMatrix vs. CostMatrix for various
-            modes and conditions (e.g. number of locations, distances between
-            locations)
+        case SELECT_OPTIMAL:
+          //TODO - Do further performance testing to pick the best algorithm for the job
           switch (mode) {
-          case TravelMode::kPedestrian:
-          case TravelMode::kBicycle:
-            time_distances = timedistancematrix();
-            break;
-          default:
-            time_distances = costmatrix();
+            case TravelMode::kPedestrian:
+            case TravelMode::kBicycle:
+            case TravelMode::kPublicTransit:
+              time_distances = timedistancematrix();
+              break;
+            default:
+              time_distances = costmatrix();
           }
-        } */
-        break;
-      case COST_MATRIX:
-        time_distances = costmatrix();
-        break;
-      case TIME_DISTANCE_MATRIX: {
-        time_distances = timedistancematrix();
-        break;
-      }
+          break;
+        case COST_MATRIX:
+          time_distances = costmatrix();
+          break;
+        case TIME_DISTANCE_MATRIX:
+          time_distances = timedistancematrix();
+          break;
       }
       json = serialize(matrix_type, request.get_optional<std::string>("id"), correlated_s, correlated_t,
         time_distances, units, distance_scale);
 
-      //jsonp callback if need be
-      std::ostringstream stream;
-      auto jsonp = request.get_optional<std::string>("jsonp");
-      if(jsonp)
-        stream << *jsonp << '(';
-      stream << *json;
-      if(jsonp)
-        stream << ')';
-
-      //get processing time for thor
-      auto e = std::chrono::system_clock::now();
-      std::chrono::duration<float, std::milli> elapsed_time = e - s;
-      //log request if greater than X (ms)
-      if (!healthcheck && !request_info.spare && elapsed_time.count() / (correlated_s.size() * correlated_t.size()) > long_request) {
-        std::stringstream ss;
-        boost::property_tree::json_parser::write_json(ss, request, false);
-        LOG_WARN("thor::" + matrix_type + " matrix request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-        LOG_WARN("thor::" + matrix_type + " matrix request exceeded threshold::"+ ss.str());
-        midgard::logging::Log("valhalla_thor_long_request_matrix", " [ANALYTICS] ");
-      }
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      worker_t::result_t result{false};
-      result.messages.emplace_back(response.to_string());
-      return result;
+      return json;
     }
   }
 }

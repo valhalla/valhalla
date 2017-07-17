@@ -1,4 +1,5 @@
-#include "loki/service.h"
+#include <cstdint>
+#include "loki/worker.h"
 #include "loki/search.h"
 
 #include "baldr/json.h"
@@ -6,14 +7,10 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
-using namespace prime_server;
+using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-
   json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
     auto array = json::array({});
     for(const auto& edge : location.edges) {
@@ -37,6 +34,7 @@ namespace {
             },
             {"percent_along", json::fp_t{edge.dist, 5} },
             {"score", json::fp_t{edge.score, 1}},
+            {"minimum_reachability", static_cast<int64_t>(edge.minimum_reachability)},
             {"edge_id", edge.id.json()},
             {"edge", directed_edge->json()},
             {"edge_info", edge_info.json()},
@@ -130,7 +128,7 @@ namespace valhalla {
     void loki_worker_t::init_locate(rapidjson::Document& request) {
       locations = parse_locations(request, "locations");
       if(locations.size() < 1)
-        throw valhalla_exception_t{400, 120};
+        throw valhalla_exception_t{120};
       if(request.HasMember("costing"))
         parse_costing(request);
       else {
@@ -139,7 +137,7 @@ namespace valhalla {
       }
     }
 
-    worker_t::result_t loki_worker_t::locate(rapidjson::Document& request, http_request_info_t& request_info) {
+    json::ArrayPtr loki_worker_t::locate(rapidjson::Document& request) {
       init_locate(request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
@@ -154,21 +152,7 @@ namespace valhalla {
           json->emplace_back(serialize(id, location.latlng_, "No data found for location", verbose));
         }
       }
-
-      std::ostringstream stream;
-      //jsonp callback if need be
-      auto jsonp = GetOptionalFromRapidJson<std::string>(request, "/jsonp");
-      if(jsonp)
-        stream << *jsonp << '(';
-      stream << *json;
-      if(jsonp)
-        stream << ')';
-
-      worker_t::result_t result{false};
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-      return result;
+      return json;
     }
 
   }

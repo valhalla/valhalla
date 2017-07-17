@@ -345,13 +345,13 @@ shared = {
 }
 
 dedicated = {
-["opposite_track"] = 2,
-["track"] = 2
+["opposite_lane"] = 2,
+["lane"] = 2
 }
 
 separated = {
-["opposite_lane"] = 3,
-["lane"] = 3
+["opposite_track"] = 3,
+["track"] = 3
 }
 
 oneway = {
@@ -1153,6 +1153,8 @@ function filter_tags_generic(kv)
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
+  kv["destination:forward"] = kv["destination:forward"]
+  kv["destination:backward"] = kv["destination:backward"]
   kv["destination:ref"] = kv["destination:ref"]
   kv["destination:ref:to"] = kv["destination:ref:to"]
   kv["destination:street"] = kv["destination:street"]
@@ -1409,10 +1411,33 @@ function rels_proc (kv, nokeys)
 
      local restrict = restriction[kv["restriction"]]
 
+     local restrict_type = restriction[kv["restriction:hgv"]] or restriction[kv["restriction:emergency"]] or
+                           restriction[kv["restriction:taxi"]] or restriction[kv["restriction:motorcar"]] or
+                           restriction[kv["restriction:bus"]] or restriction[kv["restriction:bicycle"]] or
+                           restriction[kv["restriction:hazmat"]]
+
+     --restrictions with type win over just restriction key.  people enter both.
+     if restrict_type ~= nil then
+       restrict = restrict_type
+     end
+
      if kv["type"] == "restriction" then
 
        if restrict ~= nil then
-         kv["restriction"] = restrict
+
+         kv["restriction:hgv"] = restriction[kv["restriction:hgv"]]
+         kv["restriction:emergency"] = restriction[kv["restriction:emergency"]]
+         kv["restriction:taxi"] = restriction[kv["restriction:taxi"]]
+         kv["restriction:motorcar"] = restriction[kv["restriction:motorcar"]]
+         kv["restriction:bus"] = restriction[kv["restriction:bus"]]
+         kv["restriction:bicycle"] = restriction[kv["restriction:bicycle"]]
+         kv["restriction:hazmat"] = restriction[kv["restriction:hazmat"]]
+
+         if restrict_type == nil then
+           kv["restriction"] = restrict
+         else
+           kv["restriction"] = nil
+         end
 
          if kv["day_on"] or kv["day_off"] then
 

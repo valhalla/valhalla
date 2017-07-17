@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_EDGEELEVATION_H_
 #define VALHALLA_BALDR_EDGEELEVATION_H_
 
+#include <cstdint>
 namespace valhalla {
 namespace baldr {
 

@@ -1,3 +1,4 @@
+#include <cstdint>
 //#include "mjolnir/transitbuilder.h"
 //#include "mjolnir/graphtilebuilder.h"
 #include "proto/transit.pb.h"
@@ -89,10 +90,10 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
         }
 
         if (spp.stop_pairs_size() == 0) {
-          if (transit.stops_size() > 0) {
+          if (transit.nodes_size() > 0) {
             LOG_ERROR("Tile " + fname +
                       " has 0 schedule stop pairs but has " +
-                      std::to_string(transit.stops_size()) + " stops");
+                      std::to_string(transit.nodes_size()) + " stops");
           }
         }
 
@@ -123,8 +124,7 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
             ss << ":";
             ss << std::setfill('0') << std::setw(2) << seconds;
 
-            LOG_INFO("LineID: " + std::to_string(sp.line_id()) +
-                     " Route: " + std::to_string(sp.route_index()) +
+            LOG_INFO(" Route: " + std::to_string(sp.route_index()) +
                      " Trip: " + std::to_string(sp.trip_id()) +
                      " Dep Time: " + ss.str());
           }
@@ -230,10 +230,10 @@ void LogSchedule(const std::string transit_dir,
         }
 
         if (spp.stop_pairs_size() == 0) {
-          if (transit.stops_size() > 0) {
+          if (transit.nodes_size() > 0) {
             LOG_ERROR("Tile " + fname +
                       " has 0 schedule stop pairs but has " +
-                      std::to_string(transit.stops_size()) + " stops");
+                      std::to_string(transit.nodes_size()) + " stops");
           }
         }
 
@@ -323,11 +323,11 @@ void LogRoutes(const Transit& transit) {
 }
 
 GraphId GetGraphId(Transit& transit, const std::string& onestop_id) {
-  for (uint32_t i = 0; i < transit.stops_size(); i++) {
-    const Transit_Stop& stop = transit.stops(i);
-    if (stop.onestop_id() == onestop_id) {
-      LOG_INFO("Stop: " + stop.name());
-      return GraphId(stop.graphid());
+  for (uint32_t i = 0; i < transit.nodes_size(); i++) {
+    const Transit_Node& node = transit.nodes(i);
+    if (node.onestop_id() == onestop_id) {
+      LOG_INFO("Node: " + node.name());
+      return GraphId(node.graphid());
     }
   }
   return GraphId();

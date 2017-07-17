@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 #define VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 
+#include <cstdint>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>

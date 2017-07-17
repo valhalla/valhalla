@@ -1,6 +1,7 @@
 #ifndef VALHALLA_ODIN_UTIL_H_
 #define VALHALLA_ODIN_UTIL_H_
 
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <unordered_map>

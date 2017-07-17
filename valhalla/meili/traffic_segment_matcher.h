@@ -1,6 +1,7 @@
 #ifndef MMP_TRAFFIC_SEGMENT_MATCHER_H_
 #define MMP_TRAFFIC_SEGMENT_MATCHER_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <list>
@@ -18,21 +19,24 @@ namespace valhalla {
 namespace meili {
 
 struct interpolation_t {
-  baldr::GraphId edge;   //edge id
-  float total_distance;  //distance along the path
-  float edge_distance;   //ratio of the distance along the edge
-  size_t original_index; //index into the original measurements
-  double epoch_time;     //seconds from epoch
+  baldr::GraphId edge;   // edge id
+  float total_distance;  // distance along the path
+  float edge_distance;   // ratio of the distance along the edge
+  size_t original_index; // index into the original measurements
+  double epoch_time;     // seconds from epoch
 };
 
 // Matched traffic segment.
 struct traffic_segment_t {
-  baldr::GraphId segment_id;   // Traffic segment unique Id
-  double start_time;           // Begin time along this segment, if < 0 then no begin match
-  size_t begin_shape_index;    // Begins at this index of original input
-  double end_time;             // End time along this segment, if < 0 then no end match
-  size_t end_shape_index;      // Ends at this index of original input
-  int length;                  // Length in meters along this segment, if < 0 then no match
+  baldr::GraphId segment_id;     // Traffic segment unique Id
+  double start_time;             // Begin time along this segment, if < 0 then no begin match
+  size_t begin_shape_index;      // Begins at this index of original input
+  double end_time;               // End time along this segment, if < 0 then no end match
+  size_t end_shape_index;        // Ends at this index of original input
+  int length;                    // Length in meters along this segment, if < 0 then no match
+  int queue_length;              // Length of any queue from the end of the segment
+  bool internal;                 // Is the set of edges making up this segment internal edge types
+  std::vector<uint64_t> way_ids; // A list of way ids from the directed edge
 };
 
 /**
@@ -67,7 +71,7 @@ class TrafficSegmentMatcher {
    * @param  json string of gps data {"trace":[{"lat":0,"lon":0,time:0},...]}
    * @return the list of measurements from the json trace
    */
-  static std::vector<Measurement> parse_measurements(const std::string& json,
+  static std::vector<Measurement> parse_measurements(const boost::property_tree::ptree request,
     float default_accuracy, float default_search_radius);
 
   /**
@@ -78,7 +82,6 @@ class TrafficSegmentMatcher {
   static std::string serialize(const std::vector<traffic_segment_t>& traffic_segments);
 
  protected:
-
   /**
    * Updates the matching results include the begin and end points of the edges on the path
    * in doing so it interpolates the times at those points and gives back a distance along
@@ -92,6 +95,19 @@ class TrafficSegmentMatcher {
     const std::shared_ptr<MapMatcher>& matcher) const;
 
   /**
+   * Compute queue length. Determine where (and if) speed drops below the
+   * threshold along a segment.
+   * @param  left       Iterator to the start of the interpolated matches.
+   * @param  right      Iterator to the end of the interpolated matches.
+   * @param  threshold  Speed (m/s) threshold.
+   * @return Returns the distance (meters) from the end of the segment where
+   *          speed drops below the threshold.
+   */
+  int compute_queue_length(std::vector<interpolation_t>::const_iterator left,
+                           std::vector<interpolation_t>::const_iterator right,
+                           const float threshold) const;
+
+  /**
    * Turns updated matching results with their distances into a list of segments with interpolated times
    * @param  the updated matched results including the nodes of all the edges on the path
    * @param  the distance along the entire path of each matched result
@@ -102,6 +118,7 @@ class TrafficSegmentMatcher {
     baldr::GraphReader& reader) const;
 
   valhalla::meili::MapMatcherFactory matcher_factory;
+  std::unordered_set<std::string> customizable;
 };
 
 }

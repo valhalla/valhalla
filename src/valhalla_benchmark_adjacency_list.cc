@@ -1,7 +1,9 @@
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <queue>
+#include <random>
 #include <boost/program_options.hpp>
 
 #include "midgard/util.h"
@@ -17,10 +19,6 @@ using namespace valhalla::sif;
 
 namespace bpo = boost::program_options;
 
-uint32_t GetRandom(const uint32_t maxcost) {
-  return (uint32_t)(rand01() * maxcost);
-}
-
 /**
  * Benchmark of adjacency list. Constructs a large number of random numbers,
  * adds EdgeLabels to the AdjacencyList with those as the sortcost. Then
@@ -31,9 +29,12 @@ uint32_t GetRandom(const uint32_t maxcost) {
 int Benchmark(const uint32_t n, const float maxcost,
               const float bucketsize) {
   // Create a set of random costs
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(0, 1);
   std::vector<uint32_t> costs(n);
   for (uint32_t i = 0; i < n; i++) {
-    costs[i] = (uint32_t)GetRandom(maxcost);
+    costs[i] = static_cast<uint32_t>(dis(gen) * maxcost);
   }
 
   // Test performance of STL priority queue. Construct labels

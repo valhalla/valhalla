@@ -9,7 +9,11 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/sif/truckcost.h>
 #include <valhalla/sif/transitcost.h>
-#include <baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_utils.h>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 namespace valhalla {
 namespace sif {
 
@@ -26,9 +30,7 @@ class CostFactory {
   /**
    * Constructor
    */
-  CostFactory()
-    : factory_funcs_() {
-  }
+  CostFactory() { }
 
   /**
    * Register the callback to create this type of cost

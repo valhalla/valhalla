@@ -18,11 +18,12 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
 AStarPathAlgorithm::AStarPathAlgorithm()
-    : PathAlgorithm(), mode_(TravelMode::kDrive),
+    : PathAlgorithm(),
+      mode_(TravelMode::kDrive),
       travel_type_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
-      tile_creation_date_(0) {
+      max_label_count_(std::numeric_limits<uint32_t>::max()) {
 }
 
 // Destructor
@@ -141,6 +142,11 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
     if(interrupt && total_labels/kInterruptIterationsInterval < current_labels/kInterruptIterationsInterval)
       (*interrupt)();
     total_labels = current_labels;
+
+    // Abort if max label count is exceeded
+    if (total_labels > max_label_count_) {
+      return { };
+    }
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -270,7 +276,8 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       // (cost from the dest. location to the end of the edge).
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
-        newcost -= p->second;
+        newcost.secs -= p->second.secs;  // Should properly handle elapsed time
+        newcost.cost += p->second.cost;  // Need this to handle the edge score
       }
 
       // Check if edge is temporarily labeled and this path has less cost. If
@@ -343,9 +350,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
-    // Set the tile creation date
-    tile_creation_date_ = tile->header()->date_created();
-
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
     const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
@@ -358,18 +362,35 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist);
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
 
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    // Perhaps need to adjust score?
+    cost.cost += edge.score;
+
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
-    // destination is in a forward direction along the edge
-    // TODO - if this doesn't make the cost go negative!
+    // destination is in a forward direction along the edge. Add back in
+    // the edge score/penalty to account for destination edges farther from
+    // the input location lat,lon.
     auto p = destinations_.find(edgeid);
     if (p != destinations_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
-        // a trivial route passes along a single edge, meaning that the
-        // destination point must be on this edge, and so the distance
-        // remaining must be zero.
-        cost -= p->second;
-        dist = 0.0;
+        // Find the destination edge and update cost.
+        for (const auto& destination_edge : destination.edges) {
+          if (destination_edge.id == edgeid) {
+            // a trivial route passes along a single edge, meaning that the
+            // destination point must be on this edge, and so the distance
+            // remaining must be zero.
+            Cost dest_cost = costing->EdgeCost(tile->directededge(destination_edge.id)) *
+                                            (1.0f - destination_edge.dist);
+            cost.secs -= p->second.secs;
+            cost.cost -= dest_cost.cost;
+            cost.cost += destination_edge.score;
+            cost.cost = std::max(0.0f, cost.cost);
+            dist = 0.0;
+          }
+        }
       }
     }
 
@@ -421,6 +442,11 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edge.id);
     destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id)) *
                                 (1.0f - edge.dist);
+
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    destinations_[edge.id].cost += edge.score;
 
     // Get the tile relative density
     density = tile->header()->density();

@@ -8,9 +8,10 @@ namespace valhalla {
 namespace midgard {
 
 /**
- * Latitude, Longitude point. Derives from Point2 and allows access methods
- * using lat,lng naming. Extends functionality to add heading, curvature,
- * and distance based on spherical geometry.
+ * Longitude, Latitude  point. Derives from Point2 and allows access methods
+ * using lng,lat naming. Extends functionality to add heading, curvature,
+ * and distance based on spherical geometry. Note that the order in the pair
+ * is LONGITUDE first, LATITUDE second.
  */
 class PointLL : public Point2 {
  public:
@@ -20,19 +21,10 @@ class PointLL : public Point2 {
   using Point2::Point2;
 
   /**
-   * Default constructor.  Sets latitude and longitude to INVALID.
+   * Default constructor.  Sets longitude and latitude to INVALID.
    */
   PointLL()
     : Point2(INVALID, INVALID) {
-  }
-
-
-  /**
-   * Get the latitude in degrees.
-   * @return  Returns latitude (degrees).
-   */
-  float lat() const {
-    return second;
   }
 
   /**
@@ -41,6 +33,14 @@ class PointLL : public Point2 {
    */
   float lng() const {
     return first;
+  }
+
+  /**
+   * Get the latitude in degrees.
+   * @return  Returns latitude (degrees).
+   */
+  float lat() const {
+    return second;
   }
 
   /**
@@ -62,17 +62,28 @@ class PointLL : public Point2 {
   PointLL MidPoint(const PointLL& p1) const;
 
   /**
-   * Calculates the distance between two lat/lng's in meters. Uses spherical
+   * Returns the point a specified percentage along a segment from this point
+   * to an end point.
+   * @param  end  End point.
+   * @param  pct  Percentage along the segment.
+   * @return Returns the point along the segment.
+   */
+  PointLL along_segment(const PointLL& end, const float pct) const {
+    return { x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
+  }
+
+  /**
+   * Calculates the distance between two lng,lat's in meters. Uses spherical
    * geometry (law of cosines).
-   * @param   ll2   Second lat,lng position to calculate distance to.
+   * @param   ll2   Second lng,lat position to calculate distance to.
    * @return  Returns the distance in meters.
    */
   float Distance(const PointLL& ll2) const;
 
   /**
-   * Approximates the distance squared between two lat,lng points - uses
+   * Approximates the distance squared between two lng,lat points - uses
    * the DistanceApproximator.
-   * @param   ll2   Second lat,lng position to calculate distance to.
+   * @param   ll2   Second lng,lat position to calculate distance to.
    * @return  Returns the distance squared in meters.
    */
   float DistanceSquared(const PointLL& ll2) const;
@@ -80,16 +91,16 @@ class PointLL : public Point2 {
   /**
    * Calculates the curvature using this position and 2 others. Found by
    * computing the radius of the circle that circumscribes the 3 positions.
-   * @param   ll1   Second lat,lng position
-   * @param   ll2   Third lat,lng position
+   * @param   ll1   Second lng,lat position
+   * @param   ll2   Third lng,lat position
    * @return  Returns the curvature in meters.
    */
   float Curvature(const PointLL& ll1, const PointLL& ll2) const;
 
   /**
-   * Calculates the heading or azimuth from the current lat,lng to the
-   * specified lat,lng. This uses Haversine method (spherical geometry).
-   * @param    ll2   Lat,lng position to calculate the heading to.
+   * Calculates the heading or azimuth from the current lng,lat to the
+   * specified lng,lat. This uses Haversine method (spherical geometry).
+   * @param    ll2   lng,lat position to calculate the heading to.
    * @return   Returns the heading in degrees with range [0,360] where 0 is
    *           due north, 90 is east, 180 is south, and 270 is west.
    */
@@ -97,20 +108,23 @@ class PointLL : public Point2 {
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
-   * squared to that point and the index of the segment where the closest
+   * to that point and the index of the segment where the closest
    * point lies.
-   * @param  pts     List of points on the polyline.
+   * @param  pts  List of points on the polyline.
+   * @param  begin_index  Index where the processing of closest point should start.
+   *                      Default value is 0.
+   *
    * @return tuple of <Closest point along the polyline,
-   *                   distance squared (meters) of the closest point,
-   *                   Index of the segment of the polyline which contains
-   *                      the closest point >
+   *                   Distance in meters of the closest point,
+   *                   Index of the segment of the polyline which contains the closest point >
    */
-  std::tuple<PointLL, float, int> ClosestPoint(const std::vector<PointLL>& pts) const;
+    std::tuple<PointLL, float, int> ClosestPoint(
+        const std::vector<PointLL>& pts, size_t begin_index = 0) const;
 
   /**
-   * Calculate the heading from the start index within a polyline of lat,lng
+   * Calculate the heading from the start index within a polyline of lng,lat
    * points to a point at the specified distance from the start.
-   * @param  pts   Polyline - list of lat,lng points.
+   * @param  pts   Polyline - list of lng,lat points.
    * @param  dist  Distance in meters from start to find heading to.
    * @param  idx0  Start index within the polyline.
    * @param  idx1  End index within the polyline
@@ -121,9 +135,9 @@ class PointLL : public Point2 {
 
 
   /**
-   * Calculate the heading from the start of a polyline of lat,lng points to a
+   * Calculate the heading from the start of a polyline of lng,lat points to a
    * point at the specified distance from the start.
-   * @param  pts   Polyline - list of lat,lng points.
+   * @param  pts   Polyline - list of lng,lat points.
    * @param  dist  Distance in meters from start to find heading to.
    */
   static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
@@ -133,8 +147,8 @@ class PointLL : public Point2 {
 
   /**
    * Calculate the heading from a point at a specified distance from the end
-   * of a polyline of lat,lng points to the end point of the polyline.
-   * @param  pts   Polyline - list of lat,lng points.
+   * of a polyline of lng,lat points to the end point of the polyline.
+   * @param  pts   Polyline - list of lng,lat points.
    * @param  dist  Distance in meters from end. A point that distance is
    *               used to find the heading to the end point.
    * @param  idx0  Start index within the polyline.
@@ -146,8 +160,8 @@ class PointLL : public Point2 {
 
   /**
    * Calculate the heading from a point at a specified distance from the end
-   * of a polyline of lat,lng points to the end point of the polyline.
-   * @param  pts   Polyline - list of lat,lng points.
+   * of a polyline of lng,lat points to the end point of the polyline.
+   * @param  pts   Polyline - list of lng,lat points.
    * @param  dist  Distance in meters from end. A point that distance is
    *               used to find the heading to the end point.
    */
@@ -162,7 +176,10 @@ class PointLL : public Point2 {
    * @param  p2  End point of the segment.
    * @return  Returns true if this point is left of the segment.
    */
-  virtual float IsLeft(const PointLL& p1, const PointLL& p2) const;
+  virtual float IsLeft(const PointLL& p1, const PointLL& p2) const {
+    return (p2.x() - p1.x()) * (   y() - p1.y()) -
+              (x() - p1.x()) * (p2.y() - p1.y());
+  }
 
   /**
    * Tests whether this point is within a polygon.

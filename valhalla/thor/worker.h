@@ -1,18 +1,16 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
+#include <cstdint>
 #include <vector>
 #include <utility>
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <prime_server/prime_server.hpp>
-#include <prime_server/http_protocol.hpp>
-
+#include <valhalla/worker.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/errorcode_util.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
@@ -26,28 +24,18 @@
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/meili/map_matcher_factory.h>
-
+#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/tyr/actor.h>
 
 namespace valhalla {
 namespace thor {
 
+#ifdef HAVE_HTTP
 void run_service(const boost::property_tree::ptree& config);
+#endif
 
-class thor_worker_t {
+class thor_worker_t : public service_worker_t{
  public:
-  enum ACTION_TYPE {
-    ROUTE = 0,
-    VIAROUTE = 1,
-    LOCATE = 2,
-    ONE_TO_MANY = 3,
-    MANY_TO_ONE = 4,
-    MANY_TO_MANY = 5,
-    SOURCES_TO_TARGETS = 6,
-    OPTIMIZED_ROUTE = 7,
-    ISOCHRONE = 8,
-    TRACE_ROUTE = 9,
-    TRACE_ATTRIBUTES = 10
-  };
   enum SHAPE_MATCH {
     EDGE_WALK = 0,
     MAP_SNAP = 1,
@@ -61,14 +49,21 @@ class thor_worker_t {
   static const std::unordered_map<std::string, SHAPE_MATCH> STRING_TO_MATCH;
   thor_worker_t(const boost::property_tree::ptree& config);
   virtual ~thor_worker_t();
-  prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const prime_server::worker_t::interrupt_function_t&);
-  void cleanup();
+#ifdef HAVE_HTTP
+  virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt) override;
+#endif
+  virtual void cleanup() override;
+
+  std::list<odin::TripPath> route(const boost::property_tree::ptree& request,
+             const boost::optional<int> &date_time_type);
+  baldr::json::MapPtr matrix(tyr::ACTION_TYPE matrix_type, const boost::property_tree::ptree& request);
+  std::list<odin::TripPath> optimized_route(const boost::property_tree::ptree& request);
+  baldr::json::MapPtr isochrones(const boost::property_tree::ptree& request);
+  odin::TripPath trace_route(const boost::property_tree::ptree& request);
+  baldr::json::MapPtr trace_attributes(const boost::property_tree::ptree& request);
 
  protected:
 
-  prime_server::worker_t::result_t jsonify_error(
-      const baldr::valhalla_exception_t& exception,
-      prime_server::http_request_info_t& request_info) const;
   std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
                 baldr::PathLocation& destination);
   void log_admin(odin::TripPath&);
@@ -77,17 +72,16 @@ class thor_worker_t {
   thor::PathAlgorithm* get_path_algorithm(
       const std::string& routetype, const baldr::PathLocation& origin,
       const baldr::PathLocation& destination);
-  valhalla::odin::TripPath route_match(const AttributesController& controller);
-  std::pair<valhalla::odin::TripPath, std::vector<thor::MatchResult>> map_match(
-      const AttributesController& controller, bool trace_attributes_action = false);
+  odin::TripPath route_match(const AttributesController& controller);
+  std::pair<odin::TripPath, std::vector<thor::MatchResult>> map_match(
+      const AttributesController& controller, bool trace_attributes_action = false,
+      uint32_t best_paths = 1);
 
-  std::list<valhalla::odin::TripPath> path_arrive_by(
+  std::list<odin::TripPath> path_arrive_by(
+      std::vector<baldr::PathLocation>& correlated, const std::string &costing);
+  std::list<odin::TripPath> path_depart_at(
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
-      const std::string &request_str);
-  std::list<valhalla::odin::TripPath> path_depart_at(
-      std::vector<baldr::PathLocation>& correlated, const std::string &costing,
-      const boost::optional<int> &date_time_type,
-      const std::string &request_str);
+      const boost::optional<int> &date_time_type);
 
   void parse_locations(const boost::property_tree::ptree& request);
   void parse_shape(const boost::property_tree::ptree& request);
@@ -95,29 +89,7 @@ class thor_worker_t {
   std::string parse_costing(const boost::property_tree::ptree& request);
   void filter_attributes(const boost::property_tree::ptree& request, AttributesController& controller);
 
-  prime_server::worker_t::result_t route(
-      const boost::property_tree::ptree& request,
-      const std::string &request_str,
-      const boost::optional<int> &date_time_type, const bool header_dnt);
-  prime_server::worker_t::result_t matrix(
-      ACTION_TYPE matrix_type, const boost::property_tree::ptree &request,
-      prime_server::http_request_info_t& request_info);
-  prime_server::worker_t::result_t optimized_route(
-      const boost::property_tree::ptree& request,
-      const std::string &request_str, const bool header_dnt);
-  prime_server::worker_t::result_t isochrone(
-      const boost::property_tree::ptree &request,
-      prime_server::http_request_info_t& request_info);
-  prime_server::worker_t::result_t trace_route(
-      const boost::property_tree::ptree &request,
-      const std::string &request_str, const bool header_dnt);
-  prime_server::worker_t::result_t trace_attributes(
-      const boost::property_tree::ptree &request,
-      const std::string &request_str, prime_server::http_request_info_t& request_info);
-
   valhalla::sif::TravelMode mode;
-  boost::property_tree::ptree config;
-  boost::optional<std::string> jsonp;
   std::vector<baldr::Location> locations;
   std::vector<midgard::PointLL> shape;
   std::vector<baldr::PathLocation> correlated;
@@ -131,6 +103,7 @@ class thor_worker_t {
   MultiModalPathAlgorithm multi_modal_astar;
   Isochrone isochrone_gen;
   float long_request;
+  std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   boost::optional<int> date_time_type;
   valhalla::meili::MapMatcherFactory matcher_factory;
@@ -138,8 +111,8 @@ class thor_worker_t {
   std::unordered_set<std::string> trace_customizable;
   boost::property_tree::ptree trace_config;
 
-  const std::function<void ()>* interrupt_callback;
   bool healthcheck;
+  std::vector<uint32_t> optimal_order;
 };
 
 }

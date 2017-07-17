@@ -15,7 +15,7 @@ constexpr uint32_t kMaxGraphHierarchy = 7;
 
 // 46 bits are used for the non-spare part of a graph Id. Fill all of them.
 // If we ever change the size of GraphId fields this will also need to change.
-constexpr uint64_t kInvalidGraphId = 0x3ffffffffff;
+constexpr uint64_t kInvalidGraphId = 0x3fffffffffff;
 
 /**
  * Identifier of a node or an edge within the tiled, hierarchical graph.

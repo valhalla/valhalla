@@ -1,8 +1,12 @@
 #ifndef VALHALLA_THOR_TRIPPATHBUILDER_H_
 #define VALHALLA_THOR_TRIPPATHBUILDER_H_
 
+#include <cstdint>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <utility>
+
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -11,6 +15,8 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/thor/pathinfo.h>
 #include <valhalla/thor/attributes_controller.h>
+#include <valhalla/thor/match_result.h>
+
 
 namespace valhalla {
 namespace thor {
@@ -40,7 +46,9 @@ class TripPathBuilder {
       const std::vector<PathInfo>& path, baldr::PathLocation& origin,
       baldr::PathLocation& dest,
       const std::list<baldr::PathLocation>& through_loc,
-      const std::function<void ()>* interrupt_callback = nullptr);
+      const std::function<void ()>* interrupt_callback = nullptr,
+      std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
+        route_discontinuities = nullptr);
 
   /**
    * Add trip edge. (TODO more comments)

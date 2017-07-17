@@ -1,3 +1,4 @@
+#include <cstdint>
 
 #include "statistics.h"
 #include "mjolnir/graphvalidator.h"

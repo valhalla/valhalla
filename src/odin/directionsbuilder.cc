@@ -8,7 +8,7 @@
 #include "odin/maneuversbuilder.h"
 #include "odin/narrativebuilder.h"
 #include "odin/narrative_builder_factory.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 namespace {
 // Minimum edge length (~10 feet)
@@ -69,7 +69,7 @@ TripDirections DirectionsBuilder::Build(
     const DirectionsOptions& directions_options, TripPath& trip_path) {
   // Validate trip path node list
   if (trip_path.node_size() < 1) {
-    throw valhalla_exception_t{400, 210};
+    throw valhalla_exception_t{210};
   }
 
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
@@ -287,31 +287,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       }
 
       // Process transit stops
-      for (auto& transit_stop : transit_route.transit_stops) {
-        auto* trip_transit_stop = trip_transit_info->add_transit_stops();
-        trip_transit_stop->set_type(transit_stop.type);
-        if (!transit_stop.onestop_id.empty()) {
-          trip_transit_stop->set_onestop_id(transit_stop.onestop_id);
-        }
-        if (!transit_stop.name.empty()) {
-          trip_transit_stop->set_name(transit_stop.name);
-        }
-        if (!transit_stop.arrival_date_time.empty()) {
-          trip_transit_stop->set_arrival_date_time(
-              transit_stop.arrival_date_time);
-        }
-        if (!transit_stop.departure_date_time.empty()) {
-          trip_transit_stop->set_departure_date_time(
-              transit_stop.departure_date_time);
-        }
-        if (transit_stop.is_parent_stop) {
-          trip_transit_stop->set_is_parent_stop(true);
-        }
-        if (transit_stop.assumed_schedule) {
-          trip_transit_stop->set_assumed_schedule(true);
-        }
-        trip_transit_stop->mutable_ll()->set_lat(transit_stop.ll.lat());
-        trip_transit_stop->mutable_ll()->set_lng(transit_stop.ll.lng());
+      for (const auto& transit_platform : transit_route.transit_stops) {
+        trip_transit_info->add_transit_stops()->CopyFrom(transit_platform);
       }
     }
 

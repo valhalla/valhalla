@@ -1,17 +1,17 @@
+#include <cmath>
 #include <iostream>
 #include <cstdlib>
 
 #include "midgard/util.h"
 #include "midgard/logging.h"
 #include "midgard/constants.h"
-#include "baldr/errorcode_util.h"
+#include "exception.h"
 
 #include "proto/trippath.pb.h"
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 
 using namespace valhalla::midgard;
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace odin {
@@ -82,7 +82,7 @@ std::string EnhancedTripPath::GetStateCode(int node_index) {
 const ::valhalla::odin::Location& EnhancedTripPath::GetOrigin() const {
   // Validate location count
   if (location_size() < 2) {
-    throw valhalla_exception_t{400, 212};
+    throw valhalla_exception_t{212};
   }
 
   return location(0);
@@ -91,7 +91,7 @@ const ::valhalla::odin::Location& EnhancedTripPath::GetOrigin() const {
 const ::valhalla::odin::Location& EnhancedTripPath::GetDestination() const {
   // Validate location count
   if (location_size() < 2) {
-    throw valhalla_exception_t{400, 212};
+    throw valhalla_exception_t{212};
   }
 
   return location(location_size() - 1);
@@ -209,16 +209,20 @@ bool EnhancedTripPath_Edge::IsBusUse() const {
   return (use() == TripPath_Use_kBusUse);
 }
 
-bool EnhancedTripPath_Edge::IsRailConnectionUse() const {
-  return (use() == TripPath_Use_kRailConnectionUse);
+bool EnhancedTripPath_Edge::IsEgressConnectionUse() const {
+  return (use() == TripPath_Use_kEgressConnectionUse);
 }
 
-bool EnhancedTripPath_Edge::IsBusConnectionUse() const {
-  return (use() == TripPath_Use_kBusConnectionUse);
+bool EnhancedTripPath_Edge::IsPlatformConnectionUse() const {
+  return (use() == TripPath_Use_kPlatformConnectionUse);
 }
 
 bool EnhancedTripPath_Edge::IsTransitConnectionUse() const {
   return (use() == TripPath_Use_kTransitConnectionUse);
+}
+
+bool EnhancedTripPath_Edge::IsTransitConnection() const {
+  return (IsTransitConnectionUse() || IsEgressConnectionUse() || IsPlatformConnectionUse());
 }
 
 bool EnhancedTripPath_Edge::IsUnnamedWalkway() const {
@@ -971,8 +975,16 @@ bool EnhancedTripPath_Node::IsTollBooth() const {
   return (type() == TripPath_Node_Type_kTollBooth);
 }
 
-bool EnhancedTripPath_Node::IsMultiUseTransitStop() const {
-  return (type() == TripPath_Node_Type_kMultiUseTransitStop);
+bool EnhancedTripPath_Node::IsTransitEgress() const {
+  return (type() == TripPath_Node_Type_kTransitEgress);
+}
+
+bool EnhancedTripPath_Node::IsTransitStation() const {
+  return (type() == TripPath_Node_Type_kTransitStation);
+}
+
+bool EnhancedTripPath_Node::IsTransitPlatform() const {
+  return (type() == TripPath_Node_Type_kTransitPlatform);
 }
 
 bool EnhancedTripPath_Node::IsBikeShare() const {
@@ -1008,27 +1020,30 @@ std::string EnhancedTripPath_Node::ToString() const {
   str += " | fork=";
   str += std::to_string(fork());
 
-  if (has_transit_stop_info()) {
-    str += " | transit_stop_info.type=";
-    str += std::to_string(transit_stop_info().type());
+  if (has_transit_platform_info()) {
+    str += " | transit_platform_info.type=";
+    str += std::to_string(transit_platform_info().type());
 
-    str += " | transit_stop_info.onestop_id=";
-    str += transit_stop_info().onestop_id();
+    str += " | transit_platform_info.onestop_id=";
+    str += transit_platform_info().onestop_id();
 
-    str += " | transit_stop_info.name=";
-    str += transit_stop_info().name();
+    str += " | transit_platform_info.name=";
+    str += transit_platform_info().name();
 
-    str += " | transit_stop_info.arrival_date_time=";
-    str += transit_stop_info().arrival_date_time();
+    str += " | transit_platform_info.arrival_date_time=";
+    str += transit_platform_info().arrival_date_time();
 
-    str += " | transit_stop_info.departure_date_time=";
-    str += transit_stop_info().departure_date_time();
+    str += " | transit_platform_info.departure_date_time=";
+    str += transit_platform_info().departure_date_time();
 
-    str += " | transit_stop_info.is_parent_stop=";
-    str += std::to_string(transit_stop_info().is_parent_stop());
+    str += " | transit_platform_info.assumed_schedule()=";
+    str += std::to_string(transit_platform_info().assumed_schedule());
 
-    str += " | transit_stop_info.assumed_schedule()=";
-    str += std::to_string(transit_stop_info().assumed_schedule());
+    str += " | transit_platform_info.station_onestop_id=";
+    str += transit_platform_info().station_onestop_id();
+
+    str += " | transit_platform_info.station_name=";
+    str += transit_platform_info().station_name();
   }
 
   str += " | time_zone=";
@@ -1061,4 +1076,3 @@ std::string EnhancedTripPath_Admin::ToString() const {
 
 }
 }
-

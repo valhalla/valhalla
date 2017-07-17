@@ -27,10 +27,27 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-TimeDistanceMatrix::TimeDistanceMatrix(float initial_cost_threshold)
-    : settled_count_(0),
-      initial_cost_threshold_(initial_cost_threshold),
-      cost_threshold_(initial_cost_threshold) {
+TimeDistanceMatrix::TimeDistanceMatrix()
+    : mode_(TravelMode::kDrive),
+      settled_count_(0),
+      current_cost_threshold_(0) {}
+
+float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) {
+  float cost_threshold;
+  switch (mode_) {
+  case TravelMode::kBicycle:
+    cost_threshold = max_matrix_distance / kTimeDistCostThresholdBicycleDivisor;
+    break;
+  case TravelMode::kPedestrian:
+  case TravelMode::kPublicTransit:
+    cost_threshold = max_matrix_distance / kTimeDistCostThresholdPedestrianDivisor;
+    break;
+  case TravelMode::kDrive:
+  default:
+    cost_threshold = max_matrix_distance / kTimeDistCostThresholdAutoDivisor;
+  }
+
+  return cost_threshold;
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -55,12 +72,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
             const std::vector<PathLocation>& locations,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
-            const TravelMode mode) {
-  cost_threshold_ = initial_cost_threshold_;
+            const TravelMode mode, const float max_matrix_distance) {
 
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
+  current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
@@ -71,7 +88,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   const auto edgecost = [this](const uint32_t label) {
     return edgelabels_[label].sortcost();
   };
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, initial_cost_threshold_,
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_,
                                              bucketsize, edgecost));
   edgestatus_.reset(new EdgeStatus());
 
@@ -96,7 +113,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     EdgeLabel pred = edgelabels_[predindex];
 
     // Mark the edge as permanently labeled. Do not do this for an origin
-    // edge (this will allow loops/around the block cases)
+    // edge. Otherwise loops/around the block cases will not work
     if (!pred.origin()) {
       edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
     }
@@ -115,7 +132,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     }
 
     // Terminate when we are beyond the cost threshold
-    if (pred.cost().cost > cost_threshold_) {
+    if (pred.cost().cost > current_cost_threshold_) {
       return FormTimeDistanceMatrix();
     }
 
@@ -206,12 +223,11 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
             const std::vector<PathLocation>& locations,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
-            const TravelMode mode) {
-  cost_threshold_ = initial_cost_threshold_;
-
+            const TravelMode mode, const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
+  current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
@@ -221,7 +237,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   const auto edgecost = [this](const uint32_t label) {
     return edgelabels_[label].sortcost();
   };
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, initial_cost_threshold_,
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_,
                                          bucketsize, edgecost));
   edgestatus_.reset(new EdgeStatus());
 
@@ -265,7 +281,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
     }
 
     // Terminate when we are beyond the cost threshold
-    if (pred.cost().cost > cost_threshold_) {
+    if (pred.cost().cost > current_cost_threshold_) {
       return FormTimeDistanceMatrix();
     }
 
@@ -364,8 +380,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
            const std::vector<PathLocation>& locations,
            GraphReader& graphreader,
            const std::shared_ptr<DynamicCost>* mode_costing,
-           const sif::TravelMode mode) {
-  return SourceToTarget(locations, locations, graphreader, mode_costing, mode);
+           const sif::TravelMode mode, const float max_matrix_distance) {
+  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
 
 std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
@@ -373,20 +389,22 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
         const std::vector<baldr::PathLocation>& target_location_list,
         baldr::GraphReader& graphreader,
         const std::shared_ptr<sif::DynamicCost>* mode_costing,
-        const sif::TravelMode mode) {
+        const sif::TravelMode mode, const float max_matrix_distance) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
   if (source_location_list.size() <= target_location_list.size()) {
     for (const auto& origin: source_location_list) {
       std::vector<TimeDistance> td = OneToMany(origin, target_location_list,
-                                               graphreader, mode_costing, mode);
+                                               graphreader, mode_costing,
+                                               mode, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
     }
   } else {
     for (const auto& destination: target_location_list) {
       std::vector<TimeDistance> td = ManyToOne(destination, source_location_list,
-                                               graphreader, mode_costing, mode);
+                                               graphreader, mode_costing,
+                                               mode, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
     }
@@ -429,6 +447,11 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     uint32_t d = static_cast<uint32_t>(directededge->length() *
                              (1.0f - edge.dist));
 
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    cost.cost += edge.score;
+
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
@@ -470,6 +493,11 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     Cost cost = costing->EdgeCost(opp_dir_edge) * edge.dist;
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.dist);
 
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    cost.cost += edge.score;
+
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
@@ -502,6 +530,11 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
       // Form a threshold cost (the total cost to traverse the edge)
       const GraphTile* tile = graphreader.GetGraphTile(edge.id);
       float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+      c += edge.score;
       if (c > d.threshold) {
         d.threshold = c;
       }
@@ -539,6 +572,11 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
       // Form a threshold cost (the total cost to traverse the edge)
       const GraphTile* tile = graphreader.GetGraphTile(edge.id);
       float c = costing->EdgeCost(tile->directededge(edge.id)).cost;
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+      c += edge.score;
       if (c > d.threshold) {
         d.threshold = c;
       }
@@ -575,12 +613,16 @@ bool TimeDistanceMatrix::UpdateDestinations(const PathLocation& origin,
     // TODO - it should always be, but protect against not finding it
     auto dest_edge = dest.dest_edges.find(pred.edgeid());
     if (dest_edge == dest.dest_edges.end()) {
-      LOG_ERROR("Could not find the destination edge");
+      // If the edge isn't there but the path is trivial, then that means the edge
+      // was removed towards the beginning which is not an error.
+      if (!IsTrivial (pred.edgeid(), origin, locations[dest_idx])) {
+        LOG_ERROR("Could not find the destination edge");
+      }
       continue;
     }
 
     // Skip case where destination is along the origin edge, there is no
-    // predecessor, and the destination cannot be reached via trival path.
+    // predecessor, and the destination cannot be reached via trivial path.
     if (pred.predecessor() == kInvalidLabel &&
         !IsTrivial(pred.edgeid(), origin,
                    locations[dest_idx])) {
@@ -620,7 +662,7 @@ bool TimeDistanceMatrix::UpdateDestinations(const PathLocation& origin,
 
     // Do not update cost threshold if no path to this destination
     // has been found
-    if (d.distance == 0) {
+    if (d.best_cost.cost == kMaxCost) {
       allfound = false;
     } else {
       // Settle any destinations above their threshold and update maxcost
@@ -635,7 +677,7 @@ bool TimeDistanceMatrix::UpdateDestinations(const PathLocation& origin,
   // Update cost threshold for early termination if at least one path has
   // been found to each destination
   if (allfound) {
-    cost_threshold_ = maxcost;
+    current_cost_threshold_ = maxcost;
   }
   return settled_count_ == destinations_.size();
 }

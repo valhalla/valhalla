@@ -5,7 +5,13 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "baldr/accessrestriction.h"
-#include "midgard/logging.h"
+#include "midgard/util.h"
+
+#ifdef INLINE_TEST
+#include "test/test.h"
+#include <random>
+#include <boost/property_tree/json_parser.hpp>
+#endif
 
 using namespace valhalla::baldr;
 
@@ -23,6 +29,10 @@ constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+constexpr float kDefaultUseRoad                 = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
+
+constexpr float kDefaultLowStressUseRoad        = 0.0f;   // Factor between 0 and 1
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -47,11 +57,42 @@ constexpr float kLeftSideTurnCosts[]  = { kTCStraight, kTCUnfavorableSlight,
       kTCUnfavorable, kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
       kTCFavorable, kTCFavorableSlight };
 
-// Cost of traversing an edge with steps. Make this high but not impassible.
-// Equal to about 5 minutes (penalty) but fixed time of 30 seconds.
-const Cost kBicycleStepsCost = { 300.0f, 30.0f };
+// Turn stress penalties for low-stress bike.
+constexpr float kTPStraight          = 0.0f;
+constexpr float kTPFavorableSlight   = 0.25f;
+constexpr float kTPFavorable         = 0.75f;
+constexpr float kTPFavorableSharp    = 1.0f;
+constexpr float kTPUnfavorableSlight = 0.75f;
+constexpr float kTPUnfavorable       = 1.75f;
+constexpr float kTPUnfavorableSharp  = 2.25f;
+constexpr float kTPReverse           = 4.0f;
 
-// Default cycling speed on smooth, flat roads - based on bicycle type
+constexpr float kRightSideTurnPenalties[] = {
+    kTPStraight,
+    kTPFavorableSlight,
+    kTPFavorable,
+    kTPFavorableSharp,
+    kTPReverse,
+    kTPUnfavorableSharp,
+    kTPUnfavorable,
+    kTPUnfavorableSlight
+};
+constexpr float kLeftSideTurnPenalties[]  = {
+    kTPStraight,
+    kTPUnfavorableSlight,
+    kTPUnfavorable,
+    kTPUnfavorableSharp,
+    kTPReverse,
+    kTPFavorableSharp,
+    kTPFavorable,
+    kTPFavorableSlight
+};
+
+// Cost of traversing an edge with steps. Make this high but not impassible.
+// Equal to about 5 minutes (penalty)
+const float kBicycleStepsFactor = 8.0f;
+
+// Default cycling speed on smooth, flat roads - based on bicycle type (KPH)
 constexpr float kDefaultCyclingSpeed[] = {
     25.0f,    // Road bicycle: ~15.5 MPH
     20.0f,    // Cross bicycle: ~13 MPH
@@ -61,8 +102,8 @@ constexpr float kDefaultCyclingSpeed[] = {
 
 // Minimum and maximum average bicycling speed (to validate input).
 // Maximum is just above the fastest average speed in Tour de France time trial
-constexpr float kMinCyclingSpeed = 5.0f;
-constexpr float kMaxCyclingSpeed = 60.0f;
+constexpr float kMinCyclingSpeed = 5.0f;  // KPH
+constexpr float kMaxCyclingSpeed = 60.0f; // KPH
 
 // Speed factors based on surface types (defined for each bicycle type).
 // These values determine the percentage by which speed us reduced for
@@ -82,10 +123,6 @@ constexpr Surface kWorstAllowedSurface[] =
           Surface::kGravel,               // Cross
           Surface::kDirt,                 // Hybrid
           Surface::kPath };               // Mountain
-
-// User propensity to use roads. Range of values from 0 (avoid roads - try to
-// stay on cycleways and paths) to 1 (totally comfortable riding on roads).
-constexpr float kDefaultUseRoadsFactor = 0.5f;
 
 // Avoid driveways
 constexpr float kDrivewayFactor = 20.0f;
@@ -131,13 +168,13 @@ constexpr float kGradeBasedSpeedFactor[] = {
 
 // User propensity to use "hilly" roads. Ranges from a value of 0 (avoid
 // hills) to 1 (take hills when they offer a more direct, less time, path).
-constexpr float kDefaultUseHillsFactor = 0.5f;
+constexpr float kDefaultUseHills = 0.5f;
 
 // Avoid hills "strength". How much do we want to avoid a hill. Combines
 // with the usehills factor (1.0 - usehills = avoidhills factor) to create
 // a weighting penalty per weighted grade factor. This indicates how strongly
 // edges with the specified grade are weighted. Note that speed also is
-// influenced by grade, so these weights help furhte ravoid hills.
+// influenced by grade, so these weights help further avoid hills.
 constexpr float kAvoidHillsStrength[] = {
     1.0f,      // -10%  - Treacherous descent possible
     0.5f,      // -8%   - Steep downhill
@@ -157,6 +194,26 @@ constexpr float kAvoidHillsStrength[] = {
    10.0f       // 15%   - Only for the strongest!
 };
 
+// Avoid hills "strength" specifically for low stress bicycle costing.
+constexpr float kLowStressAvoidHillsStrength[] = {
+    2.0f,      // -10%  - Treacherous descent possible
+    1.0f,      // -8%   - Steep downhill
+    0.5f,      // -6.5% - Good downhill - where is the bottom?
+    0.2f,      // -5%   - Picking up speed!
+    0.1f,      // -3%   - Modest downhill
+    0.0f,      // -1.5% - Smooth slight downhill, ride this all day!
+    0.05f,     // 0%    - Flat, no avoidance
+    0.1f,      // 1.5%  - These are called "false flat"
+    0.3f,      // 3%    - Slight rise
+    1.0f,      // 5%    - Small hill
+    2.5f,      // 6.5%  - Starting to feel this...
+    3.5f,      // 8%    - Moderately steep
+    5.0f,      // 10%   - Getting tough
+    6.5f,      // 11.5% - Tiring!
+    10.0f,     // 13%   - Ooof - this hurts
+    12.0f      // 15%   - Only for the strongest!
+};
+
 // Edge speed above which extra penalties apply (to avoid roads with higher
 // speed traffic). This threshold is adjusted upwards with higher useroads
 // factors.
@@ -164,6 +221,25 @@ constexpr uint32_t kSpeedPenaltyThreshold = 40;      // 40 KPH ~ 25 MPH
 
 // How much to favor bicycle networks.
 constexpr float kBicycleNetworkFactor = 1.0f;
+
+// Maximum amount of seconds that will be allowed to be passed in to influence paths
+// This can't be too high because sometimes a certain kind of path is required to be taken
+constexpr float kMaxSeconds = 12.0f * kSecPerHour; // 12 hours
+
+// Valid ranges and defaults
+constexpr ranged_default_t<float> kManeuverPenaltyRange{0.0f, kDefaultManeuverPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kDrivewayPenaltyRange{0.0f, kDefaultDrivewayPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kAlleyPenaltyRange{0.0f, kDefaultAlleyPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kGateCostRange{0.0f, kDefaultGateCost, kMaxSeconds};
+constexpr ranged_default_t<float> kGatePenaltyRange{0.0f, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kFerryCostRange{0.0f, kDefaultFerryCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingCostRange{0.0f, kDefaultCountryCrossingCost, kMaxSeconds};
+constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0.0f, kDefaultCountryCrossingPenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
+constexpr ranged_default_t<float> kUseFerryRange{0.0f, kDefaultUseFerry, 1.0f};
+constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
+
+constexpr ranged_default_t<float> kLowStressUseRoadRange{0.0f, kDefaultLowStressUseRoad, 1.0f};
 }
 
 /**
@@ -279,20 +355,26 @@ class BicycleCost : public DynamicCost {
    */
   virtual uint8_t travel_type() const;
 
- protected:
-
-  float speedfactor_[100];          // Cost factors based on speed in kph
-  float density_factor_[16];        // Density factor
-  float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
-  float driveway_penalty_;          // Penalty (seconds) using a driveway
-  float gate_cost_;                 // Cost (seconds) to go through gate
-  float gate_penalty_;              // Penalty (seconds) to go through gate
-  float alley_penalty_;             // Penalty (seconds) to use a alley
-  float ferry_cost_;                // Cost (seconds) to exit a ferry
-  float ferry_penalty_;             // Penalty (seconds) to enter a ferry
-  float ferry_weight_;              // Weighting to apply to ferry edges
-  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
-  float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
+  // Hidden in source file so we don't need it to be protected
+  // We expose it within the source file for testing purposes
+public:
+  
+  float speedfactor_[kMaxSpeedKph + 1];  // Cost factors based on speed in kph
+  float density_factor_[16];             // Density factor
+  float maneuver_penalty_;               // Penalty (seconds) when inconsistent names
+  float driveway_penalty_;               // Penalty (seconds) using a driveway
+  float gate_cost_;                      // Cost (seconds) to go through gate
+  float gate_penalty_;                   // Penalty (seconds) to go through gate
+  float alley_penalty_;                  // Penalty (seconds) to use a alley
+  float ferry_cost_;                     // Cost (seconds) to exit a ferry
+  float ferry_penalty_;                  // Penalty (seconds) to enter a ferry
+  float ferry_factor_;                   // Weighting to apply to ferry edges
+  float country_crossing_cost_;          // Cost (seconds) to go through toll booth
+  float country_crossing_penalty_;       // Penalty (seconds) to go across a country border
+  float use_roads_;                      // Preference of using roads between 0 and 1
+  float road_factor_;                    // Road factor based on use_roads_
+  float use_ferry_;                      // Preference of using ferries between 0 and 1
+  float use_hills_;                      // Preference of using hills between 0 and 1
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -311,25 +393,12 @@ class BicycleCost : public DynamicCost {
 
   // Speed penalty factor. Penalties apply above a threshold
   // (based on the use_roads factor)
-  float speedpenalty_[100];
+  float speedpenalty_[kMaxSpeedKph + 1];
   uint32_t speed_penalty_threshold_;
-
-  // A measure of willingness to ride with traffic. Ranges from 0-1 with
-  // 0 being not willing at all and 1 being totally comfortable. This factor
-  // determines how much cycle lanes and paths are preferred over roads (if
-  // at all). When useroads factor is low there is more penalty to higher
-  // class and higher speed roads.
-  // Experienced road riders and messengers may use a value = 1 while
-  // beginners may use a value of 0.1 to stay away from roads unless
-  // absolutely necessary.
-  float useroads_;
-  float road_factor_;
-
+  
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
   float grade_penalty[16];
-
- public:
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -342,7 +411,7 @@ class BicycleCost : public DynamicCost {
     // Throw back a lambda that checks the access for this type of costing
     uint32_t b = static_cast<uint32_t>(type_);
     return [b](const baldr::DirectedEdge* edge) {
-      if ( edge->trans_up() || edge->trans_down() || edge->is_shortcut() ||
+      if ( edge->IsTransition() || edge->is_shortcut() ||
           !(edge->forwardaccess() & kBicycleAccess) ||
            edge->use() == Use::kSteps ||
            edge->surface() > kWorstAllowedSurface[b]) {
@@ -383,16 +452,27 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 
   // Transition penalties (similar to auto)
-  maneuver_penalty_ = pt.get<float>("maneuver_penalty",
-                                    kDefaultManeuverPenalty);
-  driveway_penalty_ = pt.get<float>("driveway", kDefaultDrivewayPenalty);
-  gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
-  gate_penalty_ = pt.get<float>("gate_penalty", kDefaultGatePenalty);
-  alley_penalty_ = pt.get<float>("alley_penalty",  kDefaultAlleyPenalty);
-  country_crossing_cost_ = pt.get<float>("country_crossing_cost",
-                                           kDefaultCountryCrossingCost);
-  country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
-                                           kDefaultCountryCrossingPenalty);
+  maneuver_penalty_ = kManeuverPenaltyRange(
+    pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty)
+  );
+  driveway_penalty_ = kDrivewayPenaltyRange(
+    pt.get<float>("driveway", kDefaultDrivewayPenalty)
+  );
+  gate_cost_ = kGateCostRange(
+    pt.get<float>("gate_cost", kDefaultGateCost)
+  );
+  gate_penalty_ = kGatePenaltyRange(
+    pt.get<float>("gate_penalty", kDefaultGatePenalty)
+  );
+  alley_penalty_ = kAlleyPenaltyRange(
+    pt.get<float>("alley_penalty", kDefaultAlleyPenalty)
+  );
+  country_crossing_cost_ = kCountryCrossingCostRange(
+    pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost)
+  );
+  country_crossing_penalty_ = kCountryCrossingPenaltyRange(
+    pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty)
+  );
 
   // Get the bicycle type - enter as string and convert to enum
   std::string bicycle_type = pt.get("bicycle_type", "Road");
@@ -410,7 +490,14 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // flat roads. If not present or outside the valid range use a default speed
   // based on the bicycle type.
   uint32_t t = static_cast<uint32_t>(type_);
-  speed_ = pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]);
+  ranged_default_t<float> kCycleSpeedRange {
+    kMinCyclingSpeed,
+    kDefaultCyclingSpeed[t],
+    kMaxCyclingSpeed
+  };
+  speed_ = kCycleSpeedRange(
+    pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t])
+  );
 
   // Set the minimal surface type usable by the bicycle type and the
   // surface speed factors.
@@ -429,65 +516,61 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     surface_speed_factor_ = kMountainSurfaceSpeedFactors;
   }
 
-  // Validate speed (make sure it is in the accepted range)
-  if (speed_ < kMinCyclingSpeed || speed_ > kMaxCyclingSpeed) {
-    LOG_WARN("Outside valid cycling speed range " + std::to_string(speed_) +
-                ": using default");
-    speed_ = kDefaultCyclingSpeed[t];
-  }
-
   // Willingness to use roads. Make sure this is within range [0, 1].
-  useroads_ = pt.get<float>("use_roads", kDefaultUseRoadsFactor);
-  if (useroads_ < 0.0f || useroads_ > 1.0f) {
-    LOG_WARN("Outside valid useroads factor range " +
-              std::to_string(useroads_) + ": using default");
-  }
+  use_roads_ = kUseRoadRange(
+    pt.get<float>("use_roads", kDefaultUseRoad)
+  );
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
   // start to increase the differences.
-  road_factor_ = (useroads_ >= 0.5f) ?
-                 1.0f - (useroads_ - 0.5f) :
-                 1.0f + (0.5f - useroads_) * 3.0f;
+  road_factor_ = (use_roads_ >= 0.5f) ?
+                 1.5f - use_roads_ :
+                 5.0f - use_roads_ * 8.0f;
 
   // Set the cost (seconds) to enter a ferry (only apply entering since
   // a route must exit a ferry (except artificial test routes ending on
   // a ferry!)
-  ferry_cost_ = pt.get<float>("ferry_cost", kDefaultFerryCost);
+  ferry_cost_ = kFerryCostRange(
+    pt.get<float>("ferry_cost", kDefaultFerryCost)
+  );
 
-  // Modify ferry penalty and edge weighting based on use_ferry factor
-  float use_ferry = pt.get<float>("use_ferry", 0.5f);
-  if (use_ferry < 0.5f) {
-    // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
-    float w = 1.0f - ((0.5f - use_ferry) * 2.0f);
-    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - w));
+  // Modify ferry penalty and edge weighting based on use_ferry_ factor
+  use_ferry_ = kUseFerryRange(
+    pt.get<float>("use_ferry", 0.5f)
+  );
+  if (use_ferry_ < 0.5f) {
+    // Penalty goes from max at use_ferry_ = 0 to 0 at use_ferry_ = 0.5
+    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry_ * 2.0f));
 
-    // Double the cost at use_ferry == 0, progress to 1.0 at use_ferry = 0.5
-    ferry_weight_ = 1.0f + w;
+    // Cost X10 at use_ferry_ == 0, slopes downwards towards 1.0 at use_ferry_ = 0.5
+    ferry_factor_ = 10.0f - use_ferry_ * 18.0f;
   } else {
     // Add a ferry weighting factor to influence cost along ferries to make
     // them more favorable if desired rather than driving. No ferry penalty.
-    // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+    // Half the cost at use_ferry_ == 1, progress to 1.0 at use_ferry_ = 0.5
     ferry_penalty_ = 0.0f;
-    ferry_weight_  = 1.0f - (use_ferry - 0.5f);
+    ferry_factor_  = 1.5f - use_ferry_;
   }
 
   // Set the speed penalty threshold and factor. With useroads = 1 the
   // threshold is 70 kph (near 50 MPH).
   speed_penalty_threshold_ = kSpeedPenaltyThreshold +
-      static_cast<uint32_t>(useroads_ * 30.0f);
+      static_cast<uint32_t>(use_roads_ * 30.0f);
 
   // Create speed cost table and penalty table (to avoid division in costing)
   speedfactor_[0] = kSecPerHour;
-  for (uint32_t s = 1; s < 100; s++) {
+  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
     speedpenalty_[s] = (s <= speed_penalty_threshold_) ? 1.0f :
           powf(static_cast<float>(s) / static_cast<float>(speed_penalty_threshold_), 0.25);
   }
 
   // Populate the grade penalties (based on use_hills factor).
-  float usehills   = pt.get<float>("use_hills", kDefaultUseHillsFactor);
-  float avoidhills = (1.0f - usehills);
+  use_hills_   = kUseHillsRange(
+    pt.get<float>("use_hills", kDefaultUseHills)
+  );
+  float avoidhills = (1.0f - use_hills_);
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = 1.0f + avoidhills * kAvoidHillsStrength[i];
   }
@@ -521,7 +604,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
 
   // Disallow transit connections
   // (except when set for multi-modal routes (FUTURE)
-  if (edge->use() == Use::kTransitConnection /* && !allow_transit_connections_*/) {
+  if (edge->use() == Use::kTransitConnection || edge->use() == Use::kEgressConnection ||
+      edge->use() == Use::kPlatformConnection /* && !allow_transit_connections_*/) {
     return false;
   }
 
@@ -542,6 +626,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Do not allow transit connection edges.
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
         opp_edge->is_shortcut() || opp_edge->use() == Use::kTransitConnection ||
+        opp_edge->use() == Use::kEgressConnection || opp_edge->use() == Use::kPlatformConnection ||
        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
        IsUserAvoidEdge(opp_edgeid)) {
@@ -559,17 +644,19 @@ bool BicycleCost::Allowed(const baldr::NodeInfo* node) const {
 
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
+// TODO: Make this (and TransitionCost) more similar to low-stress bicycle cost
 Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // Stairs/steps - use a high fixed cost so they are generally avoided.
   if (edge->use() == Use::kSteps) {
-    return kBicycleStepsCost;
+    float sec = (edge->length() * speedfactor_[1]);
+    return {sec * kBicycleStepsFactor, sec };
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
     float sec = (edge->length() * speedfactor_[edge->speed()]);
-    return { sec * ferry_weight_, sec };
+    return { sec * ferry_factor_, sec };
   }
 
   // Update speed based on surface factor. Lower speed for rougher surfaces
@@ -590,11 +677,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
   if (edge->use() == Use::kCycleway) {
     // Experienced cyclists might not favor cycleways, but most do...
-    factor = (0.5f + useroads_ * 0.5f);
+    factor = (0.5f + use_roads_ * 0.5f);
   } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
-    factor = 0.75f + (useroads_ * 0.5f);
+    factor = 0.75f + (use_roads_ * 0.5f);
   } else if (edge->use() == Use::kMountainBike &&
              type_ == BicycleType::kMountain) {
     factor = 0.5f;
@@ -786,5 +873,539 @@ cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
   return std::make_shared<BicycleCost>(config);
 }
 
+////////////////////////////////////////////////////////////////////////////
+
+class LowStressBicycleCost : public BicycleCost {
+ public:
+  /**
+   * Construct low stress costing.
+   * Pass in configuration using property tree
+   * @param  config  property tree with configuration/options
+   */
+  LowStressBicycleCost(const boost::property_tree::ptree& config);
+
+  virtual ~LowStressBicycleCost();
+
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge  Pointer to a directed edge.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+
+  /**
+   * Returns the cost to make the transition from the predecessor edge.
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  edge  Directed edge (the to edge)
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  Predecessor edge information.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred) const;
+
+  /**
+   * Returns the cost to make the transition from the predecessor edge
+   * when using a reverse search (from destination towards the origin).
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  the opposing current edge in the reverse tree.
+   * @param  edge  the opposing predecessor in the reverse tree
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCostReverse(const uint32_t idx,
+                                     const baldr::NodeInfo* node,
+                                     const baldr::DirectedEdge* pred,
+                                     const baldr::DirectedEdge* edge) const;
+};
+
+LowStressBicycleCost::LowStressBicycleCost(const boost::property_tree::ptree& config)
+    : BicycleCost(config) {
+  // Overwrite use_roads_ to default to 0
+  use_roads_ = kLowStressUseRoadRange(
+    config.get<float>("use_roads", kDefaultLowStressUseRoad)
+  );
+
+  uint32_t s = 1;
+  // Low speed roads should be more favored than standard bike
+  for ( ; s <= 40; s++) {
+    // Linearly increases to a factor of 1.0 at 40 kmh (~25 mph)
+    speedpenalty_[s] = static_cast<float>(s) / 40.0f;
+  }
+
+  // Mid speed roads should be slightly more penalized than standard bike.
+  for ( ; s <= 65; s++) {
+    // Linearly increases to a factor of 2.0 at 65 kmh (~40 mph)
+    speedpenalty_[s] = (static_cast<float>(s) / 25.0f) - 0.6f;
+  }
+
+  // High speed roads should be much more penalized than standard bike.
+  for ( ; s <= kMaxSpeedKph; s++) {
+    // Linearly increases to a factor of 2.5 at 90 kmh (~56 mph) and continues until max.
+    speedpenalty_[s] = (static_cast<float>(s) / 50.0) + 0.7f;
+  }
+
+  // Populate the grade penalties (based on use_hills factor).
+  float avoidhills = (1.0f - use_hills_);
+  for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
+    // Use the specialized low stress AvoidHillsStrength array.
+    grade_penalty[i] = kLowStressAvoidHillsStrength[i];
+    // avoid hills 0.0 - 0.5 linearly increases from 0.25 to 1.0
+    // avoid hills 0.5 - 1.0 linearly increases from 1.0 to 1.5
+    // That way we will always somewhat avoid hills even if there seems to be preference for them.
+    grade_penalty[i] *= (avoidhills > 0.5) ? avoidhills + 0.5f : avoidhills * 1.5f + 0.25;
+  }
+}
+
+LowStressBicycleCost::~LowStressBicycleCost() {
+}
+
+// Returns the cost to traverse the edge and an estimate of the actual time
+// (in seconds) to traverse the edge.
+Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+  // Stairs/steps - use a high fixed cost so they are generally avoided.
+  if (edge->use() == Use::kSteps) {
+    float sec = (edge->length() * speedfactor_[1]);
+    return {sec * kBicycleStepsFactor, sec };
+  }
+
+  // Ferries are a special case - they use the ferry speed (stored on the edge)
+  if (edge->use() == Use::kFerry) {
+    // Compute elapsed time based on speed. Modulate cost with weighting factors.
+    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    return { sec * ferry_factor_, sec };
+  }
+
+  // Update speed based on surface factor. Lower speed for rougher surfaces
+  // depending on the bicycle type. Modulate speed based on weighted grade
+  // (relative measure of elevation change along the edge)
+  uint32_t bike_speed = static_cast<uint32_t>((speed_ *
+                surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
+                                            kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
+
+  // Represents how stressful a roadway is without looking at grade or cycle accomodations
+  float roadway_stress = 1.0f;
+  // Represents the amount of accomodation is being made. Should be between 0.0 and 1.0 at
+  // all times because it is a stress REDUCTION
+  float accommodation_factor = 1.0f;
+
+  // Special use cases: cycleway and footway
+  uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
+  if (edge->use() == Use::kCycleway) {
+    // Very large reduction for cycleways as they are very stress free. (Default of 0)
+    accommodation_factor = use_roads_ * 0.125f;
+  } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
+    // Slightly less reduction then cycleway but still very favorable.
+    accommodation_factor = use_roads_ * 0.25f + 0.05f;
+  } else if (edge->use() == Use::kMountainBike &&
+             type_ == BicycleType::kMountain) {
+    // Slightly less reduction than a footway or path because even with a mountain bike
+    // these paths can be a little stressful to ride. No traffic though so still favorable
+    accommodation_factor = use_roads_ * 0.25f + 0.1f;
+  } else if (edge->use() == Use::kDriveway) {
+    // Heavily penalize driveways
+    roadway_stress = kDrivewayFactor;
+  } else {
+    if (edge->cyclelane() == CycleLane::kSeparated) {
+      accommodation_factor = 0.25;
+    } else if (edge->cyclelane() == CycleLane::kShared) {
+      accommodation_factor = 0.9f;
+    } else if (edge->cyclelane() == CycleLane::kDedicated) {
+      accommodation_factor = 0.5f;
+    } else if (edge->destonly()) {
+      // Slight penalty going though destination only areas if no bike lanes
+      roadway_stress += kDestinationOnlyFactor;
+    }
+
+    // Penalize roads that have more than one lane (in the direction of travel)
+    // TODO: Maybe consider not penalizing lane count if in a separated (or even dedicated) lane
+    if (edge->lanecount() > 1) {
+      roadway_stress += (static_cast<float>(edge->lanecount()) - 1) * 0.1f;
+    }
+
+    // Add in penalization for road classification
+    roadway_stress += road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
+    // Then multiply by speed so that higher classified roads are more severely punished for being fast.
+    roadway_stress *= speedpenalty_[road_speed];
+  }
+
+  // Favor bicycle networks very slightly.
+  // TODO - do we need to differentiate between types of network?
+  if (edge->bike_network() > 0) {
+    accommodation_factor *= 0.95f;
+  }
+
+  // The stress of this road after accommodation but before grade
+  float total_stress = accommodation_factor * roadway_stress;
+
+  // Create a final edge factor based on total stress and the weighted grade penalty for the edge.
+  float factor = 1.0f + grade_penalty[edge->weighted_grade()] + total_stress;
+
+  // Compute elapsed time based on speed. Modulate cost with weighting factors.
+  float sec = (edge->length() * speedfactor_[bike_speed]);
+  return { sec * factor, sec };
+}
+
+// Returns the time (in seconds) to make the transition from the predecessor
+Cost LowStressBicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
+                                 const baldr::NodeInfo* node,
+                                 const EdgeLabel& pred) const {
+  // Accumulate cost and penalty
+  float seconds = 0.0f;
+  float penalty = 0.0f;
+
+  // Special cases with both time and penalty: country crossing,
+  // gate, toll booth
+  if (node->type() == NodeType::kBorderControl) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
+  } else if (node->type() == NodeType::kGate) {
+    seconds += gate_cost_;
+    penalty += gate_penalty_;
+  }
+
+  // Additional penalties without any time cost
+  uint32_t idx = pred.opp_local_idx();
+  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (pred.use() != Use::kDriveway && edge->use() == Use::kDriveway) {
+    penalty += driveway_penalty_;
+  }
+  if ((pred.use() != Use::kFerry && edge->use() == Use::kFerry)) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
+  }
+
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    // Slight maneuver penalty
+    penalty += maneuver_penalty_;
+  }
+
+  // Reduce the turn stress if there is a traffic signal
+  // TODO - Put this and other complex considerations like lane count into the stop impact code
+  float turn_stress = (node->traffic_signal()) ? 0.4 : 1.0;
+
+  // Reduce the cost to make this turn if the road we are turning on to has some kind
+  // of bicycle accommodation
+  // TODO - Determine if this is needed or tweak/add to it
+  float class_factor = 1.0f;
+  if (edge->use() == Use::kCycleway) {
+    class_factor = 0.05f;
+  } else if (edge->use() == Use::kPedestrian || edge->use() == Use::kPath) {
+    class_factor = 0.1f;
+  } else {
+    if (edge->cyclelane() == CycleLane::kShared) {
+      class_factor = 0.9f;
+    } else if (edge->cyclelane() == CycleLane::kDedicated) {
+      class_factor = 0.5f;
+    } else if (edge->cyclelane() == CycleLane::kSeparated) {
+      class_factor = 0.25f;
+    }
+  }
+
+  // Penalize transition to higher class road.
+  // TODO - modulate based on useroads factor?
+  if (edge->classification() < pred.classification()) {
+    penalty += 10.0f * (static_cast<uint32_t>(pred.classification()) -
+                        static_cast<uint32_t>(edge->classification()));
+    turn_stress *= kRoadClassFactor[static_cast<uint32_t>(edge->classification())] + 1.0f;
+  }
+
+  if (edge->stopimpact(idx) > 0) {
+    // Increase turn stress depending on the kind of turn that has to be made.
+    float turn_penalty = (edge->drive_on_right()) ?
+        kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))] :
+        kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
+    turn_stress += turn_penalty;
+
+    // Take the higher of the turn degree cost and the crossing cost
+    float turn_cost = (edge->drive_on_right()) ?
+        kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+        kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    if (turn_cost < kTCCrossing &&
+        edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    }
+
+    // Transition time = densityfactor * stopimpact * turncost
+    seconds += trans_density_factor_[node->density()] *
+               edge->stopimpact(idx) * turn_cost;
+  }
+
+  // Final turn factor based on the stress to make the turn and if the road being turned to is bike friendly.
+  float factor = 1.0f + turn_stress * class_factor;
+  // Return cost (time and penalty)
+  return { (seconds * factor) + penalty, seconds };
+}
+
+// Returns the cost to make the transition from the predecessor edge
+// when using a reverse search (from destination towards the origin).
+// pred is the opposing current edge in the reverse tree
+// edge is the opposing predecessor in the reverse tree
+Cost LowStressBicycleCost::TransitionCostReverse(const uint32_t idx,
+                                        const baldr::NodeInfo* node,
+                                        const baldr::DirectedEdge* pred,
+                                        const baldr::DirectedEdge* edge) const {
+  // Accumulate cost and penalty
+  float seconds = 0.0f;
+  float penalty = 0.0f;
+
+  // Special cases with both time and penalty: country crossing,
+  // gate, toll booth
+  if (node->type() == NodeType::kBorderControl) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
+  } else if (node->type() == NodeType::kGate) {
+    seconds += gate_cost_;
+    penalty += gate_penalty_;
+  }
+
+  // Additional penalties without any time cost
+  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (pred->use() != Use::kDriveway && edge->use() == Use::kDriveway) {
+    penalty += driveway_penalty_;
+  }
+  if ((pred->use() != Use::kFerry && edge->use() == Use::kFerry)) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
+  }
+
+  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    // Slight maneuver penalty
+    penalty += maneuver_penalty_;
+  }
+
+  // Reduce the turn stress if there is a traffic signal
+  // TODO - Put this and other complex considerations like lane count into the stop impact code
+  float turn_stress = (node->traffic_signal()) ? 0.4 : 1.0;
+
+  // Reduce the cost to make this turn if the road we are turning on to has some kind
+  // of bicycle accommodation
+  // TODO - Determine if this is needed or tweak/add to it
+  float class_factor = 1.0f;
+  if (edge->use() == Use::kCycleway) {
+    class_factor = 0.05f;
+  } else if (edge->use() == Use::kPedestrian || edge->use() == Use::kPath) {
+    class_factor = 0.1f;
+  } else {
+    if (edge->cyclelane() == CycleLane::kShared) {
+      class_factor = 0.9f;
+    } else if (edge->cyclelane() == CycleLane::kDedicated) {
+      class_factor = 0.5f;
+    } else if (edge->cyclelane() == CycleLane::kSeparated) {
+      class_factor = 0.25f;
+    }
+  }
+
+  // Penalize transition to higher class road.
+  // TODO - modulate based on useroads factor?
+  if (edge->classification() < pred->classification()) {
+    penalty += 10.0f * (static_cast<uint32_t>(pred->classification()) -
+                        static_cast<uint32_t>(edge->classification()));
+    turn_stress *= kRoadClassFactor[static_cast<uint32_t>(edge->classification())] + 1.0f;
+  }
+
+  if (edge->stopimpact(idx) > 0) {
+    // Increase turn stress depending on the kind of turn that has to be made.
+    float turn_penalty = (edge->drive_on_right()) ?
+        kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))] :
+        kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
+    turn_stress += turn_penalty;
+
+    // Take the higher of the turn degree cost and the crossing cost
+    float turn_cost = (edge->drive_on_right()) ?
+        kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+        kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    if (turn_cost < kTCCrossing &&
+        edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    }
+
+    // Transition time = densityfactor * stopimpact * turncost
+    seconds += trans_density_factor_[node->density()] *
+               edge->stopimpact(idx) * turn_cost;
+  }
+
+  // Final turn factor based on the stress to make the turn and if the road being turned to is bike friendly.
+  float factor = 1.0f + turn_stress * class_factor;
+  // Return cost (time and penalty)
+  return { (seconds * factor) + penalty, seconds };
+}
+
+cost_ptr_t CreateLowStressBicycleCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<LowStressBicycleCost>(config);
+}
+
 }
 }
+
+/**********************************************************************************************/
+
+#ifdef INLINE_TEST
+
+using namespace valhalla;
+using namespace sif;
+
+namespace {
+
+BicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
+  std::stringstream ss;
+  ss << R"({")" << property << R"(":)" << testVal << "}";
+  boost::property_tree::ptree costing_ptree;
+  boost::property_tree::read_json(ss, costing_ptree);
+  return new BicycleCost(costing_ptree);
+}
+
+std::uniform_real_distribution<float>* make_distributor_from_range (const ranged_default_t<float>& range) {
+  float rangeLength = range.max - range.min;
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
+}
+
+void testBicycleCostParams() {
+  constexpr unsigned testIterations = 250;
+  constexpr unsigned seed = 0;
+  std::default_random_engine generator(seed);
+  std::shared_ptr<std::uniform_real_distribution<float>> distributor;
+  std::shared_ptr<BicycleCost> ctorTester;
+
+  // maneuver_penalty_
+  distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("maneuver_penalty", (*distributor)(generator)));
+    if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
+        ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
+      throw std::runtime_error ("maneuver_penalty_ is not within it's range");
+    }
+  }
+
+  // driveway_penalty_
+  distributor.reset(make_distributor_from_range(kDrivewayPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("driveway", (*distributor)(generator)));
+    if (ctorTester->driveway_penalty_ < kDrivewayPenaltyRange.min ||
+        ctorTester->driveway_penalty_ > kDrivewayPenaltyRange.max) {
+      throw std::runtime_error ("driveway_penalty_ is not within it's range");
+    }
+  }
+
+  // alley_penalty_
+  distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("alley_penalty", (*distributor)(generator)));
+    if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
+        ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
+      throw std::runtime_error ("alley_penalty_ is not within it's range");
+    }
+  }
+
+  // gate_cost_
+  distributor.reset(make_distributor_from_range(kGateCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("gate_cost", (*distributor)(generator)));
+    if (ctorTester->gate_cost_ < kGateCostRange.min ||
+        ctorTester->gate_cost_ > kGateCostRange.max) {
+      throw std::runtime_error ("gate_cost_ is not within it's range");
+    }
+  }
+
+  // gate_penalty_
+  distributor.reset(make_distributor_from_range(kGatePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("gate_penalty", (*distributor)(generator)));
+    if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
+        ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
+      throw std::runtime_error ("gate_penalty_ is not within it's range");
+    }
+  }
+
+  // ferry_cost_
+  distributor.reset(make_distributor_from_range(kFerryCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("ferry_cost", (*distributor)(generator)));
+    if (ctorTester->ferry_cost_ < kFerryCostRange.min ||
+        ctorTester->ferry_cost_ > kFerryCostRange.max) {
+      throw std::runtime_error ("ferry_cost_ is not within it's range");
+    }
+  }
+
+  // country_crossing_cost_
+  distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("country_crossing_cost", (*distributor)(generator)));
+    if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
+        ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
+      throw std::runtime_error ("country_crossing_cost_ is not within it's range");
+    }
+  }
+
+  // country_crossing_penalty_
+  distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("country_crossing_penalty", (*distributor)(generator)));
+    if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
+        ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
+      throw std::runtime_error ("country_crossing_penalty_ is not within it's range");
+    }
+  }
+
+  // use_roads_
+  distributor.reset(make_distributor_from_range(kUseRoadRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("use_roads", (*distributor)(generator)));
+    if (ctorTester->use_roads_ < kUseRoadRange.min ||
+        ctorTester->use_roads_ > kUseRoadRange.max) {
+      throw std::runtime_error ("use_roads_ is not within it's range");
+    }
+  }
+
+  // speed_
+  constexpr ranged_default_t<float> kRoadCyclingSpeedRange {kMinCyclingSpeed, kDefaultCyclingSpeed[0], kMaxCyclingSpeed};
+  distributor.reset(make_distributor_from_range(kRoadCyclingSpeedRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("cycling_speed", (*distributor)(generator)));
+    if (ctorTester->speed_ < kRoadCyclingSpeedRange.min ||
+        ctorTester->speed_ > kRoadCyclingSpeedRange.max) {
+      throw std::runtime_error ("speed_ is not within it's range");
+    }
+  }
+
+  // use_ferry_
+  distributor.reset(make_distributor_from_range(kUseFerryRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("use_ferry", (*distributor)(generator)));
+    if (ctorTester->use_ferry_ < kUseFerryRange.min ||
+        ctorTester->use_ferry_ > kUseFerryRange.max) {
+      throw std::runtime_error ("use_ferry_ is not within it's range");
+    }
+  }
+  
+  // use_hills_
+  distributor.reset(make_distributor_from_range(kUseHillsRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("use_hills", (*distributor)(generator)));
+    if (ctorTester->use_hills_ < kUseHillsRange.min ||
+        ctorTester->use_hills_ > kUseHillsRange.max) {
+      throw std::runtime_error ("use_hills_ is not within it's range");
+    }
+  }
+
+}
+}
+
+int main() {
+  test::suite suite("costing");
+
+  suite.test(TEST_CASE(testBicycleCostParams));
+
+  return suite.tear_down();
+}
+
+#endif

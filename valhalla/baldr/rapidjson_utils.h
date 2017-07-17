@@ -69,7 +69,7 @@ inline typename std::enable_if<std::is_arithmetic<T>::value, boost::optional<T> 
   if(ptr->IsUint())
     return static_cast<T>(ptr->GetUint());
   if(ptr->IsInt64())
-      return static_cast<T>(ptr->GetInt64());
+    return static_cast<T>(ptr->GetInt64());
   if(ptr->IsUint64())
     return static_cast<T>(ptr->GetUint64());
   if(ptr->IsDouble())

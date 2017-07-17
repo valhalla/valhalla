@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
+#include <cstdint>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/turn.h>
@@ -111,7 +112,7 @@ class DirectedEdge {
   /**
    * Get the weighted grade factor
    * @return  Returns the weighted grade factor (0-15).
-   *          where 0 is a 10% grade and 15 is 15%
+   *          where 0 is a -10% grade and 15 is 15%
    */
   uint32_t weighted_grade() const {
     return weighted_grade_;
@@ -507,7 +508,7 @@ class DirectedEdge {
   void set_reverseaccess(const uint32_t modes);
 
   /**
-   * Gets the speed in KPH.
+   * Gets the average speed in KPH.
    * @return  Returns the speed in KPH.
    */
   uint32_t speed() const {
@@ -515,7 +516,7 @@ class DirectedEdge {
   }
 
   /**
-   * Sets the speed in KPH.
+   * Sets the average speed in KPH.
    * @param  speed  Speed in KPH.
    */
   void set_speed(const uint32_t speed);
@@ -953,6 +954,14 @@ class DirectedEdge {
    *                      itself).
    */
   void set_leaves_tile(const bool leaves_tile);
+
+  /**
+   * Returns true if the edge is a transition edge either up or down
+   * @return true if the edge is a transition edge either up or down
+   */
+  bool IsTransition() const {
+    return use() == Use::kTransitionUp || use() == Use::kTransitionDown;
+  }
 
   /**
    * Create a json object representing this edge

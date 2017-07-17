@@ -62,6 +62,7 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
   { kEdgeSpeedLimit, true },
   { kEdgeTruckSpeed, true },
   { kEdgeTruckRoute, true },
+  { kEdgeTrafficSegments, true },
 
   // Node keys
   { kNodeIntersectingEdgeBeginHeading, true },
@@ -74,14 +75,22 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
   { kNodeaAdminIndex, true },
   { kNodeType, true },
   { kNodeFork, true },
-  { kNodeTransitStopInfoType, true },
-  { kNodeTransitStopInfoOnestopId, true },
-  { kNodetransitStopInfoName, true },
-  { kNodeTransitStopInfoArrivalDateTime, true },
-  { kNodeTransitStopInfoDepartureDateTime, true },
-  { kNodeTransitStopInfoIsParentStop, true },
-  { kNodeTransitStopInfoAssumedSchedule, true },
-  { kNodeTransitStopInfoLatLon, true },
+  { kNodeTransitPlatformInfoType, true },
+  { kNodeTransitPlatformInfoOnestopId, true },
+  { kNodeTransitPlatformInfoName, true },
+  { kNodeTransitPlatformInfoStationOnestopId, true },
+  { kNodeTransitPlatformInfoStationName, true },
+  { kNodeTransitPlatformInfoArrivalDateTime, true },
+  { kNodeTransitPlatformInfoDepartureDateTime, true },
+  { kNodeTransitPlatformInfoIsParentStop, true },
+  { kNodeTransitPlatformInfoAssumedSchedule, true },
+  { kNodeTransitPlatformInfoLatLon, true },
+  { kNodeTransitStationInfoOnestopId, true },
+  { kNodeTransitStationInfoName, true },
+  { kNodeTransitStationInfoLatLon, true },
+  { kNodeTransitEgressInfoOnestopId, true },
+  { kNodeTransitEgressInfoName, true },
+  { kNodeTransitEgressInfoLatLon, true },
   { kNodeTimeZone, true },
 
   // Top level: admin list, full shape, and shape bounding box keys
@@ -94,6 +103,8 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
   { kMatchedPoint, true },
   { kMatchedType, true },
   { kMatchedEdgeIndex, true },
+  { kMatchedBeginRouteDiscontinuity, true },
+  { kMatchedEndRouteDiscontinuity, true },
   { kMatchedDistanceAlongEdge, true },
   { kMatchedDistanceFromTracePoint, true }
 

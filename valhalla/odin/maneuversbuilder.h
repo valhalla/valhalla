@@ -1,6 +1,7 @@
 #ifndef VALHALLA_ODIN_MANEUVERSBUILDER_H_
 #define VALHALLA_ODIN_MANEUVERSBUILDER_H_
 
+#include <cstdint>
 #include <list>
 
 #include <valhalla/proto/trippath.pb.h>

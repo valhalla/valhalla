@@ -1,18 +1,17 @@
-#include <prime_server/prime_server.hpp>
-using namespace prime_server;
+#include "thor/worker.h"
 
 #include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
+#include "exception.h"
 #include "midgard/logging.h"
 #include "baldr/geojson.h"
 #include "baldr/pathlocation.h"
-#include "baldr/errorcode_util.h"
 #include "meili/map_matcher.h"
 
-#include "thor/service.h"
 #include "thor/route_matcher.h"
 #include "thor/map_matcher.h"
 #include "thor/match_result.h"
@@ -45,10 +44,7 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree &request,
-    const std::string &request_str, const bool header_dnt) {
-  //get time for start of request
-  auto s = std::chrono::system_clock::now();
+odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &request) {
 
   // Parse request
   parse_locations(request);
@@ -66,13 +62,9 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
   std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
   AttributesController controller;
 
-  worker_t::result_t result { true };
-  // Forward the original request
-  result.messages.emplace_back(request_str);
-
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
-    throw valhalla_exception_t{400, 445};
+    throw valhalla_exception_t{445};
   else {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
@@ -81,9 +73,9 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
         try {
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
-            throw valhalla_exception_t{400, 443};
-        } catch (const valhalla_exception_t& e) {
-          throw valhalla_exception_t{400, 443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
+            throw;
+        } catch (...) {
+          throw valhalla_exception_t{443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
         break;
       // If non-exact shape points are used, then we need to correct this shape by sending them
@@ -93,8 +85,8 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
           trip_match = map_match(controller);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
-        } catch(const valhalla_exception_t& e) {
-          throw valhalla_exception_t{e.status_code, e.error_code, e.extra};
+        } catch(...) {
+          throw valhalla_exception_t { 442 };
         }
         break;
       //If we think that we have the exact shape but there ends up being no Valhalla route match, then
@@ -108,8 +100,8 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
             trip_match = map_match(controller);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
-          } catch(const valhalla_exception_t& e) {
-            throw valhalla_exception_t{e.status_code, e.error_code, e.extra};
+          } catch(...) {
+            throw valhalla_exception_t { 442 };
           }
         }
         break;
@@ -117,22 +109,7 @@ worker_t::result_t thor_worker_t::trace_route(const boost::property_tree::ptree 
       log_admin(trip_path);
     }
 
-  result.messages.emplace_back(trip_path.SerializeAsString());
-
-  // Get processing time for thor
-  auto e = std::chrono::system_clock::now();
-  std::chrono::duration<float, std::milli> elapsed_time = e - s;
-  //log request if greater than X (ms)
-  if (!healthcheck && !header_dnt
-      && (elapsed_time.count() / shape.size()) > (long_request / 1100)) {
-    LOG_WARN(
-        "thor::trace_route elapsed time (ms)::"
-            + std::to_string(elapsed_time.count()));
-    LOG_WARN("thor::trace_route exceeded threshold::" + request_str);
-    midgard::logging::Log("valhalla_thor_long_request_trace_route",
-                          " [ANALYTICS] ");
-  }
-  return result;
+  return trip_path;
 }
 
 
@@ -151,7 +128,7 @@ odin::TripPath thor_worker_t::route_match(const AttributesController& controller
     trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
                                              path_infos, correlated.front(),
                                              correlated.back(), std::list<PathLocation>{},
-                                             interrupt_callback);
+                                             interrupt);
   }
 
   return trip_path;
@@ -162,9 +139,11 @@ odin::TripPath thor_worker_t::route_match(const AttributesController& controller
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
 std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_match(
-    const AttributesController& controller, bool trace_attributes_action) {
+    const AttributesController& controller, bool trace_attributes_action,
+    uint32_t best_paths) {
   odin::TripPath trip_path;
   std::vector<thor::MatchResult> match_results;
+  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
 
   // Call Meili for map matching to get a collection of pathLocation Edges
   // Create a matcher
@@ -172,11 +151,10 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
   try {
     matcher.reset(matcher_factory.Create(trace_config));
   } catch (const std::invalid_argument& ex) {
-    //return jsonify_error({400, 499}, request_info, std::string(ex.what()));
     throw std::runtime_error(std::string(ex.what()));
   }
 
-  matcher->set_interrupt(interrupt_callback);
+  matcher->set_interrupt(interrupt);
   std::vector<meili::Measurement> sequence;
   for (const auto& coord : shape) {
     sequence.emplace_back(coord,
@@ -187,7 +165,7 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
   // Create the vector of matched path results
   std::vector<meili::MatchResult> results;
   if (sequence.size() > 0) {
-    results = (matcher->OfflineMatch(sequence));
+    results = matcher->OfflineMatch(sequence, best_paths);
   }
 
 
@@ -207,9 +185,15 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
 
       // Iterate over results to set edge_index, if found
       int edge_index = 0;
+      int last_matched_edge_index = edge_index;
       int match_index = 0;
       auto edge = path_edges.cbegin();
+      auto last_matched_edge = edge;
       for (auto& match_result : match_results) {
+        // Reset edge and edge_index to last matched for every matched result
+        edge = last_matched_edge;
+        edge_index = last_matched_edge_index;
+
         // Check for result for valid edge id
         if (match_result.edgeid.Is_Valid()) {
           // Walk edges to find matching id
@@ -218,9 +202,13 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
             if (match_result.edgeid == edge->edgeid) {
               // Set match result with matched edge index and break out of the loop
               match_result.edge_index = edge_index;
+
+              // Set the last matched edge and edge_index so we skip matched transition edges
+              last_matched_edge = edge;
+              last_matched_edge_index = edge_index;
               break;
             } else {
-              // Increment to next edge
+              // Increment to next edge and edge_index
               ++edge;
               ++edge_index;
             }
@@ -249,6 +237,22 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
           if (curr_match_result->edgeid != disconnected_edge_pair.first.value) {
             // Set previous match result as disconnected path and break
             prev_match_result->begin_route_discontinuity = true;
+
+            // The begin route discontinuity is the edge end info
+            // therefore the second item in the pair
+            if (route_discontinuities.count(prev_match_result->edge_index) > 0) {
+              // Update edge_end_info values
+              auto& edge_end_info = route_discontinuities.at(prev_match_result->edge_index).second;
+              edge_end_info.exists = true;
+              edge_end_info.vertex = prev_match_result->lnglat;
+              edge_end_info.distance_along = prev_match_result->distance_along;
+            } else {
+              // Add new item
+              // Begin distance along defaulted to 0
+              route_discontinuities.insert( {prev_match_result->edge_index,
+                { {false, {}, 0.f},
+                  {true, prev_match_result->lnglat, prev_match_result->distance_along} }});
+            }
             break;
           }
           // Increment previous and current match results to continue looking
@@ -261,6 +265,22 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
           if (curr_match_result->edgeid == disconnected_edge_pair.second.value) {
             // Set current match result as disconnected and break
             curr_match_result->end_route_discontinuity = true;
+
+            // The end route discontinuity is the edge begin info
+            // therefore the first item in the pair
+            if (route_discontinuities.count(curr_match_result->edge_index) > 0) {
+              // Update edge_begin_info values
+              auto& edge_begin_info = route_discontinuities.at(curr_match_result->edge_index).first;
+              edge_begin_info.exists = true;
+              edge_begin_info.vertex = curr_match_result->lnglat;
+              edge_begin_info.distance_along = curr_match_result->distance_along;
+            } else {
+              // Add new item
+              // End distance along defaulted to 1
+              route_discontinuities.insert( {curr_match_result->edge_index,
+                { {true, curr_match_result->lnglat, curr_match_result->distance_along},
+                  {false, {}, 1.f} }});
+            }
             break;
           }
           // Increment previous and current match results to continue looking
@@ -388,9 +408,9 @@ std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_mat
     trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
                                              mode_costing, path_edges, origin,
                                              destination, std::list<PathLocation>{},
-                                             interrupt_callback);
+                                             interrupt, &route_discontinuities);
   } else {
-    throw baldr::valhalla_exception_t { 400, 442 };
+    throw;
   }
   return {trip_path, match_results};
 }

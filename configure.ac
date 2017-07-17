@@ -37,7 +37,7 @@ AX_PTHREAD(, [AC_MSG_ERROR([cannot find libpthread])])
 REQUIRE_PROTOC
 
 # check for boost and make sure we have the program options library
-AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-all-dev.])])
+AX_BOOST_BASE([1.51], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-all-dev.])])
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
@@ -47,6 +47,24 @@ AX_BOOST_DATE_TIME
 AX_BOOST_IOSTREAMS
 AC_SUBST(BOOST_CPPFLAGS, "$BOOST_CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS")
 AC_SUBST(RAPIDJSON_CPPFLAGS, "$RAPIDJSON_CPPFLAGS -DRAPIDJSON_HAS_STDSTRING")
+
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0])
+
+# if we wanted services
+AC_ARG_ENABLE([services],
+    [  --enable-services    Create services],
+    [case "${enableval}" in
+        yes) services=true ;;
+        no)  services=false ;;
+        *) AC_MSG_ERROR([bad value ${enableval} for --enable-services]) ;;
+    esac],[services=true])
+AM_CONDITIONAL([SERVICES], [test x$services = xtrue])
+
+# then we require prime_server
+AM_COND_IF([SERVICES], [
+    PKG_CHECK_MODULES([SERVICE_DEPS], [libprime_server = 0.6.3])
+    AC_SUBST(HAVE_HTTP_DEFINE, ["#define HAVE_HTTP"])
+],[AC_SUBST(HAVE_HTTP_DEFINE, ["#undef HAVE_HTTP"])])
 
 # if we wanted python bindings
 AC_ARG_ENABLE([python_bindings],
@@ -79,6 +97,8 @@ AM_CONDITIONAL([DATA_TOOLS], [test x$data_tools = xtrue])
 # then we require lots more stuff
 AM_COND_IF([DATA_TOOLS], [
 
+    PKG_CHECK_MODULES([DATA_DEPS], [libcurl >= 7.35.0])
+
     # check for lua libraries and headers
     AX_PROG_LUA([5.2],[],[
         AX_LUA_HEADERS([
@@ -100,13 +120,10 @@ AM_COND_IF([DATA_TOOLS], [
 
 ])
 
-# check pkg-config packaged packages.
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libprime_server = 0.6.3 libcurl >= 7.35.0])
-
 # optionally enable coverage information
 CHECK_COVERAGE
 
-AC_CONFIG_FILES([Makefile libvalhalla.pc])
+AC_CONFIG_FILES([Makefile libvalhalla.pc valhalla/valhalla.h])
 
 # Debian resets this to no, but this break both Spot and the libtool
 # test suite itself.  Instead of requiring developer to install a

@@ -51,17 +51,72 @@ genfiles/admin_lua_proc.h: lua/admin.lua
 genfiles/locales.h: locales/*.json
 	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@/locales && ./make_locales.sh *.json > @abs_builddir@/genfiles/locales.h
 
-PROTO_FILES = proto/osmformat.proto proto/tripcommon.proto proto/trippath.proto proto/tile.proto proto/segment.proto proto/fileformat.proto proto/directions_options.proto proto/tripdirections.proto proto/transit.proto 
-src/proto/%.pb.cc: proto/%.proto
-	@echo " PROTOC $<"; mkdir -p src/proto valhalla/proto; @PROTOC_BIN@ -Iproto --cpp_out=valhalla/proto $< && mv valhalla/proto/$(@F) src/proto
+#non optional protobuffs
+valhalla/proto/tripcommon.pb.h: src/proto/tripcommon.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/tripcommon.pb.h valhalla/proto
+src/proto/tripcommon.pb.cc:
+	@echo " PROTOC tripcommon.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/tripcommon.proto
+valhalla/proto/trippath.pb.h: src/proto/trippath.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/trippath.pb.h valhalla/proto
+src/proto/trippath.pb.cc:
+	@echo " PROTOC trippath.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/trippath.proto
+valhalla/proto/directions_options.pb.h: src/proto/directions_options.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/directions_options.pb.h valhalla/proto
+src/proto/directions_options.pb.cc:
+	@echo " PROTOC directions_options.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/directions_options.proto
+valhalla/proto/tripdirections.pb.h: src/proto/tripdirections.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/tripdirections.pb.h valhalla/proto
+src/proto/tripdirections.pb.cc:
+	@echo " PROTOC tripdirections.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/tripdirections.proto
+valhalla/proto/route.pb.h: src/proto/route.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/route.pb.h valhalla/proto
+src/proto/route.pb.cc:
+	@echo " PROTOC route.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/route.proto
+valhalla/proto/navigator.pb.h: src/proto/navigator.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/navigator.pb.h valhalla/proto
+src/proto/navigator.pb.cc:
+	@echo " PROTOC navigator.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/navigator.proto
 
-BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h
-nodist_libvalhalla_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h
-CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES)) $(EXTRA_PROGRAMS)
+BUILT_SOURCES = genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h valhalla/proto/tripcommon.pb.h valhalla/proto/trippath.pb.h valhalla/proto/directions_options.pb.h valhalla/proto/tripdirections.pb.h valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/route.pb.cc src/proto/navigator.pb.cc
+nodist_libvalhalla_la_SOURCES = genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h
+CLEANFILES = $(EXTRA_PROGRAMS) genfiles/date_time_zonespec.h genfiles/graph_lua_proc.h genfiles/admin_lua_proc.h genfiles/locales.h valhalla/proto/tripcommon.pb.h valhalla/proto/trippath.pb.h valhalla/proto/directions_options.pb.h valhalla/proto/tripdirections.pb.h valhalla/proto/route.pb.h valhalla/proto/navigator.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/route.pb.cc src/proto/navigator.pb.cc
+
+#data tools protobuffs
+if DATA_TOOLS
+valhalla/proto/osmformat.pb.h: src/proto/osmformat.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/osmformat.pb.h valhalla/proto
+src/proto/osmformat.pb.cc:
+	@echo " PROTOC osmformat.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/osmformat.proto
+valhalla/proto/fileformat.pb.h: src/proto/fileformat.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/fileformat.pb.h valhalla/proto
+src/proto/fileformat.pb.cc:
+	@echo " PROTOC fileformat.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/fileformat.proto
+valhalla/proto/transit.pb.h: src/proto/transit.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/transit.pb.h valhalla/proto
+src/proto/transit.pb.cc:
+	@echo " PROTOC transit.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/transit.proto
+valhalla/proto/transit_fetch.pb.h: src/proto/transit_fetch.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/transit_fetch.pb.h valhalla/proto
+src/proto/transit_fetch.pb.cc:
+	@echo " PROTOC transit_fetch.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/transit_fetch.proto
+valhalla/proto/tile.pb.h: src/proto/tile.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/tile.pb.h valhalla/proto
+src/proto/tile.pb.cc:
+	@echo " PROTOC tile.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/tile.proto
+valhalla/proto/segment.pb.h: src/proto/segment.pb.cc
+	-mkdir -p valhalla/proto && mv src/proto/segment.pb.h valhalla/proto
+src/proto/segment.pb.cc:
+	@echo " PROTOC segment.proto" && mkdir -p src/proto && @PROTOC_BIN@ -Iproto --cpp_out=src/proto proto/segment.proto
+BUILT_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/transit_fetch.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
+nodist_libvalhalla_la_SOURCES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/transit_fetch.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h
+CLEANFILES += valhalla/proto/osmformat.pb.h valhalla/proto/fileformat.pb.h valhalla/proto/transit.pb.h valhalla/proto/transit_fetch.pb.h valhalla/proto/tile.pb.h valhalla/proto/segment.pb.h src/proto/tripcommon.pb.cc src/proto/trippath.pb.cc src/proto/directions_options.pb.cc src/proto/tripdirections.pb.cc src/proto/osmformat.pb.cc src/proto/fileformat.pb.cc src/proto/transit.pb.cc src/proto/transit_fetch.pb.cc src/proto/tile.pb.cc src/proto/segment.pb.cc
+endif
 
 lib_LTLIBRARIES = libvalhalla.la
 nobase_include_HEADERS = \
 	valhalla/valhalla.h \
+	valhalla/exception.h \
+	valhalla/worker.h \
 	valhalla/midgard/linesegment2.h \
 	valhalla/midgard/tiles.h \
 	valhalla/midgard/gridded_data.h \
@@ -89,7 +144,6 @@ nobase_include_HEADERS = \
 	valhalla/baldr/double_bucket_queue.h \
 	valhalla/baldr/edge_elevation.h \
 	valhalla/baldr/edgeinfo.h \
-	valhalla/baldr/errorcode_util.h \
 	valhalla/baldr/geojson.h \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
@@ -138,33 +192,33 @@ nobase_include_HEADERS = \
 	valhalla/meili/universal_cost.h \
 	valhalla/meili/candidate_search.h \
 	valhalla/meili/geometry_helpers.h \
-	valhalla/meili/graph_helpers.h \
 	valhalla/meili/grid_range_query.h \
 	valhalla/meili/map_matching.h \
 	valhalla/meili/priority_queue.h \
-	valhalla/meili/service.h \
 	valhalla/meili/routing.h \
 	valhalla/meili/viterbi_search.h \
 	valhalla/meili/geojson_reader.h \
 	valhalla/meili/geojson_writer.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
-	valhalla/meili/bucket_queue.h \
 	valhalla/meili/grid_traversal.h \
 	valhalla/meili/map_matcher.h \
 	valhalla/meili/map_matcher_factory.h \
 	valhalla/meili/traffic_segment_matcher.h \
 	valhalla/meili/match_route.h \
-	valhalla/skadi/service.h \
+	valhalla/skadi/worker.h \
 	valhalla/skadi/sample.h \
 	valhalla/skadi/util.h \
+	valhalla/loki/worker.h \
 	valhalla/loki/search.h \
 	valhalla/loki/node_search.h \
-	valhalla/loki/service.h \
 	valhalla/proto/tripcommon.pb.h \
 	valhalla/proto/trippath.pb.h \
 	valhalla/proto/tripdirections.pb.h \
+	valhalla/proto/route.pb.h \
+	valhalla/proto/navigator.pb.h \
 	valhalla/proto/directions_options.pb.h \
+	valhalla/odin/worker.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
 	valhalla/odin/narrative_dictionary.h \
@@ -175,9 +229,8 @@ nobase_include_HEADERS = \
 	valhalla/odin/sign.h \
 	valhalla/odin/signs.h \
 	valhalla/odin/util.h \
-	valhalla/odin/service.h \
 	valhalla/odin/transitrouteinfo.h \
-	valhalla/odin/transitstop.h \
+	valhalla/thor/worker.h \
 	valhalla/thor/astar.h \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/bidirectional_astar.h \
@@ -191,13 +244,15 @@ nobase_include_HEADERS = \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pathinfo.h \
 	valhalla/thor/route_matcher.h \
-	valhalla/thor/service.h \
 	valhalla/thor/trippathbuilder.h \
 	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
 	valhalla/thor/timedistancematrix.h \
-	valhalla/tyr/service.h
+	valhalla/tyr/serializers.h \
+	valhalla/tyr/navigator.h \
+	valhalla/tyr/actor.h
 libvalhalla_la_SOURCES = \
+	src/worker.cc \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
 	src/midgard/gridded_data.cc \
@@ -208,7 +263,6 @@ libvalhalla_la_SOURCES = \
 	src/midgard/aabb2.cc \
 	src/midgard/point2.cc \
 	src/midgard/util.cc \
-	src/midgard/distanceapproximator.cc \
 	src/midgard/ellipse.cc \
 	src/midgard/logging.cc \
 	src/baldr/accessrestriction.cc \
@@ -263,17 +317,16 @@ libvalhalla_la_SOURCES = \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \
-	src/meili/service.cc \
 	src/meili/geojson_reader.cc \
 	src/meili/map_matcher.cc \
 	src/meili/map_matcher_factory.cc \
 	src/meili/match_route.cc \
 	src/meili/traffic_segment_matcher.cc \
-	src/skadi/service.cc \
 	src/skadi/sample.cc \
+	src/skadi/worker.cc \
 	src/skadi/util.cc \
 	src/loki/search.cc \
-	src/loki/service.cc \
+	src/loki/worker.cc \
 	src/loki/locate_action.cc \
 	src/loki/route_action.cc \
 	src/loki/matrix_action.cc \
@@ -283,6 +336,8 @@ libvalhalla_la_SOURCES = \
 	src/proto/tripcommon.pb.cc \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
+	src/proto/route.pb.cc \
+	src/proto/navigator.pb.cc \
 	src/proto/directions_options.pb.cc \
 	src/odin/directionsbuilder.cc \
 	src/odin/maneuversbuilder.cc \
@@ -294,32 +349,34 @@ libvalhalla_la_SOURCES = \
 	src/odin/sign.cc \
 	src/odin/signs.cc \
 	src/odin/util.cc \
-	src/odin/service.cc \
 	src/odin/transitrouteinfo.cc \
-	src/odin/transitstop.cc \
 	src/odin/locales.h \
+	src/odin/worker.cc \
 	src/thor/astar.cc \
 	src/thor/bidirectional_astar.cc \
 	src/thor/costmatrix.cc \
 	src/thor/isochrone.cc \
-	src/thor/isochrone_action.cc \
 	src/thor/map_matcher.cc \
-	src/thor/matrix_action.cc \
 	src/thor/multimodal.cc \
-	src/thor/optimized_route_action.cc \
 	src/thor/optimizer.cc \
-	src/thor/route_action.cc \
-	src/thor/route_matcher.cc \
-	src/thor/service.cc \
-	src/thor/trace_attributes_action.cc \
-	src/thor/trace_route_action.cc \
 	src/thor/trippathbuilder.cc \
 	src/thor/attributes_controller.cc \
+	src/thor/route_matcher.cc \
 	src/thor/trafficalgorithm.cc \
 	src/thor/timedistancematrix.cc \
-	src/tyr/service.cc
-libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS)
-libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS)
+	src/thor/worker.cc \
+	src/thor/isochrone_action.cc \
+	src/thor/matrix_action.cc \
+	src/thor/optimized_route_action.cc \
+	src/thor/route_action.cc \
+	src/thor/trace_attributes_action.cc \
+	src/thor/trace_route_action.cc \
+	src/tyr/serializers.cc \
+	src/tyr/navigator.cc \
+	src/tyr/actor.cc
+libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+libvalhalla_la_LIBADD = @BOOST_LDFLAGS@ @PROTOC_LIBS@ $(BOOST_LIBS) $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS)
+
 if DATA_TOOLS
 nobase_include_HEADERS += \
 	valhalla/mjolnir/admin.h \
@@ -355,7 +412,6 @@ nobase_include_HEADERS += \
 	valhalla/mjolnir/util.h \
 	valhalla/mjolnir/validatetransit.h
 libvalhalla_la_SOURCES += \
-	src/proto/transit.pb.cc \
 	src/mjolnir/admin.cc \
 	src/mjolnir/complexrestrictionbuilder.cc \
 	src/mjolnir/countryaccess.cc \
@@ -399,81 +455,72 @@ if PYTHON_BINDINGS
 pyexec_LTLIBRARIES = \
 	valhalla.la
 valhalla_la_SOURCES = src/bindings/python/python.cc
-valhalla_la_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ @PYTHON_CPPFLAGS@
-valhalla_la_LIBADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PYTHON_LIBS@ -l$(BOOST_PYTHON_LIB) libvalhalla.la
+valhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ @PYTHON_CPPFLAGS@
+valhalla_la_LIBADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PYTHON_LIBS@ -l$(BOOST_PYTHON_LIB) libvalhalla.la
 valhalla_la_LDFLAGS = @COVERAGE_LDFLAGS@ -avoid-version -module -shared
 endif
 
 bin_PROGRAMS = \
-	valhalla_map_match_service \
 	valhalla_run_map_match \
-	valhalla_meili_worker \
-	valhalla_skadi_worker \
-	valhalla_loki_worker \
-	valhalla_odin_worker \
-	valhalla_thor_worker \
-	valhalla_tyr_worker \
 	valhalla_benchmark_loki \
 	valhalla_benchmark_skadi \
-	valhalla_elevation_service \
-	valhalla_route_service \
 	valhalla_run_isochrone \
 	valhalla_run_route \
 	valhalla_benchmark_adjacency_list \
 	valhalla_run_matrix \
 	valhalla_export_edges
-
-valhalla_map_match_service_SOURCES = src/meili/valhalla_map_match_service.cc
-valhalla_map_match_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_map_match_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_run_map_match_SOURCES = src/meili/valhalla_run_map_match.cc
-valhalla_run_map_match_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_run_map_match_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-valhalla_meili_worker_SOURCES = src/meili/valhalla_meili_worker.cc
-valhalla_meili_worker_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_meili_worker_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-valhalla_skadi_worker_SOURCES = src/valhalla_skadi_worker.cc
-valhalla_skadi_worker_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_skadi_worker_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
-valhalla_loki_worker_SOURCES = src/valhalla_loki_worker.cc
-valhalla_loki_worker_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_loki_worker_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
-valhalla_odin_worker_SOURCES = src/valhalla_odin_worker.cc
-valhalla_odin_worker_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_odin_worker_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-valhalla_thor_worker_SOURCES = src/valhalla_thor_worker.cc
-valhalla_thor_worker_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_thor_worker_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-valhalla_tyr_worker_SOURCES = src/valhalla_tyr_worker.cc
-valhalla_tyr_worker_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_tyr_worker_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_run_map_match_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_run_map_match_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_benchmark_loki_SOURCES = src/valhalla_benchmark_loki.cc
-valhalla_benchmark_loki_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_benchmark_loki_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+valhalla_benchmark_loki_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_benchmark_loki_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 valhalla_benchmark_skadi_SOURCES = src/valhalla_benchmark_skadi.cc
-valhalla_benchmark_skadi_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_benchmark_skadi_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
-valhalla_elevation_service_SOURCES = src/valhalla_elevation_service.cc
-valhalla_elevation_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_elevation_service_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
-valhalla_route_service_SOURCES = src/valhalla_route_service.cc
-valhalla_route_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_route_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_benchmark_skadi_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_benchmark_skadi_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 valhalla_run_isochrone_SOURCES = src/valhalla_run_isochrone.cc
-valhalla_run_isochrone_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_run_isochrone_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_run_isochrone_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_run_isochrone_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_run_route_SOURCES = src/valhalla_run_route.cc
-valhalla_run_route_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_run_route_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_run_route_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_run_route_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_benchmark_adjacency_list_SOURCES = src/valhalla_benchmark_adjacency_list.cc
-valhalla_benchmark_adjacency_list_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_benchmark_adjacency_list_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_benchmark_adjacency_list_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_benchmark_adjacency_list_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_run_matrix_SOURCES = src/valhalla_run_matrix.cc
-valhalla_run_matrix_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_run_matrix_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_run_matrix_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_run_matrix_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_export_edges_SOURCES = src/valhalla_export_edges.cc
-valhalla_export_edges_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_export_edges_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_export_edges_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_export_edges_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+
+if SERVICES
+bin_PROGRAMS += \
+	valhalla_route_service \
+	valhalla_skadi_worker \
+	valhalla_loki_worker \
+	valhalla_odin_worker \
+	valhalla_thor_worker \
+	valhalla_elevation_service 
+valhalla_skadi_worker_SOURCES = src/valhalla_skadi_worker.cc
+valhalla_skadi_worker_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_skadi_worker_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+valhalla_loki_worker_SOURCES = src/valhalla_loki_worker.cc
+valhalla_loki_worker_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_loki_worker_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+valhalla_odin_worker_SOURCES = src/valhalla_odin_worker.cc
+valhalla_odin_worker_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_odin_worker_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_thor_worker_SOURCES = src/valhalla_thor_worker.cc
+valhalla_thor_worker_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_thor_worker_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_elevation_service_SOURCES = src/valhalla_elevation_service.cc
+valhalla_elevation_service_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_elevation_service_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+valhalla_route_service_SOURCES = src/valhalla_route_service.cc
+valhalla_route_service_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_route_service_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+endif
 
 if DATA_TOOLS
 bin_PROGRAMS += \
@@ -482,6 +529,7 @@ bin_PROGRAMS += \
 	valhalla_build_tiles \
 	valhalla_build_admins \
 	valhalla_build_transit \
+	valhalla_fetch_transit \
 	valhalla_query_transit \
 	valhalla_validate_transit \
 	valhalla_ways_to_edges \
@@ -489,38 +537,41 @@ bin_PROGRAMS += \
 	valhalla_build_statistics \
 	valhalla_associate_segments
 valhalla_benchmark_admins_SOURCES = src/mjolnir/valhalla_benchmark_admins.cc
-valhalla_benchmark_admins_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_benchmark_admins_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite $(BOOST_LIBS) libvalhalla.la
+valhalla_benchmark_admins_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_benchmark_admins_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite $(BOOST_LIBS) libvalhalla.la
 valhalla_build_connectivity_SOURCES = src/mjolnir/valhalla_build_connectivity.cc
-valhalla_build_connectivity_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_build_connectivity_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_build_connectivity_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_build_connectivity_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_build_tiles_SOURCES = src/mjolnir/valhalla_build_tiles.cc
-valhalla_build_tiles_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_build_tiles_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz -lsqlite3 -lspatialite $(BOOST_LIBS) libvalhalla.la
+valhalla_build_tiles_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_build_tiles_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz -lsqlite3 -lspatialite $(BOOST_LIBS) libvalhalla.la
 valhalla_build_admins_SOURCES = src/mjolnir/valhalla_build_admins.cc
-valhalla_build_admins_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_build_admins_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite $(BOOST_LIBS) libvalhalla.la
-valhalla_build_transit_SOURCES = src/mjolnir/valhalla_build_transit.cc
-valhalla_build_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_build_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
-valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc
-valhalla_query_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_query_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
+valhalla_build_admins_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_build_admins_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite $(BOOST_LIBS) libvalhalla.la
+valhalla_build_transit_SOURCES = src/mjolnir/valhalla_build_transit.cc src/proto/transit.pb.cc
+valhalla_build_transit_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_build_transit_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
+valhalla_fetch_transit_SOURCES = src/mjolnir/valhalla_fetch_transit.cc  src/proto/transit_fetch.pb.cc
+valhalla_fetch_transit_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_fetch_transit_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
+valhalla_query_transit_SOURCES = src/mjolnir/valhalla_query_transit.cc src/proto/transit.pb.cc
+valhalla_query_transit_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_query_transit_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
 valhalla_validate_transit_SOURCES = src/mjolnir/valhalla_validate_transit.cc
-valhalla_validate_transit_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_validate_transit_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
+valhalla_validate_transit_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_validate_transit_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
 valhalla_ways_to_edges_SOURCES = src/mjolnir/valhalla_ways_to_edges.cc
-valhalla_ways_to_edges_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_ways_to_edges_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
+valhalla_ways_to_edges_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_ways_to_edges_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
 valhalla_build_speeds_SOURCES = src/mjolnir/valhalla_build_speeds.cc
-valhalla_build_speeds_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_build_speeds_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lsqlite3 $(BOOST_LIBS) libvalhalla.la
+valhalla_build_speeds_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_build_speeds_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lsqlite3 $(BOOST_LIBS) libvalhalla.la
 valhalla_build_statistics_SOURCES = src/mjolnir/valhalla_build_statistics.cc src/mjolnir/statistics.cc src/mjolnir/statistics_database.cc src/mjolnir/statistics.h
-valhalla_build_statistics_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_build_statistics_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
+valhalla_build_statistics_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_build_statistics_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
 valhalla_associate_segments_SOURCES = src/valhalla_associate_segments.cc src/proto/segment.pb.cc src/proto/tile.pb.cc
-valhalla_associate_segments_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_associate_segments_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_associate_segments_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_associate_segments_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 bin_SCRIPTS = \
@@ -572,7 +623,6 @@ check_PROGRAMS = \
 	test/verbal_text_formatter_us_co \
 	test/verbal_text_formatter_us_tx \
 	test/factory \
-	test/geometry_helpers \
 	test/grid_range_query \
 	test/grid_traversal \
 	test/map_matcher_factory \
@@ -583,12 +633,9 @@ check_PROGRAMS = \
 	test/geojson_writer \
 	test/util_skadi \
 	test/sample \
-	test/skadi_service \
-	test/loki_service \
-	test/search \
-	test/node_search \
 	test/maneuversbuilder \
 	test/narrativebuilder \
+	test/navigator \
 	test/enhancedtrippath \
 	test/sign \
 	test/signs \
@@ -596,218 +643,242 @@ check_PROGRAMS = \
 	test/narrative_dictionary \
 	test/edgestatus \
 	test/optimizer \
-	test/thor_service \
 	test/attributes_controller \
 	test/astar \
 	test/serializers \
-	test/traffic_matcher
+	test/traffic_matcher \
+	test/autocost \
+	test/bicyclecost \
+	test/pedestriancost \
+	test/transitcost \
+	test/truckcost \
+	test/actor
 test_logging_SOURCES = test/logging.cc test/test.cc
-test_logging_CPPFLAGS = $(DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
-test_logging_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_logging_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) -DLOGGING_LEVEL_ALL
+test_logging_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_point2_SOURCES = test/point2.cc test/test.cc
-test_point2_CPPFLAGS = $(DEPS_CFLAGS)
-test_point2_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_point2_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_distanceapproximator_SOURCES = test/distanceapproximator.cc test/test.cc
-test_distanceapproximator_CPPFLAGS = $(DEPS_CFLAGS)
-test_distanceapproximator_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_distanceapproximator_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_distanceapproximator_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_aabb2_SOURCES = test/aabb2.cc test/test.cc
-test_aabb2_CPPFLAGS = $(DEPS_CFLAGS)
-test_aabb2_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_aabb2_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_aabb2_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_obb2_SOURCES = test/obb2.cc test/test.cc
-test_obb2_CPPFLAGS = $(DEPS_CFLAGS)
-test_obb2_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_obb2_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_obb2_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_linesegment2_SOURCES = test/linesegment2.cc test/test.cc
-test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS)
-test_linesegment2_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_linesegment2_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_vector2_SOURCES = test/vector2.cc test/test.cc
-test_vector2_CPPFLAGS = $(DEPS_CFLAGS)
-test_vector2_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_vector2_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_vector2_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_polyline2_SOURCES = test/polyline2.cc test/test.cc
-test_polyline2_CPPFLAGS = $(DEPS_CFLAGS)
-test_polyline2_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_polyline2_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_polyline2_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_pointll_SOURCES = test/pointll.cc test/test.cc
-test_pointll_CPPFLAGS = $(DEPS_CFLAGS)
-test_pointll_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_pointll_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_ellipse_SOURCES = test/ellipse.cc test/test.cc
-test_ellipse_CPPFLAGS = $(DEPS_CFLAGS)
-test_ellipse_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_ellipse_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_ellipse_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_encode_SOURCES = test/encode.cc test/test.cc
-test_encode_CPPFLAGS = $(DEPS_CFLAGS)
-test_encode_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_encode_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_encode_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_tiles_SOURCES = test/tiles.cc test/test.cc
-test_tiles_CPPFLAGS = $(DEPS_CFLAGS)
-test_tiles_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_tiles_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_tiles_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_sequence_SOURCES = test/sequence.cc test/test.cc
-test_sequence_CPPFLAGS = $(DEPS_CFLAGS)
-test_sequence_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_sequence_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_sequence_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_util_midgard_SOURCES = test/util_midgard.cc test/test.cc
-test_util_midgard_CPPFLAGS = $(DEPS_CFLAGS)
-test_util_midgard_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_util_midgard_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_util_midgard_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_gridded_data_SOURCES = test/gridded_data.cc test/test.cc
-test_gridded_data_CPPFLAGS = $(DEPS_CFLAGS) 
-test_gridded_data_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_gridded_data_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) 
+test_gridded_data_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_location_SOURCES = test/location.cc test/test.cc
-test_location_CPPFLAGS = $(DEPS_CFLAGS) 
-test_location_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_location_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) 
+test_location_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_admin_SOURCES = test/admin.cc test/test.cc
-test_admin_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_admin_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_admin_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_admin_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_datetime_SOURCES = test/datetime.cc test/test.cc
-test_datetime_CPPFLAGS = $(DEPS_CFLAGS)
-test_datetime_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_datetime_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_datetime_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_directededge_SOURCES = test/directededge.cc test/test.cc
-test_directededge_CPPFLAGS = $(DEPS_CFLAGS)
-test_directededge_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_directededge_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_directededge_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_edge_elevation_SOURCES = test/edge_elevation.cc test/test.cc
-test_edge_elevation_CPPFLAGS = $(DEPS_CFLAGS)
-test_edge_elevation_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_edge_elevation_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_edge_elevation_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_double_bucket_queue_SOURCES = test/double_bucket_queue.cc test/test.cc
-test_double_bucket_queue_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_double_bucket_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_double_bucket_queue_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_double_bucket_queue_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_edgecollapser_SOURCES = test/edgecollapser.cc test/test.cc
-test_edgecollapser_CPPFLAGS = $(DEPS_CFLAGS)
-test_edgecollapser_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_edgecollapser_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_edgecollapser_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_laneconnectivity_SOURCES = test/laneconnectivity.cc test/test.cc
-test_laneconnectivity_CPPFLAGS = $(DEPS_CFLAGS)
-test_laneconnectivity_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_laneconnectivity_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_laneconnectivity_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_graphid_SOURCES = test/graphid.cc test/test.cc
-test_graphid_CPPFLAGS = $(DEPS_CFLAGS)
-test_graphid_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_graphid_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_tilehierarchy_SOURCES = test/tilehierarchy.cc test/test.cc
-test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS)
-test_tilehierarchy_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_tilehierarchy_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_graphtile_SOURCES = test/graphtile.cc test/test.cc
-test_graphtile_CPPFLAGS = $(DEPS_CFLAGS)
-test_graphtile_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_graphtile_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_graphtile_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_nodeinfo_SOURCES = test/nodeinfo.cc test/test.cc
-test_nodeinfo_CPPFLAGS = $(DEPS_CFLAGS)
-test_nodeinfo_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_nodeinfo_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_nodeinfo_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_turn_SOURCES = test/turn.cc test/test.cc
-test_turn_CPPFLAGS = $(DEPS_CFLAGS)
-test_turn_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_turn_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_turn_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_graphreader_SOURCES = test/graphreader.cc test/test.cc
-test_graphreader_CPPFLAGS = $(DEPS_CFLAGS)
-test_graphreader_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_graphreader_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_graphreader_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_streetname_SOURCES = test/streetname.cc test/test.cc
-test_streetname_CPPFLAGS = $(DEPS_CFLAGS)
-test_streetname_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_streetname_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_streetname_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_streetname_us_SOURCES = test/streetname_us.cc test/test.cc
-test_streetname_us_CPPFLAGS = $(DEPS_CFLAGS)
-test_streetname_us_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_streetname_us_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_streetname_us_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_streetnames_SOURCES = test/streetnames.cc test/test.cc
-test_streetnames_CPPFLAGS = $(DEPS_CFLAGS)
-test_streetnames_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_streetnames_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_streetnames_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_streetnames_us_SOURCES = test/streetnames_us.cc test/test.cc
-test_streetnames_us_CPPFLAGS = $(DEPS_CFLAGS)
-test_streetnames_us_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_streetnames_us_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_streetnames_us_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_streetnames_factory_SOURCES = test/streetnames_factory.cc test/test.cc
-test_streetnames_factory_CPPFLAGS = $(DEPS_CFLAGS)
-test_streetnames_factory_LDADD = $(DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_streetnames_factory_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_streetnames_factory_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_json_SOURCES = test/json.cc test/test.cc
-test_json_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_json_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_json_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_json_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_verbal_text_formatter_SOURCES = test/verbal_text_formatter.cc test/test.cc
-test_verbal_text_formatter_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_verbal_text_formatter_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_verbal_text_formatter_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_verbal_text_formatter_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_verbal_text_formatter_us_SOURCES = test/verbal_text_formatter_us.cc test/test.cc
-test_verbal_text_formatter_us_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_verbal_text_formatter_us_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_verbal_text_formatter_us_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_verbal_text_formatter_us_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_verbal_text_formatter_us_co_SOURCES = test/verbal_text_formatter_us_co.cc test/test.cc
-test_verbal_text_formatter_us_co_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_verbal_text_formatter_us_co_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_verbal_text_formatter_us_co_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_verbal_text_formatter_us_co_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_verbal_text_formatter_us_tx_SOURCES = test/verbal_text_formatter_us_tx.cc test/test.cc
-test_verbal_text_formatter_us_tx_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_verbal_text_formatter_us_tx_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_verbal_text_formatter_us_tx_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_verbal_text_formatter_us_tx_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_factory_SOURCES = test/factory.cc test/test.cc
-test_factory_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_factory_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_geometry_helpers_SOURCES = test/geometry_helpers.cc test/test.cc
-test_geometry_helpers_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_geometry_helpers_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_factory_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_factory_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_grid_range_query_SOURCES = test/grid_range_query.cc test/test.cc
-test_grid_range_query_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_grid_range_query_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_grid_range_query_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_grid_range_query_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_grid_traversal_SOURCES = test/grid_traversal.cc test/test.cc
-test_grid_traversal_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_grid_traversal_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_grid_traversal_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_grid_traversal_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_map_matcher_factory_SOURCES = test/map_matcher_factory.cc test/test.cc
-test_map_matcher_factory_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_map_matcher_factory_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_map_matcher_factory_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_map_matcher_factory_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_queue_SOURCES = test/queue.cc test/test.cc
-test_queue_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_queue_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_queue_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_queue_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_routing_SOURCES = test/routing.cc test/test.cc
-test_routing_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_routing_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_routing_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_routing_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_viterbi_search_SOURCES = test/viterbi_search.cc test/test.cc
-test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_viterbi_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_viterbi_search_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_geojson_reader_SOURCES = test/geojson_reader.cc test/test.cc
-test_geojson_reader_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_geojson_reader_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_geojson_reader_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_geojson_reader_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_geojson_writer_SOURCES = test/geojson_writer.cc test/test.cc
-test_geojson_writer_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_geojson_writer_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_geojson_writer_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_geojson_writer_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_util_skadi_SOURCES = test/util_skadi.cc test/test.cc
-test_util_skadi_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_util_skadi_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_util_skadi_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_util_skadi_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_sample_SOURCES = test/sample.cc test/test.cc
-test_sample_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_sample_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_skadi_service_SOURCES = test/skadi_service.cc test/test.cc
-test_skadi_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_skadi_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_loki_service_SOURCES = test/loki_service.cc test/test.cc
-test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_loki_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_search_SOURCES = test/search.cc test/test.cc
-test_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_node_search_SOURCES = test/node_search.cc test/test.cc
-test_node_search_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_node_search_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_sample_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_sample_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_maneuversbuilder_SOURCES = test/maneuversbuilder.cc test/test.cc
-test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_maneuversbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_narrativebuilder_SOURCES = test/narrativebuilder.cc test/test.cc
-test_narrativebuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_narrativebuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_narrativebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_narrativebuilder_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_navigator_SOURCES = test/navigator.cc test/test.cc
+test_navigator_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_navigator_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_enhancedtrippath_SOURCES = test/enhancedtrippath.cc test/test.cc
-test_enhancedtrippath_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_enhancedtrippath_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_enhancedtrippath_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_enhancedtrippath_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_sign_SOURCES = test/sign.cc test/test.cc
-test_sign_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_sign_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_sign_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_sign_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_signs_SOURCES = test/signs.cc test/test.cc
-test_signs_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_signs_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_signs_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_signs_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_util_odin_SOURCES = test/util_odin.cc test/test.cc
-test_util_odin_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_util_odin_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_util_odin_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_util_odin_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_narrative_dictionary_SOURCES = test/narrative_dictionary.cc test/test.cc
-test_narrative_dictionary_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_narrative_dictionary_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_narrative_dictionary_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_narrative_dictionary_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
-test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_edgestatus_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_edgestatus_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_optimizer_SOURCES = test/optimizer.cc test/test.cc
-test_optimizer_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_optimizer_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_thor_service_SOURCES = test/thor_service.cc test/test.cc
-test_thor_service_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_thor_service_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_optimizer_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_optimizer_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_attributes_controller_SOURCES = test/attributes_controller.cc test/test.cc
-test_attributes_controller_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_attributes_controller_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_attributes_controller_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_attributes_controller_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_astar_SOURCES = test/astar.cc test/test.cc
-test_astar_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_astar_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_astar_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_astar_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_serializers_SOURCES = test/serializers.cc test/test.cc
-test_serializers_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_serializers_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_serializers_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_serializers_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_traffic_matcher_SOURCES = test/traffic_matcher.cc test/test.cc
-test_traffic_matcher_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_traffic_matcher_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_traffic_matcher_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_traffic_matcher_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_autocost_SOURCES = src/sif/autocost.cc test/test.cc
+test_autocost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_autocost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_bicyclecost_SOURCES = src/sif/bicyclecost.cc test/test.cc
+test_bicyclecost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_bicyclecost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_pedestriancost_SOURCES = src/sif/pedestriancost.cc test/test.cc
+test_pedestriancost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_pedestriancost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_transitcost_SOURCES = src/sif/transitcost.cc test/test.cc
+test_transitcost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_transitcost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_truckcost_SOURCES = src/sif/truckcost.cc test/test.cc
+test_truckcost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_truckcost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_actor_SOURCES = test/actor.cc test/test.cc
+test_actor_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_actor_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+
+if SERVICES
+check_PROGRAMS += \
+	test/skadi_service \
+	test/loki_service \
+	test/thor_service
+test_skadi_service_SOURCES = test/skadi_service.cc test/test.cc
+test_skadi_service_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_skadi_service_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_loki_service_SOURCES = test/loki_service.cc test/test.cc
+test_loki_service_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_loki_service_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_thor_service_SOURCES = test/thor_service.cc test/test.cc
+test_thor_service_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_thor_service_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+endif
 
 if DATA_TOOLS
 check_PROGRAMS += \
@@ -821,40 +892,48 @@ check_PROGRAMS += \
 	test/refs \
 	test/signinfo \
 	test/countryaccess \
-	test/graphtilebuilder
+	test/graphtilebuilder \
+	test/search \
+	test/node_search
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
-test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_utrecht_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_utrecht_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
-test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_edgeinfobuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_uniquenames_SOURCES = test/uniquenames.cc test/test.cc
-test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_uniquenames_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_uniquenames_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_idtable_SOURCES = test/idtable.cc test/test.cc
-test_idtable_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_idtable_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_idtable_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_idtable_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_graphbuilder_SOURCES = test/graphbuilder.cc test/test.cc
-test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_graphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_graphbuilder_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_graphparser_SOURCES = test/graphparser.cc test/test.cc
-test_graphparser_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_graphparser_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_graphparser_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_graphparser_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_names_SOURCES = test/names.cc test/test.cc
-test_names_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_names_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_names_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_names_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_refs_SOURCES = test/refs.cc test/test.cc
-test_refs_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_refs_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_refs_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_refs_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_signinfo_SOURCES = test/signinfo.cc test/test.cc
-test_signinfo_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_signinfo_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_signinfo_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_signinfo_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_countryaccess_SOURCES = test/countryaccess.cc test/test.cc
-test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_countryaccess_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_countryaccess_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_countryaccess_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
-test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_graphtilebuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_graphtilebuilder_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_search_SOURCES = test/search.cc test/test.cc
+test_search_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_search_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_node_search_SOURCES = test/node_search.cc test/test.cc
+test_node_search_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_node_search_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 TESTS = $(check_PROGRAMS)

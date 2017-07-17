@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
 #define VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
 
+#include <cstdint>
 #include <vector>
 #include <valhalla/midgard/util.h>
 
