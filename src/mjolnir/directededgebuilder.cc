@@ -50,7 +50,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
     set_dest_only(way.no_thru_traffic());
 
   set_surface(way.surface());
-  set_cyclelane(way.cyclelane());
   set_tunnel(way.tunnel());
   set_roundabout(way.roundabout());
   set_bridge(way.bridge());

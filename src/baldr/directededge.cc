@@ -123,6 +123,11 @@ void DirectedEdge::set_laneconnectivity(const bool lc) {
 
 // -------------------------- Routing attributes --------------------------- //
 
+// Set if bikers need to dismount along the edge
+void DirectedEdge::set_dismount (const bool dismount) {
+  dismount_ = dismount;
+}
+
 // Set the flag indicating driving is on the right hand side of the road
 // along this edge?
 void DirectedEdge::set_drive_on_right(const bool rsd) {

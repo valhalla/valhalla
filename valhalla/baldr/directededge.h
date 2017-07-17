@@ -664,6 +664,20 @@ class DirectedEdge {
   void set_part_of_complex_restriction(const bool part_of);
 
   /**
+   * Get if edge is a dismount edge.
+   * @return  Returns true if edge is a dismount edge, false if it is not.
+   */
+  bool dismount () const {
+    return dismount_;
+  }
+
+  /**
+   * Set if edge is a dismount edge.
+   * @param  dismount  true if the edge is a dismount edge, false if not.
+   */
+  void set_dismount (const bool dismount);
+
+  /**
    * Get the density along the edges.
    * @return  Returns relative density along the edge.
    */
@@ -1022,7 +1036,8 @@ class DirectedEdge {
   uint64_t reverseaccess_  : 12; // Access (bit mask) in reverse direction
   uint64_t classification_ : 3;  // Classification/importance of the road/path
   uint64_t surface_        : 3;  // representation of smoothness
-  uint64_t spare2_         : 10;
+  uint64_t spare2_         : 9;
+  uint64_t dismount_       : 1;  // Do you need to dismount when biking on this edge?
   uint64_t density_        : 4;  // Density along the edge
   uint64_t speed_limit_    : 8;  // Speed limit (kph)
   uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed

@@ -532,6 +532,18 @@ struct OSMWay {
   bool oneway() const;
 
   /**
+   * Sets if the oneway is in the opposite direction
+   * @param  oneway_reverse
+   */
+  void set_oneway_reverse (const bool oneway_reverse);
+
+  /**
+   * Gets if the oneway is in the opposite direction
+   * @return  Returns if oneway is reversed
+   */
+  bool oneway_reverse() const;
+
+  /**
    * Sets the roundabout flag.
    * @param  roundabout   Is a roundabout?
    */
@@ -580,16 +592,78 @@ struct OSMWay {
   baldr::Surface surface() const;
 
   /**
-   * Sets the cycle lane.
+   * Sets the right cycle lane.
    * @param  cyclelane
    */
-  void set_cyclelane(const baldr::CycleLane cyclelane);
+  void set_cyclelane_right(const baldr::CycleLane cyclelane);
 
   /**
-   * Get the cycle lane.
+   * Gets the right cycle lane.
    * @return  Returns CycleLane.
    */
-  baldr::CycleLane cyclelane() const;
+  baldr::CycleLane cyclelane_right() const;
+
+  /**
+   * Sets the left cycle lane.
+   * @param  cyclelane
+   */
+  void set_cyclelane_left(const baldr::CycleLane cyclelane);
+
+  /**
+   * Gets the left cycle lane.
+   * @return  Returns CycleLane.
+   */
+  baldr::CycleLane cyclelane_left() const;
+
+  /**
+   * Sets if the right cycle lane is facing the opposite direction
+   * @param  cyclelane_opposite
+   */
+  void set_cyclelane_right_opposite(const bool cyclelane_opposite);
+
+  /**
+   * Gets if the right cycle lane is facing the opposite direction
+   * @return  Returns cycle_lane_right_opposite
+   */
+  bool cyclelane_right_opposite() const;
+
+  /**
+   * Sets if the left cycle lane is facing the opposite direction
+   * @param  cyclelane_opposite
+   */
+  void set_cyclelane_left_opposite(const bool cyclelane_opposite);
+
+  /**
+   * Gets if the left cycle lane is facing the opposite direction
+   * @return  Returns cycle_lane_left_opposite
+   */
+  bool cyclelane_left_opposite() const;
+
+  /**
+   * Sets if a bicyclist needs to dismount their bike
+   * @param  dismount  Whether a cyclist needs to dismount or not
+   */
+  void set_dismount(const bool dismount);
+
+  /**
+   * Gets if a bicyclist needs to dismount their bike
+   * @return  Returns dismount
+   */
+  bool dismount() const;
+
+  /**
+   * Sets whether a pedestrian or cyclist should have preference to use a different
+   * path to the side (A separate OSMWay completely)
+   * @param  use_sidepath
+   */
+  void set_use_sidepath(const bool use_sidepath);
+
+  /*
+   * Gets whether a pedestrian or cyclist should have preference to use a different
+   * path to the side (A separate OSMWay completely)
+   * @return  Returns if using a sidepath is preffered
+   */
+  bool use_sidepath() const;
 
   /**
    * Sets the number of lanes
@@ -938,11 +1012,11 @@ struct OSMWay {
       uint32_t destination_only       :1;
       uint32_t no_thru_traffic        :1;
       uint32_t oneway                 :1;
+      uint32_t oneway_reverse         :1;
       uint32_t roundabout             :1;
       uint32_t ferry                  :1;
       uint32_t rail                   :1;
       uint32_t surface                :3;
-      uint32_t cycle_lane             :2;
       uint32_t tunnel                 :1;
       uint32_t toll                   :1;
       uint32_t bridge                 :1;
@@ -959,7 +1033,7 @@ struct OSMWay {
       uint32_t truck_route            :1;
       uint32_t sidewalk_right         :1;
       uint32_t sidewalk_left          :1;
-      uint32_t spare                  :2;
+      uint32_t spare                  :3;
     } fields;
     uint32_t v;
   };
@@ -1007,6 +1081,21 @@ struct OSMWay {
   };
   WayAccess access_;
 
+  // Essentially just more space for attributes. Did not know what to name it.
+  union BikeInfo {
+    struct Fields {
+      uint16_t cycle_lane_right          :2;
+      uint16_t cycle_lane_left           :2;
+      uint16_t cycle_lane_right_opposite :1;
+      uint16_t cycle_lane_left_opposite  :1;
+      uint16_t dismount                  :1;
+      uint16_t use_sidepath              :1;
+      uint16_t spare                     :8;
+    } fields;
+    uint16_t v;
+  };
+  BikeInfo bike_info_;
+
   uint16_t nodecount_;
 
   // max speed limit in kilometers per hour
@@ -1024,6 +1113,8 @@ struct OSMWay {
 
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
+
+  uint8_t spare_;
 };
 
 }

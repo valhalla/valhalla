@@ -502,6 +502,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Set the minimal surface type usable by the bicycle type and the
   // surface speed factors.
   if (type_ == BicycleType::kRoad) {
+    // Heavily penalize driveways
     minimal_allowed_surface_ = Surface::kCompacted;
     surface_speed_factor_ = kRoadSurfaceSpeedFactors;
   } else if (type_ == BicycleType::kHybrid) {
@@ -683,6 +684,10 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   } else if (edge->use() == Use::kMountainBike &&
              type_ == BicycleType::kMountain) {
     factor = 0.5f;
+  } else if (edge->use() == Use::kLivingStreet) {
+    factor = 0.6f;
+  } else if (edge->use() == Use::kTrack) {
+    factor = 0.8f;
   } else if (edge->use() == Use::kDriveway) {
     // Heavily penalize driveways
     factor = kDrivewayFactor;
@@ -1003,16 +1008,20 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     // Slightly less reduction than a footway or path because even with a mountain bike
     // these paths can be a little stressful to ride. No traffic though so still favorable
     accommodation_factor = use_roads_ * 0.25f + 0.1f;
+  } else if(edge->use() == Use::kLivingStreet) {
+    roadway_stress = 0.25f;
+  } else if (edge->use() == Use::kTrack) {
+    roadway_stress = 0.5f;
   } else if (edge->use() == Use::kDriveway) {
     // Heavily penalize driveways
     roadway_stress = kDrivewayFactor;
   } else {
-    if (edge->cyclelane() == CycleLane::kSeparated) {
-      accommodation_factor = 0.25;
-    } else if (edge->cyclelane() == CycleLane::kShared) {
+    if (edge->cyclelane() == CycleLane::kShared) {
       accommodation_factor = 0.9f;
     } else if (edge->cyclelane() == CycleLane::kDedicated) {
       accommodation_factor = 0.5f;
+    } else if (edge->cyclelane() == CycleLane::kSeparated) {
+      accommodation_factor = 0.25;
     } else if (edge->destonly()) {
       // Slight penalty going though destination only areas if no bike lanes
       roadway_stress += kDestinationOnlyFactor;

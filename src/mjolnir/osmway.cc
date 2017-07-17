@@ -450,6 +450,16 @@ bool OSMWay::oneway() const{
   return attributes_.fields.oneway;
 }
 
+// Sets if the oneway is facing the reverse direction
+void OSMWay::set_oneway_reverse(const bool oneway_reverse) {
+  attributes_.fields.oneway_reverse = oneway_reverse;
+}
+
+// Gets if the oneway is facing the reverse direction
+bool OSMWay::oneway_reverse() const {
+  return attributes_.fields.oneway_reverse;
+}
+
 // Set roundabout flag.
 void OSMWay::set_roundabout(const bool roundabout) {
   attributes_.fields.roundabout = roundabout;
@@ -490,14 +500,64 @@ Surface OSMWay::surface() const {
   return static_cast<Surface>(attributes_.fields.surface);
 }
 
-// Set the cycle lane.
-void OSMWay::set_cyclelane(const CycleLane cyclelane) {
-  attributes_.fields.cycle_lane = static_cast<uint8_t>(cyclelane);
+// Set the right cycle lane.
+void OSMWay::set_cyclelane_right(const CycleLane cyclelane) {
+  bike_info_.fields.cycle_lane_right = static_cast<uint8_t>(cyclelane);
 }
 
-// Get the cycle lane.
-CycleLane OSMWay::cyclelane() const {
-  return static_cast<CycleLane>(attributes_.fields.cycle_lane);
+// Get the right cycle lane.
+CycleLane OSMWay::cyclelane_right() const {
+  return static_cast<CycleLane>(bike_info_.fields.cycle_lane_right);
+}
+
+// Set the left cycle lane.
+void OSMWay::set_cyclelane_left(const CycleLane cyclelane) {
+  bike_info_.fields.cycle_lane_left= static_cast<uint8_t>(cyclelane);
+}
+
+// Get the left cycle lane.
+CycleLane OSMWay::cyclelane_left() const {
+  return static_cast<CycleLane>(bike_info_.fields.cycle_lane_left);
+}
+
+// Set the if the right cycle lane is facing the opposite direction.
+void OSMWay::set_cyclelane_right_opposite(const bool cyclelane_opposite) {
+  bike_info_.fields.cycle_lane_right_opposite = cyclelane_opposite;
+}
+
+// Get the if the right cycle lane is facing the opposite direction
+bool OSMWay::cyclelane_right_opposite() const {
+  return bike_info_.fields.cycle_lane_right_opposite;
+}
+
+// Set the if the left cycle lane is facing the opposite direction.
+void OSMWay::set_cyclelane_left_opposite(const bool cyclelane_opposite) {
+  bike_info_.fields.cycle_lane_left_opposite = cyclelane_opposite;
+}
+
+// Get the if the left cycle lane is facing the opposite direction
+bool OSMWay::cyclelane_left_opposite() const {
+  return bike_info_.fields.cycle_lane_left_opposite;
+}
+
+// Sets whether a bicyclist needs to dismount their bike for this way
+void OSMWay::set_dismount(const bool dismount) {
+  bike_info_.fields.dismount = dismount;
+}
+
+// Gets whether a bicyclist needs to dismount their bike for this way
+bool OSMWay::dismount() const {
+  return bike_info_.fields.dismount;
+}
+
+// Sets whether using a sidepath is preferred
+void OSMWay::set_use_sidepath(const bool use_sidepath) {
+  bike_info_.fields.use_sidepath = use_sidepath;
+}
+
+// Gets whether using a sidepath is preferred
+bool OSMWay::use_sidepath() const {
+  return bike_info_.fields.use_sidepath;
 }
 
 // Sets the number of lanes

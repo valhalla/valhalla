@@ -289,6 +289,14 @@ hazmat = {
 ["delivery"] = "true"
 }
 
+shoulder = {
+["yes"] = "true",
+["no"] = "false",
+["both"] = "true",
+["left"] = "true",
+["right"] = "true"
+}
+
 bicycle = {
 ["yes"] = "true",
 ["designated"] = "true",
@@ -344,10 +352,15 @@ shared = {
 ["shared"] = 1
 }
 
+buffer = {
+["yes"] = "true",
+["no"] = "false"
+}
+
 dedicated = {
 ["opposite_lane"] = 2,
-["lane"] = 2
-["buffer"] = 2
+["lane"] = 2,
+["buffered_lane"] = 2
 }
 
 separated = {
@@ -824,9 +837,6 @@ function filter_tags_generic(kv)
 
   if kv["bike_backward"] == "true" then
     oneway_bike = oneway[kv["oneway:bicycle"]]
-    if (oneway_bike == "false" and kv["bicycle:backward"] == "yes") then
-      oneway_bike = "true"
-    end
   end
 
   if ((kv["oneway"] == "yes" and kv["oneway:bus"] == "no") or kv["bus:backward"] == "yes" or kv["bus:backward"] == "designated") then
@@ -841,7 +851,7 @@ function filter_tags_generic(kv)
     oneway_bus = oneway[kv["oneway:bus"]]
     if (oneway_bus == "false" and kv["bus:backward"] == "yes") then
       oneway_bus = "true"
-    end  
+    end
   end
 
   local oneway_reverse = kv["oneway"]
@@ -902,8 +912,11 @@ function filter_tags_generic(kv)
     kv["bus_backward"] = "true"
   end
 
+  kv["oneway_reverse"] = "false"
+
   --flip the onewayness 
   if oneway_reverse == "-1" then
+    kv["oneway_reverse"] = "true"
     local forwards = kv["auto_forward"]
     kv["auto_forward"] = kv["auto_backward"]
     kv["auto_backward"] = forwards
@@ -1030,17 +1043,27 @@ function filter_tags_generic(kv)
 
   kv["use"] = use
 
-  local cycle_lane = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or 0
+  local cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
+  local cycle_lane_left = cycle_lane_right
 
-  if cycle_lane == 0 then
-    cycle_lane = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or 0
-
-    if cycle_lane == 0 then
-      cycle_lane = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or 0
-    end
+  if cycle_lane_right == 0 then
+    cycle_lane_right = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or buffer[kv["cycleway:right:buffer"]] or 0
+    cycle_lane_left = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or buffer[kv["cycleway:left:buffer"]] or 0
   end
 
-  kv["cycle_lane"] = cycle_lane
+  kv["cycle_lane_right"] = cycle_lane_right
+  kv["cycle_lane_left"] = cycle_lane_left
+
+  local cycle_lane_right_opposite = bike_reverse[kv["cycleway"]] or "false"
+  local cycle_lane_left_opposite = cycle_lane_right_opposite
+
+  if cycle_lane_right_opposite == "false" then
+    cycle_lane_right_opposite = bike_reverse[kv["cycleway:right"]]
+    cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]]
+  end
+
+  kv["cycle_lane_right_opposite"] = cycle_lane_right_opposite
+  kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
 
   if kv["highway"] and string.find(kv["highway"], "_link") then --*_link 
      kv["link"] = "true"  --do we need to add more?  turnlane?
