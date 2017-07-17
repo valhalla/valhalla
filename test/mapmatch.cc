@@ -187,7 +187,7 @@ namespace {
   };
 
   void test_matcher() {
-    tyr::actor_t actor(conf);
+    tyr::actor_t actor(conf, true);
     //some edges should have no matches and most will have no segments
     for(const auto& test_case : test_cases) {
       //get a route shape
@@ -195,7 +195,6 @@ namespace {
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
       //get the edges along that route shape
-      actor.cleanup();
       auto walked = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}"));
       std::vector<uint64_t> walked_edges;
@@ -206,7 +205,6 @@ namespace {
       //std::cout << print(simulation) << std::endl;
       auto encoded_simulation = midgard::encode(simulation);
       //get a trace-attributes from the simulated gps
-      actor.cleanup();
       auto matched = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":")" + json_escape(encoded_simulation) + "\"}"));
       std::vector<uint64_t> matched_edges;
