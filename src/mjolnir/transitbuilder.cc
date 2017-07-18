@@ -347,7 +347,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         if (n < 127) {
           tilebuilder_transit.directededges().emplace_back(std::move(directededge));
         } else {
-          LOG_ERROR("Could not add transit connection edge!")
+          LOG_ERROR("Could not add transit connection edge!");
         }
 
         LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));

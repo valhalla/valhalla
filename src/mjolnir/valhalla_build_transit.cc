@@ -341,7 +341,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
 
       nodes.emplace(node->onestop_id(), egress_id);
       if(nodes.size() == kMaxGraphId) {
-        LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest")
+        LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest");
         return;
       }
     }
@@ -365,7 +365,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
     node->set_prev_type_graphid(prev_type_graphid);
     nodes.emplace(node->onestop_id(), station_id);
     if(nodes.size() == kMaxGraphId) {
-      LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest")
+      LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest");
       return;
     }
 
@@ -399,7 +399,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
       nodes.emplace(node->onestop_id(), platform_id);
       platforms.emplace(onestop, platform_id);
       if(nodes.size() == kMaxGraphId) {
-        LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest")
+        LOG_ERROR("Hit the maximum number of nodes allowed and skipping the rest");
         return;
       }
     }

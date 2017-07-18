@@ -27,7 +27,7 @@ dependencies:
     - ./configure CC="ccache gcc" CXX="ccache g++" --enable-coverage
     - ccache -z
     - ccache -s
-    - make test -j$(nproc)
+    - (rc=0; make test -j$(nproc) || rc=$?; for f in test/*.log; do if [ $(grep -Fc FAIL $f) -ne 0 ]; then echo "----------${f}----------"; cat ${f}; fi; done; exit ${rc};)
     - ccache -s
   cache_directories:
     - "~/.ccache"

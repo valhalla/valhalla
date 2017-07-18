@@ -5,7 +5,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/mjolnir/osmaccess.h>
-#include "mjolnir/adminconstants.h"
+#include <valhalla/mjolnir/adminconstants.h>
 
 using namespace valhalla::baldr;
 

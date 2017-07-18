@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
     try {
       denoise = json_ptree.get<float>("denoise");
       if (vm.count("denoise")) {
-        LOG_WARN ("denoise parameter is being overwritten by JSON denoise parameter")
+        LOG_WARN ("denoise parameter is being overwritten by JSON denoise parameter");
       }
     } catch(...){}
 
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
     try {
       generalize = json_ptree.get<float>("generalize");
       if (vm.count("generalize")) {
-        LOG_WARN ("generalize parameter is being overwritten by JSON generalize parameter")
+        LOG_WARN ("generalize parameter is being overwritten by JSON generalize parameter");
       }
     } catch (...) {}
 

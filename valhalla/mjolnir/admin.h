@@ -14,7 +14,7 @@
 #include <spatialite.h>
 #include <unordered_map>
 
-#include "mjolnir/graphtilebuilder.h"
+#include <valhalla/mjolnir/graphtilebuilder.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
