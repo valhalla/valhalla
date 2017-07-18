@@ -8,7 +8,7 @@ namespace meili {
 
 void StateIterator::Next()
 {
-  if (time_ == StateId::kInvalidTime) {
+  if (time_ == kInvalidTime) {
     if (!stateid_.IsValid()) {
       throw std::logic_error("state id should be invalid as well");
     }
@@ -27,7 +27,7 @@ void StateIterator::Next()
       stateid_ = vs_.SearchWinner(time_);
     }
   } else {
-    time_ = StateId::kInvalidTime;
+    time_ = kInvalidTime;
     stateid_ = StateId();
   }
 }

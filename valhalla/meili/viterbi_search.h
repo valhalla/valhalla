@@ -68,6 +68,9 @@ class IViterbiSearch;
 // TODO test it
 class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
 {
+ private:
+  constexpr static StateId::Time kInvalidTime = std::numeric_limits<StateId::Time>::max();
+
  public:
   StateIterator(IViterbiSearch& vs, StateId::Time time, const StateId& stateid)
       : vs_(vs),
@@ -76,7 +79,7 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
   {
     // Hold the invariant in the beginning (see below about the
     // invariant)
-    if (time_ == StateId::kInvalidTime) {
+    if (time_ == kInvalidTime) {
       if (stateid_.IsValid()) {
         throw std::runtime_error("expect invalid stateid");
       }
@@ -90,7 +93,7 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
   }
 
   StateIterator(IViterbiSearch& vs)
-      : StateIterator(vs, StateId::kInvalidTime, StateId())
+      : StateIterator(vs, kInvalidTime, StateId())
   {}
 
   // Postfix increment

@@ -5,6 +5,10 @@
 #include <functional>
 #include <limits>
 
+namespace {
+constexpr static uint32_t kInvalidTime = std::numeric_limits<uint32_t>::max();
+}
+
 namespace valhalla {
 namespace meili {
 
@@ -12,7 +16,6 @@ union StateId
 {
  public:
   using Time = uint32_t;
-  constexpr static Time kInvalidTime = std::numeric_limits<Time>::max();
 
   using Id = uint32_t;
 
