@@ -1062,20 +1062,27 @@ function filter_tags_generic(kv)
   --If we have the oneway:bicycle=no tag and there are not "opposite_lane/opposite_track" tags then there are certain situations where
   --the cyclelane is considered a two-way. (Based off of some examples on wiki.openstreetmap.org/wiki/Bicycle)
   if kv["oneway:bicycle"] == "no" and cycle_lane_right_opposite == "false" and cycle_lane_left_opposite == "false" then
-    --Example M1 or M2d but on the right side
-    if cycle_lane_right ~= 0 and oneway_norm == "true" then
-      cycle_lane_left = cycle_lane_right
-      cycle_lane_left_opposite = "true"
-    --Example L1b
-    elseif cycle_lane_right ~= 0 and cycle_lane_left == 0 then
-      cycle_lane_left = cycle_lane_right
-    --Example M2d
-    elseif cycle_lane_left ~= 0 and oneway_norm == "true" then
-      cycle_lane_right = cycle_lane_left
-      cycle_lane_right_opposite = "true"
-    --Example L1b but on the left side
-    elseif cycle_lane_left ~= 0 and cycle_lane_right == 0 then
-      cycle_lane_right = cycle_lane_left
+    if cycle_lane_right == 2 or cycle_lane_right == 3 then
+      --Example M1 or M2d but on the right side
+      if oneway_norm == "true" then
+        cycle_lane_left = cycle_lane_right
+        cycle_lane_left_opposite = "true"
+
+      --Example L1b
+      elseif cycle_lane_left == 0 then
+        cycle_lane_left = cycle_lane_right
+      end
+
+    elseif cycle_lane_left == 2 or cycle_lane_left == 3 then
+      --Example M2d
+      if oneway_norm == "true" then
+        cycle_lane_right = cycle_lane_left
+        cycle_lane_right_opposite = "true"
+
+      --Example L1b but on the left side
+      elseif cycle_lane_right == 0 then
+        cycle_lane_right = cycle_lane_left
+      end
     end
   end
 
