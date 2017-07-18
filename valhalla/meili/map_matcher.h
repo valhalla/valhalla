@@ -56,7 +56,7 @@ public:
   }
 
 private:
-  Time AppendMeasurement(const Measurement& measurement);
+  StateId::Time AppendMeasurement(const Measurement& measurement);
 
   boost::property_tree::ptree config_;
 

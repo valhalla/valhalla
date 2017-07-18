@@ -196,6 +196,7 @@ nobase_include_HEADERS = \
 	valhalla/meili/map_matching.h \
 	valhalla/meili/priority_queue.h \
 	valhalla/meili/routing.h \
+	valhalla/meili/stateid.h \
 	valhalla/meili/viterbi_search.h \
 	valhalla/meili/geojson_reader.h \
 	valhalla/meili/geojson_writer.h \
@@ -314,6 +315,7 @@ libvalhalla_la_SOURCES = \
 	src/sif/dynamiccost.cc \
 	src/sif/edgelabel.cc \
 	src/meili/universal_cost.cc \
+	src/meili/viterbi_search.cc \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \
