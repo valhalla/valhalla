@@ -21,6 +21,7 @@ namespace bpo = boost::program_options;
 int main(int argc, char** argv) {
   // Program options
   boost::filesystem::path config_file_path;
+  std::string inline_config;
   std::vector<std::string> input_files;
   bpo::options_description options(
     "valhalla_build_tiles " VERSION "\n\n"
@@ -34,6 +35,9 @@ int main(int argc, char** argv) {
       ("config,c",
         boost::program_options::value<boost::filesystem::path>(&config_file_path),
         "Path to the json configuration file.")
+      ("inline-config,i",
+        boost::program_options::value<std::string>(&inline_config),
+        "Inline json config.")
       // positional arguments
       ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
 
@@ -58,12 +62,6 @@ int main(int argc, char** argv) {
     std::cout << "valhalla_build_tiles " << VERSION << "\n";
     return EXIT_SUCCESS;
   }
-
-  // Exit if no config file or no input pbf files
-  if (!vm.count("config") || !boost::filesystem::is_regular_file(config_file_path)) {
-    std::cerr << "Configuration file is required\n\n" << options << "\n\n";
-    return EXIT_FAILURE;
-  }
   if (input_files.size() == 0) {
     std::cerr << "Input file is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;
@@ -71,7 +69,17 @@ int main(int argc, char** argv) {
 
   // Read the config file
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config_file_path.c_str(), pt);
+  if(vm.count("inline-config")) {
+    std::stringstream ss; ss << inline_config;
+    boost::property_tree::read_json(ss, pt);
+  }
+  else if (vm.count("config") && boost::filesystem::is_regular_file(config_file_path)) {
+    boost::property_tree::read_json(config_file_path.c_str(), pt);
+  }
+  else {
+    std::cerr << "Configuration is required\n\n" << options << "\n\n";
+    return EXIT_FAILURE;
+  }
 
   //configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("mjolnir.logging");
