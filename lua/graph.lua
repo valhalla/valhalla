@@ -1070,7 +1070,7 @@ function filter_tags_generic(kv)
     elseif cycle_lane_right ~= 0 and cycle_lane_left == 0 then
       cycle_lane_left = cycle_lane_right
     --Example M2d
-    elseif cycle_lane_left ~= 0 and oneway_norm == "true") then
+    elseif cycle_lane_left ~= 0 and oneway_norm == "true" then
       cycle_lane_right = cycle_lane_left
       cycle_lane_right_opposite = "true"
     --Example L1b but on the left side
