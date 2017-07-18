@@ -828,6 +828,10 @@ function filter_tags_generic(kv)
     end
   end
 
+  if kv["oneway:bus"] == nil and kv["oneway:psv"] ~= nil then
+    kv["oneway:bus"] = kv["oneway:psv"]
+  end
+
   if ((kv["oneway"] == "yes" and kv["oneway:bus"] == "no") or kv["bus:backward"] == "yes" or kv["bus:backward"] == "designated") then
     kv["bus_backward"] = "true"
   end
