@@ -107,10 +107,12 @@ namespace valhalla {
       check_shape(shape, max_shape);
       check_distance(shape, max_distance.find("trace")->second, max_factor);
 
-      // Validate best paths and best paths shape
-      unsigned int best_paths = rapidjson::GetValueByPointerWithDefault(request, "/best_paths", 1).GetUint();
-      check_best_paths(best_paths, max_best_paths);
-      check_best_paths_shape(best_paths, shape, max_best_paths_shape);
+      // Validate best paths and best paths shape for `map_snap` requests
+      if  (shape_match == "map_snap") {
+        unsigned int best_paths = rapidjson::GetValueByPointerWithDefault(request, "/best_paths", 1).GetUint();
+        check_best_paths(best_paths, max_best_paths);
+        check_best_paths_shape(best_paths, shape, max_best_paths_shape);
+      }
 
       // Validate optional trace options
       auto input_gps_accuracy = GetOptionalFromRapidJson<float>(request, "/trace_options/gps_accuracy");
