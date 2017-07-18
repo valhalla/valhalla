@@ -34,13 +34,17 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno clean-genfiles
+clean-local: clean-coverage clean-gcno clean-genfiles clean-test
 else
-clean-local: clean-genfiles
+clean-local: clean-genfiles clean-test
 endif
 
 clean-genfiles:
-	-rm -rf genfiles
+	-rm -rf @abs_builddir@/genfiles
+
+TEST_CLEANFILES =
+clean-test:
+	-rm -rf $(TEST_CLEANFILES)
 
 genfiles/date_time_zonespec.h:
 	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@ && xxd -i -s +$$(head -n 1 date_time/zonespec.csv | wc -c | xargs) date_time/zonespec.csv > @abs_builddir@/genfiles/date_time_zonespec.h
@@ -884,6 +888,7 @@ if DATA_TOOLS
 #some of the tests want tiles of a certain location so lets build those
 test/data/utrecht_tiles: valhalla_build_tiles
 	@echo "Building Utrecht Tiles..." && ./valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/tmp_utrecht_tiles","concurrency":1,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf && mv test/data/tmp_utrecht_tiles test/data/utrecht_tiles
+TEST_CLEANFILES += test/data/utrecht_tiles
 
 check_PROGRAMS += \
 	test/utrecht \
