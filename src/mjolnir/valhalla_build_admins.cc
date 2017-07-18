@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "mjolnir/pbfadminparser.h"
+#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/adminconstants.h"
@@ -250,6 +251,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
   OSMData osmdata = PBFAdminParser::Parse(pt, input_files);
+
+  //done with the protobuffer library, cant use it again after this
+  OSMPBF::Parser::free();
 
   // Bail if bad path
   auto database = pt.get_optional<std::string>("admin");

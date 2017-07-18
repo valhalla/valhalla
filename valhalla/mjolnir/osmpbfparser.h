@@ -35,9 +35,9 @@
 #include <fstream>
 
 // this describes the low-level blob storage
-#include "proto/fileformat.pb.h"
+#include <valhalla/proto/fileformat.pb.h>
 // this describes the high-level OSM objects
-#include "proto/osmformat.pb.h"
+#include <valhalla/proto/osmformat.pb.h>
 
 // extend the protobuf osmpbf namespace
 namespace OSMPBF {
@@ -73,7 +73,7 @@ class Parser {
   Parser() = delete;
   //parse the pbf file for the things you are interested in
   static void parse(std::ifstream& file, const Interest interest, Callback& callback);
-  //clean up (mainly pbf memory)
+  //clean up protobuf library level memory, this will make protobuf unusable after its called
   static void free();
 };
 

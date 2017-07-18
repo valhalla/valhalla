@@ -120,7 +120,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
           const std::string& nodes_file,
           const std::string& edges_file, const float tilesize,
           const std::function<GraphId (const OSMNode&)>& graph_id_predicate) {
-  LOG_INFO("Creating graph edges from ways...")
+  LOG_INFO("Creating graph edges from ways...");
 
   //so we can read ways and nodes and write edges
   sequence<OSMWay> ways(ways_file, false);
@@ -152,8 +152,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
       if (wn.lat == 0.0 && wn.lng == 0.0) {
-        LOG_ERROR("Cannot find node " + std::to_string(wn.osmid)) + " in way " +
-                     std::to_string(way.way_id());
+        LOG_ERROR("Cannot find node " + std::to_string(wn.osmid) + " in way " + std::to_string(way.way_id()));
         valid = false;
       }
     }
@@ -376,14 +375,18 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
-  sqlite3 *admin_db_handle = GetDBHandle(*database);
-  if (!admin_db_handle)
+  sqlite3 *admin_db_handle = database ? GetDBHandle(*database) : nullptr;
+  if (!database)
+    LOG_WARN("Admin db not found.  Not saving admin information.");
+  else if (!admin_db_handle)
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
 
   database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
-  sqlite3 *tz_db_handle = GetDBHandle(*database);
-  if (!tz_db_handle)
+  sqlite3 *tz_db_handle = database ? GetDBHandle(*database) : nullptr;
+  if (!database)
+    LOG_WARN("Time zone db not found.  Not saving time zone information.");
+  else if (!tz_db_handle)
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
 
   const auto& tl = TileHierarchy::levels().rbegin();

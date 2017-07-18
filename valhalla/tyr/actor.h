@@ -69,7 +69,7 @@ namespace valhalla {
 
     class actor_t {
      public:
-      actor_t(const boost::property_tree::ptree& config);
+      actor_t(const boost::property_tree::ptree& config, bool auto_cleanup = false);
       void cleanup();
       std::string route(ACTION_TYPE action, const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
       std::string locate(const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
@@ -82,6 +82,7 @@ namespace valhalla {
      protected:
       struct pimpl_t;
       std::shared_ptr<pimpl_t> pimpl;
+      bool auto_cleanup;
     };
 
   }

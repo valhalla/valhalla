@@ -8,12 +8,12 @@
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/graphreader.h"
-#include "baldr/graphid.h"
-#include "baldr/json.h"
-#include "meili/map_matcher.h"
-#include "meili/map_matcher_factory.h"
-#include "meili/match_route.h"
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/meili/map_matcher.h>
+#include <valhalla/meili/map_matcher_factory.h>
+#include <valhalla/meili/match_route.h>
 
 namespace valhalla {
 namespace meili {
