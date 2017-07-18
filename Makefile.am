@@ -197,8 +197,6 @@ nobase_include_HEADERS = \
 	valhalla/meili/priority_queue.h \
 	valhalla/meili/routing.h \
 	valhalla/meili/viterbi_search.h \
-	valhalla/meili/geojson_reader.h \
-	valhalla/meili/geojson_writer.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
 	valhalla/meili/grid_traversal.h \
@@ -317,7 +315,6 @@ libvalhalla_la_SOURCES = \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \
-	src/meili/geojson_reader.cc \
 	src/meili/map_matcher.cc \
 	src/meili/map_matcher_factory.cc \
 	src/meili/match_route.cc \
@@ -629,8 +626,6 @@ check_PROGRAMS = \
 	test/queue \
 	test/routing \
 	test/viterbi_search \
-	test/geojson_reader \
-	test/geojson_writer \
 	test/util_skadi \
 	test/sample \
 	test/maneuversbuilder \

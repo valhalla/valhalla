@@ -188,19 +188,19 @@ void TestRoutePathIterator()
   labelset.put(2, travelmode, nullptr);
   labelset.put(3, baldr::GraphId(),
                0.f, 1.f,
-               0.f, 0.f, 0.f,
+               {0.f, 0.0f}, 0.f, 0.f,
                1, nullptr, travelmode, nullptr);
   labelset.put(4, baldr::GraphId(),
                0.f, 1.f,
-               0.f, 0.f, 0.f,
+               {0.f, 0.0f}, 0.f, 0.f,
                1, nullptr, travelmode, nullptr);
   labelset.put(5, baldr::GraphId(),
                0.f, 1.f,
-               0.f, 0.f, 0.f,
+               {0.f, 0.0f}, 0.f, 0.f,
                3, nullptr, travelmode, nullptr);
   labelset.put(6, baldr::GraphId(),
                0.f, 1.f,
-               0.f, 0.f, 0.f,
+               {0.f, 0.0f}, 0.f, 0.f,
                3, nullptr, travelmode, nullptr);
 
   meili::RoutePathIterator the_end(&labelset, baldr::kInvalidLabel),

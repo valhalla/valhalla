@@ -22,44 +22,45 @@ namespace meili {
 
 constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
 
-// TODO simplify it by inheriting sif::EdgeLabel
+/**
+ * Labels used to mark edges in the path. Includes predecessor and cost
+ * information needed to construct and recover shortest paths.
+ * TODO simplify by inheriting from sif::EdgeLabel
+ */
 struct Label
 {
   Label() = delete;
 
-  Label(const baldr::GraphId& the_nodeid,
-        const baldr::GraphId& the_edgeid,
+  Label(const baldr::GraphId& the_nodeid, const baldr::GraphId& the_edgeid,
         float the_source, float the_target,
-        float the_cost, float the_turn_cost, float the_sortcost,
-        uint32_t the_predecessor,
-        const baldr::DirectedEdge* the_edge,
+        const sif::Cost& the_cost, float the_turn_cost, float the_sortcost,
+        uint32_t the_predecessor, const baldr::DirectedEdge* the_edge,
         sif::TravelMode the_travelmode,
         std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
       : Label(the_nodeid, kInvalidDestination, the_edgeid,
-              the_source, the_target,
-              the_cost, the_turn_cost, the_sortcost,
-              the_predecessor,
-              the_edge, the_travelmode, the_edgelabel) {}
+              the_source, the_target, the_cost, the_turn_cost, the_sortcost,
+              the_predecessor, the_edge, the_travelmode, the_edgelabel) {}
 
-  Label(uint16_t the_dest,
-        const baldr::GraphId& the_edgeid,
+  /**
+   * Construct a Label without a node Id.
+   */
+  Label(uint16_t the_dest, const baldr::GraphId& the_edgeid,
         float the_source, float the_target,
-        float the_cost, float the_turn_cost, float the_sortcost,
-        uint32_t the_predecessor,
-        const baldr::DirectedEdge* the_edge,
+        const sif::Cost& the_cost, float the_turn_cost, float the_sortcost,
+        uint32_t the_predecessor, const baldr::DirectedEdge* the_edge,
         sif::TravelMode the_travelmode,
         std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
-      : Label({}, the_dest, the_edgeid,
-              the_source, the_target,
+      : Label({}, the_dest, the_edgeid, the_source, the_target,
               the_cost, the_turn_cost, the_sortcost,
-              the_predecessor,
-              the_edge, the_travelmode, the_edgelabel) {}
+              the_predecessor, the_edge, the_travelmode, the_edgelabel) {}
 
-  Label(const baldr::GraphId& the_nodeid,
-        uint16_t the_dest,
+  /**
+   * Construct a Label with all the required information.
+   */
+  Label(const baldr::GraphId& the_nodeid, uint16_t the_dest,
         const baldr::GraphId& the_edgeid,
         float the_source, float the_target,
-        float the_cost, float the_turn_cost, float the_sortcost,
+        const sif::Cost& the_cost, float the_turn_cost, float the_sortcost,
         uint32_t the_predecessor,
         const baldr::DirectedEdge* the_edge,
         sif::TravelMode the_travelmode,
@@ -68,8 +69,7 @@ struct Label
         source(the_source), target(the_target),
         cost(the_cost), turn_cost(the_turn_cost), sortcost(the_sortcost),
         predecessor(the_predecessor),
-        edgelabel(the_edgelabel)
-  {
+        edgelabel(the_edgelabel) {
     if (!((nodeid.Is_Valid() && dest == kInvalidDestination) || (!nodeid.Is_Valid() && dest != kInvalidDestination))) {
       throw std::invalid_argument("nodeid and dest must be mutually exclusive, i.e. either nodeid is valid or dest is valid");
     }
@@ -81,8 +81,8 @@ struct Label
                                   + std::to_string(target) + ")");
     }
 
-    if (cost < 0.f) {
-      throw std::invalid_argument("invalid cost = " + std::to_string(cost));
+    if (cost.cost < 0.f) {
+      throw std::invalid_argument("invalid cost = " + std::to_string(cost.cost));
     }
 
     if (turn_cost < 0.f) {
@@ -90,14 +90,9 @@ struct Label
     }
 
     if (!edgelabel && the_edge) {
+      // Populate the sif EdgeLabel. The cost within Cost is the distance.
       edgelabel = std::make_shared<const sif::EdgeLabel>(the_predecessor,
-                                                         the_edgeid,
-                                                         the_edge,
-                                                         sif::Cost(the_cost, the_cost), // Cost
-                                                         sortcost, // Sortcost
-                                                         the_cost, // Distance
-                                                         the_travelmode,
-                                                         0);
+           the_edgeid, the_edge, the_cost, sortcost, 0.0f, the_travelmode, 0);
     }
   }
 
@@ -112,11 +107,11 @@ struct Label
   float source;
   float target;
 
-  // Cost since origin (including the cost of this edge segment)
-  float cost;
+  // Cost since origin (including the cost of this edge segment). cost is the
+  // accumulate distance and secs is the elapsed time along the path
+  sif::Cost cost;
 
-  // Turn cost since origin (including the turn cost of this edge
-  // segment)
+  // Turn cost since origin (including the turn cost of this edge segment)
   float turn_cost;
 
   // For ranking labels: sortcost = accumulated cost since origin + heuristic cost to the goal
@@ -130,6 +125,7 @@ struct Label
 };
 
 
+// Status information: label index and whether it is permanently labeled.
 struct Status{
   Status() = delete;
 
@@ -142,30 +138,48 @@ struct Status{
   uint32_t permanent : 1;
 };
 
+/**
+ * LabelSet used during shortest path construction and recovery. Includes a
+ * priority queue (sorted by sortdist) and maps that contain status (is the
+ * element "permanently" labeled) of nodes and edges.
+ */
 class LabelSet
 {
  public:
   LabelSet(const float max_cost, const float bucket_size = 1.0f);
 
   bool put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
-           std::shared_ptr<const sif::EdgeLabel> edgelabel);
+           std::shared_ptr<const sif::EdgeLabel> edgelabel) {
+    return put(nodeid, {},                 // nodeid, (dummy) edgeid
+               0.f, 0.f,                   // source, target
+               sif::Cost(), 0.f, 0.f,      // cost, turn cost, sort cost
+               baldr::kInvalidLabel,       // predecessor
+               nullptr, travelmode, edgelabel);
+  }
+
 
   bool put(const baldr::GraphId& nodeid,
            const baldr::GraphId& edgeid,
            float source, float target,
-           float cost, float turn_cost, float sortcost,
+           const sif::Cost& cost, float turn_cost, float sortcost,
            uint32_t predecessor,
            const baldr::DirectedEdge* edge,
            sif::TravelMode travelmode,
            std::shared_ptr<const sif::EdgeLabel> edgelabel);
 
   bool put(uint16_t dest, sif::TravelMode travelmode,
-           std::shared_ptr<const sif::EdgeLabel> edgelabel);
+           std::shared_ptr<const sif::EdgeLabel> edgelabel) {
+    return put(dest, {},                  // dest, (dummy) edgeid
+               0.f, 0.f,                  // source, target
+               sif::Cost(), 0.f, 0.f,     // cost, turn cost, sort cost
+               baldr::kInvalidLabel,      // predecessor
+               nullptr, travelmode, edgelabel);
+  }
 
   bool put(uint16_t dest,
            const baldr::GraphId& edgeid,
            float source, float target,
-           float cost, float turn_cost, float sortcost,
+           const sif::Cost&  cost, float turn_cost, float sortcost,
            uint32_t predecessor,
            const baldr::DirectedEdge* edge,
            sif::TravelMode travelmode,
