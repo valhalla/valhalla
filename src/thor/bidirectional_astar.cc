@@ -107,7 +107,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 
 // Expand from a node in the forward direction
 void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
-       const GraphId& node, const EdgeLabel& pred, const uint32_t pred_idx,
+       const GraphId& node, const BDEdgeLabel& pred, const uint32_t pred_idx,
        const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -179,7 +179,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (edgestatus.set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_forward_[edgestatus.index()];
+      BDEdgeLabel& lab = edgelabels_forward_[edgestatus.index()];
       if (newcost.cost <  lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_forward_->decrease(edgestatus.index(), newsortcost);
@@ -214,7 +214,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
 // Expand from a node in reverse direction.
 void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
-         const GraphId& node, const EdgeLabel& pred, const uint32_t pred_idx,
+         const GraphId& node, const BDEdgeLabel& pred, const uint32_t pred_idx,
          const DirectedEdge* opp_pred_edge, const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -299,7 +299,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (edgestatus.set() != EdgeSet::kUnreached) {
-      EdgeLabel& lab = edgelabels_reverse_[edgestatus.index()];
+      BDEdgeLabel& lab = edgelabels_reverse_[edgestatus.index()];
       if (newcost.cost < lab.cost().cost ) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_reverse_->decrease(edgestatus.index(), newsortcost);
@@ -354,7 +354,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   // TODO - CostMatrix alternates, maybe should try alternating here?
   int n = 1;
   uint32_t forward_pred_idx, reverse_pred_idx;
-  EdgeLabel pred, pred2;
+  BDEdgeLabel pred, pred2;
   const GraphTile* tile;
   const GraphTile* tile2;
   bool expand_forward  = true;
@@ -441,8 +441,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
       }
 
       // Expand from the end node in forward direction.
-      ExpandForward(graphreader, pred.endnode(), pred,
-                    forward_pred_idx, false);
+      ExpandForward(graphreader, pred.endnode(), pred, forward_pred_idx, false);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list
       // on the next pass
@@ -474,7 +473,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 // The edge on the forward search connects to a reached edge on the reverse
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-void BidirectionalAStar::SetForwardConnection(const sif::EdgeLabel& pred) {
+void BidirectionalAStar::SetForwardConnection(const BDEdgeLabel& pred) {
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
 
@@ -502,7 +501,7 @@ void BidirectionalAStar::SetForwardConnection(const sif::EdgeLabel& pred) {
 // The edge on the reverse search connects to a reached edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-void BidirectionalAStar::SetReverseConnection(const sif::EdgeLabel& pred) {
+void BidirectionalAStar::SetReverseConnection(const BDEdgeLabel& pred) {
   // Get the opposing edge - if this edge has been reached then a shortest
   // path has been found to the end node of this directed edge.
   GraphId oppedge = pred.opp_edgeid();
@@ -576,7 +575,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     adjacencylist_forward_->add(idx, sortcost);
     edgestatus_forward_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
-                                     sortcost, dist, mode_, 0);
+                                     sortcost, dist, mode_);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
@@ -594,7 +593,6 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 // Add destination edges to the reverse path adjacency list.
 void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                      const PathLocation& dest) {
-
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.edges.cbegin(), dest.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
@@ -669,9 +667,9 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
   std::vector<PathInfo> path;
   for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
       edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
-    const EdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
+    const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
-                      edgelabel.edgeid(), edgelabel.tripid());
+                      edgelabel.edgeid(), 0);
   }
 
   // Reverse the list
@@ -703,7 +701,7 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
   // path, so get the predecessor.
   uint32_t edgelabel_index = edgelabels_reverse_[idx2].predecessor();
   while (edgelabel_index != kInvalidLabel) {
-    const EdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
+    const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
     GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
 
     // Get elapsed time on the edge, then add the transition cost at
@@ -715,7 +713,7 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
       secs += edgelabel.cost().secs - edgelabels_reverse_[predidx].cost().secs;
     }
     secs += tc;
-    path.emplace_back(edgelabel.mode(), secs, oppedge, edgelabel.tripid());
+    path.emplace_back(edgelabel.mode(), secs, oppedge, 0);
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;

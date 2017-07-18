@@ -87,8 +87,8 @@ class BidirectionalAStar : public PathAlgorithm {
   AStarHeuristic astarheuristic_reverse_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<sif::EdgeLabel> edgelabels_forward_;
-  std::vector<sif::EdgeLabel> edgelabels_reverse_;
+  std::vector<sif::BDEdgeLabel> edgelabels_forward_;
+  std::vector<sif::BDEdgeLabel> edgelabels_reverse_;
 
   // Adjacency list - approximate double bucket sort
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_forward_;
@@ -115,14 +115,14 @@ class BidirectionalAStar : public PathAlgorithm {
    * Expand from the node along the forward search path.
    */
   void ExpandForward(baldr::GraphReader& graphreader,
-           const baldr::GraphId& node, const sif::EdgeLabel& pred,
+           const baldr::GraphId& node, const sif::BDEdgeLabel& pred,
            const uint32_t pred_idx, const bool from_transition);
 
   /**
    * Expand from the node along the reverse search path.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
-           const baldr::GraphId& node, const sif::EdgeLabel& pred,
+           const baldr::GraphId& node, const sif::BDEdgeLabel& pred,
            const uint32_t pred_idx, const baldr::DirectedEdge* opp_pred_edge,
            const bool from_transition);
 
@@ -149,7 +149,7 @@ class BidirectionalAStar : public PathAlgorithm {
    * search threshold.
    * @param  pred  Edge label of the predecessor.
    */
-  void SetForwardConnection(const sif::EdgeLabel& pred);
+  void SetForwardConnection(const sif::BDEdgeLabel& pred);
 
   /**
    * The edge on the reverse search connects to a reached edge on the forward
@@ -157,7 +157,7 @@ class BidirectionalAStar : public PathAlgorithm {
    * search threshold.
    * @param  pred  Edge label of the predecessor.
    */
-  void SetReverseConnection(const sif::EdgeLabel& pred);
+  void SetReverseConnection(const sif::BDEdgeLabel& pred);
 
    /**
     * Form the path from the adjacency lists. Recovers the path from the
