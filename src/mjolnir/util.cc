@@ -2,6 +2,7 @@
 
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/pbfgraphparser.h"
+#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -45,7 +46,7 @@ std::string remove_double_quotes(const std::string& s) {
   return ret;
 }
 
-void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files, const std::string& bin_file_prefix) {
+void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files, const std::string& bin_file_prefix, bool free_protobuf) {
   //cannot allow this when building tiles
   if(config.get_child("mjolnir").get_optional<std::string>("tile_extract"))
     throw std::runtime_error("Tiles cannot be directly built into a tar extract");
@@ -74,6 +75,10 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
   // relations are defined within the PBFParser class
   auto osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, bin_file_prefix + "ways.bin",
       bin_file_prefix + "way_nodes.bin", bin_file_prefix + "access.bin", bin_file_prefix + "complex_restrictions.bin");
+
+  // Optionally free all protobuf memory but also you cant use the protobuffer lib after this!
+  if(free_protobuf)
+    OSMPBF::Parser::free();
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(config, osm_data, bin_file_prefix + "ways.bin", bin_file_prefix + "way_nodes.bin",

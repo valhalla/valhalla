@@ -73,6 +73,8 @@ class Parser {
   Parser() = delete;
   //parse the pbf file for the things you are interested in
   static void parse(std::ifstream& file, const Interest interest, Callback& callback);
+  //clean up protobuf library level memory, this will make protobuf unusable after its called
+  static void free();
 };
 
 }
