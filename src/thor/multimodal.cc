@@ -42,8 +42,13 @@ constexpr uint64_t kInitialEdgeLabelCount = 200000;
 
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
-    : AStarPathAlgorithm(),
-      walking_distance_(0) {
+    : PathAlgorithm(),
+      walking_distance_(0),
+      mode_(TravelMode::kPedestrian),
+      travel_type_(0),
+      adjacencylist_(nullptr),
+      edgestatus_(nullptr),
+      max_label_count_(std::numeric_limits<uint32_t>::max()) {
 }
 
 // Destructor
@@ -78,6 +83,20 @@ void MultiModalPathAlgorithm::Init(const PointLL& origll,
   // transition counts (i.e., this is not a const reference).
   hierarchy_limits_  = costing->GetHierarchyLimits();
 }
+
+// Clear the temporary information generated during path construction.
+void MultiModalPathAlgorithm::Clear() {
+  // Clear the edge labels and destination list
+  edgelabels_.clear();
+  destinations_.clear();
+
+  // Clear elements from the adjacency list
+  adjacencylist_.reset();
+
+  // Clear the edge status flags
+  edgestatus_.reset();
+}
+
 
 // Calculate best path using multiple modes (e.g. transit).
 std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
@@ -169,7 +188,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
 
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
-    EdgeLabel pred = edgelabels_[predindex];
+    MMEdgeLabel pred = edgelabels_[predindex];
     if (destinations_.find(pred.edgeid()) != destinations_.end()) {
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
@@ -464,7 +483,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        MMEdgeLabel& lab = edgelabels_[edgestatus.index()];
         if (newcost.cost < lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
           adjacencylist_->decrease(edgestatus.index(), newsortcost);
@@ -499,6 +518,143 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     }
   }
   return {};      // Should never get here
+}
+
+// Convenience method to add an edge to the adjacency list and temporarily
+// label it.
+void MultiModalPathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
+                                       const float sortcost) {
+  uint32_t idx = edgelabels_.size();
+  adjacencylist_->add(idx, sortcost);
+  edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+}
+
+// Add an edge at the origin to the adjacency list
+void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
+                 PathLocation& origin,
+                 const PathLocation& destination,
+                 const std::shared_ptr<DynamicCost>& costing) {
+  // Only skip inbound edges if we have other options
+  bool has_other_edges = false;
+  std::for_each(origin.edges.cbegin(), origin.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+    has_other_edges = has_other_edges || !e.end_node();
+  });
+
+  // Iterate through edges and add to adjacency list
+  const NodeInfo* nodeinfo = nullptr;
+  for (const auto& edge : origin.edges) {
+    // If origin is at a node - skip any inbound edge (dist = 1)
+    if (has_other_edges && edge.end_node()) {
+      continue;
+    }
+
+    // Get the directed edge
+    GraphId edgeid = edge.id;
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr) {
+      continue;
+    }
+
+    // Get cost
+    nodeinfo = endtile->node(directededge->endnode());
+    Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist);
+    float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
+
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    // Perhaps need to adjust score?
+    cost.cost += edge.score;
+
+    // If this edge is a destination, subtract the partial/remainder cost
+    // (cost from the dest. location to the end of the edge) if the
+    // destination is in a forward direction along the edge. Add back in
+    // the edge score/penalty to account for destination edges farther from
+    // the input location lat,lon.
+    auto p = destinations_.find(edgeid);
+    if (p != destinations_.end()) {
+      if (IsTrivial(edgeid, origin, destination)) {
+        // Find the destination edge and update cost.
+        for (const auto& destination_edge : destination.edges) {
+          if (destination_edge.id == edgeid) {
+            // a trivial route passes along a single edge, meaning that the
+            // destination point must be on this edge, and so the distance
+            // remaining must be zero.
+            Cost dest_cost = costing->EdgeCost(tile->directededge(destination_edge.id)) *
+                                            (1.0f - destination_edge.dist);
+            cost.secs -= p->second.secs;
+            cost.cost -= dest_cost.cost;
+            cost.cost += destination_edge.score;
+            cost.cost = std::max(0.0f, cost.cost);
+            dist = 0.0;
+          }
+        }
+      }
+    }
+
+    // Compute sortcost
+    float sortcost = cost.cost + astarheuristic_.Get(dist);
+
+    // Add EdgeLabel to the adjacency list (but do not set its status).
+    // Set the predecessor edge index to invalid to indicate the origin
+    // of the path.
+    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
+    adjacencylist_->add(edgelabels_.size(), sortcost);
+    MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
+                         sortcost, dist, mode_, d, 0, GraphId(), 0, 0, false);
+    edge_label.set_origin();
+
+    // Set the origin flag
+    edgelabels_.push_back(std::move(edge_label));
+  }
+
+  // Set the origin timezone
+  if (nodeinfo != nullptr && origin.date_time_ &&
+    *origin.date_time_ == "current") {
+    origin.date_time_= DateTime::iso_date_time(
+        DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+  }
+}
+
+// Add a destination edge
+uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
+                     const PathLocation& dest,
+                     const std::shared_ptr<DynamicCost>& costing) {
+  // Only skip outbound edges if we have other options
+  bool has_other_edges = false;
+  std::for_each(dest.edges.cbegin(), dest.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+    has_other_edges = has_other_edges || !e.begin_node();
+  });
+
+  // For each edge
+  uint32_t density = 0;
+  for (const auto& edge : dest.edges) {
+    // If destination is at a node skip any outbound edges
+    if (has_other_edges && edge.begin_node()) {
+      continue;
+    }
+
+    // Keep the id and the cost to traverse the partial distance for the
+    // remainder of the edge. This cost is subtracted from the total cost
+    // up to the end of the destination edge.
+    const GraphTile* tile = graphreader.GetGraphTile(edge.id);
+    destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id)) *
+                                (1.0f - edge.dist);
+
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    destinations_[edge.id].cost += edge.score;
+
+    // Get the tile relative density
+    density = tile->header()->density();
+  }
+  return density;
 }
 
 // Check if destination can be reached if walking is the last mode. Checks
@@ -589,7 +745,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
       }
 
       // Handle transition edges
-      if (directededge->trans_up() || directededge->trans_down()) {
+      if (directededge->IsTransition()) {
         // Add the transition edge to the adjacency list and edge labels
         // using the predecessor information.
         edgelabels.emplace_back(predindex, edgeid, directededge->endnode(), pred);
@@ -615,7 +771,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
         if (newcost.cost < lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
           adjlist.decrease(es.index(), newsortcost);
-          lab.Update(predindex, newcost, newsortcost, walking_distance, 0, 0);
+          lab.Update(predindex, newcost, newsortcost, walking_distance);
         }
         continue;
       }
@@ -629,6 +785,26 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     }
   }
   return false;
+}
+
+// Form the path from the adjacency list.
+std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
+  // Metrics to track
+  LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
+  LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));
+
+  // Work backwards from the destination
+  std::vector<PathInfo> path;
+  for(auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
+      edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
+    const MMEdgeLabel& edgelabel = edgelabels_[edgelabel_index];
+    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
+                      edgelabel.edgeid(), edgelabel.tripid());
+  }
+
+  // Reverse the list and return
+  std:reverse(path.begin(), path.end());
+  return path;
 }
 
 }
