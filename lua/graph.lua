@@ -1047,8 +1047,8 @@ function filter_tags_generic(kv)
   local cycle_lane_left_opposite = cycle_lane_right_opposite
 
   if cycle_lane_right_opposite == "false" then
-    cycle_lane_right_opposite = bike_reverse[kv["cycleway:right"]]
-    cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]]
+    cycle_lane_right_opposite = bike_reverse[kv["cycleway:right"]] or "false"
+    cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]] or "false"
   end
 
   local cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
@@ -1057,19 +1057,25 @@ function filter_tags_generic(kv)
   if cycle_lane_right == 0 then
     cycle_lane_right = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or buffer[kv["cycleway:right:buffer"]] or 0
     cycle_lane_left = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or buffer[kv["cycleway:left:buffer"]] or 0
+  end
 
-    --If there is a oneway but it is specified that bikes are not one way and that there is a bike lane on one of the sides of the road
-    --then we want that bike lane to act as a two way bike lane
-    if oneway_norm == "true" and oneway_bike == "false" and cycle_lane_right_opposite == "false" and cycle_lane_left_opposite == "false" then
-      --We have no way of storing a special "two way bicycle lane" besides just having both the left and the right lane
-      --set with one of them in an opposing direction so that is what we do here
-      if cycle_lane_right ~= 0 then
-        cycle_lane_left = cycle_lane_right
-        cycle_lane_left_opposite = "true"
-      elseif cycle_lane_left ~=0 then
-        cycle_lane_right = cycle_lane_left
-        cycle_lane_right_opposite = "true"
-      end
+  --If we have the oneway:bicycle=no tag and there are not "opposite_lane/opposite_track" tags then there are certain situations where
+  --the cyclelane is considered a two-way. (Based off of some examples on wiki.openstreetmap.org/wiki/Bicycle)
+  if kv["oneway:bicycle"] == "no" and cycle_lane_right_opposite == "false" and cycle_lane_left_opposite == "false" then
+    --Example M1 or M2d but on the right side
+    if cycle_lane_right ~= 0 and oneway_norm == "true" then
+      cycle_lane_left = cycle_lane_right
+      cycle_lane_left_opposite = "true"
+    --Example L1b
+    elseif cycle_lane_right ~= 0 and cycle_lane_left == 0 then
+      cycle_lane_left = cycle_lane_right
+    --Example M2d
+    elseif cycle_lane_left ~= 0 and oneway_norm == "true") then
+      cycle_lane_right = cycle_lane_left
+      cycle_lane_right_opposite = "true"
+    --Example L1b but on the left side
+    elseif cycle_lane_left ~= 0 and cycle_lane_right == 0 then
+      cycle_lane_right = cycle_lane_left
     end
   end
 
