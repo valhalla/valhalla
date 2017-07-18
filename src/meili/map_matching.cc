@@ -190,7 +190,7 @@ MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
   const auto label = left.last_label(right);
   if (label) {
     const auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
-    return CalculateTransitionCost(label->turn_cost, label->cost, mmt_distance);
+    return CalculateTransitionCost(label->turn_cost, label->cost.cost, mmt_distance);
   }
 
   return -1.f;

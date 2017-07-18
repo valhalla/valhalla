@@ -59,11 +59,11 @@ void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
     throw valhalla_exception_t { 158, "(" + std::to_string(best_paths) + "). The best_paths upper limit is " + std::to_string(max_best_paths) };
 }
 
-void check_best_paths_shape(const std::vector<PointLL>& shape,
-    size_t max_best_paths_shape) {
+void check_best_paths_shape(unsigned int best_paths,
+    const std::vector<PointLL>& shape, size_t max_best_paths_shape) {
 
   // Validate shape is not larger than the configured best paths shape max
-  if (shape.size() > max_best_paths_shape)
+  if ((best_paths > 1) && (shape.size() > max_best_paths_shape))
     throw valhalla_exception_t { 153, "(" + std::to_string(shape.size()) + "). The best paths shape limit is " + std::to_string(max_best_paths_shape) };
 }
 
@@ -107,10 +107,12 @@ namespace valhalla {
       check_shape(shape, max_shape);
       check_distance(shape, max_distance.find("trace")->second, max_factor);
 
-      // Validate best paths and best paths shape
-      unsigned int best_paths = rapidjson::GetValueByPointerWithDefault(request, "/best_paths", 1).GetUint();
-      check_best_paths(best_paths, max_best_paths);
-      check_best_paths_shape(shape, max_best_paths_shape);
+      // Validate best paths and best paths shape for `map_snap` requests
+      if  (shape_match == "map_snap") {
+        unsigned int best_paths = rapidjson::GetValueByPointerWithDefault(request, "/best_paths", 1).GetUint();
+        check_best_paths(best_paths, max_best_paths);
+        check_best_paths_shape(best_paths, shape, max_best_paths_shape);
+      }
 
       // Validate optional trace options
       auto input_gps_accuracy = GetOptionalFromRapidJson<float>(request, "/trace_options/gps_accuracy");
