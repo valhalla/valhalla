@@ -1,7 +1,7 @@
 #ifndef VALHALLA_MIDGARD_ENCODED_H_
 #define VALHALLA_MIDGARD_ENCODED_H_
 
-#include "valhalla/midgard/shape_decoder.h"
+#include <valhalla/midgard/shape_decoder.h>
 
 #include <type_traits>
 #include <cmath>

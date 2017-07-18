@@ -69,7 +69,7 @@ namespace valhalla {
       skadi::skadi_worker_t skadi_worker;
     };
 
-    actor_t::actor_t(const boost::property_tree::ptree& config): pimpl(new pimpl_t(config)) {
+    actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup): pimpl(new pimpl_t(config)), auto_cleanup(auto_cleanup) {
     }
 
     void actor_t::cleanup() {
@@ -93,6 +93,9 @@ namespace valhalla {
       auto json = tyr::serializeDirections(action, request_pt, directions);
       std::stringstream ss;
       ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
       return ss.str();
     }
 
@@ -105,6 +108,9 @@ namespace valhalla {
       auto json = pimpl->loki_worker.locate(request);
       std::stringstream ss;
       ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
       return ss.str();
     }
 
@@ -120,6 +126,9 @@ namespace valhalla {
       auto json = pimpl->thor_worker.matrix(action, request_pt);
       std::stringstream ss;
       ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
       return ss.str();
     }
 
@@ -139,6 +148,9 @@ namespace valhalla {
       auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
       ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
       return ss.str();
     }
 
@@ -154,6 +166,9 @@ namespace valhalla {
       auto json = pimpl->thor_worker.isochrones(request_pt);
       std::stringstream ss;
       ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
       return ss.str();
     }
 
@@ -173,6 +188,9 @@ namespace valhalla {
       auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
       ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
       return ss.str();
     }
 
@@ -188,6 +206,9 @@ namespace valhalla {
       auto json = pimpl->thor_worker.trace_attributes(request_pt);
       std::stringstream ss;
       ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
       return ss.str();
     }
 
@@ -200,6 +221,9 @@ namespace valhalla {
       auto json = pimpl->skadi_worker.height(request_rj);
       std::stringstream ss;
       ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
       return ss.str();
     }
 

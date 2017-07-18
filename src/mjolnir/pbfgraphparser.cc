@@ -1209,7 +1209,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
 
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
-  LOG_INFO("Parsing ways...")
+  LOG_INFO("Parsing ways...");
   for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS | OSMPBF::Interest::CHANGESETS), callback);
@@ -1229,7 +1229,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   }
 
   // Parse relations.
-  LOG_INFO("Parsing relations...")
+  LOG_INFO("Parsing relations...");
   for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS | OSMPBF::Interest::CHANGESETS), callback);
@@ -1272,9 +1272,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   }
   callback.reset(nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes contained in routable ways");
-
-  //done with pbf
-  OSMPBF::Parser::free();
 
   //we need to sort the refs so that we easily iterate over them for building edges
   //so we line them first by way index then by shape index of the node

@@ -103,35 +103,35 @@ void Configure(const LoggingConfig& config);
   #define LOG_TRACE(x)
 //all logging output
 #elif defined(LOGGING_LEVEL_ALL)
-  #define LOG_ERROR(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::ERROR);
-  #define LOG_WARN(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::WARN);
-  #define LOG_INFO(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::INFO);
-  #define LOG_DEBUG(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::DEBUG);
-  #define LOG_TRACE(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::TRACE);
+  #define LOG_ERROR(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::ERROR)
+  #define LOG_WARN(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::WARN)
+  #define LOG_INFO(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::INFO)
+  #define LOG_DEBUG(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::DEBUG)
+  #define LOG_TRACE(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::TRACE)
 //some level and up
 #else
   #ifdef LOGGING_LEVEL_ERROR
-    #define LOG_ERROR(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::ERROR);
+    #define LOG_ERROR(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::ERROR)
   #else
     #define LOG_ERROR(x)
   #endif
   #ifdef LOGGING_LEVEL_WARN
-    #define LOG_WARN(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::WARN);
+    #define LOG_WARN(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::WARN)
   #else
     #define LOG_WARN(x)
   #endif
   #ifdef LOGGING_LEVEL_INFO
-    #define LOG_INFO(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::INFO);
+    #define LOG_INFO(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::INFO)
   #else
     #define LOG_INFO(x);
   #endif
   #ifdef LOGGING_LEVEL_DEBUG
-    #define LOG_DEBUG(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::DEBUG);
+    #define LOG_DEBUG(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::DEBUG)
   #else
     #define LOG_DEBUG(x)
   #endif
   #ifdef LOGGING_LEVEL_TRACE
-    #define LOG_TRACE(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::TRACE);
+    #define LOG_TRACE(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::TRACE)
   #else
     #define LOG_TRACE(x)
   #endif

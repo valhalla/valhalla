@@ -160,6 +160,7 @@ test/astar
 test/trip_path_controller
 test/data/bin_tiles/bin/*
 test/data/amsterdam_tiles
+test/data/utrecht_tiles
 test/search
 test/search_tiles/
 test/node_search
@@ -178,6 +179,7 @@ test/pedestriancost
 test/transitcost
 test/truckcost
 test/actor
+test/mapmatch
 test_requests/duane_routes.txt
 run_route_scripts/results/20*
 EdgeInfoBuilder_TestWriteRead.gph
