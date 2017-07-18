@@ -180,9 +180,9 @@ namespace {
     return simulated;
   }
 
-  int seed = 0;
+  int seed = 973; int bound = 81;
   std::string make_test_case() {
-    static std::default_random_engine generator(4);
+    static std::default_random_engine generator(seed);
     static std::uniform_real_distribution<float> distribution(0, 1);
     PointLL start,end;
     float distance = 0;
@@ -198,11 +198,10 @@ namespace {
   }
 
   void test_matcher() {
-
     //some edges should have no matches and most will have no segments
     tyr::actor_t actor(conf, true);
     int tested = 0;
-    while(tested < 23) {
+    while(tested < bound) {
       //get a route shape
       auto test_case = make_test_case();
       boost::property_tree::ptree route;
@@ -221,10 +220,8 @@ namespace {
         for(const auto& name : maneuver.second.get_child("street_names"))
           looped = looped || !names.insert(name.second.get_value<std::string>()).second;
       }
-      if(looped) {
-        std::cout << "loop detected on iteration " << tested << ", skipping.." << std::endl;
+      if(looped)
         continue;
-      }
       //get the edges along that route shape
       auto walked = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}"));
@@ -247,6 +244,7 @@ namespace {
         std::cout << "faked gps: " << print(simulation) << std::endl;
         throw std::logic_error("The match did not match the walk.\nExpected: " + print(walked_edges) + "\nGot:      " + print(matched_edges));
       }
+      std::cout << "Iteration " << tested << " complete" << std::endl;
       ++tested;
     }
   }
@@ -257,6 +255,10 @@ namespace {
 int main(int argc, char* argv[]) {
   test::suite suite("map matcher");
   midgard::logging::Configure({{"type", ""}}); //silence logs
+  if(argc > 1)
+    seed = std::stoi(argv[1]);
+  if(argc > 2)
+    bound = std::stoi(argv[2]);
 
   suite.test(TEST_CASE(test_matcher));
 
