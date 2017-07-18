@@ -12,6 +12,7 @@
 #include "tyr/actor.h"
 #include "midgard/encoded.h"
 #include "midgard/util.h"
+#include "midgard/logging.h"
 #include "baldr/json.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/polyline2.h"
@@ -36,7 +37,7 @@ namespace {
 
   //fake config
   const auto conf = json_to_pt(R"({
-    "mjolnir":{"tile_dir":"test/data/mapmatch_utrecht_tiles", "concurrency": 1},
+    "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
       "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
@@ -139,7 +140,7 @@ namespace {
     auto resampled = resample_at_1hz(edges, shape);
 
     //a way to get noise but only allow for slow change
-    std::default_random_engine generator;
+    std::default_random_engine generator(0);
     std::uniform_real_distribution<float> distribution(-1, 1);
     ring_queue_t<std::pair<float, float> > noises(smoothing);
     auto get_noise = [&]() {
@@ -179,8 +180,9 @@ namespace {
     return simulated;
   }
 
+  int seed = 0;
   std::string make_test_case() {
-    static std::default_random_engine generator;
+    static std::default_random_engine generator(4);
     static std::uniform_real_distribution<float> distribution(0, 1);
     PointLL start,end;
     float distance = 0;
@@ -200,7 +202,7 @@ namespace {
     //some edges should have no matches and most will have no segments
     tyr::actor_t actor(conf, true);
     int tested = 0;
-    while(tested < 100) {
+    while(tested < 23) {
       //get a route shape
       auto test_case = make_test_case();
       boost::property_tree::ptree route;
@@ -219,9 +221,10 @@ namespace {
         for(const auto& name : maneuver.second.get_child("street_names"))
           looped = looped || !names.insert(name.second.get_value<std::string>()).second;
       }
-      if(looped)
+      if(looped) {
+        std::cout << "loop detected on iteration " << tested << ", skipping.." << std::endl;
         continue;
-      //std::cout << print(shape) << std::endl;
+      }
       //get the edges along that route shape
       auto walked = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}"));
@@ -249,18 +252,11 @@ namespace {
   }
 
 
-  void make_tiles() {
-    //make tiles for utrecht
-    mjolnir::build_tile_set(conf, {"test/data/utrecht_netherlands.osm.pbf"}, "mapmatch_test_");
-  }
-
 }
 
 int main(int argc, char* argv[]) {
   test::suite suite("map matcher");
-
-  if(argc < 2)
-    suite.test(TEST_CASE(make_tiles));
+  midgard::logging::Configure({{"type", ""}}); //silence logs
 
   suite.test(TEST_CASE(test_matcher));
 
