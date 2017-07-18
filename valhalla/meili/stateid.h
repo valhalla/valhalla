@@ -5,12 +5,10 @@
 #include <functional>
 #include <limits>
 
-namespace {
-constexpr static uint32_t kInvalidTime = std::numeric_limits<uint32_t>::max();
-}
-
 namespace valhalla {
 namespace meili {
+
+constexpr uint32_t kInvalidTime = std::numeric_limits<uint32_t>::max();
 
 union StateId
 {

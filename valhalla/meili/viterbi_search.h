@@ -68,9 +68,6 @@ class IViterbiSearch;
 // TODO test it
 class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
 {
- private:
-  constexpr static StateId::Time kInvalidTime = std::numeric_limits<StateId::Time>::max();
-
  public:
   StateIterator(IViterbiSearch& vs, StateId::Time time, const StateId& stateid)
       : vs_(vs),
