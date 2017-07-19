@@ -5,7 +5,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_set>
 
-#include "mjolnir/util.h"
+#include <valhalla/mjolnir/util.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/datetime.h>
 

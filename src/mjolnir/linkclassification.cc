@@ -261,7 +261,7 @@ void ReclassifyLinks(const std::string& ways_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
                      const std::string& way_nodes_file) {
-  LOG_INFO("Reclassifying link graph edges...")
+  LOG_INFO("Reclassifying link graph edges...");
 
     // Need to capture these in the expand lambda
   std::unordered_set<size_t> visitedset;  // Set of visited nodes

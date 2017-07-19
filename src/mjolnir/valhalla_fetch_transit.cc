@@ -253,7 +253,7 @@ void get_stops(Transit_Fetch& tile, std::unordered_map<std::string, uint64_t>& s
 
     stops.emplace(stop->onestop_id(), stop_id);
     if(stops.size() == kMaxGraphId) {
-      LOG_ERROR("Hit the maximum number of stops allowed and skipping the rest")
+      LOG_ERROR("Hit the maximum number of stops allowed and skipping the rest");
       break;
     }
   }
@@ -547,8 +547,10 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
   auto database = pt.get_optional<std::string>("mjolnir.timezone");
   // Initialize the tz DB (if it exists)
-  sqlite3 *tz_db_handle = GetDBHandle(*database);
-  if (!tz_db_handle)
+  sqlite3 *tz_db_handle = database ? GetDBHandle(*database) : nullptr;
+  if(!database)
+    LOG_WARN("Time zone db not found.  Not saving time zone information from db.");
+  else if (!tz_db_handle)
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
 
   //for each tile

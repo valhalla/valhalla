@@ -34,13 +34,17 @@ coverage/index.html: coverage.info
 clean-gcno:
 	-find -name '*.gcno' -exec rm -rf {} \;
 
-clean-local: clean-coverage clean-gcno clean-genfiles
+clean-local: clean-coverage clean-gcno clean-genfiles clean-test
 else
-clean-local: clean-genfiles
+clean-local: clean-genfiles clean-test
 endif
 
 clean-genfiles:
-	-rm -rf genfiles
+	-rm -rf @abs_builddir@/genfiles
+
+TEST_CLEANFILES =
+clean-test:
+	-rm -rf $(TEST_CLEANFILES)
 
 genfiles/date_time_zonespec.h:
 	-mkdir -p @abs_builddir@/genfiles && cd @abs_srcdir@ && xxd -i -s +$$(head -n 1 date_time/zonespec.csv | wc -c | xargs) date_time/zonespec.csv > @abs_builddir@/genfiles/date_time_zonespec.h
@@ -197,8 +201,6 @@ nobase_include_HEADERS = \
 	valhalla/meili/priority_queue.h \
 	valhalla/meili/routing.h \
 	valhalla/meili/viterbi_search.h \
-	valhalla/meili/geojson_reader.h \
-	valhalla/meili/geojson_writer.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
 	valhalla/meili/grid_traversal.h \
@@ -317,7 +319,6 @@ libvalhalla_la_SOURCES = \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \
-	src/meili/geojson_reader.cc \
 	src/meili/map_matcher.cc \
 	src/meili/map_matcher_factory.cc \
 	src/meili/match_route.cc \
@@ -629,8 +630,6 @@ check_PROGRAMS = \
 	test/queue \
 	test/routing \
 	test/viterbi_search \
-	test/geojson_reader \
-	test/geojson_writer \
 	test/util_skadi \
 	test/sample \
 	test/maneuversbuilder \
@@ -881,6 +880,11 @@ test_thor_service_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @B
 endif
 
 if DATA_TOOLS
+#some of the tests want tiles of a certain location so lets build those
+test/data/utrecht_tiles: valhalla_build_tiles
+	@echo "Building Utrecht Tiles..." && rm -rf test/data/*utrecht_tiles && ./valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/tmp_utrecht_tiles","concurrency":1,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf && mv test/data/tmp_utrecht_tiles test/data/utrecht_tiles
+TEST_CLEANFILES += test/data/utrecht_tiles
+
 check_PROGRAMS += \
 	test/utrecht \
 	test/edgeinfobuilder \
@@ -894,7 +898,8 @@ check_PROGRAMS += \
 	test/countryaccess \
 	test/graphtilebuilder \
 	test/search \
-	test/node_search
+	test/node_search \
+	test/mapmatch
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -934,6 +939,10 @@ test_search_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_L
 test_node_search_SOURCES = test/node_search.cc test/test.cc
 test_node_search_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_node_search_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_mapmatch_DEPENDENCIES = test/data/utrecht_tiles
+test_mapmatch_SOURCES = test/mapmatch.cc test/test.cc
+test_mapmatch_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_mapmatch_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 TESTS = $(check_PROGRAMS)

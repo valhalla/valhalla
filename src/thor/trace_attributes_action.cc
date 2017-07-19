@@ -417,7 +417,6 @@ json::MapPtr thor_worker_t::trace_attributes(
   std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
   AttributesController controller;
   filter_attributes(request, controller);
-  uint32_t best_paths = request.get<uint32_t>("best_paths", 1);
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
     throw valhalla_exception_t{445};
@@ -438,6 +437,7 @@ json::MapPtr thor_worker_t::trace_attributes(
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
+          uint32_t best_paths = request.get<uint32_t>("best_paths", 1);
           trip_match = map_match(controller, true, best_paths);
           trip_path = std::move(trip_match.first);
           match_results = std::move(trip_match.second);
@@ -453,7 +453,7 @@ json::MapPtr thor_worker_t::trace_attributes(
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_match = map_match(controller, true, best_paths);
+            trip_match = map_match(controller, true);
             trip_path = std::move(trip_match.first);
             match_results = std::move(trip_match.second);
           } catch (const std::exception& e) {
