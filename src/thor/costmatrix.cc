@@ -243,7 +243,7 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
     // Handle transition edges
-    if (directededge->trans_up() || directededge->trans_down()) {
+    if (directededge->IsTransition()) {
       // Do not take transition edges if this is called from a transition.
       // Also skip transition edges onto a level no longer being expanded.
       if (from_transition || (directededge->trans_down() &&
@@ -512,7 +512,7 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
     // Handle transition edges.
-    if (directededge->trans_up() || directededge->trans_down()) {
+    if (directededge->IsTransition()) {
       // Do not take transition edges if this is called from a transition.
       // Also skip transition edges onto a level no longer being expanded.
       if (from_transition || (directededge->trans_down() &&

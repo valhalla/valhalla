@@ -655,7 +655,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
       // Handle transition edges. Add to adjacency list using predecessor
       // information.
-      if (directededge->trans_up() || directededge->trans_down()) {
+      if (directededge->IsTransition()) {
         uint32_t idx = mmedgelabels_.size();
         adjacencylist_->add(idx, pred.sortcost());
         edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);

@@ -166,7 +166,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       }
 
       // Handle transition edges - add to adjacency set.
-      if (directededge->trans_up() || directededge->trans_down()) {
+      if (directededge->IsTransition()) {
         AddToAdjacencyList(edgeid, pred.sortcost());
         edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         continue;
@@ -322,7 +322,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       }
 
       // Handle transition edges. Add to adjacency list.
-      if (directededge->trans_up() || directededge->trans_down()) {
+      if (directededge->IsTransition()) {
         AddToAdjacencyList(edgeid, pred.sortcost());
         edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         continue;

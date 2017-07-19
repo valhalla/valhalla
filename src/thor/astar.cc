@@ -228,7 +228,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       // TODO - use a strategy like in bidirectional to immediately expand
       // from end nodes of transition edges. If we start using A* again we
       // should do this.
-      if (directededge->trans_up() || directededge->trans_down()) {
+      if (directededge->IsTransition()) {
         if (!hierarchy_limits_[directededge->endnode().level()].StopExpanding(dist2dest)) {
           // Allow the transition edge. Add it to the adjacency list and edge labels
           // using the predecessor information. Transition edges have no length.
