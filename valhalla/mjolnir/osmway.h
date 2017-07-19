@@ -1081,7 +1081,7 @@ struct OSMWay {
   };
   WayAccess access_;
 
-  // Essentially just more space for attributes. Did not know what to name it.
+  // Attributes specific to biking
   union BikeInfo {
     struct Fields {
       uint16_t cycle_lane_right          :2;

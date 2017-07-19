@@ -1043,45 +1043,67 @@ function filter_tags_generic(kv)
 
   kv["use"] = use
 
-  local cycle_lane_right_opposite = bike_reverse[kv["cycleway"]] or "false"
-  local cycle_lane_left_opposite = cycle_lane_right_opposite
+  local cycle_lane_right_opposite = "false"
+  local cycle_lane_left_opposite = "false"
 
-  if cycle_lane_right_opposite == "false" then
-    cycle_lane_right_opposite = bike_reverse[kv["cycleway:right"]] or "false"
-    cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]] or "false"
-  end
+  local cycle_lane_right
+  local cycle_lane_left
 
-  local cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
-  local cycle_lane_left = cycle_lane_right
+  if (use == 20 or use == 25 or use == 27) and
+     (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
+    if kv["pedestrian"] == "false" then
+      cycle_lane_right = 3 --separated
+    elseif kv["segregated"] == "yes" then
+      cycle_lane_right = 2 --dedicated
+    elseif kv["segregated"] == "no" then
+      cycle_lane_right = 1 --shared
+    elseif use == 20 then
+      cycle_lane_right = 2 --If no segregated tag but it is tagged as a cycleway then we assume separated lanes
+    else
+      cycle_lane_right = 1 --If no segregated tag and it's tagged as a footway or path then we assume shared lanes
+    end
+    cycle_lane_left = cycle_lane_right
+  else
+    cycle_lane_right_opposite = bike_reverse[kv["cycleway"]] or "false"
+    cycle_lane_left_opposite = cycle_lane_right_opposite
 
-  if cycle_lane_right == 0 then
-    cycle_lane_right = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or buffer[kv["cycleway:right:buffer"]] or 0
-    cycle_lane_left = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or buffer[kv["cycleway:left:buffer"]] or 0
-  end
+    if cycle_lane_right_opposite == "false" then
+      cycle_lane_right_opposite = bike_reverse[kv["cycleway:right"]] or "false"
+      cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]] or "false"
+    end
 
-  --If we have the oneway:bicycle=no tag and there are not "opposite_lane/opposite_track" tags then there are certain situations where
-  --the cyclelane is considered a two-way. (Based off of some examples on wiki.openstreetmap.org/wiki/Bicycle)
-  if kv["oneway:bicycle"] == "no" and cycle_lane_right_opposite == "false" and cycle_lane_left_opposite == "false" then
-    if cycle_lane_right == 2 or cycle_lane_right == 3 then
-      --Example M1 or M2d but on the right side
-      if oneway_norm == "true" then
-        cycle_lane_left = cycle_lane_right
-        cycle_lane_left_opposite = "true"
+    cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
+    cycle_lane_left = cycle_lane_right
 
-      --Example L1b
-      elseif cycle_lane_left == 0 then
-        cycle_lane_left = cycle_lane_right
-      end
+    if cycle_lane_right == 0 then
+      cycle_lane_right = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or buffer[kv["cycleway:right:buffer"]] or 0
+      cycle_lane_left = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or buffer[kv["cycleway:left:buffer"]] or 0
+    end
 
-    elseif cycle_lane_left == 2 or cycle_lane_left == 3 then
-      --Example M2d
-      if oneway_norm == "true" then
-        cycle_lane_right = cycle_lane_left
-        cycle_lane_right_opposite = "true"
+    --If we have the oneway:bicycle=no tag and there are not "opposite_lane/opposite_track" tags then there are certain situations where
+    --the cyclelane is considered a two-way. (Based off of some examples on wiki.openstreetmap.org/wiki/Bicycle)
+    if kv["oneway:bicycle"] == "no" and cycle_lane_right_opposite == "false" and cycle_lane_left_opposite == "false" then
+      if cycle_lane_right == 2 or cycle_lane_right == 3 then
+        --Example M1 or M2d but on the right side
+        if oneway_norm == "true" then
+          cycle_lane_left = cycle_lane_right
+          cycle_lane_left_opposite = "true"
 
-      --Example L1b but on the left side
-      elseif cycle_lane_right == 0 then
-        cycle_lane_right = cycle_lane_left
+        --Example L1b
+        elseif cycle_lane_left == 0 then
+          cycle_lane_left = cycle_lane_right
+        end
+
+      elseif cycle_lane_left == 2 or cycle_lane_left == 3 then
+        --Example M2d
+        if oneway_norm == "true" then
+          cycle_lane_right = cycle_lane_left
+          cycle_lane_right_opposite = "true"
+
+        --Example L1b but on the left side
+        elseif cycle_lane_right == 0 then
+          cycle_lane_right = cycle_lane_left
+        end
       end
     end
   end

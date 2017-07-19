@@ -307,12 +307,16 @@ inline std::string to_string(SpeedType s) {
 
 // Indication of the type of cycle lane (if any) present along an edge.
 // Higher values are more favorable to safe bicycling.
+// If edge is a cycleway, footway, or path, then there is an alternate meaning
 enum class CycleLane : uint8_t {
   kNone = 0,      // No specified bicycle lane
   kShared = 1,    // Shared use lane (could be shared with pedestrians)
+                  // Alternative: Shared path with pedestrians
   kDedicated = 2, // Dedicated cycle lane
+                  // Alternative: Path with segregated lanes
   kSeparated = 3  // A separate cycle lane (physical separation from the
                   // main carriageway)
+                  // Alternative: Path with no pedestrians on it
 };
 const std::unordered_map<uint8_t, std::string> CycleLaneStrings = {
   {static_cast<uint8_t>(CycleLane::kNone), "none"},
