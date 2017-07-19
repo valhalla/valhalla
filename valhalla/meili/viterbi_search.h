@@ -78,21 +78,7 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
       : vs_(vs),
         time_(time),
         stateid_(stateid)
-  {
-    // Hold the invariant in the beginning (see below about the
-    // invariant)
-    if (time_ == kInvalidTime) {
-      if (stateid_.IsValid()) {
-        throw std::runtime_error("expect invalid stateid");
-      }
-    } else {
-      if (stateid_.IsValid()) {
-        if (stateid_.time() != time_) {
-          throw std::runtime_error("time is not matched");
-        }
-      }
-    }
-  }
+  { ValidateStateId(time, stateid); }
 
   StateIterator(IViterbiSearch& vs)
       : StateIterator(vs, kInvalidTime, StateId())
@@ -123,17 +109,24 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
   { return stateid_; }
 
  private:
+  // Invariant
+  void ValidateStateId(const StateId::Time time, const StateId& stateid)
+  {
+    if (time == kInvalidTime) {
+      if (stateid.IsValid()) {
+        throw std::runtime_error("expect invalid stateid");
+      }
+    } else {
+      if (stateid.IsValid()) {
+        if (stateid.time() != time) {
+          throw std::runtime_error("time is not matched");
+        }
+      }
+    }
+  }
+
   IViterbiSearch& vs_;
 
-  // invariant:
-
-  // if (time_ is invalid) {
-  //   stateid_ must be invalid;
-  // } else {
-  //   if (stateid_ is valid) {
-  //     assert stateid_.time() == time_;
-  //   }
-  // }
   StateId::Time time_;
 
   StateId stateid_;

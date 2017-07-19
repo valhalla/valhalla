@@ -8,10 +8,9 @@ namespace meili {
 
 void StateIterator::Next()
 {
+  ValidateStateId(time_, stateid_);
+
   if (time_ == kInvalidTime) {
-    if (!stateid_.IsValid()) {
-      throw std::logic_error("state id should be invalid as well");
-    }
     return;
   }
 
