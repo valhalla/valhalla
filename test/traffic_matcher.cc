@@ -48,17 +48,17 @@ namespace {
   using sid_t = baldr::GraphId;
   std::vector<std::pair<std::string, ots_matches_t> > test_cases {
     //partial, partial
-    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":1}],"match_options":{"breakage_distance":10000}})",
-      ots_matches_t{ots_t{sid_t(0),-1,0,.5f,0,-1}, ots_t{sid_t(0),.5f,0,-1,1,-1}}),
+    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":100}],"match_options":{"breakage_distance":10000}})",
+      ots_matches_t{ots_t{sid_t(0),-1,0,50.f,0,-1}, ots_t{sid_t(0),50.f,0,-1,1,-1}}),
     //partial, full, partial
-    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":3}],"match_options":{"breakage_distance":10000}})",
-      ots_matches_t{ots_t{sid_t(0),-1,0,1.f,0,-1}, ots_t{sid_t(0),1.f,0,2.5f,0,1000}, ots_t{sid_t(0),2.5f,0,-1,1,-1}}),
+    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":300}],"match_options":{"breakage_distance":10000}})",
+      ots_matches_t{ots_t{sid_t(0),-1,0,110.f,0,-1}, ots_t{sid_t(0),110.f,0,250.f,0,1000}, ots_t{sid_t(0),250.f,0,-1,1,-1}}),
     //partial, full, full, full
-    std::make_pair(R"({"trace":[{"lon":-76.38126,"lat":40.55602,"time":0},{"lon":-76.35784,"lat":40.56786,"time":6}],"match_options":{"breakage_distance":10000}})",
-      ots_matches_t{ots_t{sid_t(0),-1,0,.5f,0,-1}, ots_t{sid_t(0),.5f,0,1.f,0,200}, ots_t{sid_t(0),1.f,0,3.5f,0,1000}, ots_t{sid_t(0),3.5f,0,6.f,1,1000}}),
+    std::make_pair(R"({"trace":[{"lon":-76.38126,"lat":40.55602,"time":0},{"lon":-76.35784,"lat":40.56786,"time":600}],"match_options":{"breakage_distance":10000}})",
+      ots_matches_t{ots_t{sid_t(0),-1,0,60.f,0,-1}, ots_t{sid_t(0),60.f,0,110.f,0,200}, ots_t{sid_t(0),110.f,0,350.f,0,1000}, ots_t{sid_t(0),350.f,0,600.f,1,1000}}),
     //full, full, partial
-    std::make_pair(R"({"trace":[{"lon":-76.35784,"lat":40.56786,"time":0},{"lon":-76.38126,"lat":40.55602,"time":6}],"match_options":{"breakage_distance":10000}})",
-      ots_matches_t{ots_t{sid_t(0),0.f,0,2.5f,0,1000}, ots_t{sid_t(0),2.5f,0,5.f,0,1000}, ots_t{sid_t(0),5.f,0,-1,0,-1}}),
+    std::make_pair(R"({"trace":[{"lon":-76.35784,"lat":40.56786,"time":0},{"lon":-76.38126,"lat":40.55602,"time":600}],"match_options":{"breakage_distance":10000}})",
+      ots_matches_t{ots_t{sid_t(0),0.f,0,250.f,0,1000}, ots_t{sid_t(0),250.f,0,490.f,0,1000}, ots_t{sid_t(0),490.f,0,-1,0,-1}}),
 
     //TODO: add test where its all full segments
     //TODO: add test where you are on at the start of a segment, you get off on a small road in between,
@@ -77,9 +77,9 @@ namespace {
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "meili":{"customizable": ["breakage_distance"],
                "mode":"auto","grid":{"cache_size":100240,"size":500},
-               "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,
-                          "interpolation_distance":10,"max_route_distance_factor":3,"max_search_radius":100,
-                          "route":true,"search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}}
+               "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
+               "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":100,"route":true,
+               "search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}}
     })";
     boost::property_tree::ptree conf;
     boost::property_tree::read_json(conf_json, conf);
@@ -112,9 +112,9 @@ namespace {
           throw std::logic_error("begin_shape_index mismatch");
         if(a.end_shape_index != b.end_shape_index)
           throw std::logic_error("end_shape_index mismatch");
-        if(std::fabs(a.start_time - b.start_time) > .25)
+        if(std::fabs(a.start_time - b.start_time) > 10)
           throw std::logic_error("start time is out of tolerance");
-        if(std::fabs(a.end_time - b.end_time) > .25)
+        if(std::fabs(a.end_time - b.end_time) > 10)
           throw std::logic_error("end time is out of tolerance");
         if(std::fabs(a.length - b.length) > 50)
           throw std::logic_error("length is out of tolerance");

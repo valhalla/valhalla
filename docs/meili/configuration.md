@@ -22,7 +22,7 @@ Parameters                  | Description                                       
 `sigma_ z`                  | A non-negative value to specify the GPS accuracy (the variance of the normal distribution) of an incoming GPS sequence. It is also used to weight emission costs of measurements.  | 4.07
 `beta`                      | A non-negative emprical value to weight the transition cost of two successive candidates.                                                      | 3
 `max_route_distance_factor` | A non-negative value used to limit the routing search range which is the distance to next measurement multiplied by this factor.               | 5
-`max_travel_time_factor` | A non-negative value used to limit the routing search range which is the time to next measurement multiplied by this factor.               | 5
+`max_route_time_factor` | A non-negative value used to limit the routing search range which is the time to next measurement multiplied by this factor.               | 5
 `breakage_distance`         | A non-negative value. If two successive measurements are far than this distance, then connectivity in between will not be considered.          | 2000 (meters)
 `interpolation_distance`    | If two successive measurements are closer than this distance, then the later one will be interpolated into the matched route.                   | 10 (meters)
 `search_radius`             | A non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement.                     | 50 (meters)
