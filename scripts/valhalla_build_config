@@ -81,6 +81,7 @@ config = {
       'gps_accuracy': 5.0,
       'beta': 3,
       'max_route_distance_factor': 5,
+      'max_travel_time_factor': 5,
       'breakage_distance': 2000,
       'interpolation_distance': 10,
       'search_radius': 50,
@@ -281,24 +282,25 @@ help_text = {
     'customizable': 'Specify which parameters are allowed to be customized by URL query parameters',
     'verbose': 'Control verbose output for debugging',
     'default': {
-      'sigma_z': 'An non-negative value to specify the GPS accuracy (the variance of the normal distribution) of an incoming GPS sequence. It is also used to weight emission costs of measurements',
+      'sigma_z': 'A non-negative value to specify the GPS accuracy (the variance of the normal distribution) of an incoming GPS sequence. It is also used to weight emission costs of measurements',
       'gps_accuracy': 'TODO: ',
-      'beta': 'An non-negative emprical value to weight the transition cost of two successive candidates',
-      'max_route_distance_factor': 'An non-negative value used to limit the routing search range which is the distance to next measurement multiplied by this factor',
-      'breakage_distance': 'An non-negative value. If two successive measurements are far than this distance, then connectivity in between will not be considered',
+      'beta': 'A non-negative emprical value to weight the transition cost of two successive candidates',
+      'max_route_distance_factor': 'A non-negative value used to limit the routing search range which is the distance to next measurement multiplied by this factor',
+      'max_travel_time_factor': 'A non-negative value used to limit the routing search range which is the time to the next measurement multiplied by this factor',
+      'breakage_distance': 'A non-negative value. If two successive measurements are far than this distance, then connectivity in between will not be considered',
       'interpolation_distance': 'If two successive measurements are closer than this distance, then the later one will be interpolated into the matched route',
-      'search_radius': 'An non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement',
+      'search_radius': 'A non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement',
       'geometry': 'TODO: ',
       'route': 'TODO: ',
       'turn_penalty_factor': 'A non-negative value to penalize turns from one road segment to next'
     },
     'auto': {
       'turn_penalty_factor': 'A non-negative value to penalize turns from one road segment to next',
-      'search_radius': 'An non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement'
+      'search_radius': 'A non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement'
     },
     'pedestrian': {
       'turn_penalty_factor': 'A non-negative value to penalize turns from one road segment to next',
-      'search_radius': 'An non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement'
+      'search_radius': 'A non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement'
     },
     'bicycle': {
       'turn_penalty_factor': 'A non-negative value to penalize turns from one road segment to next'
