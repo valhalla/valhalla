@@ -889,7 +889,7 @@ function filter_tags_generic(kv)
     kv["emergency_backward"] = kv["emergency_forward"]
 
     if (kv["bike_backward"] == "false" and kv["oneway:bicycle"] ~= "-1" and 
-       (kv["oneway:bicycle"] == nil or oneway[kv["oneway:bicycle"]] == false)) then
+       (kv["oneway:bicycle"] == nil or oneway[kv["oneway:bicycle"]] == false or kv["oneway:bicycle"] == "no")) then
       kv["bike_backward"] = kv["bike_forward"]
     end
 
