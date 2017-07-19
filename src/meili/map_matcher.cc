@@ -169,7 +169,7 @@ FindMatchResult(const MapMatching& mapmatching,
                 const std::vector<StateId>& stateids,
                 StateId::Time time)
 {
-  if (time < stateids.size()) {
+  if (!(time < stateids.size())) {
     throw std::runtime_error("reading stateid at time out of bounds");
   }
 
