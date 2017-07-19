@@ -22,7 +22,12 @@ struct StateLabel
              const id_type& predecessor)
       : costsofar_(costsofar),
         stateid_(stateid),
-        predecessor_(predecessor) {}
+        predecessor_(predecessor)
+  {
+    if (!stateid.IsValid()) {
+      throw std::invalid_argument("expect valid stateid");
+    }
+  }
 
   // Required by SPQueue
   const id_type& id() const
