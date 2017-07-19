@@ -24,16 +24,23 @@ GreatCircleDistance(const Measurement& left,
                     const Measurement& right)
 { return left.lnglat().Distance(right.lnglat()); }
 
+inline float
+ClockDistance(const Measurement& left,
+              const Measurement& right)
+{ return right.epoch_time() - left.epoch_time(); }
+
 
 struct Interpolation {
   midgard::PointLL projected;
   baldr::GraphId edgeid;
   float sq_distance;
   float route_distance;
+  float route_time;
   float edge_distance;
 
-  float sortcost(const MapMatching& mm, float mmt_dist) const
-  { return mm.CalculateTransitionCost(0.f, route_distance, mmt_dist) + mm.CalculateEmissionCost(sq_distance); }
+  float sortcost(const MapMatching& mm, float gc_dist, float clk_dist) const
+  { return mm.CalculateTransitionCost(route_distance, gc_dist, route_time, clk_dist) +
+      mm.CalculateEmissionCost(sq_distance); }
 };
 
 
@@ -45,7 +52,8 @@ InterpolateMeasurement(const MapMatching& mapmatching,
                        segment_iterator_t begin,
                        segment_iterator_t end,
                        const Measurement& measurement,
-                       float match_measurement_distance)
+                       float match_measurement_distance,
+                       float match_measurement_time)
 {
   const baldr::GraphTile* tile(nullptr);
   midgard::DistanceApproximator approximator(measurement.lnglat());
@@ -87,15 +95,19 @@ InterpolateMeasurement(const MapMatching& mapmatching,
     // beginning segment
     const auto route_distance = segment_begin_route_distance + distance_to_segment_ends;
 
-    Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance, offset};
-    const auto cost = interp.sortcost(mapmatching, match_measurement_distance);
+    // Get the amount of time spent on this segment
+    auto edge_percent = segment->target - segment->source;
+    auto route_time = mapmatching.costing()->EdgeCost(directededge).secs * edge_percent;
+
+    Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance, route_time, offset};
+    const auto cost = interp.sortcost(mapmatching, match_measurement_distance, match_measurement_time);
     if (cost < minimal_cost) {
       minimal_cost = cost;
       best_interp = std::move(interp);
     }
 
     // Assume segments are connected
-    segment_begin_route_distance += directededge->length() * (segment->target - segment->source);
+    segment_begin_route_distance += directededge->length() * edge_percent;
   }
 
   return best_interp;
@@ -130,8 +142,10 @@ InterpolateMeasurements(const MapMatching& mapmatching,
   for (const auto& measurement: interpolated_measurements) {
     const auto& match_measurement = mapmatching.measurement(state->time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
+    const auto match_measurement_time = ClockDistance(measurement, match_measurement);
     //interpolate this point along the route
-    const auto& interp = InterpolateMeasurement(mapmatching, route.begin(), route.end(), measurement, match_measurement_distance);
+    const auto& interp = InterpolateMeasurement(mapmatching, route.begin(), route.end(),
+        measurement, match_measurement_distance, match_measurement_time);
 
     //if it was able to do the interpolation
     if (interp.edgeid.Is_Valid()) {
@@ -347,8 +361,8 @@ MapMatcher::OfflineMatch(
     }
   }
 
-  const auto state_rbegin = mapmatching_.SearchPath(time),
-               state_rend = std::next(state_rbegin, match_count);
+  const auto state_rbegin = mapmatching_.SearchPath(time);
+  const auto state_rend = std::next(state_rbegin, match_count);
   const auto& results = FindMatchResults(mapmatching_, state_rbegin, state_rend, time);
 
   // Done if no measurements to interpolate

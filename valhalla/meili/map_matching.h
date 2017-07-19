@@ -36,6 +36,7 @@ class State
   void route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
+             float max_route_time,
              const midgard::DistanceApproximator& approximator,
              const float search_radius,
              sif::cost_ptr_t costing,
@@ -79,6 +80,7 @@ class MapMatching: public ViterbiSearch<State>
               float beta,
               float breakage_distance,
               float max_route_distance_factor,
+              float max_route_time_factor,
               float turn_penalty_factor);
 
   MapMatching(baldr::GraphReader& graphreader,
@@ -137,13 +139,17 @@ class MapMatching: public ViterbiSearch<State>
   CalculateEmissionCost(float sq_distance) const
   { return sq_distance * inv_double_sq_sigma_z_; }
 
+  // when theres no time between measurements we ignore time as part of the computation
   float
-  CalculateTransitionCost(float turncost, float route_distance, float measurement_distance) const
-  { return (turncost + std::abs(route_distance - measurement_distance)) * inv_beta_; }
+  CalculateTransitionCost(float route_distance, float measurement_distance,
+      float route_time, float measurement_time) const
+  {
+    auto expected_speed = route_distance / route_time;
+    auto actual_speed = measurement_distance / (measurement_time > 0.f ? measurement_time : route_time);
+    return std::abs(actual_speed - expected_speed) * inv_beta_;
+  }
 
  protected:
-  virtual float MaxRouteDistance(const State& left, const State& right) const;
-
   float TransitionCost(const State& left, const State& right) const override;
 
   float EmissionCost(const State& state) const override;
@@ -171,6 +177,8 @@ class MapMatching: public ViterbiSearch<State>
   float breakage_distance_;
 
   float max_route_distance_factor_;
+
+  float max_route_time_factor_;
 
   float turn_penalty_factor_;
 

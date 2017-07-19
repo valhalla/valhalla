@@ -15,12 +15,12 @@ namespace valhalla {
 
 namespace meili {
 
-LabelSet::LabelSet(const float max_cost, const float bucket_size) {
+LabelSet::LabelSet(const float max_dist, const float max_time, const float bucket_size):
+    max_dist_(max_dist), max_time_(max_time) {
   const auto edgecost = [this](const uint32_t label) {
     return labels_[label].sortcost;
   };
-  max_cost_ = max_cost;
-  queue_.reset(new baldr::DoubleBucketQueue(0.0f, max_cost_, bucket_size, edgecost));
+  queue_.reset(new baldr::DoubleBucketQueue(0.0f, max_dist_, bucket_size, edgecost));
 }
 
 bool LabelSet::put(const baldr::GraphId& nodeid, const baldr::GraphId& edgeid,
@@ -38,7 +38,8 @@ bool LabelSet::put(const baldr::GraphId& nodeid, const baldr::GraphId& edgeid,
   // Create a new label and push it to the queue
   if (it == node_status_.end()) {
     const uint32_t idx = labels_.size();
-    if (sortcost < max_cost_) {
+    // We only add the labels if we are under the limits for distance and for time or time limit is 0
+    if (cost.cost < max_dist_ && (max_time_ == 0.f || cost.secs < max_time_)) {
       queue_->add(idx, sortcost);
       labels_.emplace_back(nodeid, edgeid,
                          source, target,
@@ -84,7 +85,8 @@ bool LabelSet::put(uint16_t dest,
   // Create a new label and push it to the queue
   if (it == dest_status_.end()) {
     const uint32_t idx = labels_.size();
-    if (sortcost < max_cost_) {
+    // We only add the labels if we are under the limits for distance and for time or time limit is 0
+    if (cost.cost < max_dist_ && (max_time_ == 0.f || cost.secs < max_time_)) {
       queue_->add(idx, sortcost);
       labels_.emplace_back(dest, edgeid,
                          source, target,

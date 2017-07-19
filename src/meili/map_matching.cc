@@ -13,6 +13,10 @@ GreatCircleDistance(const valhalla::meili::Measurement& left,
                     const valhalla::meili::Measurement& right)
 { return left.lnglat().Distance(right.lnglat()); }
 
+inline float ClockDistance(const valhalla::meili::Measurement& left,
+                    const valhalla::meili::Measurement& right)
+{ return right.epoch_time() - left.epoch_time(); }
+
 }
 
 
@@ -31,6 +35,7 @@ void
 State::route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
+             float max_route_time,
              const midgard::DistanceApproximator& approximator,
              const float search_radius,
              sif::cost_ptr_t costing,
@@ -46,7 +51,7 @@ State::route(const std::vector<const State*>& states,
   }
 
   // Route
-  labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance));
+  labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance), std::ceil(max_route_time));
   const auto& results = find_shortest_path(
       graphreader, locations, 0, labelset_,
       approximator, search_radius,
@@ -83,6 +88,7 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
                          float beta,
                          float breakage_distance,
                          float max_route_distance_factor,
+                         float max_route_time_factor,
                          float turn_penalty_factor)
     : graphreader_(graphreader),
       mode_costing_(mode_costing),
@@ -95,6 +101,7 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
       inv_beta_(1.f / beta_),
       breakage_distance_(breakage_distance),
       max_route_distance_factor_(max_route_distance_factor),
+      max_route_time_factor_(max_route_time_factor),
       turn_penalty_factor_(turn_penalty_factor),
       turn_cost_table_{0.f}
 {
@@ -127,6 +134,7 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
                   config.get<float>("beta"),
                   config.get<float>("breakage_distance"),
                   config.get<float>("max_route_distance_factor"),
+                  config.get<float>("max_route_time_factor"),
                   config.get<float>("turn_penalty_factor")) {}
 
 
@@ -142,18 +150,16 @@ MapMatching::Clear()
   ViterbiSearch<State>::Clear();
 }
 
-
-inline float
-MapMatching::MaxRouteDistance(const State& left, const State& right) const
-{
-  const auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
-  return std::min(mmt_distance * max_route_distance_factor_, breakage_distance_);
-}
-
-
 float
 MapMatching::TransitionCost(const State& left, const State& right) const
 {
+  // Get some basic info about difference between the two measurements
+  const auto& left_measurement = measurement(left);
+  const auto& right_measurement = measurement(right);
+  const auto gc_dist = GreatCircleDistance(left_measurement, right_measurement);
+  const auto clk_dist = ClockDistance(left_measurement, right_measurement);
+
+  // If we need to actually compute the route
   if (!left.routed()) {
     std::shared_ptr<const sif::EdgeLabel> edgelabel;
     const auto prev_stateid = predecessor(left.id());
@@ -181,18 +187,20 @@ MapMatching::TransitionCost(const State& left, const State& right) const
     // do not use it for purposes like getting transition cost of
     // two *arbitrary* states.
     left.route(unreached_states_[right.time()], graphreader_,
-               MaxRouteDistance(left, right),
+               std::min(gc_dist * max_route_distance_factor_, breakage_distance_),
+               clk_dist * max_route_time_factor_,
                approximator, measurement(right).search_radius(),
                costing(), edgelabel, turn_cost_table_);
   }
   // TODO: test it state.route(...); assert(state.routed());
 
+  // Compute the transition cost if we found a path
   const auto label = left.last_label(right);
   if (label) {
-    const auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
-    return CalculateTransitionCost(label->turn_cost, label->cost.cost, mmt_distance);
+    return CalculateTransitionCost(label->cost.cost, gc_dist, label->cost.secs, clk_dist);
   }
 
+  // No path found
   return -1.f;
 }
 

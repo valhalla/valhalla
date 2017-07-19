@@ -146,7 +146,7 @@ struct Status{
 class LabelSet
 {
  public:
-  LabelSet(const float max_cost, const float bucket_size = 1.0f);
+  LabelSet(const float max_distance, const float max_time, const float bucket_size = 1.0f);
 
   bool put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
            std::shared_ptr<const sif::EdgeLabel> edgelabel) {
@@ -200,7 +200,8 @@ class LabelSet
   }
 
  private:
-  float max_cost_;
+  float max_dist_;
+  float max_time_;
   std::shared_ptr<baldr::DoubleBucketQueue> queue_;
   std::unordered_map<baldr::GraphId, Status> node_status_;
   std::unordered_map<uint16_t, Status> dest_status_;
