@@ -47,8 +47,8 @@ void print_trellis_diagram_vertically(const std::vector<Column>& columns)
 
 void print_path_reversely(
     const std::vector<Column>& columns,
-    const IViterbiSearch::state_iterator rbegin,
-    const IViterbiSearch::state_iterator rend)
+    const IViterbiSearch::stateid_iterator rbegin,
+    const IViterbiSearch::stateid_iterator rend)
 {
   for (auto stateid = rbegin; stateid != rend; stateid++) {
     if ((*stateid).IsValid()) {

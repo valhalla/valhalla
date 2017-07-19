@@ -71,21 +71,21 @@ namespace meili {
 class IViterbiSearch;
 
 // TODO test it
-class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
+class StateIdIterator: public std::iterator<std::forward_iterator_tag, StateId>
 {
  public:
-  StateIterator(IViterbiSearch& vs, StateId::Time time, const StateId& stateid)
+  StateIdIterator(IViterbiSearch& vs, StateId::Time time, const StateId& stateid)
       : vs_(vs),
         time_(time),
         stateid_(stateid)
   { ValidateStateId(time, stateid); }
 
-  StateIterator(IViterbiSearch& vs)
-      : StateIterator(vs, kInvalidTime, StateId())
+  StateIdIterator(IViterbiSearch& vs)
+      : StateIdIterator(vs, kInvalidTime, StateId())
   {}
 
   // Postfix increment
-  StateIterator operator++(int)
+  StateIdIterator operator++(int)
   {
     auto copy = *this;
     Next();
@@ -93,16 +93,16 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
   }
 
   // Prefix increment
-  StateIterator operator++()
+  StateIdIterator operator++()
   {
     Next();
     return *this;
   }
 
-  bool operator==(const StateIterator& other) const
+  bool operator==(const StateIdIterator& other) const
   { return &vs_ == &(other.vs_) && time_ == other.time_ && stateid_ == other.stateid_; }
 
-  bool operator!=(const StateIterator& other) const
+  bool operator!=(const StateIdIterator& other) const
   { return !(*this == other); }
 
   const StateId& operator*() const
@@ -137,10 +137,10 @@ class StateIterator: public std::iterator<std::forward_iterator_tag, StateId>
 class IViterbiSearch
 {
  public:
-  using state_iterator = StateIterator;
+  using stateid_iterator = StateIdIterator;
 
   IViterbiSearch()
-      : path_end_(state_iterator(*this))
+      : path_end_(stateid_iterator(*this))
   {}
 
   virtual ~IViterbiSearch() {};
@@ -153,10 +153,10 @@ class IViterbiSearch
 
   virtual StateId SearchWinner(StateId::Time time) = 0;
 
-  state_iterator SearchPath(StateId::Time time)
-  { return state_iterator(*this, time, SearchWinner(time)); }
+  stateid_iterator SearchPath(StateId::Time time)
+  { return stateid_iterator(*this, time, SearchWinner(time)); }
 
-  state_iterator PathEnd() const
+  stateid_iterator PathEnd() const
   { return path_end_; }
 
   virtual StateId Predecessor(const StateId& stateid) const = 0;
@@ -180,7 +180,7 @@ class IViterbiSearch
   std::unordered_set<StateId> added_states_;
 
  private:
-  const state_iterator path_end_;
+  const stateid_iterator path_end_;
 };
 
 template <bool Maximize>

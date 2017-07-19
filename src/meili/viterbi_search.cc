@@ -6,7 +6,7 @@
 namespace valhalla {
 namespace meili {
 
-void StateIterator::Next()
+void StateIdIterator::Next()
 {
   ValidateStateId(time_, stateid_);
 
