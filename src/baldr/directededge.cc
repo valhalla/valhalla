@@ -123,9 +123,19 @@ void DirectedEdge::set_laneconnectivity(const bool lc) {
 
 // -------------------------- Routing attributes --------------------------- //
 
+// Set if edge has a shoulder (Beneficial to know for cycling)
+void DirectedEdge::set_shoulder (const bool shoulder) {
+  shoulder_ = shoulder;
+}
+
 // Set if bikers need to dismount along the edge
 void DirectedEdge::set_dismount (const bool dismount) {
   dismount_ = dismount;
+}
+
+// Set if a sidepath should be preffered when cycling over this one
+void DirectedEdge::set_use_sidepath (const bool use_sidepath) {
+  use_sidepath_ = use_sidepath;
 }
 
 // Set the flag indicating driving is on the right hand side of the road

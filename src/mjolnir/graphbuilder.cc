@@ -813,6 +813,14 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if (admin_index != 0)
             directededge.set_drive_on_right(drive_on_right[admin_index]);
 
+          if (forward) {
+            directededge.set_shoulder(
+              drive_on_right[admin_index] ? w.shoulder_right() : w.shoulder_left());
+          } else {
+            directededge.set_shoulder(
+              drive_on_right[admin_index] ? w.shoulder_left() : w.shoulder_right());
+          }
+
           // Figure out cycle lanes
           bool right_cyclelane_forward = true;
           bool left_cyclelane_forward = false;

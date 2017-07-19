@@ -640,6 +640,30 @@ struct OSMWay {
   bool cyclelane_left_opposite() const;
 
   /**
+   * Set if edge has a shoulder on the right
+   * @param  shoulder  True if edge has shoulder on right
+   */
+  void set_shoulder_right(const bool shoulder_right);
+
+  /**
+   * Get if edge has a shoulder on the right
+   * @return  Returns if edge has a shoulder on right
+   */
+  bool shoulder_right() const;
+
+  /**
+   * Set if edge has a shoulder on the left
+   * @param  shoulder  True if edge has shoulder on left
+   */
+  void set_shoulder_left(const bool shoulder_left);
+
+  /**
+   * Get if edge has a shoulder on the left
+   * @return  Returns if edge has a shoulder on left
+   */
+  bool shoulder_left() const;
+
+  /**
    * Sets if a bicyclist needs to dismount their bike
    * @param  dismount  Whether a cyclist needs to dismount or not
    */
@@ -1088,9 +1112,11 @@ struct OSMWay {
       uint16_t cycle_lane_left           :2;
       uint16_t cycle_lane_right_opposite :1;
       uint16_t cycle_lane_left_opposite  :1;
+      uint16_t shoulder_right            :1;
+      uint16_t shoulder_left             :1;
       uint16_t dismount                  :1;
       uint16_t use_sidepath              :1;
-      uint16_t spare                     :8;
+      uint16_t spare                     :6;
     } fields;
     uint16_t v;
   };

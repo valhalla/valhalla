@@ -658,12 +658,15 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return { sec * ferry_factor_, sec };
   }
 
-  // Update speed based on surface factor. Lower speed for rougher surfaces
+  // If you have to dismount on the edge then we set speed to an average walking speed
+  // Otherwise, Update speed based on surface factor. Lower speed for rougher surfaces
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
-  uint32_t bike_speed = static_cast<uint32_t>((speed_ *
-                surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
-		            kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
+  uint32_t bike_speed = edge->dismount () ?
+      5.1f :
+      static_cast<uint32_t>((speed_ *
+        surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
+        kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
 
   // Apply a weighting factor to the cost based on desirability of cycling
   // on this edge. Based on several factors: rider propensity to ride on roads,
@@ -982,12 +985,15 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return { sec * ferry_factor_, sec };
   }
 
-  // Update speed based on surface factor. Lower speed for rougher surfaces
+  // If you have to dismount on the edge then we set speed to an average walking speed
+  // Otherwise, Update speed based on surface factor. Lower speed for rougher surfaces
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
-  uint32_t bike_speed = static_cast<uint32_t>((speed_ *
-                surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
-                                            kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
+  uint32_t bike_speed = edge->dismount () ?
+      5.1f :
+      static_cast<uint32_t>((speed_ *
+        surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
+        kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
 
   // Represents how stressful a roadway is without looking at grade or cycle accomodations
   float roadway_stress = 1.0f;

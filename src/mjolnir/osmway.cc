@@ -540,6 +540,26 @@ bool OSMWay::cyclelane_left_opposite() const {
   return bike_info_.fields.cycle_lane_left_opposite;
 }
 
+// Sets whether there is a shoulder to the right
+void OSMWay::set_shoulder_right(const bool shoulder_right) {
+  bike_info_.fields.shoulder_right = shoulder_right;
+}
+
+// Gets whether there is a shoulder to the right
+bool OSMWay::shoulder_right() const {
+  return bike_info_.fields.shoulder_right;
+}
+
+// Sets whether there is a shoulder to the left
+void OSMWay::set_shoulder_left(const bool shoulder_left) {
+  bike_info_.fields.shoulder_left = shoulder_left;
+}
+
+// Gets whether there is a shoulder to the left
+bool OSMWay::shoulder_left() const {
+  return bike_info_.fields.shoulder_left;
+}
+
 // Sets whether a bicyclist needs to dismount their bike for this way
 void OSMWay::set_dismount(const bool dismount) {
   bike_info_.fields.dismount = dismount;

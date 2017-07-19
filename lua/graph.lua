@@ -1043,6 +1043,17 @@ function filter_tags_generic(kv)
 
   kv["use"] = use
 
+  local shoulder_right = shoulder[kv["shoulder"]] or shoulder[kv["shoulder:both"]]
+  local shoulder_left = shoulder_right
+
+  if shoulder_right == false then
+    shoulder_right = shoulder[kv["shoulder:right"]] or "false"
+    shoulder_left = shoulder[kv["shoulder:left"]] or "false"
+  end
+
+  kv["shoulder_right"] = shoulder_right
+  kv["shoulder_left"] = shoulder_left
+
   local cycle_lane_right_opposite = "false"
   local cycle_lane_left_opposite = "false"
 

@@ -617,6 +617,21 @@ struct graph_callback : public OSMPBF::Callback {
         } else has_surface = false;
       }
 
+      else if (tag.first == "bicycle") {
+        if (tag.second == "dismount") {
+          w.set_dismount(true);
+        } else if (tag.second == "use_sidepath") {
+          w.set_use_sidepath(true);
+        }
+      }
+
+      else if (tag.first == "shoulder_right") {
+        w.set_shoulder_right(tag.second == "true" ? true : false);
+      }
+      else if (tag.first == "shoulder_left") {
+        w.set_shoulder_left(tag.second == "true" ? true : false);
+      }
+
       else if (tag.first == "cycle_lane_right") {
         CycleLane cyclelane_right = (CycleLane) std::stoi(tag.second);
         switch (cyclelane_right) {
