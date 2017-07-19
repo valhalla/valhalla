@@ -176,9 +176,9 @@ uint32_t DynamicCost::GetMaxTransferDistanceMM() {
   return 0;
 }
 
-// This method overrides the weight for this mode.  The higher the value
+// This method overrides the factor for this mode.  The lower the value
 // the more the mode is favored.
-float DynamicCost::GetModeWeight() {
+float DynamicCost::GetModeFactor() {
   return 1.0f;
 }
 
