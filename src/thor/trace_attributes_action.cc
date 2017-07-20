@@ -45,6 +45,9 @@ namespace {
       scale = kMilePerKm;
     }
 
+    // Create json map to return
+    auto json = json::map({});
+
     // Loop over edges to add attributes
     json::ArrayPtr edge_array = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
@@ -273,9 +276,7 @@ namespace {
     }
 
     // Add edge array
-    auto json = json::map({
-      {"edges", edge_array}
-    });
+    json->emplace("edges", edge_array);
 
     // Add result id, if supplied
     if (id)
