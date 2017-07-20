@@ -1,5 +1,3 @@
-#include "thor/worker.h"
-
 #include <cstdint>
 #include <algorithm>
 #include <tuple>
@@ -12,9 +10,9 @@
 #include "baldr/json.h"
 #include "baldr/graphconstants.h"
 #include "baldr/directededge.h"
+#include "baldr/edge_elevation.h"
 #include "midgard/logging.h"
 #include "midgard/constants.h"
-#include "baldr/edge_elevation.h"
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 #include "proto/tripdirections.pb.h"
@@ -22,6 +20,7 @@
 #include "exception.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
+#include "thor/worker.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
