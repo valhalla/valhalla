@@ -9,13 +9,14 @@
 #include <valhalla/meili/priority_queue.h>
 #include <valhalla/meili/stateid.h>
 
-namespace {
+namespace valhalla{
+namespace meili {
 
 struct StateLabel
 {
  public:
   // Required by SPQueue
-  using id_type = valhalla::meili::StateId;
+  using id_type = StateId;
 
   StateLabel(double costsofar,
              const id_type& stateid,
@@ -62,11 +63,6 @@ struct StateLabel
 
   id_type predecessor_;
 };
-
-}
-
-namespace valhalla{
-namespace meili {
 
 class IViterbiSearch;
 
