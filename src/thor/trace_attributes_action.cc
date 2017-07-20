@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <algorithm>
-#include <utility>
+#include <tuple>
 #include <string>
 #include <vector>
 
@@ -32,10 +32,13 @@ using namespace valhalla::thor;
 namespace {
 
   json::MapPtr serialize(const AttributesController& controller,
-      const valhalla::odin::TripPath& trip_path,
       const boost::optional<std::string>& id,
       const DirectionsOptions& directions_options,
-      const std::vector<thor::MatchResult>& match_results) {
+      std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>>& map_match_results) {
+    // TODO temp
+    const auto& match_results = std::get<kMatchResults>(map_match_results.at(0));
+    const auto& trip_path = std::get<kTripPath>(map_match_results.at(0));
+
     // Length and speed default to kilometers
     double scale = 1;
     if (directions_options.has_units()
@@ -413,8 +416,7 @@ json::MapPtr thor_worker_t::trace_attributes(
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
   odin::TripPath trip_path;
-  std::vector<thor::MatchResult> match_results;
-  std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
+  std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
@@ -429,6 +431,7 @@ json::MapPtr thor_worker_t::trace_attributes(
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
             throw std::exception{};
+          map_match_results.emplace_back(1.0f, std::vector<thor::MatchResult>{}, trip_path);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
@@ -438,9 +441,7 @@ json::MapPtr thor_worker_t::trace_attributes(
       case MAP_SNAP:
         try {
           uint32_t best_paths = request.get<uint32_t>("best_paths", 1);
-          trip_match = map_match(controller, true, best_paths);
-          trip_path = std::move(trip_match.first);
-          match_results = std::move(trip_match.second);
+          map_match_results = map_match(controller, true, best_paths);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
@@ -453,9 +454,7 @@ json::MapPtr thor_worker_t::trace_attributes(
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_match = map_match(controller, true);
-            trip_path = std::move(trip_match.first);
-            match_results = std::move(trip_match.second);
+            map_match_results = map_match(controller, true);
           } catch (const std::exception& e) {
             throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
@@ -473,9 +472,11 @@ json::MapPtr thor_worker_t::trace_attributes(
 
   //serialize output to Thor
   json::MapPtr json;
-  if (trip_path.node().size() > 0)
-    json = serialize(controller, trip_path, id, directions_options, match_results);
-  else throw valhalla_exception_t{442};
+  if (!map_match_results.empty()
+      && (std::get<kTripPath>(map_match_results.at(0)).node().size() > 0))
+    json = serialize(controller, id, directions_options, map_match_results);
+  else
+    throw valhalla_exception_t { 442 };
 
   return json;
 }
