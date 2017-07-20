@@ -100,6 +100,8 @@ constexpr float kDefaultCyclingSpeed[] = {
     16.0f     // Mountain bicycle: ~10 MPH
 };
 
+constexpr float kDismountSpeed = 5.1f;
+
 // Minimum and maximum average bicycling speed (to validate input).
 // Maximum is just above the fastest average speed in Tour de France time trial
 constexpr float kMinCyclingSpeed = 5.0f;  // KPH
@@ -663,7 +665,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
   uint32_t bike_speed = edge->dismount () ?
-      5.1f :
+      kDismountSpeed :
       static_cast<uint32_t>((speed_ *
         surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
         kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
@@ -675,15 +677,19 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // (based on an avoid hills factor).
   float factor = 1.0f;
 
-  // Special use cases: cycleway and footway
+  // Special use cases: cycleway, footway, and path
   uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
-  if (edge->use() == Use::kCycleway) {
-    // Experienced cyclists might not favor cycleways, but most do...
-    factor = (0.5f + use_roads_ * 0.5f);
-  } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
-    // Cyclists who favor using roads may want to avoid paths with pedestrian
-    // traffic. Most cyclists would use them though.
-    factor = 0.75f + (use_roads_ * 0.5f);
+  if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
+    // Differentiate how segregated the way is from pedestrians
+    if (edge->cyclelane() == CycleLane::kSeparated) { // No pedestrians allowed on path
+      factor = 0.5f;
+    } else if (edge->cyclelane() == CycleLane::kDedicated) { // Segregated lane from pedestrians
+      factor = 0.6f;
+    } else { // Share path with pedestrians
+      factor = 0.75f;
+    }
+
+    factor += use_roads_ * 0.5f;
   } else if (edge->use() == Use::kMountainBike &&
              type_ == BicycleType::kMountain) {
     factor = 0.5f;
@@ -703,6 +709,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
       factor = 0.8f * speedpenalty_[road_speed];
     } else if (edge->cyclelane() == CycleLane::kSeparated) {
       factor *= 0.7f;
+    } else if (edge->shoulder()) {
+      factor = 0.85f * speedpenalty_[road_speed];
     } else {
       // On a road without a bicycle lane. Set factor to include any speed
       // penalty and road class factor
@@ -713,6 +721,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
       if (edge->destonly()) {
         factor += kDestinationOnlyFactor;
       }
+    }
+
+    // We want to try and avoid roads that specify to use a cycling path to the side
+    if (edge->use_sidepath()) {
+      factor += 1.0f;
     }
 
     // Favor bicycle networks.
@@ -990,7 +1003,7 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
   uint32_t bike_speed = edge->dismount () ?
-      5.1f :
+      kDismountSpeed :
       static_cast<uint32_t>((speed_ *
         surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
         kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
@@ -1001,14 +1014,17 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // all times because it is a stress REDUCTION
   float accommodation_factor = 1.0f;
 
-  // Special use cases: cycleway and footway
+  // Special use cases: cycleway, footway, and path
   uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
-  if (edge->use() == Use::kCycleway) {
-    // Very large reduction for cycleways as they are very stress free. (Default of 0)
-    accommodation_factor = use_roads_ * 0.125f;
-  } else if (edge->use() == Use::kFootway || edge->use() == Use::kPath) {
-    // Slightly less reduction then cycleway but still very favorable.
-    accommodation_factor = use_roads_ * 0.25f + 0.05f;
+  if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
+    // Differentiate how segregated the way is from pedestrians
+    if (edge->cyclelane() == CycleLane::kSeparated) { // No pedestrians allowed on path
+      accommodation_factor = use_roads_ * 0.125f;
+    } else if (edge->cyclelane() == CycleLane::kDedicated) { // Segregated lane from pedestrians
+      accommodation_factor = use_roads_ * 0.15f + 0.05f;
+    } else { // Share path with pedestrians
+      accommodation_factor = use_roads_ * 0.25f + 0.05f;
+    }
   } else if (edge->use() == Use::kMountainBike &&
              type_ == BicycleType::kMountain) {
     // Slightly less reduction than a footway or path because even with a mountain bike
@@ -1027,7 +1043,9 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     } else if (edge->cyclelane() == CycleLane::kDedicated) {
       accommodation_factor = 0.5f;
     } else if (edge->cyclelane() == CycleLane::kSeparated) {
-      accommodation_factor = 0.25;
+      accommodation_factor = 0.25f;
+    } else if (edge->shoulder()) {
+      accommodation_factor = 0.7f;
     } else if (edge->destonly()) {
       // Slight penalty going though destination only areas if no bike lanes
       roadway_stress += kDestinationOnlyFactor;
@@ -1043,6 +1061,11 @@ Cost LowStressBicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     roadway_stress += road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
     // Then multiply by speed so that higher classified roads are more severely punished for being fast.
     roadway_stress *= speedpenalty_[road_speed];
+  }
+
+  // We want to try and avoid roads that specify to use a cycling path to the side
+  if (edge->use_sidepath()) {
+    accommodation_factor += 1.0f;
   }
 
   // Favor bicycle networks very slightly.

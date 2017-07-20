@@ -813,6 +813,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if (admin_index != 0)
             directededge.set_drive_on_right(drive_on_right[admin_index]);
 
+          // Set shoulder based on current facing direction and which
+          // side of the road is meant to be driven on.
           if (forward) {
             directededge.set_shoulder(
               drive_on_right[admin_index] ? w.shoulder_right() : w.shoulder_left());

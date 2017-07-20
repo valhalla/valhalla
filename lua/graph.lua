@@ -291,10 +291,16 @@ hazmat = {
 
 shoulder = {
 ["yes"] = "true",
-["no"] = "false",
 ["both"] = "true",
-["left"] = "true",
+["no"] = "false"
+}
+
+shoulder_right = {
 ["right"] = "true"
+}
+
+shoulder_left = {
+["left"] = "true"
 }
 
 bicycle = {
@@ -1043,16 +1049,25 @@ function filter_tags_generic(kv)
 
   kv["use"] = use
 
-  local shoulder_right = shoulder[kv["shoulder"]] or shoulder[kv["shoulder:both"]]
-  local shoulder_left = shoulder_right
+  local r_shoulder = shoulder[kv["shoulder"]] or shoulder[kv["shoulder:both"]] or nil
+  local l_shoulder = r_shoulder
 
-  if shoulder_right == false then
-    shoulder_right = shoulder[kv["shoulder:right"]] or "false"
-    shoulder_left = shoulder[kv["shoulder:left"]] or "false"
+  if r_shoulder == nil then
+    r_shoulder = shoulder[kv["shoulder:right"]] or shoulder_right[kv["shoulder"]] or "false"
+    l_shoulder = shoulder[kv["shoulder:left"]] or shoulder_left[kv["shoulder"]] or "false"
+
+    --If the road is oneway and one shoulder is tagged but not the other, we set both to true so that when setting the
+    --shoulder in graphbuilder, driving on the right side vs the left side doesn't cause the edge to miss the shoulder tag
+    if oneway_norm == "true" and r_shoulder == "true" and l_shoulder == "false" then
+      l_shoulder = "true"
+    elseif oneway_norm == "true" and r_shoulder == "false" and l_shoulder == "true" then
+      r_shoulder = "true"
+    end
   end
 
-  kv["shoulder_right"] = shoulder_right
-  kv["shoulder_left"] = shoulder_left
+  kv["shoulder_right"] = r_shoulder
+  kv["shoulder_left"] = l_shoulder
+
 
   local cycle_lane_right_opposite = "false"
   local cycle_lane_left_opposite = "false"
@@ -1060,6 +1075,7 @@ function filter_tags_generic(kv)
   local cycle_lane_right
   local cycle_lane_left
 
+  --We have special use cases for cycle lanes when on a cycleway, footway, or path
   if (use == 20 or use == 25 or use == 27) and
      (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
     if kv["pedestrian"] == "false" then
@@ -1075,6 +1091,7 @@ function filter_tags_generic(kv)
     end
     cycle_lane_left = cycle_lane_right
   else
+    --Set flags if any of the lanes are marked "opposite" (contraflow)
     cycle_lane_right_opposite = bike_reverse[kv["cycleway"]] or "false"
     cycle_lane_left_opposite = cycle_lane_right_opposite
 
@@ -1083,6 +1100,7 @@ function filter_tags_generic(kv)
       cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]] or "false"
     end
 
+    --Figure out whihc side of the road has what cyclelane
     cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
     cycle_lane_left = cycle_lane_right
 
@@ -1124,6 +1142,7 @@ function filter_tags_generic(kv)
 
   kv["cycle_lane_right_opposite"] = cycle_lane_right_opposite
   kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
+
 
   if kv["highway"] and string.find(kv["highway"], "_link") then --*_link 
      kv["link"] = "true"  --do we need to add more?  turnlane?
