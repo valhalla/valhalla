@@ -16,6 +16,7 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathinfo.h>
+#include <valhalla/meili/measurement.h>
 
 namespace valhalla {
 namespace thor {
@@ -25,7 +26,7 @@ class RouteMatcher {
 
   static bool FormPath(const std::shared_ptr<sif::DynamicCost>* mode_costing,
                        const sif::TravelMode& mode, baldr::GraphReader& reader,
-                       const std::vector<midgard::PointLL>& shape,
+                       const std::vector<meili::Measurement>& shape,
                        const std::vector<baldr::PathLocation>& correlated,
                        std::vector<PathInfo>& path_infos);
 };

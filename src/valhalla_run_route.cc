@@ -40,6 +40,7 @@ using namespace valhalla::loki;
 using namespace valhalla::odin;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
+using namespace valhalla::meili;
 
 namespace bpo = boost::program_options;
 
@@ -135,6 +136,8 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
 
     // Get shape
     std::vector<PointLL> shape = decode<std::vector<PointLL>>(trip_path.shape());
+    std::vector<Measurement> trace; trace.reserve(shape.size());
+    std::transform(shape.begin(), shape.end(), std::back_inserter(trace), [](const PointLL& p){ return Measurement{p, 0, 0}; });
 
     // Use the shape to form a single edge correlation at the start and end of
     // the shape (using heading).
@@ -149,7 +152,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
       path_location.push_back(projections.at(loc));
     }
     std::vector<PathInfo> path;
-    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, shape,
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace,
                      path_location, path);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");

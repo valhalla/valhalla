@@ -403,9 +403,9 @@ json::MapPtr thor_worker_t::trace_attributes(
 
   // Parse request
   parse_locations(request);
-  parse_shape(request);
   parse_costing(request);
   parse_trace_config(request);
+  parse_measurements(request);
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
    * prior route run against the Valhalla road network.  Knowing that the input is from
