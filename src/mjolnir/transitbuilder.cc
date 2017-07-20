@@ -427,6 +427,13 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
 
           // Get shape and find closest point
           auto this_shape = edgeinfo.shape();
+
+          // Reverse the shape if directed edge is not the forward direction
+          // along the shape
+          if (!directededge->forward()) {
+            std::reverse(this_shape.begin(), this_shape.end());
+          }
+
           auto this_closest = stop_ll.ClosestPoint(this_shape);
           // Get names
           names = edgeinfo.GetNames();
@@ -442,12 +449,6 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
             closest = this_closest;
             closest_shape = this_shape;
             edgelength = directededge->length();
-
-            // Reverse the shape if directed edge is not the forward direction
-            // along the shape
-            if (!directededge->forward()) {
-              std::reverse(closest_shape.begin(), closest_shape.end());
-            }
           }
         }
       }
