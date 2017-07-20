@@ -599,7 +599,7 @@ struct OSMWay {
 
   /**
    * Gets the right cycle lane.
-   * @return  Returns CycleLane.
+   * @return  Returns CycleLane on right.
    */
   baldr::CycleLane cyclelane_right() const;
 
@@ -611,7 +611,7 @@ struct OSMWay {
 
   /**
    * Gets the left cycle lane.
-   * @return  Returns CycleLane.
+   * @return  Returns CycleLane on left.
    */
   baldr::CycleLane cyclelane_left() const;
 

@@ -681,7 +681,7 @@ class DirectedEdge {
   void set_shoulder (const bool shoulder);
 
   /**
-   * Get if edge is a dismount edge.
+   * Get if cyclists should dismount their bikes along this edge
    * @return  Returns true if edge is a dismount edge, false if it is not.
    */
   bool dismount () const {
@@ -689,7 +689,7 @@ class DirectedEdge {
   }
 
   /**
-   * Set if edge is a dismount edge.
+   * Set if cyclists should dismount their bikes along this edge
    * @param  dismount  true if the edge is a dismount edge, false if not.
    */
   void set_dismount (const bool dismount);
