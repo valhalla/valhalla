@@ -441,8 +441,9 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // (cost from the dest. location to the end of the edge)
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
-        newcost.secs -= p->second.secs;  // Should properly handle elapsed time
-        newcost.cost += p->second.cost;  // Need this to handle the edge score
+    	  newcost -= p->second;
+        //newcost.secs -= p->second.secs;  // Should properly handle elapsed time
+        //newcost.cost += p->second.cost;  // Need this to handle the edge score
       }
 
       // Do not allow transit connection edges if transit is disabled. Also,
