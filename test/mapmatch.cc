@@ -28,6 +28,31 @@ namespace std {
 
 namespace {
 
+  template <class container_t>
+  std::string print(const container_t& container) {
+    std::string output;
+    for(const auto& e : container)
+      output += std::to_string(e) + ",";
+    if(container.size())
+      output.pop_back();
+    return output;
+  }
+
+  std::string to_locations(const std::vector<PointLL>& shape, float accuracy, int frequency) {
+    std::string locations = "[";
+    std::string acc = R"(,"accuracy":)" + std::to_string(int(std::ceil(accuracy)));
+    int freq = 0;
+    for(const auto& p : shape) {
+      locations += R"({"lat":)" + std::to_string(p.second) + R"(,"lon":)" + std::to_string(p.first) + acc;
+      freq += frequency;
+      if(freq > 0)
+        locations += R"(,"time":)" + std::to_string(freq);
+      locations += "},";
+    }
+    locations.back() = ']';
+    return locations;
+  }
+
   boost::property_tree::ptree json_to_pt(const std::string& json) {
     std::stringstream ss; ss << json;
     boost::property_tree::ptree pt;
@@ -48,7 +73,7 @@ namespace {
     "meili":{"customizable": ["breakage_distance"],
              "mode":"auto","grid":{"cache_size":100240,"size":500},
              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
-             "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":100,"route":true,
+             "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
              "search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}},
     "service_limits": {
       "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
@@ -74,14 +99,6 @@ namespace {
     std::string escaped = ss.str().substr(1);
     escaped.pop_back();
     return escaped;
-  }
-
-  template <class container_t>
-  std::string print(const container_t& container) {
-    std::string output;
-    for(const auto& e : container)
-      output += std::to_string(e) + ",";
-    return output;
   }
 
   template <typename T>
@@ -230,19 +247,25 @@ namespace {
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
       //simulate gps from the route shape
       auto simulation = simulate_gps(walked.get_child("edges"), shape, 50, 100.f);
-      auto encoded_simulation = midgard::encode(simulation);
+      auto locations = to_locations(simulation, 100.f, 1);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
-        R"({"costing":"auto","shape_match":"map_snap","encoded_polyline":")" + json_escape(encoded_simulation) + "\"}"));
+        R"({"costing":"auto","shape_match":"map_snap","shape":)" + locations + "}"));
       std::vector<uint64_t> matched_edges;
       for(const auto& edge : matched.get_child("edges"))
         matched_edges.push_back(edge.second.get<uint64_t>("id"));
       //because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
       auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() + 1, matched_edges.end() - 1);
       if(walked_it == walked_edges.end()) {
-        std::cout << "route shape: " << print(shape) << std::endl;
-        std::cout << "faked gps: " << print(simulation) << std::endl;
-        throw std::logic_error("The match did not match the walk.\nExpected: " + print(walked_edges) + "\nGot:      " + print(matched_edges));
+        auto decoded_match = midgard::decode<std::vector<midgard::PointLL> >(matched.get<std::string>("shape"));
+        std::string geojson = R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
+        geojson += print(shape);
+        geojson += R"(]},"type":"Feature","properties":{"stroke":"#00ff00","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
+        geojson += print(simulation);
+        geojson += R"(]},"type":"Feature","properties":{"stroke":"#0000ff","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
+        geojson += print(decoded_match);
+        geojson += R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}}]})";
+        throw std::logic_error("The match did not match the walk: " + geojson);
       }
       std::cout << "Iteration " << tested << " complete" << std::endl;
       ++tested;
