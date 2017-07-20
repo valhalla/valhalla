@@ -35,8 +35,8 @@ namespace {
       const DirectionsOptions& directions_options,
       std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>>& map_match_results) {
     // TODO temp
-    const auto& match_results = std::get<kMatchResults>(map_match_results.at(0));
-    const auto& trip_path = std::get<kTripPath>(map_match_results.at(0));
+    const auto& match_results = std::get<kMatchResultsIndex>(map_match_results.at(0));
+    const auto& trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
 
     // Length and speed default to kilometers
     double scale = 1;
@@ -69,6 +69,13 @@ namespace {
     // Add shape
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
+
+    // Add confidence_score
+    if (controller.attributes.at(kConfidenceScore)
+        && (map_match_results.size() > 1)) {
+      json->emplace("confidence_score",
+          json::fp_t { std::get<kConfidenceScoreIndex>(map_match_results.at(0)), 3 });
+    }
 
     // Loop over edges to add attributes
     json::ArrayPtr edge_array = json::array({});
@@ -476,7 +483,7 @@ json::MapPtr thor_worker_t::trace_attributes(
   //serialize output to Thor
   json::MapPtr json;
   if (!map_match_results.empty()
-      && (std::get<kTripPath>(map_match_results.at(0)).node().size() > 0))
+      && (std::get<kTripPathIndex>(map_match_results.at(0)).node().size() > 0))
     json = serialize(controller, id, directions_options, map_match_results);
   else
     throw valhalla_exception_t { 442 };

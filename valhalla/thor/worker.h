@@ -35,9 +35,9 @@ void run_service(const boost::property_tree::ptree& config);
 #endif
 
 // <Confidence score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScore = 0;
-constexpr size_t kMatchResults = 1;
-constexpr size_t kTripPath = 2;
+constexpr size_t kConfidenceScoreIndex = 0;
+constexpr size_t kMatchResultsIndex = 1;
+constexpr size_t kTripPathIndex = 2;
 
 class thor_worker_t : public service_worker_t{
  public:

@@ -96,7 +96,7 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
         try {
           auto map_match_results = map_match(controller);
           if (!map_match_results.empty())
-            trip_path = std::get<kTripPath>(map_match_results.at(0));
+            trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
         } catch(...) {
           throw valhalla_exception_t { 442 };
         }
@@ -111,7 +111,7 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
           try {
             auto map_match_results = map_match(controller);
             if (!map_match_results.empty())
-              trip_path = std::get<kTripPath>(map_match_results.at(0));
+              trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
           } catch(...) {
             throw valhalla_exception_t { 442 };
           }
@@ -180,7 +180,7 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
 
   // Process each score/match result
   for (const auto& offline_result : offline_results) {
-    const auto& match_results = std::get<kMatchResults>(offline_result);
+    const auto& match_results = std::get<kMatchResultsIndex>(offline_result);
     std::vector<thor::MatchResult> enhanced_match_results;
     odin::TripPath trip_path;
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
@@ -428,7 +428,7 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
     } else {
       throw;
     }
-  map_match_results.emplace_back(std::get<kConfidenceScore>(offline_result),
+  map_match_results.emplace_back(std::get<kConfidenceScoreIndex>(offline_result),
       enhanced_match_results, trip_path);
   }
 
