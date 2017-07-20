@@ -173,9 +173,9 @@ FindMatchResult(const MapMatching& mapmatching,
     throw std::runtime_error("reading stateid at time out of bounds");
   }
 
-  const auto& prev_stateid = time <= 0 ? StateId() : stateids[time - 1],
+  const auto& prev_stateid = 0 < time ? stateids[time - 1] : StateId(),
                    stateid = stateids[time],
-              next_stateid = time < stateids.size() ? stateids[time + 1] : StateId();
+              next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
   const auto& measurement = mapmatching.measurement(time);
 
   if (!stateid.IsValid()) {
@@ -228,7 +228,6 @@ FindMatchResults(const MapMatching& mapmatching, const std::vector<StateId>& sta
 {
   std::vector<MatchResult> results;
 
-  StateId prev_stateid;
   for (StateId::Time time = 0; time < stateids.size(); time++) {
     results.push_back(FindMatchResult(mapmatching, stateids, time));
   }
@@ -298,6 +297,14 @@ MapMatcher::OfflineMatch(
       mapmatching_.PathEnd(),
       std::back_inserter(stateids));
   std::reverse(stateids.begin(), stateids.end());
+
+  // Verify that stateids are in correct order
+  for (StateId::Time time = 0; time < stateids.size(); time++) {
+    if (!(!stateids[time].IsValid() || stateids[time].time() == time)) {
+      std::logic_error("got state with time " + std::to_string(stateids[time].time())
+                       + " at time " + std::to_string(time));
+    }
+  }
 
   const auto& results = FindMatchResults(mapmatching_, stateids);
 
