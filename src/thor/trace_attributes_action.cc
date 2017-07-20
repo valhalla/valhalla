@@ -30,10 +30,30 @@ using namespace valhalla::thor;
 
 namespace {
 
+  json::ArrayPtr serialize_admins(const TripPath& trip_path) {
+    auto admin_array = json::array({});
+    for (const auto& admin : trip_path.admin()) {
+      auto admin_map = json::map({});
+      if (admin.has_country_code())
+        admin_map->emplace("country_code", admin.country_code());
+      if (admin.has_country_text())
+        admin_map->emplace("country_text", admin.country_text());
+      if (admin.has_state_code())
+        admin_map->emplace("state_code", admin.state_code());
+      if (admin.has_state_text())
+        admin_map->emplace("state_text", admin.state_text());
+
+      admin_array->push_back(admin_map);
+    }
+
+    return admin_array;
+  }
+
+
   json::MapPtr serialize(const AttributesController& controller,
       const boost::optional<std::string>& id,
       const DirectionsOptions& directions_options,
-      std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>>& map_match_results) {
+      std::vector<std::tuple<float, std::vector<thor::MatchResult>, TripPath>>& map_match_results) {
     // TODO temp
     const auto& match_results = std::get<kMatchResultsIndex>(map_match_results.at(0));
     const auto& trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
@@ -75,6 +95,11 @@ namespace {
         && (map_match_results.size() > 1)) {
       json->emplace("confidence_score",
           json::fp_t { std::get<kConfidenceScoreIndex>(map_match_results.at(0)), 3 });
+    }
+
+    // Add admins list
+    if (trip_path.admin_size() > 0) {
+      json->emplace("admins", serialize_admins(trip_path));
     }
 
     // Loop over edges to add attributes
@@ -358,25 +383,6 @@ namespace {
         match_points_array->push_back(match_points_map);
       }
       json->emplace("matched_points", match_points_array);
-    }
-
-    // Add admins list
-    if (trip_path.admin_size() > 0) {
-      auto admin_array = json::array({});
-      for (const auto& admin : trip_path.admin()) {
-        auto admin_map = json::map({});
-        if (admin.has_country_code())
-          admin_map->emplace("country_code", admin.country_code());
-        if (admin.has_country_text())
-          admin_map->emplace("country_text", admin.country_text());
-        if (admin.has_state_code())
-          admin_map->emplace("state_code", admin.state_code());
-        if (admin.has_state_text())
-          admin_map->emplace("state_text", admin.state_text());
-
-        admin_array->push_back(admin_map);
-      }
-      json->emplace("admins", admin_array);
     }
 
     return json;
