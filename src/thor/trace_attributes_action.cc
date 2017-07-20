@@ -49,14 +49,9 @@ namespace {
     return admin_array;
   }
 
-
-  json::MapPtr serialize(const AttributesController& controller,
-      const boost::optional<std::string>& id,
-      const DirectionsOptions& directions_options,
-      std::vector<std::tuple<float, std::vector<thor::MatchResult>, TripPath>>& map_match_results) {
-    // TODO temp
-    const auto& match_results = std::get<kMatchResultsIndex>(map_match_results.at(0));
-    const auto& trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
+  json::ArrayPtr serialize_edges(const AttributesController& controller,
+      const DirectionsOptions& directions_options, const TripPath& trip_path) {
+    json::ArrayPtr edge_array = json::array({});
 
     // Length and speed default to kilometers
     double scale = 1;
@@ -65,45 +60,7 @@ namespace {
       scale = kMilePerKm;
     }
 
-    // Create json map to return
-    auto json = json::map({});
-
-    // Add result id, if supplied
-    if (id)
-      json->emplace("id", *id);
-
-    // Add units, if specified
-    if (directions_options.has_units()) {
-      json->emplace("units", std::string(
-        (directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers)
-          ? "kilometers" : "miles"));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // trace info
-
-    // Add osm_changeset
-    if (trip_path.has_osm_changeset())
-      json->emplace("osm_changeset", trip_path.osm_changeset());
-
-    // Add shape
-    if (trip_path.has_shape())
-      json->emplace("shape", trip_path.shape());
-
-    // Add confidence_score
-    if (controller.attributes.at(kConfidenceScore)
-        && (map_match_results.size() > 1)) {
-      json->emplace("confidence_score",
-          json::fp_t { std::get<kConfidenceScoreIndex>(map_match_results.at(0)), 3 });
-    }
-
-    // Add admins list
-    if (trip_path.admin_size() > 0) {
-      json->emplace("admins", serialize_admins(trip_path));
-    }
-
     // Loop over edges to add attributes
-    json::ArrayPtr edge_array = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
 
       if (trip_path.node(i-1).has_edge()) {
@@ -181,7 +138,7 @@ namespace {
           edge_map->emplace("unpaved", static_cast<bool>(edge.unpaved()));
         if (edge.has_toll())
             edge_map->emplace("toll", static_cast<bool>(edge.toll()));
-       if (edge.has_use())
+        if (edge.has_use())
           edge_map->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
         if (edge.has_traversability())
           edge_map->emplace("traversability", to_string(edge.traversability()));
@@ -328,9 +285,56 @@ namespace {
         edge_array->emplace_back(edge_map);
       }
     }
+    return edge_array;
+  }
 
-    // Add edge array
-    json->emplace("edges", edge_array);
+  json::MapPtr serialize(const AttributesController& controller,
+      const boost::optional<std::string>& id,
+      const DirectionsOptions& directions_options,
+      std::vector<std::tuple<float, std::vector<thor::MatchResult>, TripPath>>& map_match_results) {
+    // TODO temp
+    const auto& match_results = std::get<kMatchResultsIndex>(map_match_results.at(0));
+    const auto& trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
+
+    // Create json map to return
+    auto json = json::map({});
+
+    // Add result id, if supplied
+    if (id)
+      json->emplace("id", *id);
+
+    // Add units, if specified
+    if (directions_options.has_units()) {
+      json->emplace("units", std::string(
+        (directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers)
+          ? "kilometers" : "miles"));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // trace info
+
+    // Add osm_changeset
+    if (trip_path.has_osm_changeset())
+      json->emplace("osm_changeset", trip_path.osm_changeset());
+
+    // Add shape
+    if (trip_path.has_shape())
+      json->emplace("shape", trip_path.shape());
+
+    // Add confidence_score
+    if (controller.attributes.at(kConfidenceScore)
+        && (map_match_results.size() > 1)) {
+      json->emplace("confidence_score",
+          json::fp_t { std::get<kConfidenceScoreIndex>(map_match_results.at(0)), 3 });
+    }
+
+    // Add admins list
+    if (trip_path.admin_size() > 0) {
+      json->emplace("admins", serialize_admins(trip_path));
+    }
+
+    // Add edges
+    json->emplace("edges", serialize_edges(controller, directions_options, trip_path));
 
     // Add matched points, if requested
     if (controller.category_attribute_enabled(kMatchedCategory)
