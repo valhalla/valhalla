@@ -48,6 +48,17 @@ namespace {
     // Create json map to return
     auto json = json::map({});
 
+    // Add result id, if supplied
+    if (id)
+      json->emplace("id", *id);
+
+    // Add units, if specified
+    if (directions_options.has_units()) {
+      json->emplace("units", std::string(
+        (directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers)
+          ? "kilometers" : "miles"));
+    }
+
     // Loop over edges to add attributes
     json::ArrayPtr edge_array = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
@@ -278,10 +289,6 @@ namespace {
     // Add edge array
     json->emplace("edges", edge_array);
 
-    // Add result id, if supplied
-    if (id)
-      json->emplace("id", *id);
-
     // Add shape
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
@@ -360,13 +367,6 @@ namespace {
         admin_array->push_back(admin_map);
       }
       json->emplace("admins", admin_array);
-    }
-
-    // Add units, if specified
-    if (directions_options.has_units()) {
-      json->emplace("units", std::string(
-        (directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers)
-          ? "kilometers" : "miles"));
     }
 
     return json;
