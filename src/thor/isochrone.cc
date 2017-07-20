@@ -754,7 +754,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
         }
 
         Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge);
-        c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeWeight();
+        c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
         newcost += c;
 
         // Add to walking distance

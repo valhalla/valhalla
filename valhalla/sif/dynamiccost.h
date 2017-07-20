@@ -79,11 +79,11 @@ class DynamicCost {
   virtual uint32_t GetMaxTransferDistanceMM();
 
   /**
-   * This method overrides the weight for this mode.  The higher the value
+   * This method overrides the factor for this mode.  The lower the value
    * the more the mode is favored.
-   * @return  mode weight
+   * @return  mode factor
    */
-  virtual float GetModeWeight();
+  virtual float GetModeFactor();
 
   /**
    * This method overrides the max_distance with the max_distance_mm per segment
