@@ -39,7 +39,7 @@ struct Interpolation {
   float edge_distance;
 
   float sortcost(const MapMatching& mm, float gc_dist, float clk_dist) const
-  { return mm.CalculateTransitionCost(route_distance, gc_dist, route_time, clk_dist) +
+  { return mm.CalculateTransitionCost(0.f, route_distance, gc_dist, route_time, clk_dist) +
       mm.CalculateEmissionCost(sq_distance); }
 };
 

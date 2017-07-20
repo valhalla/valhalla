@@ -197,7 +197,7 @@ MapMatching::TransitionCost(const State& left, const State& right) const
   // Compute the transition cost if we found a path
   const auto label = left.last_label(right);
   if (label) {
-    return CalculateTransitionCost(label->cost.cost, gc_dist, label->cost.secs, clk_dist);
+    return CalculateTransitionCost(label->turn_cost, label->cost.cost, gc_dist, label->cost.secs, clk_dist);
   }
 
   // No path found

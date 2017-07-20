@@ -139,15 +139,15 @@ class MapMatching: public ViterbiSearch<State>
   CalculateEmissionCost(float sq_distance) const
   { return sq_distance * inv_double_sq_sigma_z_; }
 
-  // when theres no time between measurements we ignore time as part of the computation
+  // we use the difference between the original two measurements and the distance along the route
+  // network to compute a transition cost of a given candidate, turn_cost may be added if
+  // the turn_penalty_table_ is enabled, one could make use of time in this computation but
+  // this is not advisable as traffic at the time may make readings unreliable and time information
+  // is not strictly required to perform the matching
   float
-  CalculateTransitionCost(float route_distance, float measurement_distance,
+  CalculateTransitionCost(float turn_cost, float route_distance, float measurement_distance,
       float route_time, float measurement_time) const
-  {
-    auto expected_speed = route_distance / route_time;
-    auto actual_speed = measurement_distance / (measurement_time > 0.f ? measurement_time : route_time);
-    return std::abs(actual_speed - expected_speed) * inv_beta_;
-  }
+  { return (turn_cost + std::abs(route_distance - measurement_distance)) * inv_beta_; }
 
  protected:
   float TransitionCost(const State& left, const State& right) const override;
