@@ -1100,7 +1100,7 @@ function filter_tags_generic(kv)
       cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]] or "false"
     end
 
-    --Figure out whihc side of the road has what cyclelane
+    --Figure out which side of the road has what cyclelane
     cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
     cycle_lane_left = cycle_lane_right
 
