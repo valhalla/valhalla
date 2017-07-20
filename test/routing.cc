@@ -175,7 +175,7 @@ void Benchmark()
 
 void TestRoutePathIterator()
 {
-  meili::LabelSet labelset(100, 0);
+  meili::LabelSet labelset(100);
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
 
