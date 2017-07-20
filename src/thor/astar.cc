@@ -228,7 +228,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       // TODO - use a strategy like in bidirectional to immediately expand
       // from end nodes of transition edges. If we start using A* again we
       // should do this.
-      if (directededge->trans_up() || directededge->trans_down()) {
+      if (directededge->IsTransition()) {
         if (!hierarchy_limits_[directededge->endnode().level()].StopExpanding(dist2dest)) {
           // Allow the transition edge. Add it to the adjacency list and edge labels
           // using the predecessor information. Transition edges have no length.
@@ -454,26 +454,6 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
   return density;
 }
 
-// Check for path completion along the same edge. Edge ID in question
-// is along both an origin and destination and origin shows up at the
-// beginning of the edge while the destination shows up at the end of
-// the edge
-bool AStarPathAlgorithm::IsTrivial(const GraphId& edgeid,
-                              const PathLocation& origin,
-                              const PathLocation& destination) const {
-  for (const auto& destination_edge : destination.edges) {
-    if (destination_edge.id == edgeid) {
-      for (const auto& origin_edge : origin.edges) {
-        if (origin_edge.id == edgeid &&
-            origin_edge.dist <= destination_edge.dist) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
 // Form the path from the adjacency list.
 std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
   // Metrics to track
@@ -486,7 +466,7 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
       edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
-                      edgelabel.edgeid(), edgelabel.tripid());
+                      edgelabel.edgeid(), 0);
   }
 
   // Reverse the list and return

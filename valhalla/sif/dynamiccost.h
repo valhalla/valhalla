@@ -7,6 +7,7 @@
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include "baldr/double_bucket_queue.h" // For kInvalidLabel
 
 #include <memory>
 #include <unordered_set>
@@ -196,7 +197,7 @@ class DynamicCost {
    * Test if an edge should be restricted due to a complex restriction.
    * @param  edge  Directed edge.
    * @param  pred        Predecessor information.
-   * @param  edgelabels  List of edge labels.
+   * @param  edge_labels List of edge labels.
    * @param  tile        Graph tile (to read restriction if needed).
    * @param  edgeid      Edge Id for the directed edge.
    * @param  forward     Forward search or reverse search.
@@ -204,12 +205,66 @@ class DynamicCost {
    *         that matches the mode and the predecessor list for the current
    *         path matches a complex restriction.
    */
-  virtual bool Restricted(const baldr::DirectedEdge* edge,
-                          const EdgeLabel& pred,
-                          const std::vector<EdgeLabel>& edgelabels,
-                          const baldr::GraphTile*& tile,
-                          const baldr::GraphId& edgeid,
-                          const bool forward) const;
+  template <typename edge_labels_container_t>
+  bool Restricted(const baldr::DirectedEdge* edge,
+                  const EdgeLabel& pred,
+                  const edge_labels_container_t& edge_labels,
+                  const baldr::GraphTile*& tile,
+                  const baldr::GraphId& edgeid,
+                  const bool forward) const {
+    // Lambda to get the next predecessor EdgeLabel (that is not a transition)
+    auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
+      // Get the next predecessor - make sure it is valid. Continue to get
+      // the next predecessor if the edge is a transition edge.
+      const EdgeLabel* next_pred = (label->predecessor() == baldr::kInvalidLabel) ?
+                      label : &edge_labels[label->predecessor()];
+      while (next_pred->use() == baldr::Use::kTransitionUp &&
+             next_pred->predecessor() != baldr::kInvalidLabel) {
+        next_pred = &edge_labels[next_pred->predecessor()];
+      }
+      return next_pred;
+    };
+
+    // If forward, check if the edge marks the end of a restriction, else check
+    // if the edge marks the start of a complex restriction.
+    if (( forward && (edge->end_restriction()   & access_mode())) ||
+        (!forward && (edge->start_restriction() & access_mode()))) {
+      // Get complex restrictions. Return false if no restrictions are found
+      auto restrictions = tile->GetRestrictions(forward, edgeid, access_mode());
+      if (restrictions.size() == 0) {
+        return false;
+      }
+
+      // Get the first predecessor edge (that is not a transition)
+      // TODO - do not need this if no transition edges are added to EdgeLabels
+      const EdgeLabel* first_pred = &pred;
+      if (first_pred->use() == baldr::Use::kTransitionUp) {
+        first_pred = next_predecessor(first_pred);
+      }
+
+      // Iterate through the restrictions
+      for (const auto& cr : restrictions) {
+        // Walk the via list, move to the next restriction if the via edge
+        // Ids do not match the path for this restriction.
+        bool match = true;
+        const EdgeLabel* next_pred = first_pred;
+        for (const auto& via_id : cr.GetVias()) {
+          if (via_id != next_pred->edgeid()) {
+            match = false;
+            break;
+          }
+          next_pred = next_predecessor(next_pred);
+        }
+
+        // Check against the start/end of the complex restriction
+        if (match && (( forward && next_pred->edgeid() == cr.from_id()) ||
+                      (!forward && next_pred->edgeid() == cr.to_id()))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
   /**
    * Returns the transfer cost between 2 transit stops.

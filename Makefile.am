@@ -314,7 +314,6 @@ libvalhalla_la_SOURCES = \
 	src/sif/transitcost.cc \
 	src/sif/truckcost.cc \
 	src/sif/dynamiccost.cc \
-	src/sif/edgelabel.cc \
 	src/meili/universal_cost.cc \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \

@@ -134,7 +134,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
     }
 
     // Process transition edge if previous edge was not from a transition
-    if (de->trans_down() || de->trans_up()) {
+    if (de->IsTransition()) {
       if (from_transition) {
         continue;
       } else {
