@@ -288,6 +288,58 @@ namespace {
     return edge_array;
   }
 
+  json::ArrayPtr serialize_matched_points(const AttributesController& controller,
+      const std::vector<thor::MatchResult>& match_results) {
+    auto match_points_array = json::array({});
+    for (const auto& match_result : match_results) {
+      auto match_points_map = json::map({});
+
+      // Process matched point
+      if (controller.attributes.at(kMatchedPoint)) {
+        match_points_map->emplace("lon", json::fp_t{match_result.lnglat.first,6});
+        match_points_map->emplace("lat", json::fp_t{match_result.lnglat.second,6});
+      }
+
+      // Process matched type
+      if (controller.attributes.at(kMatchedType)) {
+        switch (match_result.type) {
+          case thor::MatchResult::Type::kMatched:
+            match_points_map->emplace("type", std::string("matched"));
+            break;
+          case thor::MatchResult::Type::kInterpolated:
+            match_points_map->emplace("type", std::string("interpolated"));
+            break;
+          default:
+            match_points_map->emplace("type", std::string("unmatched"));
+            break;
+        }
+      }
+
+      // Process matched point edge index
+      if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex())
+        match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
+
+      // Process matched point begin route discontinuity
+      if (controller.attributes.at(kMatchedBeginRouteDiscontinuity) && match_result.begin_route_discontinuity)
+        match_points_map->emplace("begin_route_discontinuity", static_cast<bool>(match_result.begin_route_discontinuity));
+
+      // Process matched point end route discontinuity
+      if (controller.attributes.at(kMatchedEndRouteDiscontinuity) && match_result.end_route_discontinuity)
+        match_points_map->emplace("end_route_discontinuity", static_cast<bool>(match_result.end_route_discontinuity));
+
+      // Process matched point distance along edge
+      if (controller.attributes.at(kMatchedDistanceAlongEdge) && (match_result.type != thor::MatchResult::Type::kUnmatched))
+        match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along,3});
+
+      // Process matched point distance from trace point
+      if (controller.attributes.at(kMatchedDistanceFromTracePoint) && (match_result.type != thor::MatchResult::Type::kUnmatched))
+        match_points_map->emplace("distance_from_trace_point", json::fp_t{match_result.distance_from,3});
+
+      match_points_array->push_back(match_points_map);
+    }
+    return match_points_array;
+  }
+
   json::MapPtr serialize(const AttributesController& controller,
       const boost::optional<std::string>& id,
       const DirectionsOptions& directions_options,
@@ -339,55 +391,9 @@ namespace {
     // Add matched points, if requested
     if (controller.category_attribute_enabled(kMatchedCategory)
         && !match_results.empty()) {
-      auto match_points_array = json::array({});
-      for (const auto& match_result : match_results) {
-        auto match_points_map = json::map({});
-
-        // Process matched point
-        if (controller.attributes.at(kMatchedPoint)) {
-          match_points_map->emplace("lon", json::fp_t{match_result.lnglat.first,6});
-          match_points_map->emplace("lat", json::fp_t{match_result.lnglat.second,6});
-        }
-
-        // Process matched type
-        if (controller.attributes.at(kMatchedType)) {
-          switch (match_result.type) {
-            case thor::MatchResult::Type::kMatched:
-              match_points_map->emplace("type", std::string("matched"));
-              break;
-            case thor::MatchResult::Type::kInterpolated:
-              match_points_map->emplace("type", std::string("interpolated"));
-              break;
-            default:
-              match_points_map->emplace("type", std::string("unmatched"));
-              break;
-          }
-        }
-
-        // Process matched point edge index
-        if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex())
-          match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
-
-        // Process matched point begin route discontinuity
-        if (controller.attributes.at(kMatchedBeginRouteDiscontinuity) && match_result.begin_route_discontinuity)
-          match_points_map->emplace("begin_route_discontinuity", static_cast<bool>(match_result.begin_route_discontinuity));
-
-        // Process matched point end route discontinuity
-        if (controller.attributes.at(kMatchedEndRouteDiscontinuity) && match_result.end_route_discontinuity)
-          match_points_map->emplace("end_route_discontinuity", static_cast<bool>(match_result.end_route_discontinuity));
-
-        // Process matched point distance along edge
-        if (controller.attributes.at(kMatchedDistanceAlongEdge) && (match_result.type != thor::MatchResult::Type::kUnmatched))
-          match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along,3});
-
-        // Process matched point distance from trace point
-        if (controller.attributes.at(kMatchedDistanceFromTracePoint) && (match_result.type != thor::MatchResult::Type::kUnmatched))
-          match_points_map->emplace("distance_from_trace_point", json::fp_t{match_result.distance_from,3});
-
-        match_points_array->push_back(match_points_map);
-      }
-      json->emplace("matched_points", match_points_array);
+      json->emplace("matched_points", serialize_matched_points(controller, match_results));
     }
+    //////////////////////////////////////////////////////////////////////////
 
     return json;
   }
