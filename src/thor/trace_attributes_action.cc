@@ -59,6 +59,17 @@ namespace {
           ? "kilometers" : "miles"));
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // trace info
+
+    // Add osm_changeset
+    if (trip_path.has_osm_changeset())
+      json->emplace("osm_changeset", trip_path.osm_changeset());
+
+    // Add shape
+    if (trip_path.has_shape())
+      json->emplace("shape", trip_path.shape());
+
     // Loop over edges to add attributes
     json::ArrayPtr edge_array = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
@@ -289,10 +300,6 @@ namespace {
     // Add edge array
     json->emplace("edges", edge_array);
 
-    // Add shape
-    if (trip_path.has_shape())
-      json->emplace("shape", trip_path.shape());
-
     // Add matched points, if requested
     if (controller.category_attribute_enabled(kMatchedCategory)
         && !match_results.empty()) {
@@ -345,10 +352,6 @@ namespace {
       }
       json->emplace("matched_points", match_points_array);
     }
-
-    // Add osm_changeset
-    if (trip_path.has_osm_changeset())
-      json->emplace("osm_changeset", trip_path.osm_changeset());
 
     // Add admins list
     if (trip_path.admin_size() > 0) {
