@@ -166,7 +166,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       }
 
       // Handle transition edges - add to adjacency set.
-      if (directededge->trans_up() || directededge->trans_down()) {
+      if (directededge->IsTransition()) {
         AddToAdjacencyList(edgeid, pred.sortcost());
         edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         continue;
@@ -194,8 +194,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
         if (newcost.cost <  lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
           adjacencylist_->decrease(edgestatus.index(), newsortcost);
-          lab.Update(predindex, newcost, newsortcost,
-                     distance, 0, 0);
+          lab.Update(predindex, newcost, newsortcost, distance);
         }
         continue;
       }
@@ -323,7 +322,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       }
 
       // Handle transition edges. Add to adjacency list.
-      if (directededge->trans_up() || directededge->trans_down()) {
+      if (directededge->IsTransition()) {
         AddToAdjacencyList(edgeid, pred.sortcost());
         edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         continue;
@@ -359,8 +358,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
         if (newcost.cost <  lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
           adjacencylist_->decrease(edgestatus.index(), newsortcost);
-          lab.Update(predindex, newcost, newsortcost,
-                     distance, 0, 0);
+          lab.Update(predindex, newcost, newsortcost, distance);
         }
         continue;
       }

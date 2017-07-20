@@ -146,18 +146,6 @@ class AStarPathAlgorithm : public PathAlgorithm {
                           const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
-   * Test if the completed path is trivial (on the same edge in a forward
-   * direction from the origin to the destination.
-   * @param  edgeid   Edge where path completion occurs.
-   * @param  orig     Location information of the origin.
-   * @param  dest     Location information of the destination
-   * @return Returns true if the path is trivial.
-   */
-  bool IsTrivial(const baldr::GraphId& edgeid,
-                 const baldr::PathLocation& orig,
-                 const baldr::PathLocation& dest) const;
-
-  /**
    * Form the path from the adjacency list. Recovers the path from the
    * destination backwards towards the origin (using predecessor information)
    * @param   dest  Index in the edge labels of the destination edge.

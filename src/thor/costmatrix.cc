@@ -231,9 +231,9 @@ void CostMatrix::Initialize(
 void CostMatrix::ExpandForward(GraphReader& graphreader,
                    const GraphTile* tile,
                    const GraphId& node, const NodeInfo* nodeinfo,
-                   EdgeLabel& pred, const uint32_t pred_idx,
+                   BDEdgeLabel& pred, const uint32_t pred_idx,
                    std::vector<HierarchyLimits>& hierarchy_limits,
-                   std::vector<EdgeLabel>& edgelabels,
+                   std::vector<BDEdgeLabel>& edgelabels,
                    EdgeStatus& edgestate,
                    std::shared_ptr<DoubleBucketQueue>& adj,
                    const bool from_transition) {
@@ -243,7 +243,7 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
     // Handle transition edges
-    if (directededge->trans_up() || directededge->trans_down()) {
+    if (directededge->IsTransition()) {
       // Do not take transition edges if this is called from a transition.
       // Also skip transition edges onto a level no longer being expanded.
       if (from_transition || (directededge->trans_down() &&
@@ -282,10 +282,10 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
     }
 
     // Check for complex restriction
-    if (costing_->Restricted(directededge, pred, edgelabels, tile,
+/*    if (costing_->Restricted(directededge, pred, edgelabels, tile,
                              edgeid, true)) {
       continue;
-    }
+    } */
 
     // Get cost and accumulated distance. Update the_shortcuts mask.
     shortcuts |= directededge->shortcut();
@@ -296,7 +296,7 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
     if (edgestatus.set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels[edgestatus.index()];
+      BDEdgeLabel& lab = edgelabels[edgestatus.index()];
       if (newcost.cost < lab.cost().cost) {
         adj->decrease(edgestatus.index(), newcost.cost);
         lab.Update(pred_idx, newcost, newcost.cost, tc, distance);
@@ -339,7 +339,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
   }
 
   // Get edge label and check cost threshold
-  EdgeLabel pred = edgelabels[pred_idx];
+  BDEdgeLabel pred = edgelabels[pred_idx];
   if (pred.cost().secs > current_cost_threshold_) {
     source_status_[index].threshold = 0;
     return;
@@ -382,7 +382,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n,
 // Check if the edge on the forward search connects to a reached edge
 // on the reverse search trees.
 void CostMatrix::CheckForwardConnections(const uint32_t source,
-                              const EdgeLabel& pred, const uint32_t n) {
+                              const BDEdgeLabel& pred, const uint32_t n) {
   // Disallow connections that are part of a complex restriction.
   // TODO - validate that we do not need to "walk" the paths forward
   // and backward to see if they match a restriction.
@@ -419,7 +419,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     if (oppedgestatus.set() != EdgeSet::kUnreached) {
       const auto& edgelabels = target_edgelabel_[target];
       uint32_t predidx = edgelabels[oppedgestatus.index()].predecessor();
-      const EdgeLabel& opp_el = edgelabels[oppedgestatus.index()];
+      const BDEdgeLabel& opp_el = edgelabels[oppedgestatus.index()];
 
       // Special case - common edge for source and target are both initial edges
       if (pred.predecessor() == kInvalidLabel && predidx == kInvalidLabel) {
@@ -500,10 +500,10 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
 void CostMatrix::ExpandReverse(GraphReader& graphreader,
                    const GraphTile* tile, const GraphId& node,
                    const NodeInfo* nodeinfo, const uint32_t index,
-                   EdgeLabel& pred, const uint32_t pred_idx,
+                   BDEdgeLabel& pred, const uint32_t pred_idx,
                    const DirectedEdge* opp_pred_edge,
                    std::vector<HierarchyLimits>& hierarchy_limits,
-                   std::vector<EdgeLabel>& edgelabels,
+                   std::vector<BDEdgeLabel>& edgelabels,
                    EdgeStatus& edgestate,
                    std::shared_ptr<DoubleBucketQueue>& adj,
                    const bool from_transition) {
@@ -512,7 +512,7 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
     // Handle transition edges.
-    if (directededge->trans_up() || directededge->trans_down()) {
+    if (directededge->IsTransition()) {
       // Do not take transition edges if this is called from a transition.
       // Also skip transition edges onto a level no longer being expanded.
       if (from_transition || (directededge->trans_down() &&
@@ -566,10 +566,10 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Check for complex restriction
-    if (costing_->Restricted(directededge, pred, edgelabels, tile,
+/*    if (costing_->Restricted(directededge, pred, edgelabels, tile,
                              edgeid, false)) {
       continue;
-    }
+    } */
 
     // Get cost and accumulated distance. Use opposing edge for EdgeCost.
     // Update the shortcut mask
@@ -582,7 +582,7 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated along with new cost and distance.
     if (edgestatus.set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels[edgestatus.index()];
+      BDEdgeLabel& lab = edgelabels[edgestatus.index()];
       if (newcost.cost < lab.cost().cost) {
         adj->decrease(edgestatus.index(), newcost.cost);
         lab.Update(pred_idx, newcost, newcost.cost, tc, distance);
@@ -620,7 +620,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
   }
 
   // Copy predecessor, check cost threshold
-  EdgeLabel pred = edgelabels[pred_idx];
+  BDEdgeLabel pred = edgelabels[pred_idx];
   if (pred.cost().secs > current_cost_threshold_) {
     target_status_[index].threshold = 0;
     return;
@@ -724,7 +724,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
       source_adjacency_[index]->add(source_edgelabel_[index].size(), cost.cost);
-      EdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost,
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost,
                            mode_, ec, d, false);
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
@@ -804,7 +804,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path. Set the origin flag
       target_adjacency_[index]->add(target_edgelabel_[index].size(), cost.cost);
-      EdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
                            mode_, ec, d, false);
 
       // Set the initial not_thru flag to false. There is an issue with not_thru

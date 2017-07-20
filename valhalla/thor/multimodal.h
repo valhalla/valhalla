@@ -27,7 +27,7 @@ namespace thor {
  * Multi-modal pathfinding algorithm. Currently supports walking and
  * transit (bus, subway, light-rail, etc.).
  */
-class MultiModalPathAlgorithm : public AStarPathAlgorithm {
+class MultiModalPathAlgorithm : public PathAlgorithm {
  public:
   /**
    * Constructor.
@@ -55,9 +55,36 @@ class MultiModalPathAlgorithm : public AStarPathAlgorithm {
            const std::shared_ptr<sif::DynamicCost>* mode_costing,
            const sif::TravelMode mode);
 
+  /**
+   * Clear the temporary information generated during path construction.
+   */
+  void Clear();
+
  protected:
   // Current walking distance.
   uint32_t walking_distance_;
+
+  uint32_t max_label_count_;    // Max label count to allow
+  sif::TravelMode mode_;        // Current travel mode
+  uint8_t travel_type_;         // Current travel type
+
+  // Hierarchy limits.
+  std::vector<sif::HierarchyLimits> hierarchy_limits_;
+
+  // A* heuristic
+  AStarHeuristic astarheuristic_;
+
+  // Vector of edge labels (requires access by index).
+  std::vector<sif::MMEdgeLabel> edgelabels_;
+
+  // Adjacency list - approximate double bucket sort
+  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
+
+  // Edge status. Mark edges that are in adjacency list or settled.
+  std::shared_ptr<EdgeStatus> edgestatus_;
+
+  // Destinations, id and cost
+  std::map<uint64_t, sif::Cost> destinations_;
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
@@ -67,6 +94,38 @@ class MultiModalPathAlgorithm : public AStarPathAlgorithm {
    */
   void Init(const PointLL& origll, const PointLL& destll,
             const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
+   * Convenience method to add an edge to the adjacency list and temporarily
+   * label it. This must be called before adding the edge label (so it uses
+   * the correct index).
+   * @param  edgeid    Edge to add to the adjacency list.
+   * @param  sortcost  Sort cost.
+   */
+  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
+
+  /**
+   * Add edges at the origin to the adjacency list.
+   * @param  graphreader  Graph tile reader.
+   * @param  origin       Location information of the origin.
+   * @param  dest         Location information of the destination.
+   * @param  costing      Dynamic costing.
+   */
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 baldr::PathLocation& origin,
+                 const baldr::PathLocation& dest,
+                 const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
+   * Set the destination edge(s).
+   * @param   graphreader  Graph tile reader.
+   * @param   dest         Location information of the destination.
+   * @param   costing      Dynamic costing.
+   * @return  Returns the relative density near the destination (0-15)
+   */
+  uint32_t SetDestination(baldr::GraphReader& graphreader,
+                          const baldr::PathLocation& dest,
+                          const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Check if destination can be reached if walking is the last mode. Checks
@@ -79,6 +138,16 @@ class MultiModalPathAlgorithm : public AStarPathAlgorithm {
   bool CanReachDestination(const baldr::PathLocation& destination,
            baldr::GraphReader& graphreader, const sif::TravelMode dest_mode,
            const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
+    * Form the path from the adjacency list. Recovers the path from the
+    * destination backwards towards the origin (using predecessor information)
+    * @param   dest  Index in the edge labels of the destination edge.
+    * @return  Returns the path info, a list of GraphIds representing the
+    *          directed edges along the path - ordered from origin to
+    *          destination - along with travel modes and elapsed time.
+    */
+   std::vector<PathInfo> FormPath(const uint32_t dest);
 };
 
 }
