@@ -427,12 +427,20 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
 
           // Get shape and find closest point
           auto this_shape = edgeinfo.shape();
+
+          // Reverse the shape if directed edge is not the forward direction
+          // along the shape
+          if (!directededge->forward()) {
+            std::reverse(this_shape.begin(), this_shape.end());
+          }
+
           auto this_closest = stop_ll.ClosestPoint(this_shape);
           // Get names
           names = edgeinfo.GetNames();
 
           if (std::get<1>(this_closest) < mindist) {
             // use the new wayid
+
             wayid = edgeinfo.wayid();
             startnode.Set(newtile->header()->graphid().tileid(),
                           newtile->header()->graphid().level(), i);
@@ -441,12 +449,6 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
             closest = this_closest;
             closest_shape = this_shape;
             edgelength = directededge->length();
-
-            // Reverse the shape if directed edge is not the forward direction
-            // along the shape
-            if (!directededge->forward()) {
-              std::reverse(closest_shape.begin(), closest_shape.end());
-            }
           }
         }
       }
@@ -482,8 +484,11 @@ void AddOSMConnection(const GraphId& transit_stop_node,
 
         // Get shape and find closest point
         auto this_shape = edgeinfo.shape();
-        auto this_closest = stop_ll.ClosestPoint(this_shape);
 
+        if (!directededge->forward()) {
+          std::reverse(this_shape.begin(), this_shape.end());
+        }
+        auto this_closest = stop_ll.ClosestPoint(this_shape);
         // Get names
         names = edgeinfo.GetNames();
 
@@ -495,12 +500,6 @@ void AddOSMConnection(const GraphId& transit_stop_node,
           closest = this_closest;
           closest_shape = this_shape;
           edgelength = directededge->length();
-
-          // Reverse the shape if directed edge is not the forward direction
-          // along the shape
-          if (!directededge->forward()) {
-            std::reverse(closest_shape.begin(), closest_shape.end());
-          }
         }
       }
     }

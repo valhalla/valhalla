@@ -428,7 +428,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         }
 
         Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge);
-        c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeWeight();
+        c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
         newcost += c;
 
         // Add to walking distance
@@ -460,8 +460,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // (cost from the dest. location to the end of the edge)
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
-        newcost.secs -= p->second.secs;  // Should properly handle elapsed time
-        newcost.cost += p->second.cost;  // Need this to handle the edge score
+        newcost -= p->second;
       }
 
       // Do not allow transit connection edges if transit is disabled. Also,
