@@ -423,6 +423,9 @@ struct graph_callback : public OSMPBF::Callback {
           case Use::kBridleway:
             w.set_use(Use::kBridleway);
             break;
+          case Use::kLivingStreet:
+            w.set_use(Use::kLivingStreet);
+            break;
           case Use::kParkingAisle:
             w.set_destination_only(true);
             w.set_use(Use::kParkingAisle);
