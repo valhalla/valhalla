@@ -175,7 +175,10 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
   // Create the vector of matched path results
   std::vector<std::pair<float, std::vector<meili::MatchResult>>> offline_results;
   if (sequence.size() > 0) {
+    // TODO this call is temp until MapMatcher::OfflineMatch is updated
     offline_results = OfflineMatch(matcher, sequence, best_paths);
+    // TODO rm the above line and uncomment the line below when MapMatcher::OfflineMatch is updated
+    //offline_results = matcher->OfflineMatch(sequence, best_paths);
   }
 
   // Process each score/match result
