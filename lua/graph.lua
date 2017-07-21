@@ -359,8 +359,7 @@ shared = {
 }
 
 buffer = {
-["yes"] = "true",
-["no"] = "false"
+["yes"] = 2
 }
 
 dedicated = {
@@ -1076,8 +1075,8 @@ function filter_tags_generic(kv)
   local cycle_lane_right_opposite = "false"
   local cycle_lane_left_opposite = "false"
 
-  local cycle_lane_right
-  local cycle_lane_left
+  local cycle_lane_right = 0
+  local cycle_lane_left = 0
 
   --We have special use cases for cycle lanes when on a cycleway, footway, or path
   if (use == 20 or use == 25 or use == 27) and
