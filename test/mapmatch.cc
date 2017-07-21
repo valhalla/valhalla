@@ -244,7 +244,11 @@ namespace {
       try {
         walked = json_to_pt(actor.trace_attributes(
           R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}"));
-      } catch (...) { std::cout << encoded_shape << std::endl; throw std::runtime_error("Edge walk failed with exact shape"); }
+      } catch (...) {
+        std::cout << test_case << std::endl;
+        std::cout << R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}" << std::endl;
+        throw std::logic_error("Edge walk failed with exact shape");
+      }
       std::vector<uint64_t> walked_edges;
       for(const auto& edge : walked.get_child("edges"))
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
@@ -268,7 +272,8 @@ namespace {
         geojson += R"(]},"type":"Feature","properties":{"stroke":"#0000ff","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
         geojson += print(decoded_match);
         geojson += R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}}]})";
-        throw std::logic_error("The match did not match the walk: " + geojson);
+        std::cout << geojson << std::endl;
+        throw std::logic_error("The match did not match the walk");
       }
       std::cout << "Iteration " << tested << " complete" << std::endl;
       ++tested;

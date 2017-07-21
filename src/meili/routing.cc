@@ -568,13 +568,6 @@ find_shortest_path(baldr::GraphReader& reader,
             }
           }
 
-          // Get the end node tile and nodeinfo (to compute heuristic)
-          const baldr::GraphTile* endtile = directededge->leaves_tile() ?
-                        reader.GetGraphTile(directededge->endnode()) : tile;
-          if (endtile == nullptr) {
-            continue;
-          }
-
           // Get cost - use EdgeCost to get time along the edge. Override
           // cost portion to be distance. The heuristic cost from a
           // destination to itself must be 0
@@ -583,7 +576,10 @@ find_shortest_path(baldr::GraphReader& reader,
                          label_cost.secs + costing->EdgeCost(directededge).secs * f);
           // We only add the labels if we are under the limits for distance and for time or time limit is 0
           if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
-            const auto nodeinfo = endtile->node(directededge->endnode());
+            // Get the end node tile and nodeinfo (to compute heuristic)
+            const auto* nodeinfo = reader.GetEndNode(directededge, tile);
+            if(nodeinfo == nullptr)
+              continue;
             float sortcost = cost.cost + heuristic(nodeinfo->latlng());
             labelset->put(directededge->endnode(), origin_edge.id, origin_edge.dist, 1.f,
                        cost, turn_cost, sortcost, label_idx,
