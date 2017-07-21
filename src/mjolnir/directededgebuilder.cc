@@ -49,8 +49,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
   if (!way.destination_only())
     set_dest_only(way.no_thru_traffic());
 
+  set_dismount (way.dismount());
+  set_use_sidepath (way.use_sidepath());
   set_surface(way.surface());
-  set_cyclelane(way.cyclelane());
   set_tunnel(way.tunnel());
   set_roundabout(way.roundabout());
   set_bridge(way.bridge());

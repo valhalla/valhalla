@@ -195,7 +195,7 @@ namespace valhalla {
             throw valhalla_exception_t{400}; //this should never happen
         }
 
-        double elapsed_time = (std::chrono::system_clock::now() - s).count();
+        double elapsed_time = std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
         if (!healthcheck && !info.spare && elapsed_time / denominator > long_request) {
           std::stringstream ss;
           boost::property_tree::json_parser::write_json(ss, request, false);

@@ -106,7 +106,8 @@ const std::unordered_map<std::string, bool> AttributesController::kRouteAttribut
   { kMatchedBeginRouteDiscontinuity, true },
   { kMatchedEndRouteDiscontinuity, true },
   { kMatchedDistanceAlongEdge, true },
-  { kMatchedDistanceFromTracePoint, true }
+  { kMatchedDistanceFromTracePoint, true },
+  { kConfidenceScore, true }
 
 };
 

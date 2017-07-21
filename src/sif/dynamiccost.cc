@@ -1,56 +1,6 @@
 #include "sif/dynamiccost.h"
-#include "baldr/double_bucket_queue.h" // For kInvalidLabel
 
 using namespace valhalla::baldr;
-
-namespace {
-
-using namespace valhalla::sif;
-
-// Check for complex restriction
-bool IsRestricted(const EdgeLabel& pred, const std::vector<EdgeLabel>& edge_labels,
-                  const std::vector<ComplexRestriction>& restrictions,
-                  const bool forward) {
-  // Lambda to get the next predecessor EdgeLabel (that is not a transition)
-  auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
-    // Get the next predecessor - make sure it is valid. Continue to get
-    // the next predecessor if the edge is a transition edge.
-    const EdgeLabel* next_pred = (label->predecessor() == kInvalidLabel) ?
-                    label : &edge_labels[label->predecessor()];
-    while (next_pred->use() == Use::kTransitionUp &&
-           next_pred->predecessor() != kInvalidLabel) {
-      next_pred = &edge_labels[next_pred->predecessor()];
-    }
-    return next_pred;
-  };
-
-  // Get the first predecessor edge (that is not a transition)
-  const EdgeLabel* first_pred = &pred;
-  if (first_pred->use() == Use::kTransitionUp) {
-    first_pred = next_predecessor(first_pred);
-  }
-
-  // Iterate through the restrictions
-  for (const auto& cr : restrictions) {
-    // Walk the via list, break if the via edge Ids do not match the path
-    const EdgeLabel* next_pred = first_pred;
-    for (const auto& via_id : cr.GetVias()) {
-      if (via_id != next_pred->edgeid()) {
-        return false;
-      }
-      next_pred = next_predecessor(next_pred);
-    }
-
-    // Check against the start/end of the complex restriction
-    if (( forward && next_pred->edgeid() == cr.from_id()) ||
-        (!forward && next_pred->edgeid() == cr.to_id())) {
-      return true;
-    }
-  }
-  return false;
-}
-
-}
 
 namespace valhalla{
 namespace sif {
@@ -117,32 +67,6 @@ Cost DynamicCost::TransitionCostReverse(
   return { 0.0f, 0.0f };
 }
 
-/**
- * Test if an edge should be restricted due to a complex restriction.
- */
-bool DynamicCost::Restricted(const DirectedEdge* edge,
-                             const EdgeLabel& pred,
-                             const std::vector<EdgeLabel>& edgelabels,
-                             const baldr::GraphTile*& tile,
-                             const baldr::GraphId& edgeid,
-                             const bool forward) const {
-  // If forward, check if the edge marks the end of a restriction, else check
-  // if the edge marks the start of a complex restriction.
-  bool has_restriction = (forward) ?
-      edge->end_restriction()   & access_mode() :
-      edge->start_restriction() & access_mode();
-  if (has_restriction) {
-    // Get complex restrictions. Return false if no restrictions are found
-    auto restrictions = tile->GetRestrictions(forward, edgeid, access_mode());
-    if (restrictions.size() == 0) {
-      return false;
-    }
-    return IsRestricted(pred, edgelabels, restrictions, forward);
-  } else {
-    return false;
-  }
-}
-
 // Returns the transfer cost between 2 transit stops.
 Cost DynamicCost::TransferCost() const {
   return { 0.0f, 0.0f };
@@ -176,9 +100,9 @@ uint32_t DynamicCost::GetMaxTransferDistanceMM() {
   return 0;
 }
 
-// This method overrides the weight for this mode.  The higher the value
+// This method overrides the factor for this mode.  The lower the value
 // the more the mode is favored.
-float DynamicCost::GetModeWeight() {
+float DynamicCost::GetModeFactor() {
   return 1.0f;
 }
 

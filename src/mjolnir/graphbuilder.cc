@@ -816,6 +816,72 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if (admin_index != 0)
             directededge.set_drive_on_right(drive_on_right[admin_index]);
 
+          // Set shoulder based on current facing direction and which
+          // side of the road is meant to be driven on.
+          if (forward) {
+            directededge.set_shoulder(
+              drive_on_right[admin_index] ? w.shoulder_right() : w.shoulder_left());
+          } else {
+            directededge.set_shoulder(
+              drive_on_right[admin_index] ? w.shoulder_left() : w.shoulder_right());
+          }
+
+          // Figure out cycle lanes
+          bool right_cyclelane_forward = true;
+          bool left_cyclelane_forward = false;
+
+          // If we know bikes can only go in a specific direction then whatever
+          // cyclelanes there are will be in that direction
+          if (w.bike_forward() && !w.bike_backward()) {
+            right_cyclelane_forward = true;
+            left_cyclelane_forward = true;
+          } else if (!w.bike_forward() && w.bike_backward()) {
+            right_cyclelane_forward = false;
+            left_cyclelane_forward = false;
+          }
+          // If bike can go in both directions but the road is a oneway then we
+          // must check for contraflow lanes
+          else if (w.oneway()) {
+            right_cyclelane_forward = !w.cyclelane_right_opposite();
+            left_cyclelane_forward = !w.cyclelane_left_opposite();
+            // If the way has a tag of oneway=-1 then bike tags are in the reverse direction
+            if (w.oneway_reverse()) {
+              right_cyclelane_forward = !right_cyclelane_forward;
+              left_cyclelane_forward = !left_cyclelane_forward;
+            }
+          }
+          // If road is not a oneway then we must consider contraflow lanes
+          // as well as what side of the road people drive on
+          else {
+            right_cyclelane_forward = w.cyclelane_right_opposite() ?
+                !drive_on_right[admin_index] :
+                drive_on_right[admin_index];
+            left_cyclelane_forward = w.cyclelane_left_opposite() ?
+                drive_on_right[admin_index] :
+                !drive_on_right[admin_index];
+          }
+
+          directededge.set_cyclelane(CycleLane::kNone);
+          if (forward) {
+            if (right_cyclelane_forward) {
+              directededge.set_cyclelane(w.cyclelane_right());
+            }
+            if (left_cyclelane_forward &&
+                (static_cast<uint8_t>(w.cyclelane_left()) >
+                static_cast<uint8_t>(directededge.cyclelane()))) {
+              directededge.set_cyclelane(w.cyclelane_left());
+            }
+          } else {
+            if (!right_cyclelane_forward) {
+              directededge.set_cyclelane(w.cyclelane_right());
+            }
+            if (!left_cyclelane_forward &&
+                (static_cast<uint8_t>(w.cyclelane_left()) >
+                static_cast<uint8_t>(directededge.cyclelane()))) {
+              directededge.set_cyclelane(w.cyclelane_left());
+            }
+          }
+
           // Increment the directed edge index within the tile
           idx++;
           n++;

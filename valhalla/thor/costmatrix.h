@@ -155,14 +155,14 @@ class CostMatrix {
   // source location (forward traversal)
   std::vector<std::vector<sif::HierarchyLimits>> source_hierarchy_limits_;
   std::vector<std::shared_ptr<baldr::DoubleBucketQueue>> source_adjacency_;
-  std::vector<std::vector<sif::EdgeLabel>> source_edgelabel_;
+  std::vector<std::vector<sif::BDEdgeLabel>> source_edgelabel_;
   std::vector<EdgeStatus> source_edgestatus_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // target location (reverse traversal)
   std::vector<std::vector<sif::HierarchyLimits>> target_hierarchy_limits_;
   std::vector<std::shared_ptr<baldr::DoubleBucketQueue>> target_adjacency_;
-  std::vector<std::vector<sif::EdgeLabel>> target_edgelabel_;
+  std::vector<std::vector<sif::BDEdgeLabel>> target_edgelabel_;
   std::vector<EdgeStatus> target_edgestatus_;
 
   // Mark each target edge with a list of target indexes that have reached it
@@ -203,9 +203,9 @@ class CostMatrix {
                      const baldr::GraphTile* tile,
                      const baldr::GraphId& node,
                      const baldr::NodeInfo* nodeinfo,
-                     sif::EdgeLabel& pred, const uint32_t pred_idx,
+                     sif::BDEdgeLabel& pred, const uint32_t pred_idx,
                      std::vector<sif::HierarchyLimits>& hierarchy_limits,
-                     std::vector<sif::EdgeLabel>& edgelabels,
+                     std::vector<sif::BDEdgeLabel>& edgelabels,
                      EdgeStatus& edgestate,
                      std::shared_ptr<baldr::DoubleBucketQueue>& adj,
                      const bool from_transition);
@@ -215,10 +215,10 @@ class CostMatrix {
                      const baldr::GraphId& node,
                      const baldr::NodeInfo* nodeinfo,
                      const uint32_t index,
-                     sif::EdgeLabel& pred, const uint32_t pred_idx,
+                     sif::BDEdgeLabel& pred, const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      std::vector<sif::HierarchyLimits>& hierarchy_limits,
-                     std::vector<sif::EdgeLabel>& edgelabels,
+                     std::vector<sif::BDEdgeLabel>& edgelabels,
                      EdgeStatus& edgestate,
                      std::shared_ptr<baldr::DoubleBucketQueue>& adj,
                      const bool from_transition);
@@ -231,7 +231,7 @@ class CostMatrix {
    * @param  n       Iteration counter.
    */
   void CheckForwardConnections(const uint32_t source,
-                               const sif::EdgeLabel& pred, const uint32_t n);
+                               const sif::BDEdgeLabel& pred, const uint32_t n);
 
   /**
    * Update status when a connection is found.
@@ -284,7 +284,7 @@ class CostMatrix {
                           const std::vector<baldr::PathLocation>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
-                          const sif::EdgeLabel& pred,
+                          const sif::BDEdgeLabel& pred,
                           const uint32_t predindex);
 
   /**

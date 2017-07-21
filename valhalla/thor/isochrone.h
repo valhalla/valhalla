@@ -99,6 +99,8 @@ class Isochrone {
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
+  std::vector<sif::BDEdgeLabel> bdedgelabels_;
+  std::vector<sif::MMEdgeLabel> mmedgelabels_;
 
   // Adjacency list - approximate double bucket sort
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
@@ -110,11 +112,25 @@ class Isochrone {
   std::shared_ptr<GriddedData<midgard::PointLL> > isotile_;
 
   /**
-   * Initialize prior to computing the isocrhones. Creates adjacency list,
+   * Initialize prior to computing the isochrones. Creates adjacency list,
    * edgestatus support, and reserves edgelabels.
    * @param bucketsize  Adjacency list bucket size.
    */
   void Initialize(const uint32_t bucketsize);
+
+  /**
+   * Initialize prior to computing reverse isochrones. Creates adjacency list,
+   * edgestatus support, and reserves edgelabels.
+   * @param bucketsize  Adjacency list bucket size.
+   */
+  void InitializeReverse(const uint32_t bucketsize);
+
+  /**
+   * Initialize prior to computing mulit-modal isochrones. Creates adjacency
+   * list, edgestatus support, and reserves edgelabels.
+   * @param bucketsize  Adjacency list bucket size.
+   */
+  void InitializeMultiModal(const uint32_t bucketsize);
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time
@@ -134,10 +150,10 @@ class Isochrone {
            const uint32_t pred_idx, const bool from_transition);
 
   /**
-   * Expand from the node along the forward search path.
+   * Expand from the node along the reverse search path.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
-           const baldr::GraphId& node, const sif::EdgeLabel& pred,
+           const baldr::GraphId& node, const sif::BDEdgeLabel& pred,
            const uint32_t pred_idx, const baldr::DirectedEdge* opp_pred_edge,
            const bool from_transition);
 

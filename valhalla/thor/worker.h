@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <vector>
-#include <utility>
+#include <tuple>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -33,6 +33,11 @@ namespace thor {
 #ifdef HAVE_HTTP
 void run_service(const boost::property_tree::ptree& config);
 #endif
+
+// <Confidence score, match results, trip path> tuple indexes
+constexpr size_t kConfidenceScoreIndex = 0;
+constexpr size_t kMatchResultsIndex = 1;
+constexpr size_t kTripPathIndex = 2;
 
 class thor_worker_t : public service_worker_t{
  public:
@@ -73,7 +78,7 @@ class thor_worker_t : public service_worker_t{
       const std::string& routetype, const baldr::PathLocation& origin,
       const baldr::PathLocation& destination);
   odin::TripPath route_match(const AttributesController& controller);
-  std::pair<odin::TripPath, std::vector<thor::MatchResult>> map_match(
+  std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> map_match(
       const AttributesController& controller, bool trace_attributes_action = false,
       uint32_t best_paths = 1);
 
