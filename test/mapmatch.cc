@@ -70,7 +70,7 @@ namespace {
     },
     "thor":{"logging":{"long_request": 110}},
     "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-    "meili":{"customizable": ["breakage_distance"],
+    "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor"],
              "mode":"auto","grid":{"cache_size":100240,"size":500},
              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
@@ -215,7 +215,7 @@ namespace {
   }
 
   void test_matcher() {
-    //some edges should have no matches and most will have no segments
+    //generate a bunch of tests
     tyr::actor_t actor(conf, true);
     int tested = 0;
     while(tested < bound) {
@@ -280,6 +280,37 @@ namespace {
     }
   }
 
+  void test_distance_only() {
+    tyr::actor_t actor(conf, true);
+    auto matched = json_to_pt(actor.trace_attributes(
+            R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
+                "costing":"auto","shape_match":"map_snap","shape":[
+                {"lat":52.09110,"lon":5.09806,"accuracy":10},
+                {"lat":52.09050,"lon":5.09769,"accuracy":100},
+                {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
+    std::unordered_set<std::string> names;
+    for(const auto& edge : matched.get_child("edges"))
+      for(const auto& name : edge.second.get_child("names"))
+        names.insert(name.second.get_value<std::string>()).second;
+    if(names.find("Jan Pieterszoon Coenstraat") == names.end())
+      std::logic_error("Using distance only it should have taken a small detour");
+  }
+
+  void test_time_rejection() {
+    tyr::actor_t actor(conf, true);
+    auto matched = json_to_pt(actor.trace_attributes(
+            R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
+                "costing":"auto","shape_match":"map_snap","shape":[
+                {"lat":52.09110,"lon":5.09806,"accuracy":10,"time":2},
+                {"lat":52.09050,"lon":5.09769,"accuracy":100,"time":4},
+                {"lat":52.09098,"lon":5.09679,"accuracy":10,"time":6}]})"));
+    std::unordered_set<std::string> names;
+    for(const auto& edge : matched.get_child("edges"))
+      for(const auto& name : edge.second.get_child("names"))
+        names.insert(name.second.get_value<std::string>()).second;
+    if(names.find("Jan Pieterszoon Coenstraat") != names.end())
+      std::logic_error("Using time it should not take a small detour");
+  }
 
 }
 
@@ -292,6 +323,10 @@ int main(int argc, char* argv[]) {
     bound = std::stoi(argv[2]);
 
   suite.test(TEST_CASE(test_matcher));
+
+  suite.test(TEST_CASE(test_distance_only));
+
+  suite.test(TEST_CASE(test_time_rejection));
 
   return suite.tear_down();
 }
