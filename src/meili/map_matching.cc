@@ -51,7 +51,7 @@ State::route(const std::vector<const State*>& states,
   }
 
   // Route
-  labelset_ = std::make_shared<LabelSet>(max_route_distance);
+  labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance));
   const auto& results = find_shortest_path(
       graphreader, locations, 0, labelset_,
       approximator, search_radius,

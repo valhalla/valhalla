@@ -146,7 +146,7 @@ struct Status{
 class LabelSet
 {
  public:
-  LabelSet(const float max_distance, const float bucket_size = 1.0f);
+  LabelSet(const float max_cost, const float bucket_size = 1.0f);
 
   bool put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
            std::shared_ptr<const sif::EdgeLabel> edgelabel) {
