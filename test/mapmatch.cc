@@ -240,8 +240,11 @@ namespace {
       if(looped)
         continue;
       //get the edges along that route shape
-      auto walked = json_to_pt(actor.trace_attributes(
-        R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}"));
+      boost::property_tree::ptree walked;
+      try {
+        walked = json_to_pt(actor.trace_attributes(
+          R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" + json_escape(encoded_shape) + "\"}"));
+      } catch (...) { std::cout << encoded_shape << std::endl; throw std::runtime_error("Edge walk failed with exact shape"); }
       std::vector<uint64_t> walked_edges;
       for(const auto& edge : walked.get_child("edges"))
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
