@@ -44,6 +44,8 @@ boost::property_tree::ptree Location::ToPtree() const {
     location.put("heading", *heading_);
   if(heading_tolerance_)
     location.put("heading_tolerance", *heading_tolerance_);
+  if(node_snap_tolerance_)
+    location.put("node_snap_tolerance", *node_snap_tolerance_);
   if(way_id_)
     location.put("way_id", *way_id_);
 
@@ -79,6 +81,10 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
     location.AddMember("date_time", *date_time_, a);
   if(heading_)
     location.AddMember("heading", *heading_, a);
+  if(heading_tolerance_)
+    location.AddMember("heading_tolerance", *heading_tolerance_, a);
+  if(node_snap_tolerance_)
+    location.AddMember("node_snap_tolerance", *node_snap_tolerance_, a);
   if(way_id_)
     location.AddMember("way_id", *way_id_, a);
 
@@ -108,6 +114,7 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   location.date_time_ = pt.get_optional<std::string>("date_time");
   location.heading_ = pt.get_optional<float>("heading");
   location.heading_tolerance_ = pt.get_optional<float>("heading_tolerance");
+  location.node_snap_tolerance_ = pt.get_optional<float>("node_snap_tolerance");
   location.way_id_ = pt.get_optional<long double>("way_id");
 
   location.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
@@ -145,6 +152,8 @@ Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int default
 
   location.date_time_ = GetOptionalFromRapidJson<std::string>(d, "/date_time");
   location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
+  location.heading_tolerance_ = GetOptionalFromRapidJson<int>(d, "/heading_tolerance");
+  location.node_snap_tolerance_ = GetOptionalFromRapidJson<float>(d, "/node_snap_tolerance");
   location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
 
   location.minimum_reachability_ = GetFromRapidJson<unsigned int>(d, "/minimum_reachability", default_reachability);
@@ -174,12 +183,11 @@ Location Location::FromCsv(const std::string& csv) {
 }
 
 bool Location::operator==(const Location& o) const {
-  return latlng_ == o.latlng_ && stoptype_ == o.stoptype_ &&
-         name_ == o.name_ && street_ == o.street_ && city_ == o.city_ &&
-         state_ == o.state_ && zip_ == o.zip_ && country_ == o.country_ &&
-         date_time_ == o.date_time_ && heading_ == o.heading_ &&
-         heading_tolerance_ == o.heading_tolerance_ && way_id_ == o.way_id_
-         && minimum_reachability_ == o.minimum_reachability_ && radius_ == o.radius_;
+  return latlng_ == o.latlng_ && stoptype_ == o.stoptype_ && name_ == o.name_ && street_ == o.street_ &&
+      city_ == o.city_ && state_ == o.state_ && zip_ == o.zip_ && country_ == o.country_ &&
+      date_time_ == o.date_time_ && heading_ == o.heading_ && heading_tolerance_ == o.heading_tolerance_ &&
+      node_snap_tolerance_ == o.node_snap_tolerance_ && way_id_ == o.way_id_ &&
+      minimum_reachability_ == o.minimum_reachability_ && radius_ == o.radius_;
 }
 
 }

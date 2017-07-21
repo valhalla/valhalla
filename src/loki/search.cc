@@ -625,9 +625,11 @@ struct bin_handler_t {
       for (const auto& candidate : pp.reachable) {
         //this may be at a node, either because it was the closest thing or from snap tolerance
         bool front = candidate.point == candidate.edge_info->shape().front() ||
-          pp.location.latlng_.Distance(candidate.edge_info->shape().front()) < NODE_SNAP;
+          pp.location.latlng_.Distance(candidate.edge_info->shape().front()) <
+          pp.location.node_snap_tolerance_.get_value_or(NODE_SNAP);
         bool back = candidate.point == candidate.edge_info->shape().back() ||
-          pp.location.latlng_.Distance(candidate.edge_info->shape().back()) < NODE_SNAP;
+          pp.location.latlng_.Distance(candidate.edge_info->shape().back()) <
+          pp.location.node_snap_tolerance_.get_value_or(NODE_SNAP);
         //it was the begin node
         if((front && candidate.edge->forward()) || (back && !candidate.edge->forward())) {
           const GraphTile* other_tile;
