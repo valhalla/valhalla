@@ -340,30 +340,14 @@ namespace {
     return match_points_array;
   }
 
-  json::MapPtr serialize(const AttributesController& controller,
-      const boost::optional<std::string>& id,
+  void append_trace_info(json::MapPtr json,
+      const AttributesController& controller,
       const DirectionsOptions& directions_options,
-      std::vector<std::tuple<float, std::vector<thor::MatchResult>, TripPath>>& map_match_results) {
-    // TODO temp
-    const auto& match_results = std::get<kMatchResultsIndex>(map_match_results.at(0));
-    const auto& trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
-
-    // Create json map to return
-    auto json = json::map({});
-
-    // Add result id, if supplied
-    if (id)
-      json->emplace("id", *id);
-
-    // Add units, if specified
-    if (directions_options.has_units()) {
-      json->emplace("units", std::string(
-        (directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers)
-          ? "kilometers" : "miles"));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // trace info
+      const std::tuple<float, std::vector<thor::MatchResult>, TripPath>& map_match_result,
+      size_t total_map_match_result_count) {
+    // Set trip path and match results
+    const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
+    const auto& trip_path = std::get<kTripPathIndex>(map_match_result);
 
     // Add osm_changeset
     if (trip_path.has_osm_changeset())
@@ -373,11 +357,11 @@ namespace {
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
 
-    // Add confidence_score
+    // Add confidence_score, if requested and there is more than one match
     if (controller.attributes.at(kConfidenceScore)
-        && (map_match_results.size() > 1)) {
+        && (total_map_match_result_count > 1)) {
       json->emplace("confidence_score",
-          json::fp_t { std::get<kConfidenceScoreIndex>(map_match_results.at(0)), 3 });
+          json::fp_t { std::get<kConfidenceScoreIndex>(map_match_result), 3 });
     }
 
     // Add admins list
@@ -393,11 +377,57 @@ namespace {
         && !match_results.empty()) {
       json->emplace("matched_points", serialize_matched_points(controller, match_results));
     }
-    //////////////////////////////////////////////////////////////////////////
-
-    return json;
   }
 
+  json::MapPtr serialize(const AttributesController& controller,
+      const boost::optional<std::string>& id,
+      const DirectionsOptions& directions_options,
+      std::vector<std::tuple<float, std::vector<thor::MatchResult>, TripPath>>& map_match_results) {
+
+    // Create json map to return
+    auto json = json::map({});
+
+    // Add result id, if supplied
+    if (id)
+      json->emplace("id", *id);
+
+    // Add units, if specified
+    if (directions_options.has_units()) {
+      json->emplace("units", std::string(
+        (directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers)
+          ? "kilometers" : "miles"));
+    }
+
+    // Loop over all results to process the best path
+    // and the alternate paths (if alternates exist)
+    bool best_path = true;
+    size_t total_map_match_result_count = map_match_results.size();
+    auto alt_paths_array = json::array({});
+    for (const auto& map_match_result : map_match_results) {
+      if (best_path) {
+        // Append the best path trace info
+        append_trace_info(json, controller, directions_options,
+            map_match_result, total_map_match_result_count);
+
+        // Only add alternate paths array if needed
+        if (total_map_match_result_count > 1) {
+          // Update so we process alternate paths
+          best_path = false;
+
+          // Add an altenrate_paths array place holder
+          json->emplace("alternate_paths", alt_paths_array);
+
+        }
+      } else {
+        // Append alternate path trace info to alternate path array
+        auto alt_path_json = json::map({});
+        append_trace_info(alt_path_json, controller, directions_options,
+            map_match_result, total_map_match_result_count);
+        alt_paths_array->push_back(alt_path_json);
+      }
+    }
+    return json;
+  }
 }
 
 namespace valhalla {
