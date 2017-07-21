@@ -423,6 +423,9 @@ struct graph_callback : public OSMPBF::Callback {
           case Use::kBridleway:
             w.set_use(Use::kBridleway);
             break;
+          case Use::kLivingStreet:
+            w.set_use(Use::kLivingStreet);
+            break;
           case Use::kParkingAisle:
             w.set_destination_only(true);
             w.set_use(Use::kParkingAisle);
@@ -456,6 +459,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_no_thru_traffic(tag.second == "true" ? true : false);
       else if (tag.first == "oneway")
         w.set_oneway(tag.second == "true" ? true : false);
+      else if (tag.first == "oneway_reverse")
+        w.set_oneway_reverse(tag.second == "true" ? true : false);
       else if (tag.first == "roundabout")
         w.set_roundabout(tag.second == "true" ? true : false);
       else if (tag.first == "link")
@@ -615,23 +620,63 @@ struct graph_callback : public OSMPBF::Callback {
         } else has_surface = false;
       }
 
-      else if (tag.first == "cycle_lane") {
-        CycleLane cyclelane = (CycleLane) std::stoi(tag.second);
-        switch (cyclelane) {
+      else if (tag.first == "bicycle") {
+        if (tag.second == "dismount") {
+          w.set_dismount(true);
+        } else if (tag.second == "use_sidepath") {
+          w.set_use_sidepath(true);
+        }
+      }
+
+      else if (tag.first == "shoulder_right") {
+        w.set_shoulder_right(tag.second == "true" ? true : false);
+      }
+      else if (tag.first == "shoulder_left") {
+        w.set_shoulder_left(tag.second == "true" ? true : false);
+      }
+
+      else if (tag.first == "cycle_lane_right") {
+        CycleLane cyclelane_right = (CycleLane) std::stoi(tag.second);
+        switch (cyclelane_right) {
           case CycleLane::kDedicated:
-            w.set_cyclelane(CycleLane::kDedicated);
+            w.set_cyclelane_right(CycleLane::kDedicated);
             break;
           case CycleLane::kSeparated:
-            w.set_cyclelane(CycleLane::kSeparated);
+            w.set_cyclelane_right(CycleLane::kSeparated);
             break;
           case CycleLane::kShared:
-            w.set_cyclelane(CycleLane::kShared);
+            w.set_cyclelane_right(CycleLane::kShared);
             break;
           case CycleLane::kNone:
           default:
-            w.set_cyclelane(CycleLane::kNone);
+            w.set_cyclelane_right(CycleLane::kNone);
             break;
         }
+      }
+      else if (tag.first == "cycle_lane_left") {
+        CycleLane cyclelane_left = (CycleLane) std::stoi(tag.second);
+        switch (cyclelane_left) {
+          case CycleLane::kDedicated:
+            w.set_cyclelane_left(CycleLane::kDedicated);
+            break;
+          case CycleLane::kSeparated:
+            w.set_cyclelane_left(CycleLane::kSeparated);
+            break;
+          case CycleLane::kShared:
+            w.set_cyclelane_left(CycleLane::kShared);
+            break;
+          case CycleLane::kNone:
+          default:
+            w.set_cyclelane_left(CycleLane::kNone);
+            break;
+        }
+      }
+
+      else if (tag.first == "cycle_lane_right_opposite") {
+        w.set_cyclelane_right_opposite(tag.second == "true" ? true : false);
+      }
+      else if (tag.first == "cycle_lane_left_opposite") {
+        w.set_cyclelane_left_opposite(tag.second == "true" ? true : false);
       }
 
       else if (tag.first == "lanes") {
@@ -731,6 +776,7 @@ struct graph_callback : public OSMPBF::Callback {
           case Use::kAlley:
           case Use::kEmergencyAccess:
           case Use::kDriveThru:
+          case Use::kLivingStreet:
             w.set_surface(Surface::kPavedSmooth);
             break;
           case Use::kCycleway:

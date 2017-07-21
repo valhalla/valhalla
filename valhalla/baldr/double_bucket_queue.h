@@ -119,7 +119,7 @@ class DoubleBucketQueue {
    * @return  Returns true if the low-level buckets are all empty.
    */
   bool empty() {
-    while (currentbucket_->empty() && currentbucket_ != buckets_.end()) {
+    while (currentbucket_ != buckets_.end() && currentbucket_->empty()) {
       currentbucket_++;
       currentcost_ += bucketsize_;
     }
