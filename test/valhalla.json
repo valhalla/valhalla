@@ -63,6 +63,7 @@
       "gps_accuracy": 4.07,
       "beta": 3,
       "max_route_distance_factor": 3,
+      "max_route_time_factor": 3,
       "breakage_distance": 2000,
       "interpolation_distance": 10,
       "search_radius": 40,

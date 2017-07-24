@@ -89,7 +89,7 @@ end_node_t GetEndEdges(GraphReader& reader,
 
 bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
                       const TravelMode& mode, GraphReader& reader,
-                      const std::vector<midgard::PointLL>& shape,
+                      const std::vector<meili::Measurement>& shape,
                       const std::vector<float>& distances,
                       size_t& correlated_index, const GraphTile* tile,
                       const GraphId& node, end_node_t& end_nodes,
@@ -134,7 +134,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
     }
 
     // Process transition edge if previous edge was not from a transition
-    if (de->trans_down() || de->trans_up()) {
+    if (de->IsTransition()) {
       if (from_transition) {
         continue;
       } else {
@@ -174,7 +174,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       }
 
       // Found a match if shape equals directed edge LL within tolerance
-      if (shape.at(index).ApproximatelyEqual(de_end_ll) && de->length() < length_comparison(length, true)) {
+      if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) && de->length() < length_comparison(length, true)) {
         // Update the elapsed time based on transition cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
             de, node_info, prev_edge_label).secs;
@@ -213,7 +213,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
 bool RouteMatcher::FormPath(
     const std::shared_ptr<DynamicCost>* mode_costing,
     const sif::TravelMode& mode, GraphReader& reader,
-    const std::vector<midgard::PointLL>& shape,
+    const std::vector<meili::Measurement>& shape,
     const std::vector<PathLocation>& correlated,
     std::vector<PathInfo>& path_infos) {
   // Form distances between shape points
@@ -221,7 +221,7 @@ bool RouteMatcher::FormPath(
   std::vector<float> distances;
   distances.push_back(0.0f);
   for (size_t i = 1; i < shape.size(); i++) {
-    float d = shape[i].Distance(shape[i-1]);
+    float d = shape[i].lnglat().Distance(shape[i-1].lnglat());
     distances.push_back(d);
     total_distance += d;
   }
@@ -269,7 +269,7 @@ bool RouteMatcher::FormPath(
       }
 
       // Check if shape is within tolerance at the end node
-      if (shape.at(index).ApproximatelyEqual(de_end_ll) && de_remaining_length < length_comparison(length, true)) {
+      if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) && de_remaining_length < length_comparison(length, true)) {
 
         // Update the elapsed time edge cost at begin edge
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs

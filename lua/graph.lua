@@ -289,6 +289,20 @@ hazmat = {
 ["delivery"] = "true"
 }
 
+shoulder = {
+["yes"] = "true",
+["both"] = "true",
+["no"] = "false"
+}
+
+shoulder_right = {
+["right"] = "true"
+}
+
+shoulder_left = {
+["left"] = "true"
+}
+
 bicycle = {
 ["yes"] = "true",
 ["designated"] = "true",
@@ -344,9 +358,14 @@ shared = {
 ["shared"] = 1
 }
 
+buffer = {
+["yes"] = 2
+}
+
 dedicated = {
 ["opposite_lane"] = 2,
-["lane"] = 2
+["lane"] = 2,
+["buffered_lane"] = 2
 }
 
 separated = {
@@ -823,9 +842,6 @@ function filter_tags_generic(kv)
 
   if kv["bike_backward"] == "true" then
     oneway_bike = oneway[kv["oneway:bicycle"]]
-    if (oneway_bike == "false" and kv["bicycle:backward"] == "yes") then
-      oneway_bike = "true"
-    end
   end
 
   if kv["oneway:bus"] == nil and kv["oneway:psv"] ~= nil then
@@ -844,7 +860,7 @@ function filter_tags_generic(kv)
     oneway_bus = oneway[kv["oneway:bus"]]
     if (oneway_bus == "false" and kv["bus:backward"] == "yes") then
       oneway_bus = "true"
-    end  
+    end
   end
 
   local oneway_reverse = kv["oneway"]
@@ -882,7 +898,7 @@ function filter_tags_generic(kv)
     kv["emergency_backward"] = kv["emergency_forward"]
 
     if (kv["bike_backward"] == "false" and kv["oneway:bicycle"] ~= "-1" and 
-       (kv["oneway:bicycle"] == nil or oneway[kv["oneway:bicycle"]] == false)) then
+       (kv["oneway:bicycle"] == nil or oneway[kv["oneway:bicycle"]] == false or kv["oneway:bicycle"] == "no")) then
       kv["bike_backward"] = kv["bike_forward"]
     end
 
@@ -905,8 +921,11 @@ function filter_tags_generic(kv)
     kv["bus_backward"] = "true"
   end
 
+  kv["oneway_reverse"] = "false"
+
   --flip the onewayness 
   if oneway_reverse == "-1" then
+    kv["oneway_reverse"] = "true"
     local forwards = kv["auto_forward"]
     kv["auto_forward"] = kv["auto_backward"]
     kv["auto_backward"] = forwards
@@ -994,6 +1013,8 @@ function filter_tags_generic(kv)
   if kv["highway"] then
      if kv["highway"] == "track" then
         use = 3
+     elseif kv["highway"] == "living_street" then
+        use = 10
      elseif kv["highway"] == "cycleway" then
         use = 20
      elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
@@ -1031,17 +1052,100 @@ function filter_tags_generic(kv)
 
   kv["use"] = use
 
-  local cycle_lane = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or 0
+  local r_shoulder = shoulder[kv["shoulder"]] or shoulder[kv["shoulder:both"]] or nil
+  local l_shoulder = r_shoulder
 
-  if cycle_lane == 0 then
-    cycle_lane = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or 0
+  if r_shoulder == nil then
+    r_shoulder = shoulder[kv["shoulder:right"]] or shoulder_right[kv["shoulder"]] or "false"
+    l_shoulder = shoulder[kv["shoulder:left"]] or shoulder_left[kv["shoulder"]] or "false"
 
-    if cycle_lane == 0 then
-      cycle_lane = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or 0
+    --If the road is oneway and one shoulder is tagged but not the other, we set both to true so that when setting the
+    --shoulder in graphbuilder, driving on the right side vs the left side doesn't cause the edge to miss the shoulder tag
+    if oneway_norm == "true" and r_shoulder == "true" and l_shoulder == "false" then
+      l_shoulder = "true"
+    elseif oneway_norm == "true" and r_shoulder == "false" and l_shoulder == "true" then
+      r_shoulder = "true"
     end
   end
 
-  kv["cycle_lane"] = cycle_lane
+  kv["shoulder_right"] = r_shoulder
+  kv["shoulder_left"] = l_shoulder
+
+
+  local cycle_lane_right_opposite = "false"
+  local cycle_lane_left_opposite = "false"
+
+  local cycle_lane_right = 0
+  local cycle_lane_left = 0
+
+  --We have special use cases for cycle lanes when on a cycleway, footway, or path
+  if (use == 20 or use == 25 or use == 27) and
+     (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
+    if kv["pedestrian"] == "false" then
+      cycle_lane_right = 3 --separated
+    elseif kv["segregated"] == "yes" then
+      cycle_lane_right = 2 --dedicated
+    elseif kv["segregated"] == "no" then
+      cycle_lane_right = 1 --shared
+    elseif use == 20 then
+      cycle_lane_right = 2 --If no segregated tag but it is tagged as a cycleway then we assume separated lanes
+    else
+      cycle_lane_right = 1 --If no segregated tag and it's tagged as a footway or path then we assume shared lanes
+    end
+    cycle_lane_left = cycle_lane_right
+  else
+    --Set flags if any of the lanes are marked "opposite" (contraflow)
+    cycle_lane_right_opposite = bike_reverse[kv["cycleway"]] or "false"
+    cycle_lane_left_opposite = cycle_lane_right_opposite
+
+    if cycle_lane_right_opposite == "false" then
+      cycle_lane_right_opposite = bike_reverse[kv["cycleway:right"]] or "false"
+      cycle_lane_left_opposite = bike_reverse[kv["cycleway:left"]] or "false"
+    end
+
+    --Figure out which side of the road has what cyclelane
+    cycle_lane_right = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or buffer[kv["cycleway:both:buffer"]] or 0
+    cycle_lane_left = cycle_lane_right
+
+    if cycle_lane_right == 0 then
+      cycle_lane_right = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or buffer[kv["cycleway:right:buffer"]] or 0
+      cycle_lane_left = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or buffer[kv["cycleway:left:buffer"]] or 0
+    end
+
+    --If we have the oneway:bicycle=no tag and there are not "opposite_lane/opposite_track" tags then there are certain situations where
+    --the cyclelane is considered a two-way. (Based off of some examples on wiki.openstreetmap.org/wiki/Bicycle)
+    if kv["oneway:bicycle"] == "no" and cycle_lane_right_opposite == "false" and cycle_lane_left_opposite == "false" then
+      if cycle_lane_right == 2 or cycle_lane_right == 3 then
+        --Example M1 or M2d but on the right side
+        if oneway_norm == "true" then
+          cycle_lane_left = cycle_lane_right
+          cycle_lane_left_opposite = "true"
+
+        --Example L1b
+        elseif cycle_lane_left == 0 then
+          cycle_lane_left = cycle_lane_right
+        end
+
+      elseif cycle_lane_left == 2 or cycle_lane_left == 3 then
+        --Example M2d
+        if oneway_norm == "true" then
+          cycle_lane_right = cycle_lane_left
+          cycle_lane_right_opposite = "true"
+
+        --Example L1b but on the left side
+        elseif cycle_lane_right == 0 then
+          cycle_lane_right = cycle_lane_left
+        end
+      end
+    end
+  end
+
+  kv["cycle_lane_right"] = cycle_lane_right
+  kv["cycle_lane_left"] = cycle_lane_left
+
+  kv["cycle_lane_right_opposite"] = cycle_lane_right_opposite
+  kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
+
 
   if kv["highway"] and string.find(kv["highway"], "_link") then --*_link 
      kv["link"] = "true"  --do we need to add more?  turnlane?

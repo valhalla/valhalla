@@ -460,7 +460,7 @@ uint32_t PedestrianCost::GetMaxTransferDistanceMM() {
   return transit_transfer_max_distance_;
 }
 
-// This method overrides the factor for this mode.  The higher the value
+// This method overrides the factor for this mode.  The lower the value
 // the more the mode is favored.
 float PedestrianCost::GetModeFactor() {
   return mode_factor_;

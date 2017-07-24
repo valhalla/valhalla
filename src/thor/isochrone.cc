@@ -41,7 +41,7 @@ namespace valhalla {
 namespace thor {
 
 constexpr uint32_t kBucketCount = 20000;
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
 Isochrone::Isochrone()
@@ -60,7 +60,12 @@ Isochrone::~Isochrone() {
 // Clear the temporary information generated during path construction.
 void Isochrone::Clear() {
   // Clear the edge labels, edge status flags, and adjacency list
+  // TODO - clear only the edge label set that was used?
   edgelabels_.clear();
+  bdedgelabels_.clear();
+  mmedgelabels_.clear();
+  bdedgelabels_.clear();
+  mmedgelabels_.clear();
   adjacencylist_.reset();
   edgestatus_.reset();
 }
@@ -155,6 +160,36 @@ void Isochrone::Initialize(const uint32_t bucketsize) {
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) {
     return edgelabels_[label].sortcost();
+  };
+
+  float range = kBucketCount * bucketsize;
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
+  edgestatus_.reset(new EdgeStatus());
+}
+
+// Initialize - create adjacency list, edgestatus support, and reserve
+// edgelabels
+void Isochrone::InitializeReverse(const uint32_t bucketsize) {
+  bdedgelabels_.reserve(kInitialEdgeLabelCount);
+
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) {
+    return bdedgelabels_[label].sortcost();
+  };
+
+  float range = kBucketCount * bucketsize;
+  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
+  edgestatus_.reset(new EdgeStatus());
+}
+
+// Initialize - create adjacency list, edgestatus support, and reserve
+// edgelabels
+void Isochrone::InitializeMultiModal(const uint32_t bucketsize) {
+  mmedgelabels_.reserve(kInitialEdgeLabelCount);
+
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) {
+    return mmedgelabels_[label].sortcost();
   };
 
   float range = kBucketCount * bucketsize;
@@ -298,7 +333,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
 
 // Expand from a node in reverse direction.
 void Isochrone::ExpandReverse(GraphReader& graphreader,
-         const GraphId& node, const EdgeLabel& pred, const uint32_t pred_idx,
+         const GraphId& node, const BDEdgeLabel& pred, const uint32_t pred_idx,
          const DirectedEdge* opp_pred_edge, const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -377,20 +412,20 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (edgestatus.set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[edgestatus.index()];
+      BDEdgeLabel& lab = bdedgelabels_[edgestatus.index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(edgestatus.index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, tc);
       }
       continue;
     }
 
     // Add edge label, add to the adjacency list and set edge status
-    uint32_t idx = edgelabels_.size();
+    uint32_t idx = bdedgelabels_.size();
     adjacencylist_->add(idx, newcost.cost);
     edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
-    edgelabels_.emplace_back(pred_idx, edgeid, oppedge,
+    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge,
                    directededge, newcost, newcost.cost, 0.0f,
                    mode_, tc, false);
   }
@@ -410,7 +445,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
 
   // Initialize and create the isotile
   auto max_seconds = max_minutes * 60;
-  Initialize(costing_->UnitSize());
+  InitializeReverse(costing_->UnitSize());
   ConstructIsoTile(false, max_minutes, dest_locations);
 
   // Set the origin locations
@@ -428,7 +463,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
     }
 
     // Copy the EdgeLabel for use in costing and settle the edge.
-    EdgeLabel pred = edgelabels_[predindex];
+    BDEdgeLabel pred = bdedgelabels_[predindex];
     edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Get the opposing predecessor directed edge. Need to make sure we get
@@ -474,7 +509,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
   // Initialize and create the isotile
   auto max_seconds = max_minutes * 60;
-  Initialize(costing->UnitSize());
+  InitializeMultiModal(costing->UnitSize());
   ConstructIsoTile(true, max_minutes, origin_locations);
 
   // Set the origin locations.
@@ -511,7 +546,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     }
 
     // Copy the EdgeLabel for use in costing and settle the edge.
-    EdgeLabel pred = edgelabels_[predindex];
+    MMEdgeLabel pred = mmedgelabels_[predindex];
     edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Skip edges with large penalties (e.g. ferries?)
@@ -620,11 +655,11 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
       // Handle transition edges. Add to adjacency list using predecessor
       // information.
-      if (directededge->trans_up() || directededge->trans_down()) {
-        uint32_t idx = edgelabels_.size();
+      if (directededge->IsTransition()) {
+        uint32_t idx = mmedgelabels_.size();
         adjacencylist_->add(idx, pred.sortcost());
         edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
-        edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
+        mmedgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         continue;
       }
 
@@ -719,7 +754,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
         }
 
         Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge);
-        c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeWeight();
+        c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
         newcost += c;
 
         // Add to walking distance
@@ -771,7 +806,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
       if (edgestatus.set() == EdgeSet::kTemporary) {
-        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+        MMEdgeLabel& lab = mmedgelabels_[edgestatus.index()];
         if (newcost.cost < lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
           adjacencylist_->decrease(edgestatus.index(), newsortcost);
@@ -782,10 +817,10 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       }
 
       // Add edge label, add to the adjacency list and set edge status
-      uint32_t idx = edgelabels_.size();
+      uint32_t idx = mmedgelabels_.size();
       adjacencylist_->add(idx, newcost.cost);
       edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
-      edgelabels_.emplace_back(predindex, edgeid, directededge,
+      mmedgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, mode_, walking_distance,
                     tripid, prior_stop, blockid, operator_id, has_transit);
     }
@@ -985,10 +1020,10 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list. Set the predecessor edge index
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
-      uint32_t idx = edgelabels_.size();
+      uint32_t idx = bdedgelabels_.size();
       adjacencylist_->add(idx, cost.cost);
       edgestatus_->Set(opp_edge_id, EdgeSet::kTemporary, idx);
-      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
+      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
                   opp_dir_edge, cost, cost.cost, 0.0f, mode_, c, false);
     }
   }

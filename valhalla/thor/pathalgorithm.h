@@ -70,6 +70,31 @@ class PathAlgorithm {
 
  protected:
   const std::function<void()>* interrupt;
+
+  /**
+   * Check for path completion along the same edge. Edge ID in question
+   * is along both an origin and destination and origin shows up at the
+   * beginning of the edge while the destination shows up at the end of
+   * the edge.
+   * @param  edgeid       Edge id.
+   * @param  origin       Origin path location information.
+   * @param  destination  Destination path location information.
+   */
+  bool IsTrivial(const baldr::GraphId& edgeid,
+                 const baldr::PathLocation& origin,
+                 const baldr::PathLocation& destination) const {
+    for (const auto& destination_edge : destination.edges) {
+      if (destination_edge.id == edgeid) {
+        for (const auto& origin_edge : origin.edges) {
+          if (origin_edge.id == edgeid &&
+              origin_edge.dist <= destination_edge.dist) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
 };
 
 }

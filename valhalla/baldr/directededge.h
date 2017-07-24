@@ -348,7 +348,8 @@ class DirectedEdge {
   void set_opp_index(const uint32_t opp_index);
 
   /**
-   * Get the cycle lane type along this edge.
+   * Get the cycle lane type along this edge. If the edge's use is cycleway, footway or path,
+   * then cyclelane holds information based on how separated cyclists are from pedestrians
    * @returns   Returns the type (if any) of bicycle lane along this edge.
    */
   CycleLane cyclelane() const  {
@@ -357,6 +358,8 @@ class DirectedEdge {
 
   /**
    * Sets the type of cycle lane (if any) present on this edge.
+   * If edge use is cycleway, footway or path, then cyclelane should represent
+   * segregation from pedestrians
    * @param  cyclelane   Type of cycle lane.
    */
   void set_cyclelane(const CycleLane cyclelane);
@@ -662,6 +665,48 @@ class DirectedEdge {
    * @param  part_of  true if the edge is part of a complex restriction.
    */
   void set_part_of_complex_restriction(const bool part_of);
+
+  /**
+   * Get if edge has a shoulder
+   * @return  Returns if edge has a shoulder
+   */
+  bool shoulder () const {
+    return shoulder_;
+  }
+
+  /**
+   * Set if edge has a shoulder
+   * @param  shoulder  True if edge has shoulder
+   */
+  void set_shoulder (const bool shoulder);
+
+  /**
+   * Get if cyclists should dismount their bikes along this edge
+   * @return  Returns true if edge is a dismount edge, false if it is not.
+   */
+  bool dismount () const {
+    return dismount_;
+  }
+
+  /**
+   * Set if cyclists should dismount their bikes along this edge
+   * @param  dismount  true if the edge is a dismount edge, false if not.
+   */
+  void set_dismount (const bool dismount);
+
+  /**
+   * Get if a sidepath for bicycling should be preffered instead of this edge
+   * @return  Returns if a sidepath should be preffered for cycling
+   */
+  bool use_sidepath () const {
+    return use_sidepath_;
+  }
+
+  /**
+   * Set if a sidepath for bicycling should be preffered instead of this edge
+   * @param  use_sidepath  true if sidepath should be preffered for cycling over this edge
+   */
+  void set_use_sidepath (const bool use_sidepath);
 
   /**
    * Get the density along the edges.
@@ -1022,7 +1067,10 @@ class DirectedEdge {
   uint64_t reverseaccess_  : 12; // Access (bit mask) in reverse direction
   uint64_t classification_ : 3;  // Classification/importance of the road/path
   uint64_t surface_        : 3;  // representation of smoothness
-  uint64_t spare2_         : 10;
+  uint64_t shoulder_       : 1;  // Does the edge have a shoulder?
+  uint64_t spare2_         : 7;
+  uint64_t use_sidepath_   : 1;  // Is there a cycling path to the side that should be preffered?
+  uint64_t dismount_       : 1;  // Do you need to dismount when biking on this edge?
   uint64_t density_        : 4;  // Density along the edge
   uint64_t speed_limit_    : 8;  // Speed limit (kph)
   uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed

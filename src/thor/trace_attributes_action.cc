@@ -1,8 +1,6 @@
-#include "thor/worker.h"
-
 #include <cstdint>
 #include <algorithm>
-#include <utility>
+#include <tuple>
 #include <string>
 #include <vector>
 
@@ -12,9 +10,9 @@
 #include "baldr/json.h"
 #include "baldr/graphconstants.h"
 #include "baldr/directededge.h"
+#include "baldr/edge_elevation.h"
 #include "midgard/logging.h"
 #include "midgard/constants.h"
-#include "baldr/edge_elevation.h"
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 #include "proto/tripdirections.pb.h"
@@ -22,6 +20,7 @@
 #include "exception.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
+#include "thor/worker.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -31,11 +30,29 @@ using namespace valhalla::thor;
 
 namespace {
 
-  json::MapPtr serialize(const AttributesController& controller,
-      const valhalla::odin::TripPath& trip_path,
-      const boost::optional<std::string>& id,
-      const DirectionsOptions& directions_options,
-      const std::vector<thor::MatchResult>& match_results) {
+  json::ArrayPtr serialize_admins(const TripPath& trip_path) {
+    auto admin_array = json::array({});
+    for (const auto& admin : trip_path.admin()) {
+      auto admin_map = json::map({});
+      if (admin.has_country_code())
+        admin_map->emplace("country_code", admin.country_code());
+      if (admin.has_country_text())
+        admin_map->emplace("country_text", admin.country_text());
+      if (admin.has_state_code())
+        admin_map->emplace("state_code", admin.state_code());
+      if (admin.has_state_text())
+        admin_map->emplace("state_text", admin.state_text());
+
+      admin_array->push_back(admin_map);
+    }
+
+    return admin_array;
+  }
+
+  json::ArrayPtr serialize_edges(const AttributesController& controller,
+      const DirectionsOptions& directions_options, const TripPath& trip_path) {
+    json::ArrayPtr edge_array = json::array({});
+
     // Length and speed default to kilometers
     double scale = 1;
     if (directions_options.has_units()
@@ -44,7 +61,6 @@ namespace {
     }
 
     // Loop over edges to add attributes
-    json::ArrayPtr edge_array = json::array({});
     for (int i = 1; i < trip_path.node().size(); i++) {
 
       if (trip_path.node(i-1).has_edge()) {
@@ -122,7 +138,7 @@ namespace {
           edge_map->emplace("unpaved", static_cast<bool>(edge.unpaved()));
         if (edge.has_toll())
             edge_map->emplace("toll", static_cast<bool>(edge.toll()));
-       if (edge.has_use())
+        if (edge.has_use())
           edge_map->emplace("use", to_string(static_cast<baldr::Use>(edge.use())));
         if (edge.has_traversability())
           edge_map->emplace("traversability", to_string(edge.traversability()));
@@ -269,95 +285,111 @@ namespace {
         edge_array->emplace_back(edge_map);
       }
     }
+    return edge_array;
+  }
 
-    // Add edge array
-    auto json = json::map({
-      {"edges", edge_array}
-    });
+  json::ArrayPtr serialize_matched_points(const AttributesController& controller,
+      const std::vector<thor::MatchResult>& match_results) {
+    auto match_points_array = json::array({});
+    for (const auto& match_result : match_results) {
+      auto match_points_map = json::map({});
 
-    // Add result id, if supplied
-    if (id)
-      json->emplace("id", *id);
-
-    // Add shape
-    if (trip_path.has_shape())
-      json->emplace("shape", trip_path.shape());
-
-    // Add matched points, if requested
-    if (controller.category_attribute_enabled(kMatchedCategory)
-        && !match_results.empty()) {
-      auto match_points_array = json::array({});
-      for (const auto& match_result : match_results) {
-        auto match_points_map = json::map({});
-
-        // Process matched point
-        if (controller.attributes.at(kMatchedPoint)) {
-          match_points_map->emplace("lon", json::fp_t{match_result.lnglat.first,6});
-          match_points_map->emplace("lat", json::fp_t{match_result.lnglat.second,6});
-        }
-
-        // Process matched type
-        if (controller.attributes.at(kMatchedType)) {
-          switch (match_result.type) {
-            case thor::MatchResult::Type::kMatched:
-              match_points_map->emplace("type", std::string("matched"));
-              break;
-            case thor::MatchResult::Type::kInterpolated:
-              match_points_map->emplace("type", std::string("interpolated"));
-              break;
-            default:
-              match_points_map->emplace("type", std::string("unmatched"));
-              break;
-          }
-        }
-
-        // Process matched point edge index
-        if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex())
-          match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
-
-        // Process matched point begin route discontinuity
-        if (controller.attributes.at(kMatchedBeginRouteDiscontinuity) && match_result.begin_route_discontinuity)
-          match_points_map->emplace("begin_route_discontinuity", static_cast<bool>(match_result.begin_route_discontinuity));
-
-        // Process matched point end route discontinuity
-        if (controller.attributes.at(kMatchedEndRouteDiscontinuity) && match_result.end_route_discontinuity)
-          match_points_map->emplace("end_route_discontinuity", static_cast<bool>(match_result.end_route_discontinuity));
-
-        // Process matched point distance along edge
-        if (controller.attributes.at(kMatchedDistanceAlongEdge) && (match_result.type != thor::MatchResult::Type::kUnmatched))
-          match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along,3});
-
-        // Process matched point distance from trace point
-        if (controller.attributes.at(kMatchedDistanceFromTracePoint) && (match_result.type != thor::MatchResult::Type::kUnmatched))
-          match_points_map->emplace("distance_from_trace_point", json::fp_t{match_result.distance_from,3});
-
-        match_points_array->push_back(match_points_map);
+      // Process matched point
+      if (controller.attributes.at(kMatchedPoint)) {
+        match_points_map->emplace("lon", json::fp_t{match_result.lnglat.first,6});
+        match_points_map->emplace("lat", json::fp_t{match_result.lnglat.second,6});
       }
-      json->emplace("matched_points", match_points_array);
+
+      // Process matched type
+      if (controller.attributes.at(kMatchedType)) {
+        switch (match_result.type) {
+          case thor::MatchResult::Type::kMatched:
+            match_points_map->emplace("type", std::string("matched"));
+            break;
+          case thor::MatchResult::Type::kInterpolated:
+            match_points_map->emplace("type", std::string("interpolated"));
+            break;
+          default:
+            match_points_map->emplace("type", std::string("unmatched"));
+            break;
+        }
+      }
+
+      // Process matched point edge index
+      if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex())
+        match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
+
+      // Process matched point begin route discontinuity
+      if (controller.attributes.at(kMatchedBeginRouteDiscontinuity) && match_result.begin_route_discontinuity)
+        match_points_map->emplace("begin_route_discontinuity", static_cast<bool>(match_result.begin_route_discontinuity));
+
+      // Process matched point end route discontinuity
+      if (controller.attributes.at(kMatchedEndRouteDiscontinuity) && match_result.end_route_discontinuity)
+        match_points_map->emplace("end_route_discontinuity", static_cast<bool>(match_result.end_route_discontinuity));
+
+      // Process matched point distance along edge
+      if (controller.attributes.at(kMatchedDistanceAlongEdge) && (match_result.type != thor::MatchResult::Type::kUnmatched))
+        match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along,3});
+
+      // Process matched point distance from trace point
+      if (controller.attributes.at(kMatchedDistanceFromTracePoint) && (match_result.type != thor::MatchResult::Type::kUnmatched))
+        match_points_map->emplace("distance_from_trace_point", json::fp_t{match_result.distance_from,3});
+
+      match_points_array->push_back(match_points_map);
     }
+    return match_points_array;
+  }
+
+  void append_trace_info(json::MapPtr json,
+      const AttributesController& controller,
+      const DirectionsOptions& directions_options,
+      const std::tuple<float, std::vector<thor::MatchResult>, TripPath>& map_match_result,
+      size_t total_map_match_result_count) {
+    // Set trip path and match results
+    const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
+    const auto& trip_path = std::get<kTripPathIndex>(map_match_result);
 
     // Add osm_changeset
     if (trip_path.has_osm_changeset())
       json->emplace("osm_changeset", trip_path.osm_changeset());
 
+    // Add shape
+    if (trip_path.has_shape())
+      json->emplace("shape", trip_path.shape());
+
+    // Add confidence_score, if requested and there is more than one match
+    if (controller.attributes.at(kConfidenceScore)
+        && (total_map_match_result_count > 1)) {
+      json->emplace("confidence_score",
+          json::fp_t { std::get<kConfidenceScoreIndex>(map_match_result), 3 });
+    }
+
     // Add admins list
     if (trip_path.admin_size() > 0) {
-      auto admin_array = json::array({});
-      for (const auto& admin : trip_path.admin()) {
-        auto admin_map = json::map({});
-        if (admin.has_country_code())
-          admin_map->emplace("country_code", admin.country_code());
-        if (admin.has_country_text())
-          admin_map->emplace("country_text", admin.country_text());
-        if (admin.has_state_code())
-          admin_map->emplace("state_code", admin.state_code());
-        if (admin.has_state_text())
-          admin_map->emplace("state_text", admin.state_text());
-
-        admin_array->push_back(admin_map);
-      }
-      json->emplace("admins", admin_array);
+      json->emplace("admins", serialize_admins(trip_path));
     }
+
+    // Add edges
+    json->emplace("edges", serialize_edges(controller, directions_options, trip_path));
+
+    // Add matched points, if requested
+    if (controller.category_attribute_enabled(kMatchedCategory)
+        && !match_results.empty()) {
+      json->emplace("matched_points", serialize_matched_points(controller, match_results));
+    }
+  }
+
+  json::MapPtr serialize(const AttributesController& controller,
+      const boost::optional<std::string>& id,
+      const DirectionsOptions& directions_options,
+      std::vector<std::tuple<float, std::vector<thor::MatchResult>, TripPath>>& map_match_results) {
+
+    // Create json map to return
+    auto json = json::map({});
+
+    // Add result id, if supplied
+    if (id)
+      json->emplace("id", *id);
 
     // Add units, if specified
     if (directions_options.has_units()) {
@@ -366,9 +398,36 @@ namespace {
           ? "kilometers" : "miles"));
     }
 
+    // Loop over all results to process the best path
+    // and the alternate paths (if alternates exist)
+    bool best_path = true;
+    size_t total_map_match_result_count = map_match_results.size();
+    auto alt_paths_array = json::array({});
+    for (const auto& map_match_result : map_match_results) {
+      if (best_path) {
+        // Append the best path trace info
+        append_trace_info(json, controller, directions_options,
+            map_match_result, total_map_match_result_count);
+
+        // Only add alternate paths array if needed
+        if (total_map_match_result_count > 1) {
+          // Update so we process alternate paths
+          best_path = false;
+
+          // Add an altenrate_paths array place holder
+          json->emplace("alternate_paths", alt_paths_array);
+
+        }
+      } else {
+        // Append alternate path trace info to alternate path array
+        auto alt_path_json = json::map({});
+        append_trace_info(alt_path_json, controller, directions_options,
+            map_match_result, total_map_match_result_count);
+        alt_paths_array->push_back(alt_path_json);
+      }
+    }
     return json;
   }
-
 }
 
 namespace valhalla {
@@ -403,9 +462,9 @@ json::MapPtr thor_worker_t::trace_attributes(
 
   // Parse request
   parse_locations(request);
-  parse_shape(request);
   parse_costing(request);
   parse_trace_config(request);
+  parse_measurements(request);
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
    * prior route run against the Valhalla road network.  Knowing that the input is from
@@ -413,8 +472,7 @@ json::MapPtr thor_worker_t::trace_attributes(
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
   odin::TripPath trip_path;
-  std::vector<thor::MatchResult> match_results;
-  std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
+  std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
@@ -429,6 +487,7 @@ json::MapPtr thor_worker_t::trace_attributes(
           trip_path = route_match(controller);
           if (trip_path.node().size() == 0)
             throw std::exception{};
+          map_match_results.emplace_back(1.0f, std::vector<thor::MatchResult>{}, trip_path);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{443, shape_match->first + " algorithm failed to find exact route match.  Try using shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
         }
@@ -438,9 +497,7 @@ json::MapPtr thor_worker_t::trace_attributes(
       case MAP_SNAP:
         try {
           uint32_t best_paths = request.get<uint32_t>("best_paths", 1);
-          trip_match = map_match(controller, true, best_paths);
-          trip_path = std::move(trip_match.first);
-          match_results = std::move(trip_match.second);
+          map_match_results = map_match(controller, true, best_paths);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
@@ -453,9 +510,7 @@ json::MapPtr thor_worker_t::trace_attributes(
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_match = map_match(controller, true);
-            trip_path = std::move(trip_match.first);
-            match_results = std::move(trip_match.second);
+            map_match_results = map_match(controller, true);
           } catch (const std::exception& e) {
             throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
@@ -473,9 +528,11 @@ json::MapPtr thor_worker_t::trace_attributes(
 
   //serialize output to Thor
   json::MapPtr json;
-  if (trip_path.node().size() > 0)
-    json = serialize(controller, trip_path, id, directions_options, match_results);
-  else throw valhalla_exception_t{442};
+  if (!map_match_results.empty()
+      && (std::get<kTripPathIndex>(map_match_results.at(0)).node().size() > 0))
+    json = serialize(controller, id, directions_options, map_match_results);
+  else
+    throw valhalla_exception_t { 442 };
 
   return json;
 }
