@@ -289,20 +289,18 @@ MapMatcher::OfflineMatch(
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated_measurements;
 
   // Always match the first measurement
-  auto measurement = begin;
-  auto time = AppendMeasurement(*measurement);
-  auto latest_match_measurement = measurement;
-  for (measurement++; std::next(measurement) != end; measurement++) {
+  auto time = AppendMeasurement(*begin);
+  auto latest_match_measurement = begin;
+  for (auto measurement = std::next(begin); measurement != end; measurement++) {
     const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
-    if (sq_interpolation_distance < sq_distance) {
+    // Always match the last measurement
+    if (sq_interpolation_distance < sq_distance || std::next(measurement) == end) {
       time = AppendMeasurement(*measurement);
       latest_match_measurement = measurement;
     } else {
       interpolated_measurements[time].push_back(*measurement);
     }
   }
-  // Always match the last measurement
-  time = AppendMeasurement(*measurement);
 
   // Search path and put the states into an array reversely
   std::vector<StateId> stateids;
