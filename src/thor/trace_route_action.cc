@@ -62,9 +62,10 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
 
   // Parse request
   parse_locations(request);
-  parse_shape(request);
   parse_costing(request);
   parse_trace_config(request);
+  parse_measurements(request);
+
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
    * prior route run against the Valhalla road network.  Knowing that the input is from
@@ -135,7 +136,7 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
 odin::TripPath thor_worker_t::route_match(const AttributesController& controller) {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
-  if (RouteMatcher::FormPath(mode_costing, mode, reader, shape, correlated, path_infos)) {
+  if (RouteMatcher::FormPath(mode_costing, mode, reader, trace, correlated, path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
                                              path_infos, correlated.front(),
@@ -156,27 +157,12 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
   std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
 
   // Call Meili for map matching to get a collection of pathLocation Edges
-  // Create a matcher
-  std::shared_ptr<meili::MapMatcher> matcher;
-  try {
-    matcher.reset(matcher_factory.Create(trace_config));
-  } catch (const std::invalid_argument& ex) {
-    throw std::runtime_error(std::string(ex.what()));
-  }
-
   matcher->set_interrupt(interrupt);
-  std::vector<meili::Measurement> sequence;
-  for (const auto& coord : shape) {
-    sequence.emplace_back(coord,
-                          matcher->config().get<float>("gps_accuracy"),
-                          matcher->config().get<float>("search_radius"));
-  }
-
   // Create the vector of matched path results
   std::vector<std::pair<float, std::vector<meili::MatchResult>>> offline_results;
-  if (sequence.size() > 0) {
+  if (trace.size() > 0) {
     // TODO this call is temp until MapMatcher::OfflineMatch is updated
-    offline_results = OfflineMatch(matcher, sequence, best_paths);
+    offline_results = OfflineMatch(matcher, trace, best_paths);
     // TODO rm the above line and uncomment the line below when MapMatcher::OfflineMatch is updated
     //offline_results = matcher->OfflineMatch(sequence, best_paths);
   }
@@ -317,7 +303,7 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
 
       // Print trace points
       int index = 0;
-      for (const auto& trace_point : shape) {
+      for (const auto& trace_point : trace) {
         printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"#abd9e9\",\"marker-size\":\"small\",\"trace_point_index\":%d}},\n", trace_point.first, trace_point.second, index++);
       }
 

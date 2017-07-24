@@ -89,14 +89,14 @@ class thor_worker_t : public service_worker_t{
       const boost::optional<int> &date_time_type);
 
   void parse_locations(const boost::property_tree::ptree& request);
-  void parse_shape(const boost::property_tree::ptree& request);
+  void parse_measurements(const boost::property_tree::ptree& request);
   void parse_trace_config(const boost::property_tree::ptree& request);
   std::string parse_costing(const boost::property_tree::ptree& request);
   void filter_attributes(const boost::property_tree::ptree& request, AttributesController& controller);
 
   valhalla::sif::TravelMode mode;
   std::vector<baldr::Location> locations;
-  std::vector<midgard::PointLL> shape;
+  std::vector<meili::Measurement> trace;
   std::vector<baldr::PathLocation> correlated;
   std::vector<baldr::PathLocation> correlated_s;
   std::vector<baldr::PathLocation> correlated_t;
@@ -107,6 +107,7 @@ class thor_worker_t : public service_worker_t{
   BidirectionalAStar bidir_astar;
   MultiModalPathAlgorithm multi_modal_astar;
   Isochrone isochrone_gen;
+  std::shared_ptr<meili::MapMatcher> matcher;
   float long_request;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
