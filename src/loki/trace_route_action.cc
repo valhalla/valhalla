@@ -176,8 +176,10 @@ namespace valhalla {
 
     void loki_worker_t::locations_from_shape(rapidjson::Document& request) {
       std::vector<Location> locations{shape.front(), shape.back()};
-      locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
-      locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
+      locations.front().node_snap_tolerance_ = 0.f;
+      locations.front().radius_ = 10;
+      locations.back().node_snap_tolerance_ = 0.f;
+      locations.back().radius_ = 10;
 
       // Add first and last locations to request
       auto& allocator = request.GetAllocator();

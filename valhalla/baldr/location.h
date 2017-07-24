@@ -97,6 +97,7 @@ struct Location {
   boost::optional<std::string> date_time_;
   boost::optional<int> heading_;
   boost::optional<int> heading_tolerance_;
+  boost::optional<float> node_snap_tolerance_;
   boost::optional<uint64_t> way_id_;
 
   //try to find candidates who are reachable from this many or more nodes
