@@ -148,7 +148,7 @@ MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
 {
   // Get some basic info about difference between the two measurements
   const auto& left = state(lhs);
-  const right = state(rhs);
+  const auto& right = state(rhs);
   const auto& left_measurement = measurement(left);
   const auto& right_measurement = measurement(right);
   const auto gc_dist = GreatCircleDistance(left_measurement, right_measurement);
