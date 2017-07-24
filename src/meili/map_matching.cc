@@ -23,16 +23,8 @@ inline float ClockDistance(const valhalla::meili::Measurement& left,
 namespace valhalla {
 namespace meili {
 
-State::State(const StateId id, const Time time, const baldr::PathLocation& candidate)
-    : id_(id),
-      time_(time),
-      candidate_(candidate),
-      labelset_(nullptr),
-      label_idx_() {}
-
-
 void
-State::route(const std::vector<const State*>& states,
+State::route(const std::vector<State>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
              float max_route_time,
@@ -47,7 +39,7 @@ State::route(const std::vector<const State*>& states,
   locations.reserve(1 + states.size());
   locations.push_back(candidate_);
   for (const auto state : states) {
-    locations.push_back(state->candidate());
+    locations.push_back(state.candidate());
   }
 
   // Route
@@ -64,7 +56,7 @@ State::route(const std::vector<const State*>& states,
   for (const auto state : states) {
     const auto it = results.find(dest);
     if (it != results.end()) {
-      label_idx_[state->id()] = it->second;
+      label_idx_[state.stateid()] = it->second;
     }
     dest++;
   }
@@ -74,7 +66,7 @@ State::route(const std::vector<const State*>& states,
 const Label*
 State::last_label(const State& state) const
 {
-  const auto it = label_idx_.find(state.id());
+  const auto it = label_idx_.find(state.stateid());
   if (it != label_idx_.end()) {
     return &labelset_->label(it->second);
   }
@@ -95,7 +87,7 @@ MapMatching::MapMatching(baldr::GraphReader& graphreader,
       mode_costing_(mode_costing),
       mode_(mode),
       measurements_(),
-      states_(),
+      columns_(),
       sigma_z_(sigma_z),
       inv_double_sq_sigma_z_(1.f / (sigma_z_ * sigma_z_ * 2.f)),
       beta_(beta),
@@ -147,14 +139,16 @@ void
 MapMatching::Clear()
 {
   measurements_.clear();
-  states_.clear();
-  ViterbiSearch<State>::Clear();
+  columns_.clear();
+  ViterbiSearch::Clear();
 }
 
 float
-MapMatching::TransitionCost(const State& left, const State& right) const
+MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
 {
   // Get some basic info about difference between the two measurements
+  const auto& left = state(lhs);
+  const auto& right = state(rhs);
   const auto& left_measurement = measurement(left);
   const auto& right_measurement = measurement(right);
   const auto gc_dist = GreatCircleDistance(left_measurement, right_measurement);
@@ -163,8 +157,8 @@ MapMatching::TransitionCost(const State& left, const State& right) const
   // If we need to actually compute the route
   if (!left.routed()) {
     std::shared_ptr<const sif::EdgeLabel> edgelabel;
-    const auto prev_stateid = predecessor(left.id());
-    if (prev_stateid != kInvalidStateId) {
+    const auto prev_stateid = Predecessor(lhs);
+    if (prev_stateid.IsValid()) {
       const auto& prev_state = state(prev_stateid);
       if (!prev_state.routed()) {
         // When ViterbiSearch calls this method, the left state is
@@ -183,11 +177,17 @@ MapMatching::TransitionCost(const State& left, const State& right) const
     }
     const midgard::DistanceApproximator approximator(measurement(right).lnglat());
 
+    // TODO: inefficient; should move State::route to MapMatching
+    std::vector<State> unreached_states;
+    for (const auto& stateid : unreached_states_[right.stateid().time()]) {
+      unreached_states.push_back(state(stateid));
+    }
+
     // NOTE TransitionCost is a mutable method and will change
     // cached routes of a state. We should be careful with it and
     // do not use it for purposes like getting transition cost of
     // two *arbitrary* states.
-    left.route(unreached_states_[right.time()], graphreader_,
+    left.route(unreached_states, graphreader_,
                std::min(gc_dist * max_route_distance_factor_, breakage_distance_),
                clk_dist * max_route_time_factor_,
                approximator, measurement(right).search_radius(),
@@ -207,8 +207,8 @@ MapMatching::TransitionCost(const State& left, const State& right) const
 
 
 inline float
-MapMatching::EmissionCost(const State& state) const
-{ return CalculateEmissionCost(state.candidate().edges.front().score); }
+MapMatching::EmissionCost(const StateId& stateid) const
+{ return CalculateEmissionCost(state(stateid).candidate().edges.front().score); }
 
 
 inline double

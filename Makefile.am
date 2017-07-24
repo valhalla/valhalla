@@ -200,6 +200,7 @@ nobase_include_HEADERS = \
 	valhalla/meili/map_matching.h \
 	valhalla/meili/priority_queue.h \
 	valhalla/meili/routing.h \
+	valhalla/meili/stateid.h \
 	valhalla/meili/viterbi_search.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
@@ -315,6 +316,7 @@ libvalhalla_la_SOURCES = \
 	src/sif/truckcost.cc \
 	src/sif/dynamiccost.cc \
 	src/meili/universal_cost.cc \
+	src/meili/viterbi_search.cc \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \

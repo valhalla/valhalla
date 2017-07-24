@@ -1,17 +1,15 @@
 #include <cmath>
-#include "midgard/distanceapproximator.h"
 
+#include "midgard/distanceapproximator.h"
 #include "meili/routing.h"
 #include "meili/geometry_helpers.h"
 #include "meili/match_route.h"
 #include "meili/map_matcher.h"
 
-
 namespace {
 
 using namespace valhalla;
 using namespace valhalla::meili;
-
 
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
@@ -43,6 +41,13 @@ struct Interpolation {
       mm.CalculateEmissionCost(sq_distance); }
 };
 
+inline MatchResult
+CreateMatchResult(const Measurement& measurement)
+{ return {measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), StateId()}; }
+
+inline MatchResult
+CreateMatchResult(const Measurement& measurement, const Interpolation& interp)
+{ return {interp.projected, std::sqrt(interp.sq_distance), interp.edgeid, interp.edge_distance, measurement.epoch_time(), StateId()}; }
 
 // Find the interpolation along the route where the transition cost +
 // emission cost is minimal
@@ -114,33 +119,36 @@ InterpolateMeasurement(const MapMatching& mapmatching,
 }
 
 
-// Interpolate measurements along the route from previous state to
-// current state, or along the route from current state to next state
+// Interpolate measurements along the route from state at current time
+// to state at next time
 std::vector<MatchResult>
 InterpolateMeasurements(const MapMatching& mapmatching,
-                        const MapMatching::state_iterator& previous_state,
-                        const MapMatching::state_iterator& state,
-                        const MapMatching::state_iterator& next_state,
+                        const StateId& stateid,
+                        const StateId& next_stateid,
                         const std::vector<Measurement>& interpolated_measurements)
 {
-  //nothing to do here
-  if (interpolated_measurements.empty())
+  // Nothing to do here
+  if (interpolated_measurements.empty()) {
     return {};
+  }
 
   //can't interpolate these because they don't happen between two valid states or
   //we weren't able to get a downstream route
   std::vector<MatchResult> results;
-  std::vector<EdgeSegment> route;
-  if (!state.IsValid() || !next_state.IsValid() ||
-    MergeRoute(route, *state, *next_state).empty()) {
-    for (const auto& measurement: interpolated_measurements)
-      results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
+  if (!stateid.IsValid() || !next_stateid.IsValid()) {
+    for (const auto& measurement: interpolated_measurements) {
+      results.push_back(CreateMatchResult(measurement));
+    }
     return results;
   }
 
+  std::vector<EdgeSegment> route;
+  // route is updated in-place
+  MergeRoute(route, mapmatching.state(stateid), mapmatching.state(next_stateid));
+
   //for each point that needs interpolated
   for (const auto& measurement: interpolated_measurements) {
-    const auto& match_measurement = mapmatching.measurement(state->time());
+    const auto& match_measurement = mapmatching.measurement(stateid.time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
     //interpolate this point along the route
@@ -158,78 +166,56 @@ InterpolateMeasurements(const MapMatching& mapmatching,
         route.erase(route.begin(), itr);
       }
       //keep the interpolated match result
-      results.emplace_back(MatchResult{interp.projected, std::sqrt(interp.sq_distance), interp.edgeid, interp.edge_distance, measurement.epoch_time(), kInvalidStateId});
+      results.push_back(CreateMatchResult(measurement, interp));
     }//couldnt interpolate this point
-    else
-      results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
+    else {
+      results.push_back(CreateMatchResult(measurement));
+    }
   }
 
   return results;
 }
 
-
-// Interplolate measurements grouped by previous match measurement
-// time
-std::unordered_map<Time, std::vector<MatchResult>>
-InterpolateTimedMeasurements(const MapMatching& mapmatching,
-                             const MapMatching::state_iterator& state_rbegin,
-                             const MapMatching::state_iterator& state_rend,
-                             const std::unordered_map<Time, std::vector<Measurement>>& interpolated_measurements,
-                             Time time)
-{
-  std::unordered_map<Time, std::vector<MatchResult>> resultmap;
-
-  for (auto previous_state = std::next(state_rbegin),
-                     state = state_rbegin,
-                next_state = MapMatching::state_iterator(nullptr);
-       state != state_rend;
-       next_state = state, state++, previous_state = std::next(state)) {
-
-    const auto it = interpolated_measurements.find(time);
-    if (it != interpolated_measurements.end()) {
-      if (state.IsValid()) {
-        const auto& results = InterpolateMeasurements(mapmatching, previous_state, state, next_state, it->second);
-        resultmap.emplace(time, results);
-      } else {
-        auto& results = resultmap[time];
-        for (const auto& measurement: it->second) {
-          results.push_back({measurement.lnglat(), 0.f, {}, -1.f, measurement.epoch_time(), kInvalidStateId});
-        }
-      }
-    }
-
-    time--;
-  }
-
-  return resultmap;
-}
-
-
 // Find the match result of a state, given its previous state and next
 // state
 MatchResult
-FindMatchResult(const MapMatching::state_iterator& previous_state,
-                const State& state, const Measurement& measurement,
-                const MapMatching::state_iterator& next_state)
+FindMatchResult(const MapMatching& mapmatching,
+                const std::vector<StateId>& stateids,
+                StateId::Time time)
 {
+  if (!(time < stateids.size())) {
+    throw std::runtime_error("reading stateid at time out of bounds");
+  }
+
+  const auto& prev_stateid = 0 < time ? stateids[time - 1] : StateId(),
+                   stateid = stateids[time],
+              next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
+  const auto& measurement = mapmatching.measurement(time);
+
+  if (!stateid.IsValid()) {
+    return CreateMatchResult(measurement);
+  }
+
+  const auto& state = mapmatching.state(stateid);
   baldr::GraphId edgeid;
 
   // Construct the route from previous state to current state, and
   // find out which edge it matches
-  if (previous_state.IsValid()) {
+  if (prev_stateid.IsValid()) {
+    const auto& prev_state = mapmatching.state(prev_stateid);
     // It must stay on the last edge of the route
-    const auto rbegin = previous_state->RouteBegin(state),
-                 rend = previous_state->RouteEnd();
+    const auto rbegin = prev_state.RouteBegin(state),
+                 rend = prev_state.RouteEnd();
     if (rbegin != rend) {
       edgeid = rbegin->edgeid;
     }
   }
 
   // Do the same from current state to next state
-  if (!edgeid.Is_Valid() && next_state.IsValid()) {
+  if (!edgeid.Is_Valid() && next_stateid.IsValid()) {
+    const auto& next_state = mapmatching.state(next_stateid);
     // It must stay on the first edge of the route
-    for (auto label = state.RouteBegin(*next_state);
-         label != state.RouteEnd(); label++) {
+    for (auto label = state.RouteBegin(next_state); label != state.RouteEnd(); label++) {
       if (label->edgeid.Is_Valid()) {
         edgeid = label->edgeid;
       }
@@ -237,72 +223,30 @@ FindMatchResult(const MapMatching::state_iterator& previous_state,
   }
 
   // If we get a valid edge and find it in the state that's good
-  for(const auto& edge : state.candidate().edges)
-    if(edge.id == edgeid)
-      return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), state.id()};
+  for(const auto& edge : state.candidate().edges) {
+    if (edge.id == edgeid) {
+      return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), stateid};
+    }
+  }
 
   // If we failed to get a valid edge or can't find it
   // At least we know which point it matches
   const auto& edge = state.candidate().edges.front();
-  return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), state.id()};
+  return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), stateid};
 }
 
 
 // Find the corresponding match results of a list of states
 std::vector<MatchResult>
-FindMatchResults(const MapMatching& mapmatching,
-                 const MapMatching::state_iterator& state_rbegin,
-                 const MapMatching::state_iterator& state_rend,
-                 Time time)
+FindMatchResults(const MapMatching& mapmatching, const std::vector<StateId>& stateids)
 {
-  if (state_rbegin == state_rend) {
-    return {};
-  }
-
   std::vector<MatchResult> results;
 
-  for (auto previous_state = std::next(state_rbegin),
-                     state = state_rbegin,
-                next_state = MapMatching::state_iterator(nullptr);
-       state != state_rend;
-       next_state = state, state++, previous_state = std::next(state)) {
-    const auto& measurement = mapmatching.measurement(time);
-    if (state.IsValid()) {
-      results.push_back(FindMatchResult(previous_state, *state, measurement, next_state));
-    } else {
-      results.emplace_back(MatchResult{measurement.lnglat(), 0.f, baldr::GraphId{}, -1.f, measurement.epoch_time(), kInvalidStateId});
-    }
-    time--;
+  for (StateId::Time time = 0; time < stateids.size(); time++) {
+    results.push_back(FindMatchResult(mapmatching, stateids, time));
   }
 
-  std::reverse(results.begin(), results.end());
   return results;
-}
-
-
-// Insert the interpolated results into the result list, and
-// return a new result list
-std::vector<MatchResult>
-MergeMatchResults(const std::vector<MatchResult>& results,
-                  const std::unordered_map<Time, std::vector<MatchResult>>& interpolated_results)
-{
-  std::vector<MatchResult> merged_results;
-
-  Time time = 0;
-  for (const auto& result: results) {
-    merged_results.push_back(result);
-
-    const auto it = interpolated_results.find(time);
-    if (it != interpolated_results.end()) {
-      for (const auto& result: it->second) {
-        merged_results.push_back(result);
-      }
-    }
-
-    time++;
-  }
-
-  return merged_results;
 }
 
 }
@@ -342,48 +286,72 @@ MapMatcher::OfflineMatch(
 
   const auto interpolation_distance = config_.get<float>("interpolation_distance"),
           sq_interpolation_distance = interpolation_distance * interpolation_distance;
-  std::unordered_map<Time, std::vector<Measurement>> interpolated_measurements;
+  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated_measurements;
 
   // Always match the first measurement
   auto time = AppendMeasurement(*begin);
   auto latest_match_measurement = begin;
-  std::size_t match_count = 1;
-
-  for (auto measurement = next(begin); measurement != end; measurement++) {
+  for (auto measurement = std::next(begin); measurement != end; measurement++) {
     const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
     // Always match the last measurement
     if (sq_interpolation_distance < sq_distance || std::next(measurement) == end) {
       time = AppendMeasurement(*measurement);
       latest_match_measurement = measurement;
-      match_count++;
     } else {
       interpolated_measurements[time].push_back(*measurement);
     }
   }
 
-  const auto state_rbegin = mapmatching_.SearchPath(time);
-  const auto state_rend = std::next(state_rbegin, match_count);
-  const auto& results = FindMatchResults(mapmatching_, state_rbegin, state_rend, time);
+  // Search path and put the states into an array reversely
+  std::vector<StateId> stateids;
+  std::copy(
+      mapmatching_.SearchPath(time),
+      mapmatching_.PathEnd(),
+      std::back_inserter(stateids));
+  std::reverse(stateids.begin(), stateids.end());
+
+  // Verify that stateids are in correct order
+  for (StateId::Time time = 0; time < stateids.size(); time++) {
+    if (!(!stateids[time].IsValid() || stateids[time].time() == time)) {
+      std::logic_error("got state with time " + std::to_string(stateids[time].time())
+                       + " at time " + std::to_string(time));
+    }
+  }
+
+  const auto& results = FindMatchResults(mapmatching_, stateids);
 
   // Done if no measurements to interpolate
   if (interpolated_measurements.empty()) {
     return results;
   }
 
-  // Find results for all interpolated measurements
-  const auto& interpolated_results = InterpolateTimedMeasurements(
-      mapmatching_,
-      state_rbegin,
-      state_rend,
-      interpolated_measurements,
-      time);
-
   // Insert the interpolated results into the result list
-  return MergeMatchResults(results, interpolated_results);
+  std::vector<MatchResult> merged_results;
+  for (StateId::Time time = 0; time < stateids.size(); time++) {
+    merged_results.push_back(results[time]);
+
+    const auto it = interpolated_measurements.find(time);
+    if (it == interpolated_measurements.end()) {
+      continue;
+    }
+
+    const auto& interpolated_results = InterpolateMeasurements(
+        mapmatching_,
+        stateids[time],
+        time + 1 < stateids.size() ? stateids[time + 1] : StateId(),
+        it->second);
+
+    std::copy(
+        interpolated_results.cbegin(),
+        interpolated_results.cend(),
+        std::back_inserter(merged_results));
+  }
+
+  return merged_results;
 }
 
 
-Time
+StateId::Time
 MapMatcher::AppendMeasurement(const Measurement& measurement)
 {
   // Test interrupt
