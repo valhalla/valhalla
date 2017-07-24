@@ -200,7 +200,6 @@ class LabelSet
   }
 
  private:
-  float max_cost_;
   std::shared_ptr<baldr::DoubleBucketQueue> queue_;
   std::unordered_map<baldr::GraphId, Status> node_status_;
   std::unordered_map<uint16_t, Status> dest_status_;
@@ -221,7 +220,8 @@ find_shortest_path(baldr::GraphReader& reader,
                    const float search_radius,
                    sif::cost_ptr_t costing,
                    std::shared_ptr<const sif::EdgeLabel> edgelabel,
-                   const float turn_cost_table[181]);
+                   const float turn_cost_table[181],
+                   const float max_dist, const float max_time);
 
 class RoutePathIterator:
       public std::iterator<std::forward_iterator_tag, const Label>

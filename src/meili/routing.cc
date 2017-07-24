@@ -19,8 +19,7 @@ LabelSet::LabelSet(const float max_cost, const float bucket_size) {
   const auto edgecost = [this](const uint32_t label) {
     return labels_[label].sortcost;
   };
-  max_cost_ = max_cost;
-  queue_.reset(new baldr::DoubleBucketQueue(0.0f, max_cost_, bucket_size, edgecost));
+  queue_.reset(new baldr::DoubleBucketQueue(0.0f, max_cost, bucket_size, edgecost));
 }
 
 bool LabelSet::put(const baldr::GraphId& nodeid, const baldr::GraphId& edgeid,
@@ -38,30 +37,28 @@ bool LabelSet::put(const baldr::GraphId& nodeid, const baldr::GraphId& edgeid,
   // Create a new label and push it to the queue
   if (it == node_status_.end()) {
     const uint32_t idx = labels_.size();
-    if (sortcost < max_cost_) {
-      queue_->add(idx, sortcost);
-      labels_.emplace_back(nodeid, edgeid,
-                         source, target,
-                         cost, turn_cost, sortcost,
-                         predecessor,
-                         edge, travelmode, edgelabel);
-      node_status_.emplace(nodeid, idx);
-      return true;
-    }
-  } else {
-    // Decrease cost of the existing label
-    const auto& status = it->second;
-    if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
-      // Update queue first since it uses the label cost within the decrease
-      // method to determine the current bucket.
-      queue_->decrease(status.label_idx, sortcost);
-      labels_[status.label_idx] = {nodeid, edgeid,
-                                   source, target,
-                                   cost, turn_cost, sortcost,
-                                   predecessor,
-                                   edge, travelmode, edgelabel};
-      return true;
-    }
+    queue_->add(idx, sortcost);
+    labels_.emplace_back(nodeid, edgeid,
+                       source, target,
+                       cost, turn_cost, sortcost,
+                       predecessor,
+                       edge, travelmode, edgelabel);
+    node_status_.emplace(nodeid, idx);
+    return true;
+  }
+
+  // Decrease cost of the existing label
+  const auto& status = it->second;
+  if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
+    // Update queue first since it uses the label cost within the decrease
+    // method to determine the current bucket.
+    queue_->decrease(status.label_idx, sortcost);
+    labels_[status.label_idx] = {nodeid, edgeid,
+                                 source, target,
+                                 cost, turn_cost, sortcost,
+                                 predecessor,
+                                 edge, travelmode, edgelabel};
+    return true;
   }
   return false;
 }
@@ -84,30 +81,28 @@ bool LabelSet::put(uint16_t dest,
   // Create a new label and push it to the queue
   if (it == dest_status_.end()) {
     const uint32_t idx = labels_.size();
-    if (sortcost < max_cost_) {
-      queue_->add(idx, sortcost);
-      labels_.emplace_back(dest, edgeid,
-                         source, target,
-                         cost, turn_cost, sortcost,
-                         predecessor,
-                         edge, travelmode, edgelabel);
-      dest_status_.emplace(dest, idx);
-      return true;
-    }
-  } else {
-    // Decrease cost of the existing label
-    const auto& status = it->second;
-    if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
-      // Update queue first since it uses the label cost within the decrease
-      // method to determine the current bucket.
-      queue_->decrease(status.label_idx, sortcost);
-      labels_[status.label_idx] = {dest, edgeid,
-                                   source, target,
-                                   cost, turn_cost, sortcost,
-                                   predecessor,
-                                   edge, travelmode, edgelabel};
-      return true;
-    }
+    queue_->add(idx, sortcost);
+    labels_.emplace_back(dest, edgeid,
+                       source, target,
+                       cost, turn_cost, sortcost,
+                       predecessor,
+                       edge, travelmode, edgelabel);
+    dest_status_.emplace(dest, idx);
+    return true;
+  }
+
+  // Decrease cost of the existing label
+  const auto& status = it->second;
+  if (!status.permanent && sortcost < labels_[status.label_idx].sortcost) {
+    // Update queue first since it uses the label cost within the decrease
+    // method to determine the current bucket.
+    queue_->decrease(status.label_idx, sortcost);
+    labels_[status.label_idx] = {dest, edgeid,
+                                 source, target,
+                                 cost, turn_cost, sortcost,
+                                 predecessor,
+                                 edge, travelmode, edgelabel};
+    return true;
   }
   return false;
 }
@@ -350,7 +345,8 @@ find_shortest_path(baldr::GraphReader& reader,
                    const float search_radius,
                    sif::cost_ptr_t costing,
                    std::shared_ptr<const sif::EdgeLabel> edgelabel,
-                   const float turn_cost_table[181])
+                   const float turn_cost_table[181],
+                   const float max_dist, const float max_time)
 {
   sif::Cost label_cost;
   float label_turn_cost;
@@ -370,14 +366,11 @@ find_shortest_path(baldr::GraphReader& reader,
     return (d2 < search_rad2) ? 0.0f : sqrtf(d2) - search_radius;
   };
 
-  // Lambda method to expand along edges from this node. This method have to be
+  // Lambda method to expand along edges from this node. This method has to be
   // set-up to be called recursively (for transition edges) so we set up a
   // function reference.
   std::function<void(const baldr::GraphId&, const uint32_t, const bool)> expand;
-  expand = [&reader, &approximator, &pred_edgelabel, &labelset, &edge_dests,
-            &destinations, &search_radius, &search_rad2, &costing, &travelmode, &label_cost,
-            &label_turn_cost, &turn_cost_table, &heuristic, &expand]
-           (const baldr::GraphId& node, const uint32_t label_idx, const bool from_transition) {
+  expand = [&](const baldr::GraphId& node, const uint32_t label_idx, const bool from_transition) {
     // Get the node's info. The tile will be guaranteed to be nodeid's tile
     // in this block. Return if node is not found or is not allowed by costing
     const baldr::GraphTile* tile = reader.GetGraphTile(node);
@@ -437,9 +430,12 @@ find_shortest_path(baldr::GraphReader& reader,
               // to itself must be 0, so sortcost = cost
               sif::Cost cost(label_cost.cost + directededge->length() * edge.dist,
                              label_cost.secs + costing->EdgeCost(directededge).secs * edge.dist);
-              labelset->put(dest, edgeid, 0.f, edge.dist,
+              // We only add the labels if we are under the limits for distance and for time or time limit is 0
+              if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+                labelset->put(dest, edgeid, 0.f, edge.dist,
                            cost, turn_cost, cost.cost, label_idx,
                            directededge, travelmode, nullptr);
+              }
             }
           }
         }
@@ -451,13 +447,16 @@ find_shortest_path(baldr::GraphReader& reader,
       if (endtile != nullptr) {
         // Get cost - use EdgeCost to get time along the edge. Override
         // cost portion to be distance. Add heuristic to get sort cost.
-        const auto end_nodeinfo = endtile->node(directededge->endnode());
         sif::Cost cost(label_cost.cost + directededge->length(),
                        label_cost.secs + costing->EdgeCost(directededge).secs);
-        float sortcost = cost.cost + heuristic(end_nodeinfo->latlng());
-        labelset->put(directededge->endnode(), edgeid, 0.f, 1.f,
+        // We only add the labels if we are under the limits for distance and for time or time limit is 0
+        if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+          const auto end_nodeinfo = endtile->node(directededge->endnode());
+          float sortcost = cost.cost + heuristic(end_nodeinfo->latlng());
+          labelset->put(directededge->endnode(), edgeid, 0.f, 1.f,
                       cost, turn_cost, sortcost, label_idx,
                       directededge, travelmode, nullptr);
+        }
       }
     }
   };
@@ -558,21 +557,16 @@ find_shortest_path(baldr::GraphReader& reader,
                 float f = (other_edge.dist - origin_edge.dist);
                 sif::Cost cost(label_cost.cost + directededge->length() * f,
                                label_cost.secs + costing->EdgeCost(directededge).secs * f);
-                labelset->put(other_dest, origin_edge.id,
+                // We only add the labels if we are under the limits for distance and for time or time limit is 0
+                if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+                  labelset->put(other_dest, origin_edge.id,
                              origin_edge.dist, other_edge.dist,
                              cost, turn_cost, cost.cost, label_idx,
                              directededge, travelmode, nullptr);
+                }
               }
             }
           }
-
-          // Get the end node tile and nodeinfo (to compute heuristic)
-          const baldr::GraphTile* endtile = directededge->leaves_tile() ?
-                        reader.GetGraphTile(directededge->endnode()) : tile;
-          if (endtile == nullptr) {
-            continue;
-          }
-          const auto nodeinfo = endtile->node(directededge->endnode());
 
           // Get cost - use EdgeCost to get time along the edge. Override
           // cost portion to be distance. The heuristic cost from a
@@ -580,10 +574,17 @@ find_shortest_path(baldr::GraphReader& reader,
           float f = (1.f - origin_edge.dist);
           sif::Cost cost(label_cost.cost + directededge->length() * f,
                          label_cost.secs + costing->EdgeCost(directededge).secs * f);
-          float sortcost = cost.cost + heuristic(nodeinfo->latlng());
-          labelset->put(directededge->endnode(), origin_edge.id, origin_edge.dist, 1.f,
+          // We only add the labels if we are under the limits for distance and for time or time limit is 0
+          if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+            // Get the end node tile and nodeinfo (to compute heuristic)
+            const auto* nodeinfo = reader.GetEndNode(directededge, tile);
+            if(nodeinfo == nullptr)
+              continue;
+            float sortcost = cost.cost + heuristic(nodeinfo->latlng());
+            labelset->put(directededge->endnode(), origin_edge.id, origin_edge.dist, 1.f,
                        cost, turn_cost, sortcost, label_idx,
                        directededge, travelmode, nullptr);
+          }
         }
       }
     }

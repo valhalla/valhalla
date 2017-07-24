@@ -36,6 +36,7 @@ class State
   void route(const std::vector<const State*>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
+             float max_route_time,
              const midgard::DistanceApproximator& approximator,
              const float search_radius,
              sif::cost_ptr_t costing,
@@ -79,6 +80,7 @@ class MapMatching: public ViterbiSearch<State>
               float beta,
               float breakage_distance,
               float max_route_distance_factor,
+              float max_route_time_factor,
               float turn_penalty_factor);
 
   MapMatching(baldr::GraphReader& graphreader,
@@ -137,13 +139,17 @@ class MapMatching: public ViterbiSearch<State>
   CalculateEmissionCost(float sq_distance) const
   { return sq_distance * inv_double_sq_sigma_z_; }
 
+  // we use the difference between the original two measurements and the distance along the route
+  // network to compute a transition cost of a given candidate, turn_cost may be added if
+  // the turn_penalty_table_ is enabled, one could make use of time in this computation but
+  // this is not advisable as traffic at the time may make readings unreliable and time information
+  // is not strictly required to perform the matching
   float
-  CalculateTransitionCost(float turncost, float route_distance, float measurement_distance) const
-  { return (turncost + std::abs(route_distance - measurement_distance)) * inv_beta_; }
+  CalculateTransitionCost(float turn_cost, float route_distance, float measurement_distance,
+      float route_time, float measurement_time) const
+  { return (turn_cost + std::abs(route_distance - measurement_distance)) * inv_beta_; }
 
  protected:
-  virtual float MaxRouteDistance(const State& left, const State& right) const;
-
   float TransitionCost(const State& left, const State& right) const override;
 
   float EmissionCost(const State& state) const override;
@@ -171,6 +177,8 @@ class MapMatching: public ViterbiSearch<State>
   float breakage_distance_;
 
   float max_route_distance_factor_;
+
+  float max_route_time_factor_;
 
   float turn_penalty_factor_;
 

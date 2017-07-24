@@ -185,11 +185,11 @@ namespace valhalla {
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
             result.messages.emplace_back(trace_route(request).SerializeAsString());
-            denominator = shape.size() / 1100;
+            denominator = trace.size() / 1100;
             break;
           case TRACE_ATTRIBUTES:
             result = to_response(trace_attributes(request), jsonp, info);
-            denominator = shape.size() / 1100;
+            denominator = trace.size() / 1100;
             break;
           default:
             throw valhalla_exception_t{400}; //this should never happen
@@ -310,12 +310,26 @@ namespace valhalla {
         locations.back().date_time_ = date_time_value;
     }
 
-    void thor_worker_t::parse_shape(const boost::property_tree::ptree& request) {
+    void thor_worker_t::parse_measurements(const boost::property_tree::ptree& request) {
+      // Create a matcher
+      try {
+        matcher.reset(matcher_factory.Create(trace_config));
+      } catch (const std::invalid_argument& ex) {
+        throw std::runtime_error(std::string(ex.what()));
+      }
+
       //we require locations
       auto request_shape = request.get_child("shape");
       try{
-        for(const auto& pt : request_shape)
-          shape.push_back(baldr::Location::FromPtree(pt.second).latlng_);
+        for(const auto& pt : request_shape) {
+          const auto& loc = pt.second;
+          float lat = loc.get<float>("lat");
+          float lon = midgard::circular_range_clamp<float>(loc.get<float>("lon"), -180, 180);
+          double time = loc.get<long>("time", -1.0);
+          float accuracy = loc.get<float>("accuracy", matcher->config().get<float>("gps_accuracy"));
+          float radius = loc.get<float>("radius", matcher->config().get<float>("search_radius"));
+          trace.emplace_back(meili::Measurement{{lon, lat}, accuracy, radius, time});
+        }
       }
       catch (...) {
         throw valhalla_exception_t{424};
@@ -379,7 +393,7 @@ namespace valhalla {
       bidir_astar.Clear();
       multi_modal_astar.Clear();
       locations.clear();
-      shape.clear();
+      trace.clear();
       correlated.clear();
       correlated_s.clear();
       correlated_t.clear();

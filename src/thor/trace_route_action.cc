@@ -36,6 +36,20 @@ struct MapMatch
   int edge_index = -1;
 };
 
+// TODO: this is a temp wrapper - it will be removed when MapMatcher::OfflineMatch is updated
+std::vector<std::pair<float, std::vector<meili::MatchResult>>> OfflineMatch(
+    const std::shared_ptr<meili::MapMatcher>& matcher,
+    std::vector<meili::Measurement>& sequence,
+    uint32_t best_paths) {
+  std::vector<meili::MatchResult> match_results = matcher->OfflineMatch(sequence, best_paths);
+  std::vector<std::pair<float, std::vector<meili::MatchResult>>> results;
+  float confidence_score = 1.0f / best_paths;
+  for (uint32_t k = 0; k < best_paths; ++k) {
+    results.emplace_back(confidence_score, match_results);
+  }
+  return results;
+}
+
 }
 
 namespace valhalla {
@@ -48,9 +62,10 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
 
   // Parse request
   parse_locations(request);
-  parse_shape(request);
   parse_costing(request);
   parse_trace_config(request);
+  parse_measurements(request);
+
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
    * prior route run against the Valhalla road network.  Knowing that the input is from
@@ -58,8 +73,6 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
   odin::TripPath trip_path;
-  std::vector<thor::MatchResult> match_results;
-  std::pair<odin::TripPath, std::vector<thor::MatchResult>> trip_match;
   AttributesController controller;
 
   auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
@@ -82,9 +95,9 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          trip_match = map_match(controller);
-          trip_path = std::move(trip_match.first);
-          match_results = std::move(trip_match.second);
+          auto map_match_results = map_match(controller);
+          if (!map_match_results.empty())
+            trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
         } catch(...) {
           throw valhalla_exception_t { 442 };
         }
@@ -97,9 +110,9 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            trip_match = map_match(controller);
-            trip_path = std::move(trip_match.first);
-            match_results = std::move(trip_match.second);
+            auto map_match_results = map_match(controller);
+            if (!map_match_results.empty())
+              trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
           } catch(...) {
             throw valhalla_exception_t { 442 };
           }
@@ -123,7 +136,7 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
 odin::TripPath thor_worker_t::route_match(const AttributesController& controller) {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
-  if (RouteMatcher::FormPath(mode_costing, mode, reader, shape, correlated, path_infos)) {
+  if (RouteMatcher::FormPath(mode_costing, mode, reader, trace, correlated, path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
                                              path_infos, correlated.front(),
@@ -138,281 +151,277 @@ odin::TripPath thor_worker_t::route_match(const AttributesController& controller
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-std::pair<odin::TripPath, std::vector<thor::MatchResult>> thor_worker_t::map_match(
+std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> thor_worker_t::map_match(
     const AttributesController& controller, bool trace_attributes_action,
     uint32_t best_paths) {
-  odin::TripPath trip_path;
-  std::vector<thor::MatchResult> match_results;
-  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
+  std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
 
   // Call Meili for map matching to get a collection of pathLocation Edges
-  // Create a matcher
-  std::shared_ptr<meili::MapMatcher> matcher;
-  try {
-    matcher.reset(matcher_factory.Create(trace_config));
-  } catch (const std::invalid_argument& ex) {
-    throw std::runtime_error(std::string(ex.what()));
-  }
-
   matcher->set_interrupt(interrupt);
-  std::vector<meili::Measurement> sequence;
-  for (const auto& coord : shape) {
-    sequence.emplace_back(coord,
-                          matcher->config().get<float>("gps_accuracy"),
-                          matcher->config().get<float>("search_radius"));
-  }
-
   // Create the vector of matched path results
-  std::vector<meili::MatchResult> results;
-  if (sequence.size() > 0) {
-    results = matcher->OfflineMatch(sequence, best_paths);
+  std::vector<std::pair<float, std::vector<meili::MatchResult>>> offline_results;
+  if (trace.size() > 0) {
+    // TODO this call is temp until MapMatcher::OfflineMatch is updated
+    offline_results = OfflineMatch(matcher, trace, best_paths);
+    // TODO rm the above line and uncomment the line below when MapMatcher::OfflineMatch is updated
+    //offline_results = matcher->OfflineMatch(sequence, best_paths);
   }
 
+  // Process each score/match result
+  for (const auto& offline_result : offline_results) {
+    const auto& match_results = std::get<kMatchResultsIndex>(offline_result);
+    std::vector<thor::MatchResult> enhanced_match_results;
+    odin::TripPath trip_path;
+    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
 
-  // Form the path edges based on the matched points and populate disconnected edges
-  std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
-  std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(),
-      results, mode_costing, mode, disconnected_edges, trace_attributes_action);
+    // Form the path edges based on the matched points and populate disconnected edges
+    std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
+    std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(),
+        match_results, mode_costing, mode, disconnected_edges, trace_attributes_action);
 
-  if (trace_attributes_action) {
-    // Associate match points to edges, if enabled
-    if (controller.category_attribute_enabled(kMatchedCategory)) {
-      // Populate for matched points so we have 1:1 with trace points
-      for (const auto& match_result : results) {
-        // Matched type is set in constructor
-        match_results.emplace_back(match_result);
-      }
+    if (trace_attributes_action) {
+      // Associate match points to edges, if enabled
+      if (controller.category_attribute_enabled(kMatchedCategory)) {
+        // Populate for matched points so we have 1:1 with trace points
+        for (const auto& match_result : match_results) {
+          // Matched type is set in constructor
+          enhanced_match_results.emplace_back(match_result);
+        }
 
-      // Iterate over results to set edge_index, if found
-      int edge_index = 0;
-      int last_matched_edge_index = edge_index;
-      int match_index = 0;
-      auto edge = path_edges.cbegin();
-      auto last_matched_edge = edge;
-      for (auto& match_result : match_results) {
-        // Reset edge and edge_index to last matched for every matched result
-        edge = last_matched_edge;
-        edge_index = last_matched_edge_index;
+        // Iterate over results to set edge_index, if found
+        int edge_index = 0;
+        int last_matched_edge_index = edge_index;
+        int match_index = 0;
+        auto edge = path_edges.cbegin();
+        auto last_matched_edge = edge;
+        for (auto& enhanced_match_result : enhanced_match_results) {
+          // Reset edge and edge_index to last matched for every matched result
+          edge = last_matched_edge;
+          edge_index = last_matched_edge_index;
 
-        // Check for result for valid edge id
-        if (match_result.edgeid.Is_Valid()) {
-          // Walk edges to find matching id
-          while (edge != path_edges.cend()) {
-            // Find matching edge id in path
-            if (match_result.edgeid == edge->edgeid) {
-              // Set match result with matched edge index and break out of the loop
-              match_result.edge_index = edge_index;
+          // Check for result for valid edge id
+          if (enhanced_match_result.edgeid.Is_Valid()) {
+            // Walk edges to find matching id
+            while (edge != path_edges.cend()) {
+              // Find matching edge id in path
+              if (enhanced_match_result.edgeid == edge->edgeid) {
+                // Set match result with matched edge index and break out of the loop
+                enhanced_match_result.edge_index = edge_index;
 
-              // Set the last matched edge and edge_index so we skip matched transition edges
-              last_matched_edge = edge;
-              last_matched_edge_index = edge_index;
+                // Set the last matched edge and edge_index so we skip matched transition edges
+                last_matched_edge = edge;
+                last_matched_edge_index = edge_index;
+                break;
+              } else {
+                // Increment to next edge and edge_index
+                ++edge;
+                ++edge_index;
+              }
+            }
+          }
+        }
+
+        // Mark the disconnected route boundaries
+        auto curr_match_result = enhanced_match_results.begin();
+        auto prev_match_result = curr_match_result;
+        for (auto& disconnected_edge_pair : disconnected_edges) {
+
+          // Find previous(first) edge within the match results
+          while (curr_match_result != enhanced_match_results.end()) {
+            if (curr_match_result->edgeid == disconnected_edge_pair.first.value) {
+              // Found previous edge therefore stop looking
               break;
-            } else {
-              // Increment to next edge and edge_index
-              ++edge;
-              ++edge_index;
             }
+            // Increment previous and current match results to continue looking
+            prev_match_result = curr_match_result;
+            ++curr_match_result;
+          }
+
+          // Find the last match result of the previous edge
+          while (curr_match_result != enhanced_match_results.end()) {
+            if (curr_match_result->edgeid != disconnected_edge_pair.first.value) {
+              // Set previous match result as disconnected path and break
+              prev_match_result->begin_route_discontinuity = true;
+
+              // The begin route discontinuity is the edge end info
+              // therefore the second item in the pair
+              if (route_discontinuities.count(prev_match_result->edge_index) > 0) {
+                // Update edge_end_info values
+                auto& edge_end_info = route_discontinuities.at(prev_match_result->edge_index).second;
+                edge_end_info.exists = true;
+                edge_end_info.vertex = prev_match_result->lnglat;
+                edge_end_info.distance_along = prev_match_result->distance_along;
+              } else {
+                // Add new item
+                // Begin distance along defaulted to 0
+                route_discontinuities.insert( {prev_match_result->edge_index,
+                  { {false, {}, 0.f},
+                      {true, prev_match_result->lnglat, prev_match_result->distance_along} }});
+              }
+              break;
+            }
+            // Increment previous and current match results to continue looking
+            prev_match_result = curr_match_result;
+            ++curr_match_result;
+          }
+
+          // Find the current(second) edge within the match results
+          while (curr_match_result != enhanced_match_results.end()) {
+            if (curr_match_result->edgeid == disconnected_edge_pair.second.value) {
+              // Set current match result as disconnected and break
+              curr_match_result->end_route_discontinuity = true;
+
+              // The end route discontinuity is the edge begin info
+              // therefore the first item in the pair
+              if (route_discontinuities.count(curr_match_result->edge_index) > 0) {
+                // Update edge_begin_info values
+                auto& edge_begin_info = route_discontinuities.at(curr_match_result->edge_index).first;
+                edge_begin_info.exists = true;
+                edge_begin_info.vertex = curr_match_result->lnglat;
+                edge_begin_info.distance_along = curr_match_result->distance_along;
+              } else {
+                // Add new item
+                // End distance along defaulted to 1
+                route_discontinuities.insert( {curr_match_result->edge_index,
+                  { {true, curr_match_result->lnglat, curr_match_result->distance_along},
+                      {false, {}, 1.f} }});
+              }
+              break;
+            }
+            // Increment previous and current match results to continue looking
+            prev_match_result = curr_match_result;
+            ++curr_match_result;
           }
         }
       }
-
-      // Mark the disconnected route boundaries
-      auto curr_match_result = match_results.begin();
-      auto prev_match_result = curr_match_result;
-      for (auto& disconnected_edge_pair : disconnected_edges) {
-
-        // Find previous(first) edge within the match results
-        while (curr_match_result != match_results.end()) {
-          if (curr_match_result->edgeid == disconnected_edge_pair.first.value) {
-            // Found previous edge therefore stop looking
-            break;
-          }
-          // Increment previous and current match results to continue looking
-          prev_match_result = curr_match_result;
-          ++curr_match_result;
-        }
-
-        // Find the last match result of the previous edge
-        while (curr_match_result != match_results.end()) {
-          if (curr_match_result->edgeid != disconnected_edge_pair.first.value) {
-            // Set previous match result as disconnected path and break
-            prev_match_result->begin_route_discontinuity = true;
-
-            // The begin route discontinuity is the edge end info
-            // therefore the second item in the pair
-            if (route_discontinuities.count(prev_match_result->edge_index) > 0) {
-              // Update edge_end_info values
-              auto& edge_end_info = route_discontinuities.at(prev_match_result->edge_index).second;
-              edge_end_info.exists = true;
-              edge_end_info.vertex = prev_match_result->lnglat;
-              edge_end_info.distance_along = prev_match_result->distance_along;
-            } else {
-              // Add new item
-              // Begin distance along defaulted to 0
-              route_discontinuities.insert( {prev_match_result->edge_index,
-                { {false, {}, 0.f},
-                  {true, prev_match_result->lnglat, prev_match_result->distance_along} }});
-            }
-            break;
-          }
-          // Increment previous and current match results to continue looking
-          prev_match_result = curr_match_result;
-          ++curr_match_result;
-        }
-
-        // Find the current(second) edge within the match results
-        while (curr_match_result != match_results.end()) {
-          if (curr_match_result->edgeid == disconnected_edge_pair.second.value) {
-            // Set current match result as disconnected and break
-            curr_match_result->end_route_discontinuity = true;
-
-            // The end route discontinuity is the edge begin info
-            // therefore the first item in the pair
-            if (route_discontinuities.count(curr_match_result->edge_index) > 0) {
-              // Update edge_begin_info values
-              auto& edge_begin_info = route_discontinuities.at(curr_match_result->edge_index).first;
-              edge_begin_info.exists = true;
-              edge_begin_info.vertex = curr_match_result->lnglat;
-              edge_begin_info.distance_along = curr_match_result->distance_along;
-            } else {
-              // Add new item
-              // End distance along defaulted to 1
-              route_discontinuities.insert( {curr_match_result->edge_index,
-                { {true, curr_match_result->lnglat, curr_match_result->distance_along},
-                  {false, {}, 1.f} }});
-            }
-            break;
-          }
-          // Increment previous and current match results to continue looking
-          prev_match_result = curr_match_result;
-          ++curr_match_result;
-        }
-      }
-    }
 
 #ifdef LOGGING_LEVEL_TRACE
-    ////////////////////////////////////////////////////////////////////////////
-    // This trace block is used to visualize the trace and matched points
-    // Print geojson header
-    printf("\n{\"type\":\"FeatureCollection\",\"features\":[\n");
+      ////////////////////////////////////////////////////////////////////////////
+      // This trace block is used to visualize the trace and matched points
+      // Print geojson header
+      printf("\n{\"type\":\"FeatureCollection\",\"features\":[\n");
 
-    // Print trace points
-    int index = 0;
-    for (const auto& trace_point : shape) {
-      printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"#abd9e9\",\"marker-size\":\"small\",\"trace_point_index\":%d}},\n", trace_point.first, trace_point.second, index++);
-    }
-
-    // Print matched points
-    index = 0;
-    std::string marker_color;
-    std::string marker_size;
-    std::string matched_point_type;
-    for (const auto& match_result : match_results) {
-      if (match_result.begin_route_discontinuity || match_result.end_route_discontinuity) {
-        marker_color = "#d7191c"; // red
-        marker_size = "large";
-        if (match_result.type == thor::MatchResult::Type::kMatched)
-          matched_point_type = "matched";
-        else
-          matched_point_type = "interpolated";
-      } else if (match_result.type == thor::MatchResult::Type::kMatched) {
-        marker_color = "#2c7bb6"; // dark blue
-        marker_size = "medium";
-        matched_point_type = "matched";
-      } else if (match_result.type == thor::MatchResult::Type::kInterpolated) {
-        marker_color = "#ffffbf"; // yellow
-        marker_size = "small";
-        matched_point_type = "interpolated";
-      } else {
-        marker_color = "#fdae61"; // orange
-        marker_size = "small";
-        matched_point_type = "unmatched";
+      // Print trace points
+      int index = 0;
+      for (const auto& trace_point : trace) {
+        printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"#abd9e9\",\"marker-size\":\"small\",\"trace_point_index\":%d}},\n", trace_point.first, trace_point.second, index++);
       }
-      printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"%s\",\"marker-size\":\"%s\",\"matched_point_index\":%d,\"matched_point_type\":\"%s\",\"edge_index\":%u,\"distance_along_edge\":%.3f,\"distance_from_trace_point\":%.3f}}%s\n", match_result.lnglat.lng(), match_result.lnglat.lat(), marker_color.c_str(), marker_size.c_str(), index++, matched_point_type.c_str(), match_result.edge_index, match_result.distance_along, match_result.distance_from, ((index != match_results.size()-1) ? "," : ""));
-    }
 
-    // Print geojson footer
-    printf("]}\n");
-    ////////////////////////////////////////////////////////////////////////////
+      // Print matched points
+      index = 0;
+      std::string marker_color;
+      std::string marker_size;
+      std::string matched_point_type;
+      for (const auto& match_result : enhanced_match_results) {
+        if (match_result.begin_route_discontinuity || match_result.end_route_discontinuity) {
+          marker_color = "#d7191c"; // red
+          marker_size = "large";
+          if (match_result.type == thor::MatchResult::Type::kMatched)
+            matched_point_type = "matched";
+          else
+            matched_point_type = "interpolated";
+        } else if (match_result.type == thor::MatchResult::Type::kMatched) {
+          marker_color = "#2c7bb6"; // dark blue
+          marker_size = "medium";
+          matched_point_type = "matched";
+        } else if (match_result.type == thor::MatchResult::Type::kInterpolated) {
+          marker_color = "#ffffbf"; // yellow
+          marker_size = "small";
+          matched_point_type = "interpolated";
+        } else {
+          marker_color = "#fdae61"; // orange
+          marker_size = "small";
+          matched_point_type = "unmatched";
+        }
+        printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"%s\",\"marker-size\":\"%s\",\"matched_point_index\":%d,\"matched_point_type\":\"%s\",\"edge_index\":%u,\"distance_along_edge\":%.3f,\"distance_from_trace_point\":%.3f}}%s\n", match_result.lnglat.lng(), match_result.lnglat.lat(), marker_color.c_str(), marker_size.c_str(), index++, matched_point_type.c_str(), match_result.edge_index, match_result.distance_along, match_result.distance_from, ((index != enhanced_match_results.size()-1) ? "," : ""));
+      }
+
+      // Print geojson footer
+      printf("]}\n");
+      ////////////////////////////////////////////////////////////////////////////
 #endif
 
+    }
+
+    // Set origin and destination from map matching results
+    auto first_result_with_state = std::find_if(
+        match_results.begin(), match_results.end(),
+        [](const meili::MatchResult& result) {
+      return result.HasState() && result.edgeid.Is_Valid();
+    });
+
+    auto last_result_with_state = std::find_if(
+        match_results.rbegin(), match_results.rend(),
+        [](const meili::MatchResult& result) {
+      return result.HasState() && result.edgeid.Is_Valid();
+    });
+
+    if ((first_result_with_state != match_results.end())
+        && (last_result_with_state != match_results.rend())) {
+      baldr::PathLocation origin = matcher->mapmatching().state(
+          first_result_with_state->stateid).candidate();
+      baldr::PathLocation destination = matcher->mapmatching().state(
+          last_result_with_state->stateid).candidate();
+
+      bool found_origin = false;
+      for (const auto& e : origin.edges) {
+        if (e.id == path_edges.front().edgeid) {
+          found_origin = true;
+          break;
+        }
+      }
+
+      if (!found_origin) {
+        // 1. origin must be at a node, so we can reuse any one of
+        // origin's edges
+
+        // 2. path_edges.front().edgeid must be the downstream edge that
+        // connects one of origin.edges (twins) at its start node
+        origin.edges.emplace_back(path_edges.front().edgeid,
+            0.f,
+            origin.edges.front().projected,
+            origin.edges.front().score,
+            origin.edges.front().sos);
+      }
+
+      bool found_destination = false;
+      for (const auto& e : destination.edges) {
+        if (e.id == path_edges.back().edgeid) {
+          found_destination = true;
+          break;
+        }
+      }
+
+      if (!found_destination) {
+        // 1. destination must be at a node, so we can reuse any one of
+        // destination's edges
+
+        // 2. path_edges.back().edgeid must be the upstream edge that
+        // connects one of destination.edges (twins) at its end node
+        destination.edges.emplace_back(path_edges.back().edgeid,
+            1.f,
+            destination.edges.front().projected,
+            destination.edges.front().score,
+            destination.edges.front().sos);
+      }
+
+
+      // assert origin.edges contains path_edges.front() &&
+      // destination.edges contains path_edges.back()
+
+      // Form the trip path based on mode costing, origin, destination, and path edges
+      trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
+          mode_costing, path_edges, origin,
+          destination, std::list<PathLocation>{},
+          interrupt, &route_discontinuities);
+    } else {
+      throw;
+    }
+  map_match_results.emplace_back(std::get<kConfidenceScoreIndex>(offline_result),
+      enhanced_match_results, trip_path);
   }
 
-  // Set origin and destination from map matching results
-  auto first_result_with_state = std::find_if(
-      results.begin(), results.end(),
-      [](const meili::MatchResult& result) {
-        return result.HasState() && result.edgeid.Is_Valid();
-      });
-
-  auto last_result_with_state = std::find_if(
-      results.rbegin(), results.rend(),
-      [](const meili::MatchResult& result) {
-        return result.HasState() && result.edgeid.Is_Valid();
-      });
-
-  if ((first_result_with_state != results.end())
-      && (last_result_with_state != results.rend())) {
-    baldr::PathLocation origin = matcher->mapmatching().state(
-        first_result_with_state->stateid).candidate();
-    baldr::PathLocation destination = matcher->mapmatching().state(
-        last_result_with_state->stateid).candidate();
-
-    bool found_origin = false;
-    for (const auto& e : origin.edges) {
-      if (e.id == path_edges.front().edgeid) {
-        found_origin = true;
-        break;
-      }
-    }
-
-    if (!found_origin) {
-      // 1. origin must be at a node, so we can reuse any one of
-      // origin's edges
-
-      // 2. path_edges.front().edgeid must be the downstream edge that
-      // connects one of origin.edges (twins) at its start node
-      origin.edges.emplace_back(path_edges.front().edgeid,
-                                0.f,
-                                origin.edges.front().projected,
-                                origin.edges.front().score,
-                                origin.edges.front().sos);
-    }
-
-    bool found_destination = false;
-    for (const auto& e : destination.edges) {
-      if (e.id == path_edges.back().edgeid) {
-        found_destination = true;
-        break;
-      }
-    }
-
-    if (!found_destination) {
-      // 1. destination must be at a node, so we can reuse any one of
-      // destination's edges
-
-      // 2. path_edges.back().edgeid must be the upstream edge that
-      // connects one of destination.edges (twins) at its end node
-      destination.edges.emplace_back(path_edges.back().edgeid,
-                                     1.f,
-                                     destination.edges.front().projected,
-                                     destination.edges.front().score,
-                                     destination.edges.front().sos);
-    }
-
-
-    // assert origin.edges contains path_edges.front() &&
-    // destination.edges contains path_edges.back()
-
-    // Form the trip path based on mode costing, origin, destination, and path edges
-    trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
-                                             mode_costing, path_edges, origin,
-                                             destination, std::list<PathLocation>{},
-                                             interrupt, &route_discontinuities);
-  } else {
-    throw;
-  }
-  return {trip_path, match_results};
+  return map_match_results;
 }
 
 }
