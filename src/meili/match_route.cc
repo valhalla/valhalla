@@ -232,10 +232,10 @@ MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& ta
 
   // Skip the first dummy edge std::prev(route_rend)
   for (; std::next(label) != route_rend; label++) {
-    segments.emplace_back(label->edgeid, label->source, label->target);
+    segments.emplace_back(label->edgeid(), label->source(), label->target());
   }
 
-  if (label->edgeid.Is_Valid()) {
+  if (label->edgeid().Is_Valid()) {
     throw std::logic_error("The first edge must be dummy");
   }
 
@@ -284,7 +284,6 @@ ConstructRoute(const MapMatching& mapmatching,
 
     prev_match = match;
   }
-
   return route;
 }
 
