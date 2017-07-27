@@ -83,8 +83,8 @@ class Label : public sif::EdgeLabel {
   /**
    * Get the edge Id. If the predecessor is invalid return an invalid edgeid.
    * This is used to handle internal map matching logic that relies on the
-   * first edge having an invalid edge id, but needing the EdgeLabel edgeid to
-   * be valid for costing purposes).
+   * first edge having an invalid edge id, but internal to routing the edgeid
+   * should be valid if passed in from a prior route state (for costing).
    */
   baldr::GraphId label_edgeid() const {
     return predecessor_ == baldr::kInvalidLabel ?  baldr::GraphId() : edgeid();
