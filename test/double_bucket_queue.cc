@@ -7,6 +7,7 @@
 #include "config.h"
 #include "midgard/util.h"
 #include "baldr/double_bucket_queue.h"
+#include "sif/edgelabel.h"
 
 using namespace std;
 using namespace valhalla;
@@ -188,6 +189,17 @@ void TestSimulation()
   }
 }
 
+void Test32BitFailure() {
+  std::vector<sif::BDEdgeLabel> labels;
+  const auto label_functor = [&labels](const uint32_t label) {
+    return labels[label].sortcost();
+  };
+  DoubleBucketQueue q(51.8078, 20000, 1, label_functor);
+  labels.emplace_back(0, GraphId{}, GraphId{}, nullptr, sif::Cost{}, 515, 0, sif::TravelMode::kDrive, sif::Cost{}, false);
+  q.add(0, 515);
+  q.decrease(0, 507.138);
+}
+
 }
 
 int main() {
@@ -200,6 +212,8 @@ int main() {
   //  suite.test(TEST_CASE(TestDecreaseCost));
 
   suite.test(TEST_CASE(TestSimulation));
+
+  suite.test(TEST_CASE(Test32BitFailure));
 
   return suite.tear_down();
 }
