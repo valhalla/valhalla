@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <cmath>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
@@ -106,7 +107,10 @@ class DoubleBucketQueue {
    * @param  cost  Cost.
    * @return Returns the bucket that the cost lies within.
    */
-  bucket_t& get_bucket(const float cost) {
+  bucket_t& get_bucket(float cost) {
+    //shift the cost to the middle of the bucket so as to avoid precision issues
+    //since minimum bucketsize is 1 this shouldnt be a problem
+    cost = std::floor(cost) + (bucketsize_ *.5f);
     return (cost < currentcost_) ? *currentbucket_ :
              (cost < maxcost_) ?
                buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :

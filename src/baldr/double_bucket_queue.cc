@@ -9,6 +9,10 @@ namespace baldr {
 // stored in an "overflow" bucket.
 DoubleBucketQueue::DoubleBucketQueue(const float mincost, const float range,
           const uint32_t bucketsize, const LabelCost& labelcost) {
+  // We need at least a bucketsize of 1 or more
+  if(bucketsize < 1)
+    throw std::runtime_error("Bucketsize must be 1 or greater");
+
   // Adjust min cost to be the start of a bucket
   uint32_t c = static_cast<uint32_t>(mincost);
   currentcost_ = (c - (c % bucketsize));

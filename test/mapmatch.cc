@@ -312,6 +312,12 @@ namespace {
       std::logic_error("Using time it should not take a small detour");
   }
 
+  void test32bit() {
+    tyr::actor_t actor(conf, true);
+    std::string test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5.110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
+    actor.route(tyr::ROUTE, test_case);
+  }
+
 }
 
 int main(int argc, char* argv[]) {
@@ -321,6 +327,8 @@ int main(int argc, char* argv[]) {
     seed = std::stoi(argv[1]);
   if(argc > 2)
     bound = std::stoi(argv[2]);
+
+  suite.test(TEST_CASE(test32bit));
 
   suite.test(TEST_CASE(test_matcher));
 
