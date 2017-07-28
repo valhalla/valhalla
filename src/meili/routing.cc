@@ -70,7 +70,7 @@ void LabelSet::put(const uint16_t dest, const baldr::GraphId& edgeid,
     const uint32_t idx = labels_.size();
     labels_.emplace_back(inv, dest, edgeid, source, target, cost, turn_cost,
                          sortcost, predecessor, edge, travelmode);
-    queue_->add(idx, sortcost);
+    queue_->add(idx);
     dest_status_.emplace(dest, idx);
   } else {
     // Decrease cost of the existing label
