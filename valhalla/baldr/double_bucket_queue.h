@@ -61,8 +61,8 @@ class DoubleBucketQueue {
    * @param   label  Label index to add to the queue.
    * @param   cost   Cost for this label.
    */
-  void add(const uint32_t label, const float cost) {
-    get_bucket(cost).push_back(label);
+  void add(const uint32_t label) {
+    get_bucket(labelcost_(label)).push_back(label);
   }
 
   /**
@@ -107,10 +107,7 @@ class DoubleBucketQueue {
    * @param  cost  Cost.
    * @return Returns the bucket that the cost lies within.
    */
-  bucket_t& get_bucket(float cost) {
-    //shift the cost to the middle of the bucket so as to avoid precision issues
-    //since minimum bucketsize is 1 this shouldnt be a problem
-    cost = std::floor(cost) + (bucketsize_ *.5f);
+  bucket_t& get_bucket(const float cost) {
     return (cost < currentcost_) ? *currentbucket_ :
              (cost < maxcost_) ?
                buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :

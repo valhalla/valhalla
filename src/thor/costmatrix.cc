@@ -313,11 +313,12 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
 
     // Add edge label, add to the adjacency list and set edge status
-    adj->add(edgelabels.size(), newcost.cost);
-    edgestate.Set(edgeid, EdgeSet::kTemporary, edgelabels.size());
+    uint32_t idx = edgelabels.size();
+    edgestate.Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge,
                     newcost, mode_, tc, distance,
                     (pred.not_thru_pruning() || !directededge->not_thru()));
+    adj->add(idx);
   }
 }
 
@@ -591,11 +592,12 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Add edge label, add to the adjacency list and set edge status
-    adj->add(edgelabels.size(), newcost.cost);
-    edgestate.Set(edgeid, EdgeSet::kTemporary, edgelabels.size());
+    uint32_t idx = edgelabels.size();
+    edgestate.Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels.emplace_back(pred_idx, edgeid, oppedge,
        directededge, newcost, mode_, tc, distance,
        (pred.not_thru_pruning() || !directededge->not_thru()));
+    adj->add(idx);
 
     // Add to the list of targets that have reached this edge
     targets_[edgeid].push_back(index);
@@ -720,18 +722,17 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // destination are on the same edge
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
 
+      // Set the initial not_thru flag to false. There is an issue with not_thru
+      // flags on small loops. Set this to false here to override this for now.
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost,
+                           mode_, ec, d, false);
+      edge_label.set_not_thru(false);
+
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
-      source_adjacency_[index]->add(source_edgelabel_[index].size(), cost.cost);
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost,
-                           mode_, ec, d, false);
-
-      // Set the initial not_thru flag to false. There is an issue with not_thru
-      // flags on small loops. Set this to false here to override this for now.
-      edge_label.set_not_thru(false);
-
       source_edgelabel_[index].push_back(std::move(edge_label));
+      source_adjacency_[index]->add(source_edgelabel_[index].size() - 1);
     }
     index++;
   }
@@ -800,18 +801,17 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // destination are on the same edge
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
 
+      // Set the initial not_thru flag to false. There is an issue with not_thru
+      // flags on small loops. Set this to false here to override this for now.
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
+                           mode_, ec, d, false);
+      edge_label.set_not_thru(false);
+
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path. Set the origin flag
-      target_adjacency_[index]->add(target_edgelabel_[index].size(), cost.cost);
-      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
-                           mode_, ec, d, false);
-
-      // Set the initial not_thru flag to false. There is an issue with not_thru
-      // flags on small loops. Set this to false here to override this for now.
-      edge_label.set_not_thru(false);
-
       target_edgelabel_[index].push_back(std::move(edge_label));
+      target_adjacency_[index]->add(target_edgelabel_[index].size() - 1);
       targets_[opp_edge_id].push_back(index);
     }
     index++;

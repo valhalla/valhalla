@@ -78,7 +78,7 @@ int Benchmark(const uint32_t n, const float maxcost,
     EdgeLabel el;
     el.SetSortCost(costs[i]);
     edgelabels.push_back(std::move(el));
-    adjlist.add(i, costs[i]);
+    adjlist.add(i);
   }
 
   // Get edge label indexes from the adj list. Accumulate total cost to make

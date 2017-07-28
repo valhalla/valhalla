@@ -26,7 +26,7 @@ void TryAddRemove(const std::vector<uint32_t>& costs,
   DoubleBucketQueue adjlist(0, 10000, 5, edgecost);
   for (auto cost : costs) {
     edgelabels.emplace_back(cost);
-    adjlist.add(i, cost);
+    adjlist.add(i);
     i++;
   }
   for (auto expected : expectedorder) {
@@ -55,7 +55,7 @@ void TryClear(const std::vector<uint32_t>& costs) {
   DoubleBucketQueue adjlist(0, 10000, 50, edgecost);
   for (auto cost : costs) {
     edgelabels.emplace_back(cost);
-    adjlist.add(i, cost);
+    adjlist.add(i);
     i++;
   }
   adjlist.clear();
@@ -109,7 +109,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
 
   const uint32_t idx = costs.size();
   costs.push_back(10.f);
-  dbqueue.add(idx, 10.f);
+  dbqueue.add(idx);
   std::random_device rd;
   std::mt19937 gen(rd());
   for (size_t i = 0; i < loop_count; i++) {
@@ -144,7 +144,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
         // Add new label
         const uint32_t idx = costs.size();
         costs.push_back(newcost);
-        dbqueue.add(idx, newcost);
+        dbqueue.add(idx);
         addedLabels.insert(idx);
       }
     }

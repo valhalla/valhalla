@@ -37,12 +37,12 @@ bool LabelSet::put(const baldr::GraphId& nodeid, const baldr::GraphId& edgeid,
   // Create a new label and push it to the queue
   if (it == node_status_.end()) {
     const uint32_t idx = labels_.size();
-    queue_->add(idx, sortcost);
     labels_.emplace_back(nodeid, edgeid,
                        source, target,
                        cost, turn_cost, sortcost,
                        predecessor,
                        edge, travelmode, edgelabel);
+    queue_->add(idx);
     node_status_.emplace(nodeid, idx);
     return true;
   }
@@ -81,12 +81,12 @@ bool LabelSet::put(uint16_t dest,
   // Create a new label and push it to the queue
   if (it == dest_status_.end()) {
     const uint32_t idx = labels_.size();
-    queue_->add(idx, sortcost);
     labels_.emplace_back(dest, edgeid,
                        source, target,
                        cost, turn_cost, sortcost,
                        predecessor,
                        edge, travelmode, edgelabel);
+    queue_->add(idx);
     dest_status_.emplace(dest, idx);
     return true;
   }
