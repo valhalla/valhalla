@@ -232,11 +232,12 @@ MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& ta
 
   // Skip the first dummy edge std::prev(route_rend)
   for (; std::next(label) != route_rend; label++) {
-    segments.emplace_back(label->edgeid, label->source, label->target);
+    segments.emplace_back(label->edgeid(), label->source(), label->target());
   }
 
-  if (label->edgeid.Is_Valid()) {
-    throw std::logic_error("The first edge must be dummy");
+  // Make sure the first edge has an invalid predecessor
+  if (label->predecessor() != baldr::kInvalidLabel) {
+    throw std::logic_error("The first edge must be an origin (invalid predecessor)");
   }
 
   return MergeEdgeSegments(route, segments.rbegin(), segments.rend());
@@ -284,7 +285,6 @@ ConstructRoute(const MapMatching& mapmatching,
 
     prev_match = match;
   }
-
   return route;
 }
 
