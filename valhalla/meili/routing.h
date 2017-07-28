@@ -35,6 +35,7 @@ class Label : public sif::EdgeLabel {
     memset(this, 0, sizeof(Label));
     nodeid_ = baldr::GraphId();
     edgeid_ = baldr::GraphId();
+    predecessor_ = baldr::kInvalidLabel;
   }
 
   /**
@@ -65,37 +66,11 @@ class Label : public sif::EdgeLabel {
   }
 
   /**
-   * Set the node Id.
-   * @param  id   Node Id.
-   */
-  void set_nodeid(const baldr::GraphId& id) {
-    nodeid_= id;
-  }
-
-  /**
    * Get the node Id.
    * @return  Returns the node Id.
    */
   baldr::GraphId nodeid() const {
     return nodeid_;
-  }
-
-  /**
-   * Get the edge Id. If the predecessor is invalid return an invalid edgeid.
-   * This is used to handle internal map matching logic that relies on the
-   * first edge having an invalid edge id, but internal to routing the edgeid
-   * should be valid if passed in from a prior route state (for costing).
-   */
-  baldr::GraphId label_edgeid() const {
-    return predecessor_ == baldr::kInvalidLabel ?  baldr::GraphId() : edgeid();
-  }
-
-  /**
-   * Set the destination index.
-   * @param  dest  Destination index.
-   */
-  void set_dest(const uint16_t dest) {
-    dest_ = dest;
   }
 
   /**
@@ -134,7 +109,8 @@ class Label : public sif::EdgeLabel {
    * Set all costs to 0. This is used when copying a prior Label to use as an
    * origin - we want to preserve Label values except costs must be set to 0.
    */
-  void InitAsOrigin(const sif::TravelMode mode) {
+  void InitAsOrigin(const sif::TravelMode mode, const uint16_t dest,
+                    const baldr::GraphId& id) {
     source_ = 0.0f;
     target_ = 0.0f;
     turn_cost_ = 0.0f;
@@ -142,6 +118,8 @@ class Label : public sif::EdgeLabel {
     cost_ = {};
     predecessor_ = baldr::kInvalidLabel;
     mode_ = static_cast<uint32_t>(mode);
+    dest_ = dest;
+    nodeid_= id;
   }
 
  private:
@@ -193,10 +171,7 @@ class LabelSet
       queue_->add(idx, 0.0f);
       dest_status_.emplace(dest, idx);
       labels_.emplace_back(edgelabel ? *edgelabel : Label());
-      Label& label = labels_.back();
-      label.InitAsOrigin(mode);
-      label.set_dest(dest);
-      label.set_nodeid({});
+      labels_.back().InitAsOrigin(mode, dest, {});
     }
   }
 
@@ -214,10 +189,7 @@ class LabelSet
       queue_->add(idx, 0.0f);
       node_status_.emplace(nodeid, idx);
       labels_.emplace_back(edgelabel ? *edgelabel : Label());
-      Label& label = labels_.back();
-      label.InitAsOrigin(mode);
-      label.set_dest(kInvalidDestination);
-      label.set_nodeid(nodeid);
+      labels_.back().InitAsOrigin(mode, kInvalidDestination, nodeid);
     }
   }
 
