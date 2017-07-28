@@ -168,10 +168,10 @@ class LabelSet
       // a dummy. In both cases add the label to the priority queue, set its
       // predecessor to kInvalidLabel, and initialize costs to 0.
       const uint32_t idx = labels_.size();
-      queue_->add(idx, 0.0f);
       dest_status_.emplace(dest, idx);
       labels_.emplace_back(edgelabel ? *edgelabel : Label());
       labels_.back().InitAsOrigin(mode, dest, {});
+      queue_->add(idx);
     }
   }
 
@@ -186,10 +186,10 @@ class LabelSet
       // a dummy. In both cases add the label to the priority queue and set its
       // predecessor to kInvalidLabel
       const uint32_t idx = labels_.size();
-      queue_->add(idx, 0.0f);
       node_status_.emplace(nodeid, idx);
       labels_.emplace_back(edgelabel ? *edgelabel : Label());
       labels_.back().InitAsOrigin(mode, kInvalidDestination, nodeid);
+      queue_->add(idx, 0.0f);
     }
   }
 
