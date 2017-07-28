@@ -22,11 +22,11 @@ DoubleBucketQueue::DoubleBucketQueue(const float mincost, const float range,
   inv_ = 1.0f / bucketsize_;
 
   // Set the maximum cost (above this goes into the overflow bucket)
-  maxcost_ = mincost + bucketrange_;
+  maxcost_ = mincost_ + bucketrange_;
 
   // Allocate the low-level buckets
-  bucketcount_ = (range / bucketsize_) + 1;
-  buckets_.resize(bucketcount_);
+  size_t bucketcount = (range / bucketsize_) + 1;
+  buckets_.resize(bucketcount);
 
   // Set the current bucket to the lowest cost low level bucket
   currentbucket_ = buckets_.begin();

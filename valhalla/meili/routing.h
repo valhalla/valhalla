@@ -189,7 +189,7 @@ class LabelSet
       node_status_.emplace(nodeid, idx);
       labels_.emplace_back(edgelabel ? *edgelabel : Label());
       labels_.back().InitAsOrigin(mode, kInvalidDestination, nodeid);
-      queue_->add(idx, 0.0f);
+      queue_->add(idx);
     }
   }
 

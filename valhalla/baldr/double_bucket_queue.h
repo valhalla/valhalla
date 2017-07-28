@@ -83,7 +83,6 @@ class DoubleBucketQueue {
 
  private:
   float bucketrange_;  // Total range of costs in lower level buckets
-  float bucketcount_;  // Number of buckets
   float bucketsize_;   // Bucket size (range of costs in same bucket)
   float inv_;          // 1/bucketsize (so we can avoid division)
   float mincost_;      // Minimum cost within the low level buckets
