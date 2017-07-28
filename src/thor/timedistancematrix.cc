@@ -167,8 +167,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
 
       // Handle transition edges - add to adjacency set.
       if (directededge->IsTransition()) {
-        AddToAdjacencyList(edgeid, pred.sortcost());
         edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
+        AddToAdjacencyList(edgeid, pred.sortcost());
         continue;
       }
 
@@ -200,9 +200,9 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       }
 
       // Add to the adjacency list and edge labels.
-      AddToAdjacencyList(edgeid, newcost.cost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, mode_, distance);
+      AddToAdjacencyList(edgeid, newcost.cost);
     }
   }
   return {};      // Should never get here
@@ -210,8 +210,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
 
 void TimeDistanceMatrix::AddToAdjacencyList(const baldr::GraphId& edgeid,
                                             const float sortcost) {
-  uint32_t idx = edgelabels_.size();
-  adjacencylist_->add(idx, sortcost);
+  uint32_t idx = edgelabels_.size() - 1;
+  adjacencylist_->add(idx);
   edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
@@ -323,8 +323,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
 
       // Handle transition edges. Add to adjacency list.
       if (directededge->IsTransition()) {
-        AddToAdjacencyList(edgeid, pred.sortcost());
         edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
+        AddToAdjacencyList(edgeid, pred.sortcost());
         continue;
       }
 
@@ -364,9 +364,9 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       }
 
       // Add to the adjacency list and edge labels.
-      AddToAdjacencyList(edgeid, newcost.cost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, mode_, distance);
+      AddToAdjacencyList(edgeid, newcost.cost);
     }
   }
   return {};      // Should never get here
@@ -453,11 +453,11 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
-    adjacencylist_->add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                          cost.cost, 0.0f, mode_, d);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
+    adjacencylist_->add(edgelabels_.size() - 1);
   }
 }
 
@@ -500,11 +500,11 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     // TODO - restrictions?
-    adjacencylist_->add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost,
                          cost.cost, 0.0f, mode_, d);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
+    adjacencylist_->add(edgelabels_.size() - 1);
   }
 }
 

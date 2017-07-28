@@ -232,8 +232,8 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
         if (!hierarchy_limits_[directededge->endnode().level()].StopExpanding(dist2dest)) {
           // Allow the transition edge. Add it to the adjacency list and edge labels
           // using the predecessor information. Transition edges have no length.
-          AddToAdjacencyList(edgeid, pred.sortcost());
           edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
+          AddToAdjacencyList(edgeid, pred.sortcost());
           if (directededge->trans_up()) {
             hierarchy_limits_[node.level()].up_transition_count++;
           }
@@ -309,9 +309,9 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       }
 
       // Add to the adjacency list and edge labels.
-      AddToAdjacencyList(edgeid, sortcost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                                newcost, sortcost, dist, mode_, 0);
+      AddToAdjacencyList(edgeid, sortcost);
     }
   }
   return {};      // Should never get here
@@ -321,8 +321,8 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
 // label it.
 void AStarPathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
                                        const float sortcost) {
-  uint32_t idx = edgelabels_.size();
-  adjacencylist_->add(idx, sortcost);
+  uint32_t idx = edgelabels_.size() - 1;
+  adjacencylist_->add(idx);
   edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
@@ -401,13 +401,14 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-    adjacencylist_->add(edgelabels_.size(), sortcost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                          sortcost, dist, mode_, d);
+    // Set the origin flag
     edge_label.set_origin();
 
-    // Set the origin flag
+    // Add EdgeLabel to the adjeacency list
     edgelabels_.push_back(std::move(edge_label));
+    adjacencylist_->add(edgelabels_.size() - 1);
   }
 
   // Set the origin timezone

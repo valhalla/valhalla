@@ -36,9 +36,9 @@ void LabelSet::put(const baldr::GraphId& nodeid, const baldr::GraphId& edgeid,
   const auto it = node_status_.find(nodeid);
   if (it == node_status_.end()) {
     const uint32_t idx = labels_.size();
-    queue_->add(idx, sortcost);
     labels_.emplace_back(nodeid, kInvalidDestination, edgeid, source, target,
               cost, turn_cost, sortcost, predecessor, edge, mode);
+    queue_->add(idx);
     node_status_.emplace(nodeid, idx);
   } else {
     // Node has been found. Check if there is a lower sortcost than the
@@ -68,9 +68,9 @@ void LabelSet::put(const uint16_t dest, const baldr::GraphId& edgeid,
   const auto it = dest_status_.find(dest);
   if (it == dest_status_.end()) {
     const uint32_t idx = labels_.size();
-    queue_->add(idx, sortcost);
     labels_.emplace_back(inv, dest, edgeid, source, target, cost, turn_cost,
                          sortcost, predecessor, edge, travelmode);
+    queue_->add(idx, sortcost);
     dest_status_.emplace(dest, idx);
   } else {
     // Decrease cost of the existing label

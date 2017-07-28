@@ -10,7 +10,7 @@ void Add(baldr::DoubleBucketQueue &adjlist, const std::vector<float>& costs)
 {
   uint32_t idx = 0;
   for (const auto cost : costs) {
-    adjlist.add(idx++, cost);
+    adjlist.add(idx++);
   }
 }
 
@@ -67,11 +67,11 @@ void TestAddRemove()
   costs[4] = 5;
   baldr::DoubleBucketQueue adjlist3(0, 10, 1, labelcost);
 
-  adjlist3.add(0, 1000);
-  adjlist3.add(1, 100);
-  adjlist3.add(2, 10);
-  adjlist3.add(3, 9);
-  adjlist3.add(4, 5);
+  adjlist3.add(0);
+  adjlist3.add(1);
+  adjlist3.add(2);
+  adjlist3.add(3);
+  adjlist3.add(4);
 
   // Decrease cost of label 3 to 3 - pop the lowest cost element - it should be label 3
   adjlist3.decrease(3, 3);
@@ -96,7 +96,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
 
   const uint32_t idx = costs.size();
   costs.push_back(10.f);
-  adjlist.add(idx, 10.f);
+  adjlist.add(idx);
   track.insert(idx);
 
   std::random_device rd;
@@ -130,7 +130,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
         // Add new label
         const uint32_t idx = costs.size();
         costs.push_back(newcost);
-        adjlist.add(idx, newcost);
+        adjlist.add(idx);
         track.insert(idx);
       }
     }

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <cmath>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
@@ -60,8 +61,8 @@ class DoubleBucketQueue {
    * @param   label  Label index to add to the queue.
    * @param   cost   Cost for this label.
    */
-  void add(const uint32_t label, const float cost) {
-    get_bucket(cost).push_back(label);
+  void add(const uint32_t label) {
+    get_bucket(labelcost_(label)).push_back(label);
   }
 
   /**
