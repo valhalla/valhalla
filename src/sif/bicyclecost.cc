@@ -970,26 +970,8 @@ cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
   return std::make_shared<BicycleCost>(config);
 }
 
-////////////////////////////////////////////////////////////////////////////
-
-class LowStressBicycleCost : public BicycleCost {
- public:
-
-  LowStressBicycleCost(const boost::property_tree::ptree& config);
-
-  virtual ~LowStressBicycleCost();
-
-};
-
-LowStressBicycleCost::LowStressBicycleCost(const boost::property_tree::ptree& config)
-    : BicycleCost(config) {
-}
-
-LowStressBicycleCost::~LowStressBicycleCost() {
-}
-
 cost_ptr_t CreateLowStressBicycleCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<LowStressBicycleCost>(config);
+  return std::make_shared<BicycleCost>(config);
 }
 
 }
