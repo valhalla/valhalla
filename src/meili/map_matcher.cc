@@ -207,7 +207,7 @@ FindMatchResult(const MapMatching& mapmatching,
     const auto rbegin = prev_state.RouteBegin(state),
                  rend = prev_state.RouteEnd();
     if (rbegin != rend) {
-      edgeid = rbegin->edgeid;
+      edgeid = rbegin->edgeid();
     }
   }
 
@@ -216,8 +216,8 @@ FindMatchResult(const MapMatching& mapmatching,
     const auto& next_state = mapmatching.state(next_stateid);
     // It must stay on the first edge of the route
     for (auto label = state.RouteBegin(next_state); label != state.RouteEnd(); label++) {
-      if (label->edgeid.Is_Valid()) {
-        edgeid = label->edgeid;
+      if (label->edgeid().Is_Valid()) {
+        edgeid = label->edgeid();
       }
     }
   }

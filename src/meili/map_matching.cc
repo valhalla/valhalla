@@ -31,7 +31,7 @@ State::route(const std::vector<State>& states,
              const midgard::DistanceApproximator& approximator,
              const float search_radius,
              sif::cost_ptr_t costing,
-             std::shared_ptr<const sif::EdgeLabel> edgelabel,
+             const Label* edgelabel,
              const float turn_cost_table[181]) const
 {
   // Prepare locations
@@ -156,7 +156,7 @@ MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
 
   // If we need to actually compute the route
   if (!left.routed()) {
-    std::shared_ptr<const sif::EdgeLabel> edgelabel;
+    const Label* edgelabel = nullptr;
     const auto prev_stateid = Predecessor(lhs);
     if (prev_stateid.IsValid()) {
       const auto& prev_state = state(prev_stateid);
@@ -170,12 +170,8 @@ MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
         throw std::logic_error("The predecessor of current state must have been routed."
                                " Check if you have misused the TransitionCost method");
       }
-      const auto label = prev_state.last_label(left);
-      edgelabel = label? label->edgelabel : nullptr;
-    } else {
-      edgelabel = nullptr;
+      edgelabel = prev_state.last_label(left);
     }
-    const midgard::DistanceApproximator approximator(measurement(right).lnglat());
 
     // TODO: inefficient; should move State::route to MapMatching
     std::vector<State> unreached_states;
@@ -187,6 +183,7 @@ MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
     // cached routes of a state. We should be careful with it and
     // do not use it for purposes like getting transition cost of
     // two *arbitrary* states.
+    const midgard::DistanceApproximator approximator(measurement(right).lnglat());
     left.route(unreached_states, graphreader_,
                std::min(gc_dist * max_route_distance_factor_, breakage_distance_),
                clk_dist * max_route_time_factor_,
@@ -198,7 +195,7 @@ MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
   // Compute the transition cost if we found a path
   const auto label = left.last_label(right);
   if (label) {
-    return CalculateTransitionCost(label->turn_cost, label->cost.cost, gc_dist, label->cost.secs, clk_dist);
+    return CalculateTransitionCost(label->turn_cost(), label->cost().cost, gc_dist, label->cost().secs, clk_dist);
   }
 
   // No path found

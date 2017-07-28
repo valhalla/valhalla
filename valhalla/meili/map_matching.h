@@ -45,7 +45,7 @@ class State
              const midgard::DistanceApproximator& approximator,
              const float search_radius,
              sif::cost_ptr_t costing,
-             std::shared_ptr<const sif::EdgeLabel> edgelabel,
+             const Label* edgelabel,
              const float turn_cost_table[181]) const;
 
   const Label* last_label(const State& state) const;

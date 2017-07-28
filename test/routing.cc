@@ -179,6 +179,9 @@ void TestRoutePathIterator()
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
 
+  // Create a dummy DirectedEdge for use in LabelSet
+  baldr::DirectedEdge de;
+
   // Construct two poor trees:
   //  0         1
   //         3     4
@@ -189,19 +192,19 @@ void TestRoutePathIterator()
   labelset.put(3, baldr::GraphId(),
                0.f, 1.f,
                {0.f, 0.0f}, 0.f, 0.f,
-               1, nullptr, travelmode, nullptr);
+               1, &de, travelmode);
   labelset.put(4, baldr::GraphId(),
                0.f, 1.f,
                {0.f, 0.0f}, 0.f, 0.f,
-               1, nullptr, travelmode, nullptr);
+               1, &de, travelmode);
   labelset.put(5, baldr::GraphId(),
                0.f, 1.f,
                {0.f, 0.0f}, 0.f, 0.f,
-               3, nullptr, travelmode, nullptr);
+               3, &de, travelmode);
   labelset.put(6, baldr::GraphId(),
                0.f, 1.f,
                {0.f, 0.0f}, 0.f, 0.f,
-               3, nullptr, travelmode, nullptr);
+               3, &de, travelmode);
 
   meili::RoutePathIterator the_end(&labelset, baldr::kInvalidLabel),
       it0(&labelset, 0),
@@ -218,7 +221,7 @@ void TestRoutePathIterator()
   test::assert_bool(&(*it0) == &labelset.label(0),
                     "TestRoutePathIterator: wrong dereferencing");
 
-  test::assert_bool(it0->predecessor == baldr::kInvalidLabel,
+  test::assert_bool(it0->predecessor() == baldr::kInvalidLabel,
                     "TestRoutePathIterator: wrong dereferencing pointer");
 
   test::assert_bool(++it0 == the_end,
@@ -236,10 +239,10 @@ void TestRoutePathIterator()
   test::assert_bool(std::next(it4, 2) == the_end,
                     "TestRoutePathIterator: wrong forwarding 4");
 
-  test::assert_bool(it4->predecessor == 1,
+  test::assert_bool(it4->predecessor() == 1,
                     "TestRoutePathIterator: wrong dereferencing pointer 2");
 
-  test::assert_bool((it5++)->predecessor == 3,
+  test::assert_bool((it5++)->predecessor() == 3,
                     "TestRoutePathIterator: wrong postfix increment");
 
   test::assert_bool(it5 == it3,
