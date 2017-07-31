@@ -17,6 +17,11 @@ Build Status
 
 [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla)
 
+License
+-------
+
+Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).
+
 Overview
 --------
 
@@ -116,8 +121,6 @@ The build will produce libraries, headers and binaries which you are free to use
     PKG_CHECK_MODULES([VALHALLA_DEPS], [libvalhalla >= 2.0.6])
 
 For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
-
-Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).
 
 Running
 -------
