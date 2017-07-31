@@ -676,8 +676,6 @@ int main(int argc, char *argv[]) {
     PathAlgorithm* pathalgorithm;
     if (routetype == "multimodal") {
       pathalgorithm = &mm;
-    } else if (routetype == "pedestrian") {
-      pathalgorithm = &bd;
     } else {
       // Use bidirectional except for possible trivial cases
       pathalgorithm = &bd;
