@@ -29,7 +29,7 @@ constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
-constexpr float kDefaultUseRoad                 = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUseRoad                 = 0.25f;   // Factor between 0 and 1
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
@@ -168,7 +168,7 @@ constexpr float kGradeBasedSpeedFactor[] = {
 
 // User propensity to use "hilly" roads. Ranges from a value of 0 (avoid
 // hills) to 1 (take hills when they offer a more direct, less time, path).
-constexpr float kDefaultUseHills = 0.5f;
+constexpr float kDefaultUseHills = 0.25f;
 
 // Avoid hills "strength". How much do we want to avoid a hill. Combines
 // with the usehills factor (1.0 - usehills = avoidhills factor) to create
@@ -453,15 +453,15 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   );
 
   // Get the bicycle type - enter as string and convert to enum
-  std::string bicycle_type = pt.get("bicycle_type", "Road");
+  std::string bicycle_type = pt.get("bicycle_type", "Hybrid");
   if (bicycle_type == "Cross") {
     type_ = BicycleType::kCross;
-  } else if (bicycle_type == "Hybrid" || bicycle_type == "City") {
-    type_ = BicycleType::kHybrid;
+  } else if (bicycle_type == "Road") {
+    type_ = BicycleType::kRoad;
   } else if (bicycle_type == "Mountain") {
     type_ = BicycleType::kMountain;
   } else {
-    type_ = BicycleType::kRoad;
+    type_ = BicycleType::kHybrid;
   }
 
   // Get default speed from the config. This is the average speed on smooth,
