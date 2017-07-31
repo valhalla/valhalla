@@ -22,7 +22,7 @@ using namespace valhalla::mjolnir;
 
 namespace {
 // Will throw an error if this is exceeded. Then we can increase.
-constexpr uint64_t kMaxOSMNodeId = 5000000000;
+constexpr uint64_t kMaxOSMNodeId = 5500000000;
 
 // Node equality
 const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
