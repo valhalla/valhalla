@@ -25,7 +25,7 @@ constexpr float NODE_SNAP = 5.f;
 //during side of street computations we figured you're on the street if you are less than
 //5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
 //data for the roads it might want half that) but its better to assume on street than not
-constexpr float SIDE_OF_STREET_SNAP = 5.f;
+constexpr float SIDE_OF_STREET_SNAP = 25.f; //this is 5 meters squared, the computation uses square distance
 //how much of the shape should be sampled to get heading
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
@@ -88,7 +88,7 @@ float tangent_angle(size_t index, const PointLL& point, const std::vector<PointL
 }
 
 bool heading_filter(const DirectedEdge* edge, const EdgeInfo& info,
-  const Location& location, const PointLL& point, float distance, size_t index) {
+  const Location& location, const PointLL& point, size_t index) {
   //no heading means we filter nothing
   if(!location.heading_)
     return false;
@@ -130,9 +130,9 @@ struct candidate_t {
     return sq_distance < c.sq_distance;
   }
 
-  PathLocation::SideOfStreet get_side(const PointLL& original, float distance) const {
+  PathLocation::SideOfStreet get_side(const PointLL& original, float sq_distance) const {
     //its so close to the edge that its basically on the edge
-    if(distance < SIDE_OF_STREET_SNAP)
+    if(sq_distance < SIDE_OF_STREET_SNAP)
       return PathLocation::SideOfStreet::NONE;
 
     //if the projected point is way too close to the begin or end of the shape
@@ -338,7 +338,7 @@ struct bin_handler_t {
         if(edge_filter(edge) != 0.0f) {
           PathLocation::PathEdge path_edge{std::move(id), 0.f, node->latlng(), score, PathLocation::NONE, get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
-          if(heading_filter(edge, info, location, candidate.point, score, index))
+          if(heading_filter(edge, info, location, candidate.point, index))
             filtered.emplace_back(std::move(path_edge));
           else if(correlated_edges.insert(path_edge.id).second)
             correlated.edges.push_back(std::move(path_edge));
@@ -353,7 +353,7 @@ struct bin_handler_t {
         if(edge_filter(other_edge) != 0.0f) {
           PathLocation::PathEdge path_edge{std::move(other_id), 1.f, node->latlng(), score, PathLocation::NONE, get_reach(other_edge)};
           auto index = other_edge->forward() ? 0 : info.shape().size() - 2;
-          if(heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location, candidate.point, score, index))
+          if(heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location, candidate.point, index))
             filtered.emplace_back(std::move(path_edge));
           else if(correlated_edges.insert(path_edge.id).second)
             correlated.edges.push_back(std::move(path_edge));
@@ -379,21 +379,23 @@ struct bin_handler_t {
       if(!candidate.edge->forward())
         length_ratio = 1.f - length_ratio;
       //side of street
-      auto side = candidate.get_side(location.latlng_, score);
+      auto side = candidate.get_side(location.latlng_, candidate.sq_distance);
+      PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge)};
       //correlate the edge we found
-      if(heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point, score, candidate.index))
-        filtered.emplace_back(candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge));
+      if(heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point, candidate.index))
+        filtered.push_back(std::move(path_edge));
       else if(correlated_edges.insert(candidate.edge_id).second)
-        correlated.edges.push_back(PathLocation::PathEdge{candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge)});
+        correlated.edges.push_back(std::move(path_edge));
       //correlate its evil twin
       const GraphTile* other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_tile);
       const DirectedEdge* other_edge;
       if(opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) && edge_filter(other_edge) != 0.0f) {
-        if(heading_filter(other_edge, *candidate.edge_info, location, candidate.point, score, candidate.index))
-          filtered.emplace_back(opposing_edge_id, 1 - length_ratio, candidate.point, score, flip_side(side), get_reach(other_edge));
+        PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point, score, flip_side(side), get_reach(other_edge)};
+        if(heading_filter(other_edge, *candidate.edge_info, location, candidate.point, candidate.index))
+          filtered.push_back(std::move(other_path_edge));
         else if(correlated_edges.insert(opposing_edge_id).second)
-          correlated.edges.push_back(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, candidate.point, score, flip_side(side), get_reach(other_edge)});
+          correlated.edges.push_back(std::move(other_path_edge));
       }
     }
   }
