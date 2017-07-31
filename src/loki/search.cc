@@ -25,7 +25,7 @@ constexpr float NODE_SNAP = 5.f;
 //during side of street computations we figured you're on the street if you are less than
 //5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
 //data for the roads it might want half that) but its better to assume on street than not
-constexpr float SIDE_OF_STREET_SNAP = 25.f;
+constexpr float SIDE_OF_STREET_SNAP = 25.f; //this is 5 meters squared, the computation uses square distance
 //how much of the shape should be sampled to get heading
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
@@ -130,9 +130,9 @@ struct candidate_t {
     return sq_distance < c.sq_distance;
   }
 
-  PathLocation::SideOfStreet get_side(const PointLL& original, float distance) const {
+  PathLocation::SideOfStreet get_side(const PointLL& original, float sq_distance) const {
     //its so close to the edge that its basically on the edge
-    if(distance < SIDE_OF_STREET_SNAP)
+    if(sq_distance < SIDE_OF_STREET_SNAP)
       return PathLocation::SideOfStreet::NONE;
 
     //if the projected point is way too close to the begin or end of the shape
