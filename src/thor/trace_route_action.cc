@@ -304,7 +304,7 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
       // Print trace points
       int index = 0;
       for (const auto& trace_point : trace) {
-        printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"#abd9e9\",\"marker-size\":\"small\",\"trace_point_index\":%d}},\n", trace_point.first, trace_point.second, index++);
+        printf("{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[%.6f,%.6f]},\"properties\":{\"marker-color\":\"#abd9e9\",\"marker-size\":\"small\",\"trace_point_index\":%d}},\n", trace_point.lnglat().first, trace_point.lnglat().second, index++);
       }
 
       // Print matched points

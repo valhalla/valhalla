@@ -133,10 +133,10 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    adjacencylist_->add(idx, newcost.cost);
-    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_.emplace_back(pred_idx, edgeid, directededge,
-                  newcost, newcost.cost, 0.0f, mode_, distance);
+                      newcost, newcost.cost, 0.0f, mode_, distance);
+    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+    adjacencylist_->add(idx);
   }
 }
 
@@ -300,10 +300,10 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    adjacencylist_->add(idx, newcost.cost);
-    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_.emplace_back(pred_idx, edgeid, directededge,
-                  newcost, newcost.cost, 0.0f, mode_, distance);
+                      newcost, newcost.cost, 0.0f, mode_, distance);
+    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+    adjacencylist_->add(idx);
   }
 }
 
@@ -462,11 +462,11 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
-    adjacencylist_->add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                          cost.cost, 0.0f, mode_, d);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
+    adjacencylist_->add(edgelabels_.size() - 1);
   }
 }
 
@@ -508,11 +508,11 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     // TODO - restrictions?
-    adjacencylist_->add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost,
                          cost.cost, 0.0f, mode_, d);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
+    adjacencylist_->add(edgelabels_.size() - 1);
   }
 }
 

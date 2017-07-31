@@ -220,10 +220,10 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    adjacencylist_->add(idx, sortcost);
-    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost,
-                             sortcost, dist, mode_, 0);
+                                 sortcost, dist, mode_, 0);
+    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+    adjacencylist_->add(idx);
   }
 }
 
@@ -397,13 +397,14 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-    adjacencylist_->add(edgelabels_.size(), sortcost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                          sortcost, dist, mode_, d);
+    // Set the origin flag
     edge_label.set_origin();
 
-    // Set the origin flag
+    // Add EdgeLabel to the adjacency list
     edgelabels_.push_back(std::move(edge_label));
+    adjacencylist_->add(edgelabels_.size() - 1);
   }
 
   // Set the origin timezone

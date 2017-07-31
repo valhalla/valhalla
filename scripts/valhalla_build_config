@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import argparse
 import json
 import pprint
@@ -424,7 +424,8 @@ def comma_separated_list(arg):
 def add_leaf_args(path, tree, leaves, parser):
   #if we are at a dict go deeper
   if isinstance(tree, dict):
-    for k, v in tree.iteritems():
+    for k in tree:
+      v = tree[k]
       add_leaf_args('\0'.join([path, k]) if len(path) else k, v, leaves, parser)
   #we've reached a leaf
   else:
@@ -456,4 +457,4 @@ if __name__ == '__main__':
     v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
 
   #show the config
-  print json.dumps(config, sort_keys=True, indent=2, separators=(',', ': '))  
+  print(json.dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))

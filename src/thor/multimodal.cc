@@ -332,8 +332,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         // Add the transition edge to the adjacency list and edge labels
         // using the predecessor information. Transition edges have
         // no length.
-        AddToAdjacencyList(edgeid, pred.sortcost());
         edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
+        AddToAdjacencyList(edgeid, pred.sortcost());
         continue;
       }
 
@@ -510,10 +510,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       }
 
       // Add edge label, add to the adjacency list and set edge status
-      AddToAdjacencyList(edgeid, sortcost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, mode_, walking_distance_,
                     tripid, prior_stop, blockid, operator_id, has_transit);
+      AddToAdjacencyList(edgeid, sortcost);
     }
   }
   return {};      // Should never get here
@@ -523,8 +523,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
 // label it.
 void MultiModalPathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
                                        const float sortcost) {
-  uint32_t idx = edgelabels_.size();
-  adjacencylist_->add(idx, sortcost);
+  uint32_t idx = edgelabels_.size() - 1;
+  adjacencylist_->add(idx);
   edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
@@ -603,13 +603,14 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-    adjacencylist_->add(edgelabels_.size(), sortcost);
     MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                          sortcost, dist, mode_, d, 0, GraphId(), 0, 0, false);
+    // Set the origin flag
     edge_label.set_origin();
 
-    // Set the origin flag
+    // Add EdgeLabel to the adjacency list
     edgelabels_.push_back(std::move(edge_label));
+    adjacencylist_->add(edgelabels_.size() - 1);
   }
 
   // Set the origin timezone
@@ -695,7 +696,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     Cost cost = costing->EdgeCost(diredge) * ratio;
     edgelabels.emplace_back(kInvalidLabel, oppedge,
             diredge, cost, cost.cost, 0.0f, mode_, length);
-    adjlist.add(label_idx, cost.cost);
+    adjlist.add(label_idx);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx);
     label_idx++;
   }
@@ -748,7 +749,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
         // Add the transition edge to the adjacency list and edge labels
         // using the predecessor information.
         edgelabels.emplace_back(predindex, edgeid, directededge->endnode(), pred);
-        adjlist.add(label_idx, pred.sortcost());
+        adjlist.add(label_idx);
         edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
         label_idx++;
         continue;
@@ -778,7 +779,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
       // Add edge label, add to the adjacency list and set edge status
       edgelabels.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, mode_, walking_distance);
-      adjlist.add(label_idx, newcost.cost);
+      adjlist.add(label_idx);
       edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
       label_idx++;
     }

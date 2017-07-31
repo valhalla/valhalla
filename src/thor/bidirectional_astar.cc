@@ -204,11 +204,11 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_forward_.size();
-    adjacencylist_forward_->add(idx, sortcost);
     edgestatus_forward_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_forward_.emplace_back(pred_idx, edgeid, oppedge, directededge,
                   newcost, sortcost, dist, mode_, tc,
                   (pred.not_thru_pruning() || !directededge->not_thru()));
+    adjacencylist_forward_->add(idx);
   }
 }
 
@@ -316,11 +316,11 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_reverse_.size();
-    adjacencylist_reverse_->add(idx, sortcost);
     edgestatus_reverse_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_reverse_.emplace_back(pred_idx, edgeid, oppedge,
                  directededge, newcost, sortcost, dist, mode_, tc,
                  (pred.not_thru_pruning() || !directededge->not_thru()));
+    adjacencylist_reverse_->add(idx);
   }
 }
 
@@ -572,10 +572,10 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
     uint32_t idx = edgelabels_forward_.size();
-    adjacencylist_forward_->add(idx, sortcost);
     edgestatus_forward_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
                                      sortcost, dist, mode_);
+    adjacencylist_forward_->add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
@@ -639,10 +639,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // to invalid to indicate the origin of the path. Make sure the opposing
     // edge (edgeid) is set.
     uint32_t idx = edgelabels_reverse_.size();
-    adjacencylist_reverse_->add(idx, sortcost);
     edgestatus_reverse_->Set(opp_edge_id, EdgeSet::kTemporary, idx);
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
              opp_dir_edge, cost, sortcost, dist, mode_, c, false);
+    adjacencylist_reverse_->add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.

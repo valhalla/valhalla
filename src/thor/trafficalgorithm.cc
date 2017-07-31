@@ -185,10 +185,10 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
 
       // Add to the adjacency list and edge labels.
       uint32_t idx = edgelabels_.size();
-      adjacencylist_->add(idx, sortcost);
-      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
-                    newcost, sortcost, dist, mode_, 0);
+                          newcost, sortcost, dist, mode_, 0);
+      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+      adjacencylist_->add(idx);
     }
   }
   return {};      // Should never get here

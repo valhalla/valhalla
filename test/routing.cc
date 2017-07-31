@@ -10,7 +10,7 @@ void Add(baldr::DoubleBucketQueue &adjlist, const std::vector<float>& costs)
 {
   uint32_t idx = 0;
   for (const auto cost : costs) {
-    adjlist.add(idx++, cost);
+    adjlist.add(idx++);
   }
 }
 
@@ -67,11 +67,11 @@ void TestAddRemove()
   costs[4] = 5;
   baldr::DoubleBucketQueue adjlist3(0, 10, 1, labelcost);
 
-  adjlist3.add(0, 1000);
-  adjlist3.add(1, 100);
-  adjlist3.add(2, 10);
-  adjlist3.add(3, 9);
-  adjlist3.add(4, 5);
+  adjlist3.add(0);
+  adjlist3.add(1);
+  adjlist3.add(2);
+  adjlist3.add(3);
+  adjlist3.add(4);
 
   // Decrease cost of label 3 to 3 - pop the lowest cost element - it should be label 3
   adjlist3.decrease(3, 3);
@@ -96,7 +96,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
 
   const uint32_t idx = costs.size();
   costs.push_back(10.f);
-  adjlist.add(idx, 10.f);
+  adjlist.add(idx);
   track.insert(idx);
 
   std::random_device rd;
@@ -130,7 +130,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
         // Add new label
         const uint32_t idx = costs.size();
         costs.push_back(newcost);
-        adjlist.add(idx, newcost);
+        adjlist.add(idx);
         track.insert(idx);
       }
     }
@@ -179,6 +179,9 @@ void TestRoutePathIterator()
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
 
+  // Create a dummy DirectedEdge for use in LabelSet
+  baldr::DirectedEdge de;
+
   // Construct two poor trees:
   //  0         1
   //         3     4
@@ -189,19 +192,19 @@ void TestRoutePathIterator()
   labelset.put(3, baldr::GraphId(),
                0.f, 1.f,
                {0.f, 0.0f}, 0.f, 0.f,
-               1, nullptr, travelmode, nullptr);
+               1, &de, travelmode);
   labelset.put(4, baldr::GraphId(),
                0.f, 1.f,
                {0.f, 0.0f}, 0.f, 0.f,
-               1, nullptr, travelmode, nullptr);
+               1, &de, travelmode);
   labelset.put(5, baldr::GraphId(),
                0.f, 1.f,
                {0.f, 0.0f}, 0.f, 0.f,
-               3, nullptr, travelmode, nullptr);
+               3, &de, travelmode);
   labelset.put(6, baldr::GraphId(),
                0.f, 1.f,
                {0.f, 0.0f}, 0.f, 0.f,
-               3, nullptr, travelmode, nullptr);
+               3, &de, travelmode);
 
   meili::RoutePathIterator the_end(&labelset, baldr::kInvalidLabel),
       it0(&labelset, 0),
@@ -218,7 +221,7 @@ void TestRoutePathIterator()
   test::assert_bool(&(*it0) == &labelset.label(0),
                     "TestRoutePathIterator: wrong dereferencing");
 
-  test::assert_bool(it0->predecessor == baldr::kInvalidLabel,
+  test::assert_bool(it0->predecessor() == baldr::kInvalidLabel,
                     "TestRoutePathIterator: wrong dereferencing pointer");
 
   test::assert_bool(++it0 == the_end,
@@ -236,10 +239,10 @@ void TestRoutePathIterator()
   test::assert_bool(std::next(it4, 2) == the_end,
                     "TestRoutePathIterator: wrong forwarding 4");
 
-  test::assert_bool(it4->predecessor == 1,
+  test::assert_bool(it4->predecessor() == 1,
                     "TestRoutePathIterator: wrong dereferencing pointer 2");
 
-  test::assert_bool((it5++)->predecessor == 3,
+  test::assert_bool((it5++)->predecessor() == 3,
                     "TestRoutePathIterator: wrong postfix increment");
 
   test::assert_bool(it5 == it3,

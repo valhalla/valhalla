@@ -1,13 +1,17 @@
 // -*- mode: c++ -*-
 #ifndef MMP_MAP_MATCHING_H_
 #define MMP_MAP_MATCHING_H_
+
 #include <cmath>
 #include <cstdint>
+
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/costconstants.h>
+
 #include <valhalla/baldr/pathlocation.h>
 
 #include <valhalla/meili/measurement.h>
+#include <valhalla/meili/stateid.h>
 #include <valhalla/meili/viterbi_search.h>
 #include <valhalla/meili/routing.h>
 
@@ -19,13 +23,14 @@ namespace meili {
 class State
 {
  public:
-  State(const StateId id, const Time time, const baldr::PathLocation& candidate);
+  State(const StateId& stateid, const baldr::PathLocation& candidate)
+      : stateid_(stateid),
+        candidate_(candidate),
+        labelset_(nullptr),
+        label_idx_() {}
 
-  StateId id() const
-  { return id_; }
-
-  Time time() const
-  { return time_; }
+  const StateId& stateid() const
+  { return stateid_; }
 
   const baldr::PathLocation& candidate() const
   { return candidate_; }
@@ -33,21 +38,21 @@ class State
   bool routed() const
   { return labelset_ != nullptr; }
 
-  void route(const std::vector<const State*>& states,
+  void route(const std::vector<State>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
              float max_route_time,
              const midgard::DistanceApproximator& approximator,
              const float search_radius,
              sif::cost_ptr_t costing,
-             std::shared_ptr<const sif::EdgeLabel> edgelabel,
+             const Label* edgelabel,
              const float turn_cost_table[181]) const;
 
   const Label* last_label(const State& state) const;
 
   RoutePathIterator RouteBegin(const State& state) const
   {
-    const auto it = label_idx_.find(state.id());
+    const auto it = label_idx_.find(state.stateid());
     if (it != label_idx_.end()) {
       return RoutePathIterator(labelset_.get(), it->second);
     }
@@ -58,9 +63,7 @@ class State
   { return RoutePathIterator(labelset_.get()); }
 
  private:
-  const StateId id_;
-
-  const Time time_;
+  StateId stateid_;
 
   const baldr::PathLocation candidate_;
 
@@ -69,9 +72,11 @@ class State
   mutable std::unordered_map<StateId, uint32_t> label_idx_;
 };
 
-
-class MapMatching: public ViterbiSearch<State>
+class MapMatching: public ViterbiSearch
 {
+ private:
+  using Column = std::vector<State>;
+
  public:
   MapMatching(baldr::GraphReader& graphreader,
               const sif::cost_ptr_t* mode_costing,
@@ -98,37 +103,39 @@ class MapMatching: public ViterbiSearch<State>
   sif::cost_ptr_t costing() const
   { return mode_costing_[static_cast<size_t>(mode_)]; }
 
-  const std::vector<const State*>&
-  states(Time time) const
-  { return states_[time]; }
+  const Column&
+  states(StateId::Time time) const
+  { return columns_[time]; }
 
-  const Measurement& measurement(Time time) const
+  const State&
+  state(const StateId& stateid) const
+  { return columns_[stateid.time()][stateid.id()]; }
+
+  const Measurement& measurement(StateId::Time time) const
   { return measurements_[time]; }
 
   const Measurement& measurement(const State& state) const
-  { return measurements_[state.time()]; }
+  { return measurements_[state.stateid().time()]; }
 
   std::vector<Measurement>::size_type size() const
   { return measurements_.size(); }
 
   template <typename candidate_iterator_t>
-  Time AppendState(const Measurement& measurement,
-                   candidate_iterator_t begin,
-                   candidate_iterator_t end)
+  StateId::Time AppendState(const Measurement& measurement,
+                            candidate_iterator_t begin,
+                            candidate_iterator_t end)
   {
-    Time time = states_.size();
-
-    // Append to base class
-    std::vector<const State*> column;
-    for (auto it = begin; it != end; it++) {
-      StateId id = state_.size();
-      state_.push_back(new State(id, time, *it));
-      column.push_back(state_.back());
-    }
-    unreached_states_.push_back(column);
-
-    states_.push_back(column);
     measurements_.push_back(measurement);
+
+    StateId::Time time = columns_.size();
+    Column column;
+    uint32_t idx = 0;
+    for (auto it = begin; it != end; it++, idx++) {
+      const StateId stateid(time, idx);
+      AddStateId(stateid);
+      column.emplace_back(stateid, *it);
+    }
+    columns_.push_back(column);
 
     return time;
   }
@@ -150,14 +157,13 @@ class MapMatching: public ViterbiSearch<State>
   { return (turn_cost + std::abs(route_distance - measurement_distance)) * inv_beta_; }
 
  protected:
-  float TransitionCost(const State& left, const State& right) const override;
+  float TransitionCost(const StateId& lhs, const StateId& rhs) const override;
 
-  float EmissionCost(const State& state) const override;
+  float EmissionCost(const StateId& stateid) const override;
 
   double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override;
 
  private:
-
   baldr::GraphReader& graphreader_;
 
   const sif::cost_ptr_t* mode_costing_;
@@ -166,7 +172,7 @@ class MapMatching: public ViterbiSearch<State>
 
   std::vector<Measurement> measurements_;
 
-  std::vector<std::vector<const State*>> states_;
+  std::vector<Column> columns_;
 
   float sigma_z_;
   double inv_double_sq_sigma_z_;  // equals to 1.f / (sigma_z_ * sigma_z_ * 2.f)

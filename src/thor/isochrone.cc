@@ -276,10 +276,10 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_.size();
-    adjacencylist_->add(idx, newcost.cost);
     edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
     edgelabels_.emplace_back(pred_idx, edgeid, directededge,
                              newcost, newcost.cost, 0.0f, mode_, 0);
+    adjacencylist_->add(idx);
   }
 }
 
@@ -423,11 +423,11 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
-    adjacencylist_->add(idx, newcost.cost);
     edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge,
                    directededge, newcost, newcost.cost, 0.0f,
                    mode_, tc, false);
+    adjacencylist_->add(idx);
   }
 }
 
@@ -657,9 +657,9 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       // information.
       if (directededge->IsTransition()) {
         uint32_t idx = mmedgelabels_.size();
-        adjacencylist_->add(idx, pred.sortcost());
         edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
         mmedgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
+        adjacencylist_->add(idx);
         continue;
       }
 
@@ -818,11 +818,11 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = mmedgelabels_.size();
-      adjacencylist_->add(idx, newcost.cost);
       edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       mmedgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, mode_, walking_distance,
                     tripid, prior_stop, blockid, operator_id, has_transit);
+      adjacencylist_->add(idx);
     }
   }
   return isotile_;      // Should never get here
@@ -950,14 +950,15 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       // of the path.
       uint32_t idx = edgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-      adjacencylist_->add(idx, cost.cost);
       edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                            cost.cost, 0.0f, mode_, d);
+      // Set the origin flag
       edge_label.set_origin();
 
-      // Set the origin flag
+      // Add EdgeLabel to the adjacency list
       edgelabels_.push_back(std::move(edge_label));
+      adjacencylist_->add(idx);
     }
 
     // Set the origin timezone
@@ -1021,10 +1022,10 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
-      adjacencylist_->add(idx, cost.cost);
       edgestatus_->Set(opp_edge_id, EdgeSet::kTemporary, idx);
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
                   opp_dir_edge, cost, cost.cost, 0.0f, mode_, c, false);
+      adjacencylist_->add(idx);
     }
   }
 }

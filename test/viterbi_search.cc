@@ -9,322 +9,343 @@
 
 using namespace valhalla::meili;
 
-
-using ObjectId = uint32_t;
-
-class Candidate
+struct State
 {
- public:
-  Candidate(ObjectId id)
-      : id_(id), emission_cost_(-1.f) {}
-
-  Candidate(ObjectId id, float emission_cost)
-      : id_(id), emission_cost_(emission_cost) {}
-
-  ObjectId id() const
-  { return id_; }
-
-  float emission_cost() const
-  { return emission_cost_; }
-
-  float transition_cost(ObjectId id) const
-  {
-    auto iter = transition_cost_.find(id);
-    if (iter == transition_cost_.end()) {
-      return -1.f;
-    }
-    return iter->second;
-  }
-
-  void set_transition_cost(ObjectId id, float cost)
-  { transition_cost_[id] = cost; }
-
- protected:
-  std::unordered_map<ObjectId, float> transition_cost_;
-
- private:
-  ObjectId id_;
-  float emission_cost_;
+  float emission_cost;
+  std::unordered_map<uint32_t, float> transition_costs;
 };
 
+using Column = std::vector<State>;
 
-bool operator==(const Candidate& lhs, const Candidate& rhs)
-{ return lhs.id() == rhs.id() && lhs.emission_cost() == rhs.emission_cost(); }
-
-
-class State
+void print_state(const StateId& stateid, const State& state)
 {
- public:
-  State(StateId id, Time time, const Candidate& candidate)
-      : id_(id), time_(time), candidate_(candidate) {}
-
-  const Time time() const
-  { return time_; }
-
-  const StateId id() const
-  { return id_; }
-
-  const Candidate& candidate() const
-  { return candidate_; }
-
- private:
-  const StateId id_;
-  const Time time_;
-  const Candidate candidate_;
-};
-
-
-class SimpleViterbiSearch: public ViterbiSearch<State>
-{
- public:
-  template <typename candidate_iterator_t>
-  Time AppendState(candidate_iterator_t begin, candidate_iterator_t end)
-  {
-    std::vector<const State*> column;
-    Time time = unreached_states_.size();
-    for (auto candidate = begin; candidate != end; candidate++) {
-      auto candidate_id = state_.size();
-      state_.push_back(new State(candidate_id, time, *candidate));
-      column.push_back(state_.back());
-    }
-    unreached_states_.push_back(column);
-    return time;
+  // [state_time state_id emission_cost (next_stateid transition_cost)...]
+  std::cout << "[(";
+  std::cout << stateid.time();
+  std::cout << "," << stateid.id() << ")";
+  std::cout << " $" << state.emission_cost;
+  for (const auto& transition_cost : state.transition_costs) {
+    std::cout << " (" << transition_cost.first << " $" << transition_cost.second << ")";
   }
+  std::cout << "]";
+}
+
+void print_trellis_diagram_vertically(const std::vector<Column>& columns)
+{
+  StateId::Time time = 0;
+  for (const auto& column : columns) {
+    uint32_t idx = 0;
+    for (const auto& state : column) {
+      print_state(StateId(time, idx), state);
+      std::cout << std::endl;
+      idx++;
+    }
+    time++;
+    std::cout << std::endl;
+  }
+}
+
+void print_path_reversely(
+    const std::vector<Column>& columns,
+    const IViterbiSearch::stateid_iterator rbegin,
+    const IViterbiSearch::stateid_iterator rend)
+{
+  for (auto stateid = rbegin; stateid != rend; stateid++) {
+    if ((*stateid).IsValid()) {
+      print_state(*stateid, columns[(*stateid).time()][(*stateid).id()]);
+      std::cout << std::endl;
+    } else {
+      std::cout << "[NOT FOUND]" << std::endl;
+    }
+  }
+}
+
+void AddColumns(IViterbiSearch* ivs, const std::vector<Column>& columns)
+{
+  StateId::Time time = 0;
+  for (const auto& column : columns) {
+    uint32_t idx = 0;
+    for (const auto& state : column) {
+      StateId stateid(time, idx);
+      const auto added = ivs->AddStateId(stateid);
+      test::assert_bool(added, "must be added");
+      test::assert_bool(ivs->HasStateId(stateid), "must contain it");
+      idx++;
+    }
+    time++;
+  }
+}
+
+class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<false>
+{
+ public:
+  SimpleNaiveViterbiSearch(const std::vector<Column>& columns)
+      : columns_(columns)
+  { AddColumns(this, columns); }
 
  protected:
-  float TransitionCost(const State& left, const State& right) const
+  const State& GetState(const StateId& stateid) const
+  { return columns_[stateid.time()][stateid.id()]; }
+
+  static float NormalizeCost(float cost)
+  { return cost < 0.0 ? kInvalidCost : cost; }
+
+  float EmissionCost(const StateId& stateid) const
+  { return NormalizeCost(GetState(stateid).emission_cost); }
+
+  float TransitionCost(const StateId& lhs, const StateId& rhs) const
   {
-    test::assert_bool(left.time() + 1 == right.time(),
-                      "left state should be earlier than right time");
-    const auto right_id = right.candidate().id();
-    return left.candidate().transition_cost(right_id);
+    test::assert_bool(
+        lhs.time() + 1 == rhs.time(),
+        "left state should be earlier than right time");
+    const auto& state = GetState(lhs);
+    const auto it = state.transition_costs.find(rhs.id());
+    return it == state.transition_costs.end() ? kInvalidCost : NormalizeCost(it->second);
   }
 
-  float EmissionCost(const State& candidate) const
-  { return candidate.candidate().emission_cost(); }
-
-  double CostSofar(double prev_cost_sofar,
-                   float transition_cost,
-                   float emission_cost) const
+  double CostSofar(
+      double prev_cost_sofar,
+      float transition_cost,
+      float emission_cost) const
   { return prev_cost_sofar + transition_cost + emission_cost; }
+
+ private:
+  std::vector<Column> columns_;
 };
 
-
-class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<State, false>
+class SimpleViterbiSearch: public ViterbiSearch
 {
  public:
-  template <typename candidate_iterator_t>
-  Time AppendState(candidate_iterator_t begin, candidate_iterator_t end)
-  {
-    std::vector<const State*> column;
-    Time time = states_.size();
-    for (auto candidate = begin; candidate != end; candidate++) {
-      auto candidate_id = state_.size();
-      state_.push_back(new State(candidate_id, time, *candidate));
-      column.push_back(state_.back());
-    }
-    states_.push_back(column);
-    return time;
-  }
+  SimpleViterbiSearch(const std::vector<Column>& columns)
+      : columns_(columns)
+  { AddColumns(this, columns); }
 
  protected:
-  float TransitionCost(const State& left, const State& right) const
+  const State& GetState(const StateId& stateid) const
+  { return columns_[stateid.time()][stateid.id()]; }
+
+  float EmissionCost(const StateId& stateid) const
+  { return GetState(stateid).emission_cost; }
+
+  float TransitionCost(const StateId& lhs, const StateId& rhs) const
   {
-    test::assert_bool(left.time() + 1 == right.time(),
-                      "left time should be eariler than right time");
-    auto right_id = right.candidate().id();
-    auto cost = left.candidate().transition_cost(right_id);
-    return cost < 0.f? kInvalidCost : cost;
+    test::assert_bool(
+        lhs.time() + 1 == rhs.time(),
+        "left state should be earlier than right time");
+    const auto& state = GetState(lhs);
+    const auto it = state.transition_costs.find(rhs.id());
+    return it == state.transition_costs.end() ? -1.f : it->second;
   }
 
-  float EmissionCost(const State& candidate) const
+  double CostSofar(
+      double prev_cost_sofar,
+      float transition_cost,
+      float emission_cost) const
   {
-    auto cost = candidate.candidate().emission_cost();
-    return cost < 0.f? kInvalidCost : cost;
-  }
-
-  double CostSofar(double prev_cost_sofar,
-                   float transition_cost,
-                   float emission_cost) const
-  {
-    test::assert_bool(0.f <= prev_cost_sofar
-                      && 0.f <= transition_cost
-                      && 0.f <= emission_cost,
-                      "all costs should be non-negative");
+    test::assert_bool(
+        0.f <= prev_cost_sofar
+        && 0.f <= transition_cost
+        && 0.f <= emission_cost,
+        "all costs should be non-negative");
     return prev_cost_sofar + transition_cost + emission_cost;
   }
+
+ private:
+  std::vector<Column> columns_;
 };
 
+unsigned SEED = std::chrono::system_clock::now().time_since_epoch().count();
+std::default_random_engine TRANSITION_COST_GENERATOR(SEED),
+  EMISSION_COST_GENERATOR(SEED),
+  COUNT_GENERATOR(SEED);
 
-unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-std::default_random_engine TRANSITION_COST_GENERATOR(seed),
-  EMISSION_COST_GENERATOR(seed),
-  COUNT_GENERATOR(seed);
-
-
-std::vector<Candidate>
-generate_candidates(ObjectId *start_id,
-                    size_t num_candidates,
-                    std::uniform_int_distribution<int> transition_cost_distribution,
-                    std::uniform_int_distribution<int> emission_cost_distribution,
-                    // Generate transition costs to next candidates
-                    const std::vector<Candidate>& next_candidates)
+Column
+generate_column(
+    size_t num_states,
+    std::uniform_int_distribution<int> transition_cost_distribution,
+    std::uniform_int_distribution<int> emission_cost_distribution,
+    // Generate transition costs to next column
+    const Column& next_column)
 {
-  std::vector<Candidate> candidates;
+  Column states;
 
-  for (size_t i = 0; i < num_candidates; i++) {
-    auto emission_cost = static_cast<float>(emission_cost_distribution(EMISSION_COST_GENERATOR));
-    candidates.emplace_back((*start_id)++, emission_cost);
-    for (const auto& candidate : next_candidates) {
-      auto transition_cost = static_cast<float>(transition_cost_distribution(TRANSITION_COST_GENERATOR));
-      candidates.back().set_transition_cost(candidate.id(), transition_cost);
+  for (size_t _ = 0; _ < num_states; _++) {
+    const auto emission_cost = static_cast<float>(emission_cost_distribution(EMISSION_COST_GENERATOR));
+    std::unordered_map<uint32_t, float> transition_costs;
+    for (uint32_t idx = 0; idx < next_column.size(); idx++) {
+      const auto transition_cost = static_cast<float>(transition_cost_distribution(TRANSITION_COST_GENERATOR));
+      transition_costs[idx] = transition_cost;
     }
+    states.push_back({emission_cost, transition_costs});
   }
 
-  return candidates;
+  return states;
 }
-
-
-void print_state(const std::vector<Candidate>& state,
-                 const std::vector<Candidate>& next_state)
-{
-  for (const auto& candidate : state) {
-    std::cout << candidate.id() << "(" << candidate.emission_cost() << "): ";
-    for (const auto& next_candidate : next_state) {
-      if (candidate.transition_cost(next_candidate.id()) >= 0.f) {
-        std::cout << next_candidate.id() << "(" << candidate.transition_cost(next_candidate.id()) << ") ";
-      }
-    }
-    std::cout << std::endl;
-  }
-}
-
-
-void print_state(const std::vector<Candidate>& state)
-{
-  for (const auto& candidate : state) {
-    std::cout << candidate.id() << "(" << candidate.emission_cost() << ")" << std::endl;
-  }
-}
-
-
-void print_trellis_diagram_vertically(const std::vector<std::vector<Candidate>>& states)
-{
-  for (auto cursor=states.begin(); cursor < states.end(); cursor++) {
-    if (cursor+1 != states.end()) {
-      print_state(*cursor, *(cursor+1));
-    } else {
-      print_state(*cursor);
-    }
-    std::cout << std::endl;
-  }
-}
-
-
-void print_path(const std::vector<const State*>& path)
-{
-  for (const auto candidate_ptr : path) {
-    if (candidate_ptr) {
-      std::cout << candidate_ptr->candidate().id() << " ";
-    }
-  }
-  std::cout << std::endl;
-}
-
-
-void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_distribution,
-                         std::uniform_int_distribution<int> emission_cost_distribution,
-                         std::vector<size_t> candidate_counts)
-{
-  // Generate candidates for testing
-  ObjectId start_id = 0;
-  std::vector<Candidate> prev_candidates;
-  std::vector<std::vector<Candidate>> candidate_lists;
-  for (const auto count : candidate_counts) {
-    const auto& candidates = generate_candidates(&start_id, count,
-                                                 transition_cost_distribution,
-                                                 emission_cost_distribution,
-                                                 prev_candidates);
-    prev_candidates = candidates;
-    candidate_lists.push_back(candidates);
-  }
-  std::reverse(candidate_lists.begin(), candidate_lists.end());
-
-  // print_trellis_diagram_vertically(states);
-
-  // Test viterbi search
-  SimpleNaiveViterbiSearch snvs;
-  SimpleViterbiSearch svs;
-  for (const auto& candidate_list : candidate_lists) {
-    auto svs_time = svs.AppendState(candidate_list.cbegin(), candidate_list.cend()),
-        snvs_time = snvs.AppendState(candidate_list.cbegin(), candidate_list.cend());
-    test::assert_bool(svs_time == snvs_time,
-                      "time should be matched");
-
-    auto snvs_id = snvs.SearchWinner(snvs_time);
-    const State* snvs_winner = snvs_id == kInvalidStateId? nullptr : &snvs.state(snvs_id);
-    auto svs_id = svs.SearchWinner(svs_time);
-    const State* svs_winner = svs_id == kInvalidStateId? nullptr : &svs.state(svs_id);
-
-    if (svs_winner) {
-      test::assert_bool(svs_winner->time() == svs_time && snvs_winner->time() == snvs_time,
-                        "time should be matched");
-      // Gurantee that both costs are the same
-      test::assert_bool(svs.AccumulatedCost(*svs_winner) == snvs.AccumulatedCost(*snvs_winner),
-                        "costs should be both same");
-    } else {
-      test::assert_bool(!snvs_winner,
-                        "both winner should not be found");
-    }
-  }
-}
-
 
 std::vector<size_t>
-generate_candidate_counts(size_t length,
-                          std::uniform_int_distribution<size_t> count_distribution)
+generate_column_counts(
+    size_t column_length,
+    std::uniform_int_distribution<size_t> count_distribution)
 {
   std::vector<size_t> counts;
-  for (size_t i = 0; i < length; i++) {
+
+  for (size_t i = 0; i < column_length; i++) {
     counts.push_back(count_distribution(COUNT_GENERATOR));
   }
+
   return counts;
 }
 
+std::vector<Column>
+generate_columns(
+    std::uniform_int_distribution<int> transition_cost_distribution,
+    std::uniform_int_distribution<int> emission_cost_distribution,
+    std::vector<size_t> column_counts)
+{
+  std::vector<Column> columns;
+
+  for (const auto count : column_counts) {
+    const auto& column = generate_column(
+        count,
+        transition_cost_distribution,
+        emission_cost_distribution,
+        columns.empty() ? Column() : columns.back());
+    columns.push_back(column);
+  }
+  std::reverse(columns.begin(), columns.end());
+
+  return columns;
+}
+
+void test_viterbi_search(const std::vector<Column>& columns)
+{
+  SimpleNaiveViterbiSearch na(columns);
+  SimpleViterbiSearch vs(columns);
+
+  for (StateId::Time time = 0; time < columns.size(); time++) {
+    const auto& na_winner = na.SearchWinner(time);
+    const auto& vs_winner = vs.SearchWinner(time);
+
+    if (na_winner.IsValid()) {
+      test::assert_bool(
+          vs_winner.IsValid(),
+          "both winners should be valid");
+
+      test::assert_bool(
+          na_winner.time() == time,
+          "time should be matched");
+
+      test::assert_bool(
+          vs_winner.time() == time,
+          "time should be matched");
+
+      if (na.AccumulatedCost(na_winner) != vs.AccumulatedCost(vs_winner)) {
+        std::cout << "GRAPH" << std::endl;
+        print_trellis_diagram_vertically(columns);
+
+        std::cout << "PATH OF NA" << std::endl;
+        print_path_reversely(columns, na.SearchPath(time), na.PathEnd());
+
+        std::cout << "PATH OF VS" << std::endl;
+        print_path_reversely(columns, vs.SearchPath(time), vs.PathEnd());
+      }
+
+      test::assert_bool(
+          na.AccumulatedCost(na_winner) == vs.AccumulatedCost(vs_winner),
+          "costs should be both optimal"
+          "but got na = " + std::to_string(na.AccumulatedCost(na_winner)) +
+          " and vs = " + std::to_string(vs.AccumulatedCost(vs_winner)));
+    } else {
+      test::assert_bool(
+          !vs_winner.IsValid(),
+          "both winners should not be found");
+    }
+  }
+}
 
 void TestViterbiSearch()
 {
-  std::uniform_int_distribution<int> transition_cost_distribution(0, 50);
-  std::uniform_int_distribution<int> emission_cost_distribution(0, 100);
-  std::uniform_int_distribution<size_t> count_distribution(1, 100);
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
-                      generate_candidate_counts(1000, count_distribution));
+  // small case for visualization
+  {
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(-10, 30),
+        // emission costs
+        std::uniform_int_distribution<int>(-10, 30),
+        generate_column_counts(
+            5,
+            // column sizes
+            std::uniform_int_distribution<size_t>(1, 3)));
+    // std::cout << std::endl;
+    // print_trellis_diagram_vertically(columns);
+    test_viterbi_search(columns);
+  }
 
-  transition_cost_distribution = std::uniform_int_distribution<int>(-50, 10);
-  emission_cost_distribution = std::uniform_int_distribution<int>(-100, 10);
-  count_distribution = std::uniform_int_distribution<size_t>(0, 100);
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
-                      generate_candidate_counts(1000, count_distribution));
+  {
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(0, 50),
+        // emission costs
+        std::uniform_int_distribution<int>(0, 100),
+        generate_column_counts(
+            1000,
+            // column sizes
+            std::uniform_int_distribution<size_t>(1, 100)));
+    test_viterbi_search(columns);
+  }
 
-  transition_cost_distribution = std::uniform_int_distribution<int>(-30, -3);
-  emission_cost_distribution = std::uniform_int_distribution<int>(3, 30);
-  count_distribution = std::uniform_int_distribution<size_t>(0, 100);
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
-                      generate_candidate_counts(1000, count_distribution));
+  {
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(-50, 10),
+        // emission costs
+        std::uniform_int_distribution<int>(-100, 10),
+        generate_column_counts(
+            1000,
+            // column sizes
+            std::uniform_int_distribution<size_t>(0, 100)));
+    test_viterbi_search(columns);
+  }
 
-  transition_cost_distribution = std::uniform_int_distribution<int>(3, 30);
-  emission_cost_distribution = std::uniform_int_distribution<int>(-30, -3);
-  count_distribution = std::uniform_int_distribution<size_t>(0, 100);
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
-                      generate_candidate_counts(1000, count_distribution));
+  {
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(-30, -3),
+        // emission costs
+        std::uniform_int_distribution<int>(3, 30),
+        generate_column_counts(
+            1000,
+            // column sizes
+            std::uniform_int_distribution<size_t>(0, 100)));
+    test_viterbi_search(columns);
+  }
 
-  transition_cost_distribution = std::uniform_int_distribution<int>(0, 1000);
-  emission_cost_distribution = std::uniform_int_distribution<int>(0, 3000);
-  count_distribution = std::uniform_int_distribution<size_t>(1, 100);
-  test_viterbi_search(transition_cost_distribution, emission_cost_distribution,
-                      generate_candidate_counts(1000, count_distribution));
+  {
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(3, 30),
+        // emission costs
+        std::uniform_int_distribution<int>(-30, -3),
+        generate_column_counts(
+            1000,
+            // column sizes
+            std::uniform_int_distribution<size_t>(0, 100)));
+    test_viterbi_search(columns);
+  }
+
+  {
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(0, 1000),
+        // emission costs
+        std::uniform_int_distribution<int>(0, 3000),
+        generate_column_counts(
+            1000,
+            // column sizes
+            std::uniform_int_distribution<size_t>(1, 100)));
+    test_viterbi_search(columns);
+  }
 }
-
 
 int main(int argc, char *argv[])
 {

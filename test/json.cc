@@ -62,6 +62,8 @@ void TestJsonSerialize() {
   boost::property_tree::ptree res,ans;
   boost::property_tree::read_json(result, res);
   boost::property_tree::read_json(answer, ans);
+  res.sort();
+  ans.sort();
 
   stringstream res_formatted,ans_formatted;
   boost::property_tree::write_json(res_formatted, res);

@@ -200,6 +200,7 @@ nobase_include_HEADERS = \
 	valhalla/meili/map_matching.h \
 	valhalla/meili/priority_queue.h \
 	valhalla/meili/routing.h \
+	valhalla/meili/stateid.h \
 	valhalla/meili/viterbi_search.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
@@ -315,6 +316,7 @@ libvalhalla_la_SOURCES = \
 	src/sif/truckcost.cc \
 	src/sif/dynamiccost.cc \
 	src/meili/universal_cost.cc \
+	src/meili/viterbi_search.cc \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \
@@ -789,12 +791,6 @@ test_routing_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_
 test_viterbi_search_SOURCES = test/viterbi_search.cc test/test.cc
 test_viterbi_search_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_viterbi_search_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_geojson_reader_SOURCES = test/geojson_reader.cc test/test.cc
-test_geojson_reader_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_geojson_reader_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_geojson_writer_SOURCES = test/geojson_writer.cc test/test.cc
-test_geojson_writer_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-test_geojson_writer_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_util_skadi_SOURCES = test/util_skadi.cc test/test.cc
 test_util_skadi_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_util_skadi_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

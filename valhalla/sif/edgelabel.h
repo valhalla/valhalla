@@ -335,7 +335,7 @@ class EdgeLabel {
   // restriction_:   Bit mask of edges (by local edge index at the end node)
   //                 that are restricted (simple turn restrictions)
   uint32_t path_distance_ : 25;
-  uint64_t restrictions_  : 7;
+  uint32_t restrictions_  : 7;
 
   /**
    * edgeid_:         Graph Id of the edge.
