@@ -538,30 +538,21 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
       static_cast<uint32_t>(use_roads_ * 30.0f);
 
   // Create speed cost table and penalty table (to avoid division in costing)
+  float avoid_roads = (1.0f - use_roads_) * 0.75f + 0.25;
   speedfactor_[0] = kSecPerHour;
   speedpenalty_[0] = 0.0f;
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
-  }
 
-  float avoid_roads = (1.0f - use_roads_) * 0.75f + 0.25;
-  uint32_t s = 1;
-  // Low speed roads should be more favored than standard bike
-  for ( ; s <= 40; s++) {
-    // Linearly increases to a factor of 1.0 at 40 kmh (~25 mph)
-    speedpenalty_[s] = (static_cast<float>(s) / 40.0f) * avoid_roads;
-  }
-
-  // Mid speed roads should be slightly more penalized than standard bike.
-  for ( ; s <= 65; s++) {
-    // Linearly increases to a factor of 2.0 at 65 kmh (~40 mph)
-    speedpenalty_[s] = ((static_cast<float>(s) / 25.0f) - 0.6f) * avoid_roads;
-  }
-
-  // High speed roads should be much more penalized than standard bike.
-  for ( ; s <= kMaxSpeedKph; s++) {
-    // Linearly increases to a factor of 2.5 at 90 kmh (~56 mph) and continues until max.
-    speedpenalty_[s] = ((static_cast<float>(s) / 50.0) + 0.7f) * avoid_roads;
+    float base_pen = 0.0f;
+    if (s <= 40) {
+      base_pen = (static_cast<float>(s) / 40.0f);
+    } else if (s <= 65) {
+      base_pen = ((static_cast<float>(s) / 25.0f) - 0.6f);
+    } else {
+      base_pen = ((static_cast<float>(s) / 50.0) + 0.7f);
+    }
+    speedpenalty_[s] = (base_pen - 1.0f) * avoid_roads + 1.0f;
   }
 
   // Populate the grade penalties (based on use_hills factor).
@@ -827,7 +818,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Reduce stress by road class factor the closer use_roads_ is to 0
   float avoid_roads = 1.0f - use_roads_;
-  turn_stress *= (class_factor * avoid_roads) + use_roads_ + 0.5f;
+  turn_stress *= (class_factor * avoid_roads) + use_roads_ + 1.0f;
 
   // Penalize transition to higher class road.
   if (edge->classification() < pred.classification() && edge->use() != Use::kLivingStreet) {
@@ -931,7 +922,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
   // Reduce stress by road class factor the closer use_roads_ is to 0
   float avoid_roads = 1.0f - use_roads_;
-  turn_stress *= (class_factor * avoid_roads) + use_roads_ + 0.5f;
+  turn_stress *= (class_factor * avoid_roads) + use_roads_ + 1.0f;
 
   // Penalize transition to higher class road.
   if (edge->classification() < pred->classification() && edge->use() != Use::kLivingStreet) {
