@@ -277,30 +277,42 @@ MapMatcher::OfflineMatch(
     const std::vector<Measurement>& measurements, uint32_t k) {
   mapmatching_.Clear();
 
-  const auto begin = measurements.begin(),
-               end = measurements.end();
-
-  if (begin == end) {
+  if (measurements.size() < 2)
     return {};
-  }
 
   const auto interpolation_distance = config_.get<float>("interpolation_distance"),
           sq_interpolation_distance = interpolation_distance * interpolation_distance;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated_measurements;
 
-  // Always match the first measurement
-  auto time = AppendMeasurement(*begin);
-  auto latest_match_measurement = begin;
-  for (auto measurement = std::next(begin); measurement != end; measurement++) {
-    const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
-    // Always match the last measurement
-    if (sq_interpolation_distance < sq_distance || std::next(measurement) == end) {
-      time = AppendMeasurement(*measurement);
-      latest_match_measurement = measurement;
-    } else {
-      interpolated_measurements[time].push_back(*measurement);
-    }
+  // Since we always match the first and last measurement we need to find the first
+  // measurement from the end which will not be interpolated, the rest of them will
+  // be interpolated, so we keep track of the start of the run of these interpolated ones
+  size_t start_of_run = measurements.size() - 1;
+  for(; start_of_run > 0; --start_of_run) {
+    const auto sq_distance = GreatCircleDistanceSquared(measurements[start_of_run], measurements[start_of_run - 1]);
+    if(sq_interpolation_distance < sq_distance)
+      break;
   }
+
+  // Always match the first measurement and up to the last uninterpolated one
+  auto time = AppendMeasurement(measurements.front());
+  for (size_t i = 1; i < start_of_run; ++i) {
+    const auto sq_distance = GreatCircleDistanceSquared(measurements[i - 1], measurements[i]);
+    if (sq_interpolation_distance < sq_distance)
+      time = AppendMeasurement(measurements[i]);
+    else
+      interpolated_measurements[time].push_back(measurements[i]);
+  }
+
+  // All the ones in between the last interpolated and the last one are interpolated
+  for(;start_of_run < measurements.size() - 1; ++start_of_run)
+    interpolated_measurements[time].push_back(measurements[start_of_run]);
+
+  // Always match the last measurement
+  time = AppendMeasurement(measurements.back());
+
+  //TODO: at this point you could have only added front and back measurements and they could be
+  //equal, in that case the route will fail and you will get no map match
 
   // Search path and put the states into an array reversely
   std::vector<StateId> stateids;
