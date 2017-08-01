@@ -23,9 +23,9 @@ constexpr float SEARCH_CUTOFF = 35000.f;
 //we keep it small because point and click interfaces are more accurate than gps input
 constexpr float NODE_SNAP = 5.f;
 //during side of street computations we figured you're on the street if you are less than
-//5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
+//4 meters (~13) feet from the centerline. this is actually pretty large (with accurate shape
 //data for the roads it might want half that) but its better to assume on street than not
-constexpr float SIDE_OF_STREET_SNAP = 25.f; //this is 5 meters squared, the computation uses square distance
+constexpr float SIDE_OF_STREET_SNAP = 16.f; //this is 4 meters squared, the computation uses square distance
 //how much of the shape should be sampled to get heading
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
