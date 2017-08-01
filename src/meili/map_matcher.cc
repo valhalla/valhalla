@@ -287,26 +287,29 @@ MapMatcher::OfflineMatch(
   // Since we always match the first and last measurement we need to find the first
   // measurement from the end which will not be interpolated, the rest of them will
   // be interpolated, so we keep track of the start of the run of these interpolated ones
-  size_t start_of_run = measurements.size() - 1;
+  size_t start_of_run = measurements.size() - 2;
   for(; start_of_run > 0; --start_of_run) {
-    const auto sq_distance = GreatCircleDistanceSquared(measurements[start_of_run], measurements[start_of_run - 1]);
+    const auto sq_distance = GreatCircleDistanceSquared(measurements.back(), measurements[start_of_run]);
     if(sq_interpolation_distance < sq_distance)
       break;
   }
 
   // Always match the first measurement and up to the last uninterpolated one
   auto time = AppendMeasurement(measurements.front());
-  for (size_t i = 1; i < start_of_run; ++i) {
-    const auto sq_distance = GreatCircleDistanceSquared(measurements[i - 1], measurements[i]);
-    if (sq_interpolation_distance < sq_distance)
+  size_t last = 0;
+  for (size_t i = 1; i <= start_of_run; ++i) {
+    const auto sq_distance = GreatCircleDistanceSquared(measurements[last], measurements[i]);
+    if (sq_interpolation_distance < sq_distance) {
       time = AppendMeasurement(measurements[i]);
+      last = i;
+    }
     else
       interpolated_measurements[time].push_back(measurements[i]);
   }
 
   // All the ones in between the last interpolated and the last one are interpolated
-  for(;start_of_run < measurements.size() - 1; ++start_of_run)
-    interpolated_measurements[time].push_back(measurements[start_of_run]);
+  for(auto i = start_of_run + 1; i < measurements.size() - 1; ++i)
+    interpolated_measurements[time].push_back(measurements[i]);
 
   // Always match the last measurement
   time = AppendMeasurement(measurements.back());
