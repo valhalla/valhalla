@@ -42,7 +42,8 @@ State::route(const std::vector<State>& states,
     locations.push_back(state.candidate());
   }
 
-  // Route
+  // Route, we have to make sure that the max distance is greater than 0
+  // otherwise we wont be able to get any labels into the labelset
   max_route_distance = std::max(std::ceil(max_route_distance), 1.f);
   labelset_ = std::make_shared<LabelSet>(max_route_distance);
   const auto& results = find_shortest_path(
