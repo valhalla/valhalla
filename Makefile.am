@@ -429,7 +429,6 @@ libvalhalla_la_SOURCES += \
 	src/mjolnir/graphenhancer.cc \
 	src/mjolnir/graphvalidator.cc \
 	src/mjolnir/hierarchybuilder.cc \
-	src/mjolnir/idtable.cc \
 	src/mjolnir/linkclassification.cc \
 	src/mjolnir/luatagtransform.cc \
 	src/mjolnir/node_expander.cc \

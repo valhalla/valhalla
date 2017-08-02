@@ -30,7 +30,7 @@ using namespace valhalla::mjolnir;
 namespace {
 
 // Will throw an error if this is exceeded. Then we can increase.
-constexpr uint64_t kMaxOSMNodeId = 5000000000;
+constexpr uint64_t kMaxOSMNodeId = 5500000000;
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
@@ -72,7 +72,7 @@ struct graph_callback : public OSMPBF::Callback {
 
   virtual void node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) override {
     // Check if it is in the list of nodes used by ways
-    if (!shape_.IsUsed(osmid)) {
+    if (!shape_.get(osmid)) {
       return;
     }
 
@@ -127,7 +127,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
       else if (tag.first == "gate") {
         if (tag.second == "true") {
-          if (!intersection_.IsUsed(osmid)) {
+          if (!intersection_.get(osmid)) {
             intersection_.set(osmid);
             ++osmdata_.edge_count;
           }
@@ -136,7 +136,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
       else if (tag.first == "bollard") {
         if (tag.second == "true") {
-          if (!intersection_.IsUsed(osmid)) {
+          if (!intersection_.get(osmid)) {
             intersection_.set(osmid);
             ++osmdata_.edge_count;
           }
@@ -145,7 +145,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
       else if (tag.first == "toll_booth") {
         if (tag.second == "true") {
-          if (!intersection_.IsUsed(osmid)) {
+          if (!intersection_.get(osmid)) {
             intersection_.set(osmid);
             ++osmdata_.edge_count;
           }
@@ -154,7 +154,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
       else if (tag.first == "border_control") {
         if (tag.second == "true") {
-          if (!intersection_.IsUsed(osmid)) {
+          if (!intersection_.get(osmid)) {
             intersection_.set(osmid);
             ++osmdata_.edge_count;
           }
@@ -172,7 +172,7 @@ struct graph_callback : public OSMPBF::Callback {
 
     // Set the intersection flag (relies on ways being processed first to set
     // the intersection Id markers).
-    if (intersection_.IsUsed(osmid)) {
+    if (intersection_.get(osmid)) {
       n.set_intersection(true);
       osmdata_.intersection_count++;
     }
@@ -248,7 +248,7 @@ struct graph_callback : public OSMPBF::Callback {
     loop_nodes_.clear();
     for (size_t i = 0; i < nodes.size(); ++i) {
       const auto& node = nodes[i];
-      if(shape_.IsUsed(node)) {
+      if(shape_.get(node)) {
         intersection_.set(node);
         ++osmdata_.edge_count;
       }

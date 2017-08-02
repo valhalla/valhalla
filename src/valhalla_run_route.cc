@@ -662,6 +662,18 @@ int main(int argc, char *argv[]) {
       return EXIT_FAILURE;
     }
   }
+
+  // Normalize the edge scores
+  for (auto& correlated : path_location) {
+    auto minScoreEdge = *std::min_element(correlated.edges.begin(), correlated.edges.end(),
+       [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
+         return i.score < j.score;
+       });
+
+    for(auto& e : correlated.edges) {
+      e.score -= minScoreEdge.score;
+    }
+  }
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   t2 - t1).count();
