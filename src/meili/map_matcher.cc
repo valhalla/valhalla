@@ -38,7 +38,7 @@ struct Interpolation {
 
   float sortcost(const MapMatching& mm, float gc_dist, float clk_dist) const
   { return mm.CalculateTransitionCost(0.f, route_distance, gc_dist, route_time, clk_dist) +
-      mm.CalculateEmissionCost(sq_distance); }
+        mm.CalculateEmissionCost(sq_distance); }
 };
 
 inline MatchResult
@@ -118,42 +118,28 @@ InterpolateMeasurement(const MapMatching& mapmatching,
   return best_interp;
 }
 
-
-// Interpolate measurements along the route from state at current time
-// to state at next time
+// Interpolate measurements on the route. match_measurement is
+// required to calculate distances to the measurements.
 std::vector<MatchResult>
 InterpolateMeasurements(const MapMatching& mapmatching,
-                        const StateId& stateid,
-                        const StateId& next_stateid,
+                        const Measurement& match_measurement,
+                        std::vector<EdgeSegment>& route,
                         const std::vector<Measurement>& interpolated_measurements)
 {
-  // Nothing to do here
-  if (interpolated_measurements.empty()) {
-    return {};
-  }
-
-  //can't interpolate these because they don't happen between two valid states or
-  //we weren't able to get a downstream route
   std::vector<MatchResult> results;
-  if (!stateid.IsValid() || !next_stateid.IsValid()) {
-    for (const auto& measurement: interpolated_measurements) {
-      results.push_back(CreateMatchResult(measurement));
-    }
-    return results;
-  }
-
-  std::vector<EdgeSegment> route;
-  // route is updated in-place
-  MergeRoute(route, mapmatching.state(stateid), mapmatching.state(next_stateid));
 
   //for each point that needs interpolated
   for (const auto& measurement: interpolated_measurements) {
-    const auto& match_measurement = mapmatching.measurement(stateid.time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
     //interpolate this point along the route
-    const auto& interp = InterpolateMeasurement(mapmatching, route.begin(), route.end(),
-        measurement, match_measurement_distance, match_measurement_time);
+    const auto& interp = InterpolateMeasurement(
+        mapmatching,
+        route.begin(),
+        route.end(),
+        measurement,
+        match_measurement_distance,
+        match_measurement_time);
 
     //if it was able to do the interpolation
     if (interp.edgeid.Is_Valid()) {
@@ -174,6 +160,62 @@ InterpolateMeasurements(const MapMatching& mapmatching,
   }
 
   return results;
+}
+
+// Interpolate measurements on the same edge of the result
+std::vector<MatchResult>
+InterpolateMeasurements(const MapMatching& mapmatching,
+                        const MatchResult& result,
+                        const std::vector<Measurement>& interpolated_measurements)
+{
+  if (result.edgeid.Is_Valid() && result.stateid.IsValid()) {
+    std::vector<EdgeSegment> route = {EdgeSegment(result.edgeid, result.distance_along, 1.0)};
+    return InterpolateMeasurements(
+        mapmatching,
+        mapmatching.measurement(result.stateid.time()),
+        route,
+        interpolated_measurements);
+  } else {
+    std::vector<MatchResult> results;
+    for (const auto& measurement: interpolated_measurements) {
+      results.push_back(CreateMatchResult(measurement));
+    }
+    return results;
+  }
+}
+
+// Interpolate measurements along the route from state at current time
+// to state at next time
+std::vector<MatchResult>
+InterpolateMeasurements(const MapMatching& mapmatching,
+                        const StateId& stateid,
+                        const StateId& next_stateid,
+                        const std::vector<Measurement>& interpolated_measurements)
+{
+  // Nothing to do here
+  if (interpolated_measurements.empty()) {
+    return {};
+  }
+
+  //can't interpolate these because they don't happen between two valid states or
+  //we weren't able to get a downstream route
+  if (!stateid.IsValid() || !next_stateid.IsValid()) {
+    std::vector<MatchResult> results;
+    for (const auto& measurement: interpolated_measurements) {
+      results.push_back(CreateMatchResult(measurement));
+    }
+    return results;
+  }
+
+  std::vector<EdgeSegment> route;
+  // route is updated in-place
+  MergeRoute(route, mapmatching.state(stateid), mapmatching.state(next_stateid));
+
+  return InterpolateMeasurements(
+      mapmatching,
+      mapmatching.measurement(stateid.time()),
+      route,
+      interpolated_measurements);
 }
 
 // Find the match result of a state, given its previous state and next
@@ -293,8 +335,7 @@ MapMatcher::OfflineMatch(
   auto latest_match_measurement = begin;
   for (auto measurement = std::next(begin); measurement != end; measurement++) {
     const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
-    // Always match the last measurement
-    if (sq_interpolation_distance < sq_distance || std::next(measurement) == end) {
+    if (sq_interpolation_distance < sq_distance) {
       time = AppendMeasurement(*measurement);
       latest_match_measurement = measurement;
     } else {
@@ -335,11 +376,21 @@ MapMatcher::OfflineMatch(
       continue;
     }
 
-    const auto& interpolated_results = InterpolateMeasurements(
-        mapmatching_,
-        stateids[time],
-        time + 1 < stateids.size() ? stateids[time + 1] : StateId(),
-        it->second);
+    std::vector<MatchResult> interpolated_results;
+    if (time + 1 < stateids.size()) {
+      // Interpolate all along the route between current state to next state
+      interpolated_results = InterpolateMeasurements(
+          mapmatching_,
+          stateids[time],
+          stateids[time + 1],
+          it->second);
+    } else {
+      // Interpolate all on the edge of the last match road segment
+      interpolated_results = InterpolateMeasurements(
+          mapmatching_,
+          results[time],
+          it->second);
+    }
 
     std::copy(
         interpolated_results.cbegin(),
