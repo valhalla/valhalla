@@ -135,17 +135,11 @@ struct candidate_t {
     if(sq_distance < SIDE_OF_STREET_SNAP)
       return PathLocation::SideOfStreet::NONE;
 
-    //if the projected point is way too close to the begin or end of the shape
-    //TODO: if the original point is really far away side of street may also not make much sense..
-    auto& shape = edge_info->shape();
-    if(point.Distance(shape.front()) < SIDE_OF_STREET_SNAP ||
-       point.Distance(shape.back())  < SIDE_OF_STREET_SNAP)
-      return PathLocation::SideOfStreet::NONE;
-
     //get the side TODO: this can technically fail for longer segments..
     //to fix it we simply compute the plane formed by the triangle
     //through the center of the earth and the two shape points and test
     //whether the original point is above or below the plane (depending on winding)
+    auto& shape = edge_info->shape();
     LineSegment2<PointLL> segment(shape[index], shape[index + 1]);
     return (segment.IsLeft(original) > 0) == edge->forward()  ? PathLocation::SideOfStreet::LEFT : PathLocation::SideOfStreet::RIGHT;
   }
