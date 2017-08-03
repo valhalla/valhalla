@@ -469,6 +469,7 @@ bin_PROGRAMS = \
 	valhalla_run_route \
 	valhalla_benchmark_adjacency_list \
 	valhalla_run_matrix \
+	valhalla_path_comparison \
 	valhalla_export_edges
 valhalla_run_map_match_SOURCES = src/meili/valhalla_run_map_match.cc
 valhalla_run_map_match_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
@@ -491,6 +492,9 @@ valhalla_benchmark_adjacency_list_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVI
 valhalla_run_matrix_SOURCES = src/valhalla_run_matrix.cc
 valhalla_run_matrix_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_run_matrix_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_path_comparison_SOURCES = src/valhalla_path_comparison.cc
+valhalla_path_comparison_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_path_comparison_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_export_edges_SOURCES = src/valhalla_export_edges.cc
 valhalla_export_edges_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_export_edges_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
