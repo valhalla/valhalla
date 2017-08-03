@@ -670,6 +670,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // Special use cases: cycleway, footway, and path
   uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
   if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
+
     // Differentiate how segregated the way is from pedestrians
     if (edge->cyclelane() == CycleLane::kSeparated) { // No pedestrians allowed on path
       accommodation_factor = use_roads_ * 0.8f;
