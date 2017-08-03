@@ -47,6 +47,9 @@ namespace {
   using ots_matches_t = std::vector<ots_t>;
   using sid_t = baldr::GraphId;
   std::vector<std::pair<std::string, ots_matches_t> > test_cases {
+    //partial, partial with duplicate point
+    std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":99},{"lon":-76.357056,"lat":40.541309,"time":100}],"match_options":{"breakage_distance":10000}})",
+      ots_matches_t{ots_t{sid_t(0),-1,0,50.f,0,-1}, ots_t{sid_t(0),50.f,0,-1,2,-1}}),
     //partial, partial
     std::make_pair(R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.357056,"lat":40.541309,"time":100}],"match_options":{"breakage_distance":10000}})",
       ots_matches_t{ots_t{sid_t(0),-1,0,50.f,0,-1}, ots_t{sid_t(0),50.f,0,-1,1,-1}}),
