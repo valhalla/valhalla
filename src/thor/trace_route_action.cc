@@ -415,7 +415,7 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
           destination, std::list<PathLocation>{},
           interrupt, &route_discontinuities);
     } else {
-      throw;
+      throw valhalla_exception_t { 442 };
     }
   map_match_results.emplace_back(std::get<kConfidenceScoreIndex>(offline_result),
       enhanced_match_results, trip_path);
