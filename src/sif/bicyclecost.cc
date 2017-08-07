@@ -714,7 +714,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
   // We want to try and avoid roads that specify to use a cycling path to the side
   if (edge->use_sidepath()) {
-    accommodation_factor += 3.0f;
+    accommodation_factor += 3.0f * (1.0f - use_roads_);
   }
 
   // Favor bicycle networks very slightly.
