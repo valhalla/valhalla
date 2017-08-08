@@ -2,38 +2,18 @@
 #include <iostream>
 #include <string>
 #include <vector>
-//#include <queue>
-//#include <tuple>
-//#include <cmath>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
-#include <boost/format.hpp>
 
 #include "config.h"
 
-//#include "midgard/encoded.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/pathlocation.h"
 #include "baldr/graphid.h"
-//#include "baldr/connectivity_map.h"
-//#include "loki/search.h"
 #include "sif/costfactory.h"
-//#include "odin/directionsbuilder.h"
-//#include "odin/util.h"
-//#include "proto/trippath.pb.h"
-//#include "proto/tripdirections.pb.h"
-//#include "proto/directions_options.pb.h"
-//#include "midgard/logging.h"
-//#include "midgard/distanceapproximator.h"
-/*#include "thor/astar.h"
-#include "thor/bidirectional_astar.h"
-#include "thor/multimodal.h"
-#include "thor/trippathbuilder.h"
-#include "thor/attributes_controller.h"
-#include "thor/route_matcher.h"*/
 #include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"
 #include "meili/match_result.h"
@@ -140,15 +120,9 @@ int main(int argc, char *argv[]) {
 
   // Construct costing
   CostFactory<DynamicCost> factory;
-  //factory.Register("bicycle", CreateBicycleDebugger);
-  factory.Register("bicycle", CreateBicycleCost);
-  /*factory.Register("auto", CreateAutoCost);
-  factory.Register("auto_shorter", CreateAutoShorterCost);
-  factory.Register("bus", CreateBusCost);
+  factory.Register("auto", CreateAutoCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
-  factory.Register("truck", CreateTruckCost);
-  factory.Register("transit", CreateTransitCost);*/
   std::string method_options = "costing_options." + routetype;
   auto costing_options = json_ptree.get_child(method_options, {});
   cost_ptr_t costing = factory.Create(routetype, costing_options);
@@ -161,15 +135,15 @@ int main(int argc, char *argv[]) {
 
   uint32_t i = 0;
   for (const auto& path : paths) {
-    std::cout << "======================================================================\n";
-    std::cout << "                               PATH " << i << std::endl;
-    std::cout << "======================================================================\n\n";
+    std::cout << "==========================================================================\n";
+    std::cout << "                                 PATH " << i << std::endl;
+    std::cout << "==========================================================================\n\n";
     std::vector<Measurement> measurements;
     for (const auto& location : path) {
       measurements.emplace_back (Measurement{
           {location.latlng_.lng(),location.latlng_.lat()},
-          matcher->config().get<float>("gps_accuracy"),
-          matcher->config().get<float>("search_radius")
+          matcher->config().get<float>("gps_accuracy") + 10,
+          matcher->config().get<float>("search_radius") + 10
       });
     }
 
@@ -209,6 +183,7 @@ int main(int argc, char *argv[]) {
         auto node = tile->node(node_id);
         EdgeLabel pred_label (0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0);
         std::cout << "-------Transition-------\n";
+        std::cout << "Pred GraphId: " << pred_id << std::endl;
         Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
         trans_total += trans_cost;
         std::cout << "TransitionCost cost: " << trans_cost.cost;
@@ -218,17 +193,18 @@ int main(int argc, char *argv[]) {
       pred_id = current_id;
 
       std::cout << "----------Edge----------\n";
+      std::cout << "Edge GraphId: " << current_id << std::endl;
       Cost edge_cost = costing->EdgeCost(edge);
       edge_total += edge_cost;
       std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";
       std::cout << "------------------------\n\n";
     }
-    std::cout << "----------------------------------------------------------------------\n";
-    std::cout << "Total Edge Cost       : " << edge_total.cost << "  Total Edge Secs       : " << edge_total.secs << "\n";
-    std::cout << "Total Transition Cost : " << trans_total.cost << "  Total Transition Secs : " << trans_total.secs << "\n";
+    std::cout << "+------------------------------------------------------------------------+\n";
+    std::cout << "| Total Edge Cost       : " << std::setw(10) << edge_total.cost << "  Total Edge Secs       : " << std::setw(10) << edge_total.secs << " |\n";
+    std::cout << "| Total Transition Cost : " << std::setw(10) << trans_total.cost << "  Total Transition Secs : " << std::setw(10) << trans_total.secs << " |\n";
     Cost total_cost = edge_total + trans_total;
-    std::cout << "Total Cost            : " << total_cost.cost << "  Total Secs            : " << total_cost.secs << "\n";
-    std::cout << "----------------------------------------------------------------------\n";
+    std::cout << "| Total Cost            : " << std::setw(10) << total_cost.cost << "  Total Secs            : " << std::setw(10) << total_cost.secs << " |\n";
+    std::cout << "+------------------------------------------------------------------------+\n";
     ++i;
     std::cout << "\n\n";
   }

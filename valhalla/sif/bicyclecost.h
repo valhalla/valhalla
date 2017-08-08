@@ -13,8 +13,6 @@ namespace sif {
  */
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config);
 
-cost_ptr_t CreateBicycleDebugger(const boost::property_tree::ptree& config);
-
 }
 }
 

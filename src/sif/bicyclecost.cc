@@ -414,13 +414,6 @@ protected:
     };
   }
 
-  virtual uint32_t GetBikeSpeed (const baldr::DirectedEdge* edge) const {
-    return edge->dismount () ?
-        kDismountSpeed :
-        static_cast<uint32_t>((speed_ *
-          surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
-          kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
-  }
 };
 
 // Bicycle route costs are distance based with some favor/avoid based on
@@ -660,7 +653,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // Otherwise, Update speed based on surface factor. Lower speed for rougher surfaces
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
-  uint32_t bike_speed = GetBikeSpeed(edge);
+  uint32_t bike_speed = edge->dismount () ?
+      kDismountSpeed :
+      static_cast<uint32_t>((speed_ *
+        surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
+        kGradeBasedSpeedFactor[edge->weighted_grade()]) + 0.5f);
 
   // Represents how stressful a roadway is without looking at grade or cycle accommodations
   float roadway_stress = 1.0f;
@@ -965,31 +962,6 @@ uint8_t BicycleCost::travel_type() const {
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
   return std::make_shared<BicycleCost>(config);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////
-
-
-class BicycleDebugger final : public BicycleCost {
-public:
-  BicycleDebugger (const boost::property_tree::ptree& config)
-    :BicycleCost(config) {}
-
-  ~BicycleDebugger () {}
-
-private:
-
-  uint32_t GetBikeSpeed (const baldr::DirectedEdge* edge) const {
-    uint32_t bike_speed = BicycleCost::GetBikeSpeed(edge);
-    std::cout << "bike_speed: " << bike_speed << std::endl;
-    return bike_speed;
-  }
-
-};
-
-cost_ptr_t CreateBicycleDebugger(const boost::property_tree::ptree& config) {
-  return std::make_shared<BicycleDebugger>(config);
 }
 
 }
