@@ -95,6 +95,14 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
     }
   }
 
+  // motorroad override.
+  if (country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)) != -1) {
+	forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)),
+						r_oneway_vehicle, r_oneway_bicycle, user_access);
+	reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)),
+						f_oneway_vehicle, f_oneway_bicycle, user_access);
+  }
+
   // track, footway, pedestrian, bridleway, cycleway, and path
   if (directededge.use() == Use::kTrack && country_access.at(static_cast<uint32_t>(AccessTypes::kTrack)) != -1) {
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kTrack)),
