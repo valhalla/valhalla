@@ -287,7 +287,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
 
   for(const auto& station_pt : response.get_child("stop_stations")) {
 
-    const auto& ll_pt = station_pt.second.get_child("geometry.coordinates");
+    const auto& ll_pt = station_pt.second.get_child("geometry_centroid.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
     auto lat = ll_pt.back().second.get_value<float>();
     std::string onestop_id = station_pt.second.get<std::string>("onestop_id");
@@ -300,7 +300,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
     // add egresses first.
     GraphId prev_type_graphid;
     for(const auto& egress_pt : station_pt.second.get_child("stop_egresses")) {
-      const auto& ll_pt = egress_pt.second.get_child("geometry.coordinates");
+      const auto& ll_pt = egress_pt.second.get_child("geometry_centroid.coordinates");
       auto lon = ll_pt.front().second.get_value<float>();
       auto lat = ll_pt.back().second.get_value<float>();
       auto* node = tile.add_nodes();
@@ -371,7 +371,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
 
     // finally add the platforms
     for(const auto& platforms_pt : station_pt.second.get_child("stop_platforms")) {
-      const auto& ll_pt = platforms_pt.second.get_child("geometry.coordinates");
+      const auto& ll_pt = platforms_pt.second.get_child("geometry_centroid.coordinates");
       auto lon = ll_pt.front().second.get_value<float>();
       auto lat = ll_pt.back().second.get_value<float>();
       auto* node = tile.add_nodes();
