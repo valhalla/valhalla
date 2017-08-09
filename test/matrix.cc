@@ -306,10 +306,6 @@ void test_matrix() {
 
 }
 
-void test_timedist_matrix() {
-
-}
-
 int main(int argc, char* argv[]) {
   test::suite suite ("matrix");
   logging::Configure({{"type", ""}}); //silence logs
