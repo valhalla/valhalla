@@ -629,6 +629,10 @@ bool TimeDistanceMatrix::UpdateDestinations(const PathLocation& origin,
 
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
+    // TODO - Final output of time and distance is dependent on the destinations best_cost
+    // field here but the time in seconds it takes to make a transition is not included in
+    // the final times causing discrepencies between the final times in TimeDistanceMatrix
+    // and CostMatrix. These TranstionCost times should be included.
     float remainder = dest_edge->second;
     Cost newcost = pred.cost() - (costing->EdgeCost(edge) * remainder);
     if (newcost.cost < dest.best_cost.cost) {

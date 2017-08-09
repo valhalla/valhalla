@@ -30,33 +30,33 @@ using namespace valhalla::thor;
 namespace {
   constexpr double kMilePerMeter = 0.000621371;
 
-   std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
-   //we require correlated locations
-   std::vector<baldr::PathLocation> correlated;
-   correlated.reserve(locations.size());
-   size_t i = 0;
-   do {
+  std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
+    //we require correlated locations
+    std::vector<baldr::PathLocation> correlated;
+    correlated.reserve(locations.size());
+    size_t i = 0;
+    do {
      auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
      if(!path_location)
        break;
-       try {
-         correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+     try {
+       correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
 
-         auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
-            [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
-              return i.score < j.score;
-            });
+       auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
+          [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
+            return i.score < j.score;
+          });
 
-         for(auto& e : correlated.back().edges) {
-           e.score -= minScoreEdge.score;
-         }
+       for(auto& e : correlated.back().edges) {
+         e.score -= minScoreEdge.score;
        }
-       catch (...) {
-         throw valhalla_exception_t{420};
-       }
-   }while(++i);
-     return correlated;
-   }
+     }
+     catch (...) {
+       throw valhalla_exception_t{420};
+     }
+    }while(++i);
+    return correlated;
+  }
 }
 
 namespace valhalla {
