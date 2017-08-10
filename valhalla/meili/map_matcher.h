@@ -56,7 +56,7 @@ public:
   }
 
 private:
-  StateId::Time AppendMeasurement(const Measurement& measurement);
+  StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
 
   boost::property_tree::ptree config_;
 
