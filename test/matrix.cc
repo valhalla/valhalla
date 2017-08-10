@@ -78,7 +78,7 @@ namespace {
       return {sec / 10.0f, sec};
     }
 
-    Cost TransitionCost(DirectedEdge* edge,
+    Cost TransitionCost(const DirectedEdge* edge,
           const NodeInfo* node,
           const EdgeLabel& pred) const {
       return {5.0f, 5.0f};
@@ -191,7 +191,8 @@ namespace {
       {"lat":52.106337,"lon":5.101728},
       {"lat":52.111276,"lon":5.089717},
       {"lat":52.103105,"lon":5.081005},
-      {"lat":52.103948,"lon":5.06813}],
+      {"lat":52.103948,"lon":5.06813}
+    ],
     "targets":[
       {"lat":52.106126,"lon":5.101497},
       {"lat":52.100469,"lon":5.087099},
@@ -203,42 +204,40 @@ namespace {
 
   std::vector<TimeDistance> cost_matrix_answers = {
       {29, 29},
-      {1858, 1803},
-      {2221, 2176},
-      {3961, 3805},
-      {1493, 1452},
-      {1689, 1639},
-      {2057, 2012},
-      {3767, 3641},
-      {2253, 2213},
-      {651, 641},
+      {1967, 1852},
+      {2329, 2225},
+      {4084, 3854},
+      {1558, 1452},
+      {1739, 1639},
+      {2102, 2012},
+      {3857, 3641},
+      {2313, 2213},
+      {686, 641},
       {0, 0},
-      {2738, 2643},
-      {5339, 5279},
-      {3757, 3707},
-      {4157, 4108},
-      {1765, 1680}
+      {2803, 2643},
+      {5529, 5279},
+      {3902, 3707},
+      {4302, 4108},
+      {1810, 1680}
   };
 
-  // TODO - when TimeDistMatrix starts to include TransitionCost in the final times it returns,
-  // these numbers below will need to be updated otherwise test will fail.
   std::vector<TimeDistance> timedist_matrix_answers = {
       {28, 28},
-      {1803, 1803},
-      {2176, 2175},
-      {3805, 3805},
-      {1398, 1397},
-      {1639, 1639},
-      {1915, 1914},
-      {3641, 3641},
-      {2098, 2097},
-      {640, 640},
+      {2027, 1837},
+      {2402, 2211},
+      {4164, 3839},
+      {1518, 1397},
+      {1809, 1639},
+      {2062, 1951},
+      {3946, 3641},
+      {2312, 2111},
+      {700, 640},
       {0,0},
-      {2627, 2626},
-      {5164, 5163},
-      {3706, 3706},
-      {4107, 4106},
-      {1680, 1679}
+      {2822, 2626},
+      {5563, 5177},
+      {3951, 3706},
+      {4367, 4106},
+      {1825, 1679}
   };
 }
 
@@ -274,7 +273,6 @@ void test_matrix() {
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
   results = cost_matrix.SourceToTarget(correlated_s, correlated_t, reader, &costing, TravelMode::kDrive, 400000.0);
-
   for (uint32_t i = 0; i < results.size(); ++i) {
     if (results[i].dist != cost_matrix_answers[i].dist) {
       throw std::runtime_error("result " + std::to_string(i) + "'s distance is not close enough"
@@ -290,7 +288,6 @@ void test_matrix() {
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(correlated_s, correlated_t, reader, &costing, TravelMode::kDrive, 400000.0);
-
   for (uint32_t i = 0; i < results.size(); ++i) {
     if (results[i].dist != timedist_matrix_answers[i].dist) {
       throw std::runtime_error("result " + std::to_string(i) + "'s distance is not equal to"
