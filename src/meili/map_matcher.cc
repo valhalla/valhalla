@@ -284,18 +284,20 @@ MapMatcher::OfflineMatch(
     return {};
   }
 
+  const auto max_search_radius = config_.get<float>("max_search_radius"),
+          sq_max_search_radius = max_search_radius * max_search_radius;
   const auto interpolation_distance = config_.get<float>("interpolation_distance"),
           sq_interpolation_distance = interpolation_distance * interpolation_distance;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated_measurements;
 
   // Always match the first measurement
-  auto time = AppendMeasurement(*begin);
+  auto time = AppendMeasurement(*begin, sq_max_search_radius);
   auto latest_match_measurement = begin;
   for (auto measurement = std::next(begin); measurement != end; measurement++) {
     const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
     // Always match the last measurement
     if (sq_interpolation_distance < sq_distance || std::next(measurement) == end) {
-      time = AppendMeasurement(*measurement);
+      time = AppendMeasurement(*measurement, sq_max_search_radius);
       latest_match_measurement = measurement;
     } else {
       interpolated_measurements[time].push_back(*measurement);
@@ -352,16 +354,16 @@ MapMatcher::OfflineMatch(
 
 
 StateId::Time
-MapMatcher::AppendMeasurement(const Measurement& measurement)
+MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius)
 {
   // Test interrupt
   if (interrupt_) {
     (*interrupt_)();
   }
+  auto sq_radius = std::min(sq_max_search_radius,
+      std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
   const auto& candidates = candidatequery_.Query(
-      measurement.lnglat(),
-      std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()),
-      mapmatching_.costing()->GetEdgeFilter());
+      measurement.lnglat(), sq_radius, mapmatching_.costing()->GetEdgeFilter());
   return mapmatching_.AppendState(measurement, candidates.begin(), candidates.end());
 }
 
