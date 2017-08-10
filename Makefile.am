@@ -897,7 +897,8 @@ check_PROGRAMS += \
 	test/graphtilebuilder \
 	test/search \
 	test/node_search \
-	test/mapmatch
+	test/mapmatch \
+	test/matrix
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -941,6 +942,10 @@ test_mapmatch_DEPENDENCIES = test/data/utrecht_tiles
 test_mapmatch_SOURCES = test/mapmatch.cc test/test.cc
 test_mapmatch_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_mapmatch_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_matrix_DEPENDENCIES = test/data/utrecht_tiles
+test_matrix_SOURCES = test/matrix.cc test/test.cc
+test_matrix_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_matrix_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 TESTS = $(check_PROGRAMS)
