@@ -352,7 +352,7 @@ class NodeInfo {
   uint32_t type_               : 4;  // NodeType, see graphconstants
   uint32_t mode_change_        : 1;  // Mode change allowed?
   uint32_t traffic_signal_     : 1;  // Traffic signal
-  uint32_t spare_1             : 6;
+  uint32_t admin_index_ext_    : 6;  // Extended admin index
 
   // Transit stop index (for transit level) / name consistency for all
   // other levels
