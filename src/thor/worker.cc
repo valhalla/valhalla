@@ -28,6 +28,9 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
+  //maximum edge score (~12 hours)
+  constexpr float kMaxScore = 43200.0f;
+
   constexpr double kMilePerMeter = 0.000621371;
 
   std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
@@ -49,6 +52,9 @@ namespace {
 
        for(auto& e : correlated.back().edges) {
          e.score -= minScoreEdge.score;
+         if (e.score > kMaxScore) {
+           e.score = kMaxScore;
+         }
        }
      }
      catch (...) {
