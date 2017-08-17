@@ -28,8 +28,8 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-  //maximum edge score (~12 hours)
-  constexpr float kMaxScore = 43200.0f;
+  //maximum edge score (24 hours)
+  constexpr float kMaxScore = 86400.0f;
 
   constexpr double kMilePerMeter = 0.000621371;
 
@@ -53,6 +53,7 @@ namespace {
        for(auto& e : correlated.back().edges) {
          e.score -= minScoreEdge.score;
          if (e.score > kMaxScore) {
+           printf("Exceeds max score: %f\n", e.score);
            e.score = kMaxScore;
          }
        }
