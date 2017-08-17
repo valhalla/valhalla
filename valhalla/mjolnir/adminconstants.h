@@ -24,7 +24,7 @@ enum class AccessTypes : uint16_t {
 };
 
 //Based on logic at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access-Restrictions
-//vector = trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, and path
+//vector = trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, path, and motorroad
 //-1 indicates a null value will be set which means no change from default access.
 //0 indicates no access.
 const std::unordered_map<std::string, std::vector<int>> kCountryAccess {
