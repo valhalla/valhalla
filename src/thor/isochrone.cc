@@ -942,8 +942,9 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
-      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score;
+      // TODO: high edge scores cause issues as there is code to limit cost so
+      // that large penalties (e.g., ferries) are excluded.
+      cost.cost += edge.score * 0.005f;
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
