@@ -21,7 +21,7 @@ s-9q9p3tzpun-downtownberkeley,s-9q9p3qgbm0-northberkeley,r-9q9n-fremont~richmond
 s-dr5nxdzjvb-huguenot,s-dr5r4qvnzp-stgeorge,r-dr5q-sir
 s-dr72jrgmwg-145st,s-dr5qufyvz0-brightonbeach,r-dr5r-b
 s-dr5regtu03-cityhall,s-dr5r56h2gx-bayridge~95st,r-dr5r-r
-s-dr5rjk7ew1-flatbushav~avi,s-dr5rjkcp4r-flatbushav~nostrandav,r-dr5r-b41
+s-dr5rjc2qtj-flatbushav~uticaav,s-dr5rjkc8xu-avh~flatbushav,r-dr5qy-q35
 s-dr5rjkbzrj-flatbushav~brooklyncollege,s-dr5rm5c7fs-franklinav,r-dr5r-2
 s-dr5rm5c7fs-franklinav,s-dr5rmee9mx-crownhts~uticaav,r-dr5r-4
 s-dr5ru04en3-14st,s-dr72m0nzzs-145st,r-dr72-1
@@ -87,7 +87,7 @@ s-dpz8c0hdp5-lawrencestation~northboundplatform,s-dpz90f59ct-finchstation~subway
 s-dpz90g4jmf-yongestatcummerave,s-dpz90s9x9j-hildaaveatsteelesavewest,r-dpz8-97
 s-9q8znbt4ss-sanfrancisoferryterminal,s-9q8zu5xz7x-larkspurferryterminal,r-9q8z-lf
 s-9q8zuhjukk-600larkspurlandingcircle,s-9qbb5bmmsf-sanrafaeltransitcenter,r-9qbb5-228
-s-9qbb5btd7g-sanrafael,s-9qbdz09u5e-santarosanorth,r-9qb-main
+s-9qbb5btd7g-sanrafael,s-9qbdz09u5e-santarosanorth,r-9qb-smart
 s-9qbb5bmmsf-sanrafaeltransitcenter,s-9q8zs5un0d-tiburonblvd~hwy101nb~offramp,r-9q8z-17
 s-9q8zs5yh0f-tiburonblvd~nknollrd,s-9q8zmqwqmm-tiburontiburonblvd~mainst,r-9q8zs-219
 s-9q8zmqw59c-tiburonferry,s-9q8znbt4ss-sanfrancisoferryterminal,r-9q8zn-tf
@@ -95,7 +95,6 @@ s-9q8znb12j1-embarcadero,s-9q9pb85kcn-elcerritodelnorte,r-9q8y-richmond~dalycity
 s-9qhc4c205s-8th~alleghany,s-9qhc43hps6-8thst~pennsylvaniaave,r-9qhc4-4
 s-drmrrvrr16-brockton,s-drt2z0jpz7-jfk~umass,r-drmx-middleborough~lakevilleline
 s-drt2z0jpz7-jfk~umass,s-drt2wcsmvq-ashmont,r-drt2-redline
-s-drmrrkqzxp-welmstreetandaunadrive,s-drmrqfk184-pearlstreetandwestfielddrive,r-drmrr-9
 s-drtf9j8w9v-toadhallbookstore,s-drtf2x327x-shawssupermarket,r-drtf8-greenline
 s-dr5rec3weg-whitehallferryterminal,s-dr5r4rn32w-stgeorgeferryterminal,r-dr5r7-statenislandferry
 s-9qh2spybch-ssherman~dstreet,s-9qh2mz13qb-19877temescalcanyon,r-9qh2s-red
