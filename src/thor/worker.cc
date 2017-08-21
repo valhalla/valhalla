@@ -53,7 +53,6 @@ namespace {
        for(auto& e : correlated.back().edges) {
          e.score -= minScoreEdge.score;
          if (e.score > kMaxScore) {
-           printf("Exceeds max score: %f\n", e.score);
            e.score = kMaxScore;
          }
        }
