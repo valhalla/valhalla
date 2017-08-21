@@ -255,18 +255,27 @@ FindMatchResults(const MapMatching& mapmatching, const std::vector<StateId>& sta
 namespace valhalla {
 namespace meili {
 
-MapMatcher::MapMatcher(const boost::property_tree::ptree& config,
-                       baldr::GraphReader& graphreader,
-                       CandidateQuery& candidatequery,
-                       const sif::cost_ptr_t* mode_costing,
-                       sif::TravelMode travelmode)
+MapMatcher::MapMatcher(
+    const boost::property_tree::ptree& config,
+    baldr::GraphReader& graphreader,
+    CandidateQuery& candidatequery,
+    const sif::cost_ptr_t* mode_costing,
+    sif::TravelMode travelmode)
     : config_(config),
       graphreader_(graphreader),
       candidatequery_(candidatequery),
       mode_costing_(mode_costing),
       travelmode_(travelmode),
+      // mapmatching_ is deprecated
       mapmatching_(graphreader_, mode_costing_, travelmode_, config_),
-      interrupt_(nullptr) {}
+      vs_(),
+      interrupt_(nullptr)
+{
+  vs_.set_emission_costing_mode(
+      EmissionCostingMode(graphreader_, config_));
+  vs_.set_transition_costing_mode(
+      TransitionCostingMode(graphreader_, vs_, mode_costing_, travelmode_, config_));
+}
 
 
 MapMatcher::~MapMatcher() {}

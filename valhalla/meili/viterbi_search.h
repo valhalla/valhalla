@@ -130,13 +130,21 @@ class StateIdIterator: public std::iterator<std::forward_iterator_tag, StateId>
   void Next();
 };
 
+using IEmissionCostingMode = std::function<float(const StateId& stateid)>;
+
+using ITransitionCostingMode = std::function<float(const StateId& lhs, const StateId& rhs)>;
+
 class IViterbiSearch
 {
  public:
   using stateid_iterator = StateIdIterator;
 
-  IViterbiSearch()
-      : path_end_(stateid_iterator(*this))
+  IViterbiSearch(
+      const IEmissionCostingMode& emission_costing_mode,
+      const ITransitionCostingMode& transition_costing_mode)
+      : emission_costing_mode_(emission_costing_mode),
+        transition_costing_mode_(transition_costing_mode),
+        path_end_(stateid_iterator(*this))
   {}
 
   virtual ~IViterbiSearch() {};
@@ -155,27 +163,47 @@ class IViterbiSearch
   stateid_iterator PathEnd() const
   { return path_end_; }
 
+  const IEmissionCostingMode& emission_costing_mode() const
+  { return emission_costing_mode_; }
+
+  void set_emission_costing_mode(const IEmissionCostingMode costing_mode)
+  { emission_costing_mode_ = costing_mode; }
+
+  const ITransitionCostingMode& transition_costing_mode() const
+  { return transition_costing_mode_; }
+
+  void set_transition_costing_mode(const ITransitionCostingMode costing_mode)
+  { transition_costing_mode_ = costing_mode; }
+
   virtual StateId Predecessor(const StateId& stateid) const = 0;
 
   virtual double AccumulatedCost(const StateId& stateid) const = 0;
 
  protected:
   // Calculate transition cost from left state to right state
-  virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const = 0;
+  virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const
+  { return transition_costing_mode_(lhs, rhs); }
 
   // Calculate emission cost of a state
-  virtual float EmissionCost(const StateId& state) const = 0;
+  virtual float EmissionCost(const StateId& stateid) const
+  { return emission_costing_mode_(stateid); }
 
   // Calculate the a state's costsofar based on its predecessor's
   // costsofar, transition cost from predecessor to this state,
   // and emission cost of this state
-  virtual double CostSofar(double prev_costsofar,
-                           float transition_cost,
-                           float emission_cost) const = 0;
+  virtual double CostSofar(
+      double prev_costsofar,
+      float transition_cost,
+      float emission_cost) const
+  { return prev_costsofar + transition_cost + emission_cost; }
 
   std::unordered_set<StateId> added_states_;
 
  private:
+  IEmissionCostingMode emission_costing_mode_;
+
+  ITransitionCostingMode transition_costing_mode_;
+
   const stateid_iterator path_end_;
 };
 
@@ -206,11 +234,11 @@ class NaiveViterbiSearch: public IViterbiSearch
 
   std::vector<StateId> winner_;
 
-  virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const override = 0;
+  virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const override;
 
-  virtual float EmissionCost(const StateId& stateid) const override = 0;
+  virtual float EmissionCost(const StateId& stateid) const override;
 
-  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
+  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override;
 
  private:
   std::vector<std::vector<StateLabel>> history_;
@@ -231,7 +259,11 @@ class NaiveViterbiSearch: public IViterbiSearch
 class ViterbiSearch: public IViterbiSearch
 {
  public:
-  ViterbiSearch(): earliest_time_(0) {}
+  ViterbiSearch(
+      const IEmissionCostingMode& emission_costing_mode,
+      const ITransitionCostingMode& transition_costing_mode)
+      : IViterbiSearch(emission_costing_mode, transition_costing_mode),
+        earliest_time_(0) {}
 
   ~ViterbiSearch()
   { Clear(); }
@@ -256,11 +288,11 @@ class ViterbiSearch: public IViterbiSearch
 
   std::vector<std::vector<StateId>> unreached_states_;
 
-  virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const override = 0;
+  virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const override;
 
-  virtual float EmissionCost(const StateId& state) const override = 0;
+  virtual float EmissionCost(const StateId& state) const override;
 
-  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
+  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override;
 
  private:
   SPQueue<StateLabel> queue_;

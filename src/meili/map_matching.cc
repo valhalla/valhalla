@@ -14,7 +14,7 @@ GreatCircleDistance(const valhalla::meili::Measurement& left,
 { return left.lnglat().Distance(right.lnglat()); }
 
 inline float ClockDistance(const valhalla::meili::Measurement& left,
-                    const valhalla::meili::Measurement& right)
+                           const valhalla::meili::Measurement& right)
 { return right.epoch_time() - left.epoch_time(); }
 
 }
@@ -64,6 +64,24 @@ State::route(const std::vector<State>& states,
   }
 }
 
+
+void State::SetRoute(
+    const std::unordered_map<uint16_t, uint32_t>& results,
+    labelset_ptr_t labelset)
+{
+  // Cache results
+  label_idx_.clear();
+  uint16_t dest = 1;  // dest at 0 is remained for the origin
+  for (const auto state : states) {
+    const auto it = results.find(dest);
+    if (it != results.end()) {
+      label_idx_[state.stateid()] = it->second;
+    }
+    dest++;
+  }
+
+  labelset_ = labelset;
+}
 
 const Label*
 State::last_label(const State& state) const
@@ -213,6 +231,157 @@ MapMatching::EmissionCost(const StateId& stateid) const
 inline double
 MapMatching::CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const
 { return prev_costsofar + transition_cost + emission_cost; }
+
+
+TransitionCostingModel::TransitionCostingModel(
+    baldr::GraphReader& graphreader,
+    const IViterbiSearch& vs,
+    const std::vector<Column>& columns,
+    const std::vector<Measurement>& measurements,
+    const sif::cost_ptr_t* mode_costing,
+    const sif::TravelMode mode,
+    float beta,
+    float breakage_distance,
+    float max_route_distance_factor,
+    float max_route_time_factor,
+    float turn_penalty_factor)
+    : graphreader_(graphreader),
+      vs_(vs),
+      columns_(columns),
+      measurements_(measurements),
+      mode_costing_(mode_costing),
+      mode_(mode),
+      measurements_(),
+      columns_(),
+      beta_(beta),
+      inv_beta_(1.f / beta_),
+      breakage_distance_(breakage_distance),
+      max_route_distance_factor_(max_route_distance_factor),
+      max_route_time_factor_(max_route_time_factor),
+      turn_penalty_factor_(turn_penalty_factor),
+      turn_cost_table_{0.f}
+{
+  if (columns_.size() != measurements_.size()) {
+    throw std::invalid_argument("Expect columns and measurements have the same size");
+  }
+
+  if (sigma_z_ <= 0.f) {
+    throw std::invalid_argument("Expect sigma_z to be positive");
+  }
+
+  if (turn_penalty_factor_ < 0.f) {
+    throw std::invalid_argument("Expect turn penalty factor to be nonnegative");
+  }
+
+  if (0.f < turn_penalty_factor_) {
+    for (int i = 0; i <= 180; ++i) {
+      turn_cost_table_[i] = turn_penalty_factor_ * std::exp(-i/45.f);
+    }
+  }
+}
+
+TransitionCostingModel::TransitionCostingModel(
+    baldr::GraphReader& graphreader,
+    const IViterbiSearch& vs,
+    const std::vector<Column>& columns,
+    const std::vector<Measurement>& measurements,
+    const sif::cost_ptr_t* mode_costing,
+    const sif::TravelMode mode,
+    const boost::property_tree::ptree& config)
+    : TransitionCostingModel(
+          graphreader,
+          vs_(vs),
+          columns_(columns),
+          measurements_(measurements),
+          mode_costing,
+          mode,
+          config.get<float>("beta"),
+          config.get<float>("breakage_distance"),
+          config.get<float>("max_route_distance_factor"),
+          config.get<float>("max_route_time_factor"),
+          config.get<float>("turn_penalty_factor")) {}
+
+float
+TransitionCostingModel::operator()(const StateId& lhs, const StateId& rhs) const
+{
+  const auto& left = state(lhs);
+  const auto& right = state(rhs);
+
+  if (!left.routed()) {
+    UpdateRoute(left, right);
+  }
+
+  // Compute the transition cost if we found a path
+  const auto label = left.last_label(right);
+  if (label) {
+    // Get some basic info about difference between the two measurements
+    const auto& left_measurement = measurement(left);
+    const auto& right_measurement = measurement(right);
+    return CalculateTransitionCost(
+        label->turn_cost(),
+        label->cost().cost,
+        GreatCircleDistance(left_measurement, right_measurement),
+        label->cost().secs,
+        ClockDistance(left_measurement, right_measurement));
+  }
+
+  // No path found
+  return -1.f;
+}
+
+void
+TransitionCostingModel::UpdateRoute(State& left, const StateId& right) const
+{
+  // Prepare edgelabel
+  const Label* edgelabel = nullptr;
+  const auto& prev_stateid = vs_.Predecessor(left);
+  if (prev_stateid.IsValid()) {
+    const auto& prev_state = state(prev_stateid);
+    if (!prev_state.routed()) {
+      // When ViterbiSearch calls this method, the left state is
+      // guaranteed to be optimal, its predecessor is therefore
+      // guaranteed to be expanded (and routed). When
+      // NaiveViterbiSearch calls this method, the previous column,
+      // where the predecessor of the left state stays, are
+      // guaranteed to be all expanded (and routed).
+      throw std::logic_error(
+          "The predecessor of current state must have been routed."
+          " Check if you have misused the TransitionCost method");
+    }
+    edgelabel = prev_state.last_label(left);
+  }
+
+  // Prepare locations
+  std::vector<baldr::PathLocation> locations;
+  locations.reserve(1 + targets.size());
+  locations.push_back(left.candidate());
+  for (const auto& state : columns_[right.stateid().time()]) {
+    if (!vs_.Predecessor(state.stateid()).IsValid()) {
+      locations.push_back(state.candidate());
+    }
+  }
+
+  // Route, we have to make sure that the max distance is greater
+  // than 0 otherwise we wont be able to get any labels into the
+  // labelset
+  labelset_ptr_t labelset(std::max(std::ceil(max_route_distance), 1.f));
+
+  const right_measurement = measurement(right);
+  const auto& results = find_shortest_path(
+      graphreader_,
+      locations,
+      0,
+      labelset,
+      approximator(right_measurement.lnglat()),
+      right_measurement.search_radius(),
+      costing(),
+      edgelabel,
+      turn_cost_table_,
+      std::ceil(max_route_distance_),
+      std::ceil(max_route_time_));
+
+  left.SetRoute(results, labelset);
+}
 
 }
 }
