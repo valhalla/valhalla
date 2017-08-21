@@ -211,7 +211,9 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
   // Get the nodeinfo and update the isotile
   const NodeInfo* nodeinfo = tile->node(node);
   if (!from_transition) {
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng());
+    uint32_t idx = pred.predecessor();
+    float secs0 = (idx == kInvalidLabel) ? 0 : edgelabels_[idx].cost().secs;
+    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -345,7 +347,9 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
   // Get the nodeinfo and update the isotile
   const NodeInfo* nodeinfo = tile->node(node);
   if (!from_transition) {
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng());
+    uint32_t idx = pred.predecessor();
+    float secs0 = (idx == kInvalidLabel) ? 0 : bdedgelabels_[idx].cost().secs;
+    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -397,7 +401,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
     if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge) ||
-         costing_->Restricted(directededge, pred, edgelabels_, tile,
+         costing_->Restricted(directededge, pred, bdedgelabels_, tile,
                                      edgeid, false)) {
       continue;
     }
@@ -513,7 +517,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
   ConstructIsoTile(true, max_minutes, origin_locations);
 
   // Set the origin locations.
-  SetOriginLocations(graphreader, origin_locations, costing);
+  SetOriginLocationsMM(graphreader, origin_locations, costing);
 
   // For now the date_time must be set on the origin.
   if (!origin_locations.front().date_time_) {
@@ -562,8 +566,10 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     }
 
     // Get the nodeinfo and update the isotile
+    uint32_t idx = pred.predecessor();
+    float secs0 = (idx == kInvalidLabel) ? 0 : mmedgelabels_[idx].cost().secs;
     const NodeInfo* nodeinfo = tile->node(node);
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng());
+    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
     n++;
 
     // Return after the time interval has been met
@@ -830,7 +836,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
 // Update the isotile
 void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
-                              const PointLL& ll) {
+                              const PointLL& ll, float secs0) {
   // Skip if the opposing edge has already been settled.
   const GraphTile* t2;
   GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid(), t2);
@@ -849,10 +855,8 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
     return;
   }
 
-  // Get the time at the begin node and end node of the predecessor
+  // Get the time at the end node of the predecessor
   // TODO - do we need partial shape from origin location to end of edge?
-  uint32_t idx = pred.predecessor();
-  float secs0 = (idx == kInvalidLabel) ? 0 : edgelabels_[idx].cost().secs;
   float secs1 = pred.cost().secs;
 
   // Avoid getting the shape for short edges
@@ -959,6 +963,77 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
 
       // Add EdgeLabel to the adjacency list
       edgelabels_.push_back(std::move(edge_label));
+      adjacencylist_->add(idx);
+    }
+
+    // Set the origin timezone
+    if (nodeinfo != nullptr && origin.date_time_ &&
+      *origin.date_time_ == "current") {
+      origin.date_time_ = DateTime::iso_date_time(
+          DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+    }
+  }
+}
+
+// Add edge(s) at each origin to the adjacency list
+void Isochrone::SetOriginLocationsMM(GraphReader& graphreader,
+                 std::vector<PathLocation>& origin_locations,
+                 const std::shared_ptr<DynamicCost>& costing) {
+  // Add edges for each location to the adjacency list
+  for (auto& origin : origin_locations) {
+    // Set time at the origin lat, lon grid to 0
+    isotile_->Set(origin.latlng_, 0);
+
+    // Only skip inbound edges if we have other options
+    bool has_other_edges = false;
+    std::for_each(origin.edges.cbegin(), origin.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+      has_other_edges = has_other_edges || !e.end_node();
+    });
+
+    // Iterate through edges and add to adjacency list
+    const NodeInfo* nodeinfo = nullptr;
+    for (const auto& edge : (origin.edges)) {
+      // If origin is at a node - skip any inbound edge (dist = 1)
+      if (has_other_edges && edge.end_node()) {
+        continue;
+      }
+
+      // Get the directed edge
+      GraphId edgeid = edge.id;
+      const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+      const DirectedEdge* directededge = tile->directededge(edgeid);
+
+      // Get the tile at the end node. Skip if tile not found as we won't be
+      // able to expand from this origin edge.
+      const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+      if (endtile == nullptr) {
+        continue;
+      }
+
+      // Get cost
+      nodeinfo = endtile->node(directededge->endnode());
+      Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist);
+
+      // We need to penalize this location based on its score (distance in meters from input)
+      // We assume the slowest speed you could travel to cover that distance to start/end the route
+      // TODO: high edge scores cause issues as there is code to limit cost so
+      // that large penalties (e.g., ferries) are excluded.
+      cost.cost += edge.score * 0.005f;
+
+      // Add EdgeLabel to the adjacency list (but do not set its status).
+      // Set the predecessor edge index to invalid to indicate the origin
+      // of the path.
+      uint32_t idx = mmedgelabels_.size();
+      uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
+      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+      MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
+                             cost.cost, 0.0f, mode_, d, 0, GraphId(), 0, 0, false);
+
+      // Set the origin flag
+      edge_label.set_origin();
+
+      // Add EdgeLabel to the adjacency list
+      mmedgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
     }
 
