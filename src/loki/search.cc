@@ -658,8 +658,23 @@ struct bin_handler_t {
         correlated.edges.erase(new_end, correlated.edges.end());
       }
 
+
+      // Store filtered edges for retry in case find path with correlated.edges failed.
+
+      // We will also add penalty to the score of filtered edges, so as to handle the
+      // case low score filtered_edges VS high score good heading edges during retry.
+      // We use max score of the correlated.edgesfor penalty.
+      float penalty = 0;
+      for (const auto &edge : correlated.edges) {
+        penalty = std::max(edge.score, penalty);
+      }
+      for (auto &filtered_edge : filtered) {
+        filtered_edge.score = filtered_edge.score + penalty;
+        correlated.filtered_edges.push_back(std::move(filtered_edge));
+      }
+
       //if we found nothing that is no good but if its batch maybe throwing makes no sense?
-      if(correlated.edges.size() != 0)
+      if(correlated.edges.size() != 0 || correlated.filtered_edges.size() != 0)
         searched.insert({pp.location, correlated});
     }
     //give back all the results
