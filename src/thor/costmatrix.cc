@@ -282,10 +282,10 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
     }
 
     // Check for complex restriction
-/*    if (costing_->Restricted(directededge, pred, edgelabels, tile,
+    if (costing_->Restricted(directededge, pred, edgelabels, tile,
                              edgeid, true)) {
       continue;
-    } */
+    }
 
     // Get cost and accumulated distance. Update the_shortcuts mask.
     shortcuts |= directededge->shortcut();
@@ -567,10 +567,10 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Check for complex restriction
-/*    if (costing_->Restricted(directededge, pred, edgelabels, tile,
+    if (costing_->Restricted(directededge, pred, edgelabels, tile,
                              edgeid, false)) {
       continue;
-    } */
+    }
 
     // Get cost and accumulated distance. Use opposing edge for EdgeCost.
     // Update the shortcut mask

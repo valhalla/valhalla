@@ -460,6 +460,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         std::unique_ptr<Geometry> mline (gf->createMultiLineString(lines.release()));
         std::vector<std::string> wkts = GetWkts(mline);
         std::string name;
+        std::string name_en;
+        std::string iso;
 
         for (const auto& wkt : wkts) {
 
@@ -469,8 +471,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           sqlite3_bind_int (stmt, 1, admin.admin_level());
 
           if (admin.iso_code_index()) {
-            name = osmdata.name_offset_map.name(admin.iso_code_index());
-            sqlite3_bind_text (stmt, 2, name.c_str(), name.length(), SQLITE_STATIC);
+            iso = osmdata.name_offset_map.name(admin.iso_code_index());
+            sqlite3_bind_text (stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
           }
           else
             sqlite3_bind_null(stmt,2);
@@ -481,8 +483,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           sqlite3_bind_text (stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
 
           if (admin.name_en_index()) {
-            name = osmdata.name_offset_map.name(admin.name_en_index());
-            sqlite3_bind_text (stmt, 5, name.c_str(), name.length(), SQLITE_STATIC);
+            name_en = osmdata.name_offset_map.name(admin.name_en_index());
+            sqlite3_bind_text (stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
           }
           else
             sqlite3_bind_null(stmt,5);

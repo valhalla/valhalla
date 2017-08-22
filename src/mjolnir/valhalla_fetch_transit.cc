@@ -231,7 +231,7 @@ void get_stops(Transit_Fetch& tile, std::unordered_map<std::string, uint64_t>& s
     const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter,
     bool tile_within_one_tz, const std::unordered_map<uint32_t, multi_polygon_type>& tz_polys) {
   for(const auto& stop_pt : response.get_child("stops")) {
-    const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
+    const auto& ll_pt = stop_pt.second.get_child("geometry_centroid.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
     auto lat = ll_pt.back().second.get_value<float>();
     if(!filter.Contains({lon, lat}))

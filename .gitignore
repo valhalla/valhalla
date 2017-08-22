@@ -53,6 +53,7 @@ valhalla_validate_transit
 valhalla_run_matrix
 valhalla_run_isochrone
 valhalla_run_route
+valhalla_path_comparison
 valhalla_skadi_worker
 valhalla_thor_worker
 valhalla_tyr_worker
@@ -180,6 +181,7 @@ test/transitcost
 test/truckcost
 test/actor
 test/mapmatch
+test/matrix
 test_requests/duane_routes.txt
 run_route_scripts/results/20*
 EdgeInfoBuilder_TestWriteRead.gph

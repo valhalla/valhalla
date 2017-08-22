@@ -740,8 +740,17 @@ function filter_tags_generic(kv)
       kv["truck_backward"] = "false"
       kv["bus_backward"] = "false"
       kv["bike_backward"] = "false"
+    elseif kv["vehicle"] == "no" then --don't change ped access.
+      kv["auto_forward"] = "false"
+      kv["truck_forward"] = "false"
+      kv["bus_forward"] = "false"
+      kv["bike_forward"] = "false"
 
-    end  
+      kv["auto_backward"] = "false"
+      kv["truck_backward"] = "false"
+      kv["bus_backward"] = "false"
+      kv["bike_backward"] = "false"
+    end
 
     --check for auto_forward overrides
     kv["auto_forward"] = motor_vehicle[kv["motorcar"]] or motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorroad"]] or kv["auto_forward"]
@@ -790,9 +799,12 @@ function filter_tags_generic(kv)
       kv["truck_backward"] = "false"
       kv["bus_backward"] = "false"
       kv["bike_backward"] = "false"
-      default_val = "false"
 
     else
+      local ped_val = default_val
+      if kv["vehicle"] == "no" then --don't change ped access.
+        default_val = "false"
+      end
       --check for auto_forward overrides
       kv["auto_forward"] = motor_vehicle[kv["motorcar"]] or motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorroad"]] or default_val
       kv["auto_tag"] = motor_vehicle[kv["motorcar"]] or motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorroad"]] or nil
@@ -806,7 +818,7 @@ function filter_tags_generic(kv)
       kv["bus_tag"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorroad"]] or nil
 
       --check for ped overrides
-      kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or default_val
+      kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or ped_val
       kv["foot_tag"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or nil
 
       --check for bike_forward overrides
@@ -1388,7 +1400,7 @@ function nodes_proc (kv, nokeys)
     bike_tag = 4
   end
 
-  --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated")
+  --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated" or kv["vehicle"] == "no")
   local auto = auto_tag or 1
   local truck = truck_tag or 8 
   local bus = bus_tag or 64
@@ -1399,11 +1411,16 @@ function nodes_proc (kv, nokeys)
   local hov = hov_tag or 128
 
   --if access = false use tag if exists, otherwise no access for that mode.
-  if (access == "false" or kv["hov"] == "designated") then
+  if (access == "false" or kv["vehicle"] == "no" or kv["hov"] == "designated") then
     auto = auto_tag or 0
     truck = truck_tag or 0
     bus = bus_tag or 0
-    foot = foot_tag or 0
+
+    --don't change ped if kv["vehicle"] == "no"
+    if access == "false" or kv["hov"] == "designated" then
+      foot = foot_tag or 0
+    end
+
     wheelchair = wheelchair_tag or 0
     bike = bike_tag or 0
     emergency = emergency_tag or 0

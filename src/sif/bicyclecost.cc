@@ -335,7 +335,6 @@ class BicycleCost : public DynamicCost {
 
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
-public:
   
   float speedfactor_[kMaxSpeedKph + 1];  // Cost factors based on speed in kph
   float density_factor_[16];             // Density factor
@@ -378,6 +377,8 @@ public:
   // grade (relative value from 0-15)
   float grade_penalty[16];
 
+protected:
+
   /**
    * Returns a function/functor to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
@@ -412,6 +413,7 @@ public:
       return !(node->access() & kBicycleAccess);
     };
   }
+
 };
 
 // Bicycle route costs are distance based with some favor/avoid based on
@@ -665,6 +667,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // Special use cases: cycleway, footway, and path
   uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
   if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
+
     // Differentiate how segregated the way is from pedestrians
     if (edge->cyclelane() == CycleLane::kSeparated) { // No pedestrians allowed on path
       accommodation_factor = use_roads_ * 0.8f;
@@ -714,7 +717,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
   // We want to try and avoid roads that specify to use a cycling path to the side
   if (edge->use_sidepath()) {
-    accommodation_factor += 3.0f;
+    accommodation_factor += 3.0f * (1.0f - use_roads_);
   }
 
   // Favor bicycle networks very slightly.
@@ -958,10 +961,6 @@ uint8_t BicycleCost::travel_type() const {
 }
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<BicycleCost>(config);
-}
-
-cost_ptr_t CreateLowStressBicycleCost(const boost::property_tree::ptree& config) {
   return std::make_shared<BicycleCost>(config);
 }
 
