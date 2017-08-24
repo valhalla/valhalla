@@ -1062,20 +1062,69 @@ void enhance(const boost::property_tree::ptree& pt,
           // country defaults.  Otherwise, country specific access wins.
           // Currently, overrides only exist for Trunk RC and Uses below.
           OSMAccess target{e_offset.wayid()};
-
-          if (admin_index != 0 && country_access.find(country_code) != country_access.end() &&
-              (directededge.classification() == RoadClass::kTrunk ||
+          std::unordered_map<std::string, std::vector<int>>::const_iterator country_iterator =
+              country_access.find(country_code);
+          if (admin_index != 0 && country_iterator != country_access.end() &&
+              (directededge.classification() <= RoadClass::kPrimary ||
                   directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
                   directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
                   directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
 
             std::vector<int> access = country_access.at(country_code);
+            // leaves tile flag indicates that we have an access record for this edge.
+            // leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {
               sequence<OSMAccess>::iterator access_it = access_tags.find(target,less_than);
               if (access_it != access_tags.end())
                 SetCountryAccess(directededge, access, access_it);
               else LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
             } else SetCountryAccess(directededge, access, target);
+          // motorroad default.  Only applies to RC <= kPrimary and has no country override.
+          // We just use the defaults which is allow motor vehicles but no bicycles and no
+          // pedestrians.
+          // leaves tile flag indicates that we have an access record for this edge.
+          // leaves tile flag is updated later to the real value.
+          }else if (country_iterator == country_access.end() &&
+              directededge.classification() <= RoadClass::kPrimary &&
+              directededge.leaves_tile()) {
+
+            OSMAccess target{e_offset.wayid()};
+            sequence<OSMAccess>::iterator access_it = access_tags.find(target,less_than);
+            if (access_it != access_tags.end()) {
+              const OSMAccess& access = access_it;
+              if (access.motorroad_tag()) {
+                uint32_t forward = directededge.forwardaccess();
+                uint32_t reverse = directededge.reverseaccess();
+
+                bool f_oneway_vehicle = (((forward & kAutoAccess) && !(reverse & kAutoAccess)) ||
+                    ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
+                    ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
+                    ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
+                    ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
+                    ((forward & kBusAccess) && !(reverse & kBusAccess)));
+
+                bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
+                    (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
+                    (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
+                    (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
+                    (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
+                    (!(forward & kBusAccess) && (reverse & kBusAccess)));
+
+                bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
+                bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
+
+                // motorroad defaults remove ped, wheelchair, and bike access.
+                // still check for user tags via access.
+                forward = GetAccess(forward, (forward & ~(kPedestrianAccess | kWheelchairAccess | kBicycleAccess)),
+                          r_oneway_vehicle, r_oneway_bicycle, access);
+                reverse = GetAccess(reverse, (reverse & ~(kPedestrianAccess | kWheelchairAccess | kBicycleAccess)),
+                          f_oneway_vehicle, f_oneway_bicycle, access);
+
+                directededge.set_forwardaccess(forward);
+                directededge.set_reverseaccess(reverse);
+              }
+
+            }
           }
         }
 
