@@ -20,7 +20,8 @@ class Measurement
       lnglat_(lnglat),
       gps_accuracy_(gps_accuracy),
       search_radius_(search_radius),
-      epoch_time_(epoch_time)
+      epoch_time_(epoch_time),
+      leave_time_(epoch_time)
   {
     if (gps_accuracy_ < 0.f) {
       throw std::invalid_argument("non-negative gps_accuracy required");
@@ -48,6 +49,12 @@ class Measurement
   double epoch_time() const
   { return epoch_time_; }
 
+  double leave_time() const
+  { return leave_time_; }
+
+  void SetLeaveTime(double leave_time)
+  { leave_time_ = leave_time; }
+
  private:
 
   midgard::PointLL lnglat_;
@@ -56,7 +63,7 @@ class Measurement
 
   float search_radius_;
 
-  double epoch_time_;
+  double epoch_time_, leave_time_;
 };
 
 }

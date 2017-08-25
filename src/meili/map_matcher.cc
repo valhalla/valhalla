@@ -25,7 +25,7 @@ GreatCircleDistance(const Measurement& left,
 inline float
 ClockDistance(const Measurement& left,
               const Measurement& right)
-{ return right.epoch_time() - left.epoch_time(); }
+{ return right.epoch_time() - left.leave_time(); }
 
 
 struct Interpolation {
@@ -299,6 +299,14 @@ MapMatcher::OfflineMatch(
     }// This one is so close to the last one we made state for that we will just interpolate it
     else {
       interpolated_measurements[time].push_back(*measurement);
+      // If this interpolated point had time information we want to use that when the route
+      // leaves latest_match_measurement so we get accurate timing for the route between
+      // points. This protects against interpolated points being close in distance but far
+      // apart in time. We could instead not interpolating both on distance and on time
+      // but then this may lead to issues where the route doubles back on itself because
+      // the points are so close together and we dont want that
+      if(measurement->epoch_time() > 0)
+        mapmatching_.SetMeasurementLeaveTime(time, measurement->epoch_time());
     }
   }
 

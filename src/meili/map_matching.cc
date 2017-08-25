@@ -15,7 +15,7 @@ GreatCircleDistance(const valhalla::meili::Measurement& left,
 
 inline float ClockDistance(const valhalla::meili::Measurement& left,
                     const valhalla::meili::Measurement& right)
-{ return right.epoch_time() - left.epoch_time(); }
+{ return right.epoch_time() - left.leave_time(); }
 
 }
 

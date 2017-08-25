@@ -120,6 +120,9 @@ class MapMatching: public ViterbiSearch
   std::vector<Measurement>::size_type size() const
   { return measurements_.size(); }
 
+  void SetMeasurementLeaveTime(StateId::Time time, double leave_time)
+  { measurements_[time].SetLeaveTime(leave_time); }
+
   template <typename candidate_iterator_t>
   StateId::Time AppendState(const Measurement& measurement,
                             candidate_iterator_t begin,
