@@ -54,6 +54,10 @@ struct PathLocation : public Location {
   //list of edges this location appears on within the graph
   std::vector<PathEdge> edges;
 
+  //list of edges this location appears on within the graph but are filtered because of heading or
+  //something else, used for get_path retry when thor_worker_t::get_path with PathLocation.edges failed
+  std::vector<PathEdge> filtered_edges;
+
   /**
    * Equality check
    * @return true if they are equal
@@ -61,16 +65,13 @@ struct PathLocation : public Location {
   bool operator==(const PathLocation& other) const;
 
   /**
-   * Serializes this object to ptree
-   * @return ptree
-   */
-  boost::property_tree::ptree ToPtree(size_t index) const;
-
-  /**
    * Serializes this object to rapidjson
    * @return rapidjson::Value
    */
   rapidjson::Value ToRapidJson(size_t index, rapidjson::Document::AllocatorType& allocator) const;
+
+  // Serialize this edge to rapidjson
+  rapidjson::Value PathEdgeToRapidJson(const PathEdge &edge, rapidjson::Document::AllocatorType& allocator) const;
 
   /**
    * Serializes one of these objects from a ptree and a list of locations

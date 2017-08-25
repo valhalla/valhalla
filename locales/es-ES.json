@@ -6,29 +6,29 @@
   "instructions": {
     "arrive": {
       "phrases": {
-        "0": "Arrivo: <TIME>.", 
-        "1": "Arrivo: <TIME> en <TRANSIT_STOP>."
+        "0": "Llegada: <TIME>.", 
+        "1": "Llegada: <TIME> en <TRANSIT_STOP>."
       }, 
       "example_phrases": {
         "0": [
-          "Arrivo: 8:02 AM."
+          "Llegada: 8:02 AM."
         ], 
         "1": [
-          "Arrivo: 8:02 AM en 8 St - NYU."
+          "Llegada: 8:02 AM en 8 St - NYU."
         ]
       }
     }, 
     "arrive_verbal": {
       "phrases": {
-        "0": "Arrivo a las <TIME>.", 
-        "1": "Arrivo a las <TIME> en <TRANSIT_STOP>."
+        "0": "Llegada a las <TIME>.", 
+        "1": "Llegada a las <TIME> en <TRANSIT_STOP>."
       }, 
       "example_phrases": {
         "0": [
-          "Arrivo a las 8:02 AM."
+          "Llegada a las 8:02 AM."
         ], 
         "1": [
-          "Arrivo a las 8:02 AM en 8 St - NYU."
+          "Llegada a las 8:02 AM en 8 St - NYU."
         ]
       }
     }, 
@@ -300,7 +300,7 @@
       "phrases": {
         "0": "Tomar el Ferry.", 
         "1": "Tomar la <STREET_NAMES>.", 
-        "2": "Tomar la <FERRY_LABEL> <STREET_NAMES>."
+        "2": "Tomar el <FERRY_LABEL> <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
         "la acera", 
@@ -323,7 +323,7 @@
     "enter_ferry_verbal": {
       "phrases": {
         "0": "Tomar el Ferry.", 
-        "1": "Tomar el <STREET_NAMES>.", 
+        "1": "Tomar la <STREET_NAMES>.", 
         "2": "Tomar el <FERRY_LABEL> <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
@@ -347,7 +347,7 @@
     "enter_roundabout": {
       "phrases": {
         "0": "Entre en la rotonda.", 
-        "1": "Entre en la rotonda y toma la salida <ORDINAL_VALUE>."
+        "1": "Entre en la rotonda y tome la salida <ORDINAL_VALUE>."
       }, 
       "ordinal_values": [
         "1er", 
@@ -382,7 +382,7 @@
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Entre en la rotonda.", 
-        "1": "Entre en la rotonda y toma la salida <ORDINAL_VALUE>."
+        "1": "Entre en la rotonda y tome la salida <ORDINAL_VALUE>."
       }, 
       "ordinal_values": [
         "1er", 
@@ -405,7 +405,7 @@
           "Entre en la rotonda y tome la 2da salida.", 
           "Entre en la rotonda y toma la 3er salida.", 
           "Entre en la rotonda y tome la 4ta salida.", 
-          "Entre en la rotonda y tomeEnter la 5ta salida.", 
+          "Entre en la rotonda y tome la 5ta salida.", 
           "Entre en la rotonda y tome la 6ta salida.", 
           "Entre en la rotonda y tome la 7º salida.", 
           "Entre en la rotonda y tome la 8º salida.", 
@@ -476,12 +476,12 @@
     "exit_ferry": {
       "phrases": {
         "0": "Dirigirse hacia el <CARDINAL_DIRECTION>.", 
-        "1": "Dirijase hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.", 
-        "2": "Dirijase hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.", 
+        "1": "Dirigirse hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.", 
+        "2": "Dirigirse hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.", 
         "4": "Conducir hacia el <CARDINAL_DIRECTION>.", 
         "5": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.", 
         "6": "Conducir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.", 
-        "8": "Caminar haci el <CARDINAL_DIRECTION>.", 
+        "8": "Caminar hacia el <CARDINAL_DIRECTION>.", 
         "9": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.", 
         "10": "Caminar hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.", 
         "16": "Ir en bicicleta hacia el <CARDINAL_DIRECTION>.", 
@@ -505,7 +505,7 @@
       ], 
       "example_phrases": {
         "0": [
-          "Dirigierse hacia el sureste."
+          "Dirigirse hacia el sureste."
         ], 
         "1": [
           "Dirigirse hacia el oeste en la vía del Ferry"
@@ -535,7 +535,7 @@
           "Ir en bicicleta hacia el sureste."
         ], 
         "17": [
-          "ir en bicicleta hacia el oeste en la vía del Ferry"
+          "Ir en bicicleta hacia el oeste en la vía del Ferry"
         ], 
         "18": [
           "Ir en bicicleta hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
@@ -790,10 +790,10 @@
           "Manténgase a la derecha para quedar en I 95 sur."
         ], 
         "1": [
-          "Manténgase a la izquierda  para tomar la salida 62 para quedar en I 95 sur."
+          "Manténgase a la izquierda para tomar la salida 62 para quedar en I 95 sur."
         ], 
         "2": [
-          "Manténgase a la izquierda  para quedar en I 95 sur hacia Baltimore."
+          "Manténgase a la izquierda para quedar en I 95 sur hacia Baltimore."
         ], 
         "3": [
           "Manténgase a la izquierda para tomar la salida 62 para quedar en I 95 sur hacia Baltimore."
@@ -1367,7 +1367,7 @@
         ], 
         "1": [
           "Ir hacia el suroeste sobre la 5º Avenue.", 
-          " Ir hacia el oeste por el pasaje", 
+          "Ir hacia el oeste por el pasaje", 
           "Ir hacia el este sobre la ciclovía", 
           "Ir hacia el norte sobre el sendero de bici de montaña"
         ], 

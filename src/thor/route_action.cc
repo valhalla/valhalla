@@ -66,7 +66,12 @@ namespace valhalla {
     // If path is not found try again with relaxed limits (if allowed)
     if (path.empty()) {
       if (cost->AllowMultiPass()) {
-        // 2nd pass. Less aggressive hierarchy transitioning.
+        // 2nd pass. Less aggressive hierarchy transitioning, and retry with more candidate edges(filterd by heading in loki).
+
+        // add filtered edges to candidate edges for origin and destination
+        origin.edges.insert(origin.edges.end(), origin.filtered_edges.begin(), origin.filtered_edges.end());
+        destination.edges.insert(destination.edges.end(), destination.filtered_edges.begin(), destination.filtered_edges.end());
+
         path_algorithm->Clear();
         bool using_astar = (path_algorithm == &astar);
         float relax_factor = using_astar ? 16.0f : 8.0f;
