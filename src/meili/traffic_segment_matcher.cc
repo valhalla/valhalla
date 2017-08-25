@@ -356,16 +356,20 @@ std::vector<traffic_segment_t> TrafficSegmentMatcher::form_segments(const std::l
       int length = start_length != -1 && end_length != -1 ? (end_length - start_length) +.5f : -1;
 
       // Special cases for turn channels:
-      //   if the prior segment is a turn channel set a valid length and start
-      //       time if this segment has a valid end
+      //   if the prior segment is a turn channel set start to end time of
+      //       the prior segment. Update length if segment has a valid end
       //   if this segment is a turn channel set the prior segment end time to
       //       the start of this turn channel segment and set the prior
       //       segment length
       size_t idx = &segment - &merged_segments[0];
-      if (segment->ends_segment_ && idx > 0 && merged_segments[idx-1].turn_channel && start_length == -1) {
+      if (idx > 0 && merged_segments[idx-1].turn_channel && start_length == -1) {
         // Set the segment start time to the end time of the turn channel
-        if (traffic_segments.size() > 0 && end_length != -1) {
+        if (traffic_segments.size() > 0) {
           start_time = traffic_segments.back().end_time;
+        }
+
+        // Update length if this segment has a valid end
+        if (segment->ends_segment_ && end_length != -1) {
           length = (end_length - prior_end_acc_length) + traffic_segments.back().length / 2;
         }
       } else  if (segment.turn_channel && traffic_segments.size() > 0 &&
