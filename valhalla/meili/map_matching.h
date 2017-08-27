@@ -50,8 +50,9 @@ class State
              const float turn_cost_table[181]) const;
 
   void SetRoute(
+      const std::vector<StateId>& stateids,
       const std::unordered_map<uint16_t, uint32_t>& route_results,
-      const LabelSet& labelset);
+      labelset_ptr_t labelset) const;
 
   const Label* last_label(const State& state) const;
 
@@ -197,144 +198,6 @@ class MapMatching: public ViterbiSearch
   float turn_cost_table_[181];
 };
 
-classs EmissionCostModel
-{
-  EmissionCostModel(
-      baldr::GraphReader& graphreader,
-      const std::vector<Column>& columns,
-      float sigma_z);
-
-  EmissionCostModel(
-      baldr::GraphReader& graphreader,
-      const std::vector<Column>& columns,
-      const boost::property_tree::ptree& config);
-
-  const State&
-  state(const StateId& stateid) const
-  { return columns_[stateid.time()][stateid.id()]; }
-
-  float operator()(const StateId& stateid) const
-  { return CalculateEmissionCost(state(stateid).candidate().edges.front().score); }
-
-private:
-  baldr::GraphReader& graphreader_;
-
-  std::vector<Column> columns_;
-
-  float sigma_z_;
-  double inv_double_sq_sigma_z_;  // equals to 1.f / (sigma_z_ * sigma_z_ * 2.f)
-};
-
-class TransitionCostingModel
-{
- public:
-  TransitionCostModel(
-      baldr::GraphReader& graphreader,
-      const IViterbiSearch& vs,
-      const std::vector<Column>& columns,
-      const std::vector<Measurement>& measurements,
-      const sif::cost_ptr_t* mode_costing,
-      const sif::TravelMode mode,
-      float beta,
-      float breakage_distance,
-      float max_route_distance_factor,
-      float max_route_time_factor,
-      float turn_penalty_factor);
-
-  TransitionCostModel(
-      baldr::GraphReader& graphreader,
-      const IViterbiSearch& vs,
-      const std::vector<Column>& columns,
-      const std::vector<Measurement>& measurements,
-      const sif::cost_ptr_t* mode_costing,
-      const sif::TravelMode mode,
-      const boost::property_tree::ptree& config);
-
-  float operator()(const StateId& lhs, const StateId& rhs) const;
-
- private:
-  const State&
-  state(const StateId& stateid) const
-  { return columns_[stateid.time()][stateid.id()]; }
-
-  const Measurement& measurement(StateId::Time time) const
-  { return measurements_[time]; }
-
-  const Measurement& measurement(const State& state) const
-  { return measurements_[state.stateid().time()]; }
-
-  void UpdateRoute(State& left, const StateId& right) const;
-
-  baldr::GraphReader& graphreader_;
-
-  const IViterbiSearch& vs_;
-
-  const std::vector<Column>& columns_;
-
-  const std::vector<Measurement>& measurements_;
-
-  const sif::cost_ptr_t* mode_costing_;
-
-  const sif::TravelMode mode_;
-
-  float beta_;
-  float inv_beta_;  // equals to 1.f / beta_
-
-  float breakage_distance_;
-
-  float max_route_distance_factor_;
-
-  float max_route_time_factor_;
-
-  float turn_penalty_factor_;
-
-  // Cost for each degree in [0, 180]
-  float turn_cost_table_[181];
-};
-
-// class EnlargedEmissionCostingMode
-// {
-//   EnlargeedEmissionCostingMode(
-//       const ViterbiSearchEnlarger& enlarger,
-//       EmissionCostingMode& emission_costing_mode) {
-//   }
-
-//   float operator()(const StateId& stateid) const
-//   { return enlarger_.original_emission_costing_mode()(enlarger.GetOriginalStateId(stateid)); }
-// };
-
-// class ViterbiSearchEnlarger
-// {
-//  public:
-//   ViterbiSearchEnlarger(IViterbiSearch& vs)
-//       : vs_(vs),
-//         original_emission_costing_mode_(vs.emission_costing_mode()),
-//         original_transition_costing_mode_(vs.transition_costing_mode())
-//   {
-//     vs_.set_emission_costing_mode(
-//         EnlargedEmissionCostingMode(*this, vs_.emission_costing_mode()));
-//     vs_.set_transition_costing_mode(
-//         EnlargedTransitionCostingMode(*this, vs_.transition_costing_mode()));
-//   }
-
-//   IViterbiSearch& vs() const
-//   { return vs_; }
-
-//   const StateId GetOriginalStateId(const StateId& stateid) const
-//   {
-//     const auto it = cloned_stateids_.find(stateid);
-//     return it == cloned_stateids_.end() ? {} : *it;
-//   }
-
-//  private:
-//   IViterbiSearch& vs_;
-
-//   const EmissionCostingMode& original_emission_costing_mode_;
-
-//   const TransitionCostingMode& original_transition_costing_mode_;
-
-//   std::unordered_map cloned_stateids_;
-// };
 
 }
 }

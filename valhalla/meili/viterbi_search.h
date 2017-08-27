@@ -130,9 +130,15 @@ class StateIdIterator: public std::iterator<std::forward_iterator_tag, StateId>
   void Next();
 };
 
-using IEmissionCostingMode = std::function<float(const StateId& stateid)>;
+using IEmissionCostModel = std::function<float(const StateId& stateid)>;
 
-using ITransitionCostingMode = std::function<float(const StateId& lhs, const StateId& rhs)>;
+inline float DefaultEmissionCostModel(const StateId&)
+{ return 0; }
+
+using ITransitionCostModel = std::function<float(const StateId& lhs, const StateId& rhs)>;
+
+inline float DefaultTransitionCostModel(const StateId&, const StateId&)
+{ return 1; }
 
 class IViterbiSearch
 {
@@ -140,12 +146,15 @@ class IViterbiSearch
   using stateid_iterator = StateIdIterator;
 
   IViterbiSearch(
-      const IEmissionCostingMode& emission_costing_mode,
-      const ITransitionCostingMode& transition_costing_mode)
-      : emission_costing_mode_(emission_costing_mode),
-        transition_costing_mode_(transition_costing_mode),
+      const IEmissionCostModel& emission_cost_model,
+      const ITransitionCostModel& transition_cost_model)
+      : emission_cost_model_(emission_cost_model),
+        transition_cost_model_(transition_cost_model),
         path_end_(stateid_iterator(*this))
   {}
+
+  IViterbiSearch()
+      : IViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {}
 
   virtual ~IViterbiSearch() {};
 
@@ -163,17 +172,17 @@ class IViterbiSearch
   stateid_iterator PathEnd() const
   { return path_end_; }
 
-  const IEmissionCostingMode& emission_costing_mode() const
-  { return emission_costing_mode_; }
+  const IEmissionCostModel& emission_cost_model() const
+  { return emission_cost_model_; }
 
-  void set_emission_costing_mode(const IEmissionCostingMode costing_mode)
-  { emission_costing_mode_ = costing_mode; }
+  void set_emission_cost_model(const IEmissionCostModel cost_model)
+  { emission_cost_model_ = cost_model; }
 
-  const ITransitionCostingMode& transition_costing_mode() const
-  { return transition_costing_mode_; }
+  const ITransitionCostModel& transition_cost_model() const
+  { return transition_cost_model_; }
 
-  void set_transition_costing_mode(const ITransitionCostingMode costing_mode)
-  { transition_costing_mode_ = costing_mode; }
+  void set_transition_cost_model(const ITransitionCostModel cost_model)
+  { transition_cost_model_ = cost_model; }
 
   virtual StateId Predecessor(const StateId& stateid) const = 0;
 
@@ -182,11 +191,11 @@ class IViterbiSearch
  protected:
   // Calculate transition cost from left state to right state
   virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const
-  { return transition_costing_mode_(lhs, rhs); }
+  { return transition_cost_model_(lhs, rhs); }
 
   // Calculate emission cost of a state
   virtual float EmissionCost(const StateId& stateid) const
-  { return emission_costing_mode_(stateid); }
+  { return emission_cost_model_(stateid); }
 
   // Calculate the a state's costsofar based on its predecessor's
   // costsofar, transition cost from predecessor to this state,
@@ -200,9 +209,9 @@ class IViterbiSearch
   std::unordered_set<StateId> added_states_;
 
  private:
-  IEmissionCostingMode emission_costing_mode_;
+  IEmissionCostModel emission_cost_model_;
 
-  ITransitionCostingMode transition_costing_mode_;
+  ITransitionCostModel transition_cost_model_;
 
   const stateid_iterator path_end_;
 };
@@ -260,9 +269,13 @@ class ViterbiSearch: public IViterbiSearch
 {
  public:
   ViterbiSearch(
-      const IEmissionCostingMode& emission_costing_mode,
-      const ITransitionCostingMode& transition_costing_mode)
-      : IViterbiSearch(emission_costing_mode, transition_costing_mode),
+      const IEmissionCostModel& emission_cost_model,
+      const ITransitionCostModel& transition_cost_model)
+      : IViterbiSearch(emission_cost_model, transition_cost_model),
+        earliest_time_(0) {}
+
+  ViterbiSearch()
+      : IViterbiSearch(),
         earliest_time_(0) {}
 
   ~ViterbiSearch()

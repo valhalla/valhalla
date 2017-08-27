@@ -5,6 +5,8 @@
 #include "meili/geometry_helpers.h"
 #include "meili/match_route.h"
 #include "meili/map_matcher.h"
+#include "meili/emission_cost_model.h"
+#include "meili/transition_cost_model.h"
 
 namespace {
 
@@ -38,7 +40,7 @@ struct Interpolation {
 
   float sortcost(const MapMatching& mm, float gc_dist, float clk_dist) const
   { return mm.CalculateTransitionCost(0.f, route_distance, gc_dist, route_time, clk_dist) +
-      mm.CalculateEmissionCost(sq_distance); }
+        mm.CalculateEmissionCost(sq_distance); }
 };
 
 inline MatchResult
@@ -153,7 +155,7 @@ InterpolateMeasurements(const MapMatching& mapmatching,
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
     //interpolate this point along the route
     const auto& interp = InterpolateMeasurement(mapmatching, route.begin(), route.end(),
-        measurement, match_measurement_distance, match_measurement_time);
+                                                measurement, match_measurement_distance, match_measurement_time);
 
     //if it was able to do the interpolation
     if (interp.edgeid.Is_Valid()) {
@@ -188,8 +190,8 @@ FindMatchResult(const MapMatching& mapmatching,
   }
 
   const auto& prev_stateid = 0 < time ? stateids[time - 1] : StateId(),
-                   stateid = stateids[time],
-              next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
+                                 stateid = stateids[time],
+                                 next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
   const auto& measurement = mapmatching.measurement(time);
 
   if (!stateid.IsValid()) {
@@ -271,10 +273,31 @@ MapMatcher::MapMatcher(
       vs_(),
       interrupt_(nullptr)
 {
-  vs_.set_emission_costing_mode(
-      EmissionCostingMode(graphreader_, config_));
-  vs_.set_transition_costing_mode(
-      TransitionCostingMode(graphreader_, vs_, mode_costing_, travelmode_, config_));
+  // capture *this by reference
+  auto get_column = [this](const StateId::Time& time) {
+    return mapmatching_.states(time);
+  };
+
+  auto get_state = [this](const StateId& stateid) {
+    return mapmatching_.state(stateid);
+  };
+
+  auto get_measurement = [this](const StateId::Time& time) {
+    return mapmatching_.measurement(time);
+  };
+
+  vs_.set_emission_cost_model(
+      EmissionCostModel(graphreader_, get_state, config_));
+
+  vs_.set_transition_cost_model(
+      TransitionCostModel(
+          graphreader_,
+          vs_,
+          get_column,
+          get_measurement,
+          mode_costing_,
+          travelmode_,
+          config_));
 }
 
 
@@ -369,7 +392,8 @@ MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max
   if (interrupt_) {
     (*interrupt_)();
   }
-  auto sq_radius = std::min(sq_max_search_radius,
+  auto sq_radius = std::min(
+      sq_max_search_radius,
       std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
   const auto& candidates = candidatequery_.Query(
       measurement.lnglat(), sq_radius, mapmatching_.costing()->GetEdgeFilter());

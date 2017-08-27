@@ -198,6 +198,8 @@ nobase_include_HEADERS = \
 	valhalla/meili/geometry_helpers.h \
 	valhalla/meili/grid_range_query.h \
 	valhalla/meili/map_matching.h \
+	valhalla/meili/emission_cost_model.h \
+	valhalla/meili/transition_cost_model.h \
 	valhalla/meili/priority_queue.h \
 	valhalla/meili/routing.h \
 	valhalla/meili/stateid.h \
@@ -320,6 +322,7 @@ libvalhalla_la_SOURCES = \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \
+	src/meili/transition_cost_model.cc \
 	src/meili/map_matcher.cc \
 	src/meili/map_matcher_factory.cc \
 	src/meili/match_route.cc \
