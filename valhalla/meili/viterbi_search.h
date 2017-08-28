@@ -243,12 +243,6 @@ class NaiveViterbiSearch: public IViterbiSearch
 
   std::vector<StateId> winner_;
 
-  virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const override;
-
-  virtual float EmissionCost(const StateId& stateid) const override;
-
-  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override;
-
  private:
   std::vector<std::vector<StateLabel>> history_;
 
@@ -275,8 +269,7 @@ class ViterbiSearch: public IViterbiSearch
         earliest_time_(0) {}
 
   ViterbiSearch()
-      : IViterbiSearch(),
-        earliest_time_(0) {}
+      : ViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {}
 
   ~ViterbiSearch()
   { Clear(); }
@@ -300,12 +293,6 @@ class ViterbiSearch: public IViterbiSearch
   std::vector<StateId> winner_;
 
   std::vector<std::vector<StateId>> unreached_states_;
-
-  virtual float TransitionCost(const StateId& lhs, const StateId& rhs) const override;
-
-  virtual float EmissionCost(const StateId& state) const override;
-
-  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override;
 
  private:
   SPQueue<StateLabel> queue_;
