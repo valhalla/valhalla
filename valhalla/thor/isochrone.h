@@ -163,11 +163,11 @@ class Isochrone {
    * @param  pred         Predecessor edge label (edge being settled).
    * @param  graphreader  Graph reader
    * @param  ll           Lat,lon at the end of the edge.
-   *
+   * @param  secs0        Seconds at start of the edge.
    */
   void UpdateIsoTile(const sif::EdgeLabel& pred,
                      baldr::GraphReader& graphreader,
-                     const midgard::PointLL& ll);
+                     const midgard::PointLL& ll, const float secs0);
 
   /**
    * Add edge(s) at each origin location to the adjacency list.
@@ -176,6 +176,16 @@ class Isochrone {
    * @param  costing           Dynamic costing.
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
+                  std::vector<baldr::PathLocation>& origin_locations,
+                  const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
+   * Add edge(s) at each origin location to the adjacency list.
+   * @param  graphreader       Graph tile reader.
+   * @param  origin_locations  Location information for origins.
+   * @param  costing           Dynamic costing.
+   */
+  void SetOriginLocationsMM(baldr::GraphReader& graphreader,
                   std::vector<baldr::PathLocation>& origin_locations,
                   const std::shared_ptr<sif::DynamicCost>& costing);
 

@@ -56,7 +56,7 @@ public:
   }
 
 private:
-  StateId::Time AppendMeasurement(const Measurement& measurement);
+  StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
 
   boost::property_tree::ptree config_;
 
@@ -68,7 +68,10 @@ private:
 
   sif::TravelMode travelmode_;
 
+  // mapmatching_ is deprecated
   MapMatching mapmatching_;
+
+  ViterbiSearch vs_;
 
   // Interrupt callback. Can be set to interrupt if connection is closed.
   const std::function<void ()>* interrupt_;

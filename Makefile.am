@@ -198,6 +198,8 @@ nobase_include_HEADERS = \
 	valhalla/meili/geometry_helpers.h \
 	valhalla/meili/grid_range_query.h \
 	valhalla/meili/map_matching.h \
+	valhalla/meili/emission_cost_model.h \
+	valhalla/meili/transition_cost_model.h \
 	valhalla/meili/priority_queue.h \
 	valhalla/meili/routing.h \
 	valhalla/meili/stateid.h \
@@ -320,6 +322,7 @@ libvalhalla_la_SOURCES = \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \
+	src/meili/transition_cost_model.cc \
 	src/meili/map_matcher.cc \
 	src/meili/map_matcher_factory.cc \
 	src/meili/match_route.cc \
@@ -429,7 +432,6 @@ libvalhalla_la_SOURCES += \
 	src/mjolnir/graphenhancer.cc \
 	src/mjolnir/graphvalidator.cc \
 	src/mjolnir/hierarchybuilder.cc \
-	src/mjolnir/idtable.cc \
 	src/mjolnir/linkclassification.cc \
 	src/mjolnir/luatagtransform.cc \
 	src/mjolnir/node_expander.cc \
@@ -470,6 +472,7 @@ bin_PROGRAMS = \
 	valhalla_run_route \
 	valhalla_benchmark_adjacency_list \
 	valhalla_run_matrix \
+	valhalla_path_comparison \
 	valhalla_export_edges
 valhalla_run_map_match_SOURCES = src/meili/valhalla_run_map_match.cc
 valhalla_run_map_match_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
@@ -492,6 +495,9 @@ valhalla_benchmark_adjacency_list_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVI
 valhalla_run_matrix_SOURCES = src/valhalla_run_matrix.cc
 valhalla_run_matrix_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_run_matrix_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_path_comparison_SOURCES = src/valhalla_path_comparison.cc
+valhalla_path_comparison_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_path_comparison_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_export_edges_SOURCES = src/valhalla_export_edges.cc
 valhalla_export_edges_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_export_edges_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -894,7 +900,8 @@ check_PROGRAMS += \
 	test/graphtilebuilder \
 	test/search \
 	test/node_search \
-	test/mapmatch
+	test/mapmatch \
+	test/matrix
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -938,6 +945,10 @@ test_mapmatch_DEPENDENCIES = test/data/utrecht_tiles
 test_mapmatch_SOURCES = test/mapmatch.cc test/test.cc
 test_mapmatch_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_mapmatch_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_matrix_DEPENDENCIES = test/data/utrecht_tiles
+test_matrix_SOURCES = test/matrix.cc test/test.cc
+test_matrix_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_matrix_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 TESTS = $(check_PROGRAMS)

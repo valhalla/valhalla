@@ -14,7 +14,7 @@ GreatCircleDistance(const valhalla::meili::Measurement& left,
 { return left.lnglat().Distance(right.lnglat()); }
 
 inline float ClockDistance(const valhalla::meili::Measurement& left,
-                    const valhalla::meili::Measurement& right)
+                           const valhalla::meili::Measurement& right)
 { return right.epoch_time() - left.epoch_time(); }
 
 }
@@ -42,8 +42,10 @@ State::route(const std::vector<State>& states,
     locations.push_back(state.candidate());
   }
 
-  // Route
-  labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance));
+  // Route, we have to make sure that the max distance is greater than 0
+  // otherwise we wont be able to get any labels into the labelset
+  max_route_distance = std::max(std::ceil(max_route_distance), 1.f);
+  labelset_ = std::make_shared<LabelSet>(max_route_distance);
   const auto& results = find_shortest_path(
       graphreader, locations, 0, labelset_,
       approximator, search_radius,
@@ -62,6 +64,25 @@ State::route(const std::vector<State>& states,
   }
 }
 
+
+void State::SetRoute(
+    const std::vector<StateId>& stateids,
+    const std::unordered_map<uint16_t, uint32_t>& results,
+    labelset_ptr_t labelset) const
+{
+  // Cache results
+  label_idx_.clear();
+  uint16_t dest = 1;  // dest at 0 is remained for the origin
+  for (const auto stateid : stateids) {
+    const auto it = results.find(dest);
+    if (it != results.end()) {
+      label_idx_[stateid] = it->second;
+    }
+    dest++;
+  }
+
+  labelset_ = labelset;
+}
 
 const Label*
 State::last_label(const State& state) const

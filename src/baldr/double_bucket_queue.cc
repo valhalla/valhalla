@@ -13,6 +13,10 @@ DoubleBucketQueue::DoubleBucketQueue(const float mincost, const float range,
   if(bucketsize < 1)
     throw std::runtime_error("Bucketsize must be 1 or greater");
 
+  // We need at least a bucketrange of something larger than 0
+  if(range <= 0.f)
+    throw std::runtime_error("Bucketrange must be greater than 0");
+
   // Adjust min cost to be the start of a bucket
   uint32_t c = static_cast<uint32_t>(mincost);
   currentcost_ = (c - (c % bucketsize));
@@ -98,26 +102,39 @@ uint32_t DoubleBucketQueue::pop()  {
 // Empties the overflow bucket by placing the labels into the
 // low level buckets.
 void DoubleBucketQueue::empty_overflow()  {
-  bool found = false;
-  while (!found && !overflowbucket_.empty()) {
-    // Adjust cost range
-    mincost_ += bucketrange_;
-    maxcost_ += bucketrange_;
+  // Get the minimum label so we can figure out where the new range should be
+  auto itr = std::min_element(overflowbucket_.begin(), overflowbucket_.end(), [this](uint32_t a, uint32_t b){
+    return labelcost_(a) < labelcost_(b);
+  });
 
+  // If there is actually stuff to move
+  if(itr != overflowbucket_.end()) {
+
+    // Adjust cost range so smallest element is in the buckets_
+    float min = labelcost_(*itr);
+    mincost_ += (std::floor((min - mincost_) / bucketrange_)) * bucketrange_;
+
+    // Avoid precision issues
+    if(mincost_ > min)
+      mincost_ -= bucketrange_;
+    else if(mincost_ + bucketrange_ < min)
+      mincost_ += bucketrange_;
+    maxcost_ = mincost_ + bucketrange_;
+
+    // Move elements within the range from overflow to buckets
     bucket_t tmp;
     for (const auto& label : overflowbucket_) {
       // Get the cost (using the label cost function)
       float cost = labelcost_(label);
       if (cost < maxcost_) {
         buckets_[static_cast<uint32_t>((cost-mincost_)*inv_)].push_back(label);
-        found = true;
       } else {
         tmp.push_back(label);
       }
     }
 
     // Add any labels that lie outside the new range back to overflow bucket
-    overflowbucket_ = tmp;
+    overflowbucket_ = std::move(tmp);
   }
 
   // Reset current cost and bucket to beginning of low level buckets

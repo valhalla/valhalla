@@ -42,6 +42,9 @@ void AStarPathAlgorithm::Clear() {
 
   // Clear the edge status flags
   edgestatus_.reset();
+
+  // Set the ferry flag to false
+  has_ferry_ = false;
 }
 
 // Initialize prior to finding best path
@@ -463,6 +466,11 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
                       edgelabel.edgeid(), 0);
+
+    // Check if this is a ferry
+    if (edgelabel.use() == Use::kFerry) {
+      has_ferry_ = true;
+    }
   }
 
   // Reverse the list and return

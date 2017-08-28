@@ -22,7 +22,7 @@ using namespace valhalla::mjolnir;
 
 namespace {
 // Will throw an error if this is exceeded. Then we can increase.
-constexpr uint64_t kMaxOSMNodeId = 5000000000;
+constexpr uint64_t kMaxOSMNodeId = 5500000000;
 
 // Node equality
 const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
@@ -41,7 +41,7 @@ struct admin_callback : public OSMPBF::Callback {
 
   virtual void node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) override {
     // Check if it is in the list of nodes used by ways
-    if (!shape_.IsUsed(osmid)) {
+    if (!shape_.get(osmid)) {
       return;
     }
 
@@ -57,7 +57,7 @@ struct admin_callback : public OSMPBF::Callback {
   virtual void way_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) override {
 
     // Check if it is in the list of ways used by relations
-    if (!members_.IsUsed(osmid)) {
+    if (!members_.get(osmid)) {
       return;
     }
 

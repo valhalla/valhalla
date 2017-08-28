@@ -16,15 +16,15 @@ void TestSetGet() {
 
   //set them all and check them all
   for(uint64_t i = 0; i < kTableSize; ++i) {
-    if(t.IsUsed(i))
-      throw std::runtime_error("Bit should not be set");
+    if(t.get(i))
+      throw std::logic_error("Bit should not be set");
     t.set(i);
-    if(!t.IsUsed(i))
-      throw std::runtime_error("Bit should be set");
+    if(!t.get(i))
+      throw std::logic_error("Bit should be set");
   }
   for(uint64_t i = 0; i < kTableSize; ++i) {
-    if(!t.IsUsed(i))
-      throw std::runtime_error("Bit should be set");
+    if(!t.get(i))
+      throw std::logic_error("Bit should be set");
   }
 }
 
@@ -43,11 +43,31 @@ void TestRandom() {
   }
   for(uint64_t i = 0; i < kTableSize; ++i) {
     bool exists = ids.find(i) != ids.end();
-    if(exists != t.IsUsed(i))
-      throw std::runtime_error("Bit has wrong value");
+    if(exists != t.get(i))
+      throw std::logic_error("Bit has wrong value");
   }
+}
 
+void TestBounds() {
+  IdTable t(10);
 
+  for(int i = 60; i < 70; ++i)
+    if(t.get(i))
+      throw std::logic_error("No bits can be set when they are higher than max");
+
+  if(t.max() != 63)
+    throw std::logic_error("Max id should be 10");
+
+  for(int i = 60; i < 70; ++i)
+    if(i % 2)
+      t.set(i);
+
+  for(int i = 60; i < 70; ++i)
+    if(i % 2 != t.get(i))
+      throw std::logic_error("The odd ids should be set");
+
+  if(t.max() != 191)
+    throw std::logic_error("The max id should have been increased to 181");
 }
 
 int main() {
@@ -56,6 +76,7 @@ int main() {
   // Test setting and getting on random sizes of bit tables
   suite.test(TEST_CASE(TestSetGet));
   suite.test(TEST_CASE(TestRandom));
+  suite.test(TEST_CASE(TestBounds));
 
   return suite.tear_down();
 }

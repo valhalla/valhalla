@@ -53,7 +53,7 @@ namespace valhalla {
   }
 
   std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
-      baldr::PathLocation& destination) {
+      baldr::PathLocation& destination, const std::string& costing) {
     // Find the path. If bidirectional A* disable use of destination only
     // edges on the first pass. If there is a failure, we allow them on the
     // second pass.
@@ -61,13 +61,22 @@ namespace valhalla {
     if (path_algorithm == &bidir_astar) {
       cost->set_allow_destination_only(false);
     }
+    cost->set_pass(0);
     auto path = path_algorithm->GetBestPath(origin, destination, reader,
                                              mode_costing, mode);
+
     // If path is not found try again with relaxed limits (if allowed)
-    if (path.empty()) {
+    if (path.empty() ||
+        (costing == "pedestrian" && path_algorithm->has_ferry())) {
       if (cost->AllowMultiPass()) {
-        // 2nd pass. Less aggressive hierarchy transitioning.
+        // 2nd pass. Less aggressive hierarchy transitioning, and retry with more candidate edges(filterd by heading in loki).
+
+        // add filtered edges to candidate edges for origin and destination
+        origin.edges.insert(origin.edges.end(), origin.filtered_edges.begin(), origin.filtered_edges.end());
+        destination.edges.insert(destination.edges.end(), destination.filtered_edges.begin(), destination.filtered_edges.end());
+
         path_algorithm->Clear();
+        cost->set_pass(1);
         bool using_astar = (path_algorithm == &astar);
         float relax_factor = using_astar ? 16.0f : 8.0f;
         float expansion_within_factor = using_astar ? 4.0f : 2.0f;
@@ -108,7 +117,7 @@ namespace valhalla {
       }
 
       // Get best path and keep it
-      auto temp_path = get_path(path_algorithm, *origin, *destination);
+      auto temp_path = get_path(path_algorithm, *origin, *destination, costing);
       temp_path.swap(path);
 
       // Merge through legs by updating the time and splicing the lists
@@ -173,7 +182,7 @@ namespace valhalla {
       }
 
       // Get best path and keep it
-      auto temp_path = get_path(path_algorithm, *origin, *destination);
+      auto temp_path = get_path(path_algorithm, *origin, *destination, costing);
 
       // Merge through legs by updating the time and splicing the lists
       if(!path.empty()) {

@@ -91,10 +91,14 @@ struct HierarchyLimits {
 
   /**
    * Relax hierarchy limits to try to find a route when initial attempt fails.
+   * Do not relax limits if they are unlimited (bicycle and pedestrian for
+   * example).
    */
   void Relax(const float factor, const float expansion_within_factor) {
-    max_up_transitions *= factor;
-    expansion_within_dist *= expansion_within_factor;
+    if (max_up_transitions != kUnlimitedTransitions) {
+      max_up_transitions *= factor;
+      expansion_within_dist *= expansion_within_factor;
+    }
   }
 };
 

@@ -5,6 +5,8 @@
 #include "meili/geometry_helpers.h"
 #include "meili/match_route.h"
 #include "meili/map_matcher.h"
+#include "meili/emission_cost_model.h"
+#include "meili/transition_cost_model.h"
 
 namespace {
 
@@ -38,7 +40,7 @@ struct Interpolation {
 
   float sortcost(const MapMatching& mm, float gc_dist, float clk_dist) const
   { return mm.CalculateTransitionCost(0.f, route_distance, gc_dist, route_time, clk_dist) +
-      mm.CalculateEmissionCost(sq_distance); }
+        mm.CalculateEmissionCost(sq_distance); }
 };
 
 inline MatchResult
@@ -153,7 +155,7 @@ InterpolateMeasurements(const MapMatching& mapmatching,
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
     //interpolate this point along the route
     const auto& interp = InterpolateMeasurement(mapmatching, route.begin(), route.end(),
-        measurement, match_measurement_distance, match_measurement_time);
+                                                measurement, match_measurement_distance, match_measurement_time);
 
     //if it was able to do the interpolation
     if (interp.edgeid.Is_Valid()) {
@@ -188,8 +190,8 @@ FindMatchResult(const MapMatching& mapmatching,
   }
 
   const auto& prev_stateid = 0 < time ? stateids[time - 1] : StateId(),
-                   stateid = stateids[time],
-              next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
+                                 stateid = stateids[time],
+                                 next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
   const auto& measurement = mapmatching.measurement(time);
 
   if (!stateid.IsValid()) {
@@ -255,18 +257,48 @@ FindMatchResults(const MapMatching& mapmatching, const std::vector<StateId>& sta
 namespace valhalla {
 namespace meili {
 
-MapMatcher::MapMatcher(const boost::property_tree::ptree& config,
-                       baldr::GraphReader& graphreader,
-                       CandidateQuery& candidatequery,
-                       const sif::cost_ptr_t* mode_costing,
-                       sif::TravelMode travelmode)
+MapMatcher::MapMatcher(
+    const boost::property_tree::ptree& config,
+    baldr::GraphReader& graphreader,
+    CandidateQuery& candidatequery,
+    const sif::cost_ptr_t* mode_costing,
+    sif::TravelMode travelmode)
     : config_(config),
       graphreader_(graphreader),
       candidatequery_(candidatequery),
       mode_costing_(mode_costing),
       travelmode_(travelmode),
+      // mapmatching_ is deprecated
       mapmatching_(graphreader_, mode_costing_, travelmode_, config_),
-      interrupt_(nullptr) {}
+      vs_(),
+      interrupt_(nullptr)
+{
+  // capture *this by reference
+  auto get_column = [this](const StateId::Time& time) {
+    return mapmatching_.states(time);
+  };
+
+  auto get_state = [this](const StateId& stateid) {
+    return mapmatching_.state(stateid);
+  };
+
+  auto get_measurement = [this](const StateId::Time& time) {
+    return mapmatching_.measurement(time);
+  };
+
+  vs_.set_emission_cost_model(
+      EmissionCostModel(graphreader_, get_state, config_));
+
+  vs_.set_transition_cost_model(
+      TransitionCostModel(
+          graphreader_,
+          vs_,
+          get_column,
+          get_measurement,
+          mode_costing_,
+          travelmode_,
+          config_));
+}
 
 
 MapMatcher::~MapMatcher() {}
@@ -284,18 +316,20 @@ MapMatcher::OfflineMatch(
     return {};
   }
 
+  const auto max_search_radius = config_.get<float>("max_search_radius"),
+          sq_max_search_radius = max_search_radius * max_search_radius;
   const auto interpolation_distance = config_.get<float>("interpolation_distance"),
           sq_interpolation_distance = interpolation_distance * interpolation_distance;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated_measurements;
 
   // Always match the first measurement
-  auto time = AppendMeasurement(*begin);
+  auto time = AppendMeasurement(*begin, sq_max_search_radius);
   auto latest_match_measurement = begin;
   for (auto measurement = std::next(begin); measurement != end; measurement++) {
     const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
     // Always match the last measurement
     if (sq_interpolation_distance < sq_distance || std::next(measurement) == end) {
-      time = AppendMeasurement(*measurement);
+      time = AppendMeasurement(*measurement, sq_max_search_radius);
       latest_match_measurement = measurement;
     } else {
       interpolated_measurements[time].push_back(*measurement);
@@ -352,16 +386,17 @@ MapMatcher::OfflineMatch(
 
 
 StateId::Time
-MapMatcher::AppendMeasurement(const Measurement& measurement)
+MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius)
 {
   // Test interrupt
   if (interrupt_) {
     (*interrupt_)();
   }
+  auto sq_radius = std::min(
+      sq_max_search_radius,
+      std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
   const auto& candidates = candidatequery_.Query(
-      measurement.lnglat(),
-      std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()),
-      mapmatching_.costing()->GetEdgeFilter());
+      measurement.lnglat(), sq_radius, mapmatching_.costing()->GetEdgeFilter());
   return mapmatching_.AppendState(measurement, candidates.begin(), candidates.end());
 }
 

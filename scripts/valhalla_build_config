@@ -82,6 +82,7 @@ config = {
       'beta': 3,
       'max_route_distance_factor': 5,
       'max_route_time_factor': 5,
+      'max_search_radius': 100,
       'breakage_distance': 2000,
       'interpolation_distance': 10,
       'search_radius': 50,
@@ -162,12 +163,6 @@ config = {
       'max_matrix_distance': 200000.0,
       'max_matrix_locations': 50
     },
-    'low_stress_bicycle': {
-      'max_distance': 500000.0,
-      'max_locations': 50,
-      'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
-    },
     'multimodal': {
       'max_distance': 500000.0,
       'max_locations': 50,
@@ -199,7 +194,7 @@ config = {
     'trace': {
       'max_distance': 200000.0,
       'max_gps_accuracy': 100.0,
-      'max_search_radius': 100,
+      'max_search_radius': 100.0,
       'max_shape': 16000,
       'max_best_paths': 4,
       'max_best_paths_shape': 100
@@ -288,6 +283,7 @@ help_text = {
       'max_route_distance_factor': 'A non-negative value used to limit the routing search range which is the distance to next measurement multiplied by this factor',
       'max_route_time_factor': 'A non-negative value used to limit the routing search range which is the time to the next measurement multiplied by this factor',
       'breakage_distance': 'A non-negative value. If two successive measurements are far than this distance, then connectivity in between will not be considered',
+      'max_search_radius': 'A non-negative value specifying the maximum radius in meters about a given point to search for candidate edges for routing',
       'interpolation_distance': 'If two successive measurements are closer than this distance, then the later one will be interpolated into the matched route',
       'search_radius': 'A non-negative value to specify the search radius (in meters) within which to search road candidates for each measurement',
       'geometry': 'TODO: ',
@@ -362,12 +358,6 @@ help_text = {
       'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
     'bicycle': {
-      'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations',
-      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of input locations for a matrix'
-    },
-    'low_stress_bicycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',

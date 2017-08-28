@@ -71,6 +71,22 @@ class DynamicCost {
   virtual bool AllowMultiPass() const;
 
   /**
+   * Get the pass number.
+   * @return  Returns the pass through the algorithm.
+   */
+  uint32_t pass() const {
+    return pass_;
+  }
+
+  /**
+   * Set the pass number.
+   * @param  pass  Pass number (incremental).
+   */
+  void set_pass(const uint32_t pass) {
+    pass_ = pass;
+  }
+
+  /**
    * Returns the maximum transfer distance between stops that you are willing
    * to travel for this mode.  It is the max distance you are willing to
    * travel between transfers.
@@ -409,6 +425,9 @@ class DynamicCost {
   }
 
  protected:
+  // Algorithm pass
+  uint32_t pass_;
+
   // Flag indicating whether transit connections are allowed.
   bool allow_transit_connections_;
 

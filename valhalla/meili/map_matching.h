@@ -38,6 +38,7 @@ class State
   bool routed() const
   { return labelset_ != nullptr; }
 
+  // Deprecated, use SetRoute instead
   void route(const std::vector<State>& states,
              baldr::GraphReader& graphreader,
              float max_route_distance,
@@ -47,6 +48,11 @@ class State
              sif::cost_ptr_t costing,
              const Label* edgelabel,
              const float turn_cost_table[181]) const;
+
+  void SetRoute(
+      const std::vector<StateId>& stateids,
+      const std::unordered_map<uint16_t, uint32_t>& route_results,
+      labelset_ptr_t labelset) const;
 
   const Label* last_label(const State& state) const;
 
@@ -153,7 +159,7 @@ class MapMatching: public ViterbiSearch
   // is not strictly required to perform the matching
   float
   CalculateTransitionCost(float turn_cost, float route_distance, float measurement_distance,
-      float route_time, float measurement_time) const
+                          float route_time, float measurement_time) const
   { return (turn_cost + std::abs(route_distance - measurement_distance)) * inv_beta_; }
 
  protected:
@@ -191,6 +197,7 @@ class MapMatching: public ViterbiSearch
   // Cost for each degree in [0, 180]
   float turn_cost_table_[181];
 };
+
 
 }
 }
