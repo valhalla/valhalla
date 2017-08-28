@@ -296,7 +296,15 @@ MapMatcher::OfflineMatch(
       // This one isnt interpolated so we make room for its state
       time = AppendMeasurement(*measurement, sq_max_search_radius);
       latest_match_measurement = measurement;
-    }// This one is so close to the last one we made state for that we will just interpolate it
+    }
+    //TODO: if its the last measurement and it wants to be interpolated
+    //then what we need to do is make latest_match_measurement interpolated
+    //and copy its epoch_time into the last measurements epoch time
+    /*else if(std::next(measurement) == measurements.end()) {
+      interpolated_measurements[time].push_back(*latest_match_measurement);
+      mapmatching_.UpdateMeasurement(*measurement); //but keep the epoch time from latest_match_measurement
+    } */
+    // This one is so close to the last one we made state for that we will just interpolate it
     else {
       interpolated_measurements[time].push_back(*measurement);
       // If this interpolated point had time information we want to use that when the route
