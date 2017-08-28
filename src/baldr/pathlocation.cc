@@ -35,51 +35,26 @@ namespace baldr{
     return true;
   }
 
-  boost::property_tree::ptree PathLocation::ToPtree(size_t index) const {
-    boost::property_tree::ptree correlated;
-    auto& array = correlated.put_child("edges", boost::property_tree::ptree());
-    for(const auto& edge : edges) {
-      boost::property_tree::ptree e;
-      e.put("id", edge.id.value);
-      e.put("dist", edge.dist);
-      e.put("sos", static_cast<int>(edge.sos));
-      e.put("score", edge.score);
-      e.put("minimum_reachability", edge.minimum_reachability);
-
-      // Serialize projected lat,lng as double (otherwise leads to shape
-      // artifacts at begin/end of routes as the float values are rounded
-      auto& vtx = e.put_child("projected", boost::property_tree::ptree());
-      vtx.put("lon", static_cast<double>(edge.projected.first));
-      vtx.put("lat", static_cast<double>(edge.projected.second));
-      array.push_back(std::make_pair("", e));
-    }
-    correlated.put("location_index", index);
-    return correlated;
-  }
-
   rapidjson::Value PathLocation::ToRapidJson(size_t index, rapidjson::Document::AllocatorType& allocator) const {
     rapidjson::Value value{rapidjson::kObjectType};
     rapidjson::Value array{rapidjson::kArrayType};
+    rapidjson::Value filtered_edges_array{rapidjson::kArrayType};
+
     array.Reserve(edges.size(), allocator);
+    filtered_edges_array.Reserve(filtered_edges.size(), allocator);
+
     for(const auto& edge : edges) {
-      rapidjson::Value e{rapidjson::kObjectType};
-      e.AddMember("id", edge.id.value, allocator)
-          .AddMember("dist", edge.dist, allocator)
-          .AddMember("sos", static_cast<int>(edge.sos), allocator)
-          .AddMember("score", edge.score, allocator)
-          .AddMember("minimum_reachability", edge.minimum_reachability, allocator);
-
-      // Serialize projected lat,lng as double (otherwise leads to shape
-      // artifacts at begin/end of routes as the float values are rounded
-      rapidjson::Value vtx{rapidjson::kObjectType};
-      vtx.AddMember("lon", static_cast<double>(edge.projected.first), allocator)
-          .AddMember("lat", static_cast<double>(edge.projected.second), allocator);
-
-      e.AddMember("projected", vtx.Move(), allocator);
+      rapidjson::Value e = PathEdgeToRapidJson(edge, allocator);
       array.PushBack(e.Move(), allocator);
     }
+    for(const auto& edge : filtered_edges) {
+      rapidjson::Value e = PathEdgeToRapidJson(edge, allocator);
+      filtered_edges_array.PushBack(e.Move(), allocator);
+    }
+
     value.AddMember("edges", array.Move(), allocator)
-        .AddMember("location_index", static_cast<int>(index), allocator);
+         .AddMember("location_index", static_cast<int>(index), allocator)
+         .AddMember("filtered_edges", filtered_edges_array.Move(), allocator);
     return value;
   }
 
@@ -92,8 +67,31 @@ namespace baldr{
         midgard::PointLL(edge.second.get<double>("projected.lon"), edge.second.get<double>("projected.lat")),
         edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")), edge.second.get<int>("minimum_reachability"));
     }
+    for (const auto& edge : path_location.get_child("filtered_edges")) {
+      p.filtered_edges.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"),
+        midgard::PointLL(edge.second.get<double>("projected.lon"), edge.second.get<double>("projected.lat")),
+        edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")), edge.second.get<int>("minimum_reachability"));
+    }
     return p;
   }
 
+  rapidjson::Value PathLocation::PathEdgeToRapidJson(const PathEdge &edge, rapidjson::Document::AllocatorType& allocator) const {
+    rapidjson::Value e{rapidjson::kObjectType};
+
+    e.AddMember("id", edge.id.value, allocator)
+     .AddMember("dist", edge.dist, allocator)
+     .AddMember("sos", static_cast<int>(edge.sos), allocator)
+     .AddMember("score", edge.score, allocator)
+     .AddMember("minimum_reachability", edge.minimum_reachability, allocator);
+
+    // Serialize projected lat,lng as double (otherwise leads to shape
+    // artifacts at begin/end of routes as the float values are rounded
+    rapidjson::Value vtx{rapidjson::kObjectType};
+    vtx.AddMember("lon", static_cast<double>(edge.projected.first), allocator)
+       .AddMember("lat", static_cast<double>(edge.projected.second), allocator);
+    e.AddMember("projected", vtx.Move(), allocator);
+
+    return e;
+  }
 }
 }
