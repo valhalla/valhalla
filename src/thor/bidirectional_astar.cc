@@ -50,6 +50,9 @@ void BidirectionalAStar::Clear() {
   adjacencylist_reverse_.reset();
   edgestatus_forward_.reset();
   edgestatus_reverse_.reset();
+
+  // Set the ferry flag to false
+  has_ferry_ = false;
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward
@@ -670,6 +673,11 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
     const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
                       edgelabel.edgeid(), 0);
+
+    // Check if this is a ferry
+    if (edgelabel.use() == Use::kFerry) {
+      has_ferry_ = true;
+    }
   }
 
   // Reverse the list
@@ -714,6 +722,11 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
     }
     secs += tc;
     path.emplace_back(edgelabel.mode(), secs, oppedge, 0);
+
+    // Check if this is a ferry
+    if (edgelabel.use() == Use::kFerry) {
+      has_ferry_ = true;
+    }
 
     // Update edgelabel_index and transition cost to apply at next iteration
     edgelabel_index = predidx;
