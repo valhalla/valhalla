@@ -71,6 +71,9 @@ constexpr uint32_t kMaxDensity = 15;
 // clamped to this maximum value.
 constexpr uint32_t kMaxSpeedKph = 140;      // ~85 MPH
 
+// Maximum ferry speed
+constexpr uint32_t kMaxFerrySpeedKph = 40;  // 21 knots
+
 // Road class or importance of an edge
 enum class RoadClass : uint8_t {
   kMotorway = 0,
