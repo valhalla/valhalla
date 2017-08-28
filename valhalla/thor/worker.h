@@ -70,7 +70,7 @@ class thor_worker_t : public service_worker_t{
  protected:
 
   std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
-                baldr::PathLocation& destination);
+                baldr::PathLocation& destination, const std::string& costing);
   void log_admin(odin::TripPath&);
   valhalla::sif::cost_ptr_t get_costing(
       const boost::property_tree::ptree& request, const std::string& costing);

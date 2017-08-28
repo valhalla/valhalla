@@ -126,6 +126,13 @@ class PedestrianCost : public DynamicCost {
   virtual ~PedestrianCost();
 
   /**
+   * Does the costing method allow multiple passes (with relaxed hierarchy
+   * limits).
+   * @return  Returns true if the costing model allows multiple passes.
+   */
+  virtual bool AllowMultiPass() const;
+
+  /**
    * This method overrides the max_distance with the max_distance_mm per segment
    * distance. An example is a pure walking route may have a max distance of
    * 10000 meters (10km) but for a multi-modal route a lower limit of 5000
@@ -444,6 +451,11 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
 PedestrianCost::~PedestrianCost() {
 }
 
+// Allow multiple passes when ferries are on initial path.
+bool PedestrianCost::AllowMultiPass() const {
+  return true;
+}
+
 // This method overrides the max_distance with the max_distance_mm per segment
 // distance. An example is a pure walking route may have a max distance of
 // 10000 meters (10km) but for a multi-modal route a lower limit of 5000
@@ -643,8 +655,14 @@ Cost PedestrianCost::TransitionCostReverse(
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float PedestrianCost::AStarCostFactor() const {
-  // Use the factor to favor walkways/paths if < 1.0f
-  return (walkway_factor_ < 1.0f) ? walkway_factor_ * speedfactor_ : speedfactor_;
+  // On first pass use the walking speed plus a small factor to account for
+  // favoring walkways, on the second pass use the the maximum ferry speed.
+  if (pass_ == 0) {
+    float speed = kDefaultSpeedFoot * std::min(walkway_factor_, sidewalk_factor_);
+    return (kSecPerHour * 0.001f) / static_cast<float>(speed);
+  } else {
+    return (kSecPerHour * 0.001f) / static_cast<float>(kMaxFerrySpeedKph);
+  }
 }
 
 // Returns the current travel type.

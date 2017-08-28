@@ -30,7 +30,8 @@ class PathAlgorithm {
    * Constructor
    */
   PathAlgorithm()
-     : interrupt(nullptr) {
+     : interrupt(nullptr),
+       has_ferry_(false) {
   }
 
   /**
@@ -68,8 +69,18 @@ class PathAlgorithm {
     interrupt = interrupt_callback;
   }
 
+  /**
+   * Does the path include a ferry?
+   * @return  Returns true if the path includes a ferry.
+   */
+  bool has_ferry() const {
+    return has_ferry_;
+  }
+
  protected:
   const std::function<void()>* interrupt;
+
+  bool has_ferry_;    // Indicates whether the path has a ferry
 
   /**
    * Check for path completion along the same edge. Edge ID in question

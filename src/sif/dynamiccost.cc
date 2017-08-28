@@ -7,7 +7,8 @@ namespace sif {
 
 DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
                          const TravelMode mode)
-    : allow_transit_connections_(false),
+    : pass_(0),
+      allow_transit_connections_(false),
       allow_destination_only_(true),
       travel_mode_(mode) {
   // Parse property tree to get hierarchy limits
