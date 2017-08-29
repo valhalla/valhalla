@@ -81,8 +81,7 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
   // user_access.<type>_tag() == true means that a user set the <type> tag.
 
   // motorroad override.  Only applies to RC <= kPrimary.  If no override is found in the
-  // country access, just use the defaults which is allow motor vehicles but no bicycles and no
-  // pedestrians.
+  // country access, just use the defaults which is no bicycles and no pedestrians.
   if (directededge.classification() <= RoadClass::kPrimary && user_access.motorroad_tag()) {
     if (country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)) != -1) {
 
