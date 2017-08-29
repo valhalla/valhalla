@@ -5,69 +5,64 @@ namespace meili {
 
 float EnlargedEmissionCostModel::operator()(const StateId& stateid) const
 {
-  const auto& cloned_stateid = ts_.GetClonedStateId(stateid);
-  // TODO remove stateid by returning invalid cost here
-  if (cloned_stateid.IsValid()) {
-    if (cloned_stateid.time() == 0) {
-      return -1.0;
-    } else {
-      return ts_.original_emission_cost_model()(ts_.GetOriginalStateId(cloned_stateid));
-    }
+  const auto& model = evs_.original_emission_cost_model();
+  const auto& original_stateid = evs_.GetOrigin(stateid);
+  if (original_stateid.IsValid()) {
+    return model(original_stateid);
+  }
+  if (stateid.time() == 0 && evs_.GetClone(stateid).IsValid()) {
+    return -1.0;
   } else {
-    return ts_.original_emission_cost_model()(ts_.GetOriginalStateId(cloned_stateid));
+    return model(stateid);
   }
 }
 
 float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
 {
-  const auto& original_lhs = ts_.GetOriginalStateId(lhs);
-  const auto& original_rhs = ts_.GetOriginalStateId(rhs);
-  // TODO build edges between stateids
-  return ts_.original_transition_cost_model()(original_lhs, original_rhs);
-}
-
-TopKSearch::TopKSearch(IViterbiSearch& vs)
-    : vs_(vs),
-      original_emission_cost_model_(vs_.emission_cost_model()),
-      original_transition_cost_model_(vs_.transition_cost_model()),
-      cloned_stateid_(),
-      original_stateid_()
-{
-  vs_.set_emission_cost_model(EnlargedEmissionCostModel(*this));
-  vs_.set_transition_cost_model(EnlargedTransitionCostModel(*this));
-}
-
-StateId TopKSearch::GetOriginalStateId(const StateId& stateid) const
-{
-  const auto it = original_stateid_.find(stateid);
-  if (it == original_stateid_.end()) {
-    return stateid;
+  const auto& model = evs_.original_transition_cost_model();
+  const auto& original_lhs = evs_.GetOrigin(lhs);
+  const auto& original_rhs = evs_.GetOrigin(rhs);
+  if (original_lhs.IsValid()) {
+    if (original_rhs.IsValid()) {
+      return model(original_lhs, original_rhs);
+    } else {
+      if (evs_.GetClone(rhs).IsValid()) {
+        return -1.0;
+      } else {
+        return model(original_rhs, rhs);
+      }
+    }
   } else {
-    return it->second;
+    if (original_rhs.IsValid()) {
+      return -1.0;
+    } else {
+      return model(lhs, rhs);
+    }
   }
 }
 
-StateId TopKSearch::GetClonedStateId(const StateId& stateid) const
+void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
 {
-  const auto it = cloned_stateid_.find(stateid);
-  if (it == cloned_stateid_.end()) {
-    return StateId();
-  } else {
-    return it->second;
+  for (auto it = vs_.SearchPath(time); it != vs_.PathEnd(); it++) {
+    const auto& origin = *it;
+    if (origin.IsValid()) {
+      // TODO: clone(it->time(), UUID())
+      StateId clone;
+      origin_[clone] = origin;
+      clone_[origin] = clone;
+    }
+  }
+
+  // Add the clones to vs_
+  for (const auto& pair: origin_) {
+    vs_.AddStateId(pair.first);
   }
 }
 
 void TopKSearch::RemovePath(const StateId::Time& time)
 {
-  for (auto it = vs_.SearchPath(time); it != vs_.PathEnd(); it++) {
-    // TODO: cloned_stateid(it->time(), UUID())
-    StateId cloned_stateid;
-    cloned_stateid_[cloned_stateid] = *it;
-  }
-  // Add the cloned stateids to vs_
-  for (const auto& pair: cloned_stateid_) {
-    vs_.AddStateId(pair.first);
-  }
+  evss_.emplace_back(vs_);
+  evss_.back().ClonePath(time);
 }
 
 }

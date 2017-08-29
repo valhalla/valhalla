@@ -6,37 +6,46 @@
 namespace valhalla {
 namespace meili {
 
-class TopKSearch;
+class EnlargedViterbiSearch;
 
 class EnlargedEmissionCostModel
 {
  public:
-  EnlargedEmissionCostModel(const TopKSearch& ts)
-      :ts_(ts) {}
+  EnlargedEmissionCostModel(const EnlargedViterbiSearch& evs)
+      :evs_(evs) {}
 
   float operator() (const StateId& stateid) const;
 
  private:
-  const TopKSearch& ts_;
+  const EnlargedViterbiSearch& evs_;
 };
 
 
 class EnlargedTransitionCostModel
 {
  public:
-  EnlargedTransitionCostModel(const TopKSearch& ts)
-      :ts_(ts) {}
+  EnlargedTransitionCostModel(const EnlargedViterbiSearch& evs)
+      :evs_(evs) {}
 
   float operator() (const StateId& lhs, const StateId& rhs) const;
 
  private:
-  const TopKSearch& ts_;
+  const EnlargedViterbiSearch& evs_;
 };
 
-class TopKSearch
+class EnlargedViterbiSearch
 {
  public:
-  TopKSearch(IViterbiSearch& vs);
+  EnlargedViterbiSearch(IViterbiSearch& vs)
+      : vs_(vs),
+        original_emission_cost_model_(vs.emission_cost_model()),
+        original_transition_cost_model_(vs.transition_cost_model()),
+        origin_(),
+        clone_()
+  {
+    vs_.set_emission_cost_model(EnlargedEmissionCostModel(*this));
+    vs_.set_transition_cost_model(EnlargedTransitionCostModel(*this));
+  }
 
   const IEmissionCostModel& original_emission_cost_model() const
   { return original_emission_cost_model_; }
@@ -44,11 +53,27 @@ class TopKSearch
   const ITransitionCostModel& original_transition_cost_model() const
   { return original_transition_cost_model_; }
 
-  StateId GetOriginalStateId(const StateId& stateid) const;
+  StateId GetOrigin(const StateId& stateid) const
+  {
+    const auto it = origin_.find(stateid);
+    if (it == origin_.end()) {
+      return {};
+    } else {
+      return it->second;
+    }
+  }
 
-  StateId GetClonedStateId(const StateId& stateid) const;
+  StateId GetClone(const StateId& stateid) const
+  {
+    const auto it = clone_.find(stateid);
+    if (it == clone_.end()) {
+      return {};
+    } else {
+      return it->second;
+    }
+  }
 
-  void RemovePath(const StateId::Time& time);
+  void ClonePath(const StateId::Time& time);
 
  private:
   IViterbiSearch& vs_;
@@ -57,9 +82,26 @@ class TopKSearch
 
   const ITransitionCostModel& original_transition_cost_model_;
 
-  std::unordered_map<StateId, StateId> cloned_stateid_;
+  // clone -> origin
+  std::unordered_map<StateId, StateId> origin_;
 
-  std::unordered_map<StateId, StateId> original_stateid_;
+  // origin -> clone
+  std::unordered_map<StateId, StateId> clone_;
+};
+
+class TopKSearch
+{
+ public:
+  TopKSearch(IViterbiSearch& vs)
+      : vs_(vs),
+        evss_() {}
+
+  void RemovePath(const StateId::Time& time);
+
+ private:
+  IViterbiSearch& vs_;
+
+  std::vector<EnlargedViterbiSearch> evss_;
 };
 
 }
