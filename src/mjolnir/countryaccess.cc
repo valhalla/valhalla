@@ -120,7 +120,6 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
       reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),
                           f_oneway_vehicle, f_oneway_bicycle, user_access);
     } else if (country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)) != -1) {
-
       forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),
                           r_oneway_vehicle, r_oneway_bicycle, user_access);
       reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunk)),

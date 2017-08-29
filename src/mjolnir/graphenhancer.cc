@@ -1122,7 +1122,6 @@ void enhance(const boost::property_tree::ptree& pt,
                 directededge.set_forwardaccess(forward);
                 directededge.set_reverseaccess(reverse);
               }
-
             }
           }
         }
