@@ -218,7 +218,7 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3 *db_h
   uint32_t ret;
   char *err_msg = nullptr;
   uint32_t result = 0;
-  std::string sql = "SELECT iso_code, trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, path from admin_access";
+  std::string sql = "SELECT iso_code, trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, path, motorroad from admin_access";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
@@ -262,6 +262,10 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3 *db_h
 
       if (sqlite3_column_type(stmt, 8) == SQLITE_INTEGER)
         access.push_back(sqlite3_column_int(stmt, 8));
+      else access.push_back(-1);
+
+      if (sqlite3_column_type(stmt, 9) == SQLITE_INTEGER)
+        access.push_back(sqlite3_column_int(stmt, 9));
       else access.push_back(-1);
 
       country_access.emplace(country_iso,access);
