@@ -14,7 +14,7 @@ GreatCircleDistance(const valhalla::meili::Measurement& left,
 { return left.lnglat().Distance(right.lnglat()); }
 
 inline float ClockDistance(const valhalla::meili::Measurement& left,
-                    const valhalla::meili::Measurement& right)
+                           const valhalla::meili::Measurement& right)
 { return right.epoch_time() - left.epoch_time(); }
 
 }
@@ -64,6 +64,25 @@ State::route(const std::vector<State>& states,
   }
 }
 
+
+void State::SetRoute(
+    const std::vector<StateId>& stateids,
+    const std::unordered_map<uint16_t, uint32_t>& results,
+    labelset_ptr_t labelset) const
+{
+  // Cache results
+  label_idx_.clear();
+  uint16_t dest = 1;  // dest at 0 is remained for the origin
+  for (const auto stateid : stateids) {
+    const auto it = results.find(dest);
+    if (it != results.end()) {
+      label_idx_[stateid] = it->second;
+    }
+    dest++;
+  }
+
+  labelset_ = labelset;
+}
 
 const Label*
 State::last_label(const State& state) const

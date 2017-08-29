@@ -87,15 +87,19 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
                   const std::shared_ptr<DynamicCost>* mode_costing,
                   const TravelMode mode, PathStatistics& data,
                   bool multi_run, uint32_t iterations,
-                  bool using_astar, bool match_test) {
+                  bool using_astar, bool match_test,
+                  const std::string& routetype) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
   pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
   cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+  cost->set_pass(0);
   data.incPasses();
-  if (pathedges.size() == 0) {
+  if (pathedges.size() == 0 ||
+      (routetype == "pedestrian" && pathalgorithm->has_ferry())) {
     if (cost->AllowMultiPass()) {
       LOG_INFO("Try again with relaxed hierarchy limits");
+      cost->set_pass(1);
       pathalgorithm->Clear();
       float relax_factor = (using_astar) ? 16.0f : 8.0f;
       float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
@@ -705,7 +709,7 @@ int main(int argc, char *argv[]) {
     try {
       trip_path = PathTest(reader, path_location[i], path_location[i + 1],
                            pathalgorithm, mode_costing, mode, data, multi_run,
-                           iterations, using_astar, match_test);
+                           iterations, using_astar, match_test, routetype);
     } catch (std::runtime_error& rte) {
       LOG_ERROR("trip_path not found");
     }
