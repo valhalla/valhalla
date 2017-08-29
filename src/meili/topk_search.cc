@@ -3,7 +3,7 @@
 namespace valhalla {
 namespace meili {
 
-EnlargedEmissionCostModel::operator()(const StateId& stateid) const
+float EnlargedEmissionCostModel::operator()(const StateId& stateid) const
 {
   const auto& cloned_stateid = ts_.GetClonedStateId(stateid);
   // TODO remove stateid by returning invalid cost here
@@ -11,19 +11,30 @@ EnlargedEmissionCostModel::operator()(const StateId& stateid) const
     if (cloned_stateid.time() == 0) {
       return -1.0;
     } else {
-      return vs_.original_emission_cost_model()(ts_.GetOriginalStateId(cloned_stateid));
+      return ts_.original_emission_cost_model()(ts_.GetOriginalStateId(cloned_stateid));
     }
   } else {
-    return vs_.original_emission_cost_model()(ts_.GetOriginalStateId(cloned_stateid));
+    return ts_.original_emission_cost_model()(ts_.GetOriginalStateId(cloned_stateid));
   }
 }
 
-EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
+float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
 {
   const auto& original_lhs = ts_.GetOriginalStateId(lhs);
   const auto& original_rhs = ts_.GetOriginalStateId(rhs);
   // TODO build edges between stateids
-  return vs_.original_transition_cost_model()(original_lhs, original_rhs);
+  return ts_.original_transition_cost_model()(original_lhs, original_rhs);
+}
+
+TopKSearch::TopKSearch(IViterbiSearch& vs)
+    : vs_(vs),
+      original_emission_cost_model_(vs_.emission_cost_model()),
+      original_transition_cost_model_(vs_.transition_cost_model()),
+      cloned_stateid_(),
+      original_stateid_()
+{
+  vs_.set_emission_cost_model(EnlargedEmissionCostModel(*this));
+  vs_.set_transition_cost_model(EnlargedTransitionCostModel(*this));
 }
 
 StateId TopKSearch::GetOriginalStateId(const StateId& stateid) const
@@ -51,10 +62,10 @@ void TopKSearch::RemovePath(const StateId::Time& time)
   for (auto it = vs_.SearchPath(time); it != vs_.PathEnd(); it++) {
     // TODO: cloned_stateid(it->time(), UUID())
     StateId cloned_stateid;
-    cloned_stateids_[cloned_stateid] = *it;
+    cloned_stateid_[cloned_stateid] = *it;
   }
   // Add the cloned stateids to vs_
-  for (const auto& pair: cloned_stateids_) {
+  for (const auto& pair: cloned_stateid_) {
     vs_.AddStateId(pair.first);
   }
 }

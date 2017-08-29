@@ -35,12 +35,8 @@ class EnlargedTransitionCostModel
 
 class TopKSearch
 {
-  TopKSearch(IViterbiSearch& vs)
-      : vs_(vs),
-        original_emission_cost_model_(vs_.emission_cost_model()),
-        original_transition_cost_model_(vs_.transition_cost_model()),
-        cloned_stateid_(),
-        original_stateid_() {}
+ public:
+  TopKSearch(IViterbiSearch& vs);
 
   const IEmissionCostModel& original_emission_cost_model() const
   { return original_emission_cost_model_; }
