@@ -146,6 +146,7 @@ void
 MapMatching::Clear()
 {
   measurements_.clear();
+  leave_times_.clear();
   columns_.clear();
   ViterbiSearch::Clear();
 }
