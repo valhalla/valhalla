@@ -27,7 +27,8 @@ GreatCircleDistance(const Measurement& left,
 inline float
 ClockDistance(const Measurement& left,
               const Measurement& right)
-{ return right.epoch_time() - left.epoch_time(); }
+{ return right.epoch_time() > 0 && left.epoch_time() >= 0 ?
+    right.epoch_time() - left.epoch_time() : 0; }
 
 
 struct Interpolation {
