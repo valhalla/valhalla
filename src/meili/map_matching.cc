@@ -6,20 +6,6 @@
 #include "meili/match_result.h"
 #include "meili/map_matching.h"
 
-namespace {
-
-inline float
-GreatCircleDistance(const valhalla::meili::Measurement& left,
-                    const valhalla::meili::Measurement& right)
-{ return left.lnglat().Distance(right.lnglat()); }
-
-inline float ClockDistance(const valhalla::meili::Measurement& left,
-                           const valhalla::meili::Measurement& right)
-{ return right.epoch_time() - left.leave_time(); }
-
-}
-
-
 namespace valhalla {
 namespace meili {
 
@@ -172,8 +158,8 @@ MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
   const auto& right = state(rhs);
   const auto& left_measurement = measurement(left);
   const auto& right_measurement = measurement(right);
-  const auto gc_dist = GreatCircleDistance(left_measurement, right_measurement);
-  const auto clk_dist = ClockDistance(left_measurement, right_measurement);
+  const auto gc_dist = left_measurement.lnglat().Distance(right_measurement.lnglat());
+  const auto clk_dist = right_measurement.epoch_time() - leave_times_[lhs.time()];
 
   // If we need to actually compute the route
   if (!left.routed()) {

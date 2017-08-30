@@ -27,7 +27,7 @@ GreatCircleDistance(const Measurement& left,
 inline float
 ClockDistance(const Measurement& left,
               const Measurement& right)
-{ return right.epoch_time() - left.leave_time(); }
+{ return right.epoch_time() - left.epoch_time(); }
 
 
 struct Interpolation {
@@ -316,37 +316,38 @@ MapMatcher::OfflineMatch(
           sq_max_search_radius = max_search_radius * max_search_radius;
   const float interpolation_distance = config_.get<float>("interpolation_distance"),
           sq_interpolation_distance = interpolation_distance * interpolation_distance;
-  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated_measurements;
+  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
   // Always match the first measurement
-  auto latest_match_measurement = measurements.cbegin();
-  auto time = AppendMeasurement(*latest_match_measurement, sq_max_search_radius);
-  for (auto measurement = std::next(latest_match_measurement); measurement != measurements.end(); ++measurement) {
-    const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
-    // Always match the last measurement
-    if (sq_interpolation_distance < sq_distance || std::next(measurement) == measurements.end()) {
+  auto last = measurements.cbegin();
+  auto time = AppendMeasurement(*last, sq_max_search_radius);
+  double interpolated_epoch_time = -1;
+  for (auto m = std::next(last); m != measurements.end(); ++m) {
+    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
+    // Always match the last measurement and if its far enough away
+    if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
+      // If there were interpolated points between these two points with time information
+      if(interpolated_epoch_time != -1) {
+        // Project the last interpolated point onto the line between the two match points
+        auto p = interpolated[time].back().lnglat().Project(last->lnglat(), m->lnglat());
+        // If its significantly closer to the previous match point then it looks like the trace lingered
+        // so we use the time information of the last interpolation point as the actual time they started
+        // traveling towards the next match point which will help us determine what paths are really likely
+        if(p.Distance(last->lnglat())/last->lnglat().Distance(m->lnglat()) < .2f)
+          mapmatching_.SetMeasurementLeaveTime(time, interpolated_epoch_time);
+      }
       // This one isnt interpolated so we make room for its state
-      time = AppendMeasurement(*measurement, sq_max_search_radius);
-      latest_match_measurement = measurement;
-    }
-    //TODO: if its the last measurement and it wants to be interpolated
-    //then what we need to do is make latest_match_measurement interpolated
-    //and copy its epoch_time into the last measurements epoch time
-    /*else if(std::next(measurement) == measurements.end()) {
-      interpolated_measurements[time].push_back(*latest_match_measurement);
-      mapmatching_.UpdateMeasurement(*measurement); //but keep the epoch time from latest_match_measurement
-    } */
-    // This one is so close to the last one we made state for that we will just interpolate it
+      time = AppendMeasurement(*m, sq_max_search_radius);
+      last = m;
+      interpolated_epoch_time = -1;
+    }//TODO: if its the last measurement and it wants to be interpolated
+    // then what we need to do is make last match interpolated
+    // and copy its epoch_time into the last measurements epoch time
+    // else if(std::next(measurement) == measurements.end()) { }
+    // This one is so close to the last match that we will just interpolate it
     else {
-      interpolated_measurements[time].push_back(*measurement);
-      // If this interpolated point had time information we want to use that when the route
-      // leaves latest_match_measurement so we get accurate timing for the route between
-      // points. This protects against interpolated points being close in distance but far
-      // apart in time. We could instead not interpolating both on distance and on time
-      // but then this may lead to issues where the route doubles back on itself because
-      // the points are so close together and we dont want that
-      if(measurement->epoch_time() > 0)
-        mapmatching_.SetMeasurementLeaveTime(time, measurement->epoch_time());
+      interpolated[time].push_back(*m);
+      interpolated_epoch_time = m->epoch_time();
     }
   }
 
@@ -369,7 +370,7 @@ MapMatcher::OfflineMatch(
   const auto& results = FindMatchResults(mapmatching_, stateids);
 
   // Done if no measurements to interpolate
-  if (interpolated_measurements.empty()) {
+  if (interpolated.empty()) {
     return results;
   }
 
@@ -378,8 +379,8 @@ MapMatcher::OfflineMatch(
   for (StateId::Time time = 0; time < stateids.size(); time++) {
     merged_results.push_back(results[time]);
 
-    const auto it = interpolated_measurements.find(time);
-    if (it == interpolated_measurements.end()) {
+    const auto it = interpolated.find(time);
+    if (it == interpolated.end()) {
       continue;
     }
 
