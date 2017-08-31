@@ -6,6 +6,7 @@
 
 #include "test.h"
 #include "meili/viterbi_search.h"
+#include "meili/topk_search.h"
 
 using namespace valhalla::meili;
 
@@ -347,11 +348,69 @@ void TestViterbiSearch()
   }
 }
 
+class EmissionCostModel {
+ public:
+  EmissionCostModel(const std::vector<Column>& columns)
+      : columns_(columns) {}
+
+  const State& state(const StateId& stateid) const
+  { return columns_[stateid.time()][stateid.id()]; }
+
+  float operator()(const StateId& stateid) const
+  {
+    return state(stateid).emission_cost;
+  }
+ private:
+  std::vector<Column> columns_;
+};
+
+class TransitionCostModel {
+ public:
+  TransitionCostModel(const std::vector<Column>& columns)
+      : columns_(columns) {}
+
+  const State& state(const StateId& stateid) const
+  { return columns_[stateid.time()][stateid.id()]; }
+
+  float operator()(const StateId& lhs, const StateId& rhs) const
+  {
+    const auto& left = state(lhs);
+    const auto& right = state(rhs);
+    const auto it = left.transition_costs.find(rhs.id());
+    if (it == left.transition_costs.end()) {
+      return -1.0;
+    } else {
+      return it->second;
+    }
+  }
+ private:
+  std::vector<Column> columns_;
+};
+
+void TestTopKSearch()
+{
+  ViterbiSearch vs;
+
+  const auto& columns = generate_columns(
+      // transition costs
+      std::uniform_int_distribution<int>(0, 1000),
+      // emission costs
+      std::uniform_int_distribution<int>(0, 3000),
+      generate_column_counts(
+          1000,
+          // column sizes
+          std::uniform_int_distribution<size_t>(1, 100)));
+  vs.set_emission_cost_model(EmissionCostModel(columns));
+  vs.set_transition_cost_model(TransitionCostModel(columns));
+}
+
 int main(int argc, char *argv[])
 {
-  test::suite suite("viterbi search");
+  test::suite suite("viterbi search & topk search");
 
   suite.test(TEST_CASE(TestViterbiSearch));
+
+  suite.test(TEST_CASE(TestTopKSearch));
 
   return suite.tear_down();
 }
