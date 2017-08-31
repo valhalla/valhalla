@@ -126,12 +126,16 @@ class MapMatching: public ViterbiSearch
   std::vector<Measurement>::size_type size() const
   { return measurements_.size(); }
 
+  void SetMeasurementLeaveTime(StateId::Time time, double leave_time)
+  { leave_times_[time] = leave_time; }
+
   template <typename candidate_iterator_t>
   StateId::Time AppendState(const Measurement& measurement,
                             candidate_iterator_t begin,
                             candidate_iterator_t end)
   {
     measurements_.push_back(measurement);
+    leave_times_.push_back(measurement.epoch_time());
 
     StateId::Time time = columns_.size();
     Column column;
@@ -177,6 +181,7 @@ class MapMatching: public ViterbiSearch
   const sif::TravelMode mode_;
 
   std::vector<Measurement> measurements_;
+  std::vector<double> leave_times_;
 
   std::vector<Column> columns_;
 

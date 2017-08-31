@@ -297,7 +297,6 @@ struct graph_callback : public OSMPBF::Callback {
         && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-
       if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass) std::stoi(tag.second);
         switch (roadclass) {
@@ -351,6 +350,10 @@ struct graph_callback : public OSMPBF::Callback {
       }
       else if (tag.first == "hov_tag") {
         access.set_hov_tag(true);
+        has_user_tags = true;
+      }
+      else if (tag.first == "motorroad_tag") {
+        access.set_motorroad_tag(true);
         has_user_tags = true;
       }
 
@@ -859,7 +862,6 @@ struct graph_callback : public OSMPBF::Callback {
       w.set_has_user_tags(true);
       access_->push_back(access);
     }
-
     // Add the way to the list
     ways_->push_back(w);
   }

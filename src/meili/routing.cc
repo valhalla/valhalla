@@ -252,12 +252,9 @@ inline uint16_t get_inbound_edgelabel_heading(baldr::GraphReader& reader,
     const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
     const auto& shape = edgeinfo.shape();
     if (shape.size() >= 2) {
-      float heading;
-      if (directededge->forward()) {
-        heading = shape.back().Heading(shape.rbegin()[1]);
-      } else {
-        heading = shape.front().Heading(shape[1]);
-      }
+      float heading = (directededge->forward()) ?
+          shape.back().Heading(shape.rbegin()[1]) :
+          shape.front().Heading(shape[1]);
       return static_cast<uint16_t>(std::max(0.f, std::min(359.f, heading)));
     } else {
       return 0;
@@ -265,25 +262,29 @@ inline uint16_t get_inbound_edgelabel_heading(baldr::GraphReader& reader,
   }
 }
 
-// Get the outbound heading of the edge. Need the graphreader to get the tile
-// in cases where the node information does not have the heading (more than 8
-// edges at the node).
-inline uint16_t get_outbound_edge_heading(const baldr::DirectedEdge* outbound_edge,
+/**
+ * Get the heading of the outbound edge.
+ * @param  tile           Graph tile at the node.
+ * @param  outbound_edge  Outbound directed edge.
+ * @param  nodeinfo       Nodeinfo at the start of the outbound edge.
+ * @return Returns the outbound edge heading.
+ */
+// Get the outbound heading of the edge.
+inline uint16_t get_outbound_edge_heading(const baldr::GraphTile* tile,
+                          const baldr::DirectedEdge* outbound_edge,
                           const baldr::NodeInfo* nodeinfo) {
+  // Get the local index of the outbound edge. If this is less
+  // than 8 then we can get the heading from the nodeinfo.
   const auto idx = outbound_edge->localedgeidx();
   if (idx < 8) {
     return nodeinfo->heading(idx);
   } else {
-    const baldr::GraphTile* tile = nullptr;
     const auto edgeinfo = tile->edgeinfo(outbound_edge->edgeinfo_offset());
     const auto& shape = edgeinfo.shape();
     if (shape.size() >= 2) {
-      float heading;
-      if (outbound_edge->forward()) {
-        heading = shape.front().Heading(shape[1]);
-      } else {
-        heading = shape.back().Heading(shape.rbegin()[1]);
-      }
+      float heading = (outbound_edge->forward()) ?
+          shape.front().Heading(shape[1]) :
+          shape.back().Heading(shape.rbegin()[1]);
       return static_cast<uint16_t>(std::max(0.f, std::min(359.f, heading)));
     } else {
       return 0;
@@ -391,7 +392,7 @@ find_shortest_path(baldr::GraphReader& reader,
       // based on turn degree
       float turn_cost = label.turn_cost();
       if (label.edgeid().Is_Valid()) {
-        const auto outbound_hdg = get_outbound_edge_heading(directededge, nodeinfo);
+        const auto outbound_hdg = get_outbound_edge_heading(tile, directededge, nodeinfo);
         turn_cost += turn_cost_table[midgard::get_turn_degree180(inbound_hdg, outbound_hdg)];
       }
 
@@ -408,7 +409,7 @@ find_shortest_path(baldr::GraphReader& reader,
               sif::Cost cost(label.cost().cost + directededge->length() * edge.dist,
                              label.cost().secs + costing->EdgeCost(directededge).secs * edge.dist);
               // We only add the labels if we are under the limits for distance and for time or time limit is 0
-              if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+              if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
                 labelset->put(dest, edgeid, 0.f, edge.dist, cost, turn_cost,
                               cost.cost, label_idx, directededge, travelmode);
               }
@@ -426,7 +427,7 @@ find_shortest_path(baldr::GraphReader& reader,
         sif::Cost cost(label.cost().cost + directededge->length(),
                        label.cost().secs + costing->EdgeCost(directededge).secs);
         // We only add the labels if we are under the limits for distance and for time or time limit is 0
-        if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+        if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
           const auto end_nodeinfo = endtile->node(directededge->endnode());
           float sortcost = cost.cost + heuristic(end_nodeinfo->latlng());
           labelset->put(directededge->endnode(), edgeid, 0.0f, 1.0f, cost,
@@ -525,7 +526,7 @@ find_shortest_path(baldr::GraphReader& reader,
                 sif::Cost cost(label.cost().cost + directededge->length() * f,
                                label.cost().secs + costing->EdgeCost(directededge).secs * f);
                 // We only add the labels if we are under the limits for distance and for time or time limit is 0
-                if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+                if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
                   labelset->put(other_dest, origin_edge.id, origin_edge.dist,
                                 other_edge.dist, cost, turn_cost, cost.cost,
                                 label_idx, directededge, travelmode);
@@ -541,7 +542,7 @@ find_shortest_path(baldr::GraphReader& reader,
           sif::Cost cost(label.cost().cost + directededge->length() * f,
                          label.cost().secs + costing->EdgeCost(directededge).secs * f);
           // We only add the labels if we are under the limits for distance and for time or time limit is 0
-          if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+          if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
             // Get the end node tile and nodeinfo (to compute heuristic)
             const auto* nodeinfo = reader.GetEndNode(directededge, tile);
             if(nodeinfo == nullptr)
