@@ -27,7 +27,8 @@ GreatCircleDistance(const Measurement& left,
 inline float
 ClockDistance(const Measurement& left,
               const Measurement& right)
-{ return right.epoch_time() - left.epoch_time(); }
+{ return right.epoch_time() < 0 || left.epoch_time() < 0 ?
+    -1 : right.epoch_time() - left.epoch_time(); }
 
 
 struct Interpolation {
@@ -309,30 +310,45 @@ MapMatcher::OfflineMatch(
     const std::vector<Measurement>& measurements, uint32_t k) {
   mapmatching_.Clear();
 
-  const auto begin = measurements.begin(),
-               end = measurements.end();
-
-  if (begin == end) {
+  if(measurements.empty())
     return {};
-  }
 
-  const auto max_search_radius = config_.get<float>("max_search_radius"),
+  const float max_search_radius = config_.get<float>("max_search_radius"),
           sq_max_search_radius = max_search_radius * max_search_radius;
-  const auto interpolation_distance = config_.get<float>("interpolation_distance"),
+  const float interpolation_distance = config_.get<float>("interpolation_distance"),
           sq_interpolation_distance = interpolation_distance * interpolation_distance;
-  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated_measurements;
+  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
   // Always match the first measurement
-  auto time = AppendMeasurement(*begin, sq_max_search_radius);
-  auto latest_match_measurement = begin;
-  for (auto measurement = std::next(begin); measurement != end; measurement++) {
-    const auto sq_distance = GreatCircleDistanceSquared(*latest_match_measurement, *measurement);
-    // Always match the last measurement
-    if (sq_interpolation_distance < sq_distance || std::next(measurement) == end) {
-      time = AppendMeasurement(*measurement, sq_max_search_radius);
-      latest_match_measurement = measurement;
-    } else {
-      interpolated_measurements[time].push_back(*measurement);
+  auto last = measurements.cbegin();
+  auto time = AppendMeasurement(*last, sq_max_search_radius);
+  double interpolated_epoch_time = -1;
+  for (auto m = std::next(last); m != measurements.end(); ++m) {
+    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
+    // Always match the last measurement and if its far enough away
+    if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
+      // If there were interpolated points between these two points with time information
+      if(interpolated_epoch_time != -1) {
+        // Project the last interpolated point onto the line between the two match points
+        auto p = interpolated[time].back().lnglat().Project(last->lnglat(), m->lnglat());
+        // If its significantly closer to the previous match point then it looks like the trace lingered
+        // so we use the time information of the last interpolation point as the actual time they started
+        // traveling towards the next match point which will help us determine what paths are really likely
+        if(p.Distance(last->lnglat())/last->lnglat().Distance(m->lnglat()) < .2f)
+          mapmatching_.SetMeasurementLeaveTime(time, interpolated_epoch_time);
+      }
+      // This one isnt interpolated so we make room for its state
+      time = AppendMeasurement(*m, sq_max_search_radius);
+      last = m;
+      interpolated_epoch_time = -1;
+    }//TODO: if its the last measurement and it wants to be interpolated
+    // then what we need to do is make last match interpolated
+    // and copy its epoch_time into the last measurements epoch time
+    // else if(std::next(measurement) == measurements.end()) { }
+    // This one is so close to the last match that we will just interpolate it
+    else {
+      interpolated[time].push_back(*m);
+      interpolated_epoch_time = m->epoch_time();
     }
   }
 
@@ -355,7 +371,7 @@ MapMatcher::OfflineMatch(
   const auto& results = FindMatchResults(mapmatching_, stateids);
 
   // Done if no measurements to interpolate
-  if (interpolated_measurements.empty()) {
+  if (interpolated.empty()) {
     return results;
   }
 
@@ -364,8 +380,8 @@ MapMatcher::OfflineMatch(
   for (StateId::Time time = 0; time < stateids.size(); time++) {
     merged_results.push_back(results[time]);
 
-    const auto it = interpolated_measurements.find(time);
-    if (it == interpolated_measurements.end()) {
+    const auto it = interpolated.find(time);
+    if (it == interpolated.end()) {
       continue;
     }
 

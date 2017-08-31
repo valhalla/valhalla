@@ -409,7 +409,7 @@ find_shortest_path(baldr::GraphReader& reader,
               sif::Cost cost(label.cost().cost + directededge->length() * edge.dist,
                              label.cost().secs + costing->EdgeCost(directededge).secs * edge.dist);
               // We only add the labels if we are under the limits for distance and for time or time limit is 0
-              if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+              if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
                 labelset->put(dest, edgeid, 0.f, edge.dist, cost, turn_cost,
                               cost.cost, label_idx, directededge, travelmode);
               }
@@ -427,7 +427,7 @@ find_shortest_path(baldr::GraphReader& reader,
         sif::Cost cost(label.cost().cost + directededge->length(),
                        label.cost().secs + costing->EdgeCost(directededge).secs);
         // We only add the labels if we are under the limits for distance and for time or time limit is 0
-        if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+        if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
           const auto end_nodeinfo = endtile->node(directededge->endnode());
           float sortcost = cost.cost + heuristic(end_nodeinfo->latlng());
           labelset->put(directededge->endnode(), edgeid, 0.0f, 1.0f, cost,
@@ -526,7 +526,7 @@ find_shortest_path(baldr::GraphReader& reader,
                 sif::Cost cost(label.cost().cost + directededge->length() * f,
                                label.cost().secs + costing->EdgeCost(directededge).secs * f);
                 // We only add the labels if we are under the limits for distance and for time or time limit is 0
-                if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+                if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
                   labelset->put(other_dest, origin_edge.id, origin_edge.dist,
                                 other_edge.dist, cost, turn_cost, cost.cost,
                                 label_idx, directededge, travelmode);
@@ -542,7 +542,7 @@ find_shortest_path(baldr::GraphReader& reader,
           sif::Cost cost(label.cost().cost + directededge->length() * f,
                          label.cost().secs + costing->EdgeCost(directededge).secs * f);
           // We only add the labels if we are under the limits for distance and for time or time limit is 0
-          if (cost.cost < max_dist && (max_time == 0.f || cost.secs < max_time)) {
+          if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
             // Get the end node tile and nodeinfo (to compute heuristic)
             const auto* nodeinfo = reader.GetEndNode(directededge, tile);
             if(nodeinfo == nullptr)
