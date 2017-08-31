@@ -1,7 +1,7 @@
-#include <cstdint>
-// -*- mode: c++ -*-
-#include <iostream>
+#include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <iostream>
 #include <random>
 
 #include "test.h"
@@ -348,6 +348,10 @@ void TestViterbiSearch()
   }
 }
 
+inline const State&
+get_state(const std::vector<Column>& columns, const StateId& stateid)
+{ return columns[stateid.time()][stateid.id()]; }
+
 class EmissionCostModel {
  public:
   EmissionCostModel(const std::vector<Column>& columns)
@@ -386,6 +390,56 @@ class TransitionCostModel {
  private:
   std::vector<Column> columns_;
 };
+
+struct PathWithCost: std::pair<std::vector<StateId>, float> {
+  using std::pair<std::vector<StateId>, float>::pair;
+  const std::vector<StateId>& path() const { return first; }
+  float cost() const { return second; }
+};
+
+std::vector<PathWithCost>
+sort_all_paths(const std::vector<Column>& columns, const StateId::Time& since_time=0)
+{
+  if (columns.size() <= since_time) {
+    return {PathWithCost({}, 0.0)};
+  }
+
+  const auto& sub_pcs = sort_all_paths(columns, since_time + 1);
+  std::vector<PathWithCost> pcs;
+  for (auto id = 0; id <= columns[since_time].size(); id++) {
+    const StateId stateid(since_time, id);
+    const auto& state = get_state(columns, stateid);
+    for (const auto& sub_pc: sub_pcs) {
+      if (sub_pc.path().empty()) {
+        pcs.emplace_back(
+            std::vector<StateId>{stateid},
+            state.emission_cost);
+      } else {
+        const auto it = state.transition_costs.find(sub_pc.path().back().id());
+        if (it != state.transition_costs.end()) {
+          const float cost = state.emission_cost + it->second + sub_pc.cost();
+          std::vector<StateId> path;
+          path.reserve(1 + sub_pc.path().size());
+          path.emplace_back(since_time, id);
+          std::copy(
+              sub_pc.path().begin(),
+              sub_pc.path().end(),
+              std::back_inserter(path));
+          pcs.emplace_back(path, cost);
+        }
+      }
+    }
+  }
+
+  std::sort(
+      pcs.begin(),
+      pcs.end(),
+      [](const PathWithCost& lhs, const PathWithCost& rhs) {
+        return lhs.cost() < rhs.cost();
+      });
+
+  return pcs;
+}
 
 void TestTopKSearch()
 {
