@@ -315,9 +315,9 @@ MapMatcher::OfflineMatch(
     return {};
 
   const float max_search_radius = config_.get<float>("max_search_radius"),
-          sq_max_search_radius = max_search_radius * max_search_radius;
+           sq_max_search_radius = max_search_radius * max_search_radius;
   const float interpolation_distance = config_.get<float>("interpolation_distance"),
-          sq_interpolation_distance = interpolation_distance * interpolation_distance;
+           sq_interpolation_distance = interpolation_distance * interpolation_distance;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
   // Always match the first measurement
@@ -352,7 +352,7 @@ MapMatcher::OfflineMatch(
       interpolated_epoch_time = m->epoch_time();
     }
   }
-  
+
   //For k paths
   std::vector<std::vector<MatchResult> > topk;
   for(auto i = 0; i < k; ++i) {
@@ -370,7 +370,7 @@ MapMatcher::OfflineMatch(
     const auto& results = FindMatchResults(mapmatching_, stateids);
 
     // Done if no measurements to interpolate
-    if (interpolated_measurements.empty())
+    if (interpolated.empty())
       topk.emplace_back(std::move(results));
 
     // Insert the interpolated results into the result list
@@ -379,8 +379,8 @@ MapMatcher::OfflineMatch(
       // Add in this states result
       merged_results.push_back(results[time]);
       // See if there were any interpolated points with this state move on if not
-      const auto it = interpolated_measurements.find(time);
-      if (it == interpolated_measurements.end())
+      const auto it = interpolated.find(time);
+      if (it == interpolated.end())
         continue;
       // Interpolate the points between this and the next state
       const auto& interpolated_results = InterpolateMeasurements(mapmatching_, stateids[time],
