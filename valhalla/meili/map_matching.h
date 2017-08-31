@@ -101,7 +101,7 @@ class MapMatching: public ViterbiSearch
 
   virtual ~MapMatching();
 
-  void Clear();
+  void Clear() override;
 
   baldr::GraphReader& graphreader() const
   { return graphreader_; }

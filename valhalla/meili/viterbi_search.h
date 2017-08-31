@@ -156,7 +156,17 @@ class IViterbiSearch
   IViterbiSearch()
       : IViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {}
 
-  virtual ~IViterbiSearch() {};
+  virtual ~IViterbiSearch()
+  { Clear(); };
+
+  // TODO we should remove this someday because this is equivalent to create a
+  // new VS instance
+  virtual void Clear()
+  {
+    added_states_.clear();
+  }
+
+  virtual void ClearSearch() {};
 
   virtual bool AddStateId(const StateId& stateid)
   { return added_states_.insert(stateid).second; }
@@ -228,7 +238,9 @@ class NaiveViterbiSearch: public IViterbiSearch
   ~NaiveViterbiSearch()
   { Clear(); }
 
-  void Clear();
+  void Clear() override;
+
+  void ClearSearch() override;
 
   bool AddStateId(const StateId& stateid) override;
 
@@ -274,7 +286,9 @@ class ViterbiSearch: public IViterbiSearch
   ~ViterbiSearch()
   { Clear(); }
 
-  void Clear();
+  void Clear() override;
+
+  void ClearSearch() override;
 
   bool AddStateId(const StateId& stateid) override;
 
@@ -290,6 +304,8 @@ class ViterbiSearch: public IViterbiSearch
   virtual double AccumulatedCost(const StateId& stateid) const override;
 
  protected:
+  std::vector<std::vector<StateId>> states_;
+
   std::vector<StateId> winner_;
 
   std::vector<std::vector<StateId>> unreached_states_;

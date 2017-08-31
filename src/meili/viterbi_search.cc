@@ -34,10 +34,16 @@ void StateIdIterator::Next()
 template <bool Maximize>
 void NaiveViterbiSearch<Maximize>::Clear()
 {
-  history_.clear();
+  IViterbiSearch::Clear();
+  ClearSearch();
   states_.clear();
+}
+
+template <bool Maximize>
+void NaiveViterbiSearch<Maximize>::ClearSearch()
+{
+  history_.clear();
   winner_.clear();
-  added_states_.clear();
 }
 
 template <bool Maximize>
@@ -210,6 +216,11 @@ bool ViterbiSearch::AddStateId(const StateId& stateid)
     return false;
   }
 
+  while (states_.size() <= stateid.time()) {
+    states_.emplace_back();
+  }
+  states_[stateid.time()].push_back(stateid);
+
   while (unreached_states_.size() <= stateid.time()) {
     unreached_states_.emplace_back();
   }
@@ -272,12 +283,18 @@ double ViterbiSearch::AccumulatedCost(const StateId& stateid) const
 
 void ViterbiSearch::Clear()
 {
+  IViterbiSearch::Clear();
+  ClearSearch();
+  states_.clear();
+}
+
+void ViterbiSearch::ClearSearch()
+{
   earliest_time_ = 0;
   queue_.clear();
   scanned_labels_.clear();
-  unreached_states_.clear();
   winner_.clear();
-  added_states_.clear();
+  unreached_states_ = states_;
 }
 
 void ViterbiSearch::InitQueue(const std::vector<StateId>& column)

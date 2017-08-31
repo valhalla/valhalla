@@ -65,6 +65,7 @@ void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
 
 void TopKSearch::RemovePath(const StateId::Time& time)
 {
+  vs_.ClearSearch();
   evss_.emplace_back(vs_, [this](const StateId::Time& time) {
       const auto it = last_claimed_stateids_.emplace(
           time,
