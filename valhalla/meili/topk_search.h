@@ -36,8 +36,9 @@ class EnlargedTransitionCostModel
 class EnlargedViterbiSearch
 {
  public:
-  EnlargedViterbiSearch(IViterbiSearch& vs)
+  EnlargedViterbiSearch(IViterbiSearch& vs, std::function<StateId(const StateId::Time&)> claim_stateid)
       : vs_(vs),
+        claim_stateid_(claim_stateid),
         original_emission_cost_model_(vs.emission_cost_model()),
         original_transition_cost_model_(vs.transition_cost_model()),
         origin_(),
@@ -78,6 +79,8 @@ class EnlargedViterbiSearch
  private:
   IViterbiSearch& vs_;
 
+  std::function<StateId(const StateId::Time& time)> claim_stateid_;
+
   const IEmissionCostModel& original_emission_cost_model_;
 
   const ITransitionCostModel& original_transition_cost_model_;
@@ -94,12 +97,15 @@ class TopKSearch
  public:
   TopKSearch(IViterbiSearch& vs)
       : vs_(vs),
+        last_claimed_stateids_(),
         evss_() {}
 
   void RemovePath(const StateId::Time& time);
 
  private:
   IViterbiSearch& vs_;
+
+  std::unordered_map<StateId::Time, uint32_t> last_claimed_stateids_;
 
   std::vector<EnlargedViterbiSearch> evss_;
 };

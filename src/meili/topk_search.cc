@@ -46,8 +46,7 @@ void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
   for (auto it = vs_.SearchPath(time); it != vs_.PathEnd(); it++) {
     const auto& origin = *it;
     if (origin.IsValid()) {
-      // TODO: clone(it->time(), UUID())
-      StateId clone;
+      StateId clone = claim_stateid_(time);
       origin_[clone] = origin;
       clone_[origin] = clone;
     }
@@ -61,7 +60,15 @@ void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
 
 void TopKSearch::RemovePath(const StateId::Time& time)
 {
-  evss_.emplace_back(vs_);
+  evss_.emplace_back(vs_, [this](const StateId::Time& time) {
+      const auto it = last_claimed_stateids_.emplace(
+          time,
+          std::numeric_limits<float>::max());
+      if (!it.second) {
+        it.first->second --;
+      }
+      return StateId(time, it.first->second);
+    });
   evss_.back().ClonePath(time);
 }
 
