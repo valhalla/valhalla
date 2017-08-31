@@ -1,6 +1,9 @@
 #ifndef MMP_TOPK_SEAECH_H_
 #define MMP_TOPK_SEAECH_H_
 
+#include <unordered_map>
+#include <functional>
+
 #include <valhalla/meili/viterbi_search.h>
 
 namespace valhalla {
@@ -79,10 +82,13 @@ class EnlargedViterbiSearch
  private:
   IViterbiSearch& vs_;
 
+  // a function that gurantees to generate a NEW stateid at the specified time
   std::function<StateId(const StateId::Time& time)> claim_stateid_;
 
+  // vs_'s orignal emission cost model before it's been enlarged
   const IEmissionCostModel& original_emission_cost_model_;
 
+  // vs_'s original transition cost model before it's been enlarged
   const ITransitionCostModel& original_transition_cost_model_;
 
   // clone -> origin

@@ -3,6 +3,10 @@
 namespace valhalla {
 namespace meili {
 
+// a state has three status in the enlarged graph model:
+// 1. clone (evs_.GetOrigin(stateid).IsValid())
+// 2. origin that is been cloned (evs_.GetClone(stateid).IsValid())
+// 3. origin that is not been cloned (otherwise)
 float EnlargedEmissionCostModel::operator()(const StateId& stateid) const
 {
   const auto& model = evs_.original_emission_cost_model();
@@ -10,6 +14,7 @@ float EnlargedEmissionCostModel::operator()(const StateId& stateid) const
   if (original_stateid.IsValid()) {
     return model(original_stateid);
   }
+  // stateid that is been cloned at the intial time should be removed
   if (stateid.time() == 0 && evs_.GetClone(stateid).IsValid()) {
     return -1.0;
   } else {
