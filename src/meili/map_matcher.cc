@@ -271,6 +271,7 @@ MapMatcher::MapMatcher(
       // mapmatching_ is deprecated
       mapmatching_(graphreader_, mode_costing_, travelmode_, config_),
       vs_(),
+      ts_(vs_),
       interrupt_(nullptr)
 {
   // capture *this by reference
@@ -304,7 +305,7 @@ MapMatcher::MapMatcher(
 MapMatcher::~MapMatcher() {}
 
 
-std::vector<MatchResult>
+std::vector<std::vector<MatchResult> >
 MapMatcher::OfflineMatch(
     const std::vector<Measurement>& measurements, uint32_t k) {
   mapmatching_.Clear();
@@ -316,7 +317,7 @@ MapMatcher::OfflineMatch(
     return {};
   }
 
-  const auto max_search_radius = config_.get<float>("max_search_radius"),
+  const float max_search_radius = config_.get<float>("max_search_radius"),
           sq_max_search_radius = max_search_radius * max_search_radius;
   const auto interpolation_distance = config_.get<float>("interpolation_distance"),
           sq_interpolation_distance = interpolation_distance * interpolation_distance;
@@ -336,52 +337,51 @@ MapMatcher::OfflineMatch(
     }
   }
 
-  // Search path and put the states into an array reversely
-  std::vector<StateId> stateids;
-  std::copy(
-      mapmatching_.SearchPath(time),
-      mapmatching_.PathEnd(),
-      std::back_inserter(stateids));
-  std::reverse(stateids.begin(), stateids.end());
+  //For k paths
+  std::vector<std::vector<MatchResult> > topk;
+  for(auto i = 0; i < k; ++i) {
+    // Get the states for the kth best path its in reverse order
+    std::vector<StateId> stateids;
+    std::copy(vs_.SearchPath(time), vs_.PathEnd(), std::back_inserter(stateids));
+    std::reverse(stateids.begin(), stateids.end());
 
-  // Verify that stateids are in correct order
-  for (StateId::Time time = 0; time < stateids.size(); time++) {
-    if (!(!stateids[time].IsValid() || stateids[time].time() == time)) {
-      std::logic_error("got state with time " + std::to_string(stateids[time].time())
-                       + " at time " + std::to_string(time));
+    // Verify that stateids are in correct order
+    for (StateId::Time time = 0; time < stateids.size(); time++)
+      if (!(!stateids[time].IsValid() || stateids[time].time() == time))
+        throw std::logic_error("got state with time " + std::to_string(stateids[time].time()) + " at time " + std::to_string(time));
+
+    // Get the match result for each of the states
+    const auto& results = FindMatchResults(mapmatching_, stateids);
+
+    // Done if no measurements to interpolate
+    if (interpolated_measurements.empty())
+      topk.emplace_back(std::move(results));
+
+    // Insert the interpolated results into the result list
+    std::vector<MatchResult> merged_results;
+    for (StateId::Time time = 0; time < stateids.size(); time++) {
+      // Add in this states result
+      merged_results.push_back(results[time]);
+      // See if there were any interpolated points with this state move on if not
+      const auto it = interpolated_measurements.find(time);
+      if (it == interpolated_measurements.end())
+        continue;
+      // Interpolate the points between this and the next state
+      const auto& interpolated_results = InterpolateMeasurements(mapmatching_, stateids[time],
+          time + 1 < stateids.size() ? stateids[time + 1] : StateId(), it->second);
+      // Copy the interpolated match results into the final set
+      std::copy(interpolated_results.cbegin(),interpolated_results.cend(), std::back_inserter(merged_results));
     }
+
+    // Keep the final result with the interpolated matches
+    topk.emplace_back(std::move(merged_results));
+
+    // Remove this particular sequence of stateids
+    ts_.RemovePath(time);
   }
 
-  const auto& results = FindMatchResults(mapmatching_, stateids);
-
-  // Done if no measurements to interpolate
-  if (interpolated_measurements.empty()) {
-    return results;
-  }
-
-  // Insert the interpolated results into the result list
-  std::vector<MatchResult> merged_results;
-  for (StateId::Time time = 0; time < stateids.size(); time++) {
-    merged_results.push_back(results[time]);
-
-    const auto it = interpolated_measurements.find(time);
-    if (it == interpolated_measurements.end()) {
-      continue;
-    }
-
-    const auto& interpolated_results = InterpolateMeasurements(
-        mapmatching_,
-        stateids[time],
-        time + 1 < stateids.size() ? stateids[time + 1] : StateId(),
-        it->second);
-
-    std::copy(
-        interpolated_results.cbegin(),
-        interpolated_results.cend(),
-        std::back_inserter(merged_results));
-  }
-
-  return merged_results;
+  //Here are all k paths
+  return topk;
 }
 
 

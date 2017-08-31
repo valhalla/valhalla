@@ -147,14 +147,14 @@ int main(int argc, char *argv[]) {
       });
     }
 
-    std::vector<valhalla::meili::MatchResult> results = matcher->OfflineMatch(measurements);
+    auto results = matcher->OfflineMatch(measurements);
 
     GraphId pred_id;
     GraphId current_id;
     uint64_t current_osmid = 0;
     Cost edge_total;
     Cost trans_total;
-    for (const auto& result : results) {
+    for (const auto& result : results.front()) {
       //std::cout << "lat: " << result.lnglat.lat() << " lon: " << result.lnglat.lng() << std::endl;
       if (result.edgeid == current_id || result.edgeid == kInvalidGraphId) {
         continue;
