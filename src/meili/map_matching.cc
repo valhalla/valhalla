@@ -160,8 +160,8 @@ MapMatching::TransitionCost(const StateId& lhs, const StateId& rhs) const
   const auto& left_measurement = measurement(left);
   const auto& right_measurement = measurement(right);
   const auto gc_dist = left_measurement.lnglat().Distance(right_measurement.lnglat());
-  const auto clk_dist = right_measurement.epoch_time() > 0 && leave_times_[lhs.time()] >= 0 ?
-      right_measurement.epoch_time() - leave_times_[lhs.time()] : 0;
+  const auto clk_dist = right_measurement.epoch_time() < 0 || leave_times_[lhs.time()] < 0 ?
+      -1 : right_measurement.epoch_time() - leave_times_[lhs.time()];
 
   // If we need to actually compute the route
   if (!left.routed()) {
