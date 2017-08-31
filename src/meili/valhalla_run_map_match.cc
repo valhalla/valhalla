@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
     // Show results
     size_t mmt_id = 0, count = 0;
-    for (const auto& result : results) {
+    for (const auto& result : results.front()) {
       if (result.HasState()) {
         std::cout << mmt_id << " ";
         std::cout << result.distance_from << std::endl;

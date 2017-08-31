@@ -291,7 +291,7 @@ namespace {
     std::unordered_set<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
-        names.insert(name.second.get_value<std::string>()).second;
+        names.insert(name.second.get_value<std::string>());
     if(names.find("Jan Pieterszoon Coenstraat") == names.end())
       std::logic_error("Using distance only it should have taken a small detour");
   }
@@ -307,7 +307,7 @@ namespace {
     std::unordered_set<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
-        names.insert(name.second.get_value<std::string>()).second;
+        names.insert(name.second.get_value<std::string>());
     if(names.find("Jan Pieterszoon Coenstraat") != names.end())
       std::logic_error("Using time it should not take a small detour");
   }
@@ -316,6 +316,30 @@ namespace {
     tyr::actor_t actor(conf, true);
     std::string test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5.110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
     actor.route(tyr::ROUTE, test_case);
+  }
+
+  void test_topk() {
+    tyr::actor_t actor(conf, true);
+    auto matched = json_to_pt(actor.trace_attributes(
+            R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+                {"lat":52.08420,"lon":5.15248,"accuracy":10},
+                {"lat":52.08444,"lon":5.15295,"accuracy":10},
+                {"lat":52.08459,"lon":5.15345,"accuracy":10}]})"));
+
+    std::vector<std::string> names;
+    for(const auto& edge : matched.get_child("edges"))
+      for(const auto& name : edge.second.get_child("names"))
+        names.push_back(name.second.get_value<std::string>());
+    if(names != std::vector<std::string>{"Prins Hendriklaan", "Sophocleslaan"})
+      std::logic_error("The most obvious result is stay left.");
+
+    names.clear();
+    auto alternate = matched.get_child("alternate_paths").front().second;
+    for(const auto& edge : alternate.get_child("edges"))
+      for(const auto& name : edge.second.get_child("names"))
+        names.push_back(name.second.get_value<std::string>());
+    if(names != std::vector<std::string>{"Prins Hendriklaan", "Platolaan"})
+      std::logic_error("The most obvious result is stay left.");
   }
 
 }
@@ -335,6 +359,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_distance_only));
 
   suite.test(TEST_CASE(test_time_rejection));
+
+  suite.test(TEST_CASE(test_topk));
 
   return suite.tear_down();
 }
