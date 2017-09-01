@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <functional>
+#include <list>
 
 #include <valhalla/meili/viterbi_search.h>
 
@@ -86,10 +87,10 @@ class EnlargedViterbiSearch
   std::function<StateId(const StateId::Time& time)> claim_stateid_;
 
   // vs_'s orignal emission cost model before it's been enlarged
-  const IEmissionCostModel& original_emission_cost_model_;
+  IEmissionCostModel original_emission_cost_model_;
 
   // vs_'s original transition cost model before it's been enlarged
-  const ITransitionCostModel& original_transition_cost_model_;
+  ITransitionCostModel original_transition_cost_model_;
 
   // clone -> origin
   std::unordered_map<StateId, StateId> origin_;
@@ -106,14 +107,19 @@ class TopKSearch
         last_claimed_stateids_(),
         evss_() {}
 
+  // remove path from 0 to time
   void RemovePath(const StateId::Time& time);
+
+  // find corresponding origin stateid recursively
+  StateId GetOrigin(const StateId& stateid);
 
  private:
   IViterbiSearch& vs_;
 
   std::unordered_map<StateId::Time, uint32_t> last_claimed_stateids_;
 
-  std::vector<EnlargedViterbiSearch> evss_;
+  // to not invalidate references of evs we use list
+  std::list<EnlargedViterbiSearch> evss_;
 };
 
 }

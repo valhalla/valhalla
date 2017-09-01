@@ -34,7 +34,7 @@ float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId&
       if (evs_.GetClone(rhs).IsValid()) {
         return -1.0;
       } else {
-        return model(original_rhs, rhs);
+        return model(original_lhs, rhs);
       }
     }
   } else {
@@ -51,21 +51,26 @@ void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
   for (auto it = vs_.SearchPath(time); it != vs_.PathEnd(); it++) {
     const auto& origin = *it;
     if (origin.IsValid()) {
-      StateId clone = claim_stateid_(time);
-      origin_[clone] = origin;
-      clone_[origin] = clone;
+      clone_[origin] = claim_stateid_(origin.time());
+      if (!clone_[origin].IsValid()) {
+        throw std::logic_error("generate invalid stateid?");
+      }
+      origin_[clone_[origin]] = origin;
     }
   }
+  vs_.ClearSearch();
 
   // Add the clones to vs_
-  for (const auto& pair: origin_) {
-    vs_.AddStateId(pair.first);
+  for (const auto& pair: clone_) {
+    const auto added = vs_.AddStateId(pair.second);
+    if (!added) {
+      std::runtime_error("generated clone state IDs must be unique");
+    }
   }
 }
 
 void TopKSearch::RemovePath(const StateId::Time& time)
 {
-  vs_.ClearSearch();
   evss_.emplace_back(vs_, [this](const StateId::Time& time) {
       const auto it = last_claimed_stateids_.emplace(
           time,
@@ -76,6 +81,21 @@ void TopKSearch::RemovePath(const StateId::Time& time)
       return StateId(time, it.first->second);
     });
   evss_.back().ClonePath(time);
+}
+
+StateId TopKSearch::GetOrigin(const StateId& stateid)
+{
+  StateId origin, current = stateid;
+
+  // we are not sure stateid was cloned in which graph, so we try recursively
+  for (auto it = evss_.rbegin(); it != evss_.rend(); it++) {
+    origin = it->GetOrigin(current);
+    if (origin.IsValid()) {
+      current = origin;
+    } // otherwise current is a clone in the other graphs
+  }
+
+  return origin;
 }
 
 }
