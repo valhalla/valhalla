@@ -306,9 +306,107 @@ MapMatcher::MapMatcher(
 MapMatcher::~MapMatcher() {}
 
 
+std::vector<MatchResult>
+MapMatcher::OfflineMatch1(const std::vector<Measurement>& measurements) {
+  mapmatching_.Clear();
+
+  if(measurements.empty())
+    return {};
+
+  const float max_search_radius = config_.get<float>("max_search_radius"),
+          sq_max_search_radius = max_search_radius * max_search_radius;
+  const float interpolation_distance = config_.get<float>("interpolation_distance"),
+          sq_interpolation_distance = interpolation_distance * interpolation_distance;
+  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
+
+  // Always match the first measurement
+  auto last = measurements.cbegin();
+  auto time = AppendMeasurement(*last, sq_max_search_radius);
+  double interpolated_epoch_time = -1;
+  for (auto m = std::next(last); m != measurements.end(); ++m) {
+    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
+    // Always match the last measurement and if its far enough away
+    if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
+      // If there were interpolated points between these two points with time information
+      if(interpolated_epoch_time != -1) {
+        // Project the last interpolated point onto the line between the two match points
+        auto p = interpolated[time].back().lnglat().Project(last->lnglat(), m->lnglat());
+        // If its significantly closer to the previous match point then it looks like the trace lingered
+        // so we use the time information of the last interpolation point as the actual time they started
+        // traveling towards the next match point which will help us determine what paths are really likely
+        if(p.Distance(last->lnglat())/last->lnglat().Distance(m->lnglat()) < .2f)
+          mapmatching_.SetMeasurementLeaveTime(time, interpolated_epoch_time);
+      }
+      // This one isnt interpolated so we make room for its state
+      time = AppendMeasurement(*m, sq_max_search_radius);
+      last = m;
+      interpolated_epoch_time = -1;
+    }//TODO: if its the last measurement and it wants to be interpolated
+    // then what we need to do is make last match interpolated
+    // and copy its epoch_time into the last measurements epoch time
+    // else if(std::next(measurement) == measurements.end()) { }
+    // This one is so close to the last match that we will just interpolate it
+    else {
+      interpolated[time].push_back(*m);
+      interpolated_epoch_time = m->epoch_time();
+    }
+  }
+
+  // Search path and put the states into an array reversely
+  std::vector<StateId> stateids;
+  std::copy(
+      mapmatching_.SearchPath(time),
+      mapmatching_.PathEnd(),
+      std::back_inserter(stateids));
+  std::reverse(stateids.begin(), stateids.end());
+
+  // Verify that stateids are in correct order
+  for (StateId::Time time = 0; time < stateids.size(); time++) {
+    if (!(!stateids[time].IsValid() || stateids[time].time() == time)) {
+      std::logic_error("got state with time " + std::to_string(stateids[time].time())
+                       + " at time " + std::to_string(time));
+    }
+  }
+
+  const auto& results = FindMatchResults(mapmatching_, stateids);
+
+  // Done if no measurements to interpolate
+  if (interpolated.empty()) {
+    return results;
+  }
+
+  // Insert the interpolated results into the result list
+  std::vector<MatchResult> merged_results;
+  for (StateId::Time time = 0; time < stateids.size(); time++) {
+    merged_results.push_back(results[time]);
+
+    const auto it = interpolated.find(time);
+    if (it == interpolated.end()) {
+      continue;
+    }
+
+    const auto& interpolated_results = InterpolateMeasurements(
+        mapmatching_,
+        stateids[time],
+        time + 1 < stateids.size() ? stateids[time + 1] : StateId(),
+        it->second);
+
+    std::copy(
+        interpolated_results.cbegin(),
+        interpolated_results.cend(),
+        std::back_inserter(merged_results));
+  }
+
+  return merged_results;
+}
+
 std::vector<std::vector<MatchResult> >
 MapMatcher::OfflineMatch(
     const std::vector<Measurement>& measurements, uint32_t k) {
+  if (k == 1) {
+    return {OfflineMatch1(measurements)};
+  }
+
   mapmatching_.Clear();
 
   if(measurements.empty())

@@ -57,6 +57,10 @@ public:
   }
 
 private:
+  // TODO remove it
+  std::vector<MatchResult>
+  OfflineMatch1(const std::vector<Measurement>& measurements);
+
   StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
 
   boost::property_tree::ptree config_;
