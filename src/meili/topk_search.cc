@@ -99,17 +99,18 @@ void TopKSearch::RemovePath(const StateId::Time& time)
 
 StateId TopKSearch::GetOrigin(const StateId& stateid)
 {
-  StateId origin, current = stateid;
+  StateId last_valid_origin, current = stateid;
 
   // we are not sure stateid was cloned in which graph, so we try recursively
   for (auto it = evss_.rbegin(); it != evss_.rend(); it++) {
-    origin = it->GetOrigin(current);
+    const auto& origin = it->GetOrigin(current);
     if (origin.IsValid()) {
       current = origin;
+      last_valid_origin = origin;
     } // otherwise current is a clone in the other graphs
   }
 
-  return origin;
+  return last_valid_origin;
 }
 
 }
