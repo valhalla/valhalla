@@ -1,6 +1,5 @@
 s-dr5ru300e7-23rdstreet,s-dr5ru0j0k8-14thstreet,r-dr5re-path
 s-dr5ru0j0jv-6av,s-dr5rtd7d8b-morganav,r-dr5r-l
-s-sr2y7mrewv-ottaviano,s-sr2yk7y4u4-termini,r-sr2y-mea
 s-sr2yk7y70m-termini,s-sr2yk6042q-colosseo,r-sr2y-meb
 s-dr5rec3weg-whitehallferryterminal,s-dr5r4rn32w-stgeorgeferryterminal,r-dr5r7-statenislandferry
 s-9q8yyugptw-sanfranciscocaltrain,s-9q9k659e3r-sanjosediridoncaltrain,r-9q9-limited
