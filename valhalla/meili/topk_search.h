@@ -6,6 +6,7 @@
 #include <list>
 
 #include <valhalla/meili/viterbi_search.h>
+#include <valhalla/meili/stateid.h>
 
 namespace valhalla {
 namespace meili {
@@ -46,7 +47,9 @@ class EnlargedViterbiSearch
         original_emission_cost_model_(vs.emission_cost_model()),
         original_transition_cost_model_(vs.transition_cost_model()),
         origin_(),
-        clone_()
+        clone_(),
+        clone_start_time_(kInvalidTime),
+        clone_end_time_(kInvalidTime)
   {
     vs_.set_emission_cost_model(EnlargedEmissionCostModel(*this));
     vs_.set_transition_cost_model(EnlargedTransitionCostModel(*this));
@@ -80,6 +83,12 @@ class EnlargedViterbiSearch
 
   void ClonePath(const StateId::Time& time);
 
+  const StateId::Time& clone_start_time() const
+  { return clone_start_time_; }
+
+  const StateId::Time& clone_end_time() const
+  { return clone_end_time_; }
+
  private:
   IViterbiSearch& vs_;
 
@@ -97,6 +106,8 @@ class EnlargedViterbiSearch
 
   // origin -> clone
   std::unordered_map<StateId, StateId> clone_;
+
+  StateId::Time clone_start_time_, clone_end_time_;
 };
 
 class TopKSearch

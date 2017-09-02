@@ -12,10 +12,15 @@ float EnlargedEmissionCostModel::operator()(const StateId& stateid) const
   const auto& model = evs_.original_emission_cost_model();
   const auto& original_stateid = evs_.GetOrigin(stateid);
   if (original_stateid.IsValid()) {
-    return model(original_stateid);
+    // remove the last clone
+    if (stateid.time() == evs_.clone_end_time()) {
+      return -1.0;
+    } else {
+      return model(original_stateid);
+    }
   }
-  // stateid that is been cloned at the intial time should be removed
-  if (stateid.time() == 0 && evs_.GetClone(stateid).IsValid()) {
+  // remove the first cloned origin
+  if (stateid.time() == evs_.clone_start_time() && evs_.GetClone(stateid).IsValid()) {
     return -1.0;
   } else {
     return model(stateid);
@@ -25,6 +30,7 @@ float EnlargedEmissionCostModel::operator()(const StateId& stateid) const
 float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
 {
   const auto& model = evs_.original_transition_cost_model();
+
   const auto& original_lhs = evs_.GetOrigin(lhs);
   const auto& original_rhs = evs_.GetOrigin(rhs);
   if (original_lhs.IsValid()) {
@@ -56,6 +62,14 @@ void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
         throw std::logic_error("generate invalid stateid?");
       }
       origin_[clone_[origin]] = origin;
+
+      // remember when the cloning starts and ends
+      if (clone_start_time_ == kInvalidTime || origin.time() < clone_start_time_) {
+        clone_start_time_ = origin.time();
+      }
+      if (clone_end_time_ == kInvalidTime || clone_end_time_ < origin.time()) {
+        clone_end_time_ = origin.time();
+      }
     }
   }
   vs_.ClearSearch();
@@ -74,7 +88,7 @@ void TopKSearch::RemovePath(const StateId::Time& time)
   evss_.emplace_back(vs_, [this](const StateId::Time& time) {
       const auto it = last_claimed_stateids_.emplace(
           time,
-          std::numeric_limits<float>::max());
+          std::numeric_limits<StateId::Id>::max());
       if (!it.second) {
         it.first->second --;
       }
