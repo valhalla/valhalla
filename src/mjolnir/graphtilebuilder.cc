@@ -897,17 +897,24 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     throw std::runtime_error("Failed to open file " + filename.string());
 }
 
-/**
- * Initialize traffic segment association. Sizes the traffic segment Id list
- * and sets them all to Invalid.
- */
+// Initialize traffic segment association. Sizes the traffic segment Id list
+// and sets them all to Invalid.
 void GraphTileBuilder::InitializeTrafficSegments() {
-  if(header_->traffic_id_count())
+  if(header_->traffic_id_count()) {
     traffic_segment_builder_.assign(traffic_segments_, traffic_segments_ + header_->traffic_id_count());
-  else
+  } else {
     traffic_segment_builder_.resize(header_builder_.directededgecount());
+  }
+}
 
-  //TODO: assign the chunks to its builder counterpart
+// Initialize traffic chunks. Copies existing chunks into the chunk builder.
+// This is executed before adding "leftovers" and again before adding chunks.
+void GraphTileBuilder::InitializeTrafficChunks() {
+  // Assign the chunks to its builder counterpart
+  if (traffic_chunk_size_ > 0) {
+    size_t count = traffic_chunk_size_ / sizeof(TrafficChunk);
+    traffic_chunk_builder_.assign(traffic_chunks_, traffic_chunks_ + count);
+  }
 }
 
 // Add a traffic segment association - used when an edge associates to
