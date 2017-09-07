@@ -28,7 +28,14 @@ class PointLL : public Point2 {
   PointLL()
     : Point2(INVALID, INVALID) {
   }
-
+   
+  /**
+   * Parent constructor. Forwards to parent.
+   */
+  PointLL(const Point2 &p)
+    : Point2(p) {
+  }
+   
   /**
    * Get the longitude in degrees.
    * @return  Returns longitude in degrees.
