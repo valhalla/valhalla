@@ -400,17 +400,45 @@ MapMatcher::OfflineMatch1(const std::vector<Measurement>& measurements) {
   return merged_results;
 }
 
-std::vector<std::vector<MatchResult> >
+std::vector<std::vector<MatchResult>>
 MapMatcher::OfflineMatch(
     const std::vector<Measurement>& measurements, uint32_t k) {
+  // TODO remove this exception
   if (k == 1) {
     return {OfflineMatch1(measurements)};
   }
 
+  if(measurements.empty()) {
+    return {};
+  }
+
   mapmatching_.Clear();
 
-  if(measurements.empty())
-    return {};
+  ViterbiSearch vs;
+
+  vs.set_emission_cost_model(
+      EmissionCostModel(
+          graphreader_,
+          [this](const StateId& stateid) {
+            return mapmatching_.state(stateid);
+          },
+          config_));
+
+  vs.set_transition_cost_model(
+      TransitionCostModel(
+          graphreader_,
+          vs,
+          [this](const StateId::Time& time) {
+            return mapmatching_.states(time);
+          },
+          [this](const StateId::Time& time) {
+            return mapmatching_.measurement(time);
+          },
+          mode_costing_,
+          travelmode_,
+          config_));
+
+  TopKSearch ts(vs);
 
   const float max_search_radius = config_.get<float>("max_search_radius"),
            sq_max_search_radius = max_search_radius * max_search_radius;
@@ -456,7 +484,7 @@ MapMatcher::OfflineMatch(
   for(auto i = 0; i < k; ++i) {
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
-    std::copy(vs_.SearchPath(time), vs_.PathEnd(), std::back_inserter(stateids));
+    std::copy(vs.SearchPath(time), vs.PathEnd(), std::back_inserter(stateids));
     std::reverse(stateids.begin(), stateids.end());
 
     // Verify that stateids are in correct order
@@ -468,8 +496,9 @@ MapMatcher::OfflineMatch(
     const auto& results = FindMatchResults(mapmatching_, stateids);
 
     // Done if no measurements to interpolate
-    if (interpolated.empty())
+    if (interpolated.empty()) {
       topk.emplace_back(std::move(results));
+    }
 
     // Insert the interpolated results into the result list
     std::vector<MatchResult> merged_results;
@@ -481,8 +510,11 @@ MapMatcher::OfflineMatch(
       if (it == interpolated.end())
         continue;
       // Interpolate the points between this and the next state
-      const auto& interpolated_results = InterpolateMeasurements(mapmatching_, stateids[time],
-          time + 1 < stateids.size() ? stateids[time + 1] : StateId(), it->second);
+      const auto& interpolated_results = InterpolateMeasurements(
+          mapmatching_,
+          stateids[time],
+          time + 1 < stateids.size() ? stateids[time + 1] : StateId(),
+          it->second);
       // Copy the interpolated match results into the final set
       std::copy(interpolated_results.cbegin(),interpolated_results.cend(), std::back_inserter(merged_results));
     }
@@ -491,7 +523,7 @@ MapMatcher::OfflineMatch(
     topk.emplace_back(std::move(merged_results));
 
     // Remove this particular sequence of stateids
-    ts_.RemovePath(time);
+    ts.RemovePath(time);
   }
 
   //Here are all k paths
