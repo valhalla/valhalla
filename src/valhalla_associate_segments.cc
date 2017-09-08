@@ -916,6 +916,7 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
     // Write leftovers
     vj::GraphTileBuilder tile_builder(tile_dir, associations.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
+    tile_builder.InitializeTrafficChunks();
     for(const auto& association : associations)
       tile_builder.AddTrafficSegment(association.first, association.second);
     tile_builder.UpdateTrafficSegments();
@@ -940,6 +941,7 @@ void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>&
     // Write chunks
     vj::GraphTileBuilder tile_builder(tile_dir, associated_chunks.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
+    tile_builder.InitializeTrafficChunks();
     for(const auto& chunk : associated_chunks) {
       tile_builder.AddTrafficSegments(chunk.first, chunk.second);
     }
