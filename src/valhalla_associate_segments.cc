@@ -57,16 +57,21 @@ std::string to_string(const vb::GraphId &i) {
 
 namespace {
 
-// Distance tolerance (meters) for node searching
-// TODO - need to increase this to allow some tolerance for data edits.
-// However - this sometimes causes fallbacks to A* (not sure why yet!)
-constexpr float kNodeDistanceTolerance = 1.0;
+// Distance tolerance (meters) for node searching. This value allows some
+// tolerance to account for data edits.
+constexpr float kNodeDistanceTolerance = 20.0;
 
-// 10 meter length matching tolerance
-constexpr uint32_t kLengthTolerance = 10;
+// Distance tolerance (meters) for searching along an edge. This value allows
+// some tolerance to account for data edits.
+constexpr uint32_t kEdgeDistanceTolerance = 20.0;
+
+// 10 meter length matching tolerance.
+// TODO - should this be based on segment length so that short segments have
+// less tolerance?
+constexpr uint32_t kLengthTolerance = 15;
 
 // Bearing tolerance in degrees
-constexpr uint16_t kBearingTolerance = 10;
+constexpr uint16_t kBearingTolerance = 15;
 
 enum class MatchType : uint8_t {
   kWalk = 0,
@@ -178,7 +183,8 @@ private:
   std::vector<EdgeMatch> match_edges(const pbf::Segment &segment,
                     const vb::GraphId& segment_id,
                     const uint32_t segment_length, MatchType& match_type);
-  std::vector<EdgeMatch> walk(uint8_t level, const uint32_t segment_length,
+  std::vector<EdgeMatch> walk(const vb::GraphId& segment_id,
+                    const uint32_t segment_length,
                     const pbf::Segment& segment);
   vm::PointLL lookup_end_coord(const vb::GraphId& edge_id);
   vm::PointLL lookup_start_coord(const vb::GraphId& edge_id);
@@ -355,6 +361,7 @@ vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &re
 
   //we only have one location so we only get one result
   std::vector<vb::Location> locs{loc};
+  locs.back().radius_ = kEdgeDistanceTolerance;
   vb::PathLocation path_loc(loc);
   auto results = vl::Search(locs, reader, edge_filter, vl::PassThroughNodeFilter);
   if(results.size())
@@ -386,9 +393,9 @@ private:
 // Find nodes on the specified level that are within a specified distance
 // from the lat,lon location
 std::vector<vb::GraphId> find_nearby_nodes(vb::GraphReader& reader,
-                              const float dist, const vm::PointLL& pt,
+                              const vm::PointLL& pt,
                               const uint8_t level) {
-  // Create a bounding box
+  // Create a bounding box and find nodes within the bounding box
   float meters_per_lng = vm::DistanceApproximator::MetersPerLngDegree(pt.lat());
   float delta_lng = kNodeDistanceTolerance / meters_per_lng;
   float delta_lat = kNodeDistanceTolerance / vm::kMetersPerDegreeLat;
@@ -499,7 +506,7 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
   std::vector<CandidateEdge> edges;
   if (lrp.at_node()) {
     // Find nearby nodes and get allowed edges
-    auto nodes = find_nearby_nodes(m_reader, kNodeDistanceTolerance, ll, level);
+    auto nodes = find_nearby_nodes(m_reader, ll, level);
     edges = GetEdgesFromNodes(m_reader, nodes, ll, origin);
   } else {
     // Use edge search with loki
@@ -521,13 +528,13 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
 }
 
 // Walk a path between origin and destination edges.
-std::vector<EdgeMatch> edge_association::walk(uint8_t level,
+std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
                             const uint32_t segment_length,
                             const pbf::Segment& segment) {
   // Get the candidate origin and destination edges
   size_t n = segment.lrps_size();
-  auto origin_edges = candidate_edges(true, segment.lrps(0), level);
-  auto destination_edges = candidate_edges(false, segment.lrps(n-1), level);
+  auto origin_edges = candidate_edges(true, segment.lrps(0), segment_id.level());
+  auto destination_edges = candidate_edges(false, segment.lrps(n-1), segment_id.level());
 
   // Create a map of candidate destination edges for faster lookup
   std::unordered_map<GraphId, CandidateEdge> dest_edges;
@@ -636,7 +643,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
   // Try to match edges by walking a path from the first LRP to the last LRP
   // in the OSMLR segment. This uses a strategy similar to how OSMLR segments
   // are created
-  std::vector<EdgeMatch> edges = walk(segment_id.level(), segment_length, segment);
+  std::vector<EdgeMatch> edges = walk(segment_id, segment_length, segment);
   if (edges.size()) {
     match_type = MatchType::kWalk;
     return edges;
@@ -648,6 +655,9 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
   if (segment.lrps(0).at_node() && segment.lrps(size-1).at_node()) {
     LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) + " value = " +
                   std::to_string(segment_id.value));
+  } else {
+    LOG_DEBUG("Fall back to A* - LRPs are not at nodes: " + std::to_string(segment_id) +
+             " value = " + std::to_string(segment_id.value));
   }
 
   // Fall back to A* shortest path to form the path edges
@@ -661,7 +671,6 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     auto next_coord = coord_for_lrp(segment.lrps(i+1));
 
     vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
-
     auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, segment_id.level());
     if (dest.edges.size() == 0) {
       LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) + ". Segment cannot be matched, discarding.");
