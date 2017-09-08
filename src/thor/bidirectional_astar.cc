@@ -477,9 +477,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 void BidirectionalAStar::SetForwardConnection(const BDEdgeLabel& pred) {
-  GraphId oppedge = pred.opp_edgeid();
-  EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
-
   // Disallow connections that are part of a complex restriction.
   // TODO - validate that we do not need to "walk" the paths forward
   // and backward to see if they match a restriction.
@@ -491,26 +488,40 @@ void BidirectionalAStar::SetForwardConnection(const BDEdgeLabel& pred) {
   if (threshold_ == 0) {
     threshold_ = GetThreshold(mode_, edgelabels_forward_.size() + edgelabels_reverse_.size());
   }
-  uint32_t predidx = edgelabels_reverse_[oppedgestatus.index()].predecessor();
-  float oppcost = (predidx == kInvalidLabel) ?
-        0 : edgelabels_reverse_[predidx].cost().cost;
-  float c = pred.cost().cost + oppcost +
-      edgelabels_reverse_[oppedgestatus.index()].transition_cost();
-  if (c < best_connection_.cost) {
-    best_connection_ = { pred.edgeid(), oppedge, c };
-  }
+
+  // Get the opposing edge - a candidate shortest path has been found to the
+  // end node of this directed edge. Get total cost.
+  float c;
+  GraphId oppedge = pred.opp_edgeid();
+  EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
+  if (pred.predecessor() != kInvalidLabel) {
+    // Get the start of the predecessor edge on the forward path. Cost is to
+    // the end this edge, plus the cost to the end of the reverse predecessor,
+    // plus the transition cost.
+    c = edgelabels_forward_[pred.predecessor()].cost().cost +
+        edgelabels_reverse_[oppedgestatus.index()].cost().cost +
+        pred.transition_cost();
+    } else {
+     // If no predecessor on the forward path get the predecessor on
+     // the reverse path to form the cost.
+     uint32_t predidx = edgelabels_reverse_[oppedgestatus.index()].predecessor();
+     float oppcost = (predidx == kInvalidLabel) ?
+           0 : edgelabels_reverse_[predidx].cost().cost;
+     c = pred.cost().cost + oppcost +
+         edgelabels_reverse_[oppedgestatus.index()].transition_cost();
+    }
+
+    // Set best_connection if cost is less than the best cost so far.
+    if (c < best_connection_.cost) {
+      best_connection_ = { pred.edgeid(), oppedge, c };
+    }
 }
 
 // The edge on the reverse search connects to a reached edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 void BidirectionalAStar::SetReverseConnection(const BDEdgeLabel& pred) {
-  // Get the opposing edge - if this edge has been reached then a shortest
-  // path has been found to the end node of this directed edge.
-  GraphId oppedge = pred.opp_edgeid();
-  EdgeStatusInfo oppedgestatus = edgestatus_forward_->Get(oppedge);
-
-  // Disallow connections that are part of a cmplex restriction.
+  // Disallow connections that are part of a complex restriction.
   // TODO - validate that we do not need to "walk" the paths forward
   // and backward to see if they match a restriction.
   if (pred.on_complex_rest()) {
@@ -521,11 +532,30 @@ void BidirectionalAStar::SetReverseConnection(const BDEdgeLabel& pred) {
   if (threshold_ == 0) {
     threshold_ = GetThreshold(mode_, edgelabels_forward_.size() + edgelabels_reverse_.size());
   }
-  uint32_t predidx = edgelabels_forward_[oppedgestatus.index()].predecessor();
-  float oppcost = (predidx == kInvalidLabel) ?
-        0 : edgelabels_forward_[predidx].cost().cost;
-  float c = pred.cost().cost + oppcost +
+
+  // Get the opposing edge - a candidate shortest path has been found to the
+  // end node of this directed edge. Get total cost.
+  float c;
+  GraphId oppedge = pred.opp_edgeid();
+  EdgeStatusInfo oppedgestatus = edgestatus_forward_->Get(oppedge);
+  if (pred.predecessor() != kInvalidLabel) {
+    // Get the start of the predecessor edge on the reverse path. Cost is to
+    // the end this edge, plus the cost to the end of the forward predecessor,
+    // plus the transition cost.
+    c = edgelabels_reverse_[pred.predecessor()].cost().cost +
+        edgelabels_forward_[oppedgestatus.index()].cost().cost +
+        pred.transition_cost();
+  } else {
+    // If no predecessor on the reverse path get the predecessor on
+    // the forward path to form the cost.
+    uint32_t predidx = edgelabels_forward_[oppedgestatus.index()].predecessor();
+    float oppcost = (predidx == kInvalidLabel) ?
+          0 : edgelabels_forward_[predidx].cost().cost;
+    c = pred.cost().cost + oppcost +
         edgelabels_forward_[oppedgestatus.index()].transition_cost();
+  }
+
+  // Set best_connection if cost is less than the best cost so far.
   if (c < best_connection_.cost) {
     best_connection_ = { oppedge, pred.edgeid(), c };
   }
