@@ -22,6 +22,7 @@ constexpr uint16_t kTaxiAccess       = 32;
 constexpr uint16_t kBusAccess        = 64;
 constexpr uint16_t kHOVAccess        = 128;
 constexpr uint16_t kWheelchairAccess = 256;
+constexpr uint16_t kMopedAccess      = 512;
 constexpr uint16_t kAllAccess        = 4095;
 
 // Constant representing vehicular access types

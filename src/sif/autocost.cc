@@ -141,7 +141,7 @@ class AutoCost : public DynamicCost {
                  const baldr::GraphTile*& tile,
                  const baldr::GraphId& opp_edgeid) const;
 
-  /**Snap
+  /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
    * @param  edge  Pointer to node information.
@@ -629,7 +629,7 @@ cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
 class BusCost : public AutoCost {
  public:
   /**
-   * Construct auto costing for shorter (not absolute shortest) path.
+   * Construct bus costing.
    * Pass in configuration using property tree.
    * @param  config  Property tree with configuration/options.
    */
@@ -969,6 +969,183 @@ bool HOVCost::Allowed(const baldr::NodeInfo* node) const  {
 
 cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
   return std::make_shared<HOVCost>(config);
+}
+
+/**
+ * Derived class intended to provided different access for mopeds/electric scooters
+ * and also avoid hills slightly (to save battery power)
+ */
+class MopedCost : public AutoCost {
+public:
+
+  /**
+   * Construct moped costing
+   * Pass in configuration using property tree
+   * @param  config  Property tree with configuration/options
+   */
+  MopedCost(const boost::property_tree::ptree& config);
+
+  virtual ~MopedCost();
+
+  /**
+   * Gets the access mode used by this costing method
+   * @return  Returns access mode.
+   */
+  uint32_t access_mode() const;
+
+  /**
+   * Checks if access is allowed for the provided directed edge.
+   * This is generally based on mode of travel and the access modes
+   * allowed on the edge. However, it can be extended to exclude access
+   * based on other parameters.
+   * @param  edge     Pointer to a directed edge.
+   * @param  pred     Predecessor edge information.
+   * @param  tile     current tile
+   * @param  edgeid   edgeid that we care about
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const EdgeLabel& pred,
+                       const baldr::GraphTile*& tile,
+                       const baldr::GraphId& edgeid) const;
+
+  /**
+   * Checks if access is allowed for an edge on the reverse path
+   * (from destination towards origin). Both opposing edges are
+   * provided.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  opp_edge       Pointer to the opposing directed edge.
+   * @param  tile           Tile for the opposing edge (for looking
+   *                        up restrictions).
+   * @param  opp_edgeid     Opposing edge Id
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const EdgeLabel& pred,
+                 const baldr::DirectedEdge* opp_edge,
+                 const baldr::GraphTile*& tile,
+                 const baldr::GraphId& opp_edgeid) const;
+
+  /**
+   * Checks if access is allowed for the provided node. Node access can
+   * be restricted if bollards or gates are present.
+   * @param  edge  Pointer to node information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool Allowed(const baldr::NodeInfo* node) const;
+
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge  Pointer to a directed edge.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+
+
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude and allow ranking results from the search by looking at each
+   * edges attribution and suitability for use as a location by the travel
+   * mode used by the costing method. Function/functor is also used to filter
+   * edges not usable / inaccessible by bus.
+   */
+  virtual const EdgeFilter GetEdgeFilter() const {
+    // Throw back a lambda that checks the access for this type of costing
+    return [](const baldr::DirectedEdge* edge) {
+      if (edge->IsTransition() ||
+         !(edge->forwardaccess() & kMopedAccess))
+        return 0.0f;
+      else {
+        // TODO - use classification/use to alter the factor
+        return 1.0f;
+      }
+    };
+  }
+
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each node's attribution
+   * @return Function/functor to be used in filtering out nodes
+   */
+  virtual const NodeFilter GetNodeFilter() const {
+    //throw back a lambda that checks the access for this type of costing
+    return [](const baldr::NodeInfo* node){
+      return !(node->access() & kMopedAccess);
+    };
+  }
+
+protected:
+  float use_hills; // Scale from 0 (avoid hills) to 1 (don't avoid hills)
+};
+
+// Constructor
+MopedCost::MopedCost(const boost::property_tree::ptree& config)
+    : AutoCost (config) {
+  use_hills = config.get<float>("use_hills", 0.5f);
+}
+
+// Destructor
+MopedCost::~MopedCost () {
+}
+
+// Get the access mode for moped
+uint32_t MopedCost::access_mode() const {
+  return kMopedAccess;
+}
+
+// Check if access is allowed on the specified edge.
+bool MopedCost::Allowed(const baldr::DirectedEdge* edge,
+                     const EdgeLabel& pred,
+                     const baldr::GraphTile*& tile,
+                     const baldr::GraphId& edgeid) const {
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes.
+  if (!(edge->forwardaccess() & kMopedAccess) ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+       edge->surface() == Surface::kImpassable ||
+       IsUserAvoidEdge(edgeid) ||
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+    return false;
+  }
+  return true;
+}
+
+// Checks if access is allowed for an edge on the reverse path (from
+// destination towards origin). Both opposing edges are provided.
+bool MopedCost::AllowedReverse(const baldr::DirectedEdge* edge,
+                             const EdgeLabel& pred,
+                             const baldr::DirectedEdge* opp_edge,
+                             const baldr::GraphTile*& tile,
+                             const baldr::GraphId& opp_edgeid) const {
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes.
+  if (!(opp_edge->forwardaccess() & kMopedAccess) ||
+       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+        opp_edge->surface() == Surface::kImpassable ||
+        IsUserAvoidEdge(opp_edgeid) ||
+       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+    return false;
+  }
+  return true;
+}
+
+Cost MopedCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+  // Place holder
+  return {0.0f, 0.0f};
+}
+
+// Check if access is allowed at the specified node.
+bool MopedCost::Allowed(const baldr::NodeInfo* node) const  {
+  return (node->access() & kMopedAccess);
+}
+
+cost_ptr_t CreateMopedCost(const boost::property_tree::ptree& config)
+{
+  return std::make_shared<MopedCost>(config);
 }
 
 }

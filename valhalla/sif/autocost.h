@@ -35,6 +35,13 @@ cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config);
  */
 cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config);
 
+/**
+ * Create moped cost method. This is derived from auto costing and
+ * uses the same rules except for some different access restrictions
+ * and the tendency to avoid hills
+ */
+cost_ptr_t CreateMopedCost(const boost::property_tree::ptree& config);
+
 }
 }
 
