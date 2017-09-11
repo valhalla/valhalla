@@ -17,6 +17,7 @@ class TransitionCostModel
  private:
   using ColumnGetter = std::function<const std::vector<State>&(const StateId::Time&)>;
   using MeasurementGetter = std::function<const Measurement&(const StateId::Time&)>;
+  using LeaveTimeGetter = std::function<double(const StateId::Time&)>;
 
  public:
   TransitionCostModel(
@@ -24,6 +25,7 @@ class TransitionCostModel
       const IViterbiSearch& vs,
       const ColumnGetter& get_column,
       const MeasurementGetter& get_measurement,
+      const LeaveTimeGetter& get_leave_time,
       const sif::cost_ptr_t* mode_costing,
       const sif::TravelMode mode,
       float beta,
@@ -37,6 +39,7 @@ class TransitionCostModel
       const IViterbiSearch& vs,
       const ColumnGetter& get_column,
       const MeasurementGetter& get_measurement,
+      const LeaveTimeGetter& get_leave_time,
       const sif::cost_ptr_t* mode_costing,
       const sif::TravelMode mode,
       const boost::property_tree::ptree& config);
@@ -58,6 +61,8 @@ class TransitionCostModel
   ColumnGetter get_column_;
 
   MeasurementGetter get_measurement_;
+
+  LeaveTimeGetter get_leave_time_;
 
   const sif::cost_ptr_t* mode_costing_;
 

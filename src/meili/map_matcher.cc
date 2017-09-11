@@ -297,6 +297,9 @@ MapMatcher::MapMatcher(
           vs_,
           get_column,
           get_measurement,
+          [this](const StateId::Time& time) -> double {
+            return mapmatching_.leave_time(time);
+          },
           mode_costing_,
           travelmode_,
           config_));
@@ -419,7 +422,7 @@ MapMatcher::OfflineMatch(
   vs.set_emission_cost_model(
       EmissionCostModel(
           graphreader_,
-          [this](const StateId& stateid) {
+          [this](const StateId& stateid) -> const State& {
             return mapmatching_.state(stateid);
           },
           config_));
@@ -428,11 +431,14 @@ MapMatcher::OfflineMatch(
       TransitionCostModel(
           graphreader_,
           vs,
-          [this](const StateId::Time& time) {
+          [this](const StateId::Time& time) -> const std::vector<State>& {
             return mapmatching_.states(time);
           },
-          [this](const StateId::Time& time) {
+          [this](const StateId::Time& time) -> const Measurement& {
             return mapmatching_.measurement(time);
+          },
+          [this](const StateId::Time& time) -> double {
+            return mapmatching_.leave_time(time);
           },
           mode_costing_,
           travelmode_,
@@ -448,7 +454,7 @@ MapMatcher::OfflineMatch(
 
   // Always match the first measurement
   auto last = measurements.cbegin();
-  auto time = AppendMeasurement(*last, sq_max_search_radius);
+  auto time = AppendMeasurement(vs, *last, sq_max_search_radius);
   double interpolated_epoch_time = -1;
   for (auto m = std::next(last); m != measurements.end(); ++m) {
     const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
@@ -465,7 +471,7 @@ MapMatcher::OfflineMatch(
           mapmatching_.SetMeasurementLeaveTime(time, interpolated_epoch_time);
       }
       // This one isnt interpolated so we make room for its state
-      time = AppendMeasurement(*m, sq_max_search_radius);
+      time = AppendMeasurement(vs, *m, sq_max_search_radius);
       last = m;
       interpolated_epoch_time = -1;
     }//TODO: if its the last measurement and it wants to be interpolated
@@ -545,6 +551,21 @@ MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max
   const auto& candidates = candidatequery_.Query(
       measurement.lnglat(), sq_radius, mapmatching_.costing()->GetEdgeFilter());
   return mapmatching_.AppendState(measurement, candidates.begin(), candidates.end());
+}
+
+StateId::Time
+MapMatcher::AppendMeasurement(IViterbiSearch& vs, const Measurement& measurement, const float sq_max_search_radius)
+{
+  // Test interrupt
+  if (interrupt_) {
+    (*interrupt_)();
+  }
+  auto sq_radius = std::min(
+      sq_max_search_radius,
+      std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
+  const auto& candidates = candidatequery_.Query(
+      measurement.lnglat(), sq_radius, mapmatching_.costing()->GetEdgeFilter());
+  return mapmatching_.AppendState(vs, measurement, candidates.begin(), candidates.end());
 }
 
 }

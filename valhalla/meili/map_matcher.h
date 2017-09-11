@@ -63,6 +63,8 @@ private:
 
   StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
 
+  StateId::Time AppendMeasurement(IViterbiSearch& vs, const Measurement& measurement, const float sq_max_search_radius);
+
   boost::property_tree::ptree config_;
 
   baldr::GraphReader& graphreader_;

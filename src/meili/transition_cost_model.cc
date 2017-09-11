@@ -20,6 +20,7 @@ TransitionCostModel::TransitionCostModel(
     const IViterbiSearch& vs,
     const ColumnGetter& get_column,
     const MeasurementGetter& get_measurement,
+    const LeaveTimeGetter& get_leave_time,
     const sif::cost_ptr_t* mode_costing,
     const sif::TravelMode mode,
     float beta,
@@ -31,6 +32,7 @@ TransitionCostModel::TransitionCostModel(
       vs_(vs),
       get_column_(get_column),
       get_measurement_(get_measurement),
+      get_leave_time_(get_leave_time),
       mode_costing_(mode_costing),
       mode_(mode),
       beta_(beta),
@@ -61,6 +63,7 @@ TransitionCostModel::TransitionCostModel(
     const IViterbiSearch& vs,
     const ColumnGetter& get_column,
     const MeasurementGetter& get_measurement,
+    const LeaveTimeGetter& get_leave_time,
     const sif::cost_ptr_t* mode_costing,
     const sif::TravelMode mode,
     const boost::property_tree::ptree& config)
@@ -69,6 +72,7 @@ TransitionCostModel::TransitionCostModel(
           vs,
           get_column,
           get_measurement,
+          get_leave_time,
           mode_costing,
           mode,
           config.get<float>("beta"),
@@ -109,7 +113,7 @@ void
 TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
 {
   const auto& left = get_column_(lhs.time())[lhs.id()];
-  const auto& right = get_column_(rhs.time())[lhs.id()];
+  const auto& right = get_column_(rhs.time())[rhs.id()];
 
   // Prepare edgelabel
   const Label* edgelabel = nullptr;
@@ -148,11 +152,12 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
   const auto& right_measurement = get_measurement_(rhs.time());
 
   const auto gc_dist = GreatCircleDistance(left_measurement, right_measurement);
-  const auto max_route_distance = std::min(
-      gc_dist * max_route_distance_factor_,
-      breakage_distance_);
+  const auto max_route_distance = std::min(gc_dist * max_route_distance_factor_, breakage_distance_);
 
-  const auto clk_dist = ClockDistance(left_measurement, right_measurement);
+  double clk_dist = -1.0;
+  if (0 <= right_measurement.epoch_time() && 0 <= get_leave_time_(lhs.time())) {
+    clk_dist = right_measurement.epoch_time() - get_leave_time_(lhs.time());
+  }
   const auto max_route_time = clk_dist * max_route_time_factor_;
 
   const midgard::DistanceApproximator approximator(right_measurement.lnglat());
