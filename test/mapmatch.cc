@@ -305,7 +305,7 @@ namespace {
       for(const auto& name : edge.second.get_child("names"))
         names.insert(name.second.get_value<std::string>());
     if(names.find("Jan Pieterszoon Coenstraat") == names.end())
-      std::logic_error("Using distance only it should have taken a small detour");
+      throw std::logic_error("Using distance only it should have taken a small detour");
   }
 
   void test_time_rejection() {
@@ -320,8 +320,9 @@ namespace {
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
         names.insert(name.second.get_value<std::string>());
-    if(names.find("Jan Pieterszoon Coenstraat") != names.end())
-      std::logic_error("Using time it should not take a small detour");
+    if(names.find("Jan Pieterszoon Coenstraat") != names.end()) {
+      throw std::logic_error("Using time it should not take a small detour");
+    }
   }
 
   void test32bit() {
@@ -342,16 +343,18 @@ namespace {
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
         names.push_back(name.second.get_value<std::string>());
-    if(names != std::vector<std::string>{"Prins Hendriklaan", "Sophocleslaan"})
-      std::logic_error("The most obvious result is stay left.");
+    if(names != std::vector<std::string>{"Prins Hendriklaan", "Sophocleslaan"}) {
+      throw std::logic_error("The most obvious result is stay left.");
+    }
 
     names.clear();
     auto alternate = matched.get_child("alternate_paths").front().second;
     for(const auto& edge : alternate.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
         names.push_back(name.second.get_value<std::string>());
-    if(names != std::vector<std::string>{"Prins Hendriklaan", "Platolaan"})
-      std::logic_error("The most obvious result is stay left.");
+    if(names != std::vector<std::string>{"Prins Hendriklaan", "Platolaan"}) {
+      throw std::logic_error("The most obvious result is stay left.");
+    }
   }
 
 }
