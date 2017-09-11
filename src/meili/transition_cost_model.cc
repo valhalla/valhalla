@@ -85,7 +85,7 @@ float
 TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
 {
   const auto& left = get_column_(lhs.time())[lhs.id()];
-  const auto& right = get_column_(rhs.time())[lhs.id()];
+  const auto& right = get_column_(rhs.time())[rhs.id()];
 
   if (!left.routed()) {
     UpdateRoute(lhs, rhs);
