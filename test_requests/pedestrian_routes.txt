@@ -13,3 +13,4 @@
 -j '{"locations":[{"lat":40.062997,"lon":-76.3139319},{"lat":40.064705,"lon":-76.314608}],"costing":"pedestrian"}'
 -j '{"locations":[{"lat":42.02104,"lon":-80.27232},{"lat":42.020613,"lon":-80.273290}],"costing":"pedestrian"}'
 -j '{"locations":[{"lat":39.379583,"lon":-76.461485},{"lat":39.379571,"lon":-76.462858}],"costing":"pedestrian"}'
+-j '{"locations":[{"lat":37.12759,"lon":-118.43134},{"lat":37.12765,"lon":-118.43104}],"costing":"pedestrian"}'
