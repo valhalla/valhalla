@@ -212,7 +212,6 @@ struct fake_tile : public GraphTile {
     header_->set_graphid(id);
     header_->set_directededgecount(1 + (id.tileid() == o_id.tileid()) * 1);
 
-    std::string info_backing;
     edgeinfo_ = new char[sizeof(uint64_t) + sizeof(EdgeInfo::PackedItem) + e.size()];
     std::memset(static_cast<void*>(edgeinfo_), 0, sizeof(uint64_t));
     EdgeInfo::PackedItem pi{0, static_cast<uint32_t>(e.size())};
