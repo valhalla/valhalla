@@ -9,7 +9,6 @@
 #include <vector>
 #include <fstream>
 #include <streambuf>
-#include <memory>
 using namespace std;
 using namespace valhalla::mjolnir;
 
