@@ -812,7 +812,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
     //avoid duplicates and minimize leaving a tile for shape by:
     //writing the edge to the tile it originates in
     //not writing the edge to the tile it terminates in
-    //writing the edge to tweeners if originating < terminating
+    //writing the edge to tweeners if originating < terminating or the edge leaves and comes back
     auto start_id = tiles.TileId(edge->forward() ? shape.front() : shape.back());
     auto end_id = tiles.TileId(edge->forward() ? shape.back() : shape.front());
     auto intermediate = start_id < end_id;
@@ -828,7 +828,8 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
       //as per the rules above about when to add intersections
       auto originating = i.first == start_id;
       auto terminating = i.first == end_id;
-      if(originating || (intermediate && !terminating)) {
+      auto loop_back = i.first != start_id && i.first != end_id && start_id == end_id;
+      if(originating || (intermediate && !terminating) || loop_back) {
         //which set of bins, either this local set or tweeners to be added later
         auto& out_bins = originating && max ? bins : tweeners.insert({GraphId(i.first, max_level, 0), {}}).first->second;
         //keep the edge id
