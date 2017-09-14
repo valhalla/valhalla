@@ -330,6 +330,16 @@ bool OSMWay::emergency_forward() const {
   return access_.fields.emergency_forward;
 }
 
+// Set the moped forward flag
+void OSMWay::set_moped_forward(const bool moped_forward) {
+  access_.fields.moped_forward = moped_forward;
+}
+
+// Get the moped forward flag
+bool OSMWay::moped_forward() const {
+  return access_.fields.auto_forward;
+}
+
 // Set auto backward flag.
 void OSMWay::set_auto_backward(const bool auto_backward) {
   access_.fields.auto_backward = auto_backward;
@@ -398,6 +408,16 @@ void OSMWay::set_emergency_backward(const bool emergency_backward) {
 // Get the emergency backward flag.
 bool OSMWay::emergency_backward() const {
   return access_.fields.emergency_backward;
+}
+
+// Set the moped backward flag
+void OSMWay::set_moped_backward(const bool moped_backward) {
+  access_.fields.moped_backward = moped_backward;
+}
+
+// Get the moped backward flag
+bool OSMWay::moped_backward() const {
+  return access_.fields.moped_backward;
 }
 
 // Set destination only/private flag.

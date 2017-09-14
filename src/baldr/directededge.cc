@@ -282,7 +282,6 @@ void DirectedEdge::set_forwardaccess(const uint32_t modes) {
   } else {
     forwardaccess_ = modes;
   }
-  forwardaccess_ = modes;
 }
 
 // Set all forward access modes to true (used for transition edges)
