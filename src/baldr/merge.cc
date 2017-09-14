@@ -189,24 +189,29 @@ void edge_collapser::explore(GraphId node_id) {
     return;
   }
 
+
   // if either edge has been marked, then don't explore down either of them.
   if (m_tracker.get(edge_between(node_id, nodes.first)) ||
       m_tracker.get(edge_between(node_id, nodes.second))) {
     return;
   }
 
+  // Construct forward path and reverse path. If a loop is detected on the
+  // first explore method do not call the second as it will created overlapping
+  // edges.
   path forward(node_id), reverse(node_id);
-
-  explore(node_id, nodes.first,  forward, reverse);
-  explore(node_id, nodes.second, reverse, forward);
-
+  bool loop = explore(node_id, nodes.first,  forward, reverse);
+  if (!loop) {
+    explore(node_id, nodes.second, reverse, forward);
+  }
   m_func(forward);
   m_func(reverse);
 }
 
 // walk in a single direction, using the "direction" given by two nodes to
-// select which edge is considered to be "forward".
-void edge_collapser::explore(GraphId prev, GraphId cur, path &forward, path &reverse) {
+// select which edge is considered to be "forward". Returns true if a loop
+// is found, otherwise returns false.
+bool edge_collapser::explore(GraphId prev, GraphId cur, path &forward, path &reverse) {
   const auto original_node_id = prev;
 
   GraphId maybe_next;
@@ -223,11 +228,19 @@ void edge_collapser::explore(GraphId prev, GraphId cur, path &forward, path &rev
       prev = cur;
       cur = maybe_next;
       if (cur == original_node_id) {
-        // circular!
-        break;
+        // Loop is detected - add last edge and return true to indicate a loop
+        printf("Loop!\n");
+        auto e1 = edge_between(prev, cur);
+        forward.push_back(segment(prev, e1, cur));
+        m_tracker.set(e1);
+        auto e2 = edge_between(cur, prev);
+        reverse.push_front(segment(cur, e2, prev));
+        m_tracker.set(e2);
+        return true;
       }
     }
   } while (maybe_next);
+  return false;
 }
 
 } // namespace detail
