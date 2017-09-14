@@ -229,7 +229,6 @@ bool edge_collapser::explore(GraphId prev, GraphId cur, path &forward, path &rev
       cur = maybe_next;
       if (cur == original_node_id) {
         // Loop is detected - add last edge and return true to indicate a loop
-        printf("Loop!\n");
         auto e1 = edge_between(prev, cur);
         forward.push_back(segment(prev, e1, cur));
         m_tracker.set(e1);
