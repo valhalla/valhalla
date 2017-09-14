@@ -189,7 +189,6 @@ void edge_collapser::explore(GraphId node_id) {
     return;
   }
 
-
   // if either edge has been marked, then don't explore down either of them.
   if (m_tracker.get(edge_between(node_id, nodes.first)) ||
       m_tracker.get(edge_between(node_id, nodes.second))) {
