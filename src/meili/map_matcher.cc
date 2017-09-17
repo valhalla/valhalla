@@ -191,8 +191,8 @@ FindMatchResult(const MapMatching& mapmatching,
   }
 
   const auto& prev_stateid = 0 < time ? stateids[time - 1] : StateId(),
-                                 stateid = stateids[time],
-                                 next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
+                   stateid = stateids[time],
+              next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
   const auto& measurement = mapmatching.measurement(time);
 
   if (!stateid.IsValid()) {
@@ -492,6 +492,15 @@ MapMatcher::OfflineMatch(
     std::vector<StateId> stateids;
     std::copy(vs.SearchPath(time), vs.PathEnd(), std::back_inserter(stateids));
     std::reverse(stateids.begin(), stateids.end());
+
+    std::transform(
+        stateids.begin(),
+        stateids.end(),
+        stateids.begin(),
+        [&ts](const StateId& stateid) {
+          const auto& origin = ts.GetOrigin(stateid);
+          return origin.IsValid() ? origin : stateid;
+        });
 
     // Verify that stateids are in correct order
     for (StateId::Time time = 0; time < stateids.size(); time++) {
