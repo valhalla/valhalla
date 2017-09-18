@@ -204,6 +204,7 @@ nobase_include_HEADERS = \
 	valhalla/meili/routing.h \
 	valhalla/meili/stateid.h \
 	valhalla/meili/viterbi_search.h \
+	valhalla/meili/topk_search.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
 	valhalla/meili/grid_traversal.h \
@@ -319,6 +320,7 @@ libvalhalla_la_SOURCES = \
 	src/sif/dynamiccost.cc \
 	src/meili/universal_cost.cc \
 	src/meili/viterbi_search.cc \
+	src/meili/topk_search.cc \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
 	src/meili/map_matching.cc \

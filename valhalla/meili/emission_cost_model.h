@@ -19,7 +19,8 @@ class EmissionCostModel
       float sigma_z)
       : graphreader_(graphreader),
         get_state_(get_state),
-        sigma_z_(sigma_z)
+        sigma_z_(sigma_z),
+        inv_double_sq_sigma_z_(1.f / (sigma_z_ * sigma_z_ * 2.f))
   {
     if (sigma_z_ <= 0.f) {
       throw std::invalid_argument("Expect sigma_z to be positive");

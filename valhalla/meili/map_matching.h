@@ -101,7 +101,7 @@ class MapMatching: public ViterbiSearch
 
   virtual ~MapMatching();
 
-  void Clear();
+  void Clear() override;
 
   baldr::GraphReader& graphreader() const
   { return graphreader_; }
@@ -126,6 +126,9 @@ class MapMatching: public ViterbiSearch
   std::vector<Measurement>::size_type size() const
   { return measurements_.size(); }
 
+  double leave_time(const StateId::Time& time) const
+  { return leave_times_[time]; }
+
   void SetMeasurementLeaveTime(StateId::Time time, double leave_time)
   { leave_times_[time] = leave_time; }
 
@@ -143,6 +146,30 @@ class MapMatching: public ViterbiSearch
     for (auto it = begin; it != end; it++, idx++) {
       const StateId stateid(time, idx);
       AddStateId(stateid);
+      column.emplace_back(stateid, *it);
+    }
+    columns_.push_back(column);
+
+    return time;
+  }
+
+  template <typename candidate_iterator_t>
+  StateId::Time AppendState(
+      IViterbiSearch& vs,
+      const Measurement& measurement,
+      candidate_iterator_t begin,
+      candidate_iterator_t end)
+  {
+    measurements_.push_back(measurement);
+    leave_times_.push_back(measurement.epoch_time());
+
+    StateId::Time time = columns_.size();
+    Column column;
+    uint32_t idx = 0;
+    for (auto it = begin; it != end; it++, idx++) {
+      const StateId stateid(time, idx);
+      AddStateId(stateid);
+      vs.AddStateId(stateid);
       column.emplace_back(stateid, *it);
     }
     columns_.push_back(column);
