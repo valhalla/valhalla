@@ -191,8 +191,8 @@ FindMatchResult(const MapMatching& mapmatching,
   }
 
   const auto& prev_stateid = 0 < time ? stateids[time - 1] : StateId(),
-                                 stateid = stateids[time],
-                                 next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
+                   stateid = stateids[time],
+              next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
   const auto& measurement = mapmatching.measurement(time);
 
   if (!stateid.IsValid()) {
@@ -272,6 +272,7 @@ MapMatcher::MapMatcher(
       // mapmatching_ is deprecated
       mapmatching_(graphreader_, mode_costing_, travelmode_, config_),
       vs_(),
+      ts_(vs_),
       interrupt_(nullptr)
 {
   // capture *this by reference
@@ -296,6 +297,9 @@ MapMatcher::MapMatcher(
           vs_,
           get_column,
           get_measurement,
+          [this](const StateId::Time& time) -> double {
+            return mapmatching_.leave_time(time);
+          },
           mode_costing_,
           travelmode_,
           config_));
@@ -306,8 +310,7 @@ MapMatcher::~MapMatcher() {}
 
 
 std::vector<MatchResult>
-MapMatcher::OfflineMatch(
-    const std::vector<Measurement>& measurements, uint32_t k) {
+MapMatcher::OfflineMatch1(const std::vector<Measurement>& measurements) {
   mapmatching_.Clear();
 
   if(measurements.empty())
@@ -400,6 +403,149 @@ MapMatcher::OfflineMatch(
   return merged_results;
 }
 
+std::vector<std::vector<MatchResult>>
+MapMatcher::OfflineMatch(
+    const std::vector<Measurement>& measurements, uint32_t k) {
+  // TODO remove this exception
+  if (k == 1) {
+    return {OfflineMatch1(measurements)};
+  }
+
+  if(measurements.empty()) {
+    return {};
+  }
+
+  mapmatching_.Clear();
+
+  ViterbiSearch vs;
+
+  vs.set_emission_cost_model(
+      EmissionCostModel(
+          graphreader_,
+          [this](const StateId& stateid) -> const State& {
+            return mapmatching_.state(stateid);
+          },
+          config_));
+
+  vs.set_transition_cost_model(
+      TransitionCostModel(
+          graphreader_,
+          vs,
+          [this](const StateId::Time& time) -> const std::vector<State>& {
+            return mapmatching_.states(time);
+          },
+          [this](const StateId::Time& time) -> const Measurement& {
+            return mapmatching_.measurement(time);
+          },
+          [this](const StateId::Time& time) -> double {
+            return mapmatching_.leave_time(time);
+          },
+          mode_costing_,
+          travelmode_,
+          config_));
+
+  TopKSearch ts(vs);
+
+  const float max_search_radius = config_.get<float>("max_search_radius"),
+           sq_max_search_radius = max_search_radius * max_search_radius;
+  const float interpolation_distance = config_.get<float>("interpolation_distance"),
+           sq_interpolation_distance = interpolation_distance * interpolation_distance;
+  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
+
+  // Always match the first measurement
+  auto last = measurements.cbegin();
+  auto time = AppendMeasurement(vs, *last, sq_max_search_radius);
+  double interpolated_epoch_time = -1;
+  for (auto m = std::next(last); m != measurements.end(); ++m) {
+    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
+    // Always match the last measurement and if its far enough away
+    if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
+      // If there were interpolated points between these two points with time information
+      if(interpolated_epoch_time != -1) {
+        // Project the last interpolated point onto the line between the two match points
+        auto p = interpolated[time].back().lnglat().Project(last->lnglat(), m->lnglat());
+        // If its significantly closer to the previous match point then it looks like the trace lingered
+        // so we use the time information of the last interpolation point as the actual time they started
+        // traveling towards the next match point which will help us determine what paths are really likely
+        if(p.Distance(last->lnglat())/last->lnglat().Distance(m->lnglat()) < .2f)
+          mapmatching_.SetMeasurementLeaveTime(time, interpolated_epoch_time);
+      }
+      // This one isnt interpolated so we make room for its state
+      time = AppendMeasurement(vs, *m, sq_max_search_radius);
+      last = m;
+      interpolated_epoch_time = -1;
+    }//TODO: if its the last measurement and it wants to be interpolated
+    // then what we need to do is make last match interpolated
+    // and copy its epoch_time into the last measurements epoch time
+    // else if(std::next(measurement) == measurements.end()) { }
+    // This one is so close to the last match that we will just interpolate it
+    else {
+      interpolated[time].push_back(*m);
+      interpolated_epoch_time = m->epoch_time();
+    }
+  }
+
+  //For k paths
+  std::vector<std::vector<MatchResult>> best_paths;
+  for(auto i = 0; i < k; ++i) {
+    // Get the states for the kth best path its in reverse order
+    std::vector<StateId> stateids;
+    std::copy(vs.SearchPath(time), vs.PathEnd(), std::back_inserter(stateids));
+    std::reverse(stateids.begin(), stateids.end());
+
+    std::transform(
+        stateids.begin(),
+        stateids.end(),
+        stateids.begin(),
+        [&ts](const StateId& stateid) {
+          const auto& origin = ts.GetOrigin(stateid);
+          return origin.IsValid() ? origin : stateid;
+        });
+
+    // Verify that stateids are in correct order
+    for (StateId::Time time = 0; time < stateids.size(); time++) {
+      if (!(!stateids[time].IsValid() || stateids[time].time() == time)) {
+        throw std::logic_error("got state with time " + std::to_string(stateids[time].time()) + " at time " + std::to_string(time));
+      }
+    }
+
+    // Get the match result for each of the states
+    const auto& results = FindMatchResults(mapmatching_, stateids);
+
+    // Insert the interpolated results into the result list
+    best_paths.emplace_back();
+    for (StateId::Time time = 0; time < stateids.size(); time++) {
+      // Add in this states result
+      best_paths.back().push_back(results[time]);
+
+      // See if there were any interpolated points with this state move on if not
+      const auto it = interpolated.find(time);
+      if (it == interpolated.end()) {
+        continue;
+      }
+
+      // Interpolate the points between this and the next state
+      const auto& this_stateid = stateids[time];
+      const auto& next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
+      const auto& interpolated_results = InterpolateMeasurements(mapmatching_, this_stateid, next_stateid, it->second);
+
+      // Copy the interpolated match results into the final set
+      std::copy(interpolated_results.cbegin(),interpolated_results.cend(), std::back_inserter(best_paths.back()));
+    }
+
+    // Remove this particular sequence of stateids
+    ts.RemovePath(time);
+  }
+
+  //Here are all k paths
+  if (!(best_paths.size() == k)) {
+    // TODO relax it to be best_paths.size() <= k
+    std::logic_error("should get " + std::to_string(k) + " paths but got " + std::to_string(best_paths.size()));
+  }
+
+  return best_paths;
+}
+
 
 StateId::Time
 MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius)
@@ -414,6 +560,21 @@ MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max
   const auto& candidates = candidatequery_.Query(
       measurement.lnglat(), sq_radius, mapmatching_.costing()->GetEdgeFilter());
   return mapmatching_.AppendState(measurement, candidates.begin(), candidates.end());
+}
+
+StateId::Time
+MapMatcher::AppendMeasurement(IViterbiSearch& vs, const Measurement& measurement, const float sq_max_search_radius)
+{
+  // Test interrupt
+  if (interrupt_) {
+    (*interrupt_)();
+  }
+  auto sq_radius = std::min(
+      sq_max_search_radius,
+      std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
+  const auto& candidates = candidatequery_.Query(
+      measurement.lnglat(), sq_radius, mapmatching_.costing()->GetEdgeFilter());
+  return mapmatching_.AppendState(vs, measurement, candidates.begin(), candidates.end());
 }
 
 }

@@ -11,6 +11,7 @@
 #include <valhalla/meili/candidate_search.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/map_matching.h>
+#include <valhalla/meili/topk_search.h>
 #include <valhalla/meili/match_result.h>
 
 
@@ -44,7 +45,7 @@ public:
   const MapMatching& mapmatching() const
   { return mapmatching_; }
 
-  std::vector<MatchResult>
+  std::vector<std::vector<MatchResult> >
   OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k = 1);
 
   /**
@@ -56,7 +57,13 @@ public:
   }
 
 private:
+  // TODO remove it
+  std::vector<MatchResult>
+  OfflineMatch1(const std::vector<Measurement>& measurements);
+
   StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
+
+  StateId::Time AppendMeasurement(IViterbiSearch& vs, const Measurement& measurement, const float sq_max_search_radius);
 
   boost::property_tree::ptree config_;
 
@@ -72,6 +79,8 @@ private:
   MapMatching mapmatching_;
 
   ViterbiSearch vs_;
+
+  TopKSearch ts_;
 
   // Interrupt callback. Can be set to interrupt if connection is closed.
   const std::function<void ()>* interrupt_;
