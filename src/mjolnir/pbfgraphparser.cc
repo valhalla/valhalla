@@ -272,10 +272,10 @@ struct graph_callback : public OSMPBF::Callback {
         }
         if (!intsct) {
           intersection_.set(nodes[(i + inserted.first->second) / 2]); //TODO: update osmdata_.*_count?
-
-          // Update the index in case the node is used again (a future loop)
-          inserted.first->second = i;
         }
+
+        // Update the index in case the node is used again (a future loop)
+        inserted.first->second = i;
       }
     }
     intersection_.set(nodes.front());
