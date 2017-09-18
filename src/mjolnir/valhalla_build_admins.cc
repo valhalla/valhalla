@@ -359,7 +359,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   //sql += "construction INTEGER DEFAULT NULL,";
   sql += "cycleway INTEGER DEFAULT NULL,";
   //sql += "bus_guideway INTEGER DEFAULT NULL,";
-  sql += "path INTEGER DEFAULT NULL)";
+  sql += "path INTEGER DEFAULT NULL,";
+  sql += "motorroad INTEGER DEFAULT NULL)";
 
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -583,10 +584,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   LOG_INFO("Done updating Parent admin");
 
   sql  = "INSERT into admin_access (admin_id, iso_code, trunk, trunk_link, track, footway, ";
-  sql += "pedestrian, bridleway, cycleway, path) VALUES (";
+  sql += "pedestrian, bridleway, cycleway, path, motorroad) VALUES (";
   sql += "(select rowid from admins where (name = ? or name_en = ?)), ";
   sql += "(select iso_code from admins where (name = ? or name_en = ?)), ";
-  sql += "?, ?, ?, ?, ?, ?, ?, ?)";
+  sql += "?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {

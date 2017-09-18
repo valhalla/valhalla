@@ -38,12 +38,21 @@ namespace {
     return output;
   }
 
-  std::string to_locations(const std::vector<PointLL>& shape, float accuracy, int frequency) {
+  float round_up(float val, int multiple) {
+    return int((val + multiple - 1) / multiple) * multiple;
+  }
+
+  std::string to_locations(const std::vector<PointLL>& shape, const std::vector<float>& accuracies, int frequency) {
     std::string locations = "[";
-    std::string acc = R"(,"accuracy":)" + std::to_string(int(std::ceil(accuracy)));
     int freq = 0;
-    for(const auto& p : shape) {
+    for(size_t i = 0; i < shape.size(); ++i) {
+      //round accuracy up to nearest 5m
+      int accuracy = round_up(accuracies[i] + 1.f, 5);
+      std::string acc = R"(,"accuracy":)" + std::to_string(accuracy);
+      //add this point on
+      const auto& p = shape[i];
       locations += R"({"lat":)" + std::to_string(p.second) + R"(,"lon":)" + std::to_string(p.first) + acc;
+      //get the time component
       freq += frequency;
       if(freq > 0)
         locations += R"(,"time":)" + std::to_string(freq);
@@ -152,7 +161,7 @@ namespace {
   }
 
   std::vector<midgard::PointLL> simulate_gps(const boost::property_tree::ptree& edges, const std::vector<midgard::PointLL>& shape,
-      float smoothing = 30, float accuracy = 5.f, size_t sample_rate = 1) {
+      std::vector<float>& accuracies, float smoothing = 30, float accuracy = 5.f, size_t sample_rate = 1) {
     //resample the coords along a given edge at one second intervals
     auto resampled = resample_at_1hz(edges, shape);
 
@@ -192,6 +201,8 @@ namespace {
         auto metersPerDegreeLon = DistanceApproximator::MetersPerLngDegree(p.second);
         simulated.emplace_back(midgard::PointLL(p.first + noise.first / metersPerDegreeLon,
           p.second + noise.second / kMetersPerDegreeLat));
+        //keep the distance to use for accuracy
+        accuracies.emplace_back(simulated.back().Distance(p));
       }
     }
     return simulated;
@@ -253,8 +264,9 @@ namespace {
       for(const auto& edge : walked.get_child("edges"))
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
       //simulate gps from the route shape
-      auto simulation = simulate_gps(walked.get_child("edges"), shape, 50, 100.f);
-      auto locations = to_locations(simulation, 100.f, 1);
+      std::vector<float> accuracies;
+      auto simulation = simulate_gps(walked.get_child("edges"), shape, accuracies, 50, 100.f, 1);
+      auto locations = to_locations(simulation, accuracies, 1);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"map_snap","shape":)" + locations + "}"));

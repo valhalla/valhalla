@@ -296,6 +296,32 @@ bool PointLL::WithinPolygon(const container_t& poly) const {
 
 bool PointLL::IsSpherical() { return true; }
 
+PointLL PointLL::Project(const PointLL& u, const PointLL& v, float lon_scale) const {
+  //we're done if this is a zero length segment
+  if(u == v)
+    return u;
+
+  //project a onto b where b is the origin vector representing this segment
+  //and a is the origin vector to the point we are projecting, (a.b/b.b)*b
+  auto bx = v.first - u.first;
+  auto by = v.second - u.second;
+
+  // Scale longitude when finding the projection
+  auto bx2 = bx * lon_scale;
+  auto sq = bx2 * bx2 + by * by;
+  auto scale = (first - u.first) * lon_scale * bx2 + (second - u.second) * by; //only need the numerator at first
+
+  //projects along the ray before u
+  if(scale <= 0.f)
+    return u;
+  //projects along the ray after v
+  else if(scale >= sq)
+    return v;
+  //projects along the ray between u and v
+  scale /= sq;
+  return {u.first + bx * scale, u.second + by * scale};
+}
+
 // Explicit instantiations
 template bool PointLL::WithinPolygon(const std::vector<PointLL>&) const;
 template bool PointLL::WithinPolygon(const std::list<PointLL>&) const;

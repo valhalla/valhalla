@@ -86,5 +86,14 @@ bool OSMAccess::hov_tag() const {
   return attributes_.fields.hov_tag;
 }
 
+// Set motorroad tag flag.
+void OSMAccess::set_motorroad_tag(const bool motorroad_tag) {
+  attributes_.fields.motorroad_tag = motorroad_tag;
+}
+// Get motorroad tag flag.
+bool OSMAccess::motorroad_tag() const {
+  return attributes_.fields.motorroad_tag;
+}
+
 }
 }

@@ -772,6 +772,10 @@ function filter_tags_generic(kv)
     kv["bike_forward"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or kv["bike_forward"]
     kv["bike_tag"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or nil
 
+    if kv["motorroad"] == "yes" then
+      kv["motorroad_tag"] = "true"
+    end
+
   else
     --if its a ferry and these tags dont show up we want to set them to true 
     local default_val = tostring(ferry)
@@ -817,6 +821,10 @@ function filter_tags_generic(kv)
       --check for bike_forward overrides
       kv["bike_forward"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or default_val
       kv["bike_tag"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or nil
+
+      if kv["motorroad"] == "yes" then
+        kv["motorroad_tag"] = "true"
+      end
     end
   end
 
