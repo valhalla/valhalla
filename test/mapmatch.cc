@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include <vector>
 #include <random>
 #include <utility>
 #include <iostream>
@@ -335,16 +336,19 @@ namespace {
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
             R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-                {"lat":52.08420,"lon":5.15248,"accuracy":10},
-                {"lat":52.08444,"lon":5.15295,"accuracy":10},
-                {"lat":52.08459,"lon":5.15345,"accuracy":10}]})"));
+                {"lat":52.08511,"lon":5.15085,"accuracy":50},
+                {"lat":52.08533,"lon":5.15109,"accuracy":50},
+                {"lat":52.08539,"lon":5.15100,"accuracy":50}]})"));
 
     std::vector<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
         names.push_back(name.second.get_value<std::string>());
-    if(names != std::vector<std::string>{"Prins Hendriklaan", "Sophocleslaan"}) {
-      throw std::logic_error("The most obvious result is stay left.");
+    if(names != std::vector<std::string>{"Louis Saalbornlaan", "Cor Ruyslaan"}) {
+      std::string streets;
+      for(const auto& n : names)
+        streets += n + " ";
+      throw std::logic_error("The most obvious result is stay left but got: " + streets);
     }
 
     names.clear();
@@ -352,8 +356,11 @@ namespace {
     for(const auto& edge : alternate.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
         names.push_back(name.second.get_value<std::string>());
-    if(names != std::vector<std::string>{"Prins Hendriklaan", "Platolaan"}) {
-      throw std::logic_error("The most obvious result is stay left.");
+    if(names != std::vector<std::string>{"Louis Saalbornlaan", "Louis Saalbornlaan"}) {
+      std::string streets;
+      for(const auto& n : names)
+        streets += n + " ";
+      throw std::logic_error("The second most obvious result is stay right but got: " + streets);
     }
   }
 
