@@ -1,6 +1,6 @@
 ## Routing Tiles - the Who, What, When, Where, How and Why?
 
-###A bit of the Who, When and How
+### A bit of the Who, When and How
 
 We had just started our new endeavor at Mapzen and were kicking around fundamental ideas of what our system should look like. Here's a bit of a transcript of how we got here:
 
