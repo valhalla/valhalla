@@ -197,7 +197,6 @@ nobase_include_HEADERS = \
 	valhalla/meili/candidate_search.h \
 	valhalla/meili/geometry_helpers.h \
 	valhalla/meili/grid_range_query.h \
-	valhalla/meili/map_matching.h \
 	valhalla/meili/emission_cost_model.h \
 	valhalla/meili/transition_cost_model.h \
 	valhalla/meili/priority_queue.h \
@@ -208,6 +207,7 @@ nobase_include_HEADERS = \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
 	valhalla/meili/grid_traversal.h \
+	valhalla/meili/state.h \
 	valhalla/meili/map_matcher.h \
 	valhalla/meili/map_matcher_factory.h \
 	valhalla/meili/traffic_segment_matcher.h \
@@ -323,7 +323,6 @@ libvalhalla_la_SOURCES = \
 	src/meili/topk_search.cc \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
-	src/meili/map_matching.cc \
 	src/meili/transition_cost_model.cc \
 	src/meili/map_matcher.cc \
 	src/meili/map_matcher_factory.cc \

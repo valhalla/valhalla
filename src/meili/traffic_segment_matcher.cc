@@ -183,7 +183,7 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   const std::shared_ptr<meili::MapMatcher>& matcher) const {
 
   //get all of the edges along the path from the state info
-  auto edges = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
+  auto edges = ConstructRoute(*matcher, matches.begin(), matches.end());
   clean_edges(edges);
 
   //TODO: backtracking could have happened. maybe it really happened but maybe there were positional

@@ -18,11 +18,9 @@ namespace meili {
 TransitionCostModel::TransitionCostModel(
     baldr::GraphReader& graphreader,
     const IViterbiSearch& vs,
-    const ColumnGetter& get_column,
-    const MeasurementGetter& get_measurement,
-    const LeaveTimeGetter& get_leave_time,
+    const StateContainer& container,
     const sif::cost_ptr_t* mode_costing,
-    const sif::TravelMode mode,
+    const sif::TravelMode travelmode,
     float beta,
     float breakage_distance,
     float max_route_distance_factor,
@@ -30,11 +28,9 @@ TransitionCostModel::TransitionCostModel(
     float turn_penalty_factor)
     : graphreader_(graphreader),
       vs_(vs),
-      get_column_(get_column),
-      get_measurement_(get_measurement),
-      get_leave_time_(get_leave_time),
+      container_(container),
       mode_costing_(mode_costing),
-      mode_(mode),
+      travelmode_(travelmode),
       beta_(beta),
       inv_beta_(1.f / beta_),
       breakage_distance_(breakage_distance),
@@ -61,20 +57,16 @@ TransitionCostModel::TransitionCostModel(
 TransitionCostModel::TransitionCostModel(
     baldr::GraphReader& graphreader,
     const IViterbiSearch& vs,
-    const ColumnGetter& get_column,
-    const MeasurementGetter& get_measurement,
-    const LeaveTimeGetter& get_leave_time,
+    const StateContainer& container,
     const sif::cost_ptr_t* mode_costing,
-    const sif::TravelMode mode,
+    const sif::TravelMode travelmode,
     const boost::property_tree::ptree& config)
     : TransitionCostModel(
           graphreader,
           vs,
-          get_column,
-          get_measurement,
-          get_leave_time,
+          container,
           mode_costing,
-          mode,
+          travelmode,
           config.get<float>("beta"),
           config.get<float>("breakage_distance"),
           config.get<float>("max_route_distance_factor"),
@@ -84,8 +76,8 @@ TransitionCostModel::TransitionCostModel(
 float
 TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
 {
-  const auto& left = get_column_(lhs.time())[lhs.id()];
-  const auto& right = get_column_(rhs.time())[rhs.id()];
+  const auto& left = container_.state(lhs);
+  const auto& right = container_.state(rhs);
 
   if (!left.routed()) {
     UpdateRoute(lhs, rhs);
@@ -95,8 +87,8 @@ TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
   const auto label = left.last_label(right);
   if (label) {
     // Get some basic info about difference between the two measurements
-    const auto& left_measurement = get_measurement_(lhs.time());
-    const auto& right_measurement = get_measurement_(rhs.time());
+    const auto& left_measurement = container_.measurement(lhs.time());
+    const auto& right_measurement = container_.measurement(rhs.time());
     return CalculateTransitionCost(
         label->turn_cost(),
         label->cost().cost,
@@ -112,14 +104,14 @@ TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
 void
 TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
 {
-  const auto& left = get_column_(lhs.time())[lhs.id()];
-  const auto& right = get_column_(rhs.time())[rhs.id()];
+  const auto& left = container_.state(lhs);
+  const auto& right = container_.state(rhs);
 
   // Prepare edgelabel
   const Label* edgelabel = nullptr;
   const auto& prev_stateid = vs_.Predecessor(left.stateid());
   if (prev_stateid.IsValid()) {
-    const auto& prev_state = get_column_(prev_stateid.time())[prev_stateid.id()];
+    const auto& prev_state = container_.state(prev_stateid);
     if (!prev_state.routed()) {
       // When ViterbiSearch calls this method, the left state is
       // guaranteed to be optimal, its predecessor is therefore
@@ -135,7 +127,7 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
   }
 
   // Prepare locations and stateids
-  const auto& right_column = get_column_(right.stateid().time());
+  const auto& right_column = container_.column(right.stateid().time());
   std::vector<baldr::PathLocation> locations;
   locations.reserve(1 + right_column.size());
   locations.push_back(left.candidate());
@@ -148,15 +140,15 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
     }
   }
 
-  const auto& left_measurement = get_measurement_(lhs.time());
-  const auto& right_measurement = get_measurement_(rhs.time());
+  const auto& left_measurement = container_.measurement(lhs.time());
+  const auto& right_measurement = container_.measurement(rhs.time());
 
   const auto gc_dist = GreatCircleDistance(left_measurement, right_measurement);
   const auto max_route_distance = std::min(gc_dist * max_route_distance_factor_, breakage_distance_);
 
   double clk_dist = -1.0;
-  if (0 <= right_measurement.epoch_time() && 0 <= get_leave_time_(lhs.time())) {
-    clk_dist = right_measurement.epoch_time() - get_leave_time_(lhs.time());
+  if (0 <= right_measurement.epoch_time() && 0 <= container_.leave_time(lhs.time())) {
+    clk_dist = right_measurement.epoch_time() - container_.leave_time(lhs.time());
   }
   const auto max_route_time = clk_dist * max_route_time_factor_;
 
@@ -174,7 +166,7 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
       labelset,
       approximator,
       right_measurement.search_radius(),
-      mode_costing_[static_cast<size_t>(mode_)],
+      mode_costing_[static_cast<size_t>(travelmode_)],
       edgelabel,
       turn_cost_table_,
       std::ceil(max_route_distance),
