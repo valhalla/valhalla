@@ -54,6 +54,20 @@ class TransitionCostModel
  private:
   void UpdateRoute(const StateId& lhs, const StateId& rhs) const;
 
+  float
+  ClockDistance(const StateId::Time& lhs, const StateId::Time& rhs) const
+  {
+    double clk_dist = -1.0;
+
+    const auto lhs_leave_time = container_.leave_time(lhs);
+    const auto rhs_epoch = container_.measurement(rhs).epoch_time();
+    if (0 <= lhs_leave_time && 0 <= rhs_epoch) {
+      clk_dist = rhs_epoch - lhs_leave_time;
+    }
+
+    return clk_dist;
+  }
+
   baldr::GraphReader& graphreader_;
 
   const IViterbiSearch& vs_;

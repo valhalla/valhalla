@@ -6,10 +6,6 @@ inline float
 GreatCircleDistance(const valhalla::meili::Measurement& left,
                     const valhalla::meili::Measurement& right)
 { return left.lnglat().Distance(right.lnglat()); }
-
-inline float ClockDistance(const valhalla::meili::Measurement& left,
-                           const valhalla::meili::Measurement& right)
-{ return right.epoch_time() - left.epoch_time(); }
 }
 
 namespace valhalla {
@@ -94,7 +90,7 @@ TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
         label->cost().cost,
         GreatCircleDistance(left_measurement, right_measurement),
         label->cost().secs,
-        ClockDistance(left_measurement, right_measurement));
+        ClockDistance(lhs.time(), rhs.time()));
   }
 
   // No path found
@@ -143,22 +139,22 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
   const auto& left_measurement = container_.measurement(lhs.time());
   const auto& right_measurement = container_.measurement(rhs.time());
 
-  const auto gc_dist = GreatCircleDistance(left_measurement, right_measurement);
-  const auto max_route_distance = std::min(gc_dist * max_route_distance_factor_, breakage_distance_);
-
-  double clk_dist = -1.0;
-  if (0 <= right_measurement.epoch_time() && 0 <= container_.leave_time(lhs.time())) {
-    clk_dist = right_measurement.epoch_time() - container_.leave_time(lhs.time());
-  }
-  const auto max_route_time = clk_dist * max_route_time_factor_;
-
   const midgard::DistanceApproximator approximator(right_measurement.lnglat());
 
+  auto max_route_distance = std::min(
+      GreatCircleDistance(left_measurement, right_measurement) * max_route_distance_factor_,
+      breakage_distance_);
   // Route, we have to make sure that the max distance is greater
   // than 0 otherwise we wont be able to get any labels into the
   // labelset
-  labelset_ptr_t labelset = std::make_shared<LabelSet>(std::max(std::ceil(max_route_distance), 1.f));
+  max_route_distance = std::ceil(std::max(max_route_distance, 1.f));
 
+  auto max_route_time = ClockDistance(lhs.time(), rhs.time()) * max_route_time_factor_;
+  if (0 <= max_route_time) {
+    max_route_time = std::ceil(max_route_time);
+  }
+
+  labelset_ptr_t labelset = std::make_shared<LabelSet>(max_route_distance);
   const auto& results = find_shortest_path(
       graphreader_,
       locations,
@@ -169,8 +165,8 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
       mode_costing_[static_cast<size_t>(travelmode_)],
       edgelabel,
       turn_cost_table_,
-      std::ceil(max_route_distance),
-      std::ceil(max_route_time));
+      max_route_distance,
+      max_route_time);
 
   left.SetRoute(unreached_stateids, results, labelset);
 }
