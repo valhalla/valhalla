@@ -776,7 +776,7 @@ function filter_tags_generic(kv)
       kv["auto_backward"] = "false"
       kv["truck_backward"] = "false"
       kv["bus_backward"] = "false"
-      kv["moped_forward"] = "false"
+      kv["moped_backward"] = "false"
       kv["bike_backward"] = "false"
     end
 
@@ -801,7 +801,7 @@ function filter_tags_generic(kv)
     kv["bike_tag"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or nil
 
     --check for moped forward overrides
-    kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or kv["moped"] or kv["mofa"]
+    kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or kv["moped_forward"]
     kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or nil
 
     if kv["motorroad"] == "yes" then
@@ -857,7 +857,7 @@ function filter_tags_generic(kv)
       kv["bike_tag"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or nil
 
       --check for moped forward overrides
-      kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or kv["moped"] or kv["mofa"] or default_val
+      kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or default_val
       kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or nil
 
       if kv["motorroad"] == "yes" then
@@ -921,6 +921,10 @@ function filter_tags_generic(kv)
     if (oneway_bus == "false" and kv["bus:backward"] == "yes") then
       oneway_bus = "true"
     end
+  end
+
+  if kv["moped_backward"] == nil then
+    kv["moped_backward"] = "false"
   end
 
   if ((kv["oneway"] == "yes" and (kv["oneway:moped"] == "no" or kv["oneway:mofa"] == "no")) or kv["moped:backward"] == "yes" or kv["mofa:backward"] == "yes") then
@@ -1522,7 +1526,7 @@ function nodes_proc (kv, nokeys)
       foot = foot_tag or 2
       wheelchair = wheelchair_tag or 256
       bike = bike_tag or 4
-      moped = moped_tag or 512
+      moped = moped_tag or 0
       emergency = emergency_tag or 0
       hov = hov_tag or 0
     end
