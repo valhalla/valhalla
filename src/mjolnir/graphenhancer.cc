@@ -1080,7 +1080,7 @@ void enhance(const boost::property_tree::ptree& pt,
               else LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
             } else SetCountryAccess(directededge, access, target);
           // motorroad default.  Only applies to RC <= kPrimary and has no country override.
-          // We just use the defaults which is no bicycles and no pedestrians.
+          // We just use the defaults which is no bicycles, mopeds and no pedestrians.
           // leaves tile flag indicates that we have an access record for this edge.
           // leaves tile flag is updated later to the real value.
           }else if (country_iterator == country_access.end() &&
@@ -1100,6 +1100,7 @@ void enhance(const boost::property_tree::ptree& pt,
                     ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
                     ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
                     ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
+                    ((forward & kMopedAccess) && !(reverse & kMopedAccess)) ||
                     ((forward & kBusAccess) && !(reverse & kBusAccess)));
 
                 bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
@@ -1107,16 +1108,19 @@ void enhance(const boost::property_tree::ptree& pt,
                     (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
                     (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
                     (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
+                    (!(forward & kMopedAccess) && (reverse & kMopedAccess)) ||
                     (!(forward & kBusAccess) && (reverse & kBusAccess)));
 
                 bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
                 bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
 
-                // motorroad defaults remove ped, wheelchair, and bike access.
+                // motorroad defaults remove ped, wheelchair, moped, and bike access.
                 // still check for user tags via access.
-                forward = GetAccess(forward, (forward & ~(kPedestrianAccess | kWheelchairAccess | kBicycleAccess)),
+                forward = GetAccess(forward,
+                          (forward & ~(kPedestrianAccess | kWheelchairAccess | kMopedAccess | kBicycleAccess)),
                           r_oneway_vehicle, r_oneway_bicycle, access);
-                reverse = GetAccess(reverse, (reverse & ~(kPedestrianAccess | kWheelchairAccess | kBicycleAccess)),
+                reverse = GetAccess(reverse,
+                          (reverse & ~(kPedestrianAccess | kWheelchairAccess | kMopedAccess | kBicycleAccess)),
                           f_oneway_vehicle, f_oneway_bicycle, access);
 
                 directededge.set_forwardaccess(forward);

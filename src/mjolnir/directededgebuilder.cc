@@ -103,6 +103,14 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
       (way.bike_backward() &&  forward)) {
     reverse_access |= kBicycleAccess;
   }
+  if ((way.moped_forward()  &&  forward) ||
+      (way.moped_backward() && !forward)) {
+    forward_access |= kMopedAccess;
+  }
+  if ((way.moped_forward() && !forward) ||
+      (way.moped_backward() && forward)) {
+    reverse_access |= kMopedAccess;
+  }
   if ((way.emergency_forward()  &&  forward) ||
       (way.emergency_backward() && !forward)) {
     forward_access |= kEmergencyAccess;

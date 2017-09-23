@@ -50,6 +50,16 @@ bool OSMAccess::bike_tag() const {
   return attributes_.fields.bike_tag;
 }
 
+// Set moped tag flag
+void OSMAccess::set_moped_tag(const bool moped_tag) {
+  attributes_.fields.moped_tag = moped_tag;
+}
+
+// Get moped tag flag
+bool OSMAccess::moped_tag() const {
+  return attributes_.fields.moped_tag;
+}
+
 // Set bus tag flag.
 void OSMAccess::set_bus_tag(const bool bus_tag) {
   attributes_.fields.bus_tag = bus_tag;

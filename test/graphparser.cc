@@ -62,20 +62,20 @@ void BollardsGatesAndAccess(const std::string& config_file) {
 
   // bus access tests.
   auto way = GetWay(85744121, ways);
-  if (way.auto_forward() != false || way.bike_forward() != true || way.bus_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
+  if (way.auto_forward() != false || way.moped_forward () != false || way.bike_forward() != true || way.bus_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
     throw std::runtime_error("Access is not set correctly for way 85744121.");
   }
 
   way = GetWay(86260080, ways);
-  if (way.auto_forward() != true || way.bike_forward() != true || way.bus_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+  if (way.auto_forward() != true || way.bike_forward() != true || way.bus_forward() != true || way.moped_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true || way.moped_backward() != true) {
     throw std::runtime_error("Access is not set correctly for way 86260080.");
   }
 
   way = GetWay(161683833, ways);
-  if (way.auto_forward() != true || way.bike_forward() != true || way.bus_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+  if (way.auto_forward() != true || way.bike_forward() != true || way.bus_forward() != true || way.moped_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true || way.moped_backward() != true) {
     throw std::runtime_error("Access is not set correctly for way 161683833.");
   }
 
@@ -94,7 +94,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   if (!node.intersection() ||
       node.type() != NodeType::kGate || node.access_mask() !=
           (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-              kPedestrianAccess | kWheelchairAccess | kBicycleAccess))
+              kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
     throw std::runtime_error("Gate at end of way test failed.");
 
   //block

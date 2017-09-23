@@ -348,6 +348,10 @@ struct graph_callback : public OSMPBF::Callback {
         access.set_bike_tag(true);
         has_user_tags = true;
       }
+      else if (tag.first == "moped_tag") {
+        access.set_moped_tag(true);
+        has_user_tags = true;
+      }
       else if (tag.first == "hov_tag") {
         access.set_hov_tag(true);
         has_user_tags = true;
@@ -385,6 +389,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_emergency_forward(tag.second == "true" ? true : false);
       else if (tag.first == "hov_forward")
         w.set_hov_forward(tag.second == "true" ? true : false);
+      else if (tag.first == "moped_forward")
+        w.set_moped_forward(tag.second == "true" ? true : false);
       else if (tag.first == "auto_backward")
         w.set_auto_backward(tag.second == "true" ? true : false);
       else if (tag.first == "truck_backward")
@@ -397,6 +403,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_emergency_backward(tag.second == "true" ? true : false);
       else if (tag.first == "hov_backward")
         w.set_hov_backward(tag.second == "true" ? true : false);
+      else if (tag.first == "moped_backward")
+        w.set_moped_backward(tag.second == "true" ? true : false);
       else if (tag.first == "pedestrian")
         w.set_pedestrian(tag.second == "true" ? true : false);
       else if (tag.first == "private" && tag.second == "true") {
