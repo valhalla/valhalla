@@ -337,7 +337,7 @@ void OSMWay::set_moped_forward(const bool moped_forward) {
 
 // Get the moped forward flag
 bool OSMWay::moped_forward() const {
-  return access_.fields.auto_forward;
+  return access_.fields.moped_forward;
 }
 
 // Set auto backward flag.

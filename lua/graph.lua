@@ -202,6 +202,7 @@ motor_vehicle = {
 
 moped = {
 ["yes"] = "true",
+["designated"] = "true",
 ["private"] = "true",
 ["permissive"] = "true",
 ["destination"] = "true",
@@ -500,6 +501,7 @@ wheelchair_node = {
 
 moped_node = {
 ["yes"] = 512,
+["designated"] = 512,
 ["private"] = 512,
 ["permissive"] = 512,
 ["destination"] = 512,
@@ -1469,11 +1471,6 @@ function nodes_proc (kv, nokeys)
   --do not shut off bike access if there is a highway crossing.
   if bike_tag == 0 and kv["highway"] == "crossing" then
     bike_tag = 4
-  end
-
-  --if both regular bikes and automobiles are allowed then moped's/motorbikes should be as well
-  if moped_tag == nil and bike_tag == 4 and auto_tag == 1 then
-    moped_tag = 512
   end
 
   --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated" or kv["vehicle"] == "no")

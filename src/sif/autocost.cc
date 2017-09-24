@@ -34,6 +34,10 @@ constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
 
+constexpr float kDefaultUseHills                = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUsePrimary              = 0.5f;   // Factor between 0 and 1
+constexpr uint32_t kDefaultTopSpeed             = 45;  // Kilometers per hour
+
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
 constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
@@ -75,6 +79,54 @@ constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeco
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+
+// Valid ranges and defaults for motorized scooters
+constexpr ranged_default_t<float> kUseHillsRange{0, kDefaultUseHills, 1.0f};
+constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
+constexpr ranged_default_t<uint32_t> kTopSpeedRange{0, kDefaultTopSpeed, kMaxSpeedKph};
+
+// Weighting factor based on road class. These apply penalties to higher class
+// roads. These penalties are modulated by the useroads factor - further
+// avoiding higher class roads for those with low propensity for using roads.
+constexpr float kRoadClassFactor[] = {
+    1.0f,   // Motorway
+    0.4f,   // Trunk
+    0.2f,   // Primary
+    0.1f,   // Secondary
+    0.05f,  // Tertiary
+    0.05f,  // Unclassified
+    0.0f,   // Residential
+    0.5f    // Service, other
+};
+
+constexpr uint32_t kMaxGradeFactor = 15;
+
+// Avoid hills "strength". How much do we want to avoid a hill. Combines
+// with the usehills factor (1.0 - usehills = avoidhills factor) to create
+// a weighting penalty per weighted grade factor. This indicates how strongly
+// edges with the specified grade are weighted. Note that speed also is
+// influenced by grade, so these weights help further avoid hills.
+constexpr float kAvoidHillsStrength[] = {
+    2.0f,      // -10%  - Treacherous descent possible
+    1.0f,      // -8%   - Steep downhill
+    0.5f,      // -6.5% - Good downhill - where is the bottom?
+    0.2f,      // -5%   - Picking up speed!
+    0.1f,      // -3%   - Modest downhill
+    0.0f,      // -1.5% - Smooth slight downhill, ride this all day!
+    0.05f,     // 0%    - Flat, no avoidance
+    0.1f,      // 1.5%  - These are called "false flat"
+    0.3f,      // 3%    - Slight rise
+    0.8f,      // 5%    - Small hill
+    2.0f,      // 6.5%  - Starting to feel this...
+    3.0f,      // 8%    - Moderately steep
+    4.5f,      // 10%   - Getting tough
+    6.5f,      // 11.5% - Tiring!
+    10.0f,     // 13%   - Ooof - this hurts
+    12.0f      // 15%   - Only for the strongest!
+};
+
+constexpr float kSurfaceSpeedFactors[] =
+        { 1.0f, 1.0f, 0.9f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f };
 
 }
 
@@ -975,7 +1027,7 @@ cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
  * Derived class intended to provided different access for mopeds/electric scooters
  * and also avoid hills slightly (to save battery power)
  */
-class MopedCost : public AutoCost {
+class MotorScooterCost : public AutoCost {
 public:
 
   /**
@@ -983,9 +1035,9 @@ public:
    * Pass in configuration using property tree
    * @param  config  Property tree with configuration/options
    */
-  MopedCost(const boost::property_tree::ptree& config);
+  MotorScooterCost(const boost::property_tree::ptree& config);
 
-  virtual ~MopedCost();
+  virtual ~MotorScooterCost();
 
   /**
    * Gets the access mode used by this costing method
@@ -1077,26 +1129,55 @@ public:
   }
 
 protected:
-  float use_hills; // Scale from 0 (avoid hills) to 1 (don't avoid hills)
+  uint32_t top_speed_;  // Top speed the motorized scooter can go. Used to avoid roads
+                        // with higher speeds than it
+
+  float use_hills_;     // Scale from 0 (avoid hills) to 1 (don't avoid hills)
+  float use_primary_;   // Scale from 0 (avoid primary roads) to 1 (don't avoid primary roads)
+
+  // Elevation/grade penalty (weighting applied based on the edge's weighted
+  // grade (relative value from 0-15)
+  float grade_penalty_[16];
+
+  float speed_factor_[kMaxSpeedKph + 1];
 };
 
 // Constructor
-MopedCost::MopedCost(const boost::property_tree::ptree& config)
+MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& config)
     : AutoCost (config) {
-  use_hills = config.get<float>("use_hills", 0.5f);
+  top_speed_ = kTopSpeedRange (
+    config.get<float>("top_speed", 45)
+  );
+
+  use_hills_ = kUseHillsRange (
+    config.get<float>("use_hills", 0.5f)
+  );
+  use_primary_ = kUsePrimaryRange (
+    config.get<float>("use_primary", 0.5f)
+  );
+
+  speed_factor_[0] = kSecPerHour;
+  for (uint32_t s = 1; s <= kMaxSpeedKph; ++s) {
+    speed_factor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
+  }
+
+  float avoid_hills = (1.0f - use_hills_);
+  for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
+    grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
+  }
 }
 
 // Destructor
-MopedCost::~MopedCost () {
+MotorScooterCost::~MotorScooterCost () {
 }
 
 // Get the access mode for moped
-uint32_t MopedCost::access_mode() const {
+uint32_t MotorScooterCost::access_mode() const {
   return kMopedAccess;
 }
 
 // Check if access is allowed on the specified edge.
-bool MopedCost::Allowed(const baldr::DirectedEdge* edge,
+bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                      const EdgeLabel& pred,
                      const baldr::GraphTile*& tile,
                      const baldr::GraphId& edgeid) const {
@@ -1115,7 +1196,7 @@ bool MopedCost::Allowed(const baldr::DirectedEdge* edge,
 
 // Checks if access is allowed for an edge on the reverse path (from
 // destination towards origin). Both opposing edges are provided.
-bool MopedCost::AllowedReverse(const baldr::DirectedEdge* edge,
+bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
@@ -1133,19 +1214,25 @@ bool MopedCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return true;
 }
 
-Cost MopedCost::EdgeCost(const baldr::DirectedEdge* edge) const {
-  // Place holder
-  return {0.0f, 0.0f};
+Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+
+  float factor = (edge->use() == Use::kFerry) ?
+        ferry_factor_ : density_factor_[edge->density()];
+
+  uint32_t scooter_speed = (std::min(top_speed_, edge->speed ())
+    * kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())]);
+
+  float sec = (edge->length() * speedfactor_[scooter_speed]);
+  return {sec * factor, sec};
 }
 
 // Check if access is allowed at the specified node.
-bool MopedCost::Allowed(const baldr::NodeInfo* node) const  {
+bool MotorScooterCost::Allowed(const baldr::NodeInfo* node) const  {
   return (node->access() & kMopedAccess);
 }
 
-cost_ptr_t CreateMopedCost(const boost::property_tree::ptree& config)
-{
-  return std::make_shared<MopedCost>(config);
+cost_ptr_t CreateMotorScooterCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<MotorScooterCost>(config);
 }
 
 }
