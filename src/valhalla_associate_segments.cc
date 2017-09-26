@@ -681,13 +681,22 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     m_path_algo->Clear();
     m_path_algo->set_max_label_count(100);
     auto path = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
-
     if (path.empty()) {
       // what to do if there's no path?
       LOG_DEBUG("No route to destination " + std::to_string(next_coord) + " from origin point " + std::to_string(coord) + ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();
     }
 
+    // Throw out if dist mismatch. The costing method stores distance in both
+    // cost and elapsed time - so elapsed time of the last edge is total
+    // path distance.
+    if (abs_u32_diff(path.back().elapsed_time, segment_length) > kLengthTolerance) {
+      return std::vector<EdgeMatch>();
+    }
+
+    // Check that the path ends less than 10m away. TODO - can we just rely on
+    // loki to make sure the edge candidates are within tolerance? Then we can remove
+    // this!
     {
       auto last_edge_id = path.back().edgeid;
       auto *tile = m_reader.GetGraphTile(last_edge_id);
@@ -697,11 +706,11 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
       auto *node = ntile->node(node_id);
       auto dist = node->latlng().Distance(next_coord);
       if (dist > 10.0f) {
-        LOG_DEBUG("Route to destination " + std::to_string(next_coord) + " from origin point " + std::to_string(coord) + " ends more than 10m away: " + std::to_string(node->latlng()) + ". Segment cannot be matched, discarding.");
         return std::vector<EdgeMatch>();
       }
     }
 
+    // TODO - score isn't even used?
     int score = 0;
     uint32_t sum = 0;
     for (auto &p : path) {
@@ -709,10 +718,10 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     }
     score += std::abs(int(sum) - int(lrp.length())) / 10;
 
+    // TODO - remove this? - costing filter and Allowed method makes sure edge is allowed.
     auto edge_id = path.front().edgeid;
     auto *tile = m_reader.GetGraphTile(edge_id);
     auto *edge = tile->directededge(edge_id);
-
     if (!allow_edge_pred(edge)) {
       LOG_DEBUG("Edge " + std::to_string(edge_id) + " not accessible. Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();
