@@ -103,7 +103,7 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const fp_t& fp){
-  if(std::isnormal(fp.value))
+  if(std::isfinite(fp.value))
     stream << std::setprecision(fp.precision) << std::fixed << fp.value;
   else
     stream << std::setprecision(fp.precision) << std::fixed << '"' << fp.value << '"';
