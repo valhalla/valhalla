@@ -7,6 +7,7 @@
 #include <string>
 #include <cinttypes>
 #include <cstddef>
+#include <cmath>
 #include <unordered_map>
 #include <list>
 #include <sstream>
