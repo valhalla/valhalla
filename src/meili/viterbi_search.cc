@@ -35,8 +35,8 @@ template <bool Maximize>
 void NaiveViterbiSearch<Maximize>::Clear()
 {
   IViterbiSearch::Clear();
-  ClearSearch();
   states_.clear();
+  ClearSearch();
 }
 
 template <bool Maximize>
@@ -284,8 +284,8 @@ double ViterbiSearch::AccumulatedCost(const StateId& stateid) const
 void ViterbiSearch::Clear()
 {
   IViterbiSearch::Clear();
-  ClearSearch();
   states_.clear();
+  ClearSearch();
 }
 
 void ViterbiSearch::ClearSearch()
