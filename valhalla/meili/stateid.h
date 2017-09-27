@@ -37,6 +37,9 @@ union StateId
   bool operator ==(const StateId& rhs) const
   { return value_ == rhs.value_; }
 
+  bool operator !=(const StateId& rhs) const
+  { return value_ != rhs.value_; }
+
   uint64_t value() const
   { return value_; }
 

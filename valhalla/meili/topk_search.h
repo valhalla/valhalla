@@ -118,6 +118,12 @@ class TopKSearch
         last_claimed_stateids_(),
         evss_() {}
 
+  void Clear()
+  {
+    last_claimed_stateids_.clear();
+    evss_.clear();
+  }
+
   // remove path from 0 to time
   void RemovePath(const StateId::Time& time);
 

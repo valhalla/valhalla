@@ -159,12 +159,8 @@ class IViterbiSearch
   virtual ~IViterbiSearch()
   { Clear(); };
 
-  // TODO we should remove this someday because this is equivalent to create a
-  // new VS instance
   virtual void Clear()
-  {
-    added_states_.clear();
-  }
+  { added_states_.clear(); }
 
   virtual void ClearSearch() {};
 
@@ -216,9 +212,9 @@ class IViterbiSearch
       float emission_cost) const
   { return prev_costsofar + transition_cost + emission_cost; }
 
+ private:
   std::unordered_set<StateId> added_states_;
 
- private:
   IEmissionCostModel emission_cost_model_;
 
   ITransitionCostModel transition_cost_model_;
@@ -250,12 +246,11 @@ class NaiveViterbiSearch: public IViterbiSearch
 
   double AccumulatedCost(const StateId& stateid) const override;
 
- protected:
+ private:
   std::vector<std::vector<StateId>> states_;
 
   std::vector<StateId> winner_;
 
- private:
   std::vector<std::vector<StateLabel>> history_;
 
   void UpdateLabels(
@@ -303,14 +298,13 @@ class ViterbiSearch: public IViterbiSearch
 
   virtual double AccumulatedCost(const StateId& stateid) const override;
 
- protected:
+ private:
   std::vector<std::vector<StateId>> states_;
 
   std::vector<StateId> winner_;
 
   std::vector<std::vector<StateId>> unreached_states_;
 
- private:
   SPQueue<StateLabel> queue_;
 
   std::unordered_map<StateId, StateLabel> scanned_labels_;

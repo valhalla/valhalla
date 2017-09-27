@@ -339,9 +339,9 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
 
     if ((first_result_with_state != match_results.end())
         && (last_result_with_state != match_results.rend())) {
-      baldr::PathLocation origin = matcher->mapmatching().state(
+      baldr::PathLocation origin = matcher->state_container().state(
           first_result_with_state->stateid).candidate();
-      baldr::PathLocation destination = matcher->mapmatching().state(
+      baldr::PathLocation destination = matcher->state_container().state(
           last_result_with_state->stateid).candidate();
 
       bool found_origin = false;
