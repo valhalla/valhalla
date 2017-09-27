@@ -94,7 +94,15 @@ class StateContainer
  public:
   StateContainer()
       : measurements_(),
+        leave_times_(),
         columns_() {}
+
+  void Clear()
+  {
+    measurements_.clear();
+    leave_times_.clear();
+    columns_.clear();
+  }
 
   const State&
   state(const StateId& stateid) const

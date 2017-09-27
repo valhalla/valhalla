@@ -312,10 +312,22 @@ MapMatcher::MapMatcher(
 
 MapMatcher::~MapMatcher() {}
 
+void MapMatcher::Clear()
+{
+  vs_.Clear();
+  // reset cost models because they were possibly replaced by topk
+  vs_.set_emission_cost_model(emission_cost_model_);
+  vs_.set_transition_cost_model(transition_cost_model_);
+  ts_.Clear();
+  container_.Clear();
+}
+
 std::vector<std::vector<MatchResult>>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
-  if(measurements.empty()) {
+  Clear();
+
+  if (measurements.empty()) {
     return {};
   }
 
@@ -334,7 +346,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     // Always match the last measurement and if its far enough away
     if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
       // If there were interpolated points between these two points with time information
-      if(interpolated_epoch_time != -1) {
+      if (interpolated_epoch_time != -1) {
         // Project the last interpolated point onto the line between the two match points
         auto p = interpolated[time].back().lnglat().Project(last->lnglat(), m->lnglat());
         // If its significantly closer to the previous match point then it looks like the trace lingered
@@ -404,7 +416,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       const auto& interpolated_results = InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
 
       // Copy the interpolated match results into the final set
-      std::copy(interpolated_results.cbegin(),interpolated_results.cend(), std::back_inserter(best_paths.back()));
+      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_paths.back()));
     }
 
     // Remove this particular sequence of stateids

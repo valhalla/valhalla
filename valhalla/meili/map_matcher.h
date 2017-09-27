@@ -32,6 +32,8 @@ class MapMatcher final
 
   ~MapMatcher();
 
+  void Clear();
+
   baldr::GraphReader& graphreader() const
   { return graphreader_; }
 
