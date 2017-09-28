@@ -552,12 +552,15 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
   vb::RoadClass road_class = vb::RoadClass(segment.lrps(0).start_frc());
   std::vector<EdgeMatch> best_path;
   for (const auto& origin_edge : origin_edges) {
-    // Check that this edge matches road class and form of way
-    // TODO - what are implications for data updates - perhaps allow
-    // differing values but use this in the "scoring"
+    // Check that this edge matches form of way. Allow mismatch in road class
+    // within the same tile hierarchy level (e.g. tertiary and secondary).
+    // If road class change forces the edge into a different tile level
+    // (e.g. from secondary to primary or residential to tertiary) the match
+    // will fail since we only follow edges on the same hierarchy level.
+    // TODO - perhaps incorporate classification difference into scoring?
     auto* tile = m_reader.GetGraphTile(origin_edge.edge.id);
     const auto* edge = tile->directededge(origin_edge.edge.id);
-    if (road_class != edge->classification() ||  fow != form_of_way(edge)) {
+    if (fow != form_of_way(edge)) {
       continue;
     }
 
@@ -649,9 +652,18 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     return edges;
   }
 
-  // TODO - this should not happen if both are at nodes! Does not happen
-  // with low node tolerance, but as node search tolerance is raised we get
-  // fallback cases where we shouldn't
+  // Do not fall back to A* at this time
+  return std::vector<EdgeMatch>();
+
+  // TODO - do we need to fallback to A*?
+  // Seeing issues when falling back to A* - if a highway tag changes such
+  // that an edge changes hierarchy level the A* search is sometimes finding
+  // incorrect edges. Seems that the loki radius search needs to throw away
+  // edges when the lrp matches to a node, but the node is outside tolerance
+  // (but some point on the edge is within tolerance). Also could need bearing
+  // filtering.
+
+  // Fall back to A* shortest path to form the path edges
   if (segment.lrps(0).at_node() && segment.lrps(size-1).at_node()) {
     LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) + " value = " +
                   std::to_string(segment_id.value));
@@ -660,8 +672,6 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
              " value = " + std::to_string(segment_id.value));
   }
 
-  // Fall back to A* shortest path to form the path edges
-
   // check all the interim points of the location reference
   auto origin_coord = coord_for_lrp(segment.lrps(0));
   auto origin = loki_search_single(vb::Location(origin_coord), m_reader, segment_id.level());
@@ -669,79 +679,36 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     auto &lrp = segment.lrps(i);
     auto coord = coord_for_lrp(lrp);
     auto next_coord = coord_for_lrp(segment.lrps(i+1));
-
-    vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
     auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, segment_id.level());
     if (dest.edges.size() == 0) {
-      LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) + ". Segment cannot be matched, discarding.");
+      LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) +
+                ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();
     }
+
+    // TODO - reject edges if bearing from origin is outside of tolerance?
+    // TODO - do we need to use Form of Way in the Allowed costing method?
 
     // make sure there's no state left over from previous paths
     m_path_algo->Clear();
     m_path_algo->set_max_label_count(100);
     auto path = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
-
     if (path.empty()) {
       // what to do if there's no path?
-      LOG_DEBUG("No route to destination " + std::to_string(next_coord) + " from origin point " + std::to_string(coord) + ". Segment cannot be matched, discarding.");
+      LOG_DEBUG("No route to destination " + std::to_string(next_coord) + " from origin point " +
+                std::to_string(coord) + ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();
     }
 
-    {
-      auto last_edge_id = path.back().edgeid;
-      auto *tile = m_reader.GetGraphTile(last_edge_id);
-      auto *edge = tile->directededge(last_edge_id);
-      auto node_id = edge->endnode();
-      auto *ntile = (last_edge_id.Tile_Base() == node_id.Tile_Base()) ? tile : m_reader.GetGraphTile(node_id);
-      auto *node = ntile->node(node_id);
-      auto dist = node->latlng().Distance(next_coord);
-      if (dist > 10.0f) {
-        LOG_DEBUG("Route to destination " + std::to_string(next_coord) + " from origin point " + std::to_string(coord) + " ends more than 10m away: " + std::to_string(node->latlng()) + ". Segment cannot be matched, discarding.");
-        return std::vector<EdgeMatch>();
-      }
-    }
-
-    int score = 0;
-    uint32_t sum = 0;
-    for (auto &p : path) {
-      sum += p.elapsed_time;
-    }
-    score += std::abs(int(sum) - int(lrp.length())) / 10;
-
-    auto edge_id = path.front().edgeid;
-    auto *tile = m_reader.GetGraphTile(edge_id);
-    auto *edge = tile->directededge(edge_id);
-
-    if (!allow_edge_pred(edge)) {
-      LOG_DEBUG("Edge " + std::to_string(edge_id) + " not accessible. Segment cannot be matched, discarding.");
-      return std::vector<EdgeMatch>();
-    }
-    score += std::abs(int(road_class) - int(edge->classification()));
-
-    bool found = false;
-    for (auto &e : origin.edges) {
-      if (e.id == edge_id) {
-        found = true;
-        score += int(e.projected.Distance(coord));
-
-        int bear1 = bearing(tile, edge_id, e.dist);
-        int bear2 = lrp.bear();
-        score += bear_diff(bear1, bear2) / 10;
-
-        break;
-      }
-    }
-    if (!found) {
-      LOG_DEBUG("Unable to find edge " + std::to_string(edge_id) + " at origin point " + std::to_string(origin.latlng_) + ". Segment cannot be matched, discarding.");
+    // Throw out if dist mismatch. The costing method stores distance in both
+    // cost and elapsed time - so elapsed time of the last edge is total
+    // path distance.
+    if (abs_u32_diff(path.back().elapsed_time, segment_length) > kLengthTolerance) {
       return std::vector<EdgeMatch>();
     }
 
-    // form of way isn't really a metric space...
-    FormOfWay fow1 = form_of_way(edge);
-    FormOfWay fow2 = FormOfWay(lrp.start_fow());
-    score += (fow1 == fow2) ? 0 : 5;
-
+    // Add edges to the matched path.
+    // TODO - remove duplicate instances of the edge ID in the path info.
     for (const auto &info : path) {
       const GraphTile* tile = m_reader.GetGraphTile(info.edgeid);
       const DirectedEdge* edge = tile->directededge(info.edgeid);
@@ -751,10 +718,6 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     // use dest as next origin
     std::swap(origin, dest);
   }
-
-  // remove duplicate instances of the edge ID in the path info. TODO
-//   auto new_end = std::unique(edges.begin(), edges.end());
-//  edges.erase(new_end, edges.end());
   match_type = MatchType::kShortestPath;
   return edges;
 }
