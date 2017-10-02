@@ -297,6 +297,7 @@ struct graph_callback : public OSMPBF::Callback {
         && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
+
       if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass) std::stoi(tag.second);
         switch (roadclass) {
@@ -747,52 +748,60 @@ struct graph_callback : public OSMPBF::Callback {
       }
     }
 
-    //If no surface has been set by a user, assign a surface based on Road Class and Use
+    //if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
+      if (results.find("sac_scale") != results.end() ||
+          results.find("mtb:scale") != results.end() ||
+          results.find("mtb:scale:imba") != results.end() ||
+          results.find("mtb:scale:uphill") != results.end() ||
+          results.find("mtb:description") != results.end() )
+        w.set_surface(Surface::kPath);
+      else {
+      //If no surface has been set by a user, assign a surface based on Road Class and Use
+        switch (w.road_class()) {
 
-      switch (w.road_class()) {
-
-        case RoadClass::kMotorway:
-        case RoadClass::kTrunk:
-        case RoadClass::kPrimary:
-        case RoadClass::kSecondary:
-        case RoadClass::kTertiary:
-        case RoadClass::kUnclassified:
-        case RoadClass::kResidential:
-          w.set_surface(Surface::kPavedSmooth);
-          break;
-        default:
-          switch (w.use()) {
-          case Use::kFootway:
-          case Use::kPedestrian:
-          case Use::kSidewalk:
-          case Use::kPath:
-          case Use::kBridleway:
-            w.set_surface(Surface::kCompacted);
-            break;
-          case Use::kTrack:
-            w.set_surface(Surface::kDirt);
-            break;
-          case Use::kRoad:
-          case Use::kParkingAisle:
-          case Use::kDriveway:
-          case Use::kAlley:
-          case Use::kEmergencyAccess:
-          case Use::kDriveThru:
-          case Use::kLivingStreet:
+          case RoadClass::kMotorway:
+          case RoadClass::kTrunk:
+          case RoadClass::kPrimary:
+          case RoadClass::kSecondary:
+          case RoadClass::kTertiary:
+          case RoadClass::kUnclassified:
+          case RoadClass::kResidential:
             w.set_surface(Surface::kPavedSmooth);
             break;
-          case Use::kCycleway:
-          case Use::kSteps:
-            w.set_surface(Surface::kPaved);
-            break;
           default:
-            //TODO:  see if we can add more logic when a user does not
-            //specify a surface.
-            w.set_surface(Surface::kPaved);
+            switch (w.use()) {
+            case Use::kFootway:
+            case Use::kPedestrian:
+            case Use::kSidewalk:
+            case Use::kPath:
+            case Use::kBridleway:
+              w.set_surface(Surface::kCompacted);
+              break;
+            case Use::kTrack:
+              w.set_surface(Surface::kDirt);
+              break;
+            case Use::kRoad:
+            case Use::kParkingAisle:
+            case Use::kDriveway:
+            case Use::kAlley:
+            case Use::kEmergencyAccess:
+            case Use::kDriveThru:
+            case Use::kLivingStreet:
+              w.set_surface(Surface::kPavedSmooth);
+              break;
+            case Use::kCycleway:
+            case Use::kSteps:
+              w.set_surface(Surface::kPaved);
+              break;
+            default:
+              //TODO:  see if we can add more logic when a user does not
+              //specify a surface.
+              w.set_surface(Surface::kPaved);
+              break;
+            }
             break;
-          }
-          break;
+        }
       }
     }
 
