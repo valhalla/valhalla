@@ -772,6 +772,15 @@ function filter_tags_generic(kv)
     kv["bike_forward"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or kv["bike_forward"]
     kv["bike_tag"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or nil
 
+    if kv["bike_tag"] == nil then
+      if kv["sac_scale"] == "hiking" then
+        kv["bike_forward"] = "true"
+        kv["bike_tag"] = "true"
+      elseif kv["sac_scale"] then
+        kv["bike_forward"] = "false"
+      end
+    end
+
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
     end
@@ -821,6 +830,15 @@ function filter_tags_generic(kv)
       --check for bike_forward overrides
       kv["bike_forward"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or default_val
       kv["bike_tag"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or nil
+
+      if kv["bike_tag"] == nil then
+        if kv["sac_scale"] == "hiking" then
+          kv["bike_forward"] = "true"
+          kv["bike_tag"] = "true"
+        elseif kv["sac_scale"] then
+          kv["bike_forward"] = "false"
+        end
+      end
 
       if kv["motorroad"] == "yes" then
         kv["motorroad_tag"] = "true"
