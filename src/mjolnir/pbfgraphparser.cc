@@ -261,7 +261,18 @@ struct graph_callback : public OSMPBF::Callback {
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
       auto inserted = loop_nodes_.insert(std::make_pair(node, i));
       if(inserted.second == false) {
-        intersection_.set(nodes[(i + inserted.first->second) / 2]); //TODO: update osmdata_.*_count?
+        // Walk through nodes between the 2 nodes that form the loop and see if
+        // there are already intersections
+        bool intsct = false;
+        for (size_t j = inserted.first->second + 1; j < i; ++j) {
+          if (intersection_.get(nodes[j])) {
+            intsct = true;
+            break;
+          }
+        }
+        if (!intsct) {
+          intersection_.set(nodes[(i + inserted.first->second) / 2]); //TODO: update osmdata_.*_count?
+        }
 
         // Update the index in case the node is used again (a future loop)
         inserted.first->second = i;
