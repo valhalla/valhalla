@@ -297,6 +297,10 @@ struct graph_callback : public OSMPBF::Callback {
         && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
+      if (osmid == 28688259) {
+        std::cout << tag.first << " = " << tag.second << std::endl;
+      }
+
       if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass) std::stoi(tag.second);
         switch (roadclass) {

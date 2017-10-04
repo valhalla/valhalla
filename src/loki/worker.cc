@@ -182,7 +182,8 @@ namespace valhalla {
       factory.Register("motor_scooter", sif::CreateMotorScooterCost);
       factory.Register("bicycle", sif::CreateBicycleCost);
       factory.Register("hov", sif::CreateHOVCost);
-      factory.Register("pedestrian", sif::CreatePedestrianCost);
+      factory.Register("pedestrian", sif::CreateMotorScooterCost);
+      //factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("truck", sif::CreateTruckCost);
       factory.Register("transit", sif::CreateTransitCost);
     }

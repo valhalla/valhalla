@@ -36,7 +36,9 @@ constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 an
 
 constexpr float kDefaultUseHills                = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUsePrimary              = 0.5f;   // Factor between 0 and 1
-constexpr uint32_t kDefaultTopSpeed             = 45;  // Kilometers per hour
+constexpr uint32_t kDefaultTopSpeed             = 45;     // Kilometers per hour
+
+constexpr Surface kMinimumScooterSurface = Surface::kCompacted;
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -107,22 +109,22 @@ constexpr uint32_t kMaxGradeFactor = 15;
 // edges with the specified grade are weighted. Note that speed also is
 // influenced by grade, so these weights help further avoid hills.
 constexpr float kAvoidHillsStrength[] = {
-    2.0f,      // -10%  - Treacherous descent possible
-    1.0f,      // -8%   - Steep downhill
-    0.5f,      // -6.5% - Good downhill - where is the bottom?
+    0.5f,      // -10%  - Treacherous descent possible
+    0.4f,      // -8%   - Steep downhill
+    0.3f,      // -6.5% - Good downhill - where is the bottom?
     0.2f,      // -5%   - Picking up speed!
     0.1f,      // -3%   - Modest downhill
     0.0f,      // -1.5% - Smooth slight downhill, ride this all day!
     0.05f,     // 0%    - Flat, no avoidance
     0.1f,      // 1.5%  - These are called "false flat"
-    0.3f,      // 3%    - Slight rise
-    0.8f,      // 5%    - Small hill
-    2.0f,      // 6.5%  - Starting to feel this...
-    3.0f,      // 8%    - Moderately steep
-    4.5f,      // 10%   - Getting tough
-    6.5f,      // 11.5% - Tiring!
-    10.0f,     // 13%   - Ooof - this hurts
-    12.0f      // 15%   - Only for the strongest!
+    0.25f,     // 3%    - Slight rise
+    0.5f,      // 5%    - Small hill
+    0.75f,     // 6.5%  - Starting to feel this...
+    1.25f,     // 8%    - Moderately steep
+    2.0f,      // 10%   - Getting tough
+    3.0f,      // 11.5% - Tiring!
+    4.25f,     // 13%   - Ooof - this hurts
+    5.5f       // 15%   - Only for the strongest!
 };
 
 constexpr float kSurfaceSpeedFactors[] =
@@ -1024,14 +1026,14 @@ cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
 }
 
 /**
- * Derived class intended to provided different access for mopeds/electric scooters
- * and also avoid hills slightly (to save battery power)
+ * Derived class intended to provided different access for motorized scooters
+ * and also avoid hills slightly (to save battery power or fuel)
  */
 class MotorScooterCost : public AutoCost {
 public:
 
   /**
-   * Construct moped costing
+   * Construct motor scooter costing
    * Pass in configuration using property tree
    * @param  config  Property tree with configuration/options
    */
@@ -1106,8 +1108,9 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() ||
-         !(edge->forwardaccess() & kMopedAccess))
+      if (edge->IsTransition() || edge->is_shortcut() ||
+         !(edge->forwardaccess() & kMopedAccess) ||
+         edge->surface() > kMinimumScooterSurface)
         return 0.0f;
       else {
         // TODO - use classification/use to alter the factor
@@ -1138,8 +1141,6 @@ protected:
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
   float grade_penalty_[16];
-
-  float speed_factor_[kMaxSpeedKph + 1];
 };
 
 // Constructor
@@ -1156,11 +1157,6 @@ MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& config)
     config.get<float>("use_primary", 0.5f)
   );
 
-  speed_factor_[0] = kSecPerHour;
-  for (uint32_t s = 1; s <= kMaxSpeedKph; ++s) {
-    speed_factor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
-  }
-
   float avoid_hills = (1.0f - use_hills_);
   for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
     grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
@@ -1171,7 +1167,7 @@ MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& config)
 MotorScooterCost::~MotorScooterCost () {
 }
 
-// Get the access mode for moped
+// Get the access mode for motor scooter
 uint32_t MotorScooterCost::access_mode() const {
   return kMopedAccess;
 }
@@ -1186,12 +1182,11 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
   if (!(edge->forwardaccess() & kMopedAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
-       edge->surface() == Surface::kImpassable ||
        IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
-  return true;
+  return edge->surface() <= kMinimumScooterSurface;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -1206,21 +1201,28 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & kMopedAccess) ||
        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
-        opp_edge->surface() == Surface::kImpassable ||
         IsUserAvoidEdge(opp_edgeid) ||
        (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
-  return true;
+  return opp_edge->surface() <= kMinimumScooterSurface;
 }
 
 Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
-  float factor = (edge->use() == Use::kFerry) ?
-        ferry_factor_ : density_factor_[edge->density()];
+  if (edge->use() == Use::kFerry) {
+    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    return {sec * ferry_factor_, sec };
+  }
 
   uint32_t scooter_speed = (std::min(top_speed_, edge->speed ())
     * kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())]);
+
+  float speed_penalty = (edge->speed() > top_speed_) ? (edge->speed() - top_speed_) * 0.05f : 0.0f;
+  float factor = density_factor_[edge->density()] +
+      kRoadClassFactor[static_cast<uint32_t>(edge->classification())] +
+      grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
+      speed_penalty;
 
   float sec = (edge->length() * speedfactor_[scooter_speed]);
   return {sec * factor, sec};
