@@ -623,13 +623,13 @@ struct graph_callback : public OSMPBF::Callback {
         has_surface = true;
 
         if (tag.second == "grade1") {
-          w.set_surface(Surface::kPaved);
-        } else if (tag.second == "grade2") {
           w.set_surface(Surface::kPavedRough);
-        } else if (tag.second == "grade3") {
+        } else if (tag.second == "grade2") {
           w.set_surface(Surface::kCompacted);
-        } else if (tag.second == "grade4") {
+        } else if (tag.second == "grade3") {
           w.set_surface(Surface::kDirt);
+        } else if (tag.second == "grade4") {
+          w.set_surface(Surface::kGravel);
         } else if (tag.second == "grade5") {
           w.set_surface(Surface::kPath);
         } else has_surface = false;
