@@ -167,7 +167,7 @@ namespace {
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
       //simulate gps from the route shape
       std::vector<float> accuracies;
-      auto simulation = simulate_gps(walked.get_child("edges"), shape, accuracies, 50, 100.f, 1);
+      auto simulation = midgard::simulate_gps(walked.get_child("edges"), shape, accuracies, 50, 100.f, 1);
       auto locations = to_locations(simulation, accuracies, 1);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
