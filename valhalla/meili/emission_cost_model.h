@@ -2,7 +2,7 @@
 #define MMP_EMISSION_COST_MODEL_H_
 
 #include <functional>
-#include <valhalla/meili/map_matching.h>
+#include <valhalla/meili/state.h>
 
 namespace valhalla {
 namespace meili {
@@ -15,11 +15,12 @@ class EmissionCostModel
  public:
   EmissionCostModel(
       baldr::GraphReader& graphreader,
-      const StateGetter& get_state,
+      const StateContainer& container,
       float sigma_z)
       : graphreader_(graphreader),
-        get_state_(get_state),
-        sigma_z_(sigma_z)
+        container_(container),
+        sigma_z_(sigma_z),
+        inv_double_sq_sigma_z_(1.f / (sigma_z_ * sigma_z_ * 2.f))
   {
     if (sigma_z_ <= 0.f) {
       throw std::invalid_argument("Expect sigma_z to be positive");
@@ -28,9 +29,9 @@ class EmissionCostModel
 
   EmissionCostModel(
       baldr::GraphReader& graphreader,
-      const StateGetter& get_state,
+      const StateContainer& container,
       const boost::property_tree::ptree& config)
-      : EmissionCostModel(graphreader, get_state, config.get<float>("sigma_z")) {}
+      : EmissionCostModel(graphreader, container, config.get<float>("sigma_z")) {}
 
   // given the *squared* great circle distance between a measurement and its candidate,
   // return the emission cost of the candidate
@@ -39,12 +40,12 @@ class EmissionCostModel
   { return sq_distance * inv_double_sq_sigma_z_; }
 
   float operator()(const StateId& stateid) const
-  { return CalculateEmissionCost(get_state_(stateid).candidate().edges.front().score); }
+  { return CalculateEmissionCost(container_.state(stateid).candidate().edges.front().score); }
 
  private:
   baldr::GraphReader& graphreader_;
 
-  StateGetter get_state_;
+  const StateContainer& container_;
 
   float sigma_z_;
   double inv_double_sq_sigma_z_;  // equals to 1.f / (sigma_z_ * sigma_z_ * 2.f)

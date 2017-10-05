@@ -805,6 +805,15 @@ function filter_tags_generic(kv)
     --check for moped forward overrides
     kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or kv["moped_forward"]
     kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or nil
+    
+    if kv["bike_tag"] == nil then
+      if kv["sac_scale"] == "hiking" then
+        kv["bike_forward"] = "true"
+        kv["bike_tag"] = "true"
+      elseif kv["sac_scale"] then
+        kv["bike_forward"] = "false"
+      end
+    end
 
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
@@ -861,6 +870,15 @@ function filter_tags_generic(kv)
       --check for moped forward overrides
       kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or default_val
       kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or nil
+      
+      if kv["bike_tag"] == nil then
+        if kv["sac_scale"] == "hiking" then
+          kv["bike_forward"] = "true"
+          kv["bike_tag"] = "true"
+        elseif kv["sac_scale"] then
+          kv["bike_forward"] = "false"
+        end
+      end
 
       if kv["motorroad"] == "yes" then
         kv["motorroad_tag"] = "true"

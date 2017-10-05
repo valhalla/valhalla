@@ -302,13 +302,13 @@ size_t Navigator::FindManeuverIndex(size_t begin_search_index,
 size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
     size_t shape_index) const {
 
+  size_t maneuver_count = route_.trip().legs(leg_index_).maneuvers_size();
+
   // Set the destination maneuver index - since destination maneuver is a special case
-  size_t destination_maneuver_index =
-      (route_.trip().legs(leg_index_).maneuvers_size() - 1);
+  size_t destination_maneuver_index = (maneuver_count - 1);
 
   // Validate the rbegin_search_index
-  if ((route_.trip().legs(leg_index_).maneuvers_size() == 0)
-      || (rbegin_search_index > destination_maneuver_index))
+  if ((maneuver_count == 0) || (rbegin_search_index > destination_maneuver_index))
     throw valhalla_exception_t { 502 };
 
   // Check for destination shape index and rbegin search index
@@ -319,7 +319,7 @@ size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
 
   // Loop over maneuvers in reverse - starting at specified maneuver index
   // and return the maneuver index that contains the specified shape index
-  for (size_t i = rbegin_search_index; (i >= 0 && i <= destination_maneuver_index); --i) {
+  for (size_t i = rbegin_search_index; i < maneuver_count; --i) {
     const auto& maneuver = route_.trip().legs(leg_index_).maneuvers(i);
     if ((shape_index >= maneuver.begin_shape_index()) && (shape_index < maneuver.end_shape_index()))
       return i;

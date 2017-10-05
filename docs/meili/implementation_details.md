@@ -120,7 +120,7 @@ of edges, so turn restriction is not considered here.
 ### Viterbi Search VS. Routing
 
 It is worth mentioning that they share some similarities but also some
-differences. Both are finding optimal path but different objectives
+differences. Both are finding optimal paths but different objectives
 (most likely sequence vs. shortest distance path). Both are based on
 the Dijkstra algorithm (thank you Dijkstra!) but different graphical
 models (trellis graph vs. road network).
@@ -148,7 +148,7 @@ For example, assume the numbers below represent a sequence of
 measurements (in order by numbers) along a straight road, and each
 space is one meter long. If the `interpolation_distance` is set to 10
 meters, we will only send measurements `1*`, `4*` and `7*` because
-they are far apart than 10 meters; measurements `2` and `3` will be
+they are farther apart than 10 meters; measurements `2` and `3` will be
 interpolated into the route from `1*` to `4*`; measurement `5` will be
 interpolated into the route from `4*` to `7*`, and so on.
 
@@ -161,7 +161,7 @@ can reduce the number of measurements involved in map
 matching. Secondly if two successive measurements are too close, the
 later one is possible to be found at the upstream of the earlier one
 due to noise error. This error can result in wrong path inference in
-some modes such as `auto`, `bicycle` where U-turns is forbidden. For
+some modes such as `auto`, `bicycle` where U-turns are forbidden. For
 example, the true location of `8` should be at the downstream (right
 side) of `7*`, but the noise can shift it to upstream (left side). In
 `auto` mode, this slight shift can result in either wrong path or no
@@ -176,13 +176,13 @@ you on which road segment the measurement gets matched or
 interpolated, the match position, and the distance to the position,
 etc. The corresponding state ID is attached to the result if the
 measurement gets matched. Since we have stored route search trees to
-states, so you can find the state with this ID and reconstruct the
+states, you can find the state with this ID and reconstruct the
 route with the helpers from `valhalla/meili/match_route.h`.
 
 ## Map Matcher Factory
 `valhalla/meili/map_matcher_factory.h`
 
-The map matcher factory can facilitate map matcher creating. Pass it
+The map matcher factory can facilitate map matcher creation. Pass it
 the Valhalla configuration and the travel mode, it reads the
 parameters and creates a map matcher for this mode. The factory also
 maintains a graph tile reader instance and a candidate query instance

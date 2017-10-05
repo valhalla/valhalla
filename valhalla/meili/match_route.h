@@ -5,12 +5,12 @@
 #include <vector>
 
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
 
+#include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/routing.h>
-#include <valhalla/meili/map_matching.h>
-
+#include <valhalla/meili/state.h>
 
 namespace valhalla {
 namespace meili {
@@ -46,7 +46,7 @@ MergeRoute(const State& source, const State& target);
 
 template <typename match_iterator_t>
 std::vector<EdgeSegment>
-ConstructRoute(const MapMatching& mapmaching,
+ConstructRoute(const MapMatcher& mapmatcher,
                match_iterator_t begin,
                match_iterator_t end);
 

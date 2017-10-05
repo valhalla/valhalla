@@ -812,7 +812,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
     //avoid duplicates and minimize leaving a tile for shape by:
     //writing the edge to the tile it originates in
     //not writing the edge to the tile it terminates in
-    //writing the edge to tweeners if originating < terminating
+    //writing the edge to tweeners if originating < terminating or the edge leaves and comes back
     auto start_id = tiles.TileId(edge->forward() ? shape.front() : shape.back());
     auto end_id = tiles.TileId(edge->forward() ? shape.back() : shape.front());
     auto intermediate = start_id < end_id;
@@ -828,7 +828,8 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
       //as per the rules above about when to add intersections
       auto originating = i.first == start_id;
       auto terminating = i.first == end_id;
-      if(originating || (intermediate && !terminating)) {
+      auto loop_back = i.first != start_id && i.first != end_id && start_id == end_id;
+      if(originating || (intermediate && !terminating) || loop_back) {
         //which set of bins, either this local set or tweeners to be added later
         auto& out_bins = originating && max ? bins : tweeners.insert({GraphId(i.first, max_level, 0), {}}).first->second;
         //keep the edge id
@@ -897,17 +898,24 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     throw std::runtime_error("Failed to open file " + filename.string());
 }
 
-/**
- * Initialize traffic segment association. Sizes the traffic segment Id list
- * and sets them all to Invalid.
- */
+// Initialize traffic segment association. Sizes the traffic segment Id list
+// and sets them all to Invalid.
 void GraphTileBuilder::InitializeTrafficSegments() {
-  if(header_->traffic_id_count())
+  if(header_->traffic_id_count()) {
     traffic_segment_builder_.assign(traffic_segments_, traffic_segments_ + header_->traffic_id_count());
-  else
+  } else {
     traffic_segment_builder_.resize(header_builder_.directededgecount());
+  }
+}
 
-  //TODO: assign the chunks to its builder counterpart
+// Initialize traffic chunks. Copies existing chunks into the chunk builder.
+// This is executed before adding "leftovers" and again before adding chunks.
+void GraphTileBuilder::InitializeTrafficChunks() {
+  // Assign the chunks to its builder counterpart
+  if (traffic_chunk_size_ > 0) {
+    size_t count = traffic_chunk_size_ / sizeof(TrafficChunk);
+    traffic_chunk_builder_.assign(traffic_chunks_, traffic_chunks_ + count);
+  }
 }
 
 // Add a traffic segment association - used when an edge associates to
