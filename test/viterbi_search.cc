@@ -1,11 +1,12 @@
-#include <cstdint>
-// -*- mode: c++ -*-
-#include <iostream>
+#include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <iostream>
 #include <random>
 
 #include "test.h"
 #include "meili/viterbi_search.h"
+#include "meili/topk_search.h"
 
 using namespace valhalla::meili;
 
@@ -45,10 +46,11 @@ void print_trellis_diagram_vertically(const std::vector<Column>& columns)
   }
 }
 
+template <typename iterator_t>
 void print_path_reversely(
     const std::vector<Column>& columns,
-    const IViterbiSearch::stateid_iterator rbegin,
-    const IViterbiSearch::stateid_iterator rend)
+    iterator_t rbegin,
+    iterator_t rend)
 {
   for (auto stateid = rbegin; stateid != rend; stateid++) {
     if ((*stateid).IsValid()) {
@@ -60,16 +62,27 @@ void print_path_reversely(
   }
 }
 
-void AddColumns(IViterbiSearch* ivs, const std::vector<Column>& columns)
+template <typename iterator_t>
+void print_path(iterator_t rbegin, iterator_t rend)
+{
+  for (auto it = rbegin; it != rend; it++) {
+    std::cout << it->time() << "/" << it->id() << " ";
+  }
+  std::cout << std::endl;
+}
+
+void AddColumns(IViterbiSearch& vs, const std::vector<Column>& columns)
 {
   StateId::Time time = 0;
   for (const auto& column : columns) {
     uint32_t idx = 0;
     for (const auto& state : column) {
       StateId stateid(time, idx);
-      const auto added = ivs->AddStateId(stateid);
-      test::assert_bool(added, "must be added");
-      test::assert_bool(ivs->HasStateId(stateid), "must contain it");
+      const auto added = vs.AddStateId(stateid);
+      test::assert_bool(added, std::to_string(stateid.time()) + "/" + std::to_string(stateid.id()) + " must be added");
+      test::assert_bool(
+          vs.HasStateId(stateid),
+          "must contain it");
       idx++;
     }
     time++;
@@ -81,7 +94,7 @@ class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<false>
  public:
   SimpleNaiveViterbiSearch(const std::vector<Column>& columns)
       : columns_(columns)
-  { AddColumns(this, columns); }
+  { AddColumns(*this, columns); }
 
  protected:
   const State& GetState(const StateId& stateid) const
@@ -118,7 +131,7 @@ class SimpleViterbiSearch: public ViterbiSearch
  public:
   SimpleViterbiSearch(const std::vector<Column>& columns)
       : columns_(columns)
-  { AddColumns(this, columns); }
+  { AddColumns(*this, columns); }
 
  protected:
   const State& GetState(const StateId& stateid) const
@@ -347,11 +360,269 @@ void TestViterbiSearch()
   }
 }
 
+inline const State&
+get_state(const std::vector<Column>& columns, const StateId& stateid)
+{ return columns[stateid.time()][stateid.id()]; }
+
+class EmissionCostModel {
+ public:
+  EmissionCostModel(const std::vector<Column>& columns)
+      : columns_(columns) {}
+
+  float operator()(const StateId& stateid) const
+  {
+    return get_state(columns_, stateid).emission_cost;
+  }
+ private:
+  std::vector<Column> columns_;
+};
+
+class TransitionCostModel {
+ public:
+  TransitionCostModel(const std::vector<Column>& columns)
+      : columns_(columns) {}
+
+  float operator()(const StateId& lhs, const StateId& rhs) const
+  {
+    const auto& left = get_state(columns_, lhs);
+    const auto& right = get_state(columns_, rhs);
+    const auto it = left.transition_costs.find(rhs.id());
+    if (it == left.transition_costs.end()) {
+      return -1.0;
+    } else {
+      return it->second;
+    }
+  }
+ private:
+  std::vector<Column> columns_;
+};
+
+struct PathWithCost: std::pair<std::vector<StateId>, float> {
+  using std::pair<std::vector<StateId>, float>::pair;
+  const std::vector<StateId>& path() const { return first; }
+  float cost() const { return second; }
+};
+
+std::vector<PathWithCost>
+sort_all_paths(const std::vector<Column>& columns, const StateId::Time& since_time=0)
+{
+  if (columns.size() <= since_time) {
+    return {PathWithCost({}, 0.0)};
+  }
+
+  const auto& sub_pcs = sort_all_paths(columns, since_time + 1);
+  std::vector<PathWithCost> pcs;
+  for (auto id = 0; id < columns[since_time].size(); id++) {
+    const StateId stateid(since_time, id);
+    const auto& state = get_state(columns, stateid);
+    for (const auto& sub_pc: sub_pcs) {
+      if (sub_pc.path().empty()) {
+        pcs.emplace_back(
+            std::vector<StateId>{stateid},
+            state.emission_cost);
+      } else {
+        const auto it = state.transition_costs.find(sub_pc.path().front().id());
+        if (it != state.transition_costs.end()) {
+          const float cost = state.emission_cost + it->second + sub_pc.cost();
+          std::vector<StateId> path;
+          path.reserve(1 + sub_pc.path().size());
+          path.push_back(stateid);
+          std::copy(
+              sub_pc.path().begin(),
+              sub_pc.path().end(),
+              std::back_inserter(path));
+          pcs.emplace_back(path, cost);
+        }
+      }
+    }
+  }
+
+  std::sort(
+      pcs.begin(),
+      pcs.end(),
+      [](const PathWithCost& lhs, const PathWithCost& rhs) {
+        return lhs.cost() < rhs.cost();
+      });
+
+  return pcs;
+}
+
+void validate_path(const std::vector<Column>& columns, const std::vector<StateId>& path)
+{
+  test::assert_bool(
+      columns.size() == path.size(),
+      "path size and columns size must be same");
+
+  for (StateId::Time time = 0; time < path.size(); time++) {
+    test::assert_bool(
+        path[time].IsValid(),
+        "stateid in path must be valid at time " + std::to_string(time));
+
+    test::assert_bool(
+        time == path[time].time(),
+        "path[time].time() != time " + std::to_string(path[time].time()));
+
+    test::assert_bool(
+        path[time].id() < columns[time].size(),
+        "stateid id must be < columns[time] but got " + std::to_string(path[time].time()) + "/" + std::to_string(path[time].id()));
+
+    if (0 < time) {
+      const auto& prev_state = get_state(columns, path[time - 1]);
+      const auto it = prev_state.transition_costs.find(path[time].id());
+      test::assert_bool(it != prev_state.transition_costs.end(), "must be connected");
+    }
+  }
+}
+
+float total_cost(const std::vector<Column>& columns, const std::vector<StateId>& path) {
+  float cost = 0;
+  for (StateId::Time time = 0; time < path.size(); time++) {
+    if (0 < time) {
+      const auto& prev_state = get_state(columns, path[time - 1]);
+      const auto it = prev_state.transition_costs.find(path[time].id());
+      if (it != prev_state.transition_costs.end()) {
+        cost += it->second;
+      }
+    }
+    cost += get_state(columns, path[time]).emission_cost;
+  }
+  return cost;
+}
+
+void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbiSearch& vs)
+{
+  const auto& pcs = sort_all_paths(columns);
+  if (columns.empty()) {
+    test::assert_bool(
+        pcs == std::vector<PathWithCost>{PathWithCost({}, 0.0)},
+        "expect empty set from empty columns");
+    return;
+  }
+
+  TopKSearch ts(vs);
+  AddColumns(vs, columns);
+  const StateId::Time time = columns.size() - 1;
+
+  for (const auto& pc: pcs) {
+    const auto c = total_cost(columns, pc.path());
+    validate_path(columns, pc.path());
+
+    std::vector<StateId> vs_path;
+    std::copy(
+        vs.SearchPath(time),
+        vs.PathEnd(),
+        std::back_inserter(vs_path));
+    std::reverse(vs_path.begin(), vs_path.end());
+    std::transform(
+        vs_path.begin(),
+        vs_path.end(),
+        vs_path.begin(),
+        [&ts](const StateId& stateid) {
+          const auto& origin = ts.GetOrigin(stateid);
+          return origin.IsValid() ? origin : stateid;
+        });
+    validate_path(columns, vs_path);
+
+    // std::cout << "top total cost     : " << c << std::endl;
+    // std::cout << "top brute force    : " << pc.cost() << std::endl;
+    // std::cout << "top viterbi search : " << total_cost(columns, vs_path) << std::endl;
+    // std::cout << std::endl;
+
+    test::assert_bool(
+        c == pc.cost(),
+        "total cost by brute force mush be correct");
+    test::assert_bool(
+        c == total_cost(columns, vs_path),
+        "total cost by viterbisearch must be " + std::to_string(c) + " but got " + std::to_string(total_cost(columns, vs_path)));
+
+    ts.RemovePath(time);
+  }
+}
+
+void TestTopKSearch()
+{
+
+  {
+    ViterbiSearch vs;
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(1, 10),
+        // emission costs
+        std::uniform_int_distribution<int>(1, 10),
+        generate_column_counts(
+            3,
+            // column sizes
+            std::uniform_int_distribution<size_t>(4, 5)));
+
+    vs.set_emission_cost_model(EmissionCostModel(columns));
+    vs.set_transition_cost_model(TransitionCostModel(columns));
+
+    test_viterbisearch_brute_force(columns, vs);
+  }
+
+  {
+    ViterbiSearch vs;
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(1, 10),
+        // emission costs
+        std::uniform_int_distribution<int>(1, 10),
+        generate_column_counts(
+            1,
+            // column sizes
+            std::uniform_int_distribution<size_t>(1, 10)));
+
+    vs.set_emission_cost_model(EmissionCostModel(columns));
+    vs.set_transition_cost_model(TransitionCostModel(columns));
+
+    test_viterbisearch_brute_force(columns, vs);
+  }
+
+  {
+    ViterbiSearch vs;
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(1, 10),
+        // emission costs
+        std::uniform_int_distribution<int>(1, 10),
+        generate_column_counts(
+            1,
+            // column sizes
+            std::uniform_int_distribution<size_t>(0, 0)));
+
+    vs.set_emission_cost_model(EmissionCostModel(columns));
+    vs.set_transition_cost_model(TransitionCostModel(columns));
+
+    test_viterbisearch_brute_force(columns, vs);
+  }
+
+  {
+    ViterbiSearch vs;
+    const auto& columns = generate_columns(
+        // transition costs
+        std::uniform_int_distribution<int>(1, 10),
+        // emission costs
+        std::uniform_int_distribution<int>(1, 10),
+        generate_column_counts(
+            0,
+            // column sizes
+            std::uniform_int_distribution<size_t>(10, 10)));
+
+    vs.set_emission_cost_model(EmissionCostModel(columns));
+    vs.set_transition_cost_model(TransitionCostModel(columns));
+
+    test_viterbisearch_brute_force(columns, vs);
+  }
+
+}
+
 int main(int argc, char *argv[])
 {
-  test::suite suite("viterbi search");
+  test::suite suite("viterbi search & topk search");
 
   suite.test(TEST_CASE(TestViterbiSearch));
+
+  suite.test(TEST_CASE(TestTopKSearch));
 
   return suite.tear_down();
 }

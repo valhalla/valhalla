@@ -7,6 +7,7 @@
 #include <string>
 #include <cinttypes>
 #include <cstddef>
+#include <cmath>
 #include <unordered_map>
 #include <list>
 #include <sstream>
@@ -102,7 +103,10 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const fp_t& fp){
-  stream << std::setprecision(fp.precision) << std::fixed << fp.value;
+  if(std::isfinite(fp.value))
+    stream << std::setprecision(fp.precision) << std::fixed << fp.value;
+  else
+    stream << std::setprecision(fp.precision) << std::fixed << '"' << fp.value << '"';
   return stream;
 }
 

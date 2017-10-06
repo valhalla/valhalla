@@ -349,6 +349,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   void InitializeTrafficSegments();
 
   /**
+   * Initialize traffic chunks. Copies existing chunks into the chunk builder.
+   * This is executed before adding "leftovers" and again before adding chunks.
+   */
+  void InitializeTrafficChunks();
+
+  /**
    * Add a traffic segment association - used when an edge associates to
    * a single traffic segment.
    * @param  edgeid  Edge Id to which traffic segment is associated.

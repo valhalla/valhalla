@@ -3,6 +3,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
 #include "midgard/pointll.h"
+#include "midgard/encoded.h"
 #include "baldr/tilehierarchy.h"
 #include <string>
 #include <vector>
@@ -197,6 +198,47 @@ void TestAddBins() {
   }
 }
 
+struct fake_tile : public GraphTile {
+ public:
+  fake_tile(const std::string& plyenc_shape) {
+    auto s = valhalla::midgard::decode<std::vector<PointLL> >(plyenc_shape);
+    auto e = valhalla::midgard::encode7(s);
+    auto l = TileHierarchy::levels().rbegin()->first;
+    auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+    auto id = GraphId(tiles.TileId(s.front()), l, 0);
+    auto o_id = GraphId(tiles.TileId(s.front()), l, tiles.TileId(s.back()));
+    o_id.fields.id = o_id == id;
+    header_ = new GraphTileHeader();
+    header_->set_graphid(id);
+    header_->set_directededgecount(1 + (id.tileid() == o_id.tileid()) * 1);
+
+    edgeinfo_ = new char[sizeof(uint64_t) + sizeof(EdgeInfo::PackedItem) + e.size()];
+    std::memset(static_cast<void*>(edgeinfo_), 0, sizeof(uint64_t));
+    EdgeInfo::PackedItem pi{0, static_cast<uint32_t>(e.size())};
+    std::memcpy(static_cast<void*>(edgeinfo_ + sizeof(uint64_t)), static_cast<void *>(&pi), sizeof(EdgeInfo::PackedItem));
+    textlist_ = edgeinfo_;
+    textlist_size_ = 0;
+    std::memcpy(static_cast<void*>(edgeinfo_ + sizeof(uint64_t) + sizeof(EdgeInfo::PackedItem)), static_cast<void *>(&e[0]), e.size());
+
+    directededges_ = new DirectedEdge[2];
+    std::memset(static_cast<void*>(&directededges_[0]), 0, sizeof(DirectedEdge) * header_->directededgecount());
+    directededges_[0].set_forward(true);
+  }
+  ~fake_tile() {
+    delete header_;
+    delete [] edgeinfo_;
+    delete [] directededges_;
+  }
+};
+
+void TestBinEdges() {
+  fake_tile fake("gsoyLcpczmFgJOsMzAwGtDmDtEmApG|@tE|EdF~PjKlRjLbKhLrJnTdD`\\oEz`@wAlJKjVnHfMpRbQdQbRvTtNrM~ShNdZ|HjLfCbPfIbGdNxBjOyBjPOnJm@rDvD~BbFxFzA|IjAdEdFy@tOqBbPv@`HfHj`@pGxMtNbFlUjBtNvMhLbQfOxLhNzVTrFkGhMsQ|J_N{AqKkBqRxCoZpGu^jLqMz@sQwCmPmJwLgNcHePwIqG{KOoLvCsLbGeUpGm`@l@}_@jBeZmA}[aQs_@gd@gOyVosAqf@gYkLub@m@{LgCkFz@sBvDKrEjApH~Er[hOha@hIfc@i@pHaIrPyMng@mF~^kA~\\h@zVtCnHrFzAlUtE~@hBv@rFqBb\\?xVdEjV}@hM?tOvClJmAdEwCvD_b@|SuKbGiGpH_JtOsOvXyBvMbBtOlAtO}EdF}GjA_QhBiKjBsHxLoGtYkGdd@yJbf@fAxWvEtO]fCcFl@{ZlJcKnI{@lJtDpH`I|J~GbFtG|@hCz@MtEoCxB_QpGmKdE_KtPyAdO~BvNUdEyBxB_HjB{NxBwOxAuHrFwF~IXjLbDjKbKbFnIzArBvDwAdE{GtEyE|IElJ~B`H_AvCyDjBgH?mRgDy`@]{OtDaKxLiCvNiFjLgMxL_XdPgr@re@yi@vb@mWrQuFjKqHnSuH|JiGlJqAfDbAtE~A~GgBdFyKlJy[xWqMvMqTlKoPfCeKiBkHeF}E{KoD{JaLsGwSeEg~BqR");
+  GraphTileBuilder::tweeners_t tweeners;
+  auto bins = GraphTileBuilder::BinEdges(&fake, tweeners);
+  if(tweeners.size() != 1)
+    throw std::logic_error("This edge leaves a tile for 1 other tile and comes back.");
+}
+
 }
 
 int main() {
@@ -207,6 +249,9 @@ int main() {
 
   // Add bins to a tile and see if its still ok
   suite.test(TEST_CASE(TestAddBins));
+
+  // Test bin edges of some tricky edges
+  suite.test(TEST_CASE(TestBinEdges));
 
   return suite.tear_down();
 }

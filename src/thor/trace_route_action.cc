@@ -25,8 +25,8 @@ using namespace valhalla::odin;
 using namespace valhalla::thor;
 
 namespace {
-struct MapMatch
-{
+
+struct MapMatch {
   // Coordinate of the match point
   midgard::PointLL lnglat;
   // Which edge this match point stays
@@ -35,20 +35,6 @@ struct MapMatch
   float distance_along;
   int edge_index = -1;
 };
-
-// TODO: this is a temp wrapper - it will be removed when MapMatcher::OfflineMatch is updated
-std::vector<std::pair<float, std::vector<meili::MatchResult>>> OfflineMatch(
-    const std::shared_ptr<meili::MapMatcher>& matcher,
-    std::vector<meili::Measurement>& sequence,
-    uint32_t best_paths) {
-  std::vector<meili::MatchResult> match_results = matcher->OfflineMatch(sequence, best_paths);
-  std::vector<std::pair<float, std::vector<meili::MatchResult>>> results;
-  float confidence_score = 1.0f / best_paths;
-  for (uint32_t k = 0; k < best_paths; ++k) {
-    results.emplace_back(confidence_score, match_results);
-  }
-  return results;
-}
 
 }
 
@@ -159,17 +145,12 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
   // Call Meili for map matching to get a collection of pathLocation Edges
   matcher->set_interrupt(interrupt);
   // Create the vector of matched path results
-  std::vector<std::pair<float, std::vector<meili::MatchResult>>> offline_results;
-  if (trace.size() > 0) {
-    // TODO this call is temp until MapMatcher::OfflineMatch is updated
-    offline_results = OfflineMatch(matcher, trace, best_paths);
-    // TODO rm the above line and uncomment the line below when MapMatcher::OfflineMatch is updated
-    //offline_results = matcher->OfflineMatch(sequence, best_paths);
-  }
+  std::vector<std::vector<meili::MatchResult>> offline_results;
+  if (trace.size() > 0)
+    offline_results = matcher->OfflineMatch(trace, best_paths);
 
   // Process each score/match result
-  for (const auto& offline_result : offline_results) {
-    const auto& match_results = std::get<kMatchResultsIndex>(offline_result);
+  for (const auto& match_results : offline_results) {
     std::vector<thor::MatchResult> enhanced_match_results;
     odin::TripPath trip_path;
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
@@ -358,9 +339,9 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
 
     if ((first_result_with_state != match_results.end())
         && (last_result_with_state != match_results.rend())) {
-      baldr::PathLocation origin = matcher->mapmatching().state(
+      baldr::PathLocation origin = matcher->state_container().state(
           first_result_with_state->stateid).candidate();
-      baldr::PathLocation destination = matcher->mapmatching().state(
+      baldr::PathLocation destination = matcher->state_container().state(
           last_result_with_state->stateid).candidate();
 
       bool found_origin = false;
@@ -417,8 +398,9 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
     } else {
       throw valhalla_exception_t { 442 };
     }
-  map_match_results.emplace_back(std::get<kConfidenceScoreIndex>(offline_result),
-      enhanced_match_results, trip_path);
+    //TODO: figure out the confidence score..
+    float score = 1.f / ((&match_results - &offline_results.front()) + 1.f);
+    map_match_results.emplace_back(score, enhanced_match_results, trip_path);
   }
 
   return map_match_results;

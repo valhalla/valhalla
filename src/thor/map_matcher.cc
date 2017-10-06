@@ -31,8 +31,7 @@ std::vector<PathInfo> MapMatcher::FormPath(
   const DirectedEdge* directededge;
   EdgeLabel pred;
 
-  auto edge_segments = ConstructRoute(matcher->mapmatching(), results.begin(),
-                                      results.end());
+  auto edge_segments = ConstructRoute(*matcher, results.begin(), results.end());
 
   for (const auto& edge_segment : edge_segments) {
 

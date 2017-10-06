@@ -7,7 +7,7 @@
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
-#include "baldr/double_bucket_queue.h" // For kInvalidLabel
+#include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
 
 #include <memory>
 #include <unordered_set>

@@ -30,7 +30,7 @@ struct validate_stats {
 
   // Accumulate stats from all threads
   void operator()(const validate_stats& other) {
-    failure_count += other.failure_count;
+    failure_count = other.failure_count;
   }
 };
 
@@ -260,30 +260,31 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
         }
       }
     }
-
-    std::set<std::string> failures;
-    for ( auto p = failed_tests.begin(); p != failed_tests.end(); ++p ) {
-      bool bfound = false;
-      auto tests = passed_tests.equal_range(p->first);
-       for (auto it = tests.first; it != tests.second; ++it) {
-         if (it->second == (p->second)) {
-           bfound = true;
-           break;
-         }
-       }
-
-       if (bfound)
-         continue;
-       else { // only report a failure one time.  A station has multiple platforms and we could of
-         //walked the transit lines of the wrong platform.
-         if (failures.find(p->first + p->second) == failures.end()) {
-           failure_count++;
-           LOG_ERROR("Test from " + p->first + " to " + p->second + " failed.");
-           failures.emplace(p->first + p->second);
-         }
-       }
-    }
   }
+
+  std::set<std::string> failures;
+  for ( auto p = failed_tests.begin(); p != failed_tests.end(); ++p ) {
+    bool bfound = false;
+    auto tests = passed_tests.equal_range(p->first);
+     for (auto it = tests.first; it != tests.second; ++it) {
+       if (it->second == (p->second)) {
+         bfound = true;
+         break;
+       }
+     }
+
+     if (bfound)
+       continue;
+     else { // only report a failure one time.  A station has multiple platforms and we could of
+       //walked the transit lines of the wrong platform.
+       if (failures.find(p->first + p->second) == failures.end()) {
+         failure_count++;
+         LOG_ERROR("Test from " + p->first + " to " + p->second + " failed.");
+         failures.emplace(p->first + p->second);
+       }
+     }
+  }
+
   // Send back the statistics
   results.set_value({failure_count});
 }

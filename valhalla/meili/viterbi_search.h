@@ -156,7 +156,13 @@ class IViterbiSearch
   IViterbiSearch()
       : IViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {}
 
-  virtual ~IViterbiSearch() {};
+  virtual ~IViterbiSearch()
+  { Clear(); };
+
+  virtual void Clear()
+  { added_states_.clear(); }
+
+  virtual void ClearSearch() {};
 
   virtual bool AddStateId(const StateId& stateid)
   { return added_states_.insert(stateid).second; }
@@ -206,9 +212,9 @@ class IViterbiSearch
       float emission_cost) const
   { return prev_costsofar + transition_cost + emission_cost; }
 
+ private:
   std::unordered_set<StateId> added_states_;
 
- private:
   IEmissionCostModel emission_cost_model_;
 
   ITransitionCostModel transition_cost_model_;
@@ -228,7 +234,9 @@ class NaiveViterbiSearch: public IViterbiSearch
   ~NaiveViterbiSearch()
   { Clear(); }
 
-  void Clear();
+  void Clear() override;
+
+  void ClearSearch() override;
 
   bool AddStateId(const StateId& stateid) override;
 
@@ -238,12 +246,11 @@ class NaiveViterbiSearch: public IViterbiSearch
 
   double AccumulatedCost(const StateId& stateid) const override;
 
- protected:
+ private:
   std::vector<std::vector<StateId>> states_;
 
   std::vector<StateId> winner_;
 
- private:
   std::vector<std::vector<StateLabel>> history_;
 
   void UpdateLabels(
@@ -274,7 +281,9 @@ class ViterbiSearch: public IViterbiSearch
   ~ViterbiSearch()
   { Clear(); }
 
-  void Clear();
+  void Clear() override;
+
+  void ClearSearch() override;
 
   bool AddStateId(const StateId& stateid) override;
 
@@ -289,12 +298,13 @@ class ViterbiSearch: public IViterbiSearch
 
   virtual double AccumulatedCost(const StateId& stateid) const override;
 
- protected:
+ private:
+  std::vector<std::vector<StateId>> states_;
+
   std::vector<StateId> winner_;
 
   std::vector<std::vector<StateId>> unreached_states_;
 
- private:
   SPQueue<StateLabel> queue_;
 
   std::unordered_map<StateId, StateLabel> scanned_labels_;

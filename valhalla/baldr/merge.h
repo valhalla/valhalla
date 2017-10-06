@@ -45,7 +45,9 @@ struct edge_collapser {
   GraphId next_node_id(GraphId last_node_id, GraphId node_id);
   GraphId edge_between(GraphId cur, GraphId next);
   void explore(GraphId node_id);
-  void explore(GraphId prev, GraphId cur, path &forward, path &reverse);
+
+  // return true if a loop is detected
+  bool explore(GraphId prev, GraphId cur, path &forward, path &reverse);
 
 private:
   GraphReader &m_reader;

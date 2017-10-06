@@ -161,7 +161,8 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
     return R"({"segments":[]})";
 
   // Create the vector of matched path results
-  auto match_results = matcher->OfflineMatch(measurements);
+  auto topk_matches = matcher->OfflineMatch(measurements);
+  const auto& match_results = topk_matches.front();
   if (match_results.size() != measurements.size())
     throw std::runtime_error("Sequence size not equal to match result size.");
 
@@ -182,7 +183,7 @@ std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matc
   const std::shared_ptr<meili::MapMatcher>& matcher) const {
 
   //get all of the edges along the path from the state info
-  auto edges = ConstructRoute(matcher->mapmatching(), matches.begin(), matches.end());
+  auto edges = ConstructRoute(*matcher, matches.begin(), matches.end());
   clean_edges(edges);
 
   //TODO: backtracking could have happened. maybe it really happened but maybe there were positional
