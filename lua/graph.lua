@@ -805,7 +805,7 @@ function filter_tags_generic(kv)
     --check for moped forward overrides
     kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or kv["moped_forward"]
     kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or nil
-    
+
     if kv["bike_tag"] == nil then
       if kv["sac_scale"] == "hiking" then
         kv["bike_forward"] = "true"
@@ -952,7 +952,7 @@ function filter_tags_generic(kv)
   end
 
   if kv["moped_backward"] == "true" then
-    onway_moped = oneway[kv["oneway:moped"]] or oneway[kv["oneway:mofa"]]
+    oneway_moped = oneway[kv["oneway:moped"]] or oneway[kv["oneway:mofa"]]
   end
 
   local oneway_reverse = kv["oneway"]
@@ -1052,7 +1052,7 @@ function filter_tags_generic(kv)
 
     forwards = kv["moped_forward"]
     kv["moped_forward"] = kv["moped_backward"]
-    kv["bike_backward"] = forwards
+    kv["moped_backward"] = forwards
   end
 
   if kv["oneway:bicycle"] == "-1" then
