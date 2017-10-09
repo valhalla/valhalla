@@ -12,6 +12,7 @@
 #include <memory>
 #include <limits>
 #include <vector>
+#include <random>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
