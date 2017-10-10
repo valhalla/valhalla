@@ -3,6 +3,7 @@
 #define MMP_MAP_MATCHER_H_
 
 #include <vector>
+#include <map>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -58,7 +59,7 @@ class MapMatcher final
   sif::cost_ptr_t costing() const
   { return mode_costing_[static_cast<size_t>(travelmode_)]; }
 
-  std::vector<std::vector<MatchResult>>
+  std::map<float, std::vector<MatchResult>>
   OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k = 1);
 
   /**

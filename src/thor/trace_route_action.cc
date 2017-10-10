@@ -145,12 +145,13 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
   // Call Meili for map matching to get a collection of pathLocation Edges
   matcher->set_interrupt(interrupt);
   // Create the vector of matched path results
-  std::vector<std::vector<meili::MatchResult>> offline_results;
+  std::map<float, std::vector<meili::MatchResult>> offline_results;
   if (trace.size() > 0)
     offline_results = matcher->OfflineMatch(trace, best_paths);
 
   // Process each score/match result
-  for (const auto& match_results : offline_results) {
+  for (const auto& scored_match_results : offline_results) {
+    const auto& match_results = scored_match_results.second;
     std::vector<thor::MatchResult> enhanced_match_results;
     odin::TripPath trip_path;
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
@@ -398,9 +399,8 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
     } else {
       throw valhalla_exception_t { 442 };
     }
-    //TODO: figure out the confidence score..
-    float score = 1.f / ((&match_results - &offline_results.front()) + 1.f);
-    map_match_results.emplace_back(score, enhanced_match_results, trip_path);
+    //TODO: figure out how to get the score into a set range..
+    map_match_results.emplace_back(scored_match_results.first, enhanced_match_results, trip_path);
   }
 
   return map_match_results;

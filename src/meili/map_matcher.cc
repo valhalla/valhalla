@@ -322,7 +322,7 @@ void MapMatcher::Clear()
   container_.Clear();
 }
 
-std::vector<std::vector<MatchResult>>
+std::map<float, std::vector<MatchResult>>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
   Clear();
@@ -372,11 +372,12 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   }
 
   //For k paths
-  std::vector<std::vector<MatchResult>> best_paths;
+  std::map<float, std::vector<MatchResult>> best_paths;
   for(uint32_t i = 0; i < k; ++i) {
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
     std::copy(vs_.SearchPath(time), vs_.PathEnd(), std::back_inserter(stateids));
+    auto accumulated_cost = vs_.AccumulatedCost(stateids.front());
     std::reverse(stateids.begin(), stateids.end());
 
     std::transform(
@@ -399,10 +400,11 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     const auto& results = FindMatchResults(*this, stateids);
 
     // Insert the interpolated results into the result list
-    best_paths.emplace_back();
+    std::vector<MatchResult> path;
+    path.emplace_back();
     for (StateId::Time time = 0; time < stateids.size(); time++) {
       // Add in this states result
-      best_paths.back().push_back(results[time]);
+      path.push_back(results[time]);
 
       // See if there were any interpolated points with this state move on if not
       const auto it = interpolated.find(time);
@@ -416,8 +418,11 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       const auto& interpolated_results = InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
 
       // Copy the interpolated match results into the final set
-      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_paths.back()));
+      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(path));
     }
+
+    // Keep the path and the cost for it
+    best_paths.emplace(accumulated_cost, std::move(path));
 
     // Remove this particular sequence of stateids
     ts_.RemovePath(time);

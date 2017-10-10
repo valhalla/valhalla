@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
     uint64_t current_osmid = 0;
     Cost edge_total;
     Cost trans_total;
-    for (const auto& result : results.front()) {
+    for (const auto& result : results.begin()->second) {
       //std::cout << "lat: " << result.lnglat.lat() << " lon: " << result.lnglat.lng() << std::endl;
       if (result.edgeid == current_id || result.edgeid == kInvalidGraphId) {
         continue;
