@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 
 #include "midgard/distanceapproximator.h"
 #include "meili/routing.h"
@@ -12,6 +13,8 @@ namespace {
 
 using namespace valhalla;
 using namespace valhalla::meili;
+
+constexpr float MAX_ACCUMULATED_COST = 99999999;
 
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
@@ -377,7 +380,6 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
     std::copy(vs_.SearchPath(time), vs_.PathEnd(), std::back_inserter(stateids));
-    auto accumulated_cost = vs_.AccumulatedCost(stateids.front());
     std::reverse(stateids.begin(), stateids.end());
 
     std::transform(
@@ -391,8 +393,8 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
 
     // Verify that stateids are in correct order
     for (StateId::Time time = 0; time < stateids.size(); time++) {
-      if (!(!stateids[time].IsValid() || stateids[time].time() == time)) {
-        throw std::logic_error("got state with time " + std::to_string(stateids[time].time()) + " at time " + std::to_string(time));
+      if (stateids[time].IsValid() && stateids[time].time() != time) {
+        throw std::logic_error("got valid state with time " + std::to_string(stateids[time].time()) + " at time " + std::to_string(time));
       }
     }
 
@@ -401,7 +403,6 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
 
     // Insert the interpolated results into the result list
     std::vector<MatchResult> path;
-    path.emplace_back();
     for (StateId::Time time = 0; time < stateids.size(); time++) {
       // Add in this states result
       path.push_back(results[time]);
@@ -421,7 +422,11 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(path));
     }
 
-    // Keep the path and the cost for it
+    // Keep the path and the cost for it, if you cant find a valid state id we just give it a huge cost
+    auto found = std::find_if(stateids.rbegin(), stateids.rend(), [](const StateId& si) {
+      return si.IsValid();
+    });
+    auto accumulated_cost = found != stateids.rend() ? vs_.AccumulatedCost(*found) : MAX_ACCUMULATED_COST;
     best_paths.emplace(accumulated_cost, std::move(path));
 
     // Remove this particular sequence of stateids
