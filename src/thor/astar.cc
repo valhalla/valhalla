@@ -280,7 +280,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
         newcost.secs -= p->second.secs;  // Should properly handle elapsed time
-        newcost.cost += p->second.cost;  // Need this to handle the edge score
+        newcost.cost -= p->second.cost;  // Need this to handle the edge score
       }
 
       // Check if edge is temporarily labeled and this path has less cost. If
