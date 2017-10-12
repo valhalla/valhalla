@@ -75,12 +75,12 @@ void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
   vs_.ClearSearch();
 
   // Add the clones to vs_
-  for (const auto& pair: clone_) {
-    const auto added = vs_.AddStateId(pair.second);
-    if (!added) {
-      std::runtime_error("generated clone state IDs must be unique");
-    }
-  }
+//  for (const auto& pair: clone_) {
+//    const auto added = vs_.AddStateId(pair.second);
+//    if (!added) {
+//      std::runtime_error("generated clone state IDs must be unique");
+//    }
+//  }
 }
 
 void TopKSearch::RemovePath(const StateId::Time& time)
