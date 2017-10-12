@@ -4,7 +4,6 @@ s-dr5rec3weg-whitehallferryterminal,s-dr5r4rn32w-stgeorgeferryterminal,r-dr5r7-s
 s-9q8yyugptw-sanfranciscocaltrain,s-9q9k659e3r-sanjosediridoncaltrain,r-9q9-limited
 s-9q8yyugptw-sanfranciscocaltrain,s-9q9k62qu53-tamiencaltrain,r-9q9j-babybullet
 s-9qc22fg3zq-kevindr~oramwy,s-9qc0p4982e-eastst~baconst,r-9qc22-201
-s-9qc0ngn5xr-grantst~karrenst,s-9qc0pq0s22-bartnorthconcordmartinez,r-9qc0n-17
 s-9qc0pq23hg-northconcord~martinez,s-9q8yn7erg9-sanbruno,r-9q9-pittsburg~baypoint~sfia~millbrae
 s-9q8yn7erg9-sanbruno,s-9q8vzhbf8h-millbrae,r-9q8y-richmond~dalycity~millbrae
 s-9q8yy29dff-24thstmission,s-9q9q6p6u79-dublin~pleasanton,r-9q9n-dublin~pleasanton~dalycity
