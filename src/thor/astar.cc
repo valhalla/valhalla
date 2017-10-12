@@ -137,6 +137,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
   // Find shortest path
   uint32_t nc = 0;       // Count of iterations with no convergence
                          // towards destination
+  std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
   const GraphTile* tile;
   size_t total_labels = 0;
   while (true) {
@@ -187,10 +188,14 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > 500000) {
-      LOG_ERROR("No convergence to destination after = " +
+    } else if (nc++ > 50000) {
+      if (best_path.first >= 0) {
+        return FormPath(best_path.first);
+      } else {
+        LOG_ERROR("No convergence to destination after = " +
                            std::to_string(edgelabels_.size()));
-      return {};
+        return {};
+      }
     }
 
     // Get the end node of the prior directed edge. Skip if tile not found
@@ -279,8 +284,27 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
       // (cost from the dest. location to the end of the edge).
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
-        newcost.secs -= p->second.secs;  // Should properly handle elapsed time
-        newcost.cost -= p->second.cost;  // Need this to handle the edge score
+        // Subtract partial cost and time
+        newcost -= p->second;
+
+        // Find the destination edge and update cost to include the edge score.
+        // Note - with high edge scores the convergence test fails some routes
+        // so reduce the edge score.
+        for (const auto& destination_edge : destination.edges) {
+          if (destination_edge.id == edgeid) {
+            newcost.cost += destination_edge.score;
+          }
+        }
+        newcost.cost = std::max(0.0f, newcost.cost);
+
+        // Mark this as the best connection if that applies. This allows
+        // a path to be formed even if the convergence test fails (can
+        // happen with large edge scores)
+        if (best_path.first == -1 || newcost.cost < best_path.second) {
+          best_path.first = (edgestatus.set() == EdgeSet::kTemporary) ?
+              edgestatus.index() : edgelabels_.size();
+          best_path.second = newcost.cost;
+        }
       }
 
       // Check if edge is temporarily labeled and this path has less cost. If
@@ -447,10 +471,7 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
     destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id)) *
                                 (1.0f - edge.dist);
 
-    // We need to penalize this location based on its score (distance in meters from input)
-    // We assume the slowest speed you could travel to cover that distance to start/end the route
-    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    destinations_[edge.id].cost += edge.score;
+    // Edge score (penalty) is handled within GetPath. Do not add score here.
 
     // Get the tile relative density
     density = tile->header()->density();
