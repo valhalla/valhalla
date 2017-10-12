@@ -1060,15 +1060,18 @@ TripPath TripPathBuilder::Build(
         const DirectedEdge* de = tile->directededge(nodeinfo->edge_index());
         for (uint32_t idx1 = 0; idx1 < nodeinfo->edge_count();
                             ++idx1, de++) {
+
           // Skip shortcut edges and edges on the path
-          if (de->is_shortcut() ||
+          if ((de->is_shortcut() ||
               de->localedgeidx() == prior_opp_local_index ||
-              de->localedgeidx() == directededge->localedgeidx()) {
+              de->localedgeidx() == directededge->localedgeidx()) &&
+              !de->IsTransition()){
             continue;
           }
 
           // If transition edge - get directed edges at the next level
           if (de->IsTransition()) {
+
             // Get the end node tile and its directed edges
             GraphId endnode = de->endnode();
             const GraphTile* endtile = graphreader.GetGraphTile(endnode);
@@ -1076,6 +1079,7 @@ TripPath TripPathBuilder::Build(
             const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
             for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count();
                            ++idx2, de2++) {
+
               // Skip shortcut edges, edges on the path and transition edges
               if (de2->is_shortcut() ||
                   de2->localedgeidx() == prior_opp_local_index ||
@@ -1083,7 +1087,7 @@ TripPath TripPathBuilder::Build(
                   de2->IsTransition()) {
                 continue;
               }
-              AddTripIntersectingEdge(controller, de->localedgeidx(),
+              AddTripIntersectingEdge(controller, de2->localedgeidx(),
                                       prior_opp_local_index,
                                       directededge->localedgeidx(), nodeinfo2,
                                       trip_node, de2);
