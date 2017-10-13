@@ -111,10 +111,9 @@ namespace {
   }
 
   int seed = 973; int bound = 81;
-  std::string make_test_case() {
+  std::string make_test_case(PointLL& start, PointLL& end) {
     static std::default_random_engine generator(seed);
     static std::uniform_real_distribution<float> distribution(0, 1);
-    PointLL start,end;
     float distance = 0;
     do {
       //get two points in and around utrecht
@@ -133,10 +132,12 @@ namespace {
     int tested = 0;
     while(tested < bound) {
       //get a route shape
-      auto test_case = make_test_case();
+      PointLL start, end;
+      auto test_case = make_test_case(start, end);
+      std::cout << test_case << std::endl;
       boost::property_tree::ptree route;
       try { route = json_to_pt(actor.route(tyr::ROUTE, test_case)); }
-      catch (...) { continue; }
+      catch (...) { std::cout << "route failed" << std::endl; continue; }
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
       //skip any routes that have loops in them as edge walk fails in that case...
@@ -150,8 +151,10 @@ namespace {
         for(const auto& name : maneuver.second.get_child("street_names"))
           looped = looped || !names.insert(name.second.get_value<std::string>()).second;
       }
-      if(looped)
+      if(looped) {
+        std::cout << "route had a possible loop" << std::endl;
         continue;
+      }
       //get the edges along that route shape
       boost::property_tree::ptree walked;
       try {
@@ -185,7 +188,9 @@ namespace {
         geojson += print(simulation);
         geojson += R"(]},"type":"Feature","properties":{"stroke":"#0000ff","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
         geojson += print(decoded_match);
-        geojson += R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}}]})";
+        geojson += R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}},{"geometry":{"type":"MultiPoint","coordinates":[)";
+        geojson += print(std::vector<PointLL>{start, end});
+        geojson += R"(]},"type":"Feature","properties":{}}]})";
         std::cout << geojson << std::endl;
         throw std::logic_error("The match did not match the walk");
       }
