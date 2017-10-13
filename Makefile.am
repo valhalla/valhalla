@@ -187,6 +187,7 @@ nobase_include_HEADERS = \
 	valhalla/sif/costfactory.h \
 	valhalla/sif/autocost.h \
 	valhalla/sif/bicyclecost.h \
+	valhalla/sif/motorscootercost.h \
 	valhalla/sif/pedestriancost.h \
 	valhalla/sif/transitcost.h \
 	valhalla/sif/truckcost.h \
@@ -314,6 +315,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/date_time_zonespec.h \
 	src/sif/autocost.cc \
 	src/sif/bicyclecost.cc \
+	src/sif/motorscootercost.cc \
 	src/sif/pedestriancost.cc \
 	src/sif/transitcost.cc \
 	src/sif/truckcost.cc \
