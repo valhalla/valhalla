@@ -944,11 +944,18 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
   // Roundabouts
   if (prev_edge->roundabout()) {
+    TripPath_TravelMode mode = prev_edge->travel_mode();
+
+    // Adjust bicycle travel mode if roundabout is a road
+    if ((mode == TripPath_TravelMode_kBicycle)
+        && (prev_edge->IsRoadUse())) {
+      mode = TripPath_TravelMode_kDrive;
+    }
+    // TODO might have to adjust for pedestrian too
+
     IntersectingEdgeCounts xedge_counts;
-    trip_path_->GetEnhancedNode(node_index)
-        ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-                                                   prev_edge->travel_mode(),
-                                                   xedge_counts);
+    trip_path_->GetEnhancedNode(node_index)->CalculateRightLeftIntersectingEdgeCounts(
+        prev_edge->end_heading(), mode, xedge_counts);
     if (prev_edge->drive_on_right()) {
       maneuver.set_roundabout_exit_count(
           maneuver.roundabout_exit_count()
