@@ -125,15 +125,15 @@ namespace valhalla {
           rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, projection.ToRapidJson(i, request.GetAllocator()));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
-          if (connectivity_map) {
-            auto colors = connectivity_map->get_colors(TileHierarchy::levels().rbegin()->first, projection, 0);
-            for(auto& color : colors){
-              auto itr = color_counts.find(color);
-              if(itr == color_counts.cend())
-                color_counts[color] = 1;
-              else
-                ++itr->second;
-            }
+          if (!connectivity_map)
+            continue;
+          auto colors = connectivity_map->get_colors(TileHierarchy::levels().rbegin()->first, projection, 0);
+          for(auto& color : colors){
+            auto itr = color_counts.find(color);
+            if(itr == color_counts.cend())
+              color_counts[color] = 1;
+            else
+              ++itr->second;
           }
         }
       }
@@ -141,19 +141,18 @@ namespace valhalla {
         throw valhalla_exception_t{171};
       }
 
-
       //are all the locations in the same color regions
-      if (connectivity_map) {
-        bool connected = false;
-        for(const auto& c : color_counts) {
-          if(c.second == sources_targets.size()) {
-            connected = true;
-            break;
-          }
+      if (!connectivity_map)
+        return;
+      bool connected = false;
+      for(const auto& c : color_counts) {
+        if(c.second == sources_targets.size()) {
+          connected = true;
+          break;
         }
-        if(!connected)
-          throw valhalla_exception_t{170};
       }
+      if(!connected)
+        throw valhalla_exception_t{170};
       if (!healthcheck)
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }
