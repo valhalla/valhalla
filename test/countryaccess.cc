@@ -108,10 +108,10 @@ void CountryAccess(const std::string& config_file) {
       uint32_t forward = directededge.forwardaccess();
       uint32_t reverse = directededge.reverseaccess();
 
-      //cycleway (not oneway) should have kBicycleAccess
+      //cycleway (not oneway) should have kBicycleAccess and kMopedAccess
       if (e_offset.wayid() == 7047088)
       {
-        if (forward != kBicycleAccess || reverse != kBicycleAccess) {
+        if (forward != (kBicycleAccess | kMopedAccess) || reverse != (kBicycleAccess | kMopedAccess)) {
           throw std::runtime_error("Defaults:  Access is not correct for way 7047088.");
         }
         //cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
@@ -127,16 +127,18 @@ void CountryAccess(const std::string& config_file) {
           if (forward != 0)  // no access
             throw std::runtime_error("Defaults:  Forward access is not correct for way 35600238.");
         }
-      // trunk that has pedestrian and bike access but motorroad key changes turns off pedestrians
+      // trunk that has pedestrian, moped and bike access but motorroad key changes turns off pedestrians
       // and bikes
       } else if (e_offset.wayid() == 139156014) {
         if (directededge.forward()) {
-          if (forward != (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kTruckAccess | kBusAccess))
+          if (forward != (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess |
+                          kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
           if (reverse != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
         } else {
-          if (reverse != (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kTruckAccess | kBusAccess))
+          if (reverse != (kAutoAccess | kHOVAccess | kPedestrianAccess | kWheelchairAccess |
+                          kBicycleAccess | kTruckAccess | kBusAccess | kMopedAccess))
             throw std::runtime_error("Defaults:  Reverse access is not correct for way 139156014.");
           if (forward != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Defaults:  Forward access is not correct for way 139156014.");
@@ -184,19 +186,19 @@ void CountryAccess(const std::string& config_file) {
       //cycleway (not oneway) should have kPedestrianAccess and kBicycleAccess
       if (e_offset.wayid() == 7047088)
       {
-        if (!(forward & (kPedestrianAccess | kWheelchairAccess | kBicycleAccess)) ||
-            !(reverse & (kPedestrianAccess | kWheelchairAccess | kBicycleAccess))) {
+        if ((forward != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess)) ||
+            (reverse != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))) {
           throw std::runtime_error("Enhanced:  Access is not correct for way 7047088.");
         }
         //cycleway (is oneway) should have kPedestrianAccess and kBicycleAccess
       } else if (e_offset.wayid() == 31976259) {
         if (directededge.forward()) {
-          if (forward != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess))
+          if (forward != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 31976259.");
           if (reverse != (kPedestrianAccess | kWheelchairAccess)) // only pedestrian access because this is a oneway cycleway
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 31976259.");
         } else {
-          if (reverse != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess))
+          if (reverse != (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
             throw std::runtime_error("Enhanced:  Reverse access is not correct for way 31976259.");
           if (forward != (kPedestrianAccess | kWheelchairAccess))
             throw std::runtime_error("Enhanced:  Forward access is not correct for way 31976259.");

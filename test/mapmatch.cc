@@ -151,10 +151,6 @@ namespace {
         for(const auto& name : maneuver.second.get_child("street_names"))
           looped = looped || !names.insert(name.second.get_value<std::string>()).second;
       }
-      if(looped) {
-        std::cout << "route had a possible loop" << std::endl;
-        continue;
-      }
       //get the edges along that route shape
       boost::property_tree::ptree walked;
       try {
@@ -181,6 +177,10 @@ namespace {
       //because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
       auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() + 1, matched_edges.end() - 1);
       if(walked_it == walked_edges.end()) {
+        if(looped) {
+          std::cout << "route had a possible loop" << std::endl;
+          continue;
+        }
         auto decoded_match = midgard::decode<std::vector<midgard::PointLL> >(matched.get<std::string>("shape"));
         std::string geojson = R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
         geojson += print(shape);

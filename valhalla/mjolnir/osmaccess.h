@@ -61,6 +61,18 @@ struct OSMAccess {
   bool bike_tag() const;
 
   /**
+   * Sets the moped_tag flag.
+   * @param  moped_tag  Mopeds/Electric scooters allowed on this way?
+   */
+  void set_moped_tag(const bool moped_tag);
+
+  /**
+   * Get the moped_tag flag.
+   * @return  Returns moped_tag flag.
+   */
+  bool moped_tag() const;
+
+  /**
    * Sets the bus_tag flag.
    * @param  bus_tag    Buses allowed on this way?
    */
@@ -133,7 +145,7 @@ struct OSMAccess {
       uint8_t truck_tag     :1;
       uint8_t hov_tag       :1;
       uint8_t motorroad_tag :1;
-      uint8_t spare         :1;
+      uint8_t moped_tag     :1;
     } fields;
     uint32_t v;
   };

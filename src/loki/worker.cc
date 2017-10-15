@@ -12,6 +12,7 @@
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
+#include "sif/motorscootercost.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "tyr/actor.h"
@@ -182,6 +183,7 @@ namespace valhalla {
       factory.Register("bus", sif::CreateBusCost);
       factory.Register("bicycle", sif::CreateBicycleCost);
       factory.Register("hov", sif::CreateHOVCost);
+      factory.Register("motor_scooter", sif::CreateMotorScooterCost);
       factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("truck", sif::CreateTruckCost);
       factory.Register("transit", sif::CreateTransitCost);

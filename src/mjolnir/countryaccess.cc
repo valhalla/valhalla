@@ -50,6 +50,9 @@ uint32_t GetAccess(const uint32_t current_access, const uint32_t country_access,
   if (!user_access.hov_tag())
     new_access = ProcessAccess(new_access,country_access,kHOVAccess);
 
+  if (!user_access.moped_tag())
+    new_access = ProcessAccess(new_access,country_access,kMopedAccess);
+
   return new_access;
 }
 
@@ -65,6 +68,7 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
       ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
       ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
       ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
+      ((forward & kMopedAccess) && !(reverse & kMopedAccess)) ||
       ((forward & kBusAccess) && !(reverse & kBusAccess)));
 
   bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
@@ -72,6 +76,7 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
       (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
       (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
       (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
+      (!(forward & kMopedAccess) && (reverse & kMopedAccess)) ||
       (!(forward & kBusAccess) && (reverse & kBusAccess)));
 
   bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
@@ -81,7 +86,7 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
   // user_access.<type>_tag() == true means that a user set the <type> tag.
 
   // motorroad override.  Only applies to RC <= kPrimary.  If no override is found in the
-  // country access, just use the defaults which is no bicycles and no pedestrians.
+  // country access, just use the defaults which is no bicycles, mopeds or pedestrians.
   if (directededge.classification() <= RoadClass::kPrimary && user_access.motorroad_tag()) {
     if (country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)) != -1) {
 
@@ -106,10 +111,12 @@ void SetCountryAccess(DirectedEdge& directededge, const std::vector<int>& countr
                               f_oneway_vehicle, f_oneway_bicycle, user_access);
         }
       }
-      // now remove pedestian and bike access if it is set.  This is the default for motorroad_tag.
-      forward = GetAccess(forward, (forward & ~(kPedestrianAccess | kWheelchairAccess | kBicycleAccess)),
+      // now remove pedestian, moped and bike access if it is set.  This is the default for motorroad_tag.
+      forward = GetAccess(forward,
+                (forward & ~(kPedestrianAccess | kWheelchairAccess | kMopedAccess | kBicycleAccess)),
                 r_oneway_vehicle, r_oneway_bicycle, user_access);
-      reverse = GetAccess(reverse, (reverse & ~(kPedestrianAccess | kWheelchairAccess | kBicycleAccess)),
+      reverse = GetAccess(reverse,
+                (reverse & ~(kPedestrianAccess | kWheelchairAccess | kMopedAccess | kBicycleAccess)),
                 f_oneway_vehicle, f_oneway_bicycle, user_access);
     }
   } // trunk and trunk_link

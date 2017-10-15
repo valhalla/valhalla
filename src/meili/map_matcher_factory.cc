@@ -2,6 +2,7 @@
 
 #include "sif/costconstants.h"
 #include "sif/autocost.h"
+#include "sif/motorscootercost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "baldr/graphreader.h"
@@ -39,6 +40,7 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root)
       { 
   cost_factory_.Register("auto", sif::CreateAutoCost);
   cost_factory_.Register("bicycle", sif::CreateBicycleCost);
+  cost_factory_.Register("motor_scooter", sif::CreateMotorScooterCost);
   cost_factory_.Register("pedestrian", sif::CreatePedestrianCost);
   cost_factory_.Register("multimodal", CreateUniversalCost);
 }

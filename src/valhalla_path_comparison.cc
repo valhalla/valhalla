@@ -86,10 +86,8 @@ int main(int argc, char *argv[]) {
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   if (vm.count("json")) {
-    std::stringstream stream;
-    stream << json;
+    std::stringstream stream(json);
     boost::property_tree::read_json(stream, json_ptree);
-
     try {
       for (const auto& path : json_ptree.get_child("paths")) {
         paths.push_back({});
@@ -100,9 +98,8 @@ int main(int argc, char *argv[]) {
       }
     } catch (...) {
       throw std::runtime_error(
-          "insufficiently specified required parameter 'locations'");
+          "insufficiently specified required parameter 'paths'");
     }
-
     // Parse out the type of route - this provides the costing method to use
     try {
       routetype = json_ptree.get<std::string>("costing");
@@ -123,6 +120,7 @@ int main(int argc, char *argv[]) {
   factory.Register("auto", CreateAutoCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
+  factory.Register("motor_scooter", CreateMotorScooterCost);
   std::string method_options = "costing_options." + routetype;
   auto costing_options = json_ptree.get_child(method_options, {});
   cost_ptr_t costing = factory.Create(routetype, costing_options);
