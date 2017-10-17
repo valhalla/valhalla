@@ -292,6 +292,7 @@ MapMatcher::MapMatcher(
       travelmode_(travelmode),
       interrupt_(nullptr),
       vs_(),
+      ts_(vs_),
       container_(),
       emission_cost_model_(
           graphreader_,
@@ -300,11 +301,11 @@ MapMatcher::MapMatcher(
       transition_cost_model_(
           graphreader_,
           vs_,
+          ts_,
           container_,
           mode_costing_,
           travelmode_,
-          config_),
-      ts_(vs_)
+          config_)
 {
   vs_.set_emission_cost_model(emission_cost_model_);
   vs_.set_transition_cost_model(transition_cost_model_);

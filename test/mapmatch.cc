@@ -268,6 +268,15 @@ namespace {
         streets += n + " ";
       throw std::logic_error("The second most obvious result is stay right but got: " + streets);
     }
+
+    matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+         {"lat":52.088548,"lon":5.15357,"accuracy":30},
+         {"lat":52.088627,"lon":5.153269,"accuracy":30},
+         {"lat":52.08864,"lon":5.15298,"accuracy":30},
+         {"lat":52.08861,"lon":5.15272,"accuracy":30},
+         {"lat":52.08863,"lon":5.15253,"accuracy":30},
+         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
   }
 
 }

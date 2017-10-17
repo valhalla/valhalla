@@ -88,13 +88,13 @@ class MapMatcher final
 
   ViterbiSearch vs_;
 
+  TopKSearch ts_;
+
   StateContainer container_;
 
   EmissionCostModel emission_cost_model_;
 
   TransitionCostModel transition_cost_model_;
-
-  TopKSearch ts_;
 };
 
 }
