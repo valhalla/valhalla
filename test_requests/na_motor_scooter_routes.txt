@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":37.76502442709533,"lon":-122.48050747693708},{"lat":37.77335383395655,"lon":-122.48206102238441}],"costing":"motor_scooter","directions_options":{"units":"miles"}}'

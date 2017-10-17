@@ -200,9 +200,10 @@ constexpr odin::TripPath_VehicleType kTripPathVehicleType[] = {
     odin::TripPath_VehicleType::TripPath_VehicleType_kCar,
     odin::TripPath_VehicleType::TripPath_VehicleType_kMotorcycle,
     odin::TripPath_VehicleType::TripPath_VehicleType_kAutoBus,
-    odin::TripPath_VehicleType::TripPath_VehicleType_kTractorTrailer };
+    odin::TripPath_VehicleType::TripPath_VehicleType_kTractorTrailer,
+    odin::TripPath_VehicleType::TripPath_VehicleType_kMotorScooter };
 TripPath_VehicleType GetTripPathVehicleType(const uint8_t type) {
-  return (type <= static_cast<uint8_t>(VehicleType::kTractorTrailer)) ?
+  return (type <= static_cast<uint8_t>(VehicleType::kMotorScooter)) ?
       kTripPathVehicleType[type] : kTripPathVehicleType[0];
 }
 

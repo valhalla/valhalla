@@ -402,6 +402,7 @@ namespace {
       { static_cast<int>(TripDirections_VehicleType_kMotorcycle), "motorcycle" },
       { static_cast<int>(TripDirections_VehicleType_kAutoBus), "bus" },
       { static_cast<int>(TripDirections_VehicleType_kTractorTrailer), "tractor_trailer" },
+      { static_cast<int>(TripDirections_VehicleType_kMotorScooter), "motor_scooter" },
     };
 
     std::unordered_map<int, std::string> pedestrian_to_string {

@@ -618,7 +618,7 @@ float MotorScooterCost::AStarCostFactor() const {
 
 // Returns the current travel type.
 uint8_t MotorScooterCost::travel_type() const {
-  return static_cast<uint8_t>(VehicleType::kMoped);
+  return static_cast<uint8_t>(VehicleType::kMotorScooter);
 }
 
 cost_ptr_t CreateMotorScooterCost(const boost::property_tree::ptree& config) {

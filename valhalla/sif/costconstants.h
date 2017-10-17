@@ -19,7 +19,7 @@ enum class VehicleType : uint8_t {
   kMotorcycle = 1,
   kBus = 2,
   kTractorTrailer = 3,
-  kMoped = 4
+  kMotorScooter = 4
 };
 
 // Pedestrian travel type
