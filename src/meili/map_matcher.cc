@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 
 #include "midgard/distanceapproximator.h"
 #include "meili/routing.h"
@@ -12,6 +13,8 @@ namespace {
 
 using namespace valhalla;
 using namespace valhalla::meili;
+
+constexpr float MAX_ACCUMULATED_COST = 99999999;
 
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
@@ -323,7 +326,7 @@ void MapMatcher::Clear()
   container_.Clear();
 }
 
-std::vector<std::vector<MatchResult>>
+std::map<float, std::vector<MatchResult>>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
   Clear();
@@ -373,7 +376,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   }
 
   //For k paths
-  std::vector<std::vector<MatchResult>> best_paths;
+  std::map<float, std::vector<MatchResult>> best_paths;
   for(uint32_t i = 0; i < k; ++i) {
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
@@ -391,8 +394,8 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
 
     // Verify that stateids are in correct order
     for (StateId::Time time = 0; time < stateids.size(); time++) {
-      if (!(!stateids[time].IsValid() || stateids[time].time() == time)) {
-        throw std::logic_error("got state with time " + std::to_string(stateids[time].time()) + " at time " + std::to_string(time));
+      if (stateids[time].IsValid() && stateids[time].time() != time) {
+        throw std::logic_error("got valid state with time " + std::to_string(stateids[time].time()) + " at time " + std::to_string(time));
       }
     }
 
@@ -400,10 +403,10 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     const auto& results = FindMatchResults(*this, stateids);
 
     // Insert the interpolated results into the result list
-    best_paths.emplace_back();
+    std::vector<MatchResult> path;
     for (StateId::Time time = 0; time < stateids.size(); time++) {
       // Add in this states result
-      best_paths.back().push_back(results[time]);
+      path.push_back(results[time]);
 
       // See if there were any interpolated points with this state move on if not
       const auto it = interpolated.find(time);
@@ -417,8 +420,15 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       const auto& interpolated_results = InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
 
       // Copy the interpolated match results into the final set
-      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_paths.back()));
+      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(path));
     }
+
+    // Keep the path and the cost for it, if you cant find a valid state id we just give it a huge cost
+    auto found = std::find_if(stateids.rbegin(), stateids.rend(), [](const StateId& si) {
+      return si.IsValid();
+    });
+    auto accumulated_cost = found != stateids.rend() ? vs_.AccumulatedCost(*found) : MAX_ACCUMULATED_COST;
+    best_paths.emplace(accumulated_cost, std::move(path));
 
     // Remove this particular sequence of stateids
     ts_.RemovePath(time);
