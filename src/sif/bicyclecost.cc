@@ -335,7 +335,7 @@ class BicycleCost : public DynamicCost {
 
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
-  
+
   float speedfactor_[kMaxSpeedKph + 1];  // Cost factors based on speed in kph
   float maneuver_penalty_;               // Penalty (seconds) when inconsistent names
   float driveway_penalty_;               // Penalty (seconds) using a driveway

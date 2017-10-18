@@ -543,9 +543,6 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-  if (allow_destination_only_ && !pred->destonly() && edge->destonly()) {
-    penalty += destination_only_penalty_;
-  }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
   }
