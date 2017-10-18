@@ -264,7 +264,7 @@ class TruckCost : public DynamicCost {
   float tollbooth_cost_;            // Cost (seconds) to go through toll booth
   float tollbooth_penalty_;         // Penalty (seconds) to go through a toll booth
   float alley_penalty_;             // Penalty (seconds) to use a alley
-  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
+  float country_crossing_cost_;     // Cost (seconds) to go through a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float low_class_penalty_;         // Penalty (seconds) to go to residential or service road
 

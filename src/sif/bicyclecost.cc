@@ -337,7 +337,6 @@ class BicycleCost : public DynamicCost {
   // We expose it within the source file for testing purposes
   
   float speedfactor_[kMaxSpeedKph + 1];  // Cost factors based on speed in kph
-  float density_factor_[16];             // Density factor
   float maneuver_penalty_;               // Penalty (seconds) when inconsistent names
   float driveway_penalty_;               // Penalty (seconds) using a driveway
   float gate_cost_;                      // Cost (seconds) to go through gate
@@ -346,7 +345,7 @@ class BicycleCost : public DynamicCost {
   float ferry_cost_;                     // Cost (seconds) to exit a ferry
   float ferry_penalty_;                  // Penalty (seconds) to enter a ferry
   float ferry_factor_;                   // Weighting to apply to ferry edges
-  float country_crossing_cost_;          // Cost (seconds) to go through toll booth
+  float country_crossing_cost_;          // Cost (seconds) to go across a country border
   float country_crossing_penalty_;       // Penalty (seconds) to go across a country border
   float use_roads_;                      // Preference of using roads between 0 and 1
   float road_factor_;                    // Road factor based on use_roads_
