@@ -323,7 +323,7 @@ void MapMatcher::Clear()
   container_.Clear();
 }
 
-std::vector<std::vector<MatchResult>>
+std::unordered_set<std::vector<MatchResult>>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
   Clear();
@@ -373,8 +373,8 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   }
 
   //For k paths
-  std::vector<std::vector<MatchResult>> best_paths;
-  for(uint32_t i = 0; i < k; ++i) {
+  std::unordered_set<std::vector<MatchResult>> best_paths;
+  while(best_paths.size() < k) {
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
     std::copy(vs_.SearchPath(time), vs_.PathEnd(), std::back_inserter(stateids));
@@ -397,13 +397,14 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     }
 
     // Get the match result for each of the states
-    const auto& results = FindMatchResults(*this, stateids);
+    auto results = FindMatchResults(*this, stateids);
+    //TODO: figure out when we cant get any more results
 
     // Insert the interpolated results into the result list
-    best_paths.emplace_back();
+    std::vector<MatchResult> best_path;
     for (StateId::Time time = 0; time < stateids.size(); time++) {
       // Add in this states result
-      best_paths.back().push_back(results[time]);
+      best_path.emplace_back(std::move(results[time]));
 
       // See if there were any interpolated points with this state move on if not
       const auto it = interpolated.find(time);
@@ -417,8 +418,11 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       const auto& interpolated_results = InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
 
       // Copy the interpolated match results into the final set
-      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_paths.back()));
+      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_path));
     }
+
+    // Keep this path if its unique
+    auto inserted = best_paths.emplace(std::move(best_path));
 
     // Remove this particular sequence of stateids
     ts_.RemovePath(time);

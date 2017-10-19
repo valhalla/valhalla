@@ -3,11 +3,12 @@
 #define MMP_MAP_MATCHER_H_
 
 #include <vector>
+#include <functional>
+#include <unordered_set>
 
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/graphreader.h>
-
 #include <valhalla/meili/candidate_search.h>
 #include <valhalla/meili/emission_cost_model.h>
 #include <valhalla/meili/match_result.h>
@@ -15,7 +16,6 @@
 #include <valhalla/meili/state.h>
 #include <valhalla/meili/topk_search.h>
 #include <valhalla/meili/transition_cost_model.h>
-
 
 namespace valhalla {
 namespace meili {
@@ -58,7 +58,7 @@ class MapMatcher final
   sif::cost_ptr_t costing() const
   { return mode_costing_[static_cast<size_t>(travelmode_)]; }
 
-  std::vector<std::vector<MatchResult>>
+  std::unordered_set<std::vector<MatchResult> >
   OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k = 1);
 
   /**
