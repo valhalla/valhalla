@@ -84,9 +84,9 @@ constexpr float kDestinationOnlyFactor = 0.2f;
 // avoiding higher class roads for those with low propensity for using roads.
 constexpr float kRoadClassFactor[] = {
     1.0f,   // Motorway
-    0.8f,   // Trunk
-    0.35f,  // Primary
-    0.15f,   // Secondary
+    0.4f,   // Trunk
+    0.2f,   // Primary
+    0.1f,   // Secondary
     0.05f,  // Tertiary
     0.05f,  // Unclassified
     0.0f,   // Residential
@@ -101,22 +101,22 @@ constexpr uint32_t kMaxGradeFactor = 15;
 // edges with the specified grade are weighted. Note that speed also is
 // influenced by grade, so these weights help further avoid hills.
 constexpr float kAvoidHillsStrength[] = {
-    1.0f,      // -10%  - Very steep downhill
-    0.8f,      // -8%
+    2.0f,      // -10%  - Very steep downhill
+    1.0f,      // -8%
     0.5f,      // -6.5%
-    0.3f,      // -5%   - Moderately steep downhill
-    0.15f,     // -3%
+    0.2f,      // -5%   - Moderately steep downhill
+    0.1f,      // -3%
     0.0f,      // -1.5%
     0.05f,     // 0%    - Flat
     0.1f,      // 1.5%
-    0.25f,     // 3%
-    0.5f,      // 5%
-    0.75f,     // 6.5%
-    1.25f,     // 8%    - Moderately steep uphill
-    2.0f,      // 10%
-    3.0f,      // 11.5%
-    4.25f,     // 13%
-    5.5f       // 15%   - Very steep uphill
+    0.3f,      // 3%
+    0.8f,      // 5%
+    2.0f,      // 6.5%
+    3.0f,      // 8%    - Moderately steep uphill
+    4.5f,      // 10%
+    6.5f,      // 11.5%
+    10.0f,     // 13%
+    12.0f      // 15%   - Very steep uphill
 };
 
 constexpr float kSurfaceSpeedFactors[] =
@@ -303,6 +303,7 @@ class MotorScooterCost : public DynamicCost {
 
   float use_hills_;     // Scale from 0 (avoid hills) to 1 (don't avoid hills)
   float use_primary_;   // Scale from 0 (avoid primary roads) to 1 (don't avoid primary roads)
+  float road_factor_;   // Road factor based on use_primary_
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
@@ -379,14 +380,22 @@ MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
   use_hills_ = kUseHillsRange (
       pt.get<float>("use_hills", 0.5f)
   );
+
   float avoid_hills = (1.0f - use_hills_);
   for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
     grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
   }
 
   use_primary_ = kUsePrimaryRange (
-      pt.get<float>("use_primary", 0.5f)
-  );
+      pt.get<float>("use_primary", 0.5f));
+
+  // Set the road classification factor. use_roads factors above 0.5 start to
+  // reduce the weight difference between road classes while factors below 0.5
+  // start to increase the differences.
+  road_factor_ = (use_primary_ >= 0.5f) ?
+                 1.5f - use_primary_ :
+                 2.0f - use_primary_ * 2.0f;
+
 }
 
 // Destructor
@@ -457,7 +466,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
   float speed_penalty = (edge->speed() > top_speed_) ? (edge->speed() - top_speed_) * 0.05f : 0.0f;
   float factor = density_factor_[edge->density()] +
-      kRoadClassFactor[static_cast<uint32_t>(edge->classification())] +
+      (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
       grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
       speed_penalty;
 
