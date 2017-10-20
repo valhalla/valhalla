@@ -13,7 +13,6 @@
 #include <valhalla/baldr/json.h>
 #include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/map_matcher_factory.h>
-#include <valhalla/meili/match_route.h>
 
 namespace valhalla {
 namespace meili {
@@ -92,7 +91,7 @@ class TrafficSegmentMatcher {
    * @return the interpolation points one for each match result and node of each path edge
    */
   virtual std::list<std::vector<interpolation_t> > interpolate_matches(const std::vector<MatchResult>& matches,
-    const std::shared_ptr<MapMatcher>& matcher) const;
+    std::vector<EdgeSegment>& edges, const std::shared_ptr<MapMatcher>& matcher) const;
 
   /**
    * Compute queue length. Determine where (and if) speed drops below the

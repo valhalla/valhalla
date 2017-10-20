@@ -1,13 +1,8 @@
 #include <vector>
 
 #include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphid.h"
-
 #include "meili/geometry_helpers.h"
-#include "meili/match_result.h"
-#include "meili/match_route.h"
+#include "meili/map_matcher.h"
 
 
 namespace {

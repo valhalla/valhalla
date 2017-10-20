@@ -146,18 +146,14 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
   // Call Meili for map matching to get a collection of pathLocation Edges
   matcher->set_interrupt(interrupt);
   // Create the vector of matched path results
-  std::unordered_map<std::vector<meili::MatchResult>, float> offline_results;
+  std::vector<meili::MatchResults> offline_results;
   if (trace.size() > 0)
     offline_results = matcher->OfflineMatch(trace, best_paths);
-  // Sort by cost
-  std::map<float, const decltype(offline_results)::key_type*> sorted;
-  for(const auto& kv : offline_results)
-    sorted.emplace(kv.second, &kv.first);
 
   // Process each score/match result
-  size_t kth = 0;
-  for (const auto& kv : sorted) {
-    const auto& match_results = *kv.second;
+  for (const auto& result : offline_results) {
+    const auto& match_results = result.results;
+    const auto& edge_segments = result.segments;
     std::vector<thor::MatchResult> enhanced_match_results;
     odin::TripPath trip_path;
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
@@ -165,7 +161,7 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
     // Form the path edges based on the matched points and populate disconnected edges
     std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
     std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(),
-        match_results, mode_costing, mode, disconnected_edges, trace_attributes_action);
+        match_results, edge_segments, mode_costing, mode, disconnected_edges, trace_attributes_action);
 
     if (trace_attributes_action) {
       // Associate match points to edges, if enabled
@@ -406,7 +402,7 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
       throw valhalla_exception_t { 442 };
     }
     // Keep the result
-    map_match_results.emplace_back(kv.first, enhanced_match_results, trip_path);
+    map_match_results.emplace_back(result.score, enhanced_match_results, trip_path);
   }
 
   return map_match_results;

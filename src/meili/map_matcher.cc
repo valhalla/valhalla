@@ -3,7 +3,6 @@
 #include "midgard/distanceapproximator.h"
 #include "meili/routing.h"
 #include "meili/geometry_helpers.h"
-#include "meili/match_route.h"
 #include "meili/map_matcher.h"
 #include "meili/emission_cost_model.h"
 #include "meili/transition_cost_model.h"
@@ -325,7 +324,7 @@ void MapMatcher::Clear()
   container_.Clear();
 }
 
-std::unordered_map<std::vector<MatchResult>, float>
+std::vector<MatchResults>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
   Clear();
@@ -375,7 +374,10 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   }
 
   //For k paths
-  std::unordered_map<std::vector<MatchResult>, float> best_paths;
+  std::hash<MatchResults> hasher;
+  std::equal_to<MatchResults> equality;
+  std::unordered_map<size_t, std::vector<size_t> > unique_paths;
+  std::vector<MatchResults> best_paths;
   while(best_paths.size() < k) {
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
@@ -429,17 +431,36 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     // we can do that later
 
     // Keep the path and the cost for it, if you cant find a valid state id we just give it a huge cost
-    auto found = std::find_if(stateids.rbegin(), stateids.rend(), [](const StateId& si) {
+    auto found_state = std::find_if(stateids.rbegin(), stateids.rend(), [](const StateId& si) {
       return si.IsValid();
     });
-    auto accumulated_cost = found != stateids.rend() ? vs_.AccumulatedCost(*found) : MAX_ACCUMULATED_COST;
+    auto accumulated_cost = found_state != stateids.rend() ? vs_.AccumulatedCost(*found_state) : MAX_ACCUMULATED_COST;
 
     // If we didnt find any valid state we are out of results and should stop
-    if(!best_paths.empty() && found == stateids.rend())
+    //TODO: this doesnt seem to be working
+    if(!best_paths.empty() && found_state == stateids.rend())
       break;
 
+    // Construct a result
+    auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
+    MatchResults match_results(std::move(best_path), std::move(segments));
+    match_results.score = accumulated_cost;
+
     // Keep this path if its unique
-    auto inserted = best_paths.emplace(std::move(best_path), accumulated_cost);
+    auto hash = hasher(match_results);
+    auto found_path = unique_paths.find(hash);
+    //never saw one like it
+    if(found_path == unique_paths.end()) {
+      unique_paths.emplace(hash, std::vector<size_t>{best_paths.size()});
+      best_paths.emplace_back(std::move(match_results));
+    }//its a hash collision so we have to check for equality and if none are equal we can add it
+    else if(found_path->second.rend() == std::find_if(found_path->second.rbegin(), found_path->second.rend(),
+      [&best_paths, &match_results, &equality](size_t i) {
+        return equality(best_paths[i], match_results);
+      })) {
+      found_path->second.push_back(best_paths.size());
+      best_paths.emplace_back(std::move(match_results));
+    }
 
     // Remove this particular sequence of stateids
     ts_.RemovePath(time);
