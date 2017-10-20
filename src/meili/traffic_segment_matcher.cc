@@ -162,7 +162,7 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
 
   // Create the vector of matched path results
   auto topk_matches = matcher->OfflineMatch(measurements);
-  const auto& match_results = *topk_matches.begin();
+  const auto& match_results = topk_matches.begin()->first;
   if (match_results.size() != measurements.size())
     throw std::runtime_error("Sequence size not equal to match result size.");
 

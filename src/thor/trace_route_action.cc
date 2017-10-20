@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <map>
 
 #include "exception.h"
 #include "midgard/logging.h"
@@ -145,15 +146,18 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
   // Call Meili for map matching to get a collection of pathLocation Edges
   matcher->set_interrupt(interrupt);
   // Create the vector of matched path results
-  std::unordered_set<std::vector<meili::MatchResult>> offline_results;
+  std::unordered_map<std::vector<meili::MatchResult>, float> offline_results;
   if (trace.size() > 0)
     offline_results = matcher->OfflineMatch(trace, best_paths);
+  // Sort by cost
+  std::map<float, const decltype(offline_results)::key_type*> sorted;
+  for(const auto& kv : offline_results)
+    sorted.emplace(kv.second, &kv.first);
 
   // Process each score/match result
   size_t kth = 0;
-  for (const auto& match_results : offline_results) {
-    //TODO: figure out the confidence score..
-    float score = 1.f / (kth++ + 1.f);
+  for (const auto& kv : sorted) {
+    const auto& match_results = *kv.second;
     std::vector<thor::MatchResult> enhanced_match_results;
     odin::TripPath trip_path;
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
@@ -402,7 +406,7 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
       throw valhalla_exception_t { 442 };
     }
     // Keep the result
-    map_match_results.emplace_back(score, enhanced_match_results, trip_path);
+    map_match_results.emplace_back(kv.first, enhanced_match_results, trip_path);
   }
 
   return map_match_results;

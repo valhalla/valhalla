@@ -13,6 +13,8 @@ namespace {
 using namespace valhalla;
 using namespace valhalla::meili;
 
+constexpr float MAX_ACCUMULATED_COST = 99999999;
+
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
                            const Measurement& right)
@@ -323,7 +325,7 @@ void MapMatcher::Clear()
   container_.Clear();
 }
 
-std::unordered_set<std::vector<MatchResult>>
+std::unordered_map<std::vector<MatchResult>, float>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
   Clear();
@@ -373,7 +375,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   }
 
   //For k paths
-  std::unordered_set<std::vector<MatchResult>> best_paths;
+  std::unordered_map<std::vector<MatchResult>, float> best_paths;
   while(best_paths.size() < k) {
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
@@ -421,19 +423,29 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_path));
     }
 
+    // TODO: do something get real cost later, if we dont like sending back cost from here we can simple send
+    // back k as the float value so that at least we know the smaller ones are relatively better than the larger
+    // ones we just dont know how much and then if we want to call back in with the result to get the real cost
+    // we can do that later
+
+    // Keep the path and the cost for it, if you cant find a valid state id we just give it a huge cost
+    auto found = std::find_if(stateids.rbegin(), stateids.rend(), [](const StateId& si) {
+      return si.IsValid();
+    });
+    auto accumulated_cost = found != stateids.rend() ? vs_.AccumulatedCost(*found) : MAX_ACCUMULATED_COST;
+
+    // If we didnt find any valid state we are out of results and should stop
+    if(!best_paths.empty() && found == stateids.rend())
+      break;
+
     // Keep this path if its unique
-    auto inserted = best_paths.emplace(std::move(best_path));
+    auto inserted = best_paths.emplace(std::move(best_path), accumulated_cost);
 
     // Remove this particular sequence of stateids
     ts_.RemovePath(time);
   }
 
-  //Here are all k paths
-  if (!(best_paths.size() == k)) {
-    // TODO relax it to be best_paths.size() <= k
-    std::logic_error("should get " + std::to_string(k) + " paths but got " + std::to_string(best_paths.size()));
-  }
-
+  // Give back anywhere from 1 to k results
   return best_paths;
 }
 

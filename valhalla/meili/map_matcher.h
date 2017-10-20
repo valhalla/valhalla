@@ -4,7 +4,7 @@
 
 #include <vector>
 #include <functional>
-#include <unordered_set>
+#include <unordered_map>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -58,7 +58,7 @@ class MapMatcher final
   sif::cost_ptr_t costing() const
   { return mode_costing_[static_cast<size_t>(travelmode_)]; }
 
-  std::unordered_set<std::vector<MatchResult> >
+  std::unordered_map<std::vector<MatchResult>, float>
   OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k = 1);
 
   /**
