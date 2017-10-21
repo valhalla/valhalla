@@ -439,7 +439,7 @@ MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
   // start to increase the differences.
   road_factor_ = (use_primary_ >= 0.5f) ?
                  1.5f - use_primary_ :
-                 2.0f - use_primary_ * 2.0f;
+                 3.0f - use_primary_ * 5.0f;
 
 }
 
@@ -511,7 +511,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
       kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
 
   float speed_penalty = (edge->speed() > top_speed_) ? (edge->speed() - top_speed_) * 0.05f : 0.0f;
-  float factor = density_factor_[edge->density()] +
+  float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
       (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
       grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
       speed_penalty;
