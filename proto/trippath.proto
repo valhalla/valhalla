@@ -93,6 +93,7 @@ message TripPath {
     kMotorcycle = 1;
     kAutoBus = 2;
     kTractorTrailer = 3;
+    kMotorScooter = 4;
   }
 
   // TODO: review and update as needed

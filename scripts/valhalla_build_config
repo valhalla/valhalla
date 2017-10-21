@@ -24,6 +24,7 @@ config = {
   },
   'loki': {
     'actions':['locate','route','one_to_many','many_to_one','many_to_many','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes'],
+    'use_connectivity': True,
     'service_defaults': {
       'radius': 0,
       'minimum_reachability': 50
@@ -230,7 +231,8 @@ help_text = {
   },
   'loki': {
     'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, one_to_many, many_to_one, many_to_many, sources_to_targets, optimized_route, isochrone, trace_route, trace_attributes',
-   'service_defaults': {
+    'use_connectivity': 'a boolean value to know whether or not to construct the connectivity maps',
+    'service_defaults': {
       'radius': 'Default radius to apply to incoming locations should one not be supplied',
       'minimum_reachability': 'Default minimum reachability to apply to incoming locations should one not be supplied',
     },

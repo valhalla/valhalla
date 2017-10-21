@@ -585,7 +585,11 @@ struct graph_callback : public OSMPBF::Callback {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
 
-        if (value.find("paved") != std::string::npos
+        // Find unpaved before paved since they have common string
+        if (value.find("unpaved") != std::string::npos)
+          w.set_surface(Surface::kGravel);
+
+        else if (value.find("paved") != std::string::npos
             || value.find("pavement") != std::string::npos
             || value.find("asphalt") != std::string::npos
             || value.find("concrete") != std::string::npos
@@ -616,8 +620,7 @@ struct graph_callback : public OSMPBF::Callback {
 
         else if (value.find("gravel") != std::string::npos
             || value.find("pebblestone") != std::string::npos
-            || value.find("sand") != std::string::npos
-            || value.find("unpaved") != std::string::npos)
+            || value.find("sand") != std::string::npos)
           w.set_surface(Surface::kGravel);
         else if (value.find("grass") != std::string::npos)
           w.set_surface(Surface::kPath);

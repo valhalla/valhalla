@@ -128,7 +128,7 @@ class TopKSearch
   void RemovePath(const StateId::Time& time);
 
   // find corresponding origin stateid recursively
-  StateId GetOrigin(const StateId& stateid);
+  StateId GetOrigin(const StateId& stateid) const;
 
  private:
   IViterbiSearch& vs_;

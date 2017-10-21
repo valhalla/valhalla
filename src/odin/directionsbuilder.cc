@@ -24,6 +24,7 @@ const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type
   { static_cast<int>(TripPath_VehicleType_kMotorcycle), TripDirections_VehicleType_kMotorcycle },
   { static_cast<int>(TripPath_VehicleType_kAutoBus), TripDirections_VehicleType_kAutoBus },
   { static_cast<int>(TripPath_VehicleType_kTractorTrailer), TripDirections_VehicleType_kTractorTrailer },
+  { static_cast<int>(TripPath_VehicleType_kMotorScooter), TripDirections_VehicleType_kMotorScooter },
 };
 
 const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type {

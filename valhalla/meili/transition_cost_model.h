@@ -6,6 +6,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/state.h>
+#include <valhalla/meili/topk_search.h>
 #include <valhalla/meili/viterbi_search.h>
 #include <valhalla/sif/dynamiccost.h>
 
@@ -18,6 +19,7 @@ class TransitionCostModel
   TransitionCostModel(
       baldr::GraphReader& graphreader,
       const IViterbiSearch& vs,
+      const TopKSearch& ts,
       const StateContainer& container,
       const sif::cost_ptr_t* mode_costing,
       const sif::TravelMode travelmode,
@@ -30,6 +32,7 @@ class TransitionCostModel
   TransitionCostModel(
       baldr::GraphReader& graphreader,
       const IViterbiSearch& vs,
+      const TopKSearch& ts,
       const StateContainer& container,
       const sif::cost_ptr_t* mode_costing,
       const sif::TravelMode travelmode,
@@ -71,6 +74,8 @@ class TransitionCostModel
   baldr::GraphReader& graphreader_;
 
   const IViterbiSearch& vs_;
+
+  const TopKSearch& ts_;
 
   const StateContainer& container_;
 

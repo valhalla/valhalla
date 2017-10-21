@@ -59,7 +59,7 @@ constexpr uint32_t kTransitStartEndMaxDistance    = 2415;   // 1.5 miles
 constexpr uint32_t kTransitTransferMaxDistance   = 805;   // 0.5 miles
 
 // Avoid roundabouts
-constexpr float kRoundaboutFactor = 5.0f;
+constexpr float kRoundaboutFactor = 2.0f;
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.

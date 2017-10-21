@@ -97,7 +97,7 @@ void TopKSearch::RemovePath(const StateId::Time& time)
   evss_.back().ClonePath(time);
 }
 
-StateId TopKSearch::GetOrigin(const StateId& stateid)
+StateId TopKSearch::GetOrigin(const StateId& stateid) const
 {
   StateId last_valid_origin, current = stateid;
 

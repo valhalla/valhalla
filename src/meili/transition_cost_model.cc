@@ -14,6 +14,7 @@ namespace meili {
 TransitionCostModel::TransitionCostModel(
     baldr::GraphReader& graphreader,
     const IViterbiSearch& vs,
+    const TopKSearch& ts,
     const StateContainer& container,
     const sif::cost_ptr_t* mode_costing,
     const sif::TravelMode travelmode,
@@ -24,6 +25,7 @@ TransitionCostModel::TransitionCostModel(
     float turn_penalty_factor)
     : graphreader_(graphreader),
       vs_(vs),
+      ts_(ts),
       container_(container),
       mode_costing_(mode_costing),
       travelmode_(travelmode),
@@ -53,6 +55,7 @@ TransitionCostModel::TransitionCostModel(
 TransitionCostModel::TransitionCostModel(
     baldr::GraphReader& graphreader,
     const IViterbiSearch& vs,
+    const TopKSearch& ts,
     const StateContainer& container,
     const sif::cost_ptr_t* mode_costing,
     const sif::TravelMode travelmode,
@@ -60,6 +63,7 @@ TransitionCostModel::TransitionCostModel(
     : TransitionCostModel(
           graphreader,
           vs,
+          ts,
           container,
           mode_costing,
           travelmode,
@@ -107,7 +111,8 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
   const Label* edgelabel = nullptr;
   const auto& prev_stateid = vs_.Predecessor(left.stateid());
   if (prev_stateid.IsValid()) {
-    const auto& prev_state = container_.state(prev_stateid);
+    const auto& original_prev_stateid = ts_.GetOrigin(prev_stateid);
+    const auto& prev_state = container_.state(original_prev_stateid.IsValid() ? original_prev_stateid : prev_stateid);
     if (!prev_state.routed()) {
       // When ViterbiSearch calls this method, the left state is
       // guaranteed to be optimal, its predecessor is therefore
