@@ -80,11 +80,12 @@ constexpr ranged_default_t<uint32_t> kTopSpeedRange{0, kDefaultTopSpeed, kMaxSpe
 constexpr float kDestinationOnlyFactor = 0.2f;
 
 // Weighting factor based on road class. These apply penalties to higher class
-// roads. These penalties are modulated by the useroads factor - further
-// avoiding higher class roads for those with low propensity for using roads.
+// roads. These penalties are modulated by the road factor - further
+// avoiding higher class roads for those with low propensity for using
+// primary roads.
 constexpr float kRoadClassFactor[] = {
     1.0f,   // Motorway
-    0.4f,   // Trunk
+    0.5f,   // Trunk
     0.2f,   // Primary
     0.1f,   // Secondary
     0.05f,  // Tertiary
@@ -101,8 +102,8 @@ constexpr uint32_t kMaxGradeFactor = 15;
 // edges with the specified grade are weighted. Note that speed also is
 // influenced by grade, so these weights help further avoid hills.
 constexpr float kAvoidHillsStrength[] = {
-    2.0f,      // -10%  - Very steep downhill
-    1.0f,      // -8%
+    1.0f,      // -10%  - Very steep downhill
+    0.8f,      // -8%
     0.5f,      // -6.5%
     0.2f,      // -5%   - Moderately steep downhill
     0.1f,      // -3%
@@ -114,9 +115,53 @@ constexpr float kAvoidHillsStrength[] = {
     2.0f,      // 6.5%
     3.0f,      // 8%    - Moderately steep uphill
     4.5f,      // 10%
-    6.5f,      // 11.5%
-    10.0f,     // 13%
-    12.0f      // 15%   - Very steep uphill
+    6.0f,      // 11.5%
+    8.0f,     // 13%
+    10.0f      // 15%   - Very steep uphill
+};
+
+
+// Speed adjustment factors based on weighted grade. Comments here show an
+// example of speed changes based on "grade", using a base speed of 25 MPH
+// on flat roads
+/*
+constexpr float kGradeBasedSpeedFactor[] = {
+  2.0f,      // -10%  - 45
+  1.7f,     // -8%   - 40.5
+  1.4f,      // -6.5% - 36
+  1.2f,      // -5%   - 30.6
+  1.1f,      // -3%   - 25
+  1.05f,      // -1.5% - 21.6
+  1.0f,      // 0%    - 18
+  0.95f,     // 1.5%  - 17
+  0.9f,     // 3%    - 15
+  0.8f,     // 5%    - 13.5
+  0.65f,     // 6.5%  - 12
+  0.5f,     // 8%    - 10
+  0.35f,      // 10%   - 9
+  0.25f,     // 11.5% - 6.25
+  0.15f,      // 13%   - 3.75
+  0.1f       // 15%   - 2.5
+};
+*/
+
+constexpr float kGradeBasedSpeedFactor[] = {
+  1.5f,      // -10%  - 45
+  1.4f,     // -8%   - 40.5
+  1.3f,      // -6.5% - 36
+  1.2f,      // -5%   - 30.6
+  1.1f,      // -3%   - 25
+  1.05f,      // -1.5% - 21.6
+  1.0f,      // 0%    - 18
+  0.95f,     // 1.5%  - 17
+  0.9f,     // 3%    - 15
+  0.75f,     // 5%    - 13.5
+  0.6f,     // 6.5%  - 12
+  0.5f,     // 8%    - 10
+  0.45f,      // 10%   - 9
+  0.4f,     // 11.5% - 8
+  0.35f,      // 13%   - 7
+  0.25f       // 15%   - 5.5
 };
 
 constexpr float kSurfaceSpeedFactors[] =
@@ -374,11 +419,11 @@ MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
   }
 
   top_speed_ = kTopSpeedRange (
-    pt.get<float>("top_speed", 45)
+    pt.get<float>("top_speed", kDefaultTopSpeed)
   );
 
   use_hills_ = kUseHillsRange (
-      pt.get<float>("use_hills", 0.5f)
+      pt.get<float>("use_hills", kDefaultUseHills)
   );
 
   float avoid_hills = (1.0f - use_hills_);
@@ -387,7 +432,7 @@ MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
   }
 
   use_primary_ = kUsePrimaryRange (
-      pt.get<float>("use_primary", 0.5f));
+      pt.get<float>("use_primary", kDefaultUsePrimary));
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -461,8 +506,9 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return {sec * ferry_factor_, sec };
   }
 
-  uint32_t scooter_speed = (std::min(top_speed_, edge->speed ())
-    * kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())]);
+  uint32_t scooter_speed = (std::min(top_speed_, edge->speed ()) *
+      kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
+      kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
 
   float speed_penalty = (edge->speed() > top_speed_) ? (edge->speed() - top_speed_) * 0.05f : 0.0f;
   float factor = density_factor_[edge->density()] +
