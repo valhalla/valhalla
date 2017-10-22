@@ -109,20 +109,13 @@ constexpr float kMaxCyclingSpeed = 60.0f; // KPH
 // These values determine the percentage by which speed us reduced for
 // each surface type. (0 values indicate unusable surface types).
 constexpr float kRoadSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 0.9f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f };
+        { 1.0f, 1.0f, 0.9f, 0.7f, 0.6f, 0.5f, 0.4f, 0.0f };
 constexpr float kHybridSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 1.0f, 0.8f, 0.5f, 0.0f, 0.0f, 0.0f };
+        { 1.0f, 1.0f, 1.0f, 0.8f, 0.7f, 0.6f, 0.5f, 0.0f };
 constexpr float kCrossSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 1.0f, 0.8f, 0.7f, 0.5f, 0.0f, 0.0f };
+        { 1.0f, 1.0f, 1.0f, 0.9f, 0.8f, 0.7f, 0.6f, 0.0f };
 constexpr float kMountainSurfaceSpeedFactors[] =
         { 1.0f, 1.0f, 1.0f, 1.0f, 0.9f, 0.8f, 0.7f, 0.0f };
-
-// Worst allowed surface based on bicycle type
-constexpr Surface kWorstAllowedSurface[] =
-        { Surface::kCompacted,            // Road bicycle
-          Surface::kGravel,               // Cross
-          Surface::kDirt,                 // Hybrid
-          Surface::kPath };               // Mountain
 
 // Avoid driveways
 constexpr float kDrivewayFactor = 20.0f;
@@ -362,9 +355,6 @@ class BicycleCost : public DynamicCost {
   // Bicycle type
   BicycleType type_;
 
-  // Minimal surface type usable by the bicycle type
-  Surface minimal_allowed_surface_;
-
   // Surface speed factors (based on road surface type).
   const float* surface_speed_factor_;
 
@@ -393,7 +383,7 @@ protected:
       if ( edge->IsTransition() || edge->is_shortcut() ||
           !(edge->forwardaccess() & kBicycleAccess) ||
            edge->use() == Use::kSteps ||
-           edge->surface() > kWorstAllowedSurface[b]) {
+           edge->surface() == Surface::kImpassable) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -479,21 +469,14 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t])
   );
 
-  // Set the minimal surface type usable by the bicycle type and the
-  // surface speed factors.
+  // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
-    // Heavily penalize driveways
-    minimal_allowed_surface_ = Surface::kCompacted;
     surface_speed_factor_ = kRoadSurfaceSpeedFactors;
   } else if (type_ == BicycleType::kHybrid) {
-    minimal_allowed_surface_ =  Surface::kDirt;
     surface_speed_factor_ = kHybridSurfaceSpeedFactors;
   } else if (type_ == BicycleType::kCross) {
-    minimal_allowed_surface_ =  Surface::kGravel;
     surface_speed_factor_ = kCrossSurfaceSpeedFactors;
   } else {
-    // Mountain - allow all but impassable
-    minimal_allowed_surface_ =  Surface::kPath;
     surface_speed_factor_ = kMountainSurfaceSpeedFactors;
   }
 
@@ -601,7 +584,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   // Prohibit certain roads based on surface type and bicycle type
-  return edge->surface() <= minimal_allowed_surface_;
+  return edge->surface() != Surface::kImpassable;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -625,7 +608,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   // Prohibit certain roads based on surface type and bicycle type
-  return opp_edge->surface() <= minimal_allowed_surface_;
+  return opp_edge->surface() != Surface::kImpassable;
 }
 
 // Check if access is allowed at the specified node.
