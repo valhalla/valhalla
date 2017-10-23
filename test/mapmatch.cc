@@ -63,7 +63,6 @@ namespace {
   }
 
   boost::property_tree::ptree json_to_pt(const std::string& json) {
-    std::cout << json << std::endl;
     std::stringstream ss; ss << json;
     boost::property_tree::ptree pt;
     boost::property_tree::read_json(ss, pt);
@@ -84,7 +83,7 @@ namespace {
              "mode":"auto","grid":{"cache_size":100240,"size":500},
              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-             "search_radius":1.0,"sigma_z":4.07,"turn_penalty_factor":200}},
+             "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
     "service_limits": {
       "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
@@ -284,8 +283,10 @@ namespace {
     //this tests a fix for an infinite loop because there is only 1 result and we ask for 4
     matched = json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
-         {"lat":52.09579,"lon":5.13137,"accuracy":10},
-         {"lat":52.09652,"lon":5.13184,"accuracy":10}]})"));
+         {"lat":52.09579,"lon":5.13137,"accuracy":5},
+         {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
+    if(matched.get_child("alternate_paths").size() > 0)
+      throw std::logic_error("There should be only one result");
   }
 
 }
