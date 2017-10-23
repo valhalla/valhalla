@@ -298,14 +298,14 @@ int main(int argc, char* argv[]) {
     seed = std::stoi(argv[1]);
   if(argc > 2)
     bound = std::stoi(argv[2]);
-/*
+
   suite.test(TEST_CASE(test32bit));
 
   suite.test(TEST_CASE(test_matcher));
 
   suite.test(TEST_CASE(test_distance_only));
 
-  suite.test(TEST_CASE(test_time_rejection));*/
+  suite.test(TEST_CASE(test_time_rejection));
 
   suite.test(TEST_CASE(test_topk));
 

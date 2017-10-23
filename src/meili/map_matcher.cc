@@ -13,6 +13,7 @@ using namespace valhalla;
 using namespace valhalla::meili;
 
 constexpr float MAX_ACCUMULATED_COST = 99999999;
+constexpr size_t MAX_RESULTS = 20;
 
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
@@ -375,7 +376,8 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
 
   //For k paths
   std::vector<MatchResults> best_paths;
-  while(best_paths.size() < k) {
+  size_t results = 0;
+  while(best_paths.size() < k && results++ < MAX_RESULTS) {
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
     try {
@@ -438,10 +440,6 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       return si.IsValid();
     });
     auto accumulated_cost = found_state != stateids.rend() ? vs_.AccumulatedCost(*found_state) : MAX_ACCUMULATED_COST;
-
-    for(auto i : stateids)
-      std::cout << i.time() << ',' << i.id() << std::endl;
-    std::cout << std::endl;
 
     // Construct a result
     auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
