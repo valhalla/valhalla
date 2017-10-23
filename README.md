@@ -105,6 +105,7 @@ git submodule update --init --recursive
 ./configure
 make test -j$(nproc)
 sudo make install
+# Note: on macOS, a few tests involving time formatting will fail: narrativebuilder, util_odin, mapmatch
 ```
 
 Please see `./configure --help` for more options on how to control the build process. There are a few notable options that you might want to try out:
