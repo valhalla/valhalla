@@ -91,9 +91,7 @@ sudo apt-get install -y python-all-dev
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
     # install dependencies (czmq is required by prime_server)
-    brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config lua czmq
-    # you also need to be able to link sqlite3 (at least on some versions of macOS and only if you want datatools)
-    brew link sqlite3
+    brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl czmq
 
     # clone and build prime_server https://github.com/kevinkreiser/prime_server#build-and-install
 
