@@ -3,8 +3,7 @@
 #define MMP_MATCH_RESULT_H_
 
 #include <vector>
-#include <functional>
-#include <unordered_set>
+#include <algorithm>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
@@ -70,10 +69,22 @@ struct MatchResults {
     score = o.score;
     return *this;
   }
+  bool operator==(const MatchResults& o) const {
+    //account for node snaps at the beginning and end of this result
+    auto e1 = segments.empty() || segments.front().source < 1.0f || edges.size() ? edges.cbegin() : edges.cbegin() + 1;
+    auto e2 = segments.empty() || segments.back().target > 0.0f || edges.size() ? edges.cend() : edges.cend() - 1;
+    //account for node snaps at the beginning and end of the other result
+    auto e3 = o.segments.empty() || o.segments.front().source < 1.0f || o.edges.size() ? o.edges.cbegin() : o.edges.cbegin() + 1;
+    auto e4 = o.segments.empty() || o.segments.back().target > 0.0f || o.edges.size() ? o.edges.cend() : o.edges.cend() - 1;
+    //if we can find the one path contained within the other then they are the same
+    return std::search(e1, e2, e3, e4) != e2 || std::search(e3, e4, e1, e2) != e4;
+  }
+
   std::vector<MatchResult> results;
   std::vector<EdgeSegment> segments;
   std::vector<uint64_t> edges;
   float score;
+
  private:
   std::vector<uint64_t> unique() {
     std::vector<uint64_t> edges;
@@ -86,30 +97,6 @@ struct MatchResults {
 };
 
 }
-}
-
-namespace std {
-  template <>
-  struct equal_to<valhalla::meili::MatchResults> {
-    bool operator()(const valhalla::meili::MatchResults& a, const valhalla::meili::MatchResults& b) const {
-      //equal if they are the same edges but TODO: if one has an extra on either end
-      //then they dont count if they are 100% along at the beginning edge or 0% along
-      //at the ending edge
-      return a.edges == b.edges;
-    }
-  };
-
-  template <>
-  struct hash<valhalla::meili::MatchResults> {
-    size_t operator()(const valhalla::meili::MatchResults& r) const {
-      std::hash<uint64_t> hasher;
-      size_t seed = 0;
-      uint64_t last = -1;
-      for(auto id : r.edges)
-        seed ^= hasher(id) + 0x9e3779b9 + (seed<<6) + (seed>>2);
-      return seed;
-    }
-  };
 }
 
 #endif // MMP_MATCH_RESULT_H_
