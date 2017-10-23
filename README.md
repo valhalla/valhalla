@@ -100,8 +100,8 @@ After getting the dependencies install it with:
 ```bash
 git submodule update --init --recursive
 ./autogen.sh
-# on macOS you need to tell linkers how to reach home-brewed sqlite3
-# export LDFLAGS="-L/usr/local/opt/sqlite/lib/ -lsqlite3"
+# on macOS you need to tell linkers how to reach home-brewed sqlite3 and curl:
+# export LDFLAGS="-L/usr/local/opt/sqlite/lib/ -lsqlite3" PKG_CONFIG_PATH=/usr/local/opt/curl/lib/pkgconfig
 ./configure
 make test -j$(nproc)
 sudo make install
