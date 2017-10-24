@@ -16,6 +16,7 @@ namespace thor {
 // TripPathBuilder.
 std::vector<PathInfo> MapMatcher::FormPath(
     meili::MapMatcher* matcher, const std::vector<meili::MatchResult>& results,
+    const std::vector<meili::EdgeSegment>& edge_segments,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
     const sif::TravelMode mode,
     std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
@@ -30,8 +31,6 @@ std::vector<PathInfo> MapMatcher::FormPath(
   const NodeInfo* nodeinfo = nullptr;
   const DirectedEdge* directededge;
   EdgeLabel pred;
-
-  auto edge_segments = ConstructRoute(*matcher, results.begin(), results.end());
 
   for (const auto& edge_segment : edge_segments) {
 

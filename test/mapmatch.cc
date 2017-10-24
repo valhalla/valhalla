@@ -83,7 +83,7 @@ namespace {
              "mode":"auto","grid":{"cache_size":100240,"size":500},
              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-             "search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}},
+             "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
     "service_limits": {
       "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
@@ -202,11 +202,11 @@ namespace {
   void test_distance_only() {
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
-            R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
-                "costing":"auto","shape_match":"map_snap","shape":[
-                {"lat":52.09110,"lon":5.09806,"accuracy":10},
-                {"lat":52.09050,"lon":5.09769,"accuracy":100},
-                {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
+      R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
+          "costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"accuracy":10},
+          {"lat":52.09050,"lon":5.09769,"accuracy":100},
+          {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
     std::unordered_set<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
@@ -218,11 +218,11 @@ namespace {
   void test_time_rejection() {
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
-            R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
-                "costing":"auto","shape_match":"map_snap","shape":[
-                {"lat":52.09110,"lon":5.09806,"accuracy":10,"time":2},
-                {"lat":52.09050,"lon":5.09769,"accuracy":100,"time":4},
-                {"lat":52.09098,"lon":5.09679,"accuracy":10,"time":6}]})"));
+      R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
+          "costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"accuracy":10,"time":2},
+          {"lat":52.09050,"lon":5.09769,"accuracy":100,"time":4},
+          {"lat":52.09098,"lon":5.09679,"accuracy":10,"time":6}]})"));
     std::unordered_set<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
@@ -239,12 +239,13 @@ namespace {
   }
 
   void test_topk() {
+    //tests a fork in the road
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
-            R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-                {"lat":52.08511,"lon":5.15085,"accuracy":50},
-                {"lat":52.08533,"lon":5.15109,"accuracy":50},
-                {"lat":52.08539,"lon":5.15100,"accuracy":50}]})"));
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+          {"lat":52.08511,"lon":5.15085,"accuracy":50},
+          {"lat":52.08533,"lon":5.15109,"accuracy":50},
+          {"lat":52.08539,"lon":5.15100,"accuracy":50}]})"));
 
     std::vector<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
@@ -269,6 +270,7 @@ namespace {
       throw std::logic_error("The second most obvious result is stay right but got: " + streets);
     }
 
+    //tests a previous segfault due to using a claimed state
     matched = json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
          {"lat":52.088548,"lon":5.15357,"accuracy":30},
@@ -277,6 +279,14 @@ namespace {
          {"lat":52.08861,"lon":5.15272,"accuracy":30},
          {"lat":52.08863,"lon":5.15253,"accuracy":30},
          {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
+
+    //this tests a fix for an infinite loop because there is only 1 result and we ask for 4
+    matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
+         {"lat":52.09579,"lon":5.13137,"accuracy":5},
+         {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
+    if(matched.get_child("alternate_paths").size() > 0)
+      throw std::logic_error("There should be only one result");
   }
 
 }

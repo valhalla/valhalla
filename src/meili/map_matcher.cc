@@ -3,7 +3,6 @@
 #include "midgard/distanceapproximator.h"
 #include "meili/routing.h"
 #include "meili/geometry_helpers.h"
-#include "meili/match_route.h"
 #include "meili/map_matcher.h"
 #include "meili/emission_cost_model.h"
 #include "meili/transition_cost_model.h"
@@ -12,6 +11,9 @@ namespace {
 
 using namespace valhalla;
 using namespace valhalla::meili;
+
+constexpr float MAX_ACCUMULATED_COST = 99999999;
+constexpr size_t MAX_RESULTS = 20;
 
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
@@ -323,7 +325,7 @@ void MapMatcher::Clear()
   container_.Clear();
 }
 
-std::vector<std::vector<MatchResult>>
+std::vector<MatchResults>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
   Clear();
@@ -373,13 +375,20 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   }
 
   //For k paths
-  std::vector<std::vector<MatchResult>> best_paths;
-  for(uint32_t i = 0; i < k; ++i) {
+  std::vector<MatchResults> best_paths;
+  size_t results = 0;
+  while(best_paths.size() < k && results++ < MAX_RESULTS) {
     // Get the states for the kth best path its in reverse order
     std::vector<StateId> stateids;
-    std::copy(vs_.SearchPath(time), vs_.PathEnd(), std::back_inserter(stateids));
-    std::reverse(stateids.begin(), stateids.end());
+    try {
+      std::copy(vs_.SearchPath(time, !best_paths.empty()), vs_.PathEnd(), std::back_inserter(stateids));
+      std::reverse(stateids.begin(), stateids.end());
+    }// There was a discontinuous path and we already had at least one result so we bail
+    catch (const discontinuity_exception_t&) {
+      break;
+    }
 
+    // Get back the real state ids
     std::transform(
         stateids.begin(),
         stateids.end(),
@@ -397,13 +406,14 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     }
 
     // Get the match result for each of the states
-    const auto& results = FindMatchResults(*this, stateids);
+    auto results = FindMatchResults(*this, stateids);
+    //TODO: figure out when we cant get any more results
 
     // Insert the interpolated results into the result list
-    best_paths.emplace_back();
+    std::vector<MatchResult> best_path;
     for (StateId::Time time = 0; time < stateids.size(); time++) {
       // Add in this states result
-      best_paths.back().push_back(results[time]);
+      best_path.emplace_back(std::move(results[time]));
 
       // See if there were any interpolated points with this state move on if not
       const auto it = interpolated.find(time);
@@ -417,19 +427,37 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       const auto& interpolated_results = InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
 
       // Copy the interpolated match results into the final set
-      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_paths.back()));
+      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_path));
     }
+
+    // TODO: do something to get real cost later, if we dont like sending back cost from here we can simply send
+    // back k as the float value so that at least we know the smaller ones are relatively better than the larger
+    // ones we just dont know how much and then if we want to call back in with the result to get the real cost
+    // we can do that later
+
+    // Keep the path and the cost for it, if you cant find a valid state id we just give it a huge cost
+    auto found_state = std::find_if(stateids.rbegin(), stateids.rend(), [](const StateId& si) {
+      return si.IsValid();
+    });
+    auto accumulated_cost = found_state != stateids.rend() ? vs_.AccumulatedCost(*found_state) : MAX_ACCUMULATED_COST;
+
+    // Construct a result
+    auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
+    MatchResults match_results(std::move(best_path), std::move(segments));
+    match_results.score = accumulated_cost;
+
+    // We'll keep it if we don't have a duplicate already
+    auto found_path = std::find_if(best_paths.rbegin(), best_paths.rend(), [&match_results](const MatchResults& r) {
+      return match_results == r;
+    });
+    if(found_path == best_paths.rend())
+      best_paths.emplace_back(std::move(match_results));
 
     // Remove this particular sequence of stateids
     ts_.RemovePath(time);
   }
 
-  //Here are all k paths
-  if (!(best_paths.size() == k)) {
-    // TODO relax it to be best_paths.size() <= k
-    std::logic_error("should get " + std::to_string(k) + " paths but got " + std::to_string(best_paths.size()));
-  }
-
+  // Give back anywhere from 1 to k results
   return best_paths;
 }
 

@@ -6,8 +6,9 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphreader.h>
-
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/meili/candidate_search.h>
 #include <valhalla/meili/emission_cost_model.h>
 #include <valhalla/meili/match_result.h>
@@ -15,7 +16,7 @@
 #include <valhalla/meili/state.h>
 #include <valhalla/meili/topk_search.h>
 #include <valhalla/meili/transition_cost_model.h>
-
+#include <valhalla/meili/routing.h>
 
 namespace valhalla {
 namespace meili {
@@ -58,7 +59,7 @@ class MapMatcher final
   sif::cost_ptr_t costing() const
   { return mode_costing_[static_cast<size_t>(travelmode_)]; }
 
-  std::vector<std::vector<MatchResult>>
+  std::vector<MatchResults>
   OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k = 1);
 
   /**
@@ -96,6 +97,28 @@ class MapMatcher final
 
   TransitionCostModel transition_cost_model_;
 };
+
+
+std::vector<EdgeSegment>&
+MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target);
+
+
+std::vector<EdgeSegment>
+MergeRoute(const State& source, const State& target);
+
+
+template <typename match_iterator_t>
+std::vector<EdgeSegment>
+ConstructRoute(const MapMatcher& mapmatcher,
+               match_iterator_t begin,
+               match_iterator_t end);
+
+
+template <typename segment_iterator_t>
+std::vector<std::vector<midgard::PointLL>>
+ConstructRouteShapes(baldr::GraphReader& graphreader,
+                     segment_iterator_t begin,
+                     segment_iterator_t end);
 
 }
 }

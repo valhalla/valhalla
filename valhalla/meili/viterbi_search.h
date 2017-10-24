@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <stdexcept>
 
 #include <valhalla/meili/priority_queue.h>
 #include <valhalla/meili/stateid.h>
@@ -140,6 +141,10 @@ using ITransitionCostModel = std::function<float(const StateId& lhs, const State
 inline float DefaultTransitionCostModel(const StateId&, const StateId&)
 { return 1; }
 
+struct discontinuity_exception_t : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
+
 class IViterbiSearch
 {
  public:
@@ -170,10 +175,10 @@ class IViterbiSearch
   virtual bool HasStateId(const StateId& stateid) const
   { return added_states_.find(stateid) != added_states_.end(); }
 
-  virtual StateId SearchWinner(StateId::Time time) = 0;
+  virtual StateId SearchWinner(StateId::Time time, bool force_continuous) = 0;
 
-  stateid_iterator SearchPath(StateId::Time time)
-  { return stateid_iterator(*this, time, SearchWinner(time)); }
+  stateid_iterator SearchPath(StateId::Time time, bool force_continuous = false)
+  { return stateid_iterator(*this, time, SearchWinner(time, force_continuous)); }
 
   stateid_iterator PathEnd() const
   { return path_end_; }
@@ -240,7 +245,7 @@ class NaiveViterbiSearch: public IViterbiSearch
 
   bool AddStateId(const StateId& stateid) override;
 
-  StateId SearchWinner(StateId::Time time) override;
+  StateId SearchWinner(StateId::Time time, bool force_continuous) override;
 
   StateId Predecessor(const StateId& stateid) const override;
 
@@ -287,7 +292,7 @@ class ViterbiSearch: public IViterbiSearch
 
   bool AddStateId(const StateId& stateid) override;
 
-  StateId SearchWinner(StateId::Time time) override;
+  StateId SearchWinner(StateId::Time time, bool force_continuous) override;
 
   StateId Predecessor(const StateId& stateid) const override;
 

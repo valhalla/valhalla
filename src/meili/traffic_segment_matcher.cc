@@ -160,14 +160,15 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
   if(measurements.empty())
     return R"({"segments":[]})";
 
-  // Create the vector of matched path results
+  // Create the matched path results
   auto topk_matches = matcher->OfflineMatch(measurements);
-  const auto& match_results = topk_matches.front();
+  const auto& match_results = topk_matches.front().results;
+  auto& edge_segments = topk_matches.front().segments;
   if (match_results.size() != measurements.size())
     throw std::runtime_error("Sequence size not equal to match result size.");
 
   // Get the edges associated with the entire connected trace path
-  auto interpolations = interpolate_matches(match_results, matcher);
+  auto interpolations = interpolate_matches(match_results, edge_segments, matcher);
 
   // Get the segments along the measurements
   auto traffic_segments = form_segments(interpolations, matcher->graphreader());
@@ -180,10 +181,9 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
 }
 
 std::list<std::vector<interpolation_t> > TrafficSegmentMatcher::interpolate_matches(const std::vector<MatchResult>& matches,
-  const std::shared_ptr<meili::MapMatcher>& matcher) const {
+  std::vector<EdgeSegment>& edges, const std::shared_ptr<meili::MapMatcher>& matcher) const {
 
   //get all of the edges along the path from the state info
-  auto edges = ConstructRoute(*matcher, matches.begin(), matches.end());
   clean_edges(edges);
 
   //TODO: backtracking could have happened. maybe it really happened but maybe there were positional

@@ -236,8 +236,8 @@ void test_viterbi_search(const std::vector<Column>& columns)
   SimpleViterbiSearch vs(columns);
 
   for (StateId::Time time = 0; time < columns.size(); time++) {
-    const auto& na_winner = na.SearchWinner(time);
-    const auto& vs_winner = vs.SearchWinner(time);
+    const auto& na_winner = na.SearchWinner(time, false);
+    const auto& vs_winner = vs.SearchWinner(time, false);
 
     if (na_winner.IsValid()) {
       test::assert_bool(
