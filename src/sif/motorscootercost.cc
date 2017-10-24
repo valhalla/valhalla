@@ -120,41 +120,16 @@ constexpr float kAvoidHillsStrength[] = {
     10.0f      // 15%   - Very steep uphill
 };
 
-
-// Speed adjustment factors based on weighted grade. Comments here show an
-// example of speed changes based on "grade", using a base speed of 25 MPH
-// on flat roads
-/*
 constexpr float kGradeBasedSpeedFactor[] = {
-  2.0f,      // -10%  - 45
-  1.7f,     // -8%   - 40.5
-  1.4f,      // -6.5% - 36
-  1.2f,      // -5%   - 30.6
-  1.1f,      // -3%   - 25
-  1.05f,      // -1.5% - 21.6
+  1.25f,      // -10%  - 45
+  1.2f,     // -8%   - 40.5
+  1.15f,      // -6.5% - 36
+  1.1f,      // -5%   - 30.6
+  1.05f,      // -3%   - 25
+  1.0f,      // -1.5% - 21.6
   1.0f,      // 0%    - 18
-  0.95f,     // 1.5%  - 17
-  0.9f,     // 3%    - 15
-  0.8f,     // 5%    - 13.5
-  0.65f,     // 6.5%  - 12
-  0.5f,     // 8%    - 10
-  0.35f,      // 10%   - 9
-  0.25f,     // 11.5% - 6.25
-  0.15f,      // 13%   - 3.75
-  0.1f       // 15%   - 2.5
-};
-*/
-
-constexpr float kGradeBasedSpeedFactor[] = {
-  1.5f,      // -10%  - 45
-  1.4f,     // -8%   - 40.5
-  1.3f,      // -6.5% - 36
-  1.2f,      // -5%   - 30.6
-  1.1f,      // -3%   - 25
-  1.05f,      // -1.5% - 21.6
-  1.0f,      // 0%    - 18
-  0.95f,     // 1.5%  - 17
-  0.9f,     // 3%    - 15
+  1.0f,     // 1.5%  - 17
+  0.95f,     // 3%    - 15
   0.75f,     // 5%    - 13.5
   0.6f,     // 6.5%  - 12
   0.5f,     // 8%    - 10
