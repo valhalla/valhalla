@@ -5,7 +5,6 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
-#include <map>
 
 #include "exception.h"
 #include "midgard/logging.h"

@@ -3,8 +3,6 @@
 #define MMP_MAP_MATCHER_H_
 
 #include <vector>
-#include <functional>
-#include <unordered_map>
 
 #include <boost/property_tree/ptree.hpp>
 

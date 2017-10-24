@@ -202,11 +202,11 @@ namespace {
   void test_distance_only() {
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
-            R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
-                "costing":"auto","shape_match":"map_snap","shape":[
-                {"lat":52.09110,"lon":5.09806,"accuracy":10},
-                {"lat":52.09050,"lon":5.09769,"accuracy":100},
-                {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
+      R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
+          "costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"accuracy":10},
+          {"lat":52.09050,"lon":5.09769,"accuracy":100},
+          {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
     std::unordered_set<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
@@ -218,11 +218,11 @@ namespace {
   void test_time_rejection() {
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
-            R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
-                "costing":"auto","shape_match":"map_snap","shape":[
-                {"lat":52.09110,"lon":5.09806,"accuracy":10,"time":2},
-                {"lat":52.09050,"lon":5.09769,"accuracy":100,"time":4},
-                {"lat":52.09098,"lon":5.09679,"accuracy":10,"time":6}]})"));
+      R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
+          "costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"accuracy":10,"time":2},
+          {"lat":52.09050,"lon":5.09769,"accuracy":100,"time":4},
+          {"lat":52.09098,"lon":5.09679,"accuracy":10,"time":6}]})"));
     std::unordered_set<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
@@ -242,10 +242,10 @@ namespace {
     //tests a fork in the road
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
-            R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-                {"lat":52.08511,"lon":5.15085,"accuracy":50},
-                {"lat":52.08533,"lon":5.15109,"accuracy":50},
-                {"lat":52.08539,"lon":5.15100,"accuracy":50}]})"));
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+          {"lat":52.08511,"lon":5.15085,"accuracy":50},
+          {"lat":52.08533,"lon":5.15109,"accuracy":50},
+          {"lat":52.08539,"lon":5.15100,"accuracy":50}]})"));
 
     std::vector<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
