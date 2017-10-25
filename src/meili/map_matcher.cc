@@ -275,6 +275,15 @@ FindMatchResults(const MapMatcher& mapmatcher, const std::vector<StateId>& state
   return results;
 }
 
+std::vector<uint64_t> UniqueEdges(const std::vector<EdgeSegment>& segments) {
+  std::vector<uint64_t> edges;
+  edges.reserve(segments.size());
+  for(const auto& segment : segments)
+    if(edges.empty() || edges.back() != segment.edgeid)
+      edges.push_back(segment.edgeid);
+  return edges;
+}
+
 }
 
 
@@ -328,14 +337,44 @@ void MapMatcher::Clear()
 void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 {
   // For each pair of states in the last sequence of states
-  /*for(auto s = result.cbegin(); s != result.cend() - 1; ++s) {
-    // For each path between each candidate of the left state and the right state
+  for(auto left_state_id = result.cbegin(); left_state_id != result.cend() - 1; ++left_state_id) {
+    auto left_used_candidate = container_.state(*left_state_id);
+    // For each candidate of the left state
+    for(const auto& left_unused_candidate : container_.column(left_state_id->time())) {
+      // We cant remove the candidate that was actually used
+      if(left_used_candidate.stateid() == left_unused_candidate.stateid())
+        continue;
+      // For each candidate in the right state
+      bool found_unique = false;
+      for(const auto& right_candidate : container_.column(left_state_id->time() + 1)) {
+        // Get the path between the winner left candidate and the right candidate
+        auto used_segments = MergeRoute(left_used_candidate, right_candidate);
+        auto used_edges = UniqueEdges(used_segments);
+        // Get the potentially redundant path between this unused candidate and the right candidate
+        auto unused_segments = MergeRoute(left_unused_candidate, right_candidate);
+        auto unused_edges = UniqueEdges(unused_segments);
+        //account for node snaps at the beginning and end of this result
+        auto e1 = used_segments.empty() || used_segments.front().source < 1.0f ? used_edges.cbegin() : used_edges.cbegin() + 1;
+        auto e2 = used_segments.empty() || used_segments.back().target > 0.0f ? used_edges.cend() : used_edges.cend() - 1;
+        //account for node snaps at the beginning and end of the other result
+        auto e3 = unused_segments.empty() || unused_segments.front().source < 1.0f ? unused_edges.cbegin() : unused_edges.cbegin() + 1;
+        auto e4 = unused_segments.empty() || unused_segments.back().target > 0.0f ? unused_edges.cend() : unused_edges.cend() - 1;
+        //if neither are contained within each other then the unused path is unique from the used one
+        if(std::search(e1, e2, e3, e4) == e2 && std::search(e3, e4, e1, e2) == e4) {
+          found_unique = true;
+          break;
+        }
+      }
+      // We didnt find any unique paths for this left candidate so we need to mark it has useless
+      if(!found_unique) {
+        //TODO:
+        //container_.Mark(left_unused_candidate);
+        //vs_.Mark(left_unused_candidate);
+      }
+    }
+  }
 
-    // Get the path between this pair of states
-    auto segments = MergeRoute(container_.state(*s), container_.state(*std::next(s)));
-
-
-  }*/
+  // TODO: Note that we didnt remove any redundancies resulting from candidates in the last state, do that
 }
 
 std::vector<MatchResults>
@@ -352,7 +391,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   auto interpolated = AppendMeasurements(measurements);
 
   // Get the time at the last column of states
-  auto time = container_.Size() - 1;
+  auto time = container_.size() - 1;
 
   //For k paths
   std::vector<MatchResults> best_paths;
