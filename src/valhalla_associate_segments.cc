@@ -829,7 +829,7 @@ void edge_association::add_tile(const std::string& file_name) {
   }
 
   // Finish this tile
-  m_tile_builder->UpdateTrafficSegments();
+  m_tile_builder->UpdateTrafficSegments(false);
   m_reader.Clear();
 }
 
@@ -887,7 +887,7 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
     tile_builder.InitializeTrafficChunks();
     for(const auto& association : associations)
       tile_builder.AddTrafficSegment(association.first, association.second);
-    tile_builder.UpdateTrafficSegments();
+    tile_builder.UpdateTrafficSegments(false);
   }
 }
 
@@ -913,7 +913,10 @@ void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>&
     for(const auto& chunk : associated_chunks) {
       tile_builder.AddTrafficSegments(chunk.first, chunk.second);
     }
-    tile_builder.UpdateTrafficSegments();
+
+    // Since this is the last time UpdateTrafficSegments is called we set
+    // the flag indicating the DirectedEdge traffic flags are set.
+    tile_builder.UpdateTrafficSegments(true);
   }
 }
 
