@@ -238,7 +238,7 @@ namespace {
     actor.route(tyr::ROUTE, test_case);
   }
 
-  void test_topk() {
+  void test_topk_fork_alternate() {
     //tests a fork in the road
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
@@ -290,25 +290,12 @@ namespace {
       throw std::logic_error("The second most obvious result is stay right but got: " + streets);
     }
 
-    //tests a previous segfault due to using a claimed state
-    matched = json_to_pt(actor.trace_attributes(
-      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-         {"lat":52.088548,"lon":5.15357,"accuracy":30},
-         {"lat":52.088627,"lon":5.153269,"accuracy":30},
-         {"lat":52.08864,"lon":5.15298,"accuracy":30},
-         {"lat":52.08861,"lon":5.15272,"accuracy":30},
-         {"lat":52.08863,"lon":5.15253,"accuracy":30},
-         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
+  }
 
-    //this tests a fix for an infinite loop because there is only 1 result and we ask for 4
-    matched = json_to_pt(actor.trace_attributes(
-      R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
-         {"lat":52.09579,"lon":5.13137,"accuracy":5},
-         {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
-    if(matched.get_child("alternate_paths").size() > 0)
-      throw std::logic_error("There should be only one result");
-
-    matched = json_to_pt(actor.trace_attributes(
+  void test_topk_loop_alternate() {
+    //tests a fork in the road
+    tyr::actor_t actor(conf, true);
+    auto matched = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
            {"lat":52.0885185353439,"lon":5.153676867485047,"accuracy":20},
            {"lat":52.088584457910834,"lon":5.153411328792573,"accuracy":20},
@@ -348,7 +335,7 @@ namespace {
       {"type":"Feature","geometry":{"type":"Point","coordinates":[5.151974,52.088051]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":10,"matched_point_type":"matched","edge_index":5,"distance_along_edge":0.801,"distance_from_trace_point":1.485}}
       ]}
      */
-    names.clear();
+    std::vector<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
         names.push_back(name.second.get_value<std::string>());
@@ -386,7 +373,7 @@ namespace {
       ]}
      */
     names.clear();
-    alternate = matched.get_child("alternate_paths").front().second;
+    auto alternate = matched.get_child("alternate_paths").front().second;
     for(const auto& edge : alternate.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
         names.push_back(name.second.get_value<std::string>());
@@ -396,6 +383,30 @@ namespace {
         streets += n + " ";
       throw std::logic_error("The second most obvious result is loop around to the right - but got: " + streets);
     }
+
+  }
+
+  void test_topk_validate() {
+    //tests a fork in the road
+    tyr::actor_t actor(conf, true);
+
+    //tests a previous segfault due to using a claimed state
+    auto matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+         {"lat":52.088548,"lon":5.15357,"accuracy":30},
+         {"lat":52.088627,"lon":5.153269,"accuracy":30},
+         {"lat":52.08864,"lon":5.15298,"accuracy":30},
+         {"lat":52.08861,"lon":5.15272,"accuracy":30},
+         {"lat":52.08863,"lon":5.15253,"accuracy":30},
+         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
+
+    //this tests a fix for an infinite loop because there is only 1 result and we ask for 4
+    matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
+         {"lat":52.09579,"lon":5.13137,"accuracy":5},
+         {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
+    if(matched.get_child("alternate_paths").size() > 0)
+      throw std::logic_error("There should be only one result");
 
   }
 
@@ -417,7 +428,11 @@ int main(int argc, char* argv[]) {
 
   suite.test(TEST_CASE(test_time_rejection));
 
-  suite.test(TEST_CASE(test_topk));
+  suite.test(TEST_CASE(test_topk_fork_alternate));
+
+  suite.test(TEST_CASE(test_topk_loop_alternate));
+
+  suite.test(TEST_CASE(test_topk_validate));
 
   return suite.tear_down();
 }
