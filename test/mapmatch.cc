@@ -258,6 +258,7 @@ namespace {
       throw std::logic_error("The most obvious result is stay left but got: " + streets);
     }
 
+
     names.clear();
     auto alternate = matched.get_child("alternate_paths").front().second;
     for(const auto& edge : alternate.get_child("edges"))
@@ -287,6 +288,44 @@ namespace {
          {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
     if(matched.get_child("alternate_paths").size() > 0)
       throw std::logic_error("There should be only one result");
+
+    matched = json_to_pt(actor.trace_attributes(
+        R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+           {"lat":52.0885185353439,"lon":5.153676867485047,"accuracy":20},
+           {"lat":52.088584457910834,"lon":5.153411328792573,"accuracy":20},
+           {"lat":52.088635547833206,"lon":5.153258442878724,"accuracy":20},
+           {"lat":52.0886207152811,"lon":5.153059959411622,"accuracy":20},
+           {"lat":52.08860093853734,"lon":5.152877569198609,"accuracy":20},
+           {"lat":52.0885185353439,"lon":5.152652263641358,"accuracy":20},
+           {"lat":52.08846579722028,"lon":5.152507424354554,"accuracy":20},
+           {"lat":52.08839657833841,"lon":5.152378678321839,"accuracy":20},
+           {"lat":52.088268028701464,"lon":5.152182877063752,"accuracy":20},
+           {"lat":52.088159255642495,"lon":5.152064859867097,"accuracy":20},
+           {"lat":52.08806366697785,"lon":5.151962935924531,"accuracy":20}]})"));
+
+    names.clear();
+    for(const auto& edge : matched.get_child("edges"))
+      for(const auto& name : edge.second.get_child("names"))
+        names.push_back(name.second.get_value<std::string>());
+    if(names != std::vector<std::string>{"Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan"}) {
+      std::string streets;
+      for(const auto& n : names)
+        streets += n + " ";
+      throw std::logic_error("The most obvious result is stay left on the same road - but got: " + streets);
+    }
+
+    names.clear();
+    alternate = matched.get_child("alternate_paths").front().second;
+    for(const auto& edge : alternate.get_child("edges"))
+      for(const auto& name : edge.second.get_child("names"))
+        names.push_back(name.second.get_value<std::string>());
+    if(names != std::vector<std::string>{"Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Eduard Verkadelaan", "Eduard Verkadelaan", "Eduard Verkadelaan", "Eduard Verkadelaan", "Louis Bouwmeesterlaan"}) {
+      std::string streets;
+      for(const auto& n : names)
+        streets += n + " ";
+      throw std::logic_error("The second most obvious result is loop around to the right - but got: " + streets);
+    }
+
   }
 
 }
