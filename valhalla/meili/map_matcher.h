@@ -3,6 +3,7 @@
 #define MMP_MAP_MATCHER_H_
 
 #include <vector>
+#include <unordered_set>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -101,6 +102,8 @@ class MapMatcher final
   EmissionCostModel emission_cost_model_;
 
   TransitionCostModel transition_cost_model_;
+
+  std::unordered_set<StateId> redundant_candidates;
 };
 
 

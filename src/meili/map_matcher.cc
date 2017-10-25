@@ -340,6 +340,7 @@ void MapMatcher::Clear()
   vs_.set_transition_cost_model(transition_cost_model_);
   ts_.Clear();
   container_.Clear();
+  redundant_candidates.clear();
 }
 
 void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
@@ -353,15 +354,16 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
       paths_from_winner.emplace(right_candidate.stateid(), MergeRoute(left_used_candidate, right_candidate));
     // For each candidate of the left state that isnt the winner
     for(const auto& left_unused_candidate : container_.column(left_state_id->time())) {
-      // We cant remove the candidate that was actually used
-      if(left_used_candidate.stateid() == left_unused_candidate.stateid())
+      // We cant remove the candidate that was actually used and we dont care about ones we've already removed
+      if(left_used_candidate.stateid() == left_unused_candidate.stateid() ||
+          redundant_candidates.find(left_unused_candidate.stateid()) != redundant_candidates.cend())
         continue;
       // For each candidate in the right state
       bool found_unique = false;
       for(const auto& right_candidate : container_.column(left_state_id->time() + 1)) {
         // Get the potentially redundant path between this unused candidate and the right candidate
         path_t path_from_loser(MergeRoute(left_unused_candidate, right_candidate));
-        //if neither are contained within each other then the unused path is unique from the used one
+        // If its unique we can stop checking this left state, because it cant be removed
         if(paths_from_winner.find(right_candidate.stateid())->second != path_from_loser) {
           found_unique = true;
           break;
@@ -369,6 +371,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
       }
       // We didnt find any unique paths for this left candidate so we need to mark it has useless
       if(!found_unique) {
+        redundant_candidates.emplace(left_unused_candidate.stateid());
         //TODO:
         //container_.Remove(left_unused_candidate);
         //vs_.Mark(left_unused_candidate);
