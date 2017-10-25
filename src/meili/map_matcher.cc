@@ -503,8 +503,6 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements)
            sq_interpolation_distance = interpolation_distance * interpolation_distance;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
-  //std::cout << std::setprecision(7) << std::fixed << R"({"type":"FeatureCollection","features":[)" << std::endl;
-
   // Always match the first measurement
   auto last = measurements.cbegin();
   auto time = AppendMeasurement(*last, sq_max_search_radius);
@@ -539,7 +537,6 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements)
     }
   }
 
-  //std::cout << "]}" << std::endl;
   return interpolated;
 }
 
@@ -559,24 +556,7 @@ MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max
       measurement.lnglat(),
       sq_radius,
       costing()->GetEdgeFilter());
-/*
-  std::string fsep = container_.NewStateId().IsValid()?",":"";
-  for(const auto& x : candidates) {
-    for(const auto& y: x.edges) {
-      std::cout << fsep << R"({"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[)";
-      fsep = ",";
-      const auto* tile = graphreader_.GetGraphTile(y.id);
-      auto shape = tile->edgeinfo(tile->directededge(y.id)->edgeinfo_offset()).shape();
-      std::string psep = "";
-      for(const auto& p : shape) {
-        std::cout << psep << '[' << p.lng() << ',' << p.lat() << ']';
-        psep = ",";
-      }
-      std::cout << R"(]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[)";
-      std::cout  << y.projected.lng() << ',' << y.projected.lat() << "]}}" << std::endl;
-    }
-  }
-*/
+
   const auto time = container_.AppendMeasurement(measurement);
 
   for (const auto& candidate: candidates) {
