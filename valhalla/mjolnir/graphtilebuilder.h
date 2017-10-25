@@ -374,8 +374,10 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   /**
    * Updates a tile with traffic segment and chunk data.
+   * @param  update_dir_edges  If true this will update directed edge flags
+   *                 indicating a traffic segment exists on the edge.
    */
-  void UpdateTrafficSegments();
+  void UpdateTrafficSegments(const bool update_dir_edges);
 
   /**
     * Gets the current list of edge elevation (builders).
