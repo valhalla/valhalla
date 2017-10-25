@@ -103,7 +103,7 @@ class MapMatcher final
 
   TransitionCostModel transition_cost_model_;
 
-  std::unordered_set<StateId> redundant_candidates;
+  std::unordered_set<StateId> redundancies;
 };
 
 

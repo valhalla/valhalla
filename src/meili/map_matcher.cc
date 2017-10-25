@@ -340,7 +340,7 @@ void MapMatcher::Clear()
   vs_.set_transition_cost_model(transition_cost_model_);
   ts_.Clear();
   container_.Clear();
-  redundant_candidates.clear();
+  redundancies.clear();
 }
 
 void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
@@ -350,33 +350,51 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
     // Get all the paths that use the left winner
     auto left_used_candidate = container_.state(*left_state_id);
     std::unordered_map<StateId, path_t> paths_from_winner;
+    std::unordered_set<StateId> right_uniques;
     for(const auto& right_candidate : container_.column(left_state_id->time() + 1))
       paths_from_winner.emplace(right_candidate.stateid(), MergeRoute(left_used_candidate, right_candidate));
 
     // For each candidate of the left state that isnt the winner
     for(const auto& left_unused_candidate : container_.column(left_state_id->time())) {
-      // We cant remove the candidate that was actually used and we dont care about ones we've already removed
+      // We cant remove ones that were already removed nor the candidate that was actually used
       if(left_used_candidate.stateid() == left_unused_candidate.stateid() ||
-          redundant_candidates.find(left_unused_candidate.stateid()) != redundant_candidates.cend())
+          redundancies.find(left_unused_candidate.stateid()) != redundancies.cend())
         continue;
 
       // For each candidate in the right state
       bool found_unique = false;
       for(const auto& right_candidate : container_.column(left_state_id->time() + 1)) {
-        // Get the potentially redundant path between this unused candidate and the right candidate
+        // This was already removed
+        if(redundancies.find(right_candidate.stateid()) != redundancies.cend())
+          continue;
+
+        // Get the potentially redundant path and bail if isn't redundant with the winner path
         path_t path_from_loser(MergeRoute(left_unused_candidate, right_candidate));
-        // If its unique we can stop checking this left state, because it cant be removed
         if(paths_from_winner.find(right_candidate.stateid())->second != path_from_loser) {
           found_unique = true;
+          right_uniques.emplace(right_candidate.stateid());
           break;
         }
       }
 
       // We didnt find any unique paths for this left candidate so we need to mark it has useless
       if(!found_unique) {
-        redundant_candidates.emplace(left_unused_candidate.stateid());
+        redundancies.emplace(left_unused_candidate.stateid());
         //TODO:
         //vs_.Mark(left_unused_candidate);
+      }
+    }
+
+    // If this was the last state pair we can possibly remove some of the right candidates
+    if(left_state_id == result.cend() - 2) {
+      // For each right candidate
+      for(const auto& right_candidate : container_.column(left_state_id->time() + 1)) {
+        // If we ended up finding no uniques for this right candidate we can remove it
+        if(right_uniques.find(right_candidate.stateid()) == right_uniques.cend()) {
+          redundancies.emplace(right_candidate.stateid());
+          //TODO:
+          //vs_.Mark(left_unused_candidate);
+        }
       }
     }
   }
