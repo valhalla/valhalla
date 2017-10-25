@@ -275,14 +275,22 @@ FindMatchResults(const MapMatcher& mapmatcher, const std::vector<StateId>& state
   return results;
 }
 
-std::vector<uint64_t> UniqueEdges(const std::vector<EdgeSegment>& segments) {
+struct path_t{
+  path_t(const std::vector<EdgeSegment>& segments) {
+    edges.reserve(segments.size());
+    for(const auto& segment : segments)
+      if(edges.empty() || edges.back() != segment.edgeid)
+        edges.push_back(segment.edgeid);
+    auto e1 = segments.empty() || segments.front().source < 1.0f ? edges.cbegin() : edges.cbegin() + 1;
+    auto e2 = segments.empty() || segments.back().target > 0.0f ? edges.cend() : edges.cend() - 1;
+  }
+  bool operator!=(const path_t& p) const {
+    return std::search(e1, e2, p.e1, p.e2) == e2 && std::search(p.e1, p.e2, e1, e2) == p.e2;
+  }
   std::vector<uint64_t> edges;
-  edges.reserve(segments.size());
-  for(const auto& segment : segments)
-    if(edges.empty() || edges.back() != segment.edgeid)
-      edges.push_back(segment.edgeid);
-  return edges;
-}
+  std::vector<uint64_t>::const_iterator e1;
+  std::vector<uint64_t>::const_iterator e2;
+};
 
 }
 
@@ -338,8 +346,12 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 {
   // For each pair of states in the last sequence of states
   for(auto left_state_id = result.cbegin(); left_state_id != result.cend() - 1; ++left_state_id) {
+    // Get all the paths that use the left winner
     auto left_used_candidate = container_.state(*left_state_id);
-    // For each candidate of the left state
+    std::unordered_map<StateId, path_t> paths_from_winner;
+    for(const auto& right_candidate : container_.column(left_state_id->time() + 1))
+      paths_from_winner.emplace(right_candidate.stateid(), MergeRoute(left_used_candidate, right_candidate));
+    // For each candidate of the left state that isnt the winner
     for(const auto& left_unused_candidate : container_.column(left_state_id->time())) {
       // We cant remove the candidate that was actually used
       if(left_used_candidate.stateid() == left_unused_candidate.stateid())
@@ -347,20 +359,10 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
       // For each candidate in the right state
       bool found_unique = false;
       for(const auto& right_candidate : container_.column(left_state_id->time() + 1)) {
-        // Get the path between the winner left candidate and the right candidate
-        auto used_segments = MergeRoute(left_used_candidate, right_candidate);
-        auto used_edges = UniqueEdges(used_segments);
         // Get the potentially redundant path between this unused candidate and the right candidate
-        auto unused_segments = MergeRoute(left_unused_candidate, right_candidate);
-        auto unused_edges = UniqueEdges(unused_segments);
-        //account for node snaps at the beginning and end of this result
-        auto e1 = used_segments.empty() || used_segments.front().source < 1.0f ? used_edges.cbegin() : used_edges.cbegin() + 1;
-        auto e2 = used_segments.empty() || used_segments.back().target > 0.0f ? used_edges.cend() : used_edges.cend() - 1;
-        //account for node snaps at the beginning and end of the other result
-        auto e3 = unused_segments.empty() || unused_segments.front().source < 1.0f ? unused_edges.cbegin() : unused_edges.cbegin() + 1;
-        auto e4 = unused_segments.empty() || unused_segments.back().target > 0.0f ? unused_edges.cend() : unused_edges.cend() - 1;
+        path_t path_from_loser(MergeRoute(left_unused_candidate, right_candidate));
         //if neither are contained within each other then the unused path is unique from the used one
-        if(std::search(e1, e2, e3, e4) == e2 && std::search(e3, e4, e1, e2) == e4) {
+        if(paths_from_winner.find(right_candidate.stateid())->second != path_from_loser) {
           found_unique = true;
           break;
         }
@@ -368,7 +370,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
       // We didnt find any unique paths for this left candidate so we need to mark it has useless
       if(!found_unique) {
         //TODO:
-        //container_.Mark(left_unused_candidate);
+        //container_.Remove(left_unused_candidate);
         //vs_.Mark(left_unused_candidate);
       }
     }
