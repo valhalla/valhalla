@@ -1084,7 +1084,7 @@ class DirectedEdge {
   uint64_t surface_        : 3;  // representation of smoothness
   uint64_t shoulder_       : 1;  // Does the edge have a shoulder?
   uint64_t spare2_         : 7;
-  uint64_t use_sidepath_   : 1;  // Is there a cycling path to the side that should be preffered?
+  uint64_t use_sidepath_   : 1;  // Is there a cycling path to the side that should be prefered?
   uint64_t dismount_       : 1;  // Do you need to dismount when biking on this edge?
   uint64_t density_        : 4;  // Density along the edge
   uint64_t speed_limit_    : 8;  // Speed limit (kph)
