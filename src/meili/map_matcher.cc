@@ -13,7 +13,6 @@ using namespace valhalla;
 using namespace valhalla::meili;
 
 constexpr float MAX_ACCUMULATED_COST = 99999999;
-constexpr size_t MAX_RESULTS = 50;
 
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
@@ -422,7 +421,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   std::vector<MatchResults> best_paths;
   size_t results = 0;
   std::vector<StateId> stateids;
-  while(best_paths.size() < k && results++ < MAX_RESULTS) {
+  while(best_paths.size() < k) {
     // If we just got some results then we need to remove them from consideration
     // we avoid doing this for the common case where k==1 by putting this at the start of the loop
     if(best_paths.size()) {
