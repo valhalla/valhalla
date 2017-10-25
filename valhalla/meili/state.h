@@ -122,6 +122,9 @@ class StateContainer
   column(const StateId::Time& time) const
   { return columns_[time]; }
 
+  StateId::Time Size() const
+  { return static_cast<StateId::Time>(columns_.size()); }
+
   StateId
   NewStateId() const
   { return columns_.empty() ? StateId() : StateId(columns_.size() - 1, columns_.back().size()); }

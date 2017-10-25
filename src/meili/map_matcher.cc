@@ -13,7 +13,7 @@ using namespace valhalla;
 using namespace valhalla::meili;
 
 constexpr float MAX_ACCUMULATED_COST = 99999999;
-constexpr size_t MAX_RESULTS = 20;
+constexpr size_t MAX_RESULTS = 50;
 
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
@@ -325,61 +325,51 @@ void MapMatcher::Clear()
   container_.Clear();
 }
 
+void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
+{
+  // For each pair of states in the last sequence of states
+  /*for(auto s = result.cbegin(); s != result.cend() - 1; ++s) {
+    // For each path between each candidate of the left state and the right state
+
+    // Get the path between this pair of states
+    auto segments = MergeRoute(container_.state(*s), container_.state(*std::next(s)));
+
+
+  }*/
+}
+
 std::vector<MatchResults>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
+  // Reset everything
   Clear();
 
-  if (measurements.empty()) {
+  // Nothing to do
+  if (measurements.empty())
     return {};
-  }
 
-  const float max_search_radius = config_.get<float>("max_search_radius"),
-           sq_max_search_radius = max_search_radius * max_search_radius;
-  const float interpolation_distance = config_.get<float>("interpolation_distance"),
-           sq_interpolation_distance = interpolation_distance * interpolation_distance;
-  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
+  // Separate the measurements we are using for matching from the ones we'll just interpolate
+  auto interpolated = AppendMeasurements(measurements);
 
-  // Always match the first measurement
-  auto last = measurements.cbegin();
-  auto time = AppendMeasurement(*last, sq_max_search_radius);
-  double interpolated_epoch_time = -1;
-  for (auto m = std::next(last); m != measurements.end(); ++m) {
-    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
-    // Always match the last measurement and if its far enough away
-    if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
-      // If there were interpolated points between these two points with time information
-      if (interpolated_epoch_time != -1) {
-        // Project the last interpolated point onto the line between the two match points
-        auto p = interpolated[time].back().lnglat().Project(last->lnglat(), m->lnglat());
-        // If its significantly closer to the previous match point then it looks like the trace lingered
-        // so we use the time information of the last interpolation point as the actual time they started
-        // traveling towards the next match point which will help us determine what paths are really likely
-        if(p.Distance(last->lnglat())/last->lnglat().Distance(m->lnglat()) < .2f) {
-          container_.SetMeasurementLeaveTime(time, interpolated_epoch_time);
-        }
-      }
-      // This one isnt interpolated so we make room for its state
-      time = AppendMeasurement(*m, sq_max_search_radius);
-      last = m;
-      interpolated_epoch_time = -1;
-    }//TODO: if its the last measurement and it wants to be interpolated
-    // then what we need to do is make last match interpolated
-    // and copy its epoch_time into the last measurements epoch time
-    // else if(std::next(measurement) == measurements.end()) { }
-    // This one is so close to the last match that we will just interpolate it
-    else {
-      interpolated[time].push_back(*m);
-      interpolated_epoch_time = m->epoch_time();
-    }
-  }
+  // Get the time at the last column of states
+  auto time = container_.Size() - 1;
 
   //For k paths
   std::vector<MatchResults> best_paths;
   size_t results = 0;
+  std::vector<StateId> stateids;
   while(best_paths.size() < k && results++ < MAX_RESULTS) {
+    // If we just got some results then we need to remove them from consideration
+    // we avoid doing this for the common case where k==1 by putting this at the start of the loop
+    if(best_paths.size()) {
+      // Remove all the candidates whose paths are redundant with this one
+      RemoveRedundancies(stateids);
+      // Remove this particular sequence of stateids
+      ts_.RemovePath(time);
+    }
+
     // Get the states for the kth best path its in reverse order
-    std::vector<StateId> stateids;
+    stateids.clear();
     try {
       std::copy(vs_.SearchPath(time, !best_paths.empty()), vs_.PathEnd(), std::back_inserter(stateids));
       std::reverse(stateids.begin(), stateids.end());
@@ -452,15 +442,60 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     });
     if(found_path == best_paths.rend())
       best_paths.emplace_back(std::move(match_results));
-
-    // Remove this particular sequence of stateids
-    ts_.RemovePath(time);
   }
 
   // Give back anywhere from 1 to k results
   return best_paths;
 }
 
+std::unordered_map<StateId::Time, std::vector<Measurement>>
+MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements)
+{
+  const float max_search_radius = config_.get<float>("max_search_radius"),
+           sq_max_search_radius = max_search_radius * max_search_radius;
+  const float interpolation_distance = config_.get<float>("interpolation_distance"),
+           sq_interpolation_distance = interpolation_distance * interpolation_distance;
+  std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
+
+  //std::cout << std::setprecision(7) << std::fixed << R"({"type":"FeatureCollection","features":[)" << std::endl;
+
+  // Always match the first measurement
+  auto last = measurements.cbegin();
+  auto time = AppendMeasurement(*last, sq_max_search_radius);
+  double interpolated_epoch_time = -1;
+  for (auto m = std::next(last); m != measurements.end(); ++m) {
+    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
+    // Always match the last measurement and if its far enough away
+    if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
+      // If there were interpolated points between these two points with time information
+      if (interpolated_epoch_time != -1) {
+        // Project the last interpolated point onto the line between the two match points
+        auto p = interpolated[time].back().lnglat().Project(last->lnglat(), m->lnglat());
+        // If its significantly closer to the previous match point then it looks like the trace lingered
+        // so we use the time information of the last interpolation point as the actual time they started
+        // traveling towards the next match point which will help us determine what paths are really likely
+        if(p.Distance(last->lnglat())/last->lnglat().Distance(m->lnglat()) < .2f) {
+          container_.SetMeasurementLeaveTime(time, interpolated_epoch_time);
+        }
+      }
+      // This one isnt interpolated so we make room for its state
+      time = AppendMeasurement(*m, sq_max_search_radius);
+      last = m;
+      interpolated_epoch_time = -1;
+    }//TODO: if its the last measurement and it wants to be interpolated
+    // then what we need to do is make last match interpolated
+    // and copy its epoch_time into the last measurements epoch time
+    // else if(std::next(measurement) == measurements.end()) { }
+    // This one is so close to the last match that we will just interpolate it
+    else {
+      interpolated[time].push_back(*m);
+      interpolated_epoch_time = m->epoch_time();
+    }
+  }
+
+  //std::cout << "]}" << std::endl;
+  return interpolated;
+}
 
 StateId::Time
 MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius)
@@ -478,7 +513,24 @@ MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max
       measurement.lnglat(),
       sq_radius,
       costing()->GetEdgeFilter());
-
+/*
+  std::string fsep = container_.NewStateId().IsValid()?",":"";
+  for(const auto& x : candidates) {
+    for(const auto& y: x.edges) {
+      std::cout << fsep << R"({"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[)";
+      fsep = ",";
+      const auto* tile = graphreader_.GetGraphTile(y.id);
+      auto shape = tile->edgeinfo(tile->directededge(y.id)->edgeinfo_offset()).shape();
+      std::string psep = "";
+      for(const auto& p : shape) {
+        std::cout << psep << '[' << p.lng() << ',' << p.lat() << ']';
+        psep = ",";
+      }
+      std::cout << R"(]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[)";
+      std::cout  << y.projected.lng() << ',' << y.projected.lat() << "]}}" << std::endl;
+    }
+  }
+*/
   const auto time = container_.AppendMeasurement(measurement);
 
   for (const auto& candidate: candidates) {
