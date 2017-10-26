@@ -803,8 +803,8 @@ function filter_tags_generic(kv)
     kv["bike_tag"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or nil
 
     --check for moped forward overrides
-    kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or kv["moped_forward"]
-    kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or nil
+    kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or motor_vehicle[kv["motor_vehicle"]] or kv["moped_forward"]
+    kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     if kv["bike_tag"] == nil then
       if kv["sac_scale"] == "hiking" then
@@ -868,8 +868,8 @@ function filter_tags_generic(kv)
       kv["bike_tag"] = bicycle[kv["bicycle"]] or cycleway[kv["cycleway"]] or bicycle[kv["bicycle_road"]] or bicycle[kv["cyclestreet"]] or nil
 
       --check for moped forward overrides
-      kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or default_val
-      kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or nil
+      kv["moped_forward"] = moped[kv["moped"]] or moped[kv["mofa"]] or motor_vehicle[kv["motor_vehicle"]] or default_val
+      kv["moped_tag"] = moped[kv["moped"]] or moped[kv["mofa"]] or motor_vehicle[kv["motor_vehicle"]] or nil
       
       if kv["bike_tag"] == nil then
         if kv["sac_scale"] == "hiking" then
