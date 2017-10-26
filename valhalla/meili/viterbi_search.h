@@ -264,7 +264,7 @@ class NaiveViterbiSearch: public IViterbiSearch
     // remove it from columns
     auto& column = states_[stateid.time()];
     const auto it = std::find(column.begin(), column.end(), stateid);
-    column.earse(it);
+    column.erase(it);
     return true;
 
     // TODO should we call ClearSearch here or ask user to call ClearSearch after removing stateid
