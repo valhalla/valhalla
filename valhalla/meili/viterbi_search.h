@@ -265,9 +265,9 @@ class NaiveViterbiSearch: public IViterbiSearch
     auto& column = states_[stateid.time()];
     const auto it = std::find(column.begin(), column.end(), stateid);
     column.erase(it);
+    // clear current search status to remove possible uses of the removed state ID
+    ClearSearch();
     return true;
-
-    // TODO should we call ClearSearch here or ask user to call ClearSearch after removing stateid
   }
 
   StateId SearchWinner(StateId::Time time, bool force_continuous) override;
@@ -327,9 +327,9 @@ class ViterbiSearch: public IViterbiSearch
     auto& column = states_[stateid.time()];
     const auto it = std::find(column.begin(), column.end(), stateid);
     column.erase(it);
+    // clear current search status to remove possible uses of the removed state ID
+    ClearSearch();
     return true;
-
-    // TODO should we call ClearSearch here or ask user to call ClearSearch after removing stateid
   }
 
   StateId SearchWinner(StateId::Time time, bool force_continuous) override;
