@@ -172,6 +172,16 @@ class IViterbiSearch
   virtual bool AddStateId(const StateId& stateid)
   { return added_states_.insert(stateid).second; }
 
+  /**
+   * Remove a state ID. Note that if an ID is removed, client must call ClearSearch before new search.
+   *
+   * @return true if it's removed
+   */
+  virtual bool RemoveStateId(const StateId& stateid)
+  {
+    return 0 < added_states_.erase(stateid);
+  }
+
   virtual bool HasStateId(const StateId& stateid) const
   { return added_states_.find(stateid) != added_states_.end(); }
 
@@ -245,6 +255,21 @@ class NaiveViterbiSearch: public IViterbiSearch
 
   bool AddStateId(const StateId& stateid) override;
 
+  bool RemoveStateId(const StateId& stateid) override
+  {
+    const auto removed = IViterbiSearch::RemoveStateId(stateid);
+    if (!removed) {
+      return false;
+    }
+    // remove it from columns
+    auto& column = states_[stateid.time()];
+    const auto it = std::find(column.begin(), column.end(), stateid);
+    column.earse(it);
+    return true;
+
+    // TODO should we call ClearSearch here or ask user to call ClearSearch after removing stateid
+  }
+
   StateId SearchWinner(StateId::Time time, bool force_continuous) override;
 
   StateId Predecessor(const StateId& stateid) const override;
@@ -291,6 +316,21 @@ class ViterbiSearch: public IViterbiSearch
   void ClearSearch() override;
 
   bool AddStateId(const StateId& stateid) override;
+
+  bool RemoveStateId(const StateId& stateid) override
+  {
+    const auto removed = IViterbiSearch::RemoveStateId(stateid);
+    if (!removed) {
+      return false;
+    }
+    // remove it from columns
+    auto& column = states_[stateid.time()];
+    const auto it = std::find(column.begin(), column.end(), stateid);
+    column.erase(it);
+    return true;
+
+    // TODO should we call ClearSearch here or ask user to call ClearSearch after removing stateid
+  }
 
   StateId SearchWinner(StateId::Time time, bool force_continuous) override;
 
