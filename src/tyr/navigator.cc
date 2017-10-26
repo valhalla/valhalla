@@ -39,8 +39,8 @@ NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
   try {
     jsonToProtoRoute (route_json_str, route_);
   } catch (const std::runtime_error& e) {
-    nav_status.set_route_state(NavigationStatus_RouteState_kInvalid);
     route_state_ = NavigationStatus_RouteState_kInvalid;
+    nav_status.set_route_state(route_state_);
     return nav_status;
   }
 
