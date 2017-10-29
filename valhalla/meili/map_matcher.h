@@ -102,8 +102,6 @@ class MapMatcher final
   EmissionCostModel emission_cost_model_;
 
   TransitionCostModel transition_cost_model_;
-
-  std::unordered_set<StateId> redundancies;
 };
 
 

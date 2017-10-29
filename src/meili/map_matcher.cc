@@ -280,8 +280,8 @@ struct path_t{
     for(const auto& segment : segments)
       if(edges.empty() || edges.back() != segment.edgeid)
         edges.push_back(segment.edgeid);
-    auto e1 = segments.empty() || segments.front().source < 1.0f ? edges.cbegin() : edges.cbegin() + 1;
-    auto e2 = segments.empty() || segments.back().target > 0.0f ? edges.cend() : edges.cend() - 1;
+    e1 = edges.cbegin();//segments.empty() || segments.front().source < 1.0f ? edges.cbegin() : edges.cbegin() + 1;
+    e2 = edges.cend();//segments.empty() || segments.back().target > 0.0f ? edges.cend() : edges.cend() - 1;
   }
   bool operator!=(const path_t& p) const {
     return std::search(e1, e2, p.e1, p.e2) == e2 && std::search(p.e1, p.e2, e1, e2) == p.e2;
@@ -339,66 +339,100 @@ void MapMatcher::Clear()
   vs_.set_transition_cost_model(transition_cost_model_);
   ts_.Clear();
   container_.Clear();
-  redundancies.clear();
 }
 
 void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 {
   // For each pair of states in the last sequence of states
-  for(auto left_state_id = result.cbegin(); left_state_id != result.cend() - 1; ++left_state_id) {
+  for(auto left_state_id_itr = result.cbegin(); left_state_id_itr != result.cend() - 1; ++left_state_id_itr) {
     // Get all the paths that use the left winner
-    auto left_used_candidate = container_.state(*left_state_id);
+    auto left_state_id = ts_.GetOrigin(*left_state_id_itr);
+    if(!left_state_id.IsValid())
+      left_state_id = *left_state_id_itr;
+    auto left_used_candidate = container_.state(left_state_id);
     std::unordered_map<StateId, path_t> paths_from_winner;
     std::unordered_set<StateId> right_uniques;
-    for(const auto& right_candidate : container_.column(left_state_id->time() + 1))
-      paths_from_winner.emplace(right_candidate.stateid(), MergeRoute(left_used_candidate, right_candidate));
+    for(const auto& right_candidate : container_.column(left_state_id.time() + 1))
+      auto i = paths_from_winner.emplace(right_candidate.stateid(), MergeRoute(left_used_candidate, right_candidate));
+
+    std::cout << std::endl << "Paths from left winner:" << std::endl;
+    for(const auto& kv:paths_from_winner) {
+      std::cout << R"({"type":"FeatureCollection","features":[)";
+      std::cout << container_.geojson(left_used_candidate) << ',' << container_.geojson(kv.first);
+      std::cout << R"(]})" << std::endl;
+    }
 
     // For each candidate of the left state that isnt the winner
-    for(const auto& left_unused_candidate : container_.column(left_state_id->time())) {
-      // We cant remove ones that were already removed nor the candidate that was actually used
-      if(left_used_candidate.stateid() == left_unused_candidate.stateid() ||
-          redundancies.find(left_unused_candidate.stateid()) != redundancies.cend())
+    std::unordered_set<StateId> redundancies;
+    for(const auto& left_unused_candidate : container_.column(left_state_id.time())) {
+      // We cant remove the candidate that was actually used in the result
+      if(left_used_candidate.stateid() == left_unused_candidate.stateid())
         continue;
 
       // For each candidate in the right state
       bool found_unique = false;
-      for(const auto& right_candidate : container_.column(left_state_id->time() + 1)) {
-        // This was already removed
-        if(redundancies.find(right_candidate.stateid()) != redundancies.cend())
-          continue;
-
+      std::cout << std::endl << "Paths from left loser:" << std::endl;
+      for(const auto& right_candidate : container_.column(left_state_id.time() + 1)) {
         // Get the potentially redundant path and bail if isn't redundant with the winner path
         path_t path_from_loser(MergeRoute(left_unused_candidate, right_candidate));
+        std::cout << R"({"type":"FeatureCollection","features":[)";
+        std::cout << container_.geojson(left_unused_candidate) << ',' << container_.geojson(right_candidate);
+        std::cout << R"(]})" << std::endl;
+
         if(paths_from_winner.find(right_candidate.stateid())->second != path_from_loser) {
           found_unique = true;
           right_uniques.emplace(right_candidate.stateid());
+          std::cout << "Unique!" << std::endl;
           break;
         }
+        std::cout << "Duplicate!" << std::endl;
       }
 
       // We didnt find any unique paths for this left candidate so we need to mark it has useless
-      if(!found_unique) {
+      if(!found_unique)
         redundancies.emplace(left_unused_candidate.stateid());
-        //TODO:
-        //vs_.Mark(left_unused_candidate);
-      }
     }
 
+    std::cout << std::endl << "Removing: ";
+    std::cout << R"({"type":"FeatureCollection","features":[)";
+    std::string fsep = "";
+    for(auto r : redundancies) {
+      std::cout << fsep << container_.geojson(r);
+      fsep = ",";
+    }
+    std::cout << R"(]})" << std::endl;
+
+    // Clean up the left hand redundancies
+    container_.RemoveCandidates(left_state_id.time(), redundancies);
+    for(const auto& r : redundancies)
+      vs_.RemoveStateId(r);
+
     // If this was the last state pair we can possibly remove some of the right candidates
-    if(left_state_id == result.cend() - 2) {
+    if(left_state_id_itr == result.cend() - 2) {
       // For each right candidate
-      for(const auto& right_candidate : container_.column(left_state_id->time() + 1)) {
+      redundancies.clear();
+      for(const auto& right_candidate : container_.column(left_state_id.time() + 1)) {
         // If we ended up finding no uniques for this right candidate we can remove it
         if(right_uniques.find(right_candidate.stateid()) == right_uniques.cend()) {
           redundancies.emplace(right_candidate.stateid());
-          //TODO:
-          //vs_.Mark(left_unused_candidate);
         }
       }
+
+      std::cout << std::endl << "Removing: ";
+      std::cout << R"({"type":"FeatureCollection","features":[)";
+      std::string fsep = "";
+      for(auto r : redundancies) {
+        std::cout << fsep << container_.geojson(r);
+        fsep = ",";
+      }
+      std::cout << R"(]})" << std::endl;
+
+      // Cleanup the right hand redundancies
+      container_.RemoveCandidates(left_state_id.time() + 1, redundancies);
+      for(const auto& r : redundancies)
+        vs_.RemoveStateId(r);
     }
   }
-
-  // TODO: Note that we didnt remove any redundancies resulting from candidates in the last state, do that
 }
 
 std::vector<MatchResults>
@@ -425,10 +459,10 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     // If we just got some results then we need to remove them from consideration
     // we avoid doing this for the common case where k==1 by putting this at the start of the loop
     if(best_paths.size()) {
-      // Remove all the candidates whose paths are redundant with this one
-      RemoveRedundancies(stateids);
       // Remove this particular sequence of stateids
       ts_.RemovePath(time);
+      // Remove all the candidates whose paths are redundant with this one
+      RemoveRedundancies(stateids);
     }
 
     // Get the states for the kth best path its in reverse order
@@ -460,7 +494,6 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
 
     // Get the match result for each of the states
     auto results = FindMatchResults(*this, stateids);
-    //TODO: figure out when we cant get any more results
 
     // Insert the interpolated results into the result list
     std::vector<MatchResult> best_path;
@@ -492,19 +525,11 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     auto found_state = std::find_if(stateids.rbegin(), stateids.rend(), [](const StateId& si) {
       return si.IsValid();
     });
-    auto accumulated_cost = found_state != stateids.rend() ? vs_.AccumulatedCost(*found_state) : MAX_ACCUMULATED_COST;
+    auto accumulated_cost = found_state != stateids.rend() ? static_cast<float>(vs_.AccumulatedCost(*found_state)) : MAX_ACCUMULATED_COST;
 
     // Construct a result
     auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
-    MatchResults match_results(std::move(best_path), std::move(segments));
-    match_results.score = accumulated_cost;
-
-    // We'll keep it if we don't have a duplicate already
-    auto found_path = std::find_if(best_paths.rbegin(), best_paths.rend(), [&match_results](const MatchResults& r) {
-      return match_results == r;
-    });
-    if(found_path == best_paths.rend())
-      best_paths.emplace_back(std::move(match_results));
+    best_paths.emplace_back(MatchResults{std::move(best_path), std::move(segments), accumulated_cost});
   }
 
   // Give back anywhere from 1 to k results
