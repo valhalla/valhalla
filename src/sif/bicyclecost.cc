@@ -123,7 +123,7 @@ constexpr Surface kWorstAllowedSurface[] =
         { Surface::kCompacted,            // Road bicycle
           Surface::kGravel,               // Cross
           Surface::kDirt,                 // Hybrid
-          Surface::kPath }; // Mountain
+          Surface::kPath };               // Mountain
 
 constexpr float kSurfaceFactors[] =
         { 1.0f, 2.5f, 4.5f, 7.0f };
@@ -371,6 +371,8 @@ class BicycleCost : public DynamicCost {
   // Minimal surface type that will be penalized for costing
   Surface minimal_surface_penalized_;
 
+  Surface worst_allowed_surface_;
+
   // Surface speed factors (based on road surface type).
   const float* surface_speed_factor_;
 
@@ -394,9 +396,7 @@ protected:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    Surface s = avoid_bad_surfaces_ == 1.0f ?
-        minimal_surface_penalized_ :
-        Surface::kPath;
+    Surface s = worst_allowed_surface_;
     return [s](const baldr::DirectedEdge* edge) {
       if ( edge->IsTransition() || edge->is_shortcut() ||
           !(edge->forwardaccess() & kBicycleAccess) ||
@@ -475,6 +475,10 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 
   minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t> (type_)];
+
+  worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ?
+          minimal_surface_penalized_ :
+          Surface::kPath;
 
   // Get default speed from the config. This is the average speed on smooth,
   // flat roads. If not present or outside the valid range use a default speed
@@ -608,11 +612,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  Surface s = avoid_bad_surfaces_ == 1.0f ?
-          kWorstAllowedSurface[static_cast<uint32_t>(type_)] :
-          Surface::kPath;
   // Prohibit certain roads based on surface type and bicycle type
-  return edge->surface() <= s;
+  return edge->surface() <= worst_allowed_surface_;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -634,12 +635,9 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
        IsUserAvoidEdge(opp_edgeid)) {
     return false;
   }
-  Surface s = avoid_bad_surfaces_ == 1.0f ?
-          kWorstAllowedSurface[static_cast<uint32_t>(type_)] :
-          Surface::kPath;
 
   // Prohibit certain roads based on surface type and bicycle type
-  return opp_edge->surface() <= s;
+  return opp_edge->surface() <= worst_allowed_surface_;
 }
 
 // Check if access is allowed at the specified node.
