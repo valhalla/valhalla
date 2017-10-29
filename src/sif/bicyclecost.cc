@@ -110,13 +110,13 @@ constexpr float kMaxCyclingSpeed = 60.0f; // KPH
 // These values determine the percentage by which speed us reduced for
 // each surface type. (0 values indicate unusable surface types).
 constexpr float kRoadSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 0.9f, 0.7f, 0.6f, 0.5f, 0.4f, 0.0f };
+        { 1.0f, 1.0f, 0.9f, 0.6f, 0.5f, 0.3f, 0.2f, 0.0f };
 constexpr float kHybridSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 1.0f, 0.8f, 0.7f, 0.6f, 0.5f, 0.0f };
+        { 1.0f, 1.0f, 1.0f, 0.8f, 0.6f, 0.4f, 0.25f, 0.0f };
 constexpr float kCrossSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 1.0f, 0.9f, 0.8f, 0.7f, 0.6f, 0.0f };
+        { 1.0f, 1.0f, 1.0f, 0.8f, 0.7f, 0.5f, 0.4f, 0.0f };
 constexpr float kMountainSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 1.0f, 1.0f, 0.9f, 0.8f, 0.7f, 0.0f };
+        { 1.0f, 1.0f, 1.0f, 1.0f, 0.9f, 0.75f, 0.55f, 0.0f };
 
 // Worst allowed surface based on bicycle type
 constexpr Surface kWorstAllowedSurface[] =
