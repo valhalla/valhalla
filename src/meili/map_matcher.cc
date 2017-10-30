@@ -339,6 +339,7 @@ void MapMatcher::Clear()
   vs_.set_transition_cost_model(transition_cost_model_);
   ts_.Clear();
   container_.Clear();
+  redundancies.clear();
 }
 
 void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
@@ -352,34 +353,55 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
     auto left_used_candidate = container_.state(left_state_id);
     std::unordered_map<StateId, path_t> paths_from_winner;
     std::unordered_set<StateId> right_uniques;
-    for(const auto& right_candidate : container_.column(left_state_id.time() + 1))
-      auto i = paths_from_winner.emplace(right_candidate.stateid(), MergeRoute(left_used_candidate, right_candidate));
+    for(const auto& right_candidate : container_.column(left_state_id.time() + 1)) {
+      if(IsRedundant(right_candidate))
+        continue;
+      auto edges = MergeRoute(left_used_candidate, right_candidate);
+      if(edges.size())
+        paths_from_winner.emplace(right_candidate.stateid(), std::move(edges));
+    }
 
     std::cout << std::endl << "Paths from left winner:" << std::endl;
     for(const auto& kv:paths_from_winner) {
       std::cout << R"({"type":"FeatureCollection","features":[)";
       std::cout << container_.geojson(left_used_candidate) << ',' << container_.geojson(kv.first);
+      std::cout << R"(],"edges":[)";
+      std::string esep = "";
+      for (auto e : kv.second.edges) {
+        std::cout << esep << e;
+        esep = ",";
+      }
       std::cout << R"(]})" << std::endl;
     }
 
     // For each candidate of the left state that isnt the winner
-    std::unordered_set<StateId> redundancies;
+    std::unordered_set<StateId> next_redundancies;
     for(const auto& left_unused_candidate : container_.column(left_state_id.time())) {
-      // We cant remove the candidate that was actually used in the result
-      if(left_used_candidate.stateid() == left_unused_candidate.stateid())
+      // We cant remove the candidate that was actually used in the result or if its already redundant
+      if(left_used_candidate.stateid() == left_unused_candidate.stateid() || IsRedundant(left_unused_candidate))
         continue;
 
       // For each candidate in the right state
       bool found_unique = false;
       std::cout << std::endl << "Paths from left loser:" << std::endl;
       for(const auto& right_candidate : container_.column(left_state_id.time() + 1)) {
+        if(IsRedundant(right_candidate))
+          continue;
         // Get the potentially redundant path and bail if isn't redundant with the winner path
         path_t path_from_loser(MergeRoute(left_unused_candidate, right_candidate));
         std::cout << R"({"type":"FeatureCollection","features":[)";
         std::cout << container_.geojson(left_unused_candidate) << ',' << container_.geojson(right_candidate);
+        std::cout << R"(],"edges":[)";
+        std::string esep = "";
+        for (auto e : path_from_loser.edges) {
+          std::cout << esep << e;
+          esep = ",";
+        }
         std::cout << R"(]})" << std::endl;
 
-        if(paths_from_winner.find(right_candidate.stateid())->second != path_from_loser) {
+        auto path_from_winner = paths_from_winner.find(right_candidate.stateid());
+        if(path_from_loser.edges.size() &&
+            (path_from_winner == paths_from_winner.end() || path_from_winner->second != path_from_loser)) {
           found_unique = true;
           right_uniques.emplace(right_candidate.stateid());
           std::cout << "Unique!" << std::endl;
@@ -390,47 +412,49 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 
       // We didnt find any unique paths for this left candidate so we need to mark it has useless
       if(!found_unique)
-        redundancies.emplace(left_unused_candidate.stateid());
+        next_redundancies.emplace(left_unused_candidate.stateid());
     }
 
     std::cout << std::endl << "Removing: ";
     std::cout << R"({"type":"FeatureCollection","features":[)";
     std::string fsep = "";
-    for(auto r : redundancies) {
+    for(auto r : next_redundancies) {
       std::cout << fsep << container_.geojson(r);
       fsep = ",";
     }
     std::cout << R"(]})" << std::endl;
 
     // Clean up the left hand redundancies
-    container_.RemoveCandidates(left_state_id.time(), redundancies);
-    for(const auto& r : redundancies)
+    for(const auto& r : next_redundancies) {
+      redundancies.emplace(r);
       vs_.RemoveStateId(r);
+    }
 
     // If this was the last state pair we can possibly remove some of the right candidates
     if(left_state_id_itr == result.cend() - 2) {
       // For each right candidate
-      redundancies.clear();
+      next_redundancies.clear();
       for(const auto& right_candidate : container_.column(left_state_id.time() + 1)) {
         // If we ended up finding no uniques for this right candidate we can remove it
         if(right_uniques.find(right_candidate.stateid()) == right_uniques.cend()) {
-          redundancies.emplace(right_candidate.stateid());
+          next_redundancies.emplace(right_candidate.stateid());
         }
       }
 
       std::cout << std::endl << "Removing: ";
       std::cout << R"({"type":"FeatureCollection","features":[)";
       std::string fsep = "";
-      for(auto r : redundancies) {
+      for(auto r : next_redundancies) {
         std::cout << fsep << container_.geojson(r);
         fsep = ",";
       }
       std::cout << R"(]})" << std::endl;
 
       // Cleanup the right hand redundancies
-      container_.RemoveCandidates(left_state_id.time() + 1, redundancies);
-      for(const auto& r : redundancies)
+      for(const auto& r : next_redundancies) {
+        redundancies.emplace(r);
         vs_.RemoveStateId(r);
+      }
     }
   }
 }
@@ -601,10 +625,16 @@ MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max
 
   const auto time = container_.AppendMeasurement(measurement);
 
+  std::string fsep = "";
+  std::cout << "Candidates at time " << time << std::endl << R"({"type":"FeatureCollection","features":[)";
   for (const auto& candidate: candidates) {
     const auto& stateid = container_.AppendCandidate(candidate);
     vs_.AddStateId(stateid);
+
+    std::cout << fsep << container_.geojson(stateid);
+    fsep = ",";
   }
+  std::cout << R"(]})" << std::endl;
 
   return time;
 }

@@ -126,13 +126,7 @@ class StateContainer
   { return static_cast<StateId::Time>(columns_.size()); }
 
   std::string geojson(const StateId& s)
-  {
-    const auto& c = columns_[s.time()];
-     auto f = std::find_if(c.begin(), c.end(), [&s](const State& i){ return i.stateid() == s; });
-     if(f == c.end())
-       throw std::runtime_error("stateid not found.");
-     return geojson(*f);
-  }
+  { return geojson(state(s)); }
 
   std::string geojson(const State& s)
   {
@@ -141,16 +135,6 @@ class StateContainer
     ss << s.candidate().edges[0].projected.lng() << ',' << s.candidate().edges[0].projected.lat() << "]}";
     ss << ',' << R"("properties":{"time":)" << s.stateid().time() << R"(,"id":)" << s.stateid().id() << R"(,"edge":")" << s.candidate().edges[0].id << "\"}}";
     return ss.str();
-  }
-
-  size_t RemoveCandidates(const StateId::Time& time, const std::unordered_set<StateId>& candidates)
-  {
-    auto s = columns_[time].size();
-    auto erase_from = std::remove_if(columns_[time].begin(), columns_[time].end(), [&candidates](const State& state){
-      return candidates.find(state.stateid()) != candidates.cend();
-    });
-    columns_[time].erase(erase_from);
-    return s - columns_[time].size();
   }
 
   StateId

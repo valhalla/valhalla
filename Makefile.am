@@ -885,8 +885,8 @@ endif
 if DATA_TOOLS
 #some of the tests want tiles of a certain location so lets build those
 test/data/utrecht_tiles: valhalla_build_tiles
-	@echo "Building Utrecht Tiles..." && rm -rf test/data/*utrecht_tiles && ./valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/tmp_utrecht_tiles","concurrency":1,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf && mv test/data/tmp_utrecht_tiles test/data/utrecht_tiles
-TEST_CLEANFILES += test/data/utrecht_tiles
+	@echo #"Building Utrecht Tiles..." && rm -rf test/data/*utrecht_tiles && ./valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/tmp_utrecht_tiles","concurrency":1,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf && mv test/data/tmp_utrecht_tiles test/data/utrecht_tiles
+#TEST_CLEANFILES += test/data/utrecht_tiles
 
 check_PROGRAMS += \
 	test/utrecht \

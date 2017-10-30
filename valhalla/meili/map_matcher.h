@@ -80,6 +80,9 @@ class MapMatcher final
 
   void RemoveRedundancies(const std::vector<StateId>& result);
 
+  bool IsRedundant(const State& s) const
+  { return redundancies.find(s.stateid()) != redundancies.cend(); }
+
   boost::property_tree::ptree config_;
 
   baldr::GraphReader& graphreader_;
@@ -102,6 +105,8 @@ class MapMatcher final
   EmissionCostModel emission_cost_model_;
 
   TransitionCostModel transition_cost_model_;
+
+  std::unordered_set<StateId> redundancies;
 };
 
 
