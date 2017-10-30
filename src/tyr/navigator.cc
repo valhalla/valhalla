@@ -48,7 +48,7 @@ NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
   maneuver_index_ = 0;
   SetUnits();
   SetShapeLengthTime();
-  SetUsedInstructions();
+  InitializeUsedInstructions();
   route_state_ = NavigationStatus_RouteState_kInitialized;
 
   nav_status.set_route_state(route_state_);
@@ -252,7 +252,7 @@ void Navigator::SetShapeLengthTime() {
   current_shape_index_ = 0;
 }
 
-void Navigator::SetUsedInstructions() {
+void Navigator::InitializeUsedInstructions() {
   used_instructions_.clear();
   for (size_t i = 0; i < route_.trip().legs(leg_index_).maneuvers_size(); ++i) {
     used_instructions_.emplace_back(false, false, false, false);
