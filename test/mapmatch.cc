@@ -299,13 +299,13 @@ int main(int argc, char* argv[]) {
   if(argc > 2)
     bound = std::stoi(argv[2]);
 
-  /*suite.test(TEST_CASE(test32bit));
+  suite.test(TEST_CASE(test32bit));
 
   suite.test(TEST_CASE(test_matcher));
 
   suite.test(TEST_CASE(test_distance_only));
 
-  suite.test(TEST_CASE(test_time_rejection));*/
+  suite.test(TEST_CASE(test_time_rejection));
 
   suite.test(TEST_CASE(test_topk));
 
