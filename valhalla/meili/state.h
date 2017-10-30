@@ -106,7 +106,13 @@ class StateContainer
 
   const State&
   state(const StateId& stateid) const
-  { return columns_[stateid.time()][stateid.id()]; }
+  {
+    const auto& c = columns_[stateid.time()];
+    auto f = std::find_if(c.cbegin(), c.cend(), [&stateid](const State& s){return stateid == s.stateid();});
+    if(f == c.cend())
+      throw std::runtime_error("No state found!");
+    return *f;
+  }
 
   const Measurement&
   measurement(const StateId::Time& time) const
@@ -135,6 +141,16 @@ class StateContainer
     ss << s.candidate().edges[0].projected.lng() << ',' << s.candidate().edges[0].projected.lat() << "]}";
     ss << ',' << R"("properties":{"time":)" << s.stateid().time() << R"(,"id":)" << s.stateid().id() << R"(,"edge":")" << s.candidate().edges[0].id << "\"}}";
     return ss.str();
+  }
+
+  size_t RemoveCandidates(const StateId::Time& time, const std::unordered_set<StateId>& candidates)
+  {
+    auto s = columns_[time].size();
+    auto erase_from = std::remove_if(columns_[time].begin(), columns_[time].end(), [&candidates](const State& state){
+      return candidates.find(state.stateid()) != candidates.end();
+    });
+    columns_[time].erase(erase_from, columns_[time].end());
+    return s - columns_[time].size();
   }
 
   StateId

@@ -339,7 +339,6 @@ void MapMatcher::Clear()
   vs_.set_transition_cost_model(transition_cost_model_);
   ts_.Clear();
   container_.Clear();
-  redundancies.clear();
 }
 
 void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
@@ -354,8 +353,6 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
     std::unordered_map<StateId, path_t> paths_from_winner;
     std::unordered_set<StateId> right_uniques;
     for(const auto& right_candidate : container_.column(left_state_id.time() + 1)) {
-      if(IsRedundant(right_candidate))
-        continue;
       auto edges = MergeRoute(left_used_candidate, right_candidate);
       if(edges.size())
         paths_from_winner.emplace(right_candidate.stateid(), std::move(edges));
@@ -375,18 +372,16 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
     }
 
     // For each candidate of the left state that isnt the winner
-    std::unordered_set<StateId> next_redundancies;
+    std::unordered_set<StateId> redundancies;
     for(const auto& left_unused_candidate : container_.column(left_state_id.time())) {
-      // We cant remove the candidate that was actually used in the result or if its already redundant
-      if(left_used_candidate.stateid() == left_unused_candidate.stateid() || IsRedundant(left_unused_candidate))
+      // We cant remove the candidate that was actually used in the result
+      if(left_used_candidate.stateid() == left_unused_candidate.stateid())
         continue;
 
       // For each candidate in the right state
       bool found_unique = false;
       std::cout << std::endl << "Paths from left loser:" << std::endl;
       for(const auto& right_candidate : container_.column(left_state_id.time() + 1)) {
-        if(IsRedundant(right_candidate))
-          continue;
         // Get the potentially redundant path and bail if isn't redundant with the winner path
         path_t path_from_loser(MergeRoute(left_unused_candidate, right_candidate));
         std::cout << R"({"type":"FeatureCollection","features":[)";
@@ -400,8 +395,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
         std::cout << R"(]})" << std::endl;
 
         auto path_from_winner = paths_from_winner.find(right_candidate.stateid());
-        if(path_from_loser.edges.size() &&
-            (path_from_winner == paths_from_winner.end() || path_from_winner->second != path_from_loser)) {
+        if(path_from_loser.edges.size() && (path_from_winner == paths_from_winner.end() || path_from_winner->second != path_from_loser)) {
           found_unique = true;
           right_uniques.emplace(right_candidate.stateid());
           std::cout << "Unique!" << std::endl;
@@ -412,49 +406,50 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 
       // We didnt find any unique paths for this left candidate so we need to mark it has useless
       if(!found_unique)
-        next_redundancies.emplace(left_unused_candidate.stateid());
+        redundancies.emplace(left_unused_candidate.stateid());
     }
 
     std::cout << std::endl << "Removing: ";
     std::cout << R"({"type":"FeatureCollection","features":[)";
     std::string fsep = "";
-    for(auto r : next_redundancies) {
+    for(auto r : redundancies) {
       std::cout << fsep << container_.geojson(r);
       fsep = ",";
     }
     std::cout << R"(]})" << std::endl;
 
     // Clean up the left hand redundancies
-    for(const auto& r : next_redundancies) {
-      redundancies.emplace(r);
+    std::cout << "removed: " << container_.RemoveCandidates(left_state_id.time(), redundancies) << std::endl;
+    for(const auto& r : redundancies)
       vs_.RemoveStateId(r);
-    }
 
     // If this was the last state pair we can possibly remove some of the right candidates
     if(left_state_id_itr == result.cend() - 2) {
+      auto right_state_id = ts_.GetOrigin(*(left_state_id_itr + 1));
+      if(!right_state_id.IsValid())
+        right_state_id = *(left_state_id_itr + 1);
       // For each right candidate
-      next_redundancies.clear();
+      redundancies.clear();
       for(const auto& right_candidate : container_.column(left_state_id.time() + 1)) {
-        // If we ended up finding no uniques for this right candidate we can remove it
-        if(right_uniques.find(right_candidate.stateid()) == right_uniques.cend()) {
-          next_redundancies.emplace(right_candidate.stateid());
+        // If we ended up finding no uniques for this right candidate we can remove it unless its winner
+        if(right_uniques.find(right_candidate.stateid()) == right_uniques.cend() && right_candidate.stateid() != right_state_id) {
+          redundancies.emplace(right_candidate.stateid());
         }
       }
 
       std::cout << std::endl << "Removing: ";
       std::cout << R"({"type":"FeatureCollection","features":[)";
       std::string fsep = "";
-      for(auto r : next_redundancies) {
+      for(auto r : redundancies) {
         std::cout << fsep << container_.geojson(r);
         fsep = ",";
       }
       std::cout << R"(]})" << std::endl;
 
       // Cleanup the right hand redundancies
-      for(const auto& r : next_redundancies) {
-        redundancies.emplace(r);
+      std::cout << "removed: " << container_.RemoveCandidates(left_state_id.time() + 1, redundancies) << std::endl;
+      for(const auto& r : redundancies)
         vs_.RemoveStateId(r);
-      }
     }
   }
 }
