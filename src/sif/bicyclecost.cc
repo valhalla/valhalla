@@ -29,8 +29,9 @@ constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
-constexpr float kDefaultUseRoad                 = 0.25f;   // Factor between 0 and 1
+constexpr float kDefaultUseRoad                 = 0.25f;  // Factor between 0 and 1
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultAvoidBadSurfaces        = 0.25f;  // Factor between 0 and 1
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -109,13 +110,13 @@ constexpr float kMaxCyclingSpeed = 60.0f; // KPH
 // These values determine the percentage by which speed us reduced for
 // each surface type. (0 values indicate unusable surface types).
 constexpr float kRoadSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 0.9f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f };
+        { 1.0f, 1.0f, 0.9f, 0.6f, 0.5f, 0.3f, 0.2f, 0.0f };
 constexpr float kHybridSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 1.0f, 0.8f, 0.5f, 0.0f, 0.0f, 0.0f };
+        { 1.0f, 1.0f, 1.0f, 0.8f, 0.6f, 0.4f, 0.25f, 0.0f };
 constexpr float kCrossSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 1.0f, 0.8f, 0.7f, 0.5f, 0.0f, 0.0f };
+        { 1.0f, 1.0f, 1.0f, 0.8f, 0.7f, 0.5f, 0.4f, 0.0f };
 constexpr float kMountainSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 1.0f, 1.0f, 0.9f, 0.8f, 0.7f, 0.0f };
+        { 1.0f, 1.0f, 1.0f, 1.0f, 0.9f, 0.75f, 0.55f, 0.0f };
 
 // Worst allowed surface based on bicycle type
 constexpr Surface kWorstAllowedSurface[] =
@@ -123,6 +124,9 @@ constexpr Surface kWorstAllowedSurface[] =
           Surface::kGravel,               // Cross
           Surface::kDirt,                 // Hybrid
           Surface::kPath };               // Mountain
+
+constexpr float kSurfaceFactors[] =
+        { 1.0f, 2.5f, 4.5f, 7.0f };
 
 // Avoid driveways
 constexpr float kDrivewayFactor = 20.0f;
@@ -218,6 +222,7 @@ constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0.0f, kDefaultCou
 constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseFerryRange{0.0f, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
+constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadSurfaces, 1.0f};
 }
 
 /**
@@ -351,6 +356,7 @@ class BicycleCost : public DynamicCost {
   float road_factor_;                    // Road factor based on use_roads_
   float use_ferry_;                      // Preference of using ferries between 0 and 1
   float use_hills_;                      // Preference of using hills between 0 and 1
+  float avoid_bad_surfaces_;             // Preference of avoiding bad surfaces for the bike type
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -361,8 +367,10 @@ class BicycleCost : public DynamicCost {
   // Bicycle type
   BicycleType type_;
 
-  // Minimal surface type usable by the bicycle type
-  Surface minimal_allowed_surface_;
+  // Minimal surface type that will be penalized for costing
+  Surface minimal_surface_penalized_;
+
+  Surface worst_allowed_surface_;
 
   // Surface speed factors (based on road surface type).
   const float* surface_speed_factor_;
@@ -387,12 +395,12 @@ protected:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    uint32_t b = static_cast<uint32_t>(type_);
-    return [b](const baldr::DirectedEdge* edge) {
+    Surface s = worst_allowed_surface_;
+    return [s](const baldr::DirectedEdge* edge) {
       if ( edge->IsTransition() || edge->is_shortcut() ||
           !(edge->forwardaccess() & kBicycleAccess) ||
            edge->use() == Use::kSteps ||
-           edge->surface() > kWorstAllowedSurface[b]) {
+           edge->surface() > s) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -465,6 +473,12 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     type_ = BicycleType::kHybrid;
   }
 
+  minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t> (type_)];
+
+  worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ?
+          minimal_surface_penalized_ :
+          Surface::kPath;
+
   // Get default speed from the config. This is the average speed on smooth,
   // flat roads. If not present or outside the valid range use a default speed
   // based on the bicycle type.
@@ -474,25 +488,23 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     kDefaultCyclingSpeed[t],
     kMaxCyclingSpeed
   };
+
   speed_ = kCycleSpeedRange(
     pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t])
   );
 
-  // Set the minimal surface type usable by the bicycle type and the
-  // surface speed factors.
+  avoid_bad_surfaces_ = kAvoidBadSurfacesRange (
+    pt.get<float>("avoid_bad_surfaces", kDefaultAvoidBadSurfaces)
+  );
+
+  // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
-    // Heavily penalize driveways
-    minimal_allowed_surface_ = Surface::kCompacted;
     surface_speed_factor_ = kRoadSurfaceSpeedFactors;
   } else if (type_ == BicycleType::kHybrid) {
-    minimal_allowed_surface_ =  Surface::kDirt;
     surface_speed_factor_ = kHybridSurfaceSpeedFactors;
   } else if (type_ == BicycleType::kCross) {
-    minimal_allowed_surface_ =  Surface::kGravel;
     surface_speed_factor_ = kCrossSurfaceSpeedFactors;
   } else {
-    // Mountain - allow all but impassable
-    minimal_allowed_surface_ =  Surface::kPath;
     surface_speed_factor_ = kMountainSurfaceSpeedFactors;
   }
 
@@ -600,7 +612,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   // Prohibit certain roads based on surface type and bicycle type
-  return edge->surface() <= minimal_allowed_surface_;
+  return edge->surface() <= worst_allowed_surface_;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -624,7 +636,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   // Prohibit certain roads based on surface type and bicycle type
-  return opp_edge->surface() <= minimal_allowed_surface_;
+  return opp_edge->surface() <= worst_allowed_surface_;
 }
 
 // Check if access is allowed at the specified node.
@@ -728,8 +740,15 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // The stress of this road after accommodation but before grade
   float total_stress = accommodation_factor * roadway_stress;
 
+  float surface_factor = 0.0f;
+  if (edge->surface () >= minimal_surface_penalized_)
+  {
+    surface_factor = avoid_bad_surfaces_ * kSurfaceFactors[static_cast<uint32_t> (edge->surface ())
+                                   - static_cast<uint32_t> (minimal_surface_penalized_)];
+  }
+
   // Create a final edge factor based on total stress and the weighted grade penalty for the edge.
-  float factor = 1.0f + grade_penalty[edge->weighted_grade()] + total_stress;
+  float factor = 1.0f + grade_penalty[edge->weighted_grade()] + total_stress + surface_factor;
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   float sec = (edge->length() * speedfactor_[bike_speed]);
