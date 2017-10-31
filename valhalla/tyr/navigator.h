@@ -52,11 +52,54 @@ constexpr size_t kPreTransition = 2;
 constexpr size_t kPostTransition = 3;
 
 ///////////////////////////////////////////////////////////////////////////////
+// Metric values for transition alert processing
+
+// Transition alert upper and lower deltas
+constexpr float kTransitionAlertLowerMetricDelta = 0.04828032f; // ~48 meters
+constexpr float kTransitionAlertUpperMetricDelta = 0.04828032f; // ~48 meters
+
+// Initial long transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kInitialLongTransitionAlertMetricLength = 3.0f; // three kilometers
+constexpr float kInitialLongTransitionAlertLowerMetricLength = kInitialLongTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
+constexpr float kInitialLongTransitionAlertUpperMetricLength = kInitialLongTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
+constexpr float kInitialLongTransitionAlertMinManeuverMetricLength = kInitialLongTransitionAlertMetricLength * 2.0f;
+
+// Initial short transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kInitialShortTransitionAlertMetricLength = 1.0f; // one kilometer
+constexpr float kInitialShortTransitionAlertUpperMetricLength = kInitialShortTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
+constexpr float kInitialShortTransitionAlertLowerMetricLength = kInitialShortTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
+constexpr float kInitialShortTransitionAlertMinManeuverMetricLength = kInitialShortTransitionAlertMetricLength * 2.0f;
+
+// Final long transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kFinalLongTransitionAlertMetricLength = 0.5f; // half kilometer = 500 meters
+constexpr float kFinalLongTransitionAlertLowerMetricLength = kFinalLongTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
+constexpr float kFinalLongTransitionAlertUpperMetricLength = kFinalLongTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
+constexpr float kFinalLongTransitionAlertMinManeuverMetricLength = kFinalLongTransitionAlertMetricLength * 2.0f;
+
+// Final medium transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kFinalMediumTransitionAlertMetricLength = 0.25f; // quarter kilometer = 250 meters
+constexpr float kFinalMediumTransitionAlertLowerMetricLength = kFinalMediumTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
+constexpr float kFinalMediumTransitionAlertUpperMetricLength = kFinalMediumTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
+constexpr float kFinalMediumTransitionAlertMinManeuverMetricLength = kFinalMediumTransitionAlertMetricLength * 2.0f;
+
+// Final short transition alert length, length bounds, and
+// minimum maneuver length threshold
+// TODO: maybe refactor for just short values less than medium length?
+constexpr float kFinalShortTransitionAlertMetricLength = 0.125f; // eighth of a kilometer = 125 meters
+constexpr float kFinalShortTransitionAlertLowerMetricLength = kFinalShortTransitionAlertMetricLength - (kTransitionAlertLowerMetricDelta * 0.6667f);
+constexpr float kFinalShortTransitionAlertUpperMetricLength = kFinalShortTransitionAlertMetricLength + (kTransitionAlertUpperMetricDelta * 0.6667f);
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Imperial values for transition alert processing
 
 // Transition alert upper and lower deltas
-constexpr float kTransitionAlertLowerImperialDelta = 0.03f; // ~48.3 meters
-constexpr float kTransitionAlertUpperImperialDelta = 0.03f; // ~48.3 meters
+constexpr float kTransitionAlertLowerImperialDelta = 0.03f; // ~158 feet
+constexpr float kTransitionAlertUpperImperialDelta = 0.03f; // ~158 feet
 
 // Initial long transition alert length, length bounds, and
 // minimum maneuver length threshold
@@ -89,7 +132,7 @@ constexpr float kFinalMediumTransitionAlertMinManeuverImperialLength = kFinalMed
 // Final short transition alert length, length bounds, and
 // minimum maneuver length threshold
 // TODO: maybe refactor for just short values less than medium length?
-constexpr float kFinalShortTransitionAlertImperialLength = 0.095f; // miles (500 feet)
+constexpr float kFinalShortTransitionAlertImperialLength = 0.095f; // miles = 500 feet
 constexpr float kFinalShortTransitionAlertLowerImperialLength = kFinalShortTransitionAlertImperialLength - (kTransitionAlertLowerImperialDelta * 0.6667f);
 constexpr float kFinalShortTransitionAlertUpperImperialLength = kFinalShortTransitionAlertImperialLength + (kTransitionAlertUpperImperialDelta * 0.6667f);
 
