@@ -474,12 +474,6 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     type_ = BicycleType::kHybrid;
   }
 
-  minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t> (type_)];
-
-  worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ?
-          minimal_surface_penalized_ :
-          Surface::kPath;
-
   // Get default speed from the config. This is the average speed on smooth,
   // flat roads. If not present or outside the valid range use a default speed
   // based on the bicycle type.
@@ -497,6 +491,12 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   avoid_bad_surfaces_ = kAvoidBadSurfacesRange (
     pt.get<float>("avoid_bad_surfaces", kDefaultAvoidBadSurfaces)
   );
+
+  minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t> (type_)];
+
+  worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ?
+          minimal_surface_penalized_ :
+          Surface::kPath;
 
   // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
