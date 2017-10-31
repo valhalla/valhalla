@@ -108,13 +108,13 @@ class Navigator {
     /**
      * Sets the route path for the navigator to process.
      * Returns a NavigationStatus_RouteState_kInitialized route state
-     * if no errors occurred, otherwise it returns a
+     * if no errors occurred; otherwise, it returns a
      * NavigationStatus_RouteState_kInvalid route state.
      *
-     * @param route_json_str A string containing a json route response.
+     * @param  route_json_str  A string containing a json route response.
      *
      * @return a NavigationStatus_RouteState_kInitialized route state
-     * if no errors occurred, otherwise it returns a
+     * if no errors occurred; otherwise, it returns a
      * NavigationStatus_RouteState_kInvalid route state.
      */
     NavigationStatus SetRoute(const std::string& route_json_str);
@@ -125,7 +125,7 @@ class Navigator {
      * Also, this method will determine if an instruction needs to be called out
      * for the user.
      *
-     * @param fix_location The current fix location of user.
+     * @param  fix_location  The current fix location of user.
      *
      * @return the navigation status depending on the fix location in relation
      * to the route path.
@@ -136,51 +136,233 @@ class Navigator {
 
   protected:
 
-    // TODO add comments for methods
-
+    /**
+     * Assigns the kilometer units boolean based on the value specified
+     * in the route.
+     */
     void SetUnits();
+
+    /**
+     * Returns true if the route units are in kilometers; otherwise, return false.
+     *
+     * @return true if the route units are in kilometers; otherwise, return false.
+     */
     bool HasKilometerUnits() const;
 
+    /**
+     * Assigns the shape, maneuver speeds, and remaining leg length & time
+     * based on the route.
+     */
     void SetShapeLengthTime();
 
-    void SetUsedInstructions();
+    /**
+     * Initializes the used instruction boolean values for each maneuver and
+     * instruction type.
+     */
+    void InitializeUsedInstructions();
 
+    /**
+     * Returns true if the specified index is the route leg destination shape
+     * index; otherwise, returns false.
+     *
+     * @param  idx  The specified shape index to verify.
+     *
+     * @return true if the specified index is the route leg destination shape
+     * index; otherwise, returns false.
+     */
     bool IsDestinationShapeIndex(size_t idx) const;
 
+    /**
+     * Returns true if the specified index is the route leg start maneuver
+     * index; otherwise, returns false.
+     *
+     * @param  idx  The specified maneuver index to verify.
+     *
+     * @return true if the specified index is the route leg start maneuver
+     * index; otherwise, returns false.
+     */
     bool IsStartManeuverIndex(size_t idx) const;
+
+    /**
+     * Returns true if the specified index is the route leg destination maneuver
+     * index; otherwise, returns false.
+     *
+     * @param  idx  The specified maneuver index to verify.
+     *
+     * @return true if the specified index is the route leg destination maneuver
+     * index; otherwise, returns false.
+     */
     bool IsDestinationManeuverIndex(size_t idx) const;
 
+    /**
+     * Returns the maneuver index that contains the specified shape index.
+     *
+     * @param  begin_search_index  The maneuver index to start the search.
+     * @param  shape_index  The target shape index to find the associated maneuver.
+     *
+     * @return the maneuver index that contains the specified shape index.
+     */
     size_t FindManeuverIndex(size_t begin_search_index, size_t shape_index) const;
+
+    /**
+     * Returns the maneuver index that contains the specified shape index by
+     * searching in reverse from the specified maneuver index.
+     *
+     * @param  rbegin_search_index  The maneuver index to start the search in reverse.
+     * @param  shape_index  The target shape index to find the associated maneuver.
+     *
+     * @return the maneuver index that contains the specified shape index by
+     * searching in reverse from the specified maneuver index.
+     */
     size_t RfindManeuverIndex(size_t rbegin_search_index, size_t shape_index) const;
 
+    /**
+     * Find the closest point on the route that corresponds to the specified
+     * fix location. If a valid snap point is found then the navigation
+     * status will be populated and returned with a route state of 'tracking'.
+     * Otherwise, a route state of 'invalid' will be returned.
+     *
+     * @param  fix_location  The current fix location of user.
+     */
     NavigationStatus SnapToRoute(const FixLocation& fix_location);
 
+    /**
+     * Returns true if navigation is just starting (going from initialized to
+     * tracking state); otherwise, returns false.
+     *
+     * @param  prev_route_state  The previous route state.
+     * @param  curr_route_state  The current route state.
+     *
+     * @return true if navigation is just starting (going from initialized to
+     * tracking state); otherwise, returns false.
+     */
     bool StartingNavigation(const NavigationStatus_RouteState& prev_route_state,
         const NavigationStatus_RouteState& curr_route_state) const;
 
+    /**
+     * Returns true if the snapped location is close to the route leg origin;
+     * otherwise, returns false.
+     *
+     * @param  nav_status  The current navigation status.
+     *
+     * @return true if the snapped location is close to the route leg origin;
+     * otherwise, returns false.
+     */
     bool OnRouteLocationCloseToOrigin(const NavigationStatus& nav_status) const;
 
+    /**
+     * Transforms the specified unit value to meters.
+     *
+     * @param  units  The length to transform to meters.
+     *
+     * @return the meter equivalent of the specified unit value.
+     */
     float UnitsToMeters(float units) const;
 
+    /**
+     * Returns the number of words in the specified instruction string.
+     *
+     * @param  instruction  The string to process the word count.
+     *
+     * @return the number of words in the specified instruction string.
+     */
     size_t GetWordCount(const std::string& instruction) const;
 
+
+    /**
+     * Returns the time traveled on the current maneuver.
+     *
+     * @param  fix_location  The current fix location of user.
+     * @param  nav_status  The current navigation status.
+     *
+     * @return the time traveled on the current maneuver.
+     */
     uint32_t GetSpentManeuverTime(const FixLocation& fix_location,
         const NavigationStatus& nav_status) const;
 
+    /**
+     * Returns the remaining time to complete the current maneuver.
+     * If the specified fix location has speed then it will be used to calculate
+     * the remaining time; otherwise, the default data speed is used for the
+     * calculation.
+     *
+     * @param  fix_location  The current fix location of user.
+     * @param  nav_status  The current navigation status.
+     *
+     * @return the remaining time to complete the current maneuver.
+     */
     uint32_t GetRemainingManeuverTime(const FixLocation& fix_location,
         const NavigationStatus& nav_status) const;
 
+    /**
+     * Returns the time in seconds prior to the transition point when a
+     * pre-transition instruction should be announced. The number of words
+     * in the instruction is used when determining the threshold.
+     *
+     * @param  instruction_index  The instruction index to process.
+     *
+     * @return the time in seconds prior to the transition point when a
+     * pre-transition instruction should be announced.
+     */
     uint32_t GetPreTransitionThreshold(size_t instruction_index) const;
 
+    /**
+     * Returns true if the specified time in seconds is within the specified
+     * lower and upper bounds; otherwise, returns false.
+     *
+     * @param  time  The time in seconds to verify.
+     * @param  lower_bound  The lower time bound.
+     * @param  upper_bound  The upper time bound.
+     *
+     * @return true if the specified time in seconds is within the specified
+     * lower and upper bounds; otherwise, returns false
+     */
     bool IsTimeWithinBounds(uint32_t time, uint32_t lower_bound,
         uint32_t upper_bound) const;
 
+    /**
+     * Returns true if the specified length based on units is within the
+     * specified lower and upper bounds; otherwise, returns false.
+     *
+     * @param  length  The length in units to verify.
+     * @param  lower_bound  The lower length bound.
+     * @param  upper_bound  The upper length bound.
+     *
+     * @return true if the specified length based on units is within the
+     * specified lower and upper bounds; otherwise, returns false.
+     */
     bool IsLengthWithinBounds(float length, float lower_bound,
         float upper_bound) const;
 
+    /**
+     * Returns true if an initial transition alert should be announced;
+     * otherwise, returns false. Also, if returning true - the alert length
+     * will be populated.
+     *
+     * @param  fix_location  The current fix location of user.
+     * @param  nav_status  The current navigation status.
+     * @param  alert_length  The returned alert length.
+     *
+     * @return true if an initial transition alert should be announced;
+     * otherwise, returns false. Also, if returning true - the alert length
+     * will be populated.
+     */
     bool IsInitialTransitionAlert(const FixLocation& fix_location,
         const NavigationStatus& nav_status, float& alert_length) const;
 
+    /**
+     * Returns true if a final transition alert should be announced;
+     * otherwise, returns false. Also, if returning true - the alert length
+     * will be populated.
+     *
+     * @param  fix_location  The current fix location of user.
+     * @param  nav_status  The current navigation status.
+     * @param  alert_length  The returned alert length.
+     *
+     * @return true if a final transition alert should be announced;
+     * otherwise, returns false. Also, if returning true - the alert length
+     * will be populated.
+     */
     bool IsFinalTransitionAlert(const FixLocation& fix_location,
         const NavigationStatus& nav_status, float& alert_length) const;
 
