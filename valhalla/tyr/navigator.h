@@ -36,6 +36,21 @@ constexpr uint32_t kInitialShortTransitionAlertMinSpeed = 18; // ~40.3 MPH
 constexpr uint32_t kFinalLongTransitionAlertMinSpeed = 28; // ~62.6 MPH
 constexpr uint32_t kFinalMediumTransitionAlertMinSpeed = 10; // ~22.4 MPH
 
+// Post-transition lower and upper bounds in seconds
+constexpr uint32_t kPostTransitionLowerBound = 2;
+constexpr uint32_t kPostTransitionUpperBound = 6;
+
+// Closest point tuple indexes
+constexpr size_t kClosestPoint = 0;
+constexpr size_t kClosestPointDistance = 1;
+constexpr size_t kClosestPointSegmentIndex = 2;
+
+// Used instruction tuple indexes
+constexpr size_t kInitialTransitionAlert = 0; // 2 or 1 miles depending on speed
+constexpr size_t kFinalTransitionAlert = 1;   // half or quarter mile depending on speed
+constexpr size_t kPreTransition = 2;
+constexpr size_t kPostTransition = 3;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Imperial values for transition alert processing
 
@@ -78,21 +93,7 @@ constexpr float kFinalShortTransitionAlertImperialLength = 0.095f; // miles (500
 constexpr float kFinalShortTransitionAlertLowerImperialLength = kFinalShortTransitionAlertImperialLength - (kTransitionAlertLowerImperialDelta * 0.6667f);
 constexpr float kFinalShortTransitionAlertUpperImperialLength = kFinalShortTransitionAlertImperialLength + (kTransitionAlertUpperImperialDelta * 0.6667f);
 
-// Post-transition lower and upper bounds in seconds
-constexpr uint32_t kPostTransitionLowerBound = 2;
-constexpr uint32_t kPostTransitionUpperBound = 6;
-
-// Closest point tuple indexes
-constexpr size_t kClosestPoint = 0;
-constexpr size_t kClosestPointDistance = 1;
-constexpr size_t kClosestPointSegmentIndex = 2;
-
-// Used instruction tuple indexes
-constexpr size_t kInitialTransitionAlert = 0; // 2 or 1 miles depending on speed
-constexpr size_t kFinalTransitionAlert = 1;   // half or quarter mile depending on speed
-constexpr size_t kPreTransition = 2;
-constexpr size_t kPostTransition = 3;
-
+///////////////////////////////////////////////////////////////////////////////
 class Navigator {
   public:
 
