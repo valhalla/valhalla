@@ -46,8 +46,8 @@ NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
 
   leg_index_ = 0;
   maneuver_index_ = 0;
-  SetUnits();
-  SetShapeLengthTime();
+  InitializeDistanceUnits();
+  InitializeShapeLengthTime();
   InitializeUsedInstructions();
   route_state_ = NavigationStatus_RouteState_kInitialized;
 
@@ -180,7 +180,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
   return nav_status;
 }
 
-void Navigator::SetUnits() {
+void Navigator::InitializeDistanceUnits() {
   if (route_.has_trip() && (route_.trip().has_units())
       && route_.trip().units() == "miles") {
     kilometer_units_ = false;
@@ -193,7 +193,7 @@ bool Navigator::HasKilometerUnits() const {
   return kilometer_units_;
 }
 
-void Navigator::SetShapeLengthTime() {
+void Navigator::InitializeShapeLengthTime() {
   if (route_.has_trip() && (route_.trip().legs_size() > 0)
       && route_.trip().legs(leg_index_).has_shape()) {
     shape_ = midgard::decode<std::vector<PointLL> >(

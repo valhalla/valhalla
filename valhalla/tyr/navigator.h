@@ -185,12 +185,12 @@ class Navigator {
      * Assigns the kilometer units boolean based on the value specified
      * in the route.
      */
-    void SetUnits();
+    void InitializeDistanceUnits();
 
     /**
-     * Returns true if the route units are in kilometers; otherwise, return false.
+     * Returns true if the distance units are in kilometers; otherwise, return false.
      *
-     * @return true if the route units are in kilometers; otherwise, return false.
+     * @return true if the distance units are in kilometers; otherwise, return false.
      */
     bool HasKilometerUnits() const;
 
@@ -198,7 +198,7 @@ class Navigator {
      * Assigns the shape, maneuver speeds, and remaining leg length & time
      * based on the route.
      */
-    void SetShapeLengthTime();
+    void InitializeShapeLengthTime();
 
     /**
      * Initializes the used instruction boolean values for each maneuver and
