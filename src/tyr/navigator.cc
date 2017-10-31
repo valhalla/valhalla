@@ -541,16 +541,16 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
     // and fix speed OR maneuver speed
     // and location prior to next maneuver
     if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
-        > kInitialLongTransitionAlertMinManeuverLength)
+        > kInitialLongTransitionAlertMinManeuverImperialLength)
         && ((fix_location.has_speed()
             && (fix_location.speed() > kInitialLongTransitionAlertMinSpeed)) // ~62.6 MPH
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kInitialLongTransitionAlertMinSpeed))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kInitialLongTransitionAlertLowerLength,
-            kInitialLongTransitionAlertUpperLength)) {
-      alert_length = kInitialLongTransitionAlertLength;
+            kInitialLongTransitionAlertLowerImperialLength,
+            kInitialLongTransitionAlertUpperImperialLength)) {
+      alert_length = kInitialLongTransitionAlertImperialLength;
       return true;
     }
 
@@ -559,16 +559,16 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
     // and fix speed OR maneuver speed
     // and location prior to next maneuver
     else if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
-        > kInitialShortTransitionAlertMinManeuverLength)
+        > kInitialShortTransitionAlertMinManeuverImperialLength)
         && ((fix_location.has_speed()
             && (fix_location.speed() > kInitialShortTransitionAlertMinSpeed)) // ~40.3 MPH
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kInitialShortTransitionAlertMinSpeed))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kInitialShortTransitionAlertLowerLength,
-            kInitialShortTransitionAlertUpperLength)) {
-      alert_length = kInitialShortTransitionAlertLength;
+            kInitialShortTransitionAlertLowerImperialLength,
+            kInitialShortTransitionAlertUpperImperialLength)) {
+      alert_length = kInitialShortTransitionAlertImperialLength;
       return true;
     }
   }
@@ -592,16 +592,16 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
     // and fix speed OR maneuver speed
     // and location prior to next maneuver
     if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
-        > kFinalLongTransitionAlertMinManeuverLength)
+        > kFinalLongTransitionAlertMinManeuverImperialLength)
         && ((fix_location.has_speed()
             && (fix_location.speed() > kFinalLongTransitionAlertMinSpeed)) // ~62.6 MPH
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kFinalLongTransitionAlertMinSpeed))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kFinalLongTransitionAlertLowerLength,
-            kFinalLongTransitionAlertUpperLength)) {
-      alert_length = kFinalLongTransitionAlertLength;
+            kFinalLongTransitionAlertLowerImperialLength,
+            kFinalLongTransitionAlertUpperImperialLength)) {
+      alert_length = kFinalLongTransitionAlertImperialLength;
       return true;
     }
 
@@ -610,25 +610,25 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
     // and fix speed OR maneuver speed
     // and location prior to next maneuver
     else if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
-        > kFinalMediumTransitionAlertMinManeuverLength)
+        > kFinalMediumTransitionAlertMinManeuverImperialLength)
         && ((fix_location.has_speed()
             && (fix_location.speed() > kFinalMediumTransitionAlertMinSpeed)) // ~22.4 MPH
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kFinalMediumTransitionAlertMinSpeed))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kFinalMediumTransitionAlertLowerLength,
-            kFinalMediumTransitionAlertUpperLength)) {
-      alert_length = kFinalMediumTransitionAlertLength;
+            kFinalMediumTransitionAlertLowerImperialLength,
+            kFinalMediumTransitionAlertUpperImperialLength)) {
+      alert_length = kFinalMediumTransitionAlertImperialLength;
       return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Validate location prior to next maneuver
     else if (IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kFinalShortTransitionAlertLowerLength,
-            kFinalShortTransitionAlertUpperLength)) {
-      alert_length = kFinalShortTransitionAlertLength;
+            kFinalShortTransitionAlertLowerImperialLength,
+            kFinalShortTransitionAlertUpperImperialLength)) {
+      alert_length = kFinalShortTransitionAlertImperialLength;
       return true;
     }
   }
