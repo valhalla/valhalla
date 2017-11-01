@@ -524,7 +524,6 @@ bool Navigator::IsLengthWithinBounds(float length, float lower_bound,
   return ((length > lower_bound) && (length < upper_bound));
 }
 
-// TODO separate values for metric
 bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
     const NavigationStatus& nav_status, float& alert_length) const {
 
@@ -655,7 +654,6 @@ float Navigator::GetInitialShortTransitionAlertMinManeuverLength() const {
   return kInitialShortTransitionAlertMinManeuverMetricLength;
 }
 
-// TODO separate values for metric
 bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
     const NavigationStatus& nav_status, float& alert_length) const {
 
@@ -663,6 +661,7 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
   size_t next_instruction_index = (maneuver_index_ + 1);
 
   // Verify that the current maneuver is not a destination maneuver
+
   // and the next maneuver has a transition alert instruction
   if (!IsDestinationManeuverIndex(curr_instruction_index)
       && route_.trip().legs(leg_index_).maneuvers(next_instruction_index).has_verbal_transition_alert_instruction()) {
@@ -672,16 +671,16 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
     // and fix speed OR maneuver speed
     // and location prior to next maneuver
     if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
-        > kFinalLongTransitionAlertMinManeuverImperialLength)
+        > GetFinalLongTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kFinalLongTransitionAlertMinSpeed)) // ~62.6 MPH
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kFinalLongTransitionAlertMinSpeed))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kFinalLongTransitionAlertLowerImperialLength,
-            kFinalLongTransitionAlertUpperImperialLength)) {
-      alert_length = kFinalLongTransitionAlertImperialLength;
+            GetFinalLongTransitionAlertLowerLength(),
+            GetFinalLongTransitionAlertUpperLength())) {
+      alert_length = GetFinalLongTransitionAlertLength();
       return true;
     }
 
@@ -690,29 +689,139 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
     // and fix speed OR maneuver speed
     // and location prior to next maneuver
     else if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
-        > kFinalMediumTransitionAlertMinManeuverImperialLength)
+        > GetFinalMediumTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kFinalMediumTransitionAlertMinSpeed)) // ~22.4 MPH
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kFinalMediumTransitionAlertMinSpeed))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kFinalMediumTransitionAlertLowerImperialLength,
-            kFinalMediumTransitionAlertUpperImperialLength)) {
-      alert_length = kFinalMediumTransitionAlertImperialLength;
+            GetFinalMediumTransitionAlertLowerLength(),
+            GetFinalMediumTransitionAlertUpperLength())) {
+      alert_length = GetFinalMediumTransitionAlertLength();
       return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Validate location prior to next maneuver
     else if (IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kFinalShortTransitionAlertLowerImperialLength,
-            kFinalShortTransitionAlertUpperImperialLength)) {
-      alert_length = kFinalShortTransitionAlertImperialLength;
+        GetFinalShortTransitionAlertLowerLength(),
+        GetFinalShortTransitionAlertUpperLength())) {
+      alert_length = GetFinalShortTransitionAlertLength();
       return true;
     }
   }
   return false;
+}
+
+float Navigator::GetFinalLongTransitionAlertLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalLongTransitionAlertImperialLength;
+  }
+  // Return metric value
+  return kFinalLongTransitionAlertMetricLength;
+}
+
+float Navigator::GetFinalLongTransitionAlertLowerLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalLongTransitionAlertLowerImperialLength;
+  }
+  // Return metric value
+  return kFinalLongTransitionAlertLowerMetricLength;
+}
+
+float Navigator::GetFinalLongTransitionAlertUpperLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalLongTransitionAlertUpperImperialLength;
+  }
+  // Return metric value
+  return kFinalLongTransitionAlertUpperMetricLength;
+}
+
+float Navigator::GetFinalLongTransitionAlertMinManeuverLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalLongTransitionAlertMinManeuverImperialLength;
+  }
+  // Return metric value
+  return kFinalLongTransitionAlertMinManeuverMetricLength;
+}
+
+float Navigator::GetFinalMediumTransitionAlertLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalMediumTransitionAlertImperialLength;
+  }
+  // Return metric value
+  return kFinalMediumTransitionAlertMetricLength;
+}
+
+float Navigator::GetFinalMediumTransitionAlertLowerLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalMediumTransitionAlertLowerImperialLength;
+  }
+  // Return metric value
+  return kFinalMediumTransitionAlertLowerMetricLength;
+}
+
+float Navigator::GetFinalMediumTransitionAlertUpperLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalMediumTransitionAlertUpperImperialLength;
+  }
+  // Return metric value
+  return kFinalMediumTransitionAlertUpperMetricLength;
+}
+
+float Navigator::GetFinalMediumTransitionAlertMinManeuverLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalMediumTransitionAlertMinManeuverImperialLength;
+  }
+  // Return metric value
+  return kFinalMediumTransitionAlertMinManeuverMetricLength;
+}
+
+float Navigator::GetFinalShortTransitionAlertLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalShortTransitionAlertImperialLength;
+  }
+  // Return metric value
+  return kFinalShortTransitionAlertMetricLength;
+}
+
+float Navigator::GetFinalShortTransitionAlertLowerLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalShortTransitionAlertLowerImperialLength;
+  }
+  // Return metric value
+  return kFinalShortTransitionAlertLowerMetricLength;
+}
+
+float Navigator::GetFinalShortTransitionAlertUpperLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kFinalShortTransitionAlertUpperImperialLength;
+  }
+  // Return metric value
+  return kFinalShortTransitionAlertUpperMetricLength;
 }
 
 }

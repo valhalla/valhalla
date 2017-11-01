@@ -473,6 +473,87 @@ class Navigator {
     bool IsFinalTransitionAlert(const FixLocation& fix_location,
         const NavigationStatus& nav_status, float& alert_length) const;
 
+    /**
+     * Returns the final long transition alert length based on the distance units.
+     *
+     * @return the final long transition alert length based on the distance units.
+     */
+    float GetFinalLongTransitionAlertLength() const;
+
+    /**
+     * Returns the final long transition alert lower length based on the distance units.
+     *
+     * @return the final long transition alert lower length based on the distance units.
+     */
+    float GetFinalLongTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the final long transition alert upper length based on the distance units.
+     *
+     * @return the final long transition alert upper length based on the distance units.
+     */
+    float GetFinalLongTransitionAlertUpperLength() const;
+
+    /**
+     * Returns the final long transition alert minimum maneuver length
+     * based on the distance units.
+     *
+     * @return the final long transition alert minimum maneuver length
+     * based on the distance units.
+     */
+    float GetFinalLongTransitionAlertMinManeuverLength() const;
+
+    /**
+     * Returns the final medium transition alert length based on the distance units.
+     *
+     * @return the final medium transition alert length based on the distance units.
+     */
+    float GetFinalMediumTransitionAlertLength() const;
+
+    /**
+     * Returns the final medium transition alert lower length based on the distance units.
+     *
+     * @return the final medium transition alert lower length based on the distance units.
+     */
+    float GetFinalMediumTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the final medium transition alert upper length based on the distance units.
+     *
+     * @return the final medium transition alert upper length based on the distance units.
+     */
+    float GetFinalMediumTransitionAlertUpperLength() const;
+
+    /**
+     * Returns the final medium transition alert minimum maneuver length
+     * based on the distance units.
+     *
+     * @return the final medium transition alert minimum maneuver length
+     * based on the distance units.
+     */
+    float GetFinalMediumTransitionAlertMinManeuverLength() const;
+
+    /**
+     * Returns the final short transition alert length based on the distance units.
+     *
+     * @return the final short transition alert length based on the distance units.
+     */
+    float GetFinalShortTransitionAlertLength() const;
+
+    /**
+     * Returns the final short transition alert lower length based on the distance units.
+     *
+     * @return the final short transition alert lower length based on the distance units.
+     */
+    float GetFinalShortTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the final short transition alert upper length based on the distance units.
+     *
+     * @return the final short transition alert upper length based on the distance units.
+     */
+    float GetFinalShortTransitionAlertUpperLength() const;
+
     /////////////////////////////////////////////////////////////////////////////
 
     // Specified route to navigate
