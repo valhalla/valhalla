@@ -471,52 +471,10 @@ void TryRemainingLegValues(NavigatorTest& nav, uint32_t index,
     throw std::runtime_error("Incorrect remaining leg time - found: " + std::to_string(remaining_leg_time) + " | expected: " + std::to_string(expected_remaining_leg_time));
 }
 
-void TryInitialLongTransitionAlertLength(float found_length, float expected_length) {
+void TryLength(std::string method, float found_length, float expected_length) {
   float epsilon = 0.005f;
   if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
-    throw std::runtime_error("Incorrect InitialLongTransitionAlertLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
-}
-
-void TryInitialLongTransitionAlertLowerLength(float found_length, float expected_length) {
-  float epsilon = 0.005f;
-  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
-    throw std::runtime_error("Incorrect InitialLongTransitionAlertLowerLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
-}
-
-void TryInitialLongTransitionAlertUpperLength(float found_length, float expected_length) {
-  float epsilon = 0.005f;
-  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
-    throw std::runtime_error("Incorrect InitialLongTransitionAlertUpperLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
-}
-
-void TryInitialLongTransitionAlertMinManeuverLength(float found_length, float expected_length) {
-  float epsilon = 0.005f;
-  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
-    throw std::runtime_error("Incorrect InitialLongTransitionAlertMinManeuverLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
-}
-
-void TryInitialShortTransitionAlertLength(float found_length, float expected_length) {
-  float epsilon = 0.005f;
-  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
-    throw std::runtime_error("Incorrect InitialShortTransitionAlertLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
-}
-
-void TryInitialShortTransitionAlertLowerLength(float found_length, float expected_length) {
-  float epsilon = 0.005f;
-  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
-    throw std::runtime_error("Incorrect InitialShortTransitionAlertLowerLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
-}
-
-void TryInitialShortTransitionAlertUpperLength(float found_length, float expected_length) {
-  float epsilon = 0.005f;
-  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
-    throw std::runtime_error("Incorrect InitialShortTransitionAlertUpperLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
-}
-
-void TryInitialShortTransitionAlertMinManeuverLength(float found_length, float expected_length) {
-  float epsilon = 0.005f;
-  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
-    throw std::runtime_error("Incorrect InitialShortTransitionAlertMinManeuverLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
+    throw std::runtime_error("Incorrect " + method + " - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
 }
 
 FixLocation GetFixLocation(float lon, float lat, uint64_t time) {
@@ -4922,30 +4880,30 @@ void TestAutoLancasterToHershey() {
   TryRemainingLegValues(nav, 0, 31.322f, 2438);   // 2423
 
   // Test the initial long transition alert methods for imperial values
-  TryInitialLongTransitionAlertLength(
+  TryLength("GetInitialLongTransitionAlertLength",
       nav.GetInitialLongTransitionAlertLength(),
       kInitialLongTransitionAlertImperialLength);
-  TryInitialLongTransitionAlertLowerLength(
+  TryLength("GetInitialLongTransitionAlertLowerLength",
       nav.GetInitialLongTransitionAlertLowerLength(),
       kInitialLongTransitionAlertLowerImperialLength);
-  TryInitialLongTransitionAlertUpperLength(
+  TryLength("GetInitialLongTransitionAlertUpperLength",
       nav.GetInitialLongTransitionAlertUpperLength(),
       kInitialLongTransitionAlertUpperImperialLength);
-  TryInitialLongTransitionAlertMinManeuverLength(
+  TryLength("GetInitialLongTransitionAlertMinManeuverLength",
       nav.GetInitialLongTransitionAlertMinManeuverLength(),
       kInitialLongTransitionAlertMinManeuverImperialLength);
 
   // Test the initial short transition alert methods for imperial values
-  TryInitialShortTransitionAlertLength(
+  TryLength("GetInitialShortTransitionAlertLength",
       nav.GetInitialShortTransitionAlertLength(),
       kInitialShortTransitionAlertImperialLength);
-  TryInitialShortTransitionAlertLowerLength(
+  TryLength("GetInitialShortTransitionAlertLowerLength",
       nav.GetInitialShortTransitionAlertLowerLength(),
       kInitialShortTransitionAlertLowerImperialLength);
-  TryInitialShortTransitionAlertUpperLength(
+  TryLength("GetInitialShortTransitionAlertUpperLength",
       nav.GetInitialShortTransitionAlertUpperLength(),
       kInitialShortTransitionAlertUpperImperialLength);
-  TryInitialShortTransitionAlertMinManeuverLength(
+  TryLength("GetInitialShortTransitionAlertMinManeuverLength",
       nav.GetInitialShortTransitionAlertMinManeuverLength(),
       kInitialShortTransitionAlertMinManeuverImperialLength);
 
