@@ -5264,7 +5264,7 @@ void TestAutoLancasterToHershey() {
       GetFixLocation(-76.313850f, 40.069965f, 446),
       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
       -76.3138428f, 40.0699997f, leg_index, 26.2774086f, 1977,
-      maneuver_index, 0.251014709f, 14, instruction_index));
+      maneuver_index, 0.251014709f, 14, instruction_index, 0.25f));
 
   // kFinalTransitionAlert instruction should be used after OnLocationChanged
   // because it was within length bounds for final transition alert
@@ -5312,7 +5312,7 @@ void TestAutoLancasterToHershey() {
       GetFixLocation(-76.587799f, 40.168167f, 1387, 32.19f),
       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
       -76.5878143f, 40.1681595f, leg_index, 9.69095802f, 1036,
-      maneuver_index, 0.508657455f, 29, instruction_index));
+      maneuver_index, 0.508657455f, 29, instruction_index, 0.5f));
 
   // kFinalTransitionAlert instruction should be used after OnLocationChanged
   // because it was within length bounds for final transition alert
@@ -5809,7 +5809,7 @@ void TestPedestrianCatalinasToOffice() {
        GetFixLocation(-76.301743f, 40.041588f, 496),
        GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
            -76.3017426f, 40.0415878f, leg_index, 0.174173057f, 197,
-           maneuver_index, 0.0986945033f, 112, instruction_index));
+           maneuver_index, 0.0986945033f, 112, instruction_index, 0.095f));
 
    // kFinalTransitionAlert instruction should be used after OnLocationChanged
    // because it was within length bounds for final transition alert
