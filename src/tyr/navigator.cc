@@ -559,16 +559,16 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
     // and fix speed OR maneuver speed
     // and location prior to next maneuver
     else if ((route_.trip().legs(leg_index_).maneuvers(curr_instruction_index).length()
-        > kInitialShortTransitionAlertMinManeuverImperialLength)
+        > GetInitialShortTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kInitialShortTransitionAlertMinSpeed)) // ~40.3 MPH
             || (UnitsToMeters(nav_status.remaining_maneuver_length())
                 / nav_status.remaining_maneuver_time()
                 > kInitialShortTransitionAlertMinSpeed))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
-            kInitialShortTransitionAlertLowerImperialLength,
-            kInitialShortTransitionAlertUpperImperialLength)) {
-      alert_length = kInitialShortTransitionAlertImperialLength;
+            GetInitialShortTransitionAlertLowerLength(),
+            GetInitialShortTransitionAlertUpperLength())) {
+      alert_length = GetInitialShortTransitionAlertLength();
       return true;
     }
   }
@@ -613,6 +613,46 @@ float Navigator::GetInitialLongTransitionAlertMinManeuverLength() const {
   }
   // Return metric value
   return kInitialLongTransitionAlertMinManeuverMetricLength;
+}
+
+float Navigator::GetInitialShortTransitionAlertLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kInitialShortTransitionAlertImperialLength;
+  }
+  // Return metric value
+  return kInitialShortTransitionAlertMetricLength;
+}
+
+float Navigator::GetInitialShortTransitionAlertLowerLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kInitialShortTransitionAlertLowerImperialLength;
+  }
+  // Return metric value
+  return kInitialShortTransitionAlertLowerMetricLength;
+}
+
+float Navigator::GetInitialShortTransitionAlertUpperLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kInitialShortTransitionAlertUpperImperialLength;
+  }
+  // Return metric value
+  return kInitialShortTransitionAlertUpperMetricLength;
+}
+
+float Navigator::GetInitialShortTransitionAlertMinManeuverLength() const {
+  // If imperial units
+  if (!HasKilometerUnits()) {
+    // Return imperial value
+    return kInitialShortTransitionAlertMinManeuverImperialLength;
+  }
+  // Return metric value
+  return kInitialShortTransitionAlertMinManeuverMetricLength;
 }
 
 // TODO separate values for metric

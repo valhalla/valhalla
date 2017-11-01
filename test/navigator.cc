@@ -4882,13 +4882,17 @@ void TestAutoLancasterToHershey() {
   TryRemainingLegValues(nav, 0, 31.322f, 2438);   // 2423
 
   // Test the initial long transition alert methods for imperial values
-  TryInitialLongTransitionAlertLength(nav.GetInitialLongTransitionAlertLength(),
+  TryInitialLongTransitionAlertLength(
+      nav.GetInitialLongTransitionAlertLength(),
       kInitialLongTransitionAlertImperialLength);
-  TryInitialLongTransitionAlertLowerLength(nav.GetInitialLongTransitionAlertLowerLength(),
+  TryInitialLongTransitionAlertLowerLength(
+      nav.GetInitialLongTransitionAlertLowerLength(),
       kInitialLongTransitionAlertLowerImperialLength);
-  TryInitialLongTransitionAlertUpperLength(nav.GetInitialLongTransitionAlertUpperLength(),
+  TryInitialLongTransitionAlertUpperLength(
+      nav.GetInitialLongTransitionAlertUpperLength(),
       kInitialLongTransitionAlertUpperImperialLength);
-  TryInitialLongTransitionAlertMinManeuverLength(nav.GetInitialLongTransitionAlertMinManeuverLength(),
+  TryInitialLongTransitionAlertMinManeuverLength(
+      nav.GetInitialLongTransitionAlertMinManeuverLength(),
       kInitialLongTransitionAlertMinManeuverImperialLength);
 
 //  TryGetRemainingManeuverTime()

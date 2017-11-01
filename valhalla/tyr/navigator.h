@@ -427,6 +427,36 @@ class Navigator {
     float GetInitialLongTransitionAlertMinManeuverLength() const;
 
     /**
+     * Returns the initial short transition alert length based on the distance units.
+     *
+     * @return the initial short transition alert length based on the distance units.
+     */
+    float GetInitialShortTransitionAlertLength() const;
+
+    /**
+     * Returns the initial short transition alert lower length based on the distance units.
+     *
+     * @return the initial short transition alert lower length based on the distance units.
+     */
+    float GetInitialShortTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the initial short transition alert upper length based on the distance units.
+     *
+     * @return the initial short transition alert upper length based on the distance units.
+     */
+    float GetInitialShortTransitionAlertUpperLength() const;
+
+    /**
+     * Returns the initial short transition alert minimum maneuver length
+     * based on the distance units.
+     *
+     * @return the initial short transition alert minimum maneuver length
+     * based on the distance units.
+     */
+    float GetInitialShortTransitionAlertMinManeuverLength() const;
+
+    /**
      * Returns true if a final transition alert should be announced;
      * otherwise, returns false. Also, if returning true - the alert length
      * will be populated. The determining criteria for the return values are
