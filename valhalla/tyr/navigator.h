@@ -382,7 +382,8 @@ class Navigator {
     /**
      * Returns true if an initial transition alert should be announced;
      * otherwise, returns false. Also, if returning true - the alert length
-     * will be populated.
+     * will be populated. The determining criteria for the return values are
+     * speed, maneuver length, and remaining maneuver length.
      *
      * @param  fix_location  The current fix location of user.
      * @param  nav_status  The current navigation status.
@@ -396,9 +397,40 @@ class Navigator {
         const NavigationStatus& nav_status, float& alert_length) const;
 
     /**
+     * Returns the initial long transition alert length based on the distance units.
+     *
+     * @return the initial long transition alert length based on the distance units.
+     */
+    float GetInitialLongTransitionAlertLength() const;
+
+    /**
+     * Returns the initial long transition alert lower length based on the distance units.
+     *
+     * @return the initial long transition alert lower length based on the distance units.
+     */
+    float GetInitialLongTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the initial long transition alert upper length based on the distance units.
+     *
+     * @return the initial long transition alert upper length based on the distance units.
+     */
+    float GetInitialLongTransitionAlertUpperLength() const;
+
+    /**
+     * Returns the initial long transition alert minimum maneuver length
+     * based on the distance units.
+     *
+     * @return the initial long transition alert minimum maneuver length
+     * based on the distance units.
+     */
+    float GetInitialLongTransitionAlertMinManeuverLength() const;
+
+    /**
      * Returns true if a final transition alert should be announced;
      * otherwise, returns false. Also, if returning true - the alert length
-     * will be populated.
+     * will be populated. The determining criteria for the return values are
+     * speed, maneuver length, and remaining maneuver length.
      *
      * @param  fix_location  The current fix location of user.
      * @param  nav_status  The current navigation status.
