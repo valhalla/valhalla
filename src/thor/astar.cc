@@ -115,7 +115,9 @@ void AStarPathAlgorithm::ModifyHierarchyLimits(const float dist,
 // edges if from_transition is false.
 void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
                    const GraphId& node, const EdgeLabel& pred,
-                   const uint32_t pred_idx, const bool from_transition) {
+                   const uint32_t pred_idx, const bool from_transition,
+                   const PathLocation& destination,
+                   std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -138,14 +140,16 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     if (directededge->trans_up()) {
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
+        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx,
+                      true, destination, best_path);
       }
       continue;
     }
     if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
+        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx,
+                      true, destination, best_path);
       }
       continue;
     }
@@ -345,7 +349,8 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
     }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false,
+                  destination, best_path);
   }
   return {};      // Should never get here
 }

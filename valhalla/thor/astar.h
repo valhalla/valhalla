@@ -129,10 +129,13 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
+   * @param   dest        Location information of the destination.
    */
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node, const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx, const bool from_transition);
+                     const uint32_t pred_idx, const bool from_transition,
+                     const baldr::PathLocation& dest,
+                     std::pair<int32_t, float>& best_path);
 
   /**
    * Add edges at the origin to the adjacency list.
