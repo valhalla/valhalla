@@ -126,6 +126,22 @@ class NavigatorTest : public Navigator {
     return Navigator::IsTimeWithinBounds(time, lower_bound, upper_bound);
   }
 
+  float GetInitialLongTransitionAlertLength() const {
+    return Navigator::GetInitialLongTransitionAlertLength();
+  }
+
+  float GetInitialLongTransitionAlertLowerLength() const {
+    return Navigator::GetInitialLongTransitionAlertLowerLength();
+  }
+
+  float GetInitialLongTransitionAlertUpperLength() const {
+    return Navigator::GetInitialLongTransitionAlertUpperLength();
+  }
+
+  float GetInitialLongTransitionAlertMinManeuverLength() const {
+    return Navigator::GetInitialLongTransitionAlertMinManeuverLength();
+  }
+
   std::vector<std::tuple<bool, bool, bool, bool>>& used_instructions() {
     return Navigator::used_instructions_;
   }
@@ -437,6 +453,30 @@ void TryRemainingLegValues(NavigatorTest& nav, uint32_t index,
 
   if (!valhalla::midgard::equal<float>(remaining_leg_time, expected_remaining_leg_time, (expected_remaining_leg_time*0.0066f)))
     throw std::runtime_error("Incorrect remaining leg time - found: " + std::to_string(remaining_leg_time) + " | expected: " + std::to_string(expected_remaining_leg_time));
+}
+
+void TryInitialLongTransitionAlertLength(float found_length, float expected_length) {
+  float epsilon = 0.005f;
+  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
+    throw std::runtime_error("Incorrect InitialLongTransitionAlertLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
+}
+
+void TryInitialLongTransitionAlertLowerLength(float found_length, float expected_length) {
+  float epsilon = 0.005f;
+  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
+    throw std::runtime_error("Incorrect InitialLongTransitionAlertLowerLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
+}
+
+void TryInitialLongTransitionAlertUpperLength(float found_length, float expected_length) {
+  float epsilon = 0.005f;
+  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
+    throw std::runtime_error("Incorrect InitialLongTransitionAlertUpperLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
+}
+
+void TryInitialLongTransitionAlertMinManeuverLength(float found_length, float expected_length) {
+  float epsilon = 0.005f;
+  if (!valhalla::midgard::equal<float>(found_length, expected_length, epsilon))
+    throw std::runtime_error("Incorrect InitialLongTransitionAlertMinManeuverLength - found: " + std::to_string(found_length) + " | expected: " + std::to_string(expected_length));
 }
 
 FixLocation GetFixLocation(float lon, float lat, uint64_t time) {
@@ -4840,6 +4880,16 @@ void TestAutoLancasterToHershey() {
   TryRemainingLegValues(nav, 3, 31.203f, 2390);   // 2375
   TryRemainingLegValues(nav, 2, 31.249f, 2424);   // 2409
   TryRemainingLegValues(nav, 0, 31.322f, 2438);   // 2423
+
+  // Test the initial long transition alert methods for imperial values
+  TryInitialLongTransitionAlertLength(nav.GetInitialLongTransitionAlertLength(),
+      kInitialLongTransitionAlertImperialLength);
+  TryInitialLongTransitionAlertLowerLength(nav.GetInitialLongTransitionAlertLowerLength(),
+      kInitialLongTransitionAlertLowerImperialLength);
+  TryInitialLongTransitionAlertUpperLength(nav.GetInitialLongTransitionAlertUpperLength(),
+      kInitialLongTransitionAlertUpperImperialLength);
+  TryInitialLongTransitionAlertMinManeuverLength(nav.GetInitialLongTransitionAlertMinManeuverLength(),
+      kInitialLongTransitionAlertMinManeuverImperialLength);
 
 //  TryGetRemainingManeuverTime()
 
