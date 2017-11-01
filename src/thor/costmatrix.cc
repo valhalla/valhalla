@@ -267,10 +267,10 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Skip any superseded edges that match the shortcut mask. Also skip
-    // if no access is allowed to this edge (based on costing method)
-    if ((shortcuts & directededge->superseded()) ||
-        !costing_->Allowed(directededge, pred, tile, edgeid)) {
+    // Quick check to skip if no access for this mode or if edge is
+    // superseded by a shortcut edge that was taken.
+    if (!(directededge->forwardaccess() & access_mode_) ||
+         (shortcuts & directededge->superseded())) {
       continue;
     }
 
@@ -281,14 +281,22 @@ void CostMatrix::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Check for complex restriction
-    if (costing_->Restricted(directededge, pred, edgelabels, tile,
-                             edgeid, true)) {
+    // Skip this edge if no access is allowed (based on costing method)
+    // or if a complex restriction prevents transition onto this edge.
+    if (!costing_->Allowed(directededge, pred, tile, edgeid) ||
+         costing_->Restricted(directededge, pred, edgelabels, tile,
+                              edgeid, true)) {
       continue;
     }
 
-    // Get cost and accumulated distance. Update the_shortcuts mask.
-    shortcuts |= directededge->shortcut();
+    // Get cost. Separate out transition cost. Update the_shortcuts mask.
+    // to supersede any regular edge, but only do this once we have stopped
+    // expanding on the next lower level (so we can still transition down to
+    // that level).
+    if (directededge->is_shortcut() &&
+        hierarchy_limits[edgeid.level()+1].StopExpanding()) {
+      shortcuts |= directededge->shortcut();
+    }
     Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
     Cost newcost = pred.cost() + tc + costing_->EdgeCost(directededge);
     uint32_t distance = pred.path_distance() + directededge->length();
@@ -559,22 +567,24 @@ void CostMatrix::ExpandReverse(GraphReader& graphreader,
     }
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
 
-    // Get opposing directed edge and check if allowed.
+    // Skip this edge if no access is allowed (based on costing method)
+    // or if a complex restriction prevents transition onto this edge.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge,
-                      t2, oppedge)) {
+    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge) ||
+         costing_->Restricted(directededge, pred, edgelabels, tile,
+                                     edgeid, false)) {
       continue;
     }
 
-    // Check for complex restriction
-    if (costing_->Restricted(directededge, pred, edgelabels, tile,
-                             edgeid, false)) {
-      continue;
+    // Get cost. Use opposing edge for EdgeCost. Update the_shortcuts mask
+    // to supersede any regular edge, but only do this once we have stopped
+    // expanding on the next lower level (so we can still transition down to
+    // that level). Separate the transition seconds so we can properly recover
+    // elapsed time on the reverse path.
+    if (directededge->is_shortcut() &&
+        hierarchy_limits[edgeid.level()+1].StopExpanding()) {
+      shortcuts |= directededge->shortcut();
     }
-
-    // Get cost and accumulated distance. Use opposing edge for EdgeCost.
-    // Update the shortcut mask
-    shortcuts |= directededge->shortcut();
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(),
                    nodeinfo, opp_edge, opp_pred_edge);
     Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge);
