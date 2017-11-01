@@ -21,28 +21,25 @@ enum class EdgeSet : uint8_t {
 
 // Store the edge label status and its index in the EdgeLabels list
 struct EdgeStatusInfo {
-  struct SetAndIndex {
-    uint32_t index : 28;
-    uint32_t set   : 4;
-  };
-  SetAndIndex status;
+  uint32_t index_ : 28;
+  uint32_t set_   : 4;
 
   EdgeStatusInfo() {
-    status.set   = static_cast<uint32_t>(EdgeSet::kUnreached);
-    status.index = 0;
+    set_   = static_cast<uint32_t>(EdgeSet::kUnreached);
+    index_ = 0;
   }
 
   EdgeStatusInfo(const EdgeSet set, const uint32_t index) {
-    status.set   = static_cast<uint32_t>(set);
-    status.index = index;
+    set_   = static_cast<uint32_t>(set);
+    index_ = index;
   }
 
   uint32_t index() const {
-    return status.index;
+    return index_;
   }
 
   EdgeSet set() const {
-    return static_cast<EdgeSet>(status.set);
+    return static_cast<EdgeSet>(set_);
   }
 };
 
@@ -84,7 +81,7 @@ class EdgeStatus {
    * @param  set      Label set for this directed edge.
    */
   void Update(const baldr::GraphId& edgeid, const EdgeSet set) {
-    edgestatus_[edgeid.value].status.set = static_cast<uint32_t>(set);
+    edgestatus_[edgeid.value].set_ = static_cast<uint32_t>(set);
   }
 
   /**
