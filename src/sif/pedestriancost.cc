@@ -59,7 +59,7 @@ constexpr uint32_t kTransitStartEndMaxDistance    = 2415;   // 1.5 miles
 constexpr uint32_t kTransitTransferMaxDistance   = 805;   // 0.5 miles
 
 // Avoid roundabouts
-constexpr float kRoundaboutFactor = 5.0f;
+constexpr float kRoundaboutFactor = 2.0f;
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -324,7 +324,7 @@ class PedestrianCost : public DynamicCost {
   float step_penalty_;    // Penalty applied to steps/stairs (seconds).
   float gate_penalty_;    // Penalty (seconds) to go through gate
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
-  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
+  float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float ferry_cost_;                // Cost (seconds) to exit a ferry
   float ferry_penalty_;             // Penalty (seconds) to enter a ferry

@@ -21,10 +21,10 @@ namespace {
     using meili::TrafficSegmentMatcher::TrafficSegmentMatcher;
 
     std::list<std::vector<meili::interpolation_t> > interpolate_matches(const std::vector<meili::MatchResult>& r,
-      const std::shared_ptr<meili::MapMatcher>& m) const override {
+      std::vector<meili::EdgeSegment>& e, const std::shared_ptr<meili::MapMatcher>& m) const override {
       matches = r;
       matcher = m;
-      interpolations = meili::TrafficSegmentMatcher::interpolate_matches(r, m);
+      interpolations = meili::TrafficSegmentMatcher::interpolate_matches(r, e, m);
       return interpolations;
     }
 

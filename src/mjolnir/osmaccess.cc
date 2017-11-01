@@ -50,6 +50,16 @@ bool OSMAccess::bike_tag() const {
   return attributes_.fields.bike_tag;
 }
 
+// Set moped tag flag
+void OSMAccess::set_moped_tag(const bool moped_tag) {
+  attributes_.fields.moped_tag = moped_tag;
+}
+
+// Get moped tag flag
+bool OSMAccess::moped_tag() const {
+  return attributes_.fields.moped_tag;
+}
+
 // Set bus tag flag.
 void OSMAccess::set_bus_tag(const bool bus_tag) {
   attributes_.fields.bus_tag = bus_tag;
@@ -84,6 +94,15 @@ void OSMAccess::set_hov_tag(const bool hov_tag) {
 // Get hov tag flag.
 bool OSMAccess::hov_tag() const {
   return attributes_.fields.hov_tag;
+}
+
+// Set motorroad tag flag.
+void OSMAccess::set_motorroad_tag(const bool motorroad_tag) {
+  attributes_.fields.motorroad_tag = motorroad_tag;
+}
+// Get motorroad tag flag.
+bool OSMAccess::motorroad_tag() const {
+  return attributes_.fields.motorroad_tag;
 }
 
 }

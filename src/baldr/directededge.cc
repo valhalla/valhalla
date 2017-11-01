@@ -26,7 +26,8 @@ json::MapPtr access_json(uint32_t access) {
     {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
     {"taxi", static_cast<bool>(access & kTaxiAccess)},
     {"truck", static_cast<bool>(access & kTruckAccess)},
-    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)}
+    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)},
+    {"moped", static_cast<bool>(access & kMopedAccess)}
   });
 }
 
@@ -119,6 +120,11 @@ void DirectedEdge::set_curvature(const uint32_t factor) {
 // Sets the lane connectivity flag.
 void DirectedEdge::set_laneconnectivity(const bool lc) {
   lane_conn_ = lc;
+}
+
+// Sets the traffic segment flag.
+void DirectedEdge::set_traffic_seg(const bool seg) {
+  traffic_seg_ = seg;
 }
 
 // -------------------------- Routing attributes --------------------------- //
@@ -282,7 +288,6 @@ void DirectedEdge::set_forwardaccess(const uint32_t modes) {
   } else {
     forwardaccess_ = modes;
   }
-  forwardaccess_ = modes;
 }
 
 // Set all forward access modes to true (used for transition edges)

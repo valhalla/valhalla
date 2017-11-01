@@ -261,7 +261,18 @@ struct graph_callback : public OSMPBF::Callback {
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
       auto inserted = loop_nodes_.insert(std::make_pair(node, i));
       if(inserted.second == false) {
-        intersection_.set(nodes[(i + inserted.first->second) / 2]); //TODO: update osmdata_.*_count?
+        // Walk through nodes between the 2 nodes that form the loop and see if
+        // there are already intersections
+        bool intsct = false;
+        for (size_t j = inserted.first->second + 1; j < i; ++j) {
+          if (intersection_.get(nodes[j])) {
+            intsct = true;
+            break;
+          }
+        }
+        if (!intsct) {
+          intersection_.set(nodes[(i + inserted.first->second) / 2]); //TODO: update osmdata_.*_count?
+        }
 
         // Update the index in case the node is used again (a future loop)
         inserted.first->second = i;
@@ -349,8 +360,16 @@ struct graph_callback : public OSMPBF::Callback {
         access.set_bike_tag(true);
         has_user_tags = true;
       }
+      else if (tag.first == "moped_tag") {
+        access.set_moped_tag(true);
+        has_user_tags = true;
+      }
       else if (tag.first == "hov_tag") {
         access.set_hov_tag(true);
+        has_user_tags = true;
+      }
+      else if (tag.first == "motorroad_tag") {
+        access.set_motorroad_tag(true);
         has_user_tags = true;
       }
 
@@ -382,6 +401,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_emergency_forward(tag.second == "true" ? true : false);
       else if (tag.first == "hov_forward")
         w.set_hov_forward(tag.second == "true" ? true : false);
+      else if (tag.first == "moped_forward")
+        w.set_moped_forward(tag.second == "true" ? true : false);
       else if (tag.first == "auto_backward")
         w.set_auto_backward(tag.second == "true" ? true : false);
       else if (tag.first == "truck_backward")
@@ -394,6 +415,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_emergency_backward(tag.second == "true" ? true : false);
       else if (tag.first == "hov_backward")
         w.set_hov_backward(tag.second == "true" ? true : false);
+      else if (tag.first == "moped_backward")
+        w.set_moped_backward(tag.second == "true" ? true : false);
       else if (tag.first == "pedestrian")
         w.set_pedestrian(tag.second == "true" ? true : false);
       else if (tag.first == "private" && tag.second == "true") {
@@ -562,7 +585,11 @@ struct graph_callback : public OSMPBF::Callback {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
 
-        if (value.find("paved") != std::string::npos
+        // Find unpaved before paved since they have common string
+        if (value.find("unpaved") != std::string::npos)
+          w.set_surface(Surface::kGravel);
+
+        else if (value.find("paved") != std::string::npos
             || value.find("pavement") != std::string::npos
             || value.find("asphalt") != std::string::npos
             || value.find("concrete") != std::string::npos
@@ -593,8 +620,7 @@ struct graph_callback : public OSMPBF::Callback {
 
         else if (value.find("gravel") != std::string::npos
             || value.find("pebblestone") != std::string::npos
-            || value.find("sand") != std::string::npos
-            || value.find("unpaved") != std::string::npos)
+            || value.find("sand") != std::string::npos)
           w.set_surface(Surface::kGravel);
         else if (value.find("grass") != std::string::npos)
           w.set_surface(Surface::kPath);
@@ -608,13 +634,13 @@ struct graph_callback : public OSMPBF::Callback {
         has_surface = true;
 
         if (tag.second == "grade1") {
-          w.set_surface(Surface::kPaved);
-        } else if (tag.second == "grade2") {
           w.set_surface(Surface::kPavedRough);
-        } else if (tag.second == "grade3") {
+        } else if (tag.second == "grade2") {
           w.set_surface(Surface::kCompacted);
-        } else if (tag.second == "grade4") {
+        } else if (tag.second == "grade3") {
           w.set_surface(Surface::kDirt);
+        } else if (tag.second == "grade4") {
+          w.set_surface(Surface::kGravel);
         } else if (tag.second == "grade5") {
           w.set_surface(Surface::kPath);
         } else has_surface = false;
@@ -744,52 +770,60 @@ struct graph_callback : public OSMPBF::Callback {
       }
     }
 
-    //If no surface has been set by a user, assign a surface based on Road Class and Use
+    //if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
+      if (results.find("sac_scale") != results.end() ||
+          results.find("mtb:scale") != results.end() ||
+          results.find("mtb:scale:imba") != results.end() ||
+          results.find("mtb:scale:uphill") != results.end() ||
+          results.find("mtb:description") != results.end() )
+        w.set_surface(Surface::kPath);
+      else {
+      //If no surface has been set by a user, assign a surface based on Road Class and Use
+        switch (w.road_class()) {
 
-      switch (w.road_class()) {
-
-        case RoadClass::kMotorway:
-        case RoadClass::kTrunk:
-        case RoadClass::kPrimary:
-        case RoadClass::kSecondary:
-        case RoadClass::kTertiary:
-        case RoadClass::kUnclassified:
-        case RoadClass::kResidential:
-          w.set_surface(Surface::kPavedSmooth);
-          break;
-        default:
-          switch (w.use()) {
-          case Use::kFootway:
-          case Use::kPedestrian:
-          case Use::kSidewalk:
-          case Use::kPath:
-          case Use::kBridleway:
-            w.set_surface(Surface::kCompacted);
-            break;
-          case Use::kTrack:
-            w.set_surface(Surface::kDirt);
-            break;
-          case Use::kRoad:
-          case Use::kParkingAisle:
-          case Use::kDriveway:
-          case Use::kAlley:
-          case Use::kEmergencyAccess:
-          case Use::kDriveThru:
-          case Use::kLivingStreet:
+          case RoadClass::kMotorway:
+          case RoadClass::kTrunk:
+          case RoadClass::kPrimary:
+          case RoadClass::kSecondary:
+          case RoadClass::kTertiary:
+          case RoadClass::kUnclassified:
+          case RoadClass::kResidential:
             w.set_surface(Surface::kPavedSmooth);
             break;
-          case Use::kCycleway:
-          case Use::kSteps:
-            w.set_surface(Surface::kPaved);
-            break;
           default:
-            //TODO:  see if we can add more logic when a user does not
-            //specify a surface.
-            w.set_surface(Surface::kPaved);
+            switch (w.use()) {
+            case Use::kFootway:
+            case Use::kPedestrian:
+            case Use::kSidewalk:
+            case Use::kPath:
+            case Use::kBridleway:
+              w.set_surface(Surface::kCompacted);
+              break;
+            case Use::kTrack:
+              w.set_surface(Surface::kDirt);
+              break;
+            case Use::kRoad:
+            case Use::kParkingAisle:
+            case Use::kDriveway:
+            case Use::kAlley:
+            case Use::kEmergencyAccess:
+            case Use::kDriveThru:
+            case Use::kLivingStreet:
+              w.set_surface(Surface::kPavedSmooth);
+              break;
+            case Use::kCycleway:
+            case Use::kSteps:
+              w.set_surface(Surface::kPaved);
+              break;
+            default:
+              //TODO:  see if we can add more logic when a user does not
+              //specify a surface.
+              w.set_surface(Surface::kPaved);
+              break;
+            }
             break;
-          }
-          break;
+        }
       }
     }
 
@@ -859,7 +893,6 @@ struct graph_callback : public OSMPBF::Callback {
       w.set_has_user_tags(true);
       access_->push_back(access);
     }
-
     // Add the way to the list
     ways_->push_back(w);
   }

@@ -34,6 +34,10 @@ constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
 
+constexpr float kDefaultUseHills                = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUsePrimary              = 0.5f;   // Factor between 0 and 1
+constexpr uint32_t kDefaultTopSpeed             = 45;     // Kilometers per hour
+
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
 constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
@@ -75,6 +79,20 @@ constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeco
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+
+// Weighting factor based on road class. These apply penalties to higher class
+// roads. These penalties are modulated by the useroads factor - further
+// avoiding higher class roads for those with low propensity for using roads.
+constexpr float kRoadClassFactor[] = {
+    1.0f,   // Motorway
+    0.4f,   // Trunk
+    0.2f,   // Primary
+    0.1f,   // Secondary
+    0.05f,  // Tertiary
+    0.05f,  // Unclassified
+    0.0f,   // Residential
+    0.5f    // Service, other
+};
 
 }
 
@@ -141,7 +159,7 @@ class AutoCost : public DynamicCost {
                  const baldr::GraphTile*& tile,
                  const baldr::GraphId& opp_edgeid) const;
 
-  /**Snap
+  /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
    * @param  edge  Pointer to node information.
@@ -248,7 +266,7 @@ class AutoCost : public DynamicCost {
   float ferry_penalty_;             // Penalty (seconds) to enter a ferry
   float ferry_factor_;              // Weighting to apply to ferry edges
   float alley_penalty_;             // Penalty (seconds) to use a alley
-  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
+  float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float use_ferry_;
 
@@ -629,7 +647,7 @@ cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
 class BusCost : public AutoCost {
  public:
   /**
-   * Construct auto costing for shorter (not absolute shortest) path.
+   * Construct bus costing.
    * Pass in configuration using property tree.
    * @param  config  Property tree with configuration/options.
    */

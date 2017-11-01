@@ -57,16 +57,21 @@ std::string to_string(const vb::GraphId &i) {
 
 namespace {
 
-// Distance tolerance (meters) for node searching
-// TODO - need to increase this to allow some tolerance for data edits.
-// However - this sometimes causes fallbacks to A* (not sure why yet!)
-constexpr float kNodeDistanceTolerance = 1.0;
+// Distance tolerance (meters) for node searching. This value allows some
+// tolerance to account for data edits.
+constexpr float kNodeDistanceTolerance = 20.0;
 
-// 10 meter length matching tolerance
-constexpr uint32_t kLengthTolerance = 10;
+// Distance tolerance (meters) for searching along an edge. This value allows
+// some tolerance to account for data edits.
+constexpr uint32_t kEdgeDistanceTolerance = 20.0;
+
+// 10 meter length matching tolerance.
+// TODO - should this be based on segment length so that short segments have
+// less tolerance?
+constexpr uint32_t kLengthTolerance = 15;
 
 // Bearing tolerance in degrees
-constexpr uint16_t kBearingTolerance = 10;
+constexpr uint16_t kBearingTolerance = 15;
 
 enum class MatchType : uint8_t {
   kWalk = 0,
@@ -164,10 +169,10 @@ struct edge_association {
   // segment.
   const chunk_t& chunks() const { return traffic_chunks; }
 
-  uint32_t success_count() const { return success_count_; }
-  uint32_t failure_count() const { return failure_count_; }
-  uint32_t walk_count() const { return walk_count_; }
-  uint32_t path_count() const { return path_count_; }
+  std::unordered_map<uint32_t, uint32_t> success_count() const { return success_count_; }
+  std::unordered_map<uint32_t, uint32_t> failure_count() const { return failure_count_; }
+  std::unordered_map<uint32_t, uint32_t> walk_count() const { return walk_count_; }
+  std::unordered_map<uint32_t, uint32_t> path_count() const { return path_count_; }
 
 private:
   std::vector<CandidateEdge> candidate_edges(bool origin,
@@ -178,7 +183,8 @@ private:
   std::vector<EdgeMatch> match_edges(const pbf::Segment &segment,
                     const vb::GraphId& segment_id,
                     const uint32_t segment_length, MatchType& match_type);
-  std::vector<EdgeMatch> walk(uint8_t level, const uint32_t segment_length,
+  std::vector<EdgeMatch> walk(const vb::GraphId& segment_id,
+                    const uint32_t segment_length,
                     const pbf::Segment& segment);
   vm::PointLL lookup_end_coord(const vb::GraphId& edge_id);
   vm::PointLL lookup_start_coord(const vb::GraphId& edge_id);
@@ -190,10 +196,10 @@ private:
   std::shared_ptr<vj::GraphTileBuilder> m_tile_builder;
 
   // Statistics
-  uint32_t success_count_;
-  uint32_t failure_count_;
-  uint32_t walk_count_;
-  uint32_t path_count_;
+  std::unordered_map<uint32_t, uint32_t> success_count_;
+  std::unordered_map<uint32_t, uint32_t> failure_count_;
+  std::unordered_map<uint32_t, uint32_t> walk_count_;
+  std::unordered_map<uint32_t, uint32_t> path_count_;
 
   // Chunks - saved for later
   chunk_t traffic_chunks;
@@ -355,6 +361,7 @@ vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &re
 
   //we only have one location so we only get one result
   std::vector<vb::Location> locs{loc};
+  locs.back().radius_ = kEdgeDistanceTolerance;
   vb::PathLocation path_loc(loc);
   auto results = vl::Search(locs, reader, edge_filter, vl::PassThroughNodeFilter);
   if(results.size())
@@ -386,9 +393,9 @@ private:
 // Find nodes on the specified level that are within a specified distance
 // from the lat,lon location
 std::vector<vb::GraphId> find_nearby_nodes(vb::GraphReader& reader,
-                              const float dist, const vm::PointLL& pt,
+                              const vm::PointLL& pt,
                               const uint8_t level) {
-  // Create a bounding box
+  // Create a bounding box and find nodes within the bounding box
   float meters_per_lng = vm::DistanceApproximator::MetersPerLngDegree(pt.lat());
   float delta_lng = kNodeDistanceTolerance / meters_per_lng;
   float delta_lat = kNodeDistanceTolerance / vm::kMetersPerDegreeLat;
@@ -481,11 +488,7 @@ vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb:
 
 // Edge association constructor
 edge_association::edge_association(const bpt::ptree &pt)
-  : success_count_(0),
-    failure_count_(0),
-    walk_count_(0),
-    path_count_(0),
-    m_reader(pt.get_child("mjolnir")),
+  : m_reader(pt.get_child("mjolnir")),
     m_travel_mode(vs::TravelMode::kDrive),
     m_path_algo(new vt::AStarPathAlgorithm()),
     m_costing(new DistanceOnlyCost(m_travel_mode)) {
@@ -499,7 +502,7 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
   std::vector<CandidateEdge> edges;
   if (lrp.at_node()) {
     // Find nearby nodes and get allowed edges
-    auto nodes = find_nearby_nodes(m_reader, kNodeDistanceTolerance, ll, level);
+    auto nodes = find_nearby_nodes(m_reader, ll, level);
     edges = GetEdgesFromNodes(m_reader, nodes, ll, origin);
   } else {
     // Use edge search with loki
@@ -521,13 +524,13 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
 }
 
 // Walk a path between origin and destination edges.
-std::vector<EdgeMatch> edge_association::walk(uint8_t level,
+std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
                             const uint32_t segment_length,
                             const pbf::Segment& segment) {
   // Get the candidate origin and destination edges
   size_t n = segment.lrps_size();
-  auto origin_edges = candidate_edges(true, segment.lrps(0), level);
-  auto destination_edges = candidate_edges(false, segment.lrps(n-1), level);
+  auto origin_edges = candidate_edges(true, segment.lrps(0), segment_id.level());
+  auto destination_edges = candidate_edges(false, segment.lrps(n-1), segment_id.level());
 
   // Create a map of candidate destination edges for faster lookup
   std::unordered_map<GraphId, CandidateEdge> dest_edges;
@@ -545,12 +548,15 @@ std::vector<EdgeMatch> edge_association::walk(uint8_t level,
   vb::RoadClass road_class = vb::RoadClass(segment.lrps(0).start_frc());
   std::vector<EdgeMatch> best_path;
   for (const auto& origin_edge : origin_edges) {
-    // Check that this edge matches road class and form of way
-    // TODO - what are implications for data updates - perhaps allow
-    // differing values but use this in the "scoring"
+    // Check that this edge matches form of way. Allow mismatch in road class
+    // within the same tile hierarchy level (e.g. tertiary and secondary).
+    // If road class change forces the edge into a different tile level
+    // (e.g. from secondary to primary or residential to tertiary) the match
+    // will fail since we only follow edges on the same hierarchy level.
+    // TODO - perhaps incorporate classification difference into scoring?
     auto* tile = m_reader.GetGraphTile(origin_edge.edge.id);
     const auto* edge = tile->directededge(origin_edge.edge.id);
-    if (road_class != edge->classification() ||  fow != form_of_way(edge)) {
+    if (fow != form_of_way(edge)) {
       continue;
     }
 
@@ -636,21 +642,31 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
   // Try to match edges by walking a path from the first LRP to the last LRP
   // in the OSMLR segment. This uses a strategy similar to how OSMLR segments
   // are created
-  std::vector<EdgeMatch> edges = walk(segment_id.level(), segment_length, segment);
+  std::vector<EdgeMatch> edges = walk(segment_id, segment_length, segment);
   if (edges.size()) {
     match_type = MatchType::kWalk;
     return edges;
   }
 
-  // TODO - this should not happen if both are at nodes! Does not happen
-  // with low node tolerance, but as node search tolerance is raised we get
-  // fallback cases where we shouldn't
+  // Do not fall back to A* at this time
+  return std::vector<EdgeMatch>();
+
+  // TODO - do we need to fallback to A*?
+  // Seeing issues when falling back to A* - if a highway tag changes such
+  // that an edge changes hierarchy level the A* search is sometimes finding
+  // incorrect edges. Seems that the loki radius search needs to throw away
+  // edges when the lrp matches to a node, but the node is outside tolerance
+  // (but some point on the edge is within tolerance). Also could need bearing
+  // filtering.
+
+  // Fall back to A* shortest path to form the path edges
   if (segment.lrps(0).at_node() && segment.lrps(size-1).at_node()) {
     LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) + " value = " +
                   std::to_string(segment_id.value));
+  } else {
+    LOG_DEBUG("Fall back to A* - LRPs are not at nodes: " + std::to_string(segment_id) +
+             " value = " + std::to_string(segment_id.value));
   }
-
-  // Fall back to A* shortest path to form the path edges
 
   // check all the interim points of the location reference
   auto origin_coord = coord_for_lrp(segment.lrps(0));
@@ -659,80 +675,36 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     auto &lrp = segment.lrps(i);
     auto coord = coord_for_lrp(lrp);
     auto next_coord = coord_for_lrp(segment.lrps(i+1));
-
-    vb::RoadClass road_class = vb::RoadClass(lrp.start_frc());
-
     auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, segment_id.level());
     if (dest.edges.size() == 0) {
-      LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) + ". Segment cannot be matched, discarding.");
+      LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) +
+                ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();
     }
+
+    // TODO - reject edges if bearing from origin is outside of tolerance?
+    // TODO - do we need to use Form of Way in the Allowed costing method?
 
     // make sure there's no state left over from previous paths
     m_path_algo->Clear();
     m_path_algo->set_max_label_count(100);
     auto path = m_path_algo->GetBestPath(origin, dest, m_reader, &m_costing, m_travel_mode);
-
     if (path.empty()) {
       // what to do if there's no path?
-      LOG_DEBUG("No route to destination " + std::to_string(next_coord) + " from origin point " + std::to_string(coord) + ". Segment cannot be matched, discarding.");
+      LOG_DEBUG("No route to destination " + std::to_string(next_coord) + " from origin point " +
+                std::to_string(coord) + ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();
     }
 
-    {
-      auto last_edge_id = path.back().edgeid;
-      auto *tile = m_reader.GetGraphTile(last_edge_id);
-      auto *edge = tile->directededge(last_edge_id);
-      auto node_id = edge->endnode();
-      auto *ntile = (last_edge_id.Tile_Base() == node_id.Tile_Base()) ? tile : m_reader.GetGraphTile(node_id);
-      auto *node = ntile->node(node_id);
-      auto dist = node->latlng().Distance(next_coord);
-      if (dist > 10.0f) {
-        LOG_DEBUG("Route to destination " + std::to_string(next_coord) + " from origin point " + std::to_string(coord) + " ends more than 10m away: " + std::to_string(node->latlng()) + ". Segment cannot be matched, discarding.");
-        return std::vector<EdgeMatch>();
-      }
-    }
-
-    int score = 0;
-    uint32_t sum = 0;
-    for (auto &p : path) {
-      sum += p.elapsed_time;
-    }
-    score += std::abs(int(sum) - int(lrp.length())) / 10;
-
-    auto edge_id = path.front().edgeid;
-    auto *tile = m_reader.GetGraphTile(edge_id);
-    auto *edge = tile->directededge(edge_id);
-
-    if (!allow_edge_pred(edge)) {
-      LOG_DEBUG("Edge " + std::to_string(edge_id) + " not accessible. Segment cannot be matched, discarding.");
-      return std::vector<EdgeMatch>();
-    }
-    score += std::abs(int(road_class) - int(edge->classification()));
-
-    bool found = false;
-    for (auto &e : origin.edges) {
-      if (e.id == edge_id) {
-        found = true;
-        score += int(e.projected.Distance(coord));
-
-        int bear1 = bearing(tile, edge_id, e.dist);
-        int bear2 = lrp.bear();
-        score += bear_diff(bear1, bear2) / 10;
-
-        break;
-      }
-    }
-    if (!found) {
-      LOG_DEBUG("Unable to find edge " + std::to_string(edge_id) + " at origin point " + std::to_string(origin.latlng_) + ". Segment cannot be matched, discarding.");
+    // Throw out if dist mismatch. The costing method stores distance in both
+    // cost and elapsed time - so elapsed time of the last edge is total
+    // path distance.
+    if (abs_u32_diff(path.back().elapsed_time, segment_length) > kLengthTolerance) {
       return std::vector<EdgeMatch>();
     }
 
-    // form of way isn't really a metric space...
-    FormOfWay fow1 = form_of_way(edge);
-    FormOfWay fow2 = FormOfWay(lrp.start_fow());
-    score += (fow1 == fow2) ? 0 : 5;
-
+    // Add edges to the matched path.
+    // TODO - remove duplicate instances of the edge ID in the path info.
     for (const auto &info : path) {
       const GraphTile* tile = m_reader.GetGraphTile(info.edgeid);
       const DirectedEdge* edge = tile->directededge(info.edgeid);
@@ -742,10 +714,6 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     // use dest as next origin
     std::swap(origin, dest);
   }
-
-  // remove duplicate instances of the edge ID in the path info. TODO
-//   auto new_end = std::unique(edges.begin(), edges.end());
-//  edges.erase(new_end, edges.end());
   match_type = MatchType::kShortestPath;
   return edges;
 }
@@ -847,21 +815,21 @@ void edge_association::add_tile(const std::string& file_name) {
       assert(entry.has_segment());
       auto &segment = entry.segment();
       if (match_segment(base_id + entry_id, segment, match_type)) {
-        success_count_++;
+        success_count_[base_id.level()] += 1;
         if (match_type == MatchType::kWalk) {
-          walk_count_++;
+          walk_count_[base_id.level()] += 1;
         } else {
-          path_count_++;
+          path_count_[base_id.level()] += 1;
         }
       } else {
-        failure_count_++;
+        failure_count_[base_id.level()] += 1;
       }
     }
     entry_id += 1;
   }
 
   // Finish this tile
-  m_tile_builder->UpdateTrafficSegments();
+  m_tile_builder->UpdateTrafficSegments(false);
   m_reader.Clear();
 }
 
@@ -916,9 +884,10 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
     // Write leftovers
     vj::GraphTileBuilder tile_builder(tile_dir, associations.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
+    tile_builder.InitializeTrafficChunks();
     for(const auto& association : associations)
       tile_builder.AddTrafficSegment(association.first, association.second);
-    tile_builder.UpdateTrafficSegments();
+    tile_builder.UpdateTrafficSegments(false);
   }
 }
 
@@ -940,10 +909,14 @@ void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>&
     // Write chunks
     vj::GraphTileBuilder tile_builder(tile_dir, associated_chunks.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
+    tile_builder.InitializeTrafficChunks();
     for(const auto& chunk : associated_chunks) {
       tile_builder.AddTrafficSegments(chunk.first, chunk.second);
     }
-    tile_builder.UpdateTrafficSegments();
+
+    // Since this is the last time UpdateTrafficSegments is called we set
+    // the flag indicating the DirectedEdge traffic flags are set.
+    tile_builder.UpdateTrafficSegments(true);
   }
 }
 
@@ -1041,20 +1014,28 @@ int main(int argc, char** argv) {
   LOG_INFO("Finished");
 
   // Gather statistics, chunks, and leftovers (associations in a different tile)
-  uint32_t success_count = 0;
-  uint32_t failure_count = 0;
-  uint32_t walk_count = 0;
-  uint32_t path_count = 0;
+  std::unordered_map<uint32_t, uint32_t> success_count;
+  std::unordered_map<uint32_t, uint32_t> failure_count;
+  std::unordered_map<uint32_t, uint32_t> walk_count;
+  std::unordered_map<uint32_t, uint32_t> path_count;
   uint32_t leftover_count = 0;
   uint32_t chunk_count = 0;
   std::unordered_map<vb::GraphId, leftovers_t> leftovers;
   std::unordered_map<vb::GraphId, chunks_t> chunks;
   for (auto& result : results) {
     auto associations = result.get_future().get();
-    success_count += associations.success_count();
-    failure_count += associations.failure_count();
-    walk_count += associations.walk_count();
-    path_count += associations.path_count();
+
+    for( const auto& x : associations.success_count() )
+      success_count[x.first] += x.second;
+
+    for( const auto& x : associations.failure_count() )
+      failure_count[x.first] += x.second;
+
+    for( const auto& x : associations.walk_count() )
+      walk_count[x.first] += x.second;
+
+    for( const auto& x : associations.path_count() )
+      path_count[x.first] += x.second;
 
     // Leftovers
     for(const auto& association : associations.leftovers()) {
@@ -1076,10 +1057,19 @@ int main(int argc, char** argv) {
     }
     chunk_count += associations.chunks().size();
   }
-  LOG_INFO("Success = " + std::to_string(success_count) +
-           " Failure = " + std::to_string(failure_count) +
-           " Walk = " + std::to_string(walk_count) +
-           " Path = " + std::to_string(path_count));
+
+  for( const auto& x : success_count )
+    LOG_INFO("Success = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
+
+  for( const auto& x : failure_count )
+    LOG_INFO("Failure = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
+
+  for( const auto& x : walk_count )
+    LOG_INFO("Walk = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
+
+  for( const auto& x : path_count )
+    LOG_INFO("Path = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
+
   LOG_INFO("Leftovers = " + std::to_string(leftover_count) +
            " Chunks = " + std::to_string(chunk_count));
 

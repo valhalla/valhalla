@@ -60,68 +60,68 @@ void TestBike() {
   ways.sort(way_predicate);
 
   auto way = GetWay(127361688, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != true || way.moped_backward() != true || way.bus_backward() != true || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 127361688.");
   }
 
   way = GetWay(7062008, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 7062008.");
   }
 
   way = GetWay(48672084, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 48672084.");
   }
 
   way = GetWay(7053107, ways);
   if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+      way.auto_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 7053107.");
   }
 
   way = GetWay(7053048, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
     throw std::runtime_error("Access is not correct for way 7053048.");
   }
 
   way = GetWay(221051138, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != false) {
     throw std::runtime_error("Access is not correct for way 221051138.");
   }
 
   way = GetWay(23544607, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != true || way.moped_backward() != true || way.bus_backward() != true || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 23544607.");
   }
 
   way = GetWay(221051142, ways);
-  if (way.auto_forward() != false || way.bus_forward() != false || way.bike_forward() != true || way.pedestrian() != false ||
-      way.auto_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
+  if (way.auto_forward() != false || way.moped_forward() != true || way.bus_forward() != false || way.bike_forward() != true || way.pedestrian() != false ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != false) {
     throw std::runtime_error("Access is not correct for way 221051142.");
   }
 
   way = GetWay(72906238, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 72906238.");
   }
 
   way = GetWay(7010549, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 7010549.");
   }
 
   way = GetWay(7007629, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != false || way.bus_backward() != false || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 7007629.");
   }
 }
@@ -133,8 +133,8 @@ void TestBus() {
   ways.sort(way_predicate);
 
   auto way = GetWay(33648196, ways);
-  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
-      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != true) {
+  if (way.auto_forward() != true || way.moped_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.moped_backward() != true || way.bus_backward() != true || way.bike_backward() != true) {
     throw std::runtime_error("Access is not correct for way 33648196.");
   }
 }

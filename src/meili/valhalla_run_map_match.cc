@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
     // Offline match
     std::cout << "Sequence " << index++ << std::endl;
-    const auto& results = mapmatcher->OfflineMatch(measurements);
+    auto results = mapmatcher->OfflineMatch(measurements).front().results;
 
     // Show results
     size_t mmt_id = 0, count = 0;

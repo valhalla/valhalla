@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <stdexcept>
 
 #include <valhalla/meili/priority_queue.h>
 #include <valhalla/meili/stateid.h>
@@ -140,6 +141,10 @@ using ITransitionCostModel = std::function<float(const StateId& lhs, const State
 inline float DefaultTransitionCostModel(const StateId&, const StateId&)
 { return 1; }
 
+struct discontinuity_exception_t : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
+
 class IViterbiSearch
 {
  public:
@@ -156,18 +161,34 @@ class IViterbiSearch
   IViterbiSearch()
       : IViterbiSearch(DefaultEmissionCostModel, DefaultTransitionCostModel) {}
 
-  virtual ~IViterbiSearch() {};
+  virtual ~IViterbiSearch()
+  { Clear(); };
+
+  virtual void Clear()
+  { added_states_.clear(); }
+
+  virtual void ClearSearch() {};
 
   virtual bool AddStateId(const StateId& stateid)
   { return added_states_.insert(stateid).second; }
 
+  /**
+   * Remove a state ID. Note that if an ID is removed, client must call ClearSearch before new search.
+   *
+   * @return true if it's removed
+   */
+  virtual bool RemoveStateId(const StateId& stateid)
+  {
+    return 0 < added_states_.erase(stateid);
+  }
+
   virtual bool HasStateId(const StateId& stateid) const
   { return added_states_.find(stateid) != added_states_.end(); }
 
-  virtual StateId SearchWinner(StateId::Time time) = 0;
+  virtual StateId SearchWinner(StateId::Time time, bool force_continuous) = 0;
 
-  stateid_iterator SearchPath(StateId::Time time)
-  { return stateid_iterator(*this, time, SearchWinner(time)); }
+  stateid_iterator SearchPath(StateId::Time time, bool force_continuous = false)
+  { return stateid_iterator(*this, time, SearchWinner(time, force_continuous)); }
 
   stateid_iterator PathEnd() const
   { return path_end_; }
@@ -206,9 +227,9 @@ class IViterbiSearch
       float emission_cost) const
   { return prev_costsofar + transition_cost + emission_cost; }
 
+ private:
   std::unordered_set<StateId> added_states_;
 
- private:
   IEmissionCostModel emission_cost_model_;
 
   ITransitionCostModel transition_cost_model_;
@@ -228,22 +249,38 @@ class NaiveViterbiSearch: public IViterbiSearch
   ~NaiveViterbiSearch()
   { Clear(); }
 
-  void Clear();
+  void Clear() override;
+
+  void ClearSearch() override;
 
   bool AddStateId(const StateId& stateid) override;
 
-  StateId SearchWinner(StateId::Time time) override;
+  bool RemoveStateId(const StateId& stateid) override
+  {
+    const auto removed = IViterbiSearch::RemoveStateId(stateid);
+    if (!removed) {
+      return false;
+    }
+    // remove it from columns
+    auto& column = states_[stateid.time()];
+    const auto it = std::find(column.begin(), column.end(), stateid);
+    column.erase(it);
+    // clear current search status to remove possible uses of the removed state ID
+    ClearSearch();
+    return true;
+  }
+
+  StateId SearchWinner(StateId::Time time, bool force_continuous) override;
 
   StateId Predecessor(const StateId& stateid) const override;
 
   double AccumulatedCost(const StateId& stateid) const override;
 
- protected:
+ private:
   std::vector<std::vector<StateId>> states_;
 
   std::vector<StateId> winner_;
 
- private:
   std::vector<std::vector<StateLabel>> history_;
 
   void UpdateLabels(
@@ -274,11 +311,28 @@ class ViterbiSearch: public IViterbiSearch
   ~ViterbiSearch()
   { Clear(); }
 
-  void Clear();
+  void Clear() override;
+
+  void ClearSearch() override;
 
   bool AddStateId(const StateId& stateid) override;
 
-  StateId SearchWinner(StateId::Time time) override;
+  bool RemoveStateId(const StateId& stateid) override
+  {
+    const auto removed = IViterbiSearch::RemoveStateId(stateid);
+    if (!removed) {
+      return false;
+    }
+    // remove it from columns
+    auto& column = states_[stateid.time()];
+    const auto it = std::find(column.begin(), column.end(), stateid);
+    column.erase(it);
+    // clear current search status to remove possible uses of the removed state ID
+    ClearSearch();
+    return true;
+  }
+
+  StateId SearchWinner(StateId::Time time, bool force_continuous) override;
 
   StateId Predecessor(const StateId& stateid) const override;
 
@@ -289,12 +343,13 @@ class ViterbiSearch: public IViterbiSearch
 
   virtual double AccumulatedCost(const StateId& stateid) const override;
 
- protected:
+ private:
+  std::vector<std::vector<StateId>> states_;
+
   std::vector<StateId> winner_;
 
   std::vector<std::vector<StateId>> unreached_states_;
 
- private:
   SPQueue<StateLabel> queue_;
 
   std::unordered_map<StateId, StateLabel> scanned_labels_;

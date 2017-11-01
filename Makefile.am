@@ -187,6 +187,7 @@ nobase_include_HEADERS = \
 	valhalla/sif/costfactory.h \
 	valhalla/sif/autocost.h \
 	valhalla/sif/bicyclecost.h \
+	valhalla/sif/motorscootercost.h \
 	valhalla/sif/pedestriancost.h \
 	valhalla/sif/transitcost.h \
 	valhalla/sif/truckcost.h \
@@ -197,20 +198,20 @@ nobase_include_HEADERS = \
 	valhalla/meili/candidate_search.h \
 	valhalla/meili/geometry_helpers.h \
 	valhalla/meili/grid_range_query.h \
-	valhalla/meili/map_matching.h \
 	valhalla/meili/emission_cost_model.h \
 	valhalla/meili/transition_cost_model.h \
 	valhalla/meili/priority_queue.h \
 	valhalla/meili/routing.h \
 	valhalla/meili/stateid.h \
 	valhalla/meili/viterbi_search.h \
+	valhalla/meili/topk_search.h \
 	valhalla/meili/measurement.h \
 	valhalla/meili/match_result.h \
 	valhalla/meili/grid_traversal.h \
+	valhalla/meili/state.h \
 	valhalla/meili/map_matcher.h \
 	valhalla/meili/map_matcher_factory.h \
 	valhalla/meili/traffic_segment_matcher.h \
-	valhalla/meili/match_route.h \
 	valhalla/skadi/worker.h \
 	valhalla/skadi/sample.h \
 	valhalla/skadi/util.h \
@@ -313,15 +314,16 @@ libvalhalla_la_SOURCES = \
 	src/baldr/date_time_zonespec.h \
 	src/sif/autocost.cc \
 	src/sif/bicyclecost.cc \
+	src/sif/motorscootercost.cc \
 	src/sif/pedestriancost.cc \
 	src/sif/transitcost.cc \
 	src/sif/truckcost.cc \
 	src/sif/dynamiccost.cc \
 	src/meili/universal_cost.cc \
 	src/meili/viterbi_search.cc \
+	src/meili/topk_search.cc \
 	src/meili/routing.cc \
 	src/meili/candidate_search.cc \
-	src/meili/map_matching.cc \
 	src/meili/transition_cost_model.cc \
 	src/meili/map_matcher.cc \
 	src/meili/map_matcher_factory.cc \
@@ -654,6 +656,7 @@ check_PROGRAMS = \
 	test/serializers \
 	test/traffic_matcher \
 	test/autocost \
+	test/motorscootercost \
 	test/bicyclecost \
 	test/pedestriancost \
 	test/transitcost \
@@ -848,6 +851,9 @@ test_traffic_matcher_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS)
 test_autocost_SOURCES = src/sif/autocost.cc test/test.cc
 test_autocost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_autocost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_motorscootercost_SOURCES = src/sif/motorscootercost.cc test/test.cc
+test_motorscootercost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_motorscootercost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_bicyclecost_SOURCES = src/sif/bicyclecost.cc test/test.cc
 test_bicyclecost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_bicyclecost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include <vector>
 #include <random>
 #include <utility>
 #include <iostream>
@@ -15,7 +16,6 @@
 #include "midgard/logging.h"
 #include "baldr/json.h"
 #include "midgard/distanceapproximator.h"
-#include "midgard/polyline2.h"
 #include "mjolnir/util.h"
 
 using namespace valhalla;
@@ -38,12 +38,21 @@ namespace {
     return output;
   }
 
-  std::string to_locations(const std::vector<PointLL>& shape, float accuracy, int frequency) {
+  float round_up(float val, int multiple) {
+    return int((val + multiple - 1) / multiple) * multiple;
+  }
+
+  std::string to_locations(const std::vector<PointLL>& shape, const std::vector<float>& accuracies, int frequency) {
     std::string locations = "[";
-    std::string acc = R"(,"accuracy":)" + std::to_string(int(std::ceil(accuracy)));
     int freq = 0;
-    for(const auto& p : shape) {
+    for(size_t i = 0; i < shape.size(); ++i) {
+      //round accuracy up to nearest 5m
+      int accuracy = round_up(accuracies[i] + 1.f, 5);
+      std::string acc = R"(,"accuracy":)" + std::to_string(accuracy);
+      //add this point on
+      const auto& p = shape[i];
       locations += R"({"lat":)" + std::to_string(p.second) + R"(,"lon":)" + std::to_string(p.first) + acc;
+      //get the time component
       freq += frequency;
       if(freq > 0)
         locations += R"(,"time":)" + std::to_string(freq);
@@ -74,7 +83,7 @@ namespace {
              "mode":"auto","grid":{"cache_size":100240,"size":500},
              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-             "search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}},
+             "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
     "service_limits": {
       "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
@@ -101,107 +110,10 @@ namespace {
     return escaped;
   }
 
-  template <typename T>
-  struct ring_queue_t {
-    ring_queue_t(size_t limit):limit(limit), i(0) {
-      v.reserve(limit);
-    }
-    void emplace_back(T&& t){
-      if(v.size() < limit) v.emplace_back(t);
-      else v[i] = t;
-      i = (i + 1) % limit;
-    };
-    const T& front() const { return i < v.size() ? v[i] : v[0]; }
-    const T& back() const { return v[i - 1]; }
-    size_t size() const { return v.size(); }
-    bool full() const { return v.size() == limit; }
-
-    size_t limit, i;
-    std::vector<T> v;
-
-    using iterator = typename std::vector<T>::iterator;
-    using const_iterator = typename std::vector<T>::const_iterator;
-    iterator begin() { return v.begin(); }
-    const_iterator begin() const { return v.begin(); }
-    iterator end() { return v.end(); }
-    const_iterator end() const { return v.end(); }
-  };
-
-  std::vector<midgard::PointLL> resample_at_1hz(const boost::property_tree::ptree& edges, const std::vector<midgard::PointLL>& shape) {
-    std::vector<midgard::PointLL> resampled;
-    float time_remainder = 0.0;
-    for(const auto& edge_item: edges) {
-      const auto& edge = edge_item.second;
-      //get the portion of the shape that applies to this edge
-      std::vector<midgard::PointLL> edge_shape(shape.cbegin() + edge.get<size_t>("begin_shape_index"),
-        shape.cbegin() + edge.get<size_t>("end_shape_index") + 1);
-      //get the speed of this edge
-      auto meters = midgard::Polyline2<PointLL>::Length(edge_shape);
-      auto speed = (edge.get<float>("speed") * 1e3) / 3600.f;
-      //trim the shape to account of the portion of the previous second that bled onto this edge
-      auto to_trim = speed * time_remainder;
-      auto trimmed = midgard::trim_polyline(edge_shape.cbegin(), edge_shape.cend(), to_trim / meters, 1.f);
-      //resample it at 1 second intervals
-      auto second_interval = midgard::resample_spherical_polyline(trimmed, speed, false);
-      resampled.insert(resampled.end(), second_interval.begin(), second_interval.end());
-      //figure out how much of the last second will bleed into the next edge
-      double intpart;
-      time_remainder = std::modf((meters - to_trim) / speed, &intpart);
-    }
-    return resampled;
-  }
-
-  std::vector<midgard::PointLL> simulate_gps(const boost::property_tree::ptree& edges, const std::vector<midgard::PointLL>& shape,
-      float smoothing = 30, float accuracy = 5.f, size_t sample_rate = 1) {
-    //resample the coords along a given edge at one second intervals
-    auto resampled = resample_at_1hz(edges, shape);
-
-    //a way to get noise but only allow for slow change
-    std::default_random_engine generator(0);
-    std::uniform_real_distribution<float> distribution(-1, 1);
-    ring_queue_t<std::pair<float, float> > noises(smoothing);
-    auto get_noise = [&]() {
-      //we generate a vector whose magnitude is no more than accuracy
-      auto lon_adj = distribution(generator);
-      auto lat_adj = distribution(generator);
-      auto len = std::sqrt((lon_adj * lon_adj) + (lat_adj * lat_adj));
-      lon_adj /= len; lat_adj /= len; //norm
-      auto scale = (distribution(generator) + 1.f) / 2.f;
-      lon_adj *= scale * accuracy;  lat_adj *= scale * accuracy; //random scale <= accuracy
-      noises.emplace_back(std::make_pair(lon_adj, lat_adj));
-      //average over last n to smooth
-      std::pair<float, float> noise{0, 0};
-      std::for_each(noises.begin(), noises.end(),
-        [&noise](const std::pair<float, float>& n) { noise.first += n.first; noise.second += n.second; });
-      noise.first /= noises.size();
-      noise.second /= noises.size();
-      return noise;
-    };
-    //fill up the noise queue so the first points arent unsmoothed
-    while(!noises.full()) get_noise();
-
-    //for each point of the 1hz shape
-    std::vector<midgard::PointLL> simulated;
-    for(size_t i = 0; i < resampled.size(); ++i) {
-      const auto& p = resampled[i];
-      //is this a harmonic of the desired sampling rate
-      if(i % sample_rate == 0) {
-        //meters of noise with extremely low likelihood its larger than accuracy
-        auto noise = get_noise();
-        //use the number of meters per degree in both axis to offset the point by the noise
-        auto metersPerDegreeLon = DistanceApproximator::MetersPerLngDegree(p.second);
-        simulated.emplace_back(midgard::PointLL(p.first + noise.first / metersPerDegreeLon,
-          p.second + noise.second / kMetersPerDegreeLat));
-      }
-    }
-    return simulated;
-  }
-
   int seed = 973; int bound = 81;
-  std::string make_test_case() {
+  std::string make_test_case(PointLL& start, PointLL& end) {
     static std::default_random_engine generator(seed);
     static std::uniform_real_distribution<float> distribution(0, 1);
-    PointLL start,end;
     float distance = 0;
     do {
       //get two points in and around utrecht
@@ -220,10 +132,12 @@ namespace {
     int tested = 0;
     while(tested < bound) {
       //get a route shape
-      auto test_case = make_test_case();
+      PointLL start, end;
+      auto test_case = make_test_case(start, end);
+      std::cout << test_case << std::endl;
       boost::property_tree::ptree route;
       try { route = json_to_pt(actor.route(tyr::ROUTE, test_case)); }
-      catch (...) { continue; }
+      catch (...) { std::cout << "route failed" << std::endl; continue; }
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
       //skip any routes that have loops in them as edge walk fails in that case...
@@ -237,8 +151,6 @@ namespace {
         for(const auto& name : maneuver.second.get_child("street_names"))
           looped = looped || !names.insert(name.second.get_value<std::string>()).second;
       }
-      if(looped)
-        continue;
       //get the edges along that route shape
       boost::property_tree::ptree walked;
       try {
@@ -253,8 +165,9 @@ namespace {
       for(const auto& edge : walked.get_child("edges"))
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
       //simulate gps from the route shape
-      auto simulation = simulate_gps(walked.get_child("edges"), shape, 50, 100.f);
-      auto locations = to_locations(simulation, 100.f, 1);
+      std::vector<float> accuracies;
+      auto simulation = midgard::simulate_gps(walked.get_child("edges"), shape, accuracies, 50, 100.f, 1);
+      auto locations = to_locations(simulation, accuracies, 1);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","shape_match":"map_snap","shape":)" + locations + "}"));
@@ -264,6 +177,10 @@ namespace {
       //because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
       auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() + 1, matched_edges.end() - 1);
       if(walked_it == walked_edges.end()) {
+        if(looped) {
+          std::cout << "route had a possible loop" << std::endl;
+          continue;
+        }
         auto decoded_match = midgard::decode<std::vector<midgard::PointLL> >(matched.get<std::string>("shape"));
         std::string geojson = R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
         geojson += print(shape);
@@ -271,7 +188,9 @@ namespace {
         geojson += print(simulation);
         geojson += R"(]},"type":"Feature","properties":{"stroke":"#0000ff","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
         geojson += print(decoded_match);
-        geojson += R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}}]})";
+        geojson += R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}},{"geometry":{"type":"MultiPoint","coordinates":[)";
+        geojson += print(std::vector<PointLL>{start, end});
+        geojson += R"(]},"type":"Feature","properties":{}}]})";
         std::cout << geojson << std::endl;
         throw std::logic_error("The match did not match the walk");
       }
@@ -283,39 +202,91 @@ namespace {
   void test_distance_only() {
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
-            R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
-                "costing":"auto","shape_match":"map_snap","shape":[
-                {"lat":52.09110,"lon":5.09806,"accuracy":10},
-                {"lat":52.09050,"lon":5.09769,"accuracy":100},
-                {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
+      R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
+          "costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"accuracy":10},
+          {"lat":52.09050,"lon":5.09769,"accuracy":100},
+          {"lat":52.09098,"lon":5.09679,"accuracy":10}]})"));
     std::unordered_set<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
-        names.insert(name.second.get_value<std::string>()).second;
+        names.insert(name.second.get_value<std::string>());
     if(names.find("Jan Pieterszoon Coenstraat") == names.end())
-      std::logic_error("Using distance only it should have taken a small detour");
+      throw std::logic_error("Using distance only it should have taken a small detour");
   }
 
   void test_time_rejection() {
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
-            R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
-                "costing":"auto","shape_match":"map_snap","shape":[
-                {"lat":52.09110,"lon":5.09806,"accuracy":10,"time":2},
-                {"lat":52.09050,"lon":5.09769,"accuracy":100,"time":4},
-                {"lat":52.09098,"lon":5.09679,"accuracy":10,"time":6}]})"));
+      R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
+          "costing":"auto","shape_match":"map_snap","shape":[
+          {"lat":52.09110,"lon":5.09806,"accuracy":10,"time":2},
+          {"lat":52.09050,"lon":5.09769,"accuracy":100,"time":4},
+          {"lat":52.09098,"lon":5.09679,"accuracy":10,"time":6}]})"));
     std::unordered_set<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
-        names.insert(name.second.get_value<std::string>()).second;
-    if(names.find("Jan Pieterszoon Coenstraat") != names.end())
-      std::logic_error("Using time it should not take a small detour");
+        names.insert(name.second.get_value<std::string>());
+    if(names.find("Jan Pieterszoon Coenstraat") != names.end()) {
+      throw std::logic_error("Using time it should not take a small detour");
+    }
   }
 
   void test32bit() {
     tyr::actor_t actor(conf, true);
     std::string test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5.110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
     actor.route(tyr::ROUTE, test_case);
+  }
+
+  void test_topk() {
+    //tests a fork in the road
+    tyr::actor_t actor(conf, true);
+    auto matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+          {"lat":52.08511,"lon":5.15085,"accuracy":50},
+          {"lat":52.08533,"lon":5.15109,"accuracy":50},
+          {"lat":52.08539,"lon":5.15100,"accuracy":50}]})"));
+
+    std::vector<std::string> names;
+    for(const auto& edge : matched.get_child("edges"))
+      for(const auto& name : edge.second.get_child("names"))
+        names.push_back(name.second.get_value<std::string>());
+    if(names != std::vector<std::string>{"Louis Saalbornlaan", "Cor Ruyslaan"}) {
+      std::string streets;
+      for(const auto& n : names)
+        streets += n + " ";
+      throw std::logic_error("The most obvious result is stay left but got: " + streets);
+    }
+
+    names.clear();
+    auto alternate = matched.get_child("alternate_paths").front().second;
+    for(const auto& edge : alternate.get_child("edges"))
+      for(const auto& name : edge.second.get_child("names"))
+        names.push_back(name.second.get_value<std::string>());
+    if(names != std::vector<std::string>{"Louis Saalbornlaan", "Louis Saalbornlaan"}) {
+      std::string streets;
+      for(const auto& n : names)
+        streets += n + " ";
+      throw std::logic_error("The second most obvious result is stay right but got: " + streets);
+    }
+
+    //tests a previous segfault due to using a claimed state
+    matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+         {"lat":52.088548,"lon":5.15357,"accuracy":30},
+         {"lat":52.088627,"lon":5.153269,"accuracy":30},
+         {"lat":52.08864,"lon":5.15298,"accuracy":30},
+         {"lat":52.08861,"lon":5.15272,"accuracy":30},
+         {"lat":52.08863,"lon":5.15253,"accuracy":30},
+         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
+
+    //this tests a fix for an infinite loop because there is only 1 result and we ask for 4
+    matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
+         {"lat":52.09579,"lon":5.13137,"accuracy":5},
+         {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
+    if(matched.get_child("alternate_paths").size() > 0)
+      throw std::logic_error("There should be only one result");
   }
 
 }
@@ -335,6 +306,8 @@ int main(int argc, char* argv[]) {
   suite.test(TEST_CASE(test_distance_only));
 
   suite.test(TEST_CASE(test_time_rejection));
+
+  suite.test(TEST_CASE(test_topk));
 
   return suite.tear_down();
 }

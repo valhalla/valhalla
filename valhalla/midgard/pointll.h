@@ -2,7 +2,9 @@
 #define VALHALLA_MIDGARD_POINTLL_H_
 
 #include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/constants.h>
 #include <tuple>
+#include <cmath>
 
 namespace valhalla {
 namespace midgard {
@@ -26,7 +28,14 @@ class PointLL : public Point2 {
   PointLL()
     : Point2(INVALID, INVALID) {
   }
-
+   
+  /**
+   * Parent constructor. Forwards to parent.
+   */
+  PointLL(const Point2 &p)
+    : Point2(p) {
+  }
+   
   /**
    * Get the longitude in degrees.
    * @return  Returns longitude in degrees.
@@ -198,6 +207,20 @@ class PointLL : public Point2 {
    * @return true if the system is spherical false if not
    */
   static bool IsSpherical();
+
+  /**
+   * Project this point onto the line from u to v
+   * @param u          first point of segment
+   * @param v          second point of segment
+   * @param lon_scale  needed for spherical projections. dont pass this parameter unless
+   *                   you cached it and want to avoid trig functions in a tight loop
+   * @return p  the projected point of this onto the segment uv
+   */
+  PointLL Project(const PointLL& u, const PointLL& v) const {
+    auto lon_scale = cosf(second * kRadPerDeg);
+    return Project(u, v, lon_scale);
+  }
+  PointLL Project(const PointLL& u, const PointLL& v, float lon_scale) const;
 
  private:
   static constexpr float INVALID = 0xBADBADBAD;

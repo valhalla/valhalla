@@ -22,8 +22,9 @@ void StateIdIterator::Next()
     }
 
     // Search at previous time directly
+    // used in cloning path so no need to enforce a continuous path
     if (!stateid_.IsValid()) {
-      stateid_ = vs_.SearchWinner(time_);
+      stateid_ = vs_.SearchWinner(time_, false);
     }
   } else {
     time_ = kInvalidTime;
@@ -34,10 +35,16 @@ void StateIdIterator::Next()
 template <bool Maximize>
 void NaiveViterbiSearch<Maximize>::Clear()
 {
-  history_.clear();
+  IViterbiSearch::Clear();
   states_.clear();
+  ClearSearch();
+}
+
+template <bool Maximize>
+void NaiveViterbiSearch<Maximize>::ClearSearch()
+{
+  history_.clear();
   winner_.clear();
-  added_states_.clear();
 }
 
 template <bool Maximize>
@@ -61,7 +68,7 @@ NaiveViterbiSearch<Maximize>::AccumulatedCost(const StateId& stateid) const
 { return stateid.IsValid() ? GetLabel(stateid).costsofar() : kInvalidCost; }
 
 template <bool Maximize>
-StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target)
+StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target, bool force_continuous)
 {
   if (states_.size() <= target) {
     return {};
@@ -86,6 +93,9 @@ StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target)
 
     auto winner = FindWinner(labels);
     if (!winner.IsValid() && 0 < time) {
+      //if we didnt want to allow any non continuous paths return an empty result
+      if(force_continuous)
+        throw discontinuity_exception_t("No path between states with force_continuous = true");
       // If it's not reachable by prevous column, we find the winner
       // with the best emission cost only
       labels = InitLabels(column, true);
@@ -210,6 +220,11 @@ bool ViterbiSearch::AddStateId(const StateId& stateid)
     return false;
   }
 
+  while (states_.size() <= stateid.time()) {
+    states_.emplace_back();
+  }
+  states_[stateid.time()].push_back(stateid);
+
   while (unreached_states_.size() <= stateid.time()) {
     unreached_states_.emplace_back();
   }
@@ -218,7 +233,7 @@ bool ViterbiSearch::AddStateId(const StateId& stateid)
   return true;
 }
 
-StateId ViterbiSearch::SearchWinner(StateId::Time time)
+StateId ViterbiSearch::SearchWinner(StateId::Time time, bool force_continuous)
 {
   // Use the cache
   if (time < winner_.size()) {
@@ -236,6 +251,9 @@ StateId ViterbiSearch::SearchWinner(StateId::Time time)
   StateId::Time searched_time = IterativeSearch(target, false);
 
   while (searched_time < target) {
+    //if we didnt want to allow any non continuous paths return an empty result
+    if(force_continuous)
+      throw discontinuity_exception_t("No path between states with force_continuous = true");
     // searched_time < target implies that there was a breakage during
     // last search, so we request a new start
     searched_time = IterativeSearch(target, true);
@@ -272,12 +290,18 @@ double ViterbiSearch::AccumulatedCost(const StateId& stateid) const
 
 void ViterbiSearch::Clear()
 {
+  IViterbiSearch::Clear();
+  states_.clear();
+  ClearSearch();
+}
+
+void ViterbiSearch::ClearSearch()
+{
   earliest_time_ = 0;
   queue_.clear();
   scanned_labels_.clear();
-  unreached_states_.clear();
   winner_.clear();
-  added_states_.clear();
+  unreached_states_ = states_;
 }
 
 void ViterbiSearch::InitQueue(const std::vector<StateId>& column)

@@ -1,12 +1,9 @@
 s-dr5ru300e7-23rdstreet,s-dr5ru0j0k8-14thstreet,r-dr5re-path
 s-dr5ru0j0jv-6av,s-dr5rtd7d8b-morganav,r-dr5r-l
-s-sr2y7mrewv-ottaviano,s-sr2yk7y4u4-termini,r-sr2y-mea
-s-sr2yk7y70m-termini,s-sr2yk6042q-colosseo,r-sr2y-meb
 s-dr5rec3weg-whitehallferryterminal,s-dr5r4rn32w-stgeorgeferryterminal,r-dr5r7-statenislandferry
 s-9q8yyugptw-sanfranciscocaltrain,s-9q9k659e3r-sanjosediridoncaltrain,r-9q9-limited
 s-9q8yyugptw-sanfranciscocaltrain,s-9q9k62qu53-tamiencaltrain,r-9q9j-babybullet
 s-9qc22fg3zq-kevindr~oramwy,s-9qc0p4982e-eastst~baconst,r-9qc22-201
-s-9qc0ngn5xr-grantst~karrenst,s-9qc0pq0s22-bartnorthconcordmartinez,r-9qc0n-17
 s-9qc0pq23hg-northconcord~martinez,s-9q8yn7erg9-sanbruno,r-9q9-pittsburg~baypoint~sfia~millbrae
 s-9q8yn7erg9-sanbruno,s-9q8vzhbf8h-millbrae,r-9q8y-richmond~dalycity~millbrae
 s-9q8yy29dff-24thstmission,s-9q9q6p6u79-dublin~pleasanton,r-9q9n-dublin~pleasanton~dalycity
@@ -131,7 +128,6 @@ s-c342trgg6p-northboundwestsydeatsoldier,s-c342v3ws5s-northboundwestsydeatporter
 s-c2g5cbz01q-westboundharveyatcooper,s-c2fgw01ry9-westboundhwy97atbutt,r-c2g5-97
 s-c2g5bcjb2g-eastboundhwy97atrichter,s-c2g5f3tff4-eastboundhwy97natbanks,r-c2g5-97
 s-c2g5f9ffgq-northboundziprickatterai,s-c2g5g1zrfe-eastboundhwy33watroxby,r-c2g5-8
-s-c0z88p4hwh-southboundjonesatfernrdw,s-c0zb155yc5-woodgrovecentreexchange,r-c0z-99
 s-c0zb155yc5-woodgrovecentreexchange,s-c0xzg3d5r1-southbound1220blockterminalaven,r-c0xzf-50
 s-c0zb155yc5-woodgrovecentreexchange,s-c0z88r0r2h-southboundmemorialatfernrdw,r-c0z8-91
 s-c38dmx475w-westboundtyneratuniversityheights,s-c38dt69g29-unbcexchange,r-c38dq-16

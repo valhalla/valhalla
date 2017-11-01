@@ -6,10 +6,6 @@ inline float
 GreatCircleDistance(const valhalla::meili::Measurement& left,
                     const valhalla::meili::Measurement& right)
 { return left.lnglat().Distance(right.lnglat()); }
-
-inline float ClockDistance(const valhalla::meili::Measurement& left,
-                           const valhalla::meili::Measurement& right)
-{ return right.epoch_time() - left.epoch_time(); }
 }
 
 namespace valhalla {
@@ -18,10 +14,10 @@ namespace meili {
 TransitionCostModel::TransitionCostModel(
     baldr::GraphReader& graphreader,
     const IViterbiSearch& vs,
-    const ColumnGetter& get_column,
-    const MeasurementGetter& get_measurement,
+    const TopKSearch& ts,
+    const StateContainer& container,
     const sif::cost_ptr_t* mode_costing,
-    const sif::TravelMode mode,
+    const sif::TravelMode travelmode,
     float beta,
     float breakage_distance,
     float max_route_distance_factor,
@@ -29,10 +25,10 @@ TransitionCostModel::TransitionCostModel(
     float turn_penalty_factor)
     : graphreader_(graphreader),
       vs_(vs),
-      get_column_(get_column),
-      get_measurement_(get_measurement),
+      ts_(ts),
+      container_(container),
       mode_costing_(mode_costing),
-      mode_(mode),
+      travelmode_(travelmode),
       beta_(beta),
       inv_beta_(1.f / beta_),
       breakage_distance_(breakage_distance),
@@ -59,18 +55,18 @@ TransitionCostModel::TransitionCostModel(
 TransitionCostModel::TransitionCostModel(
     baldr::GraphReader& graphreader,
     const IViterbiSearch& vs,
-    const ColumnGetter& get_column,
-    const MeasurementGetter& get_measurement,
+    const TopKSearch& ts,
+    const StateContainer& container,
     const sif::cost_ptr_t* mode_costing,
-    const sif::TravelMode mode,
+    const sif::TravelMode travelmode,
     const boost::property_tree::ptree& config)
     : TransitionCostModel(
           graphreader,
           vs,
-          get_column,
-          get_measurement,
+          ts,
+          container,
           mode_costing,
-          mode,
+          travelmode,
           config.get<float>("beta"),
           config.get<float>("breakage_distance"),
           config.get<float>("max_route_distance_factor"),
@@ -80,8 +76,8 @@ TransitionCostModel::TransitionCostModel(
 float
 TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
 {
-  const auto& left = get_column_(lhs.time())[lhs.id()];
-  const auto& right = get_column_(rhs.time())[lhs.id()];
+  const auto& left = container_.state(lhs);
+  const auto& right = container_.state(rhs);
 
   if (!left.routed()) {
     UpdateRoute(lhs, rhs);
@@ -91,14 +87,14 @@ TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
   const auto label = left.last_label(right);
   if (label) {
     // Get some basic info about difference between the two measurements
-    const auto& left_measurement = get_measurement_(lhs.time());
-    const auto& right_measurement = get_measurement_(rhs.time());
+    const auto& left_measurement = container_.measurement(lhs.time());
+    const auto& right_measurement = container_.measurement(rhs.time());
     return CalculateTransitionCost(
         label->turn_cost(),
         label->cost().cost,
         GreatCircleDistance(left_measurement, right_measurement),
         label->cost().secs,
-        ClockDistance(left_measurement, right_measurement));
+        ClockDistance(lhs.time(), rhs.time()));
   }
 
   // No path found
@@ -108,14 +104,15 @@ TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
 void
 TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
 {
-  const auto& left = get_column_(lhs.time())[lhs.id()];
-  const auto& right = get_column_(rhs.time())[lhs.id()];
+  const auto& left = container_.state(lhs);
+  const auto& right = container_.state(rhs);
 
   // Prepare edgelabel
   const Label* edgelabel = nullptr;
   const auto& prev_stateid = vs_.Predecessor(left.stateid());
   if (prev_stateid.IsValid()) {
-    const auto& prev_state = get_column_(prev_stateid.time())[prev_stateid.id()];
+    const auto& original_prev_stateid = ts_.GetOrigin(prev_stateid);
+    const auto& prev_state = container_.state(original_prev_stateid.IsValid() ? original_prev_stateid : prev_stateid);
     if (!prev_state.routed()) {
       // When ViterbiSearch calls this method, the left state is
       // guaranteed to be optimal, its predecessor is therefore
@@ -131,7 +128,7 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
   }
 
   // Prepare locations and stateids
-  const auto& right_column = get_column_(right.stateid().time());
+  const auto& right_column = container_.column(right.stateid().time());
   std::vector<baldr::PathLocation> locations;
   locations.reserve(1 + right_column.size());
   locations.push_back(left.candidate());
@@ -144,24 +141,25 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
     }
   }
 
-  const auto& left_measurement = get_measurement_(lhs.time());
-  const auto& right_measurement = get_measurement_(rhs.time());
-
-  const auto gc_dist = GreatCircleDistance(left_measurement, right_measurement);
-  const auto max_route_distance = std::min(
-      gc_dist * max_route_distance_factor_,
-      breakage_distance_);
-
-  const auto clk_dist = ClockDistance(left_measurement, right_measurement);
-  const auto max_route_time = clk_dist * max_route_time_factor_;
+  const auto& left_measurement = container_.measurement(lhs.time());
+  const auto& right_measurement = container_.measurement(rhs.time());
 
   const midgard::DistanceApproximator approximator(right_measurement.lnglat());
 
+  auto max_route_distance = std::min(
+      GreatCircleDistance(left_measurement, right_measurement) * max_route_distance_factor_,
+      breakage_distance_);
   // Route, we have to make sure that the max distance is greater
   // than 0 otherwise we wont be able to get any labels into the
   // labelset
-  labelset_ptr_t labelset = std::make_shared<LabelSet>(std::max(std::ceil(max_route_distance), 1.f));
+  max_route_distance = std::ceil(std::max(max_route_distance, 1.f));
 
+  auto max_route_time = ClockDistance(lhs.time(), rhs.time()) * max_route_time_factor_;
+  if (0 <= max_route_time) {
+    max_route_time = std::ceil(max_route_time);
+  }
+
+  labelset_ptr_t labelset = std::make_shared<LabelSet>(max_route_distance);
   const auto& results = find_shortest_path(
       graphreader_,
       locations,
@@ -169,11 +167,11 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
       labelset,
       approximator,
       right_measurement.search_radius(),
-      mode_costing_[static_cast<size_t>(mode_)],
+      mode_costing_[static_cast<size_t>(travelmode_)],
       edgelabel,
       turn_cost_table_,
-      std::ceil(max_route_distance),
-      std::ceil(max_route_time));
+      max_route_distance,
+      max_route_time);
 
   left.SetRoute(unreached_stateids, results, labelset);
 }

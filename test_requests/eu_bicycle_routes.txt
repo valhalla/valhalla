@@ -1,0 +1,5 @@
+-j '{"locations":[{"lat":52.066656,"lon":5.119761,"type":"break"},{"lat":52.066310,"lon":5.120238,"type":"break"}],"costing":"bicycle"}'
+-j '{"locations":[{"lat":52.117505,"lon":5.086265,"type":"break"},{"lat":52.118088,"lon":5.085493,"type":"break"}],"costing":"bicycle"}'
+-j '{"locations":[{"lat":52.08020,"lon":5.12173,"type":"break"},{"lat":52.08056,"lon":5.12140,"type":"break"}],"costing":"bicycle"}'
+-j '{"locations":[{"lat":50.300524924617285,"lon":-4.919478894153144,"type":"break"},{"lat":50.29989442975862,"lon":-4.904758931079414,"type":"break"}],"costing":"bicycle"}'
+-j '{"locations":[{"lat":50.29989442975862,"lon":-4.904758931079414,"type":"break"},{"lat":50.300524924617285,"lon":-4.919478894153144,"type":"break"}],"costing":"bicycle"}'

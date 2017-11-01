@@ -349,6 +349,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   void InitializeTrafficSegments();
 
   /**
+   * Initialize traffic chunks. Copies existing chunks into the chunk builder.
+   * This is executed before adding "leftovers" and again before adding chunks.
+   */
+  void InitializeTrafficChunks();
+
+  /**
    * Add a traffic segment association - used when an edge associates to
    * a single traffic segment.
    * @param  edgeid  Edge Id to which traffic segment is associated.
@@ -368,8 +374,10 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   /**
    * Updates a tile with traffic segment and chunk data.
+   * @param  update_dir_edges  If true this will update directed edge flags
+   *                 indicating a traffic segment exists on the edge.
    */
-  void UpdateTrafficSegments();
+  void UpdateTrafficSegments(const bool update_dir_edges);
 
   /**
     * Gets the current list of edge elevation (builders).

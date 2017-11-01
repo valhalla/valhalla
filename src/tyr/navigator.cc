@@ -39,8 +39,8 @@ NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
   try {
     jsonToProtoRoute (route_json_str, route_);
   } catch (const std::runtime_error& e) {
-    nav_status.set_route_state(NavigationStatus_RouteState_kInvalid);
     route_state_ = NavigationStatus_RouteState_kInvalid;
+    nav_status.set_route_state(route_state_);
     return nav_status;
   }
 
@@ -48,7 +48,7 @@ NavigationStatus Navigator::SetRoute(const std::string& route_json_str) {
   maneuver_index_ = 0;
   SetUnits();
   SetShapeLengthTime();
-  SetUsedInstructions();
+  InitializeUsedInstructions();
   route_state_ = NavigationStatus_RouteState_kInitialized;
 
   nav_status.set_route_state(route_state_);
@@ -252,7 +252,7 @@ void Navigator::SetShapeLengthTime() {
   current_shape_index_ = 0;
 }
 
-void Navigator::SetUsedInstructions() {
+void Navigator::InitializeUsedInstructions() {
   used_instructions_.clear();
   for (size_t i = 0; i < route_.trip().legs(leg_index_).maneuvers_size(); ++i) {
     used_instructions_.emplace_back(false, false, false, false);
@@ -302,13 +302,13 @@ size_t Navigator::FindManeuverIndex(size_t begin_search_index,
 size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
     size_t shape_index) const {
 
+  size_t maneuver_count = route_.trip().legs(leg_index_).maneuvers_size();
+
   // Set the destination maneuver index - since destination maneuver is a special case
-  size_t destination_maneuver_index =
-      (route_.trip().legs(leg_index_).maneuvers_size() - 1);
+  size_t destination_maneuver_index = (maneuver_count - 1);
 
   // Validate the rbegin_search_index
-  if ((route_.trip().legs(leg_index_).maneuvers_size() == 0)
-      || (rbegin_search_index > destination_maneuver_index))
+  if ((maneuver_count == 0) || (rbegin_search_index > destination_maneuver_index))
     throw valhalla_exception_t { 502 };
 
   // Check for destination shape index and rbegin search index
@@ -319,7 +319,7 @@ size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index,
 
   // Loop over maneuvers in reverse - starting at specified maneuver index
   // and return the maneuver index that contains the specified shape index
-  for (size_t i = rbegin_search_index; (i >= 0 && i <= destination_maneuver_index); --i) {
+  for (size_t i = rbegin_search_index; i < maneuver_count; --i) {
     const auto& maneuver = route_.trip().legs(leg_index_).maneuvers(i);
     if ((shape_index >= maneuver.begin_shape_index()) && (shape_index < maneuver.end_shape_index()))
       return i;

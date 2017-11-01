@@ -1,13 +1,8 @@
 #include <vector>
 
 #include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphid.h"
-
 #include "meili/geometry_helpers.h"
-#include "meili/match_result.h"
-#include "meili/match_route.h"
+#include "meili/map_matcher.h"
 
 
 namespace {
@@ -254,7 +249,7 @@ MergeRoute(const State& source, const State& target)
 
 template <typename match_iterator_t>
 std::vector<EdgeSegment>
-ConstructRoute(const MapMatching& mapmatching,
+ConstructRoute(const MapMatcher& mapmatcher,
                match_iterator_t begin,
                match_iterator_t end)
 {
@@ -272,11 +267,11 @@ ConstructRoute(const MapMatching& mapmatching,
     }
 
     if (prev_match != end) {
-      const auto& prev_state = mapmatching.state(prev_match->stateid),
-                     state = mapmatching.state(match->stateid);
+      const auto& prev_state = mapmatcher.state_container().state(prev_match->stateid),
+                       state = mapmatcher.state_container().state(match->stateid);
       auto segments = MergeRoute(prev_state, state);
 
-      if (!ValidateRoute(mapmatching.graphreader(), segments.begin(), segments.end(), tile)) {
+      if (!ValidateRoute(mapmatcher.graphreader(), segments.begin(), segments.end(), tile)) {
         throw std::runtime_error("Found invalid route");
       }
 
@@ -292,13 +287,13 @@ ConstructRoute(const MapMatching& mapmatching,
 //explicit instantiations
 template std::vector<EdgeSegment>
 ConstructRoute<std::vector<MatchResult>::iterator>(
-    const MapMatching&,
+    const MapMatcher&,
     std::vector<MatchResult>::iterator,
     std::vector<MatchResult>::iterator);
 
 template std::vector<EdgeSegment>
 ConstructRoute<std::vector<MatchResult>::const_iterator>(
-    const MapMatching&,
+    const MapMatcher&,
     std::vector<MatchResult>::const_iterator,
     std::vector<MatchResult>::const_iterator);
 

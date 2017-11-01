@@ -96,6 +96,21 @@ class DirectedEdge {
   void set_laneconnectivity(const bool lc);
 
   /**
+   * Does this directed edge have a traffic segment?
+   * @return  Returns true if the directed edge has a traffic segment,
+   *          false if not.
+   */
+  bool traffic_seg() const {
+    return traffic_seg_;
+  }
+
+  /**
+   * Sets the traffic segment flag.
+   * @param  seg  True if this directed edge has a traffic segment.
+   */
+  void set_traffic_seg(const bool seg);
+
+  /**
    * Gets the length of the edge in meters.
    * @return  Returns the length in meters.
    */
@@ -1069,13 +1084,14 @@ class DirectedEdge {
   uint64_t surface_        : 3;  // representation of smoothness
   uint64_t shoulder_       : 1;  // Does the edge have a shoulder?
   uint64_t spare2_         : 7;
-  uint64_t use_sidepath_   : 1;  // Is there a cycling path to the side that should be preffered?
+  uint64_t use_sidepath_   : 1;  // Is there a cycling path to the side that should be prefered?
   uint64_t dismount_       : 1;  // Do you need to dismount when biking on this edge?
   uint64_t density_        : 4;  // Density along the edge
   uint64_t speed_limit_    : 8;  // Speed limit (kph)
   uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed
   uint64_t lane_conn_      : 1;  // 1 if has lane connectivity, 0 otherwise
-  uint64_t spare_          : 10;
+  uint64_t traffic_seg_    : 1;  // 1 if has a traffic segment, 0 otherwise
+  uint64_t spare_          : 9;
 
   // Geometric attributes: length, weighted grade, curvature factor.
   // Turn types between edges.

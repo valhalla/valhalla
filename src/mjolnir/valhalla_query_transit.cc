@@ -124,86 +124,95 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
             ss << ":";
             ss << std::setfill('0') << std::setw(2) << seconds;
 
+            std::string dow;
+            uint32_t counter = 0;
+            for(const auto& service_day : sp.service_days_of_week()) {
+
+              switch (counter) {
+                case 0:
+                  if (service_day) {
+                    if (!dow.empty())
+                      dow += ", ";
+                    dow += "Sunday";
+                  }
+                  break;
+                case 1:
+                  if (service_day) {
+                    if (!dow.empty())
+                      dow += ", ";
+                    dow += "Monday";
+                  }
+                  break;
+                case 2:
+                  if (service_day) {
+                    if (!dow.empty())
+                      dow += ", ";
+                    dow += "Tuesday";
+                  }
+                  break;
+                case 3:
+                  if (service_day) {
+                    if (!dow.empty())
+                      dow += ", ";
+                    dow += "Wednesday";
+                  }
+                  break;
+                case 4:
+                  if (service_day) {
+                    if (!dow.empty())
+                      dow += ", ";
+                    dow += "Thursday";
+                  }
+                  break;
+                case 5:
+                  if (service_day) {
+                    if (!dow.empty())
+                      dow += ", ";
+                    dow += "Friday";
+                  }
+                  break;
+                case 6:
+                  if (service_day) {
+                    if (!dow.empty())
+                      dow += ", ";
+                    dow += "Saturday";
+                  }
+                  break;
+              }
+              counter++;
+            }
+
+            std::string added_dates;
+            for(const auto& day : sp.service_added_dates()) {
+
+              if (!added_dates.empty())
+                added_dates += ", ";
+              boost::gregorian::date adddate(boost::gregorian::gregorian_calendar::from_julian_day_number(day));
+              added_dates += to_iso_extended_string(adddate);
+            }
+
+            boost::gregorian::date start_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_start_date()));
+            boost::gregorian::date end_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
+
             LOG_INFO(" Route: " + std::to_string(sp.route_index()) +
                      " Trip: " + std::to_string(sp.trip_id()) +
-                     " Dep Time: " + ss.str());
+                     " Dep Time: " + ss.str() +
+                     " DOW: " + dow +
+                     " Added dates: " + added_dates +
+                     " Start Date: " + to_iso_extended_string(start_date) +
+                     " End Date: " + to_iso_extended_string(end_date));
           }
         }
       }
     }
   }
 }
-
-
-void GetNextDeparture(const std::string transit_dir,
-                      GraphId& orig_graphid, const GraphId& destid,
-                      const uint32_t tripid,std::string& origin_time,
-                      const Transit transit) {
-
-  if (orig_graphid.Is_Valid()) {
-
-    for (uint32_t i = 0; i < transit.stop_pairs_size(); i++) {
-
-      const Transit_StopPair& sp = transit.stop_pairs(i);
-      if (sp.trip_id() == tripid && orig_graphid == GraphId(sp.origin_graphid())) {
-
-        int total_seconds = sp.origin_departure_time();
-        int seconds = total_seconds % 60;
-        int minutes = (total_seconds / 60) % 60;
-        int hours = total_seconds / 3600;
-
-        std::stringstream ss;
-        ss << std::setfill('0') << std::setw(2) << hours;
-        ss << ":";
-        ss << std::setfill('0') << std::setw(2) << minutes;
-        ss << ":";
-        ss << std::setfill('0') << std::setw(2) << seconds;
-
-        if (origin_time == ss.str()) {
-
-          total_seconds = sp.destination_arrival_time();
-          seconds = total_seconds % 60;
-          minutes = (total_seconds / 60) % 60;
-          hours = total_seconds / 3600;
-
-          ss.str("");
-          ss << std::setfill('0') << std::setw(2) << hours;
-          ss << ":";
-          ss << std::setfill('0') << std::setw(2) << minutes;
-          ss << ":";
-          ss << std::setfill('0') << std::setw(2) << seconds;
-
-          LOG_INFO("Trip:\t" + sp.trip_headsign() +
-                   "\tDep Time:\t" + origin_time +
-                   "\tArr Time:\t" + ss.str() +
-                   "\tOrigin ----> Dest\t" + sp.origin_onestop_id() +
-                   " ----> " + sp.destination_onestop_id());
-
-          origin_time = ss.str();
-          orig_graphid = GraphId(sp.destination_graphid());
-
-          if (destid == orig_graphid) {//we are done.
-            orig_graphid = GraphId();
-            origin_time = "";
-          }
-
-          if (orig_graphid.Is_Valid())
-            return;
-        }
-      }
-    }
-  }
-  orig_graphid = GraphId();
-  origin_time = "";
-}
-
 
 void LogSchedule(const std::string transit_dir,
-                 const GraphId& originid, const GraphId& destid,
+                 GraphId& originid, const GraphId& destid,
                  const uint32_t tripid, const std::string time, Transit transit,
-                 std::string& file) {
+                 std::string& file, const uint8_t local_level) {
 
-  LOG_INFO("Schedule:");
   std::size_t slash_found = file.find_last_of("/\\");
   std::string directory = file.substr(0,slash_found);
 
@@ -216,6 +225,7 @@ void LogSchedule(const std::string transit_dir,
       std::string fname = transit_file_itr->path().string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
+
 
       // make sure we are looking at a pbf file
       if ((ext == ".pbf" && fname == file) ||
@@ -256,10 +266,8 @@ void LogSchedule(const std::string transit_dir,
               !GraphId(sp.destination_graphid()).Is_Valid()) {
             continue;
           }
-
           //do we have the correct stop?
           if (orig_graphid == originid) {
-
             //do we have the correct trip?
             if (sp.trip_id() == tripid) {
 
@@ -290,13 +298,18 @@ void LogSchedule(const std::string transit_dir,
                 ss << ":";
                 ss << std::setfill('0') << std::setw(2) << seconds;
                 origin_time = ss.str();
-                orig_graphid = GraphId(sp.destination_graphid());
+                originid = GraphId(sp.destination_graphid());
 
-                LOG_INFO("Trip:\t" + sp.trip_headsign() +
+                LOG_INFO("Tile : " + std::to_string(orig_graphid.tileid()) +
+                         "\tTrip:\t" + sp.trip_headsign() +
                          "\tDep Time:\t" + time +
                          "\tArr Time:\t" + origin_time +
                          "\tOrigin ----> Dest\t" + sp.origin_onestop_id() +
                          " ----> " + sp.destination_onestop_id());
+                if (destid == originid) {//we are done.
+                  originid = GraphId();
+                  origin_time = "";
+                }
 
                 break;
               }
@@ -304,14 +317,18 @@ void LogSchedule(const std::string transit_dir,
           }
         }
 
-        while (orig_graphid.Is_Valid() && !origin_time.empty())
-          GetNextDeparture(transit_dir, orig_graphid, destid, tripid, origin_time, spp);
+        while (originid.Is_Valid()) {
 
+          GraphId tile(originid.tileid(), local_level, 0);
+          std::string file_name;
+          Transit transit = read_pbf(tile, transit_dir, file_name);
+          LogSchedule(transit_dir, originid, destid, tripid, origin_time, transit, file_name, local_level);
+
+        }
       }
     }
   }
 }
-
 // Log the list of routes within the tile
 void LogRoutes(const Transit& transit) {
   LOG_INFO("Routes:");
@@ -340,16 +357,18 @@ int main(int argc, char *argv[]) {
   "transit_stop_query is a simple command line test tool to log transit stop info."
   "\n");
 
-  std::string config, origin, dest, time;
-  float lat,lng;
+  std::string config, o_onestop_id, d_onestop_id, time;
+  float o_lat, o_lng, d_lat, d_lng;
   int tripid = 0;
   options.add_options()
       ("help,h", "Print this help message.")
       ("version,v", "Print the version of this software.")
-      ("lat,y", boost::program_options::value<float>(&lat))
-      ("lng,x", boost::program_options::value<float>(&lng))
-      ("origin,o", boost::program_options::value<std::string>(&origin))
-      ("dest,d", boost::program_options::value<std::string>(&dest))
+      ("o_lat,o_y", boost::program_options::value<float>(&o_lat))
+      ("o_lng,o_x", boost::program_options::value<float>(&o_lng))
+      ("d_lat,d_y", boost::program_options::value<float>(&d_lat))
+      ("d_lng,d_x", boost::program_options::value<float>(&d_lng))
+      ("o_onestop_id,o", boost::program_options::value<std::string>(&o_onestop_id))
+      ("d_onestop_id,d", boost::program_options::value<std::string>(&d_onestop_id))
       ("tripid,i", boost::program_options::value<int>(&tripid))
       ("time,t", boost::program_options::value<std::string>(&time))
       ("conf,c", bpo::value<std::string>(&config), "Valhalla configuration file");
@@ -368,7 +387,7 @@ int main(int argc, char *argv[]) {
     return true;
   }
 
-  for (auto arg : std::vector<std::string> { "origin", "lat", "lng", "conf" }) {
+  for (auto arg : std::vector<std::string> { "o_onestop_id", "o_lat", "o_lng", "conf" }) {
     if (vm.count(arg) == 0) {
       std::cerr << "The <" << arg
           << "> argument was not provided, but is mandatory\n\n";
@@ -392,10 +411,11 @@ int main(int argc, char *argv[]) {
   }
 
   // Get the tile
-  PointLL stopll(lng, lat);
+  PointLL stopll(o_lng, o_lat);
   auto local_level = TileHierarchy::levels().rbegin()->second.level;
   auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
   uint32_t tileid = tiles.TileId(stopll);
+  LOG_INFO("Origin Tile " + std::to_string(tileid));
 
   // Read transit tile
   GraphId tile(tileid, local_level, 0);
@@ -403,9 +423,7 @@ int main(int argc, char *argv[]) {
   Transit transit = read_pbf(tile, *transit_dir, file_name);
 
   // Get the graph Id of the stop
-  GraphId originid = GetGraphId(transit, origin);
-
-
+  GraphId originid = GetGraphId(transit, o_onestop_id);
 
   if (tripid == 0 || time.empty()) {
     // Log departures from this stop
@@ -415,12 +433,26 @@ int main(int argc, char *argv[]) {
     LogRoutes(transit);
   }
   else {
+
     GraphId destid = GraphId();
-    if (!dest.empty()) {
+    if (!o_onestop_id.empty()) {
+
+      // Get the tile
+      PointLL stopll(d_lng, d_lat);
+      uint32_t tileid = tiles.TileId(stopll);
+
+      // Read transit tile
+      GraphId tile(tileid, local_level, 0);
+      std::string file_name;
+      Transit transit = read_pbf(tile, *transit_dir, file_name);
+
+      LOG_INFO("Dest Tile " + std::to_string(tileid));
       // Get the graph Id of the stop
-      destid = GetGraphId(transit, dest);
+      destid = GetGraphId(transit, d_onestop_id);
     }
-    LogSchedule(*transit_dir, originid, destid, tripid, time, transit, file_name);
+
+    LOG_INFO("Schedule:");
+    LogSchedule(*transit_dir, originid, destid, tripid, time, transit, file_name, local_level);
   }
 
 }

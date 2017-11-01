@@ -86,10 +86,8 @@ int main(int argc, char *argv[]) {
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   if (vm.count("json")) {
-    std::stringstream stream;
-    stream << json;
+    std::stringstream stream(json);
     boost::property_tree::read_json(stream, json_ptree);
-
     try {
       for (const auto& path : json_ptree.get_child("paths")) {
         paths.push_back({});
@@ -100,9 +98,8 @@ int main(int argc, char *argv[]) {
       }
     } catch (...) {
       throw std::runtime_error(
-          "insufficiently specified required parameter 'locations'");
+          "insufficiently specified required parameter 'paths'");
     }
-
     // Parse out the type of route - this provides the costing method to use
     try {
       routetype = json_ptree.get<std::string>("costing");
@@ -123,6 +120,7 @@ int main(int argc, char *argv[]) {
   factory.Register("auto", CreateAutoCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
+  factory.Register("motor_scooter", CreateMotorScooterCost);
   std::string method_options = "costing_options." + routetype;
   auto costing_options = json_ptree.get_child(method_options, {});
   cost_ptr_t costing = factory.Create(routetype, costing_options);
@@ -147,7 +145,7 @@ int main(int argc, char *argv[]) {
       });
     }
 
-    std::vector<valhalla::meili::MatchResult> results = matcher->OfflineMatch(measurements);
+    auto results = matcher->OfflineMatch(measurements).front().results;
 
     GraphId pred_id;
     GraphId current_id;
@@ -180,7 +178,8 @@ int main(int argc, char *argv[]) {
         auto pred_edge = pred_tile->directededge(pred_id);
         auto predinfo = tile->edgeinfo(pred_edge->edgeinfo_offset());
         auto node_id = pred_edge->endnode();
-        auto node = tile->node(node_id);
+        auto node_tile = reader.GetGraphTile (node_id);
+        auto node = node_tile->node(node_id);
         EdgeLabel pred_label (0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0);
         std::cout << "-------Transition-------\n";
         std::cout << "Pred GraphId: " << pred_id << std::endl;
@@ -194,6 +193,7 @@ int main(int argc, char *argv[]) {
 
       std::cout << "----------Edge----------\n";
       std::cout << "Edge GraphId: " << current_id << std::endl;
+      std::cout << "Edge length: " << edge->length() << std::endl;
       Cost edge_cost = costing->EdgeCost(edge);
       edge_total += edge_cost;
       std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";

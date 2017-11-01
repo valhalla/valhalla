@@ -812,7 +812,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
     //avoid duplicates and minimize leaving a tile for shape by:
     //writing the edge to the tile it originates in
     //not writing the edge to the tile it terminates in
-    //writing the edge to tweeners if originating < terminating
+    //writing the edge to tweeners if originating < terminating or the edge leaves and comes back
     auto start_id = tiles.TileId(edge->forward() ? shape.front() : shape.back());
     auto end_id = tiles.TileId(edge->forward() ? shape.back() : shape.front());
     auto intermediate = start_id < end_id;
@@ -828,7 +828,8 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
       //as per the rules above about when to add intersections
       auto originating = i.first == start_id;
       auto terminating = i.first == end_id;
-      if(originating || (intermediate && !terminating)) {
+      auto loop_back = i.first != start_id && i.first != end_id && start_id == end_id;
+      if(originating || (intermediate && !terminating) || loop_back) {
         //which set of bins, either this local set or tweeners to be added later
         auto& out_bins = originating && max ? bins : tweeners.insert({GraphId(i.first, max_level, 0), {}}).first->second;
         //keep the edge id
@@ -897,17 +898,24 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     throw std::runtime_error("Failed to open file " + filename.string());
 }
 
-/**
- * Initialize traffic segment association. Sizes the traffic segment Id list
- * and sets them all to Invalid.
- */
+// Initialize traffic segment association. Sizes the traffic segment Id list
+// and sets them all to Invalid.
 void GraphTileBuilder::InitializeTrafficSegments() {
-  if(header_->traffic_id_count())
+  if(header_->traffic_id_count()) {
     traffic_segment_builder_.assign(traffic_segments_, traffic_segments_ + header_->traffic_id_count());
-  else
+  } else {
     traffic_segment_builder_.resize(header_builder_.directededgecount());
+  }
+}
 
-  //TODO: assign the chunks to its builder counterpart
+// Initialize traffic chunks. Copies existing chunks into the chunk builder.
+// This is executed before adding "leftovers" and again before adding chunks.
+void GraphTileBuilder::InitializeTrafficChunks() {
+  // Assign the chunks to its builder counterpart
+  if (traffic_chunk_size_ > 0) {
+    size_t count = traffic_chunk_size_ / sizeof(TrafficChunk);
+    traffic_chunk_builder_.assign(traffic_chunks_, traffic_chunks_ + count);
+  }
 }
 
 // Add a traffic segment association - used when an edge associates to
@@ -968,7 +976,7 @@ void GraphTileBuilder::AddTrafficSegments(const baldr::GraphId& edgeid,
  * "chunks". Need to make sure the "shift" for offsets to data after the
  * traffic information are only increased by the amount of "new" segments.
  */
-void GraphTileBuilder::UpdateTrafficSegments() {
+void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
   // Get the number of new segments and chunks added with this call.
   uint32_t new_segments = traffic_segment_builder_.size() -
                           header_->traffic_id_count();
@@ -1022,6 +1030,29 @@ void GraphTileBuilder::UpdateTrafficSegments() {
     const auto* end = reinterpret_cast<const char*>(header_) +
                 header_->end_offset();
     file.write(begin, end - begin);
+
+    // Update directed edge flags
+    if (update_dir_edges) {
+      // Copy directed edges so we can modify them
+      uint32_t n = header_->directededgecount();
+      directededges_builder_.resize(n);
+      memcpy(&directededges_builder_[0], directededges_, n * sizeof(DirectedEdge));
+
+      // Iterate through directed edges and set traffic segment flag for aby
+      // that have any traffic segments.
+      for (uint32_t i = 0; i < n; i++) {
+        const TrafficAssociation& t = traffic_segment_builder_[i];
+        if (t.chunk() || t.count() == 1) {
+          directededges_builder_[i].set_traffic_seg(true);
+        }
+      }
+
+      // Write the updated directed edges
+      size_t offset = sizeof(GraphTileHeader) + header_->nodecount() * sizeof(NodeInfo);
+      file.seekp(offset, std::ios_base::beg);
+      file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
+                 directededges_builder_.size() * sizeof(DirectedEdge));
+    }
 
     // Close the file
     file.close();
