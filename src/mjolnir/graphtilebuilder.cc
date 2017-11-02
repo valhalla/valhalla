@@ -28,6 +28,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // Copy tile header to a builder (if tile exists). Always set the tileid
   if (header_) {
     header_builder_ = *header_;
+  } else {
+    // Tile does not yet exist. We are creating a new one. Add a dummy admin
+    // record at index 0 to be used if admin records are not used/created or
+    //if none is found.
+    AddAdmin("None","None","","");
   }
   header_builder_.set_graphid(graphid);
 
