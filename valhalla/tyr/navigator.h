@@ -55,8 +55,8 @@ constexpr size_t kPostTransition = 3;
 // Metric values for transition alert processing
 
 // Transition alert upper and lower deltas
-constexpr float kTransitionAlertLowerMetricDelta = 0.04828032f; // ~48 meters
-constexpr float kTransitionAlertUpperMetricDelta = 0.04828032f; // ~48 meters
+constexpr float kTransitionAlertLowerMetricDelta = 0.05f; // 50 meters
+constexpr float kTransitionAlertUpperMetricDelta = 0.05f; // 50 meters
 
 // Initial long transition alert length, length bounds, and
 // minimum maneuver length threshold
@@ -98,8 +98,8 @@ constexpr float kFinalShortTransitionAlertUpperMetricLength = kFinalShortTransit
 // Imperial values for transition alert processing
 
 // Transition alert upper and lower deltas
-constexpr float kTransitionAlertLowerImperialDelta = 0.03f; // ~158 feet
-constexpr float kTransitionAlertUpperImperialDelta = 0.03f; // ~158 feet
+constexpr float kTransitionAlertLowerImperialDelta = 0.0310686f; // ~164 feet
+constexpr float kTransitionAlertUpperImperialDelta = 0.0310686f; // ~164 feet
 
 // Initial long transition alert length, length bounds, and
 // minimum maneuver length threshold
