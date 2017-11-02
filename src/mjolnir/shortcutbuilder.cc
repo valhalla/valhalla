@@ -566,9 +566,6 @@ uint32_t FormShortcuts(GraphReader& reader,
     GraphId new_tile(tileid, tile_level, 0);
     GraphTileBuilder tilebuilder(reader.tile_dir(), new_tile, false);
 
-    // Create a dummy admin at index 0.  Used if admins are not used/created.
-    tilebuilder.AddAdmin("None", "None", "", "");
-
     // Iterate through the nodes in the tile
     GraphId node_id(tileid, tile_level, 0);
     for (uint32_t n = 0; n < tile->header()->nodecount(); n++, ++node_id) {

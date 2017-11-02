@@ -179,9 +179,6 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       tilebuilder = new GraphTileBuilder(reader.tile_dir(), tile_id, false);
       current_level = nodea.level();
 
-      // Create a dummy admin at index 0. Used if admins are not used/created.
-      tilebuilder->AddAdmin("None", "None", "", "");
-
       // Check if we need to clear the base/local tile cache
       if (reader.OverCommitted()) {
         reader.Clear();
