@@ -54,10 +54,6 @@ vj::GraphTileBuilder &graph_writer::builder(vb::GraphId tile_id) {
     bool inserted = false;
     auto builder = std::make_shared<vj::GraphTileBuilder>(test_tile_dir, tile_id, false);
 
-    // Create a dummy admin record at index 0. Used if admin records
-    // are not used/created or if none is
-    builder->AddAdmin("None","None","","");
-
     std::tie(itr, inserted) = m_builders.emplace(tile_id, builder);
     // should be new, since itr == end.
     assert(inserted);
