@@ -66,10 +66,8 @@ struct edges {
     }
   };
 
-  edges(GraphReader &reader, GraphId node_id) {
-    auto *tile = reader.GetGraphTile(node_id);
+  edges(const GraphTile* tile, GraphId node_id) {
     auto *node_info = tile->node(node_id);
-
     auto edge_idx = node_info->edge_index();
     m_begin = const_iterator(tile->directededge(edge_idx),
                              node_id.Tile_Base() + uint64_t(edge_idx));
@@ -106,7 +104,12 @@ std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id
   static const std::pair<GraphId, GraphId> none;
   GraphId first, second;
 
-  for (const auto &edge : iter::edges(m_reader, node_id)) {
+  // Get the tile of the node, return none if the tile is not found
+  auto *tile = m_reader.GetGraphTile(node_id);
+  if (tile == nullptr) {
+    return none;
+  }
+  for (const auto &edge : iter::edges(tile, node_id)) {
     // Check if this edge excludes merging at this node
     if (!m_edge_merge_predicate(edge.first)) {
       return none;
@@ -163,8 +166,13 @@ GraphId edge_collapser::next_node_id(GraphId last_node_id, GraphId node_id) {
 }
 
 GraphId edge_collapser::edge_between(GraphId cur, GraphId next) {
+  // Get the tile of the current node, return none if the tile is not found
   GraphId edge_id;
-  for (const auto &edge : iter::edges(m_reader, cur)) {
+  const GraphTile* tile = m_reader.GetGraphTile(cur);
+  if (tile == nullptr) {
+    return edge_id;
+  }
+  for (const auto &edge : iter::edges(tile, cur)) {
     // Skip edges that are not allowed
     if (!m_edge_allowed_predicate(edge.first)) {
       continue;
