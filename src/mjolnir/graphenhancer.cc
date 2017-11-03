@@ -891,14 +891,15 @@ void enhance(const boost::property_tree::ptree& pt,
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
 
-  // Default speeds per road class (TODO - get from property tree)
-  // motorway = 55 MPH
-  // trunk    = 45 MPH
-  // primary  = 35 MPH
-  // secondary = 30 MPH
-  // tertiary  = 25 MPH
-  // residential and unclassified = 20 MPH
-  // service = 15 MPH
+  // Default speeds (kph) in urban areas per road class
+  // (TODO - get from property tree)
+  // 55 MPH - motorway
+  // 45 MPH - trunk
+  // 35 MPH - primary
+  // 30 MPH - secondary
+  // 25 MPH - tertiary
+  // 20 MPH - residential and unclassified
+  // 15 MPH - service/other
   uint32_t urban_rc_speed[] = { 89, 73, 57, 49, 40, 35, 35, 25 };
 
   // Get some things we need throughout
