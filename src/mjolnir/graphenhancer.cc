@@ -155,7 +155,12 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
       directededge.set_speed(65);   // 40 MPH
       return;
     } else if (directededge.use() == Use::kFerry) {
-      if (directededge.length() < 2000) {
+      // if duration flag is set do nothing with speed - currently set
+      // as the leaves tile flag.
+      // leaves tile flag is updated later to the real value.
+      if (directededge.leaves_tile()) {
+        return;
+      } else if (directededge.length() < 2000) {
         directededge.set_speed(10);  // 5 knots
       } else if (directededge.length() < 8000) {
         directededge.set_speed(20);  // 10 knots
@@ -1065,6 +1070,7 @@ void enhance(const boost::property_tree::ptree& pt,
           std::unordered_map<std::string, std::vector<int>>::const_iterator country_iterator =
               country_access.find(country_code);
           if (admin_index != 0 && country_iterator != country_access.end() &&
+              directededge.use() != Use::kFerry &&
               (directededge.classification() <= RoadClass::kPrimary ||
                   directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
                   directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
