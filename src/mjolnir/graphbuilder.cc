@@ -409,7 +409,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<uint32_t, std::tuple<float, uint32_t, uint32_t, uint32_t,
+  std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t,
                         float, float, float, float, float> > geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
@@ -667,7 +667,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             uint32_t forward_grade = static_cast<uint32_t>(std::get<0>(forward_grades)  * .6 + 6.5);
             uint32_t reverse_grade = static_cast<uint32_t>(std::get<0>(reverse_grades) * .6 + 6.5);
             auto inserted = geo_attribute_cache.insert({edge_info_offset,
-              std::make_tuple(length, forward_grade,
+              std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade,
                               reverse_grade, curvature,
                               std::get<1>(forward_grades), std::get<2>(forward_grades),
                               std::get<1>(reverse_grades), std::get<2>(reverse_grades),
@@ -687,7 +687,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           //ferry speed override.  duration is set on the way
           if (w.ferry() && w.duration()) {
             //convert to kph
-            speed = static_cast<uint32_t>((std::get<0>(found->second) / w.duration())*3.6);
+            speed = static_cast<uint32_t>((std::get<0>(found->second) * 3.6f) / w.duration());
           }
 
           // Add a directed edge and get a reference to it
