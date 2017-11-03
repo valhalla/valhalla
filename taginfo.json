@@ -2698,6 +2698,14 @@
       },
       {
          "key": "cycleway",
+         "value": "buffered_lane",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides access flags for bicycle.  Bicycle Routing allowed.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway",
          "value": "track",
          "object_types": [
             "way"
@@ -3285,6 +3293,54 @@
          "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
       },
       {
+         "key": "cycleway:left:buffer",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:left:buffer",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right:buffer",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:right:buffer",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:both:buffer",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
+         "key": "cycleway:both:buffer",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "Bike forward and backward overrides.  Sets bike forward and backward to true.  Used to determine if the bike lane is shared, dedicated, or separated."
+      },
+      {
          "key": "shoulder",
          "value": "yes",
          "object_types": [
@@ -3356,6 +3412,20 @@
       },
       {
          "key": "shoulder:both",
+         "value": "no",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "segregated",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ]
+      },
+      {
+         "key": "segregated",
          "value": "no",
          "object_types": [
             "way"
