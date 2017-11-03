@@ -506,23 +506,23 @@ struct graph_callback : public OSMPBF::Callback {
           ss >> min;
           min *= 60;
         } else if (time.size() == 2) { //hours and min
-          std::stringstream ss(time.at(0));
+          std::stringstream ss(tag.second);
           ss >> hour;
+          ss.ignore();
           hour *= 3600;
 
-          ss = std::stringstream(time.at(1));
           ss >> min;
           min *= 60;
         } else if (time.size() == 3) { //hours, min, and sec
-          std::stringstream ss(time.at(0));
+          std::stringstream ss(tag.second);
           ss >> hour;
+          ss.ignore();
           hour *= 3600;
 
-          ss = std::stringstream(time.at(1));
           ss >> min;
+          ss.ignore();
           min *= 60;
 
-          ss = std::stringstream(time.at(2));
           ss >> sec;
         }
         w.set_duration(hour + min + sec);
