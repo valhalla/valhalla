@@ -178,7 +178,8 @@ int main(int argc, char *argv[]) {
         auto pred_edge = pred_tile->directededge(pred_id);
         auto predinfo = tile->edgeinfo(pred_edge->edgeinfo_offset());
         auto node_id = pred_edge->endnode();
-        auto node = tile->node(node_id);
+        auto node_tile = reader.GetGraphTile (node_id);
+        auto node = node_tile->node(node_id);
         EdgeLabel pred_label (0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0);
         std::cout << "-------Transition-------\n";
         std::cout << "Pred GraphId: " << pred_id << std::endl;
@@ -192,6 +193,7 @@ int main(int argc, char *argv[]) {
 
       std::cout << "----------Edge----------\n";
       std::cout << "Edge GraphId: " << current_id << std::endl;
+      std::cout << "Edge length: " << edge->length() << std::endl;
       Cost edge_cost = costing->EdgeCost(edge);
       edge_total += edge_cost;
       std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";

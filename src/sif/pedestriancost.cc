@@ -324,7 +324,7 @@ class PedestrianCost : public DynamicCost {
   float step_penalty_;    // Penalty applied to steps/stairs (seconds).
   float gate_penalty_;    // Penalty (seconds) to go through gate
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
-  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
+  float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float ferry_cost_;                // Cost (seconds) to exit a ferry
   float ferry_penalty_;             // Penalty (seconds) to enter a ferry

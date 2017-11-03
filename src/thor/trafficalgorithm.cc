@@ -31,16 +31,16 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
              const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
-  const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
+  costing_ = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.edges.front().projected, destination.edges.front().projected, costing);
+  Init(origin.edges.front().projected, destination.edges.front().projected);
   float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
-  uint32_t density = SetDestination(graphreader, destination, costing);
-  SetOrigin(graphreader, origin, destination, costing);
+  uint32_t density = SetDestination(graphreader, destination);
+  SetOrigin(graphreader, origin, destination);
 
   // Find shortest path
   uint32_t nc = 0;       // Count of iterations with no convergence
@@ -98,7 +98,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
 
     // Check access at the node
     const NodeInfo* nodeinfo = tile->node(node);
-    if (!costing->Allowed(nodeinfo)) {
+    if (!costing_->Allowed(nodeinfo)) {
       continue;
     }
 
@@ -117,7 +117,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       }
 
       // Skip if no access is allowed to this edge (based on costing method)
-      if (!costing->Allowed(directededge, pred, tile, edgeid)) {
+      if (!costing_->Allowed(directededge, pred, tile, edgeid)) {
         continue;
       }
 
@@ -130,9 +130,9 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
 
       // TODO - want to add a traffic costing method in sif
       Cost edge_cost;
-      Cost tc = costing->TransitionCost(directededge, nodeinfo, pred);
+      Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
       if (speeds.size() == 0 || speeds[edgeid.id()] == 0) {
-        edge_cost = costing->EdgeCost(directededge);
+        edge_cost = costing_->EdgeCost(directededge);
       } else {
         // Traffic exists for this edge
         float sec = directededge->length() * (kSecPerHour * 0.001f) /
@@ -184,9 +184,11 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       }
 
       // Add to the adjacency list and edge labels.
-      AddToAdjacencyList(edgeid, sortcost);
+      uint32_t idx = edgelabels_.size();
       edgelabels_.emplace_back(predindex, edgeid, directededge,
-                    newcost, sortcost, dist, mode_, 0);
+                          newcost, sortcost, dist, mode_, 0);
+      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+      adjacencylist_->add(idx);
     }
   }
   return {};      // Should never get here

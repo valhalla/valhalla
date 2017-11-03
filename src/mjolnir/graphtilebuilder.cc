@@ -36,6 +36,10 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     textlistbuilder_.emplace_back("");
     text_offset_map_.emplace("", 0);
     text_list_offset_ = 1;
+
+    // Add a dummy admin record at index 0 to be used if admin records are
+    // not used/created or if none is found.
+    AddAdmin("None","None","","");
     return;
   }
 
@@ -1041,8 +1045,8 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
       // Iterate through directed edges and set traffic segment flag for aby
       // that have any traffic segments.
       for (uint32_t i = 0; i < n; i++) {
-        auto segs = GetTrafficSegments(i);
-        if (segs.size() > 0) {
+        const TrafficAssociation& t = traffic_segment_builder_[i];
+        if (t.chunk() || t.count() == 1) {
           directededges_builder_[i].set_traffic_seg(true);
         }
       }

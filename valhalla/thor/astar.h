@@ -26,7 +26,11 @@ namespace thor {
 /**
  * Single direction A* algorithm to create the shortest / least cost path.
  * For driving routes it uses a highway hierarchy with shortcut edges to
- * improve performance.
+ * improve performance. In general, this is only used for "trivial" cases
+ * where the origin and destination share an edge (or are adjacent edges).
+ * These types of routes have tricky special cases that are harder to manage
+ * with bidirectional algorithms. Single direction (forward) A* algorithms
+ * are also used for time-dependent paths.
  */
 class AStarPathAlgorithm : public PathAlgorithm {
  public:
@@ -81,6 +85,9 @@ class AStarPathAlgorithm : public PathAlgorithm {
   // A* heuristic
   AStarHeuristic astarheuristic_;
 
+  // Current costing mode
+  std::shared_ptr<sif::DynamicCost> costing_;
+
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
 
@@ -97,19 +104,8 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
-   * @param  costing Dynamic costing method.
    */
-  virtual void Init(const PointLL& origll, const PointLL& destll,
-            const std::shared_ptr<sif::DynamicCost>& costing);
-
-  /**
-   * Convenience method to add an edge to the adjacency list and temporarily
-   * label it. This must be called before adding the edge label (so it uses
-   * the correct index).
-   * @param  edgeid    Edge to add to the adjacency list.
-   * @param  sortcost  Sort cost.
-   */
-  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
+  virtual void Init(const PointLL& origll, const PointLL& destll);
 
   /**
    * Modify hierarchy limits based on distance between origin and destination
@@ -123,27 +119,42 @@ class AStarPathAlgorithm : public PathAlgorithm {
   void ModifyHierarchyLimits(const float dist, const uint32_t density);
 
   /**
+   * Expand from the node along the forward search path. Immediately expands
+   * from the end node of any transition edge (so no transition edges are added
+   * to the adjacency list or EdgeLabel list). Does not expand transition
+   * edges if from_transition is false.
+   * @param  graphreader  Graph tile reader.
+   * @param  node         Graph Id of the node being expanded.
+   * @param  pred         Predecessor edge label (for costing).
+   * @param  pred_idx     Predecessor index into the EdgeLabel list.
+   * @param  from_transition True if this method is called from a transition
+   *                         edge.
+   * @param   dest        Location information of the destination.
+   */
+  void ExpandForward(baldr::GraphReader& graphreader,
+                     const baldr::GraphId& node, const sif::EdgeLabel& pred,
+                     const uint32_t pred_idx, const bool from_transition,
+                     const baldr::PathLocation& dest,
+                     std::pair<int32_t, float>& best_path);
+
+  /**
    * Add edges at the origin to the adjacency list.
    * @param  graphreader  Graph tile reader.
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
-   * @param  costing      Dynamic costing.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
                  baldr::PathLocation& origin,
-                 const baldr::PathLocation& dest,
-                 const std::shared_ptr<sif::DynamicCost>& costing);
+                 const baldr::PathLocation& dest);
 
   /**
    * Set the destination edge(s).
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination.
-   * @param   costing      Dynamic costing.
    * @return  Returns the relative density near the destination (0-15)
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader,
-                          const baldr::PathLocation& dest,
-                          const std::shared_ptr<sif::DynamicCost>& costing);
+                          const baldr::PathLocation& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

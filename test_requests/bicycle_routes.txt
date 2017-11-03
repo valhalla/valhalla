@@ -26,3 +26,5 @@
 -j '{"locations":[{"lat":34.417545,"lon":-119.854576,"street":""},{"lat":34.416924,"lon":-119.853531,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":34.417545,"lon":-119.854576,"street":""},{"lat":34.417549,"lon":-119.852890,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":34.417545,"lon":-119.854576,"street":""},{"lat":34.418053,"lon":-119.853683,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.94152381803029,"lon":-121.96226477622986},{"lat":37.931335857027115,"lon":-121.97398066520691}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Road","use_roads":"0.5","use_hills":"0.0"}}}
+-j '{"locations":[{"lat":37.94152381803029,"lon":-121.96226477622986},{"lat":37.931335857027115,"lon":-121.97398066520691}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"Mountain","use_roads":"0.5","use_hills":"0.0"}}}

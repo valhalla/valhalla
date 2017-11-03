@@ -266,7 +266,7 @@ class AutoCost : public DynamicCost {
   float ferry_penalty_;             // Penalty (seconds) to enter a ferry
   float ferry_factor_;              // Weighting to apply to ferry edges
   float alley_penalty_;             // Penalty (seconds) to use a alley
-  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
+  float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float use_ferry_;
 

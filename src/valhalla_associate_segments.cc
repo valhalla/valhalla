@@ -1059,16 +1059,16 @@ int main(int argc, char** argv) {
   }
 
   for( const auto& x : success_count )
-    LOG_INFO("Success = " + std::to_string(x.first) + " at level " + std::to_string(x.second));
+    LOG_INFO("Success = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
 
   for( const auto& x : failure_count )
-    LOG_INFO("Failure = " + std::to_string(x.first) + " at level " + std::to_string(x.second));
+    LOG_INFO("Failure = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
 
   for( const auto& x : walk_count )
-    LOG_INFO("Walk = " + std::to_string(x.first) + " at level " + std::to_string(x.second));
+    LOG_INFO("Walk = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
 
   for( const auto& x : path_count )
-    LOG_INFO("Path = " + std::to_string(x.first) + " at level " + std::to_string(x.second));
+    LOG_INFO("Path = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
 
   LOG_INFO("Leftovers = " + std::to_string(leftover_count) +
            " Chunks = " + std::to_string(chunk_count));

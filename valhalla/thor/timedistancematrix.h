@@ -145,6 +145,9 @@ class TimeDistanceMatrix {
   // List of destinations
   std::vector<Destination> destinations_;
 
+  // Current costing mode
+  std::shared_ptr<sif::DynamicCost> costing_;
+
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
   std::unordered_map<baldr::GraphId, std::vector<uint32_t>> dest_edges_;
@@ -163,41 +166,67 @@ class TimeDistanceMatrix {
   sif::TravelMode mode_;
 
   /**
+   * Expand from the node along the forward search path. Immediately expands
+   * from the end node of any transition edge (so no transition edges are added
+   * to the adjacency list or EdgeLabel list). Does not expand transition
+   * edges if from_transition is false.
+   * @param  graphreader  Graph tile reader.
+   * @param  node         Graph Id of the node being expanded.
+   * @param  pred         Predecessor edge label (for costing).
+   * @param  pred_idx     Predecessor index into the EdgeLabel list.
+   * @param  from_transition True if this method is called from a transition
+   *                         edge.
+   */
+  void ExpandForward(baldr::GraphReader& graphreader, const baldr::GraphId& node,
+                     const sif::EdgeLabel& pred, const uint32_t pred_idx,
+                     const bool from_transition);
+
+  /**
+   * Expand from the node along the reverse search path. Immediately expands
+   * from the end node of any transition edge (so no transition edges are added
+   * to the adjacency list or EdgeLabel list). Does not expand transition
+   * edges if from_transition is false.
+   * @param  graphreader  Graph tile reader.
+   * @param  node         Graph Id of the node being expanded.
+   * @param  pred         Predecessor edge label (for costing).
+   * @param  pred_idx     Predecessor index into the EdgeLabel list.
+   * @param  from_transition True if this method is called from a transition
+   *                         edge.
+   */
+  void ExpandReverse(baldr::GraphReader& graphreader,
+           const baldr::GraphId& node, const sif::EdgeLabel& pred,
+           const uint32_t pred_idx, const bool from_transition);
+
+  /**
    * Get the cost threshold based on the current mode and the max arc-length distance
    * for that mode.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    */
-  float GetCostThreshold (const float max_matrix_distance);
+  float GetCostThreshold(const float max_matrix_distance) const;
 
   /**
    * Sets the origin for a many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin        Origin location information.
-   * @param  costing       Costing method.
    */
   void SetOriginOneToMany(baldr::GraphReader& graphreader,
-                   const baldr::PathLocation& origin,
-                   const std::shared_ptr<sif::DynamicCost>& costing);
+                          const baldr::PathLocation& origin);
 
   /**
    * Sets the origin for a many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  dest          Destination
-   * @param  costing       Costing method.
    */
   void SetOriginManyToOne(baldr::GraphReader& graphreader,
-                        const baldr::PathLocation& dest,
-                        const std::shared_ptr<sif::DynamicCost>& costing);
+                          const baldr::PathLocation& dest);
 
   /**
    * Add destinations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
-   * @param  costing       Costing method.
    */
   void SetDestinations(baldr::GraphReader& graphreader,
-                       const std::vector<baldr::PathLocation>& locations,
-                       const std::shared_ptr<sif::DynamicCost>& costing);
+                       const std::vector<baldr::PathLocation>& locations);
 
   /**
    * Set destinations for the many to one time+distance matrix computation.
@@ -206,8 +235,7 @@ class TimeDistanceMatrix {
    * @param  costing       Costing method.
    */
   void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-            const std::vector<baldr::PathLocation>& locations,
-            const std::shared_ptr<sif::DynamicCost>& costing);
+            const std::vector<baldr::PathLocation>& locations);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -218,7 +246,6 @@ class TimeDistanceMatrix {
    * @param   edge          Directed edge
    * @param   pred          Predecessor information in shortest path.
    * @param   predindex     Predecessor index in EdgeLabels vector.
-   * @param   costing       Costing method.
    * @return  Returns true if all destinations have been settled.
    */
   bool UpdateDestinations(const baldr::PathLocation& origin,
@@ -226,16 +253,13 @@ class TimeDistanceMatrix {
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const sif::EdgeLabel& pred,
-                          const uint32_t predindex,
-                          const std::shared_ptr<sif::DynamicCost>& costing);
+                          const uint32_t predindex);
 
   /**
    * Form a time/distance matrix from the results.
    * @return  Returns a time distance matrix among locations.
    */
   std::vector<TimeDistance> FormTimeDistanceMatrix();
-
-  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
 };
 
 }

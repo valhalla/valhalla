@@ -656,6 +656,7 @@ check_PROGRAMS = \
 	test/serializers \
 	test/traffic_matcher \
 	test/autocost \
+	test/motorscootercost \
 	test/bicyclecost \
 	test/pedestriancost \
 	test/transitcost \
@@ -850,6 +851,9 @@ test_traffic_matcher_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS)
 test_autocost_SOURCES = src/sif/autocost.cc test/test.cc
 test_autocost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_autocost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_motorscootercost_SOURCES = src/sif/motorscootercost.cc test/test.cc
+test_motorscootercost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_motorscootercost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_bicyclecost_SOURCES = src/sif/bicyclecost.cc test/test.cc
 test_bicyclecost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_bicyclecost_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
