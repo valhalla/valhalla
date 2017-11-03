@@ -495,6 +495,39 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "rail")
         w.set_rail(tag.second == "true" ? true : false);
 
+      else if (tag.first == "duration") {
+        std::size_t found = tag.second.find(":");
+        if (found == std::string::npos)
+          continue;
+        std::vector<std::string> time = GetTagTokens(tag.second,':');
+        uint32_t hour = 0, min = 0, sec = 0;
+        if (time.size() == 1) { //minutes
+          std::stringstream ss(time.at(0));
+          ss >> min;
+          min *= 60;
+        } else if (time.size() == 2) { //hours and min
+          std::stringstream ss(time.at(0));
+          ss >> hour;
+          hour *= 3600;
+
+          ss = std::stringstream(time.at(1));
+          ss >> min;
+          min *= 60;
+        } else if (time.size() == 3) { //hours, min, and sec
+          std::stringstream ss(time.at(0));
+          ss >> hour;
+          hour *= 3600;
+
+          ss = std::stringstream(time.at(1));
+          ss >> min;
+          min *= 60;
+
+          ss = std::stringstream(time.at(2));
+          ss >> sec;
+        }
+        w.set_duration(hour + min + sec);
+      }
+
       else if (tag.first == "name" && !tag.second.empty())
         name = tag.second;
       else if (tag.first == "name:en" && !tag.second.empty())
