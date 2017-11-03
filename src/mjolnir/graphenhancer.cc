@@ -105,8 +105,10 @@ struct enhancer_stats {
  * surface type. TODO - add admin specific logic
  * @param  directededge  Directed edge to update.
  * @param  density       Relative road density.
+ * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
+void UpdateSpeed(DirectedEdge& directededge, const uint32_t density,
+                 const uint32_t* urban_rc_speed) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
@@ -165,25 +167,11 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
       return;
     }
 
-    // Modify speed based on urban/rural region - anything above 8 (TBD) is
+    // Modify speed for roads in urban regions - anything above 8 (TBD) is
     // assumed to be urban
     if (density > 8) {
-      if (directededge.classification() == RoadClass::kMotorway) {
-        directededge.set_speed(89);  // 55MPH
-      } else if (directededge.classification() == RoadClass::kTrunk) {
-        directededge.set_speed(73);  // 45MPH
-      } else if (directededge.classification() == RoadClass::kPrimary) {
-        directededge.set_speed(57);  // 35MPH
-      } else if (directededge.classification() == RoadClass::kSecondary) {
-        directededge.set_speed(49);  // 30 MPH
-      } else if (directededge.classification() == RoadClass::kTertiary) {
-        directededge.set_speed(40);  // 25 MPH
-      } else if (directededge.classification() == RoadClass::kResidential ||
-                 directededge.classification() == RoadClass::kUnclassified) {
-        directededge.set_speed(35);  // 20 MPH
-      } else {
-        directededge.set_speed(25);  // 15 MPH (service/alley)
-      }
+      uint32_t rc = static_cast<uint32_t>(directededge.classification());
+      directededge.set_speed(urban_rc_speed[rc]);
     }
 
     // Modify speed based on surface.
@@ -903,6 +891,16 @@ void enhance(const boost::property_tree::ptree& pt,
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
 
+  // Default speeds per road class (TODO - get from property tree)
+  // motorway = 55 MPH
+  // trunk    = 45 MPH
+  // primary  = 35 MPH
+  // secondary = 30 MPH
+  // tertiary  = 25 MPH
+  // residential and unclassified = 20 MPH
+  // service = 15 MPH
+  uint32_t urban_rc_speed[] = { 89, 73, 57, 49, 40, 35, 35, 25 };
+
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
   const auto& local_level = TileHierarchy::levels().rbegin()->second.level;
@@ -1141,7 +1139,7 @@ void enhance(const boost::property_tree::ptree& pt,
           directededge.set_use(Use::kFootway);
 
         // Update speed.
-        UpdateSpeed(directededge, density);
+        UpdateSpeed(directededge, density, urban_rc_speed);
 
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNames();
