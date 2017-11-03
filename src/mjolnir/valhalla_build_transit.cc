@@ -1440,8 +1440,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   std::set<uint64_t> added_stations;
   std::set<uint64_t> added_egress;
 
-  tilebuilder_transit.AddAdmin("None","None","","");
-
   // Data looks like the following.
   // Egress1_for_Station_A
   // Egress2_for_Station_A

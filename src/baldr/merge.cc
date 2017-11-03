@@ -66,10 +66,8 @@ struct edges {
     }
   };
 
-  edges(GraphReader &reader, GraphId node_id) {
-    auto *tile = reader.GetGraphTile(node_id);
+  edges(const GraphTile* tile, GraphId node_id) {
     auto *node_info = tile->node(node_id);
-
     auto edge_idx = node_info->edge_index();
     m_begin = const_iterator(tile->directededge(edge_idx),
                              node_id.Tile_Base() + uint64_t(edge_idx));
@@ -106,7 +104,12 @@ std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id
   static const std::pair<GraphId, GraphId> none;
   GraphId first, second;
 
-  for (const auto &edge : iter::edges(m_reader, node_id)) {
+  // Get the tile of the node, return none if the tile is not found
+  auto *tile = m_reader.GetGraphTile(node_id);
+  if (tile == nullptr) {
+    return none;
+  }
+  for (const auto &edge : iter::edges(tile, node_id)) {
     // Check if this edge excludes merging at this node
     if (!m_edge_merge_predicate(edge.first)) {
       return none;
@@ -162,20 +165,21 @@ GraphId edge_collapser::next_node_id(GraphId last_node_id, GraphId node_id) {
   }
 }
 
+// Get the edge Id between 2 nodes. Will return an invalid edge Id if there
+// is no "allowed" edge between the 2 nodes.
 GraphId edge_collapser::edge_between(GraphId cur, GraphId next) {
-  GraphId edge_id;
-  for (const auto &edge : iter::edges(m_reader, cur)) {
-    // Skip edges that are not allowed
-    if (!m_edge_allowed_predicate(edge.first)) {
-      continue;
-    }
-    if (edge.first->endnode() == next) {
-      edge_id = edge.second;
-      break;
-    }
+  // Get the tile of the current node, return none if the tile is not found
+  const GraphTile* tile = m_reader.GetGraphTile(cur);
+  if (tile == nullptr) {
+    return { };
   }
-  assert(bool(edge_id));
-  return edge_id;
+  for (const auto &edge : iter::edges(tile, cur)) {
+    // Return the edge Id if endnode matches and the edge is allowed
+     if (edge.first->endnode() == next && m_edge_allowed_predicate(edge.first)) {
+       return edge.second;
+     }
+  }
+  return { };
 }
 
 // explore starts walking the graph from a single node, building a forward and
@@ -189,9 +193,14 @@ void edge_collapser::explore(GraphId node_id) {
     return;
   }
 
-  // if either edge has been marked, then don't explore down either of them.
-  if (m_tracker.get(edge_between(node_id, nodes.first)) ||
-      m_tracker.get(edge_between(node_id, nodes.second))) {
+  // if either edge has been marked or is invalid (was not allowed in the
+  // edge between method) then don't explore down either of them.
+  GraphId e1 = edge_between(node_id, nodes.first);
+  if (!e1.Is_Valid() || m_tracker.get(e1)) {
+    return;
+  }
+  GraphId e2 = edge_between(node_id, nodes.second);
+  if (!e2.Is_Valid() || m_tracker.get(e2)) {
     return;
   }
 
@@ -216,9 +225,15 @@ bool edge_collapser::explore(GraphId prev, GraphId cur, path &forward, path &rev
   GraphId maybe_next;
   do {
     auto e1 = edge_between(prev, cur);
+    if (!e1.Is_Valid()) {
+      return false;
+    }
     forward.push_back(segment(prev, e1, cur));
     m_tracker.set(e1);
     auto e2 = edge_between(cur, prev);
+    if (!e2.Is_Valid()) {
+      return false;
+    }
     reverse.push_front(segment(cur, e2, prev));
     m_tracker.set(e2);
 
@@ -229,9 +244,15 @@ bool edge_collapser::explore(GraphId prev, GraphId cur, path &forward, path &rev
       if (cur == original_node_id) {
         // Loop is detected - add last edge and return true to indicate a loop
         auto e1 = edge_between(prev, cur);
+        if (!e1.Is_Valid()) {
+          return false;
+        }
         forward.push_back(segment(prev, e1, cur));
         m_tracker.set(e1);
         auto e2 = edge_between(cur, prev);
+        if (!e2.Is_Valid()) {
+          return false;
+        }
         reverse.push_front(segment(cur, e2, prev));
         m_tracker.set(e2);
         return true;

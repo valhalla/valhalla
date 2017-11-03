@@ -424,10 +424,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       graphtile.AddTileCreationDate(tile_creation_date);
       graphtile.header_builder().set_dataset_id(osmdata.max_changeset_id_);
 
-      // Create a dummy admin record at index 0. Used if admin records
-      // are not used/created or if none is found.
-      graphtile.AddAdmin("None","None","","");
-
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
       bool tile_within_one_admin = false;

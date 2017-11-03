@@ -30,52 +30,11 @@ constexpr float kWordsPerSecond = 2.5f;
 // Minimum speed threshold in meters per second (~1 KPH)
 constexpr float kMinSpeedThreshold = 0.277f;
 
-// Transition alert upper and lower deltas
-constexpr float kTransitionAlertLowerDelta = 0.03f; // ~48.3 meters
-constexpr float kTransitionAlertUpperDelta = 0.03f; // ~48.3 meters
-
-// Minimum speed for certain transition alert types
-constexpr uint32_t kInitialLongTransitionAlertMinSpeed = 28; // meters per second (~62.6 MPH)
-constexpr uint32_t kInitialShortTransitionAlertMinSpeed = 18; // meters per second (~40.3 MPH)
-constexpr uint32_t kFinalLongTransitionAlertMinSpeed = 28; // meters per second (~62.6 MPH)
-constexpr uint32_t kFinalMediumTransitionAlertMinSpeed = 10; // meters per second (~22.4 MPH)
-
-// TODO metric
-
-// Initial long transition alert length, length bounds, and
-// minimum maneuver length threshold
-constexpr float kInitialLongTransitionAlertLength = 2.0f; // two miles
-constexpr float kInitialLongTransitionAlertLowerLength = kInitialLongTransitionAlertLength - kTransitionAlertLowerDelta;
-constexpr float kInitialLongTransitionAlertUpperLength = kInitialLongTransitionAlertLength + kTransitionAlertUpperDelta;
-constexpr float kInitialLongTransitionAlertMinManeuverLength = kInitialLongTransitionAlertLength * 2.0f;
-
-// Initial short transition alert length, length bounds, and
-// minimum maneuver length threshold
-constexpr float kInitialShortTransitionAlertLength = 1.0f; // one mile
-constexpr float kInitialShortTransitionAlertUpperLength = kInitialShortTransitionAlertLength + kTransitionAlertUpperDelta;
-constexpr float kInitialShortTransitionAlertLowerLength = kInitialShortTransitionAlertLength - kTransitionAlertLowerDelta;
-constexpr float kInitialShortTransitionAlertMinManeuverLength = kInitialShortTransitionAlertLength * 2.0f;
-
-// Final long transition alert length, length bounds, and
-// minimum maneuver length threshold
-constexpr float kFinalLongTransitionAlertLength = 0.5f; // half mile
-constexpr float kFinalLongTransitionAlertLowerLength = kFinalLongTransitionAlertLength - kTransitionAlertLowerDelta;
-constexpr float kFinalLongTransitionAlertUpperLength = kFinalLongTransitionAlertLength + kTransitionAlertUpperDelta;
-constexpr float kFinalLongTransitionAlertMinManeuverLength = kFinalLongTransitionAlertLength * 2.0f;
-
-// Final medium transition alert length, length bounds, and
-// minimum maneuver length threshold
-constexpr float kFinalMediumTransitionAlertLength = 0.25f; // quarter mile
-constexpr float kFinalMediumTransitionAlertLowerLength = kFinalMediumTransitionAlertLength - kTransitionAlertLowerDelta;
-constexpr float kFinalMediumTransitionAlertUpperLength = kFinalMediumTransitionAlertLength + kTransitionAlertUpperDelta;
-constexpr float kFinalMediumTransitionAlertMinManeuverLength = kFinalMediumTransitionAlertLength * 2.0f;
-
-// Final short transition alert length, length bounds, and
-// minimum maneuver length threshold
-// TODO: maybe refactor for just short values less than medium length?
-constexpr float kFinalShortTransitionAlertLength = 0.095f; // miles (500 feet)
-constexpr float kFinalShortTransitionAlertLowerLength = kFinalShortTransitionAlertLength - (kTransitionAlertLowerDelta * 0.6667f);
-constexpr float kFinalShortTransitionAlertUpperLength = kFinalShortTransitionAlertLength + (kTransitionAlertUpperDelta * 0.6667f);
+// Minimum speed in meters per second for certain transition alert types
+constexpr uint32_t kInitialLongTransitionAlertMinSpeed = 28; // ~62.6 MPH
+constexpr uint32_t kInitialShortTransitionAlertMinSpeed = 18; // ~40.3 MPH
+constexpr uint32_t kFinalLongTransitionAlertMinSpeed = 28; // ~62.6 MPH
+constexpr uint32_t kFinalMediumTransitionAlertMinSpeed = 10; // ~22.4 MPH
 
 // Post-transition lower and upper bounds in seconds
 constexpr uint32_t kPostTransitionLowerBound = 2;
@@ -92,6 +51,92 @@ constexpr size_t kFinalTransitionAlert = 1;   // half or quarter mile depending 
 constexpr size_t kPreTransition = 2;
 constexpr size_t kPostTransition = 3;
 
+///////////////////////////////////////////////////////////////////////////////
+// Metric values for transition alert processing
+
+// Transition alert upper and lower deltas
+constexpr float kTransitionAlertLowerMetricDelta = 0.05f; // 50 meters
+constexpr float kTransitionAlertUpperMetricDelta = 0.05f; // 50 meters
+
+// Initial long transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kInitialLongTransitionAlertMetricLength = 3.0f; // three kilometers
+constexpr float kInitialLongTransitionAlertLowerMetricLength = kInitialLongTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
+constexpr float kInitialLongTransitionAlertUpperMetricLength = kInitialLongTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
+constexpr float kInitialLongTransitionAlertMinManeuverMetricLength = kInitialLongTransitionAlertMetricLength * 2.0f;
+
+// Initial short transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kInitialShortTransitionAlertMetricLength = 1.0f; // one kilometer
+constexpr float kInitialShortTransitionAlertUpperMetricLength = kInitialShortTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
+constexpr float kInitialShortTransitionAlertLowerMetricLength = kInitialShortTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
+constexpr float kInitialShortTransitionAlertMinManeuverMetricLength = kInitialShortTransitionAlertMetricLength * 2.0f;
+
+// Final long transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kFinalLongTransitionAlertMetricLength = 0.5f; // half kilometer = 500 meters
+constexpr float kFinalLongTransitionAlertLowerMetricLength = kFinalLongTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
+constexpr float kFinalLongTransitionAlertUpperMetricLength = kFinalLongTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
+constexpr float kFinalLongTransitionAlertMinManeuverMetricLength = kFinalLongTransitionAlertMetricLength * 2.0f;
+
+// Final medium transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kFinalMediumTransitionAlertMetricLength = 0.25f; // quarter kilometer = 250 meters
+constexpr float kFinalMediumTransitionAlertLowerMetricLength = kFinalMediumTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
+constexpr float kFinalMediumTransitionAlertUpperMetricLength = kFinalMediumTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
+constexpr float kFinalMediumTransitionAlertMinManeuverMetricLength = kFinalMediumTransitionAlertMetricLength * 2.0f;
+
+// Final short transition alert length, length bounds, and
+// minimum maneuver length threshold
+// TODO: maybe refactor for just short values less than medium length?
+constexpr float kFinalShortTransitionAlertMetricLength = 0.125f; // eighth of a kilometer = 125 meters
+constexpr float kFinalShortTransitionAlertLowerMetricLength = kFinalShortTransitionAlertMetricLength - (kTransitionAlertLowerMetricDelta * 0.6667f);
+constexpr float kFinalShortTransitionAlertUpperMetricLength = kFinalShortTransitionAlertMetricLength + (kTransitionAlertUpperMetricDelta * 0.6667f);
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Imperial values for transition alert processing
+
+// Transition alert upper and lower deltas
+constexpr float kTransitionAlertLowerImperialDelta = 0.0310686f; // ~164 feet
+constexpr float kTransitionAlertUpperImperialDelta = 0.0310686f; // ~164 feet
+
+// Initial long transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kInitialLongTransitionAlertImperialLength = 2.0f; // two miles
+constexpr float kInitialLongTransitionAlertLowerImperialLength = kInitialLongTransitionAlertImperialLength - kTransitionAlertLowerImperialDelta;
+constexpr float kInitialLongTransitionAlertUpperImperialLength = kInitialLongTransitionAlertImperialLength + kTransitionAlertUpperImperialDelta;
+constexpr float kInitialLongTransitionAlertMinManeuverImperialLength = kInitialLongTransitionAlertImperialLength * 2.0f;
+
+// Initial short transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kInitialShortTransitionAlertImperialLength = 1.0f; // one mile
+constexpr float kInitialShortTransitionAlertUpperImperialLength = kInitialShortTransitionAlertImperialLength + kTransitionAlertUpperImperialDelta;
+constexpr float kInitialShortTransitionAlertLowerImperialLength = kInitialShortTransitionAlertImperialLength - kTransitionAlertLowerImperialDelta;
+constexpr float kInitialShortTransitionAlertMinManeuverImperialLength = kInitialShortTransitionAlertImperialLength * 2.0f;
+
+// Final long transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kFinalLongTransitionAlertImperialLength = 0.5f; // half mile
+constexpr float kFinalLongTransitionAlertLowerImperialLength = kFinalLongTransitionAlertImperialLength - kTransitionAlertLowerImperialDelta;
+constexpr float kFinalLongTransitionAlertUpperImperialLength = kFinalLongTransitionAlertImperialLength + kTransitionAlertUpperImperialDelta;
+constexpr float kFinalLongTransitionAlertMinManeuverImperialLength = kFinalLongTransitionAlertImperialLength * 2.0f;
+
+// Final medium transition alert length, length bounds, and
+// minimum maneuver length threshold
+constexpr float kFinalMediumTransitionAlertImperialLength = 0.25f; // quarter mile
+constexpr float kFinalMediumTransitionAlertLowerImperialLength = kFinalMediumTransitionAlertImperialLength - kTransitionAlertLowerImperialDelta;
+constexpr float kFinalMediumTransitionAlertUpperImperialLength = kFinalMediumTransitionAlertImperialLength + kTransitionAlertUpperImperialDelta;
+constexpr float kFinalMediumTransitionAlertMinManeuverImperialLength = kFinalMediumTransitionAlertImperialLength * 2.0f;
+
+// Final short transition alert length, length bounds, and
+// minimum maneuver length threshold
+// TODO: maybe refactor for just short values less than medium length?
+constexpr float kFinalShortTransitionAlertImperialLength = 0.095f; // miles = 500 feet
+constexpr float kFinalShortTransitionAlertLowerImperialLength = kFinalShortTransitionAlertImperialLength - (kTransitionAlertLowerImperialDelta * 0.6667f);
+constexpr float kFinalShortTransitionAlertUpperImperialLength = kFinalShortTransitionAlertImperialLength + (kTransitionAlertUpperImperialDelta * 0.6667f);
+
+///////////////////////////////////////////////////////////////////////////////
 class Navigator {
   public:
 
@@ -140,12 +185,12 @@ class Navigator {
      * Assigns the kilometer units boolean based on the value specified
      * in the route.
      */
-    void SetUnits();
+    void InitializeDistanceUnits();
 
     /**
-     * Returns true if the route units are in kilometers; otherwise, return false.
+     * Returns true if the distance units are in kilometers; otherwise, return false.
      *
-     * @return true if the route units are in kilometers; otherwise, return false.
+     * @return true if the distance units are in kilometers; otherwise, return false.
      */
     bool HasKilometerUnits() const;
 
@@ -153,7 +198,7 @@ class Navigator {
      * Assigns the shape, maneuver speeds, and remaining leg length & time
      * based on the route.
      */
-    void SetShapeLengthTime();
+    void InitializeShapeLengthTime();
 
     /**
      * Initializes the used instruction boolean values for each maneuver and
@@ -337,7 +382,8 @@ class Navigator {
     /**
      * Returns true if an initial transition alert should be announced;
      * otherwise, returns false. Also, if returning true - the alert length
-     * will be populated.
+     * will be populated. The determining criteria for the return values are
+     * speed, maneuver length, and remaining maneuver length.
      *
      * @param  fix_location  The current fix location of user.
      * @param  nav_status  The current navigation status.
@@ -351,9 +397,70 @@ class Navigator {
         const NavigationStatus& nav_status, float& alert_length) const;
 
     /**
+     * Returns the initial long transition alert length based on the distance units.
+     *
+     * @return the initial long transition alert length based on the distance units.
+     */
+    float GetInitialLongTransitionAlertLength() const;
+
+    /**
+     * Returns the initial long transition alert lower length based on the distance units.
+     *
+     * @return the initial long transition alert lower length based on the distance units.
+     */
+    float GetInitialLongTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the initial long transition alert upper length based on the distance units.
+     *
+     * @return the initial long transition alert upper length based on the distance units.
+     */
+    float GetInitialLongTransitionAlertUpperLength() const;
+
+    /**
+     * Returns the initial long transition alert minimum maneuver length
+     * based on the distance units.
+     *
+     * @return the initial long transition alert minimum maneuver length
+     * based on the distance units.
+     */
+    float GetInitialLongTransitionAlertMinManeuverLength() const;
+
+    /**
+     * Returns the initial short transition alert length based on the distance units.
+     *
+     * @return the initial short transition alert length based on the distance units.
+     */
+    float GetInitialShortTransitionAlertLength() const;
+
+    /**
+     * Returns the initial short transition alert lower length based on the distance units.
+     *
+     * @return the initial short transition alert lower length based on the distance units.
+     */
+    float GetInitialShortTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the initial short transition alert upper length based on the distance units.
+     *
+     * @return the initial short transition alert upper length based on the distance units.
+     */
+    float GetInitialShortTransitionAlertUpperLength() const;
+
+    /**
+     * Returns the initial short transition alert minimum maneuver length
+     * based on the distance units.
+     *
+     * @return the initial short transition alert minimum maneuver length
+     * based on the distance units.
+     */
+    float GetInitialShortTransitionAlertMinManeuverLength() const;
+
+    /**
      * Returns true if a final transition alert should be announced;
      * otherwise, returns false. Also, if returning true - the alert length
-     * will be populated.
+     * will be populated. The determining criteria for the return values are
+     * speed, maneuver length, and remaining maneuver length.
      *
      * @param  fix_location  The current fix location of user.
      * @param  nav_status  The current navigation status.
@@ -365,6 +472,87 @@ class Navigator {
      */
     bool IsFinalTransitionAlert(const FixLocation& fix_location,
         const NavigationStatus& nav_status, float& alert_length) const;
+
+    /**
+     * Returns the final long transition alert length based on the distance units.
+     *
+     * @return the final long transition alert length based on the distance units.
+     */
+    float GetFinalLongTransitionAlertLength() const;
+
+    /**
+     * Returns the final long transition alert lower length based on the distance units.
+     *
+     * @return the final long transition alert lower length based on the distance units.
+     */
+    float GetFinalLongTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the final long transition alert upper length based on the distance units.
+     *
+     * @return the final long transition alert upper length based on the distance units.
+     */
+    float GetFinalLongTransitionAlertUpperLength() const;
+
+    /**
+     * Returns the final long transition alert minimum maneuver length
+     * based on the distance units.
+     *
+     * @return the final long transition alert minimum maneuver length
+     * based on the distance units.
+     */
+    float GetFinalLongTransitionAlertMinManeuverLength() const;
+
+    /**
+     * Returns the final medium transition alert length based on the distance units.
+     *
+     * @return the final medium transition alert length based on the distance units.
+     */
+    float GetFinalMediumTransitionAlertLength() const;
+
+    /**
+     * Returns the final medium transition alert lower length based on the distance units.
+     *
+     * @return the final medium transition alert lower length based on the distance units.
+     */
+    float GetFinalMediumTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the final medium transition alert upper length based on the distance units.
+     *
+     * @return the final medium transition alert upper length based on the distance units.
+     */
+    float GetFinalMediumTransitionAlertUpperLength() const;
+
+    /**
+     * Returns the final medium transition alert minimum maneuver length
+     * based on the distance units.
+     *
+     * @return the final medium transition alert minimum maneuver length
+     * based on the distance units.
+     */
+    float GetFinalMediumTransitionAlertMinManeuverLength() const;
+
+    /**
+     * Returns the final short transition alert length based on the distance units.
+     *
+     * @return the final short transition alert length based on the distance units.
+     */
+    float GetFinalShortTransitionAlertLength() const;
+
+    /**
+     * Returns the final short transition alert lower length based on the distance units.
+     *
+     * @return the final short transition alert lower length based on the distance units.
+     */
+    float GetFinalShortTransitionAlertLowerLength() const;
+
+    /**
+     * Returns the final short transition alert upper length based on the distance units.
+     *
+     * @return the final short transition alert upper length based on the distance units.
+     */
+    float GetFinalShortTransitionAlertUpperLength() const;
 
     /////////////////////////////////////////////////////////////////////////////
 

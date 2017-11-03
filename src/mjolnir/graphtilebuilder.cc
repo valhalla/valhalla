@@ -36,6 +36,10 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     textlistbuilder_.emplace_back("");
     text_offset_map_.emplace("", 0);
     text_list_offset_ = 1;
+
+    // Add a dummy admin record at index 0 to be used if admin records are
+    // not used/created or if none is found.
+    AddAdmin("None","None","","");
     return;
   }
 
