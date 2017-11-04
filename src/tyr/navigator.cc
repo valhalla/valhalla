@@ -398,12 +398,22 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
 
 #ifdef LOGGING_LEVEL_TRACE
   // Output to help build unit tests
-  std::cout << std::endl << "------------------------------------------------------------------------" << std::setprecision(9) << std::endl
-            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << (remaining_leg_values_.at(0).second - nav_status.remaining_leg_time()) << "),"  << std::endl
+  std::cout << "  maneuver_index = " << nav_status.maneuver_index() << ";" << std::setprecision(9) << std::endl
+            << "  instruction_index = maneuver_index;" << std::endl
+            << "  TryRouteOnLocationChanged(nav," << std:: endl
+            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << fix_location.time() << ", " << fix_location.speed()  << "),"  << std::endl
             << "      GetNavigationStatus(NavigationStatus_RouteState_kTracking," << std::endl
             << "          " << nav_status.lon() << "f, " << nav_status.lat() << "f, leg_index, " << nav_status.remaining_leg_length() << "f, " << nav_status.remaining_leg_time() << "," << std::endl
             << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << ", instruction_index));" << std::endl;
 #endif
+//#ifdef LOGGING_LEVEL_TRACE
+//  // Output to help build unit tests
+//  std::cout << std::endl << "//----------------------------------------------------------------------" << std::setprecision(9) << std::endl
+//            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << (remaining_leg_values_.at(0).second - nav_status.remaining_leg_time()) << "),"  << std::endl
+//            << "      GetNavigationStatus(NavigationStatus_RouteState_kTracking," << std::endl
+//            << "          " << nav_status.lon() << "f, " << nav_status.lat() << "f, leg_index, " << nav_status.remaining_leg_length() << "f, " << nav_status.remaining_leg_time() << "," << std::endl
+//            << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << ", instruction_index));" << std::endl;
+//#endif
 
 
   return nav_status;
