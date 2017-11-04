@@ -3274,6 +3274,14 @@
       },
       {
          "key": "oneway:moped",
+         "value": "true",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets motor scooter reverse flag to true."
+      },
+      {
+         "key": "oneway:moped",
          "value": "no",
          "object_types": [
             "way"
@@ -3299,6 +3307,14 @@
       {
          "key": "oneway:mofa",
          "value": "1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets motor scooter reverse flag to true."
+      },
+      {
+         "key": "oneway:mofa",
+         "value": "true",
          "object_types": [
             "way"
          ],
