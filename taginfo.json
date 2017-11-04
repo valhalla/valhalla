@@ -1817,6 +1817,202 @@
          "description": "Bus forward and backward overrides.  Sets bus forward and backward to true."
       },
       {
+         "key": "moped",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "moped",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "moped",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "moped",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "moped",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "moped",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "moped",
+         "value": "dismount",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "moped",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
+      },
+      {
+         "key": "moped",
+         "value": "unknown",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
+      },
+      {
+         "key": "moped",
+         "value": "agricultural",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "yes",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "designated",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "private",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "permissive",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "destination",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "delivery",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "dismount",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "no",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "unknown",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
+      },
+      {
+         "key": "mofa",
+         "value": "agricultural",
+         "object_types": [
+            "node",
+            "way"
+         ],
+         "description": "Overrides access flags for motor scooter.  Motor Scooter Routing not allowed."
+      },
+      {
+         "key": "moped:backward",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the motor scooter reverse flag to true."
+      },
+      {
+         "key": "mofa:backward",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Sets the motor scooter reverse flag to true."
+      },
+      {
          "key": "foot",
          "value": "no",
          "object_types": [
@@ -3051,6 +3247,70 @@
             "way"
          ],
          "description": "If oneway = yes and oneway:bicycle = no then set the bike reverse flag to true."
+      },
+      {
+         "key": "oneway:moped",
+         "value": "-1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets motor scooter reverse flag to true.  A value of -1 will flip the direction of the oneway for motor scooters."
+      },
+      {
+         "key": "oneway:moped",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets motor scooter reverse flag to true."
+      },
+      {
+         "key": "oneway:moped",
+         "value": "1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets motor scooter reverse flag to true."
+      },
+      {
+         "key": "oneway:moped",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "If oneway = yes and oneway:moped = no then set the motor scooter reverse flag to true."
+      },
+      {
+         "key": "oneway:mofa",
+         "value": "-1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets motor scooter reverse flag to true.  A value of -1 will flip the direction of the oneway for motor scooters."
+      },
+      {
+         "key": "oneway:mofa",
+         "value": "yes",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets motor scooter reverse flag to true."
+      },
+      {
+         "key": "oneway:mofa",
+         "value": "1",
+         "object_types": [
+            "way"
+         ],
+         "description": "Overrides oneway flag.  Sets motor scooter reverse flag to true."
+      },
+      {
+         "key": "oneway:mofa",
+         "value": "no",
+         "object_types": [
+            "way"
+         ],
+         "description": "If oneway = yes and oneway:mofa = no then set the motor scooter reverse flag to true."
       },
       {
          "key": "busway",
