@@ -79,6 +79,7 @@ class MapMatcher final
   AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
 
   void RemoveRedundancies(const std::vector<StateId>& result);
+  //void RemoveRedundancies(const MatchResults& path, std::vector<StateId>& result);
 
   boost::property_tree::ptree config_;
 
@@ -104,10 +105,8 @@ class MapMatcher final
   TransitionCostModel transition_cost_model_;
 };
 
-
-std::vector<EdgeSegment>&
+bool
 MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target);
-
 
 std::vector<EdgeSegment>
 MergeRoute(const State& source, const State& target);
@@ -117,7 +116,8 @@ template <typename match_iterator_t>
 std::vector<EdgeSegment>
 ConstructRoute(const MapMatcher& mapmatcher,
                match_iterator_t begin,
-               match_iterator_t end);
+               match_iterator_t end,
+               bool& continuous);
 
 
 template <typename segment_iterator_t>

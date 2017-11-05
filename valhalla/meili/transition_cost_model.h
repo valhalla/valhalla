@@ -54,8 +54,9 @@ class TransitionCostModel
 
   float operator()(const StateId& lhs, const StateId& rhs) const;
 
- private:
   void UpdateRoute(const StateId& lhs, const StateId& rhs) const;
+
+ private:
 
   float
   ClockDistance(const StateId::Time& lhs, const StateId::Time& rhs) const

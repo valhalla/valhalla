@@ -3,14 +3,28 @@
 namespace valhalla {
 namespace meili {
 
+float EnlargedEmissionCostModel::operator()(const StateId& stateid) {
+  //if this was a removed state bail
+  const auto& original_stateid = evs_.GetOrigin(stateid);
+  if(evs_.IsRemoved(original_stateid))
+    return - 1;
+
+  //TODO: remove this
+  return calculate_cost(stateid, original_stateid);
+
+  auto c = cached_costs_.find(stateid);
+  if (c == cached_costs_.cend())
+    c = cached_costs_.emplace(stateid, calculate_cost(stateid, original_stateid)).first;
+  return c->second;
+}
+
 // a state has three status in the enlarged graph model:
 // 1. clone (evs_.GetOrigin(stateid).IsValid())
 // 2. origin that is been cloned (evs_.GetClone(stateid).IsValid())
 // 3. origin that is not been cloned (otherwise)
-float EnlargedEmissionCostModel::operator()(const StateId& stateid) const
+float EnlargedEmissionCostModel::calculate_cost(const StateId& stateid, const StateId& original_stateid) const
 {
   const auto& model = evs_.original_emission_cost_model();
-  const auto& original_stateid = evs_.GetOrigin(stateid);
   if (original_stateid.IsValid()) {
     // remove the last clone
     if (stateid.time() == evs_.clone_end_time()) {
@@ -27,7 +41,17 @@ float EnlargedEmissionCostModel::operator()(const StateId& stateid) const
   }
 }
 
-float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const
+float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) {
+  //TODO: remove this
+  return calculate_cost(lhs, rhs);
+  auto couple = std::make_pair(lhs, rhs);
+  auto c = cached_costs_.find(couple);
+  if (c == cached_costs_.cend())
+    c = cached_costs_.emplace(couple, calculate_cost(lhs, rhs)).first;
+  return c->second;
+}
+
+float EnlargedTransitionCostModel::calculate_cost(const StateId& lhs, const StateId& rhs) const
 {
   const auto& model = evs_.original_transition_cost_model();
 
@@ -52,16 +76,29 @@ float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId&
   }
 }
 
-void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
+void EnlargedViterbiSearch::ClonePath(const std::vector<StateId>& path)
 {
-  for (auto it = vs_.SearchPath(time); it != vs_.PathEnd(); it++) {
+  for (auto it = path.rbegin(); it != path.rend(); it++) {
+    // Did we actually get to this state
     const auto& origin = *it;
     if (origin.IsValid()) {
-      clone_[origin] = claim_stateid_(origin.time());
-      if (!clone_[origin].IsValid()) {
+      // Get a new id to map to and from this paths use of this candidate
+      auto clone = claim_stateid_(origin.time());
+      clone_[origin] = clone;
+      if (!clone.IsValid()) {
         throw std::logic_error("generate invalid stateid?");
       }
-      origin_[clone_[origin]] = origin;
+      // Keep inverse mapping
+      origin_[clone] = origin;
+
+      // This candidate was not a clone this is the first use of it
+      auto found = initial_origins_.find(origin);
+      if(found == initial_origins_.end()) {
+        initial_origins_[clone] = origin; //this use of clone to original candidate
+      }// This was a use of a clone so we already had the original candidate
+      else {
+        initial_origins_[clone] = found->second; //this use of clone to original candidate
+      }
 
       // remember when the cloning starts and ends
       if (clone_start_time_ == kInvalidTime || origin.time() < clone_start_time_) {
@@ -72,7 +109,6 @@ void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
       }
     }
   }
-  vs_.ClearSearch();
 
   // Add the clones to vs_
   for (const auto& pair: clone_) {
@@ -83,34 +119,32 @@ void EnlargedViterbiSearch::ClonePath(const StateId::Time& time)
   }
 }
 
-void TopKSearch::RemovePath(const StateId::Time& time)
+void TopKSearch::RemovePath(const std::vector<StateId>& path)
 {
-  evss_.emplace_back(vs_, [this](const StateId::Time& time) {
-      const auto it = last_claimed_stateids_.emplace(
-          time,
-          std::numeric_limits<StateId::Id>::max());
-      if (!it.second) {
-        it.first->second --;
-      }
-      return StateId(time, it.first->second);
-    });
-  evss_.back().ClonePath(time);
+  // A lambda for generating new claimed ids to use as a mapping
+  auto claim = [this](const StateId::Time& time) {
+    const auto it = last_claimed_stateids_.emplace(
+        time,
+        std::numeric_limits<StateId::Id>::max());
+    if (!it.second) {
+      it.first->second --;
+    }
+    return StateId(time, it.first->second);
+  };
+
+  // Create a new enlarged viterbi search
+  evss_.emplace_back(new EnlargedViterbiSearch(vs_, claim, initial_origins_, removed_origins_));
+
+  // Have it clone the current path
+  evss_.back()->ClonePath(path);
 }
 
-StateId TopKSearch::GetOrigin(const StateId& stateid) const
+StateId TopKSearch::GetOrigin(const StateId& stateid, const StateId& not_found) const
 {
-  StateId last_valid_origin, current = stateid;
-
-  // we are not sure stateid was cloned in which graph, so we try recursively
-  for (auto it = evss_.rbegin(); it != evss_.rend(); it++) {
-    const auto& origin = it->GetOrigin(current);
-    if (origin.IsValid()) {
-      current = origin;
-      last_valid_origin = origin;
-    } // otherwise current is a clone in the other graphs
-  }
-
-  return last_valid_origin;
+  auto found = initial_origins_.find(stateid);
+  if(found == initial_origins_.end())
+    return not_found;
+  return found->second;
 }
 
 }

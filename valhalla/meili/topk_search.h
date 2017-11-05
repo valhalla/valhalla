@@ -3,7 +3,8 @@
 
 #include <unordered_map>
 #include <functional>
-#include <list>
+#include <vector>
+#include <memory>
 
 #include <valhalla/meili/viterbi_search.h>
 #include <valhalla/meili/stateid.h>
@@ -19,10 +20,13 @@ class EnlargedEmissionCostModel
   EnlargedEmissionCostModel(const EnlargedViterbiSearch& evs)
       :evs_(evs) {}
 
-  float operator() (const StateId& stateid) const;
+  float operator() (const StateId& stateid);
 
  private:
+  float calculate_cost(const StateId& stateid, const StateId& original_stateid) const;
+
   const EnlargedViterbiSearch& evs_;
+  std::unordered_map<StateId, float> cached_costs_;
 };
 
 
@@ -32,16 +36,20 @@ class EnlargedTransitionCostModel
   EnlargedTransitionCostModel(const EnlargedViterbiSearch& evs)
       :evs_(evs) {}
 
-  float operator() (const StateId& lhs, const StateId& rhs) const;
+  float operator() (const StateId& lhs, const StateId& rhs);
 
  private:
+  float calculate_cost(const StateId& lhs, const StateId& rhs) const;
+
   const EnlargedViterbiSearch& evs_;
+  std::unordered_map<std::pair<StateId, StateId>, float> cached_costs_;
 };
 
 class EnlargedViterbiSearch
 {
  public:
-  EnlargedViterbiSearch(IViterbiSearch& vs, std::function<StateId(const StateId::Time&)> claim_stateid)
+  EnlargedViterbiSearch(IViterbiSearch& vs, std::function<StateId (const StateId::Time&)> claim_stateid,
+      std::unordered_map<StateId, StateId> &initial_origins, std::unordered_set<StateId>& removed_origins)
       : vs_(vs),
         claim_stateid_(claim_stateid),
         original_emission_cost_model_(vs.emission_cost_model()),
@@ -49,7 +57,9 @@ class EnlargedViterbiSearch
         origin_(),
         clone_(),
         clone_start_time_(kInvalidTime),
-        clone_end_time_(kInvalidTime)
+        clone_end_time_(kInvalidTime),
+        initial_origins_(initial_origins),
+        removed_origins_(removed_origins)
   {
     vs_.set_emission_cost_model(EnlargedEmissionCostModel(*this));
     vs_.set_transition_cost_model(EnlargedTransitionCostModel(*this));
@@ -81,7 +91,10 @@ class EnlargedViterbiSearch
     }
   }
 
-  void ClonePath(const StateId::Time& time);
+  bool IsRemoved(const StateId& stateid) const
+  { return removed_origins_.find(stateid) != removed_origins_.cend(); }
+
+  void ClonePath(const std::vector<StateId>& path);
 
   const StateId::Time& clone_start_time() const
   { return clone_start_time_; }
@@ -107,6 +120,12 @@ class EnlargedViterbiSearch
   // origin -> clone
   std::unordered_map<StateId, StateId> clone_;
 
+  // clone -> root origin
+  std::unordered_map<StateId, StateId>& initial_origins_;
+
+  // origins that were removed
+  std::unordered_set<StateId>& removed_origins_;
+
   StateId::Time clone_start_time_, clone_end_time_;
 };
 
@@ -114,29 +133,35 @@ class TopKSearch
 {
  public:
   TopKSearch(IViterbiSearch& vs)
-      : vs_(vs),
-        last_claimed_stateids_(),
-        evss_() {}
+      : vs_(vs) {}
 
   void Clear()
   {
     last_claimed_stateids_.clear();
     evss_.clear();
+    initial_origins_.clear();
   }
 
-  // remove path from 0 to time
-  void RemovePath(const StateId::Time& time);
+  // remove path from first state to last state
+  void RemovePath(const std::vector<StateId>& path);
 
   // find corresponding origin stateid recursively
-  StateId GetOrigin(const StateId& stateid) const;
+  StateId GetOrigin(const StateId& stateid, const StateId& not_found = {}) const;
+
+  void RemoveStateId(const StateId& stateid)
+  { removed_origins_.emplace(stateid); }
 
  private:
   IViterbiSearch& vs_;
 
   std::unordered_map<StateId::Time, uint32_t> last_claimed_stateids_;
 
-  // to not invalidate references of evs we use list
-  std::list<EnlargedViterbiSearch> evss_;
+  // to not invalidate references of evs we use pointers
+  std::vector<std::unique_ptr<EnlargedViterbiSearch> > evss_;
+
+  std::unordered_map<StateId, StateId> initial_origins_;
+
+  std::unordered_set<StateId> removed_origins_;
 };
 
 }
