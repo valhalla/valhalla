@@ -236,8 +236,8 @@ void test_viterbi_search(const std::vector<Column>& columns)
   SimpleViterbiSearch vs(columns);
 
   for (StateId::Time time = 0; time < columns.size(); time++) {
-    const auto& na_winner = na.SearchWinner(time, false);
-    const auto& vs_winner = vs.SearchWinner(time, false);
+    const auto& na_winner = na.SearchWinner(time);
+    const auto& vs_winner = vs.SearchWinner(time);
 
     if (na_winner.IsValid()) {
       test::assert_bool(
@@ -257,10 +257,10 @@ void test_viterbi_search(const std::vector<Column>& columns)
         print_trellis_diagram_vertically(columns);
 
         std::cout << "PATH OF NA" << std::endl;
-        print_path_reversely(columns, na.SearchPath(time), na.PathEnd());
+        print_path_reversely(columns, na.SearchPath(time, false), na.PathEnd());
 
         std::cout << "PATH OF VS" << std::endl;
-        print_path_reversely(columns, vs.SearchPath(time), vs.PathEnd());
+        print_path_reversely(columns, vs.SearchPath(time, false), vs.PathEnd());
       }
 
       test::assert_bool(
@@ -509,7 +509,7 @@ void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbi
 
     std::vector<StateId> vs_path;
     std::copy(
-        vs.SearchPath(time),
+        vs.SearchPath(time, false),
         vs.PathEnd(),
         std::back_inserter(vs_path));
     std::reverse(vs_path.begin(), vs_path.end());
@@ -535,7 +535,7 @@ void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbi
         c == total_cost(columns, vs_path),
         "total cost by viterbisearch must be " + std::to_string(c) + " but got " + std::to_string(total_cost(columns, vs_path)));
 
-    ts.RemovePath(time);
+    ts.RemovePath(vs_path);
   }
 }
 
