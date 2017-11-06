@@ -244,10 +244,8 @@ template <typename match_iterator_t>
 std::vector<EdgeSegment>
 ConstructRoute(const MapMatcher& mapmatcher,
                match_iterator_t begin,
-               match_iterator_t end,
-               bool& continuous)
+               match_iterator_t end)
 {
-  continuous = true;
   if (begin == end) {
     return {};
   }
@@ -265,7 +263,7 @@ ConstructRoute(const MapMatcher& mapmatcher,
       const auto& prev_state = mapmatcher.state_container().state(prev_match->stateid),
                        state = mapmatcher.state_container().state(match->stateid);
       std::vector<EdgeSegment> segments;
-      continuous = MergeRoute(segments, prev_state, state) && continuous;
+      MergeRoute(segments, prev_state, state);
 
       if (!ValidateRoute(mapmatcher.graphreader(), segments.begin(), segments.end(), tile)) {
         throw std::runtime_error("Found invalid route");
@@ -285,15 +283,13 @@ template std::vector<EdgeSegment>
 ConstructRoute<std::vector<MatchResult>::iterator>(
     const MapMatcher&,
     std::vector<MatchResult>::iterator,
-    std::vector<MatchResult>::iterator,
-    bool&);
+    std::vector<MatchResult>::iterator);
 
 template std::vector<EdgeSegment>
 ConstructRoute<std::vector<MatchResult>::const_iterator>(
     const MapMatcher&,
     std::vector<MatchResult>::const_iterator,
-    std::vector<MatchResult>::const_iterator,
-    bool&);
+    std::vector<MatchResult>::const_iterator);
 
 
 template <typename segment_iterator_t>

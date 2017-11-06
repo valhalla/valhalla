@@ -116,8 +116,7 @@ template <typename match_iterator_t>
 std::vector<EdgeSegment>
 ConstructRoute(const MapMatcher& mapmatcher,
                match_iterator_t begin,
-               match_iterator_t end,
-               bool& continuous);
+               match_iterator_t end);
 
 
 template <typename segment_iterator_t>

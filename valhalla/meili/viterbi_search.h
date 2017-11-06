@@ -71,10 +71,11 @@ class IViterbiSearch;
 class StateIdIterator: public std::iterator<std::forward_iterator_tag, StateId>
 {
  public:
-  StateIdIterator(IViterbiSearch& vs, StateId::Time time, const StateId& stateid)
+  StateIdIterator(IViterbiSearch& vs, StateId::Time time, const StateId& stateid, bool allow_breaks = true)
       : vs_(vs),
         time_(time),
-        stateid_(stateid)
+        stateid_(stateid),
+        allow_breaks_(allow_breaks)
   { ValidateStateId(time, stateid); }
 
   StateIdIterator(IViterbiSearch& vs)
@@ -127,6 +128,8 @@ class StateIdIterator: public std::iterator<std::forward_iterator_tag, StateId>
   StateId::Time time_;
 
   StateId stateid_;
+
+  bool allow_breaks_;
 
   void Next();
 };
@@ -183,8 +186,8 @@ class IViterbiSearch
 
   virtual StateId SearchWinner(StateId::Time time) = 0;
 
-  stateid_iterator SearchPath(StateId::Time time)
-  { return stateid_iterator(*this, time, SearchWinner(time)); }
+  stateid_iterator SearchPath(StateId::Time time, bool allow_breaks)
+  { return stateid_iterator(*this, time, SearchWinner(time), allow_breaks); }
 
   stateid_iterator PathEnd() const
   { return path_end_; }

@@ -357,7 +357,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
     std::unordered_map<StateId, path_t> paths_from_winner;
     for(const auto& right_candidate : container_.column(time + 1)) {
       std::vector<EdgeSegment> edges;
-      if(MergeRoute(edges, left_used_candidate, right_candidate))
+      if(!ts_.IsRemoved(right_candidate.stateid()) && MergeRoute(edges, left_used_candidate, right_candidate))
         paths_from_winner.emplace(right_candidate.stateid(), std::move(edges));
     }
 /*
@@ -371,8 +371,8 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
     std::unordered_set<StateId> right_uniques;
     std::unordered_set<StateId> redundancies;
     for(const auto& left_unused_candidate : container_.column(time)) {
-      // We cant remove the candidate that was actually used in the result
-      if(left_used_candidate.stateid() == left_unused_candidate.stateid())
+      // We cant remove candidates that were used in the result or already removed
+      if(left_used_candidate.stateid() == left_unused_candidate.stateid() || ts_.IsRemoved(left_unused_candidate.stateid()))
         continue;
 
       // If we didnt compute the paths from this loser we need to do it now
@@ -391,7 +391,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 
         // If there is no route its not really unique since we dont need discontinuities
         std::vector<EdgeSegment> edges;
-        if(!MergeRoute(edges, left_unused_candidate, right_candidate))
+        if(ts_.IsRemoved(right_candidate.stateid()) || !MergeRoute(edges, left_unused_candidate, right_candidate))
           continue;
 
         // This subpath is unique if: there is no path from the winner
@@ -412,16 +412,15 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
         redundancies.emplace(left_unused_candidate.stateid());
     }
 
-/*
+
     if(redundancies.size()) {
       std::cout << std::endl << "Removing: " << R"({"type":"FeatureCollection","features":[)";
       std::string fsep = "";
       for(auto r : redundancies) { std::cout << fsep << container_.geojson(r); fsep = ","; }
       std::cout << R"(]})" << std::endl;
     }
-*/
+
     // Clean up the left hand redundancies
-    container_.RemoveCandidates(time, redundancies);
     for(const auto& r : redundancies) {
       ts_.RemoveStateId(r);
       vs_.RemoveStateId(r);
@@ -440,17 +439,16 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
         }
       }
 
-/*
+
       if(redundancies.size()) {
         std::cout << std::endl << "Removing: " << R"({"type":"FeatureCollection","features":[)";
         std::string fsep = "";
         for(auto r : redundancies) { std::cout << fsep << container_.geojson(r); fsep = ","; }
         std::cout << R"(]})" << std::endl;
       }
-*/
+
 
       // Cleanup the right hand redundancies
-      container_.RemoveCandidates(time + 1, redundancies);
       for(const auto& r : redundancies) {
         ts_.RemoveStateId(r);
         vs_.RemoveStateId(r);
@@ -547,8 +545,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   //For k paths
   std::vector<MatchResults> best_paths;
   std::vector<StateId> state_ids, original_state_ids;
-  bool continuous = true;
-  while(best_paths.size() < k && continuous) {
+  while(best_paths.size() < k + 5) {
     // If we just got some results then we need to remove them from consideration
     // we avoid doing this for the common case where k==1 by putting this at the start of the loop
     if(best_paths.size()) {
@@ -561,17 +558,21 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     }
 
     // Get the states for the kth best path in reversed order then fix the order
-    state_ids.assign(vs_.SearchPath(time), vs_.PathEnd());
-    std::reverse(state_ids.begin(), state_ids.end());
+    state_ids.assign(vs_.SearchPath(time, best_paths.empty()), vs_.PathEnd());
+
+    // If we ended up finding a break in the path and this is not the first result we are done
+    if(state_ids.empty() || state_ids.back().time() != 0)
+      break;
 
     // Get back the real state ids in order
+    std::reverse(state_ids.begin(), state_ids.end());
     original_state_ids.clear();
     for(const auto& s : state_ids)
       original_state_ids.push_back(ts_.GetOrigin(s, s));
 
     // Verify that stateids are in correct order
     for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
-      if (!(!original_state_ids[time].IsValid() || original_state_ids[time].time() == time)) {
+      if (original_state_ids[time].time() != time) {
         throw std::logic_error("got state with time " + std::to_string(original_state_ids[time].time()) + " at time " + std::to_string(time));
       }
     }
@@ -612,7 +613,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     auto accumulated_cost = found_state != original_state_ids.rend() ? static_cast<float>(vs_.AccumulatedCost(*found_state)) : MAX_ACCUMULATED_COST;
 
     // Construct a result
-    auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend(), continuous);
+    auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
     MatchResults match_results(std::move(best_path), std::move(segments), accumulated_cost);
 
     // We'll keep it if we don't have a duplicate already
@@ -699,16 +700,16 @@ MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max
 
   const auto time = container_.AppendMeasurement(measurement);
 
-  std::string fsep = "";
-  std::cout << std::endl << "Candidates at time " << time << std::endl << R"({"type":"FeatureCollection","features":[)";
+//  std::string fsep = "";
+//  std::cout << std::endl << "Candidates at time " << time << std::endl << R"({"type":"FeatureCollection","features":[)";
   for (const auto& candidate: candidates) {
     const auto& stateid = container_.AppendCandidate(candidate);
     vs_.AddStateId(stateid);
 
-    std::cout << fsep << container_.geojson(stateid);
-    fsep = ",";
+//    std::cout << fsep << container_.geojson(stateid);
+//    fsep = ",";
   }
-  std::cout << R"(]})" << std::endl;
+//  std::cout << R"(]})" << std::endl;
 
   return time;
 }

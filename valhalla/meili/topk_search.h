@@ -151,6 +151,9 @@ class TopKSearch
   void RemoveStateId(const StateId& stateid)
   { removed_origins_.emplace(stateid); }
 
+  bool IsRemoved(const StateId& stateid) const
+  { return removed_origins_.find(stateid) != removed_origins_.cend(); }
+
  private:
   IViterbiSearch& vs_;
 
