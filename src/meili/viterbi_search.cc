@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <string>
-#include <iostream>
 
 #include "meili/viterbi_search.h"
 

@@ -265,7 +265,7 @@ namespace {
     if(names != std::vector<std::string>{"Louis Saalbornlaan", "Cor Ruyslaan"}) {
       std::string streets;
       for(const auto& n : names)
-        streets += n + " ";
+        streets += n + ", ";
       throw std::logic_error("The most obvious result is stay left but got: " + streets);
     }
 
@@ -287,7 +287,7 @@ namespace {
     if(names != std::vector<std::string>{"Louis Saalbornlaan", "Louis Saalbornlaan"}) {
       std::string streets;
       for(const auto& n : names)
-        streets += n + " ";
+        streets += n + ", ";
       throw std::logic_error("The second most obvious result is stay right but got: " + streets);
     }
 
@@ -343,7 +343,7 @@ namespace {
     if(names != std::vector<std::string>{"Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan"}) {
       std::string streets;
       for(const auto& n : names)
-        streets += n + " ";
+        streets += n + ", ";
       throw std::logic_error("The most obvious result is stay left on the same road - but got: " + streets);
     }
 
@@ -381,7 +381,7 @@ namespace {
     if(names != std::vector<std::string>{"Louis Bouwmeesterlaan", "Louis Bouwmeesterlaan", "Eduard Verkadelaan", "Eduard Verkadelaan", "Eduard Verkadelaan", "Eduard Verkadelaan", "Louis Bouwmeesterlaan"}) {
       std::string streets;
       for(const auto& n : names)
-        streets += n + " ";
+        streets += n + ", ";
       throw std::logic_error("The second most obvious result is loop around to the right - but got: " + streets);
     }
 
@@ -434,7 +434,7 @@ namespace {
     if(names != std::vector<std::string>{"Rubenslaan", "Rubenslaan", "Rubenslaan"}) {
       std::string streets;
       for(const auto& n : names)
-        streets += n + " ";
+        streets += n + ", ";
       throw std::logic_error("The most obvious result is stay straight on the same road - but got: " + streets);
     }
 
@@ -476,7 +476,7 @@ namespace {
       if(names != std::vector<std::string>{"Rubenslaan", "Rubenslaan", "<empty>", "Rubenslaan"}) {
       std::string streets;
       for(const auto& n : names)
-        streets += n + " ";
+        streets += n + ", ";
       throw std::logic_error("The second most obvious result is fronatge road to the right - but got: " + streets);
     }
 
