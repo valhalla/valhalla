@@ -404,7 +404,7 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
             << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << fix_location.time() << ", " << fix_location.speed()  << "),"  << std::endl
             << "      GetNavigationStatus(NavigationStatus_RouteState_kTracking," << std::endl
             << "          " << nav_status.lon() << "f, " << nav_status.lat() << "f, leg_index, " << nav_status.remaining_leg_length() << "f, " << nav_status.remaining_leg_time() << "," << std::endl
-            << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << ", instruction_index));" << std::endl;
+            << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << "));" << std::endl;
 #endif
 //#ifdef LOGGING_LEVEL_TRACE
 //  // Output to help build unit tests

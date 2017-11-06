@@ -6437,7 +6437,6 @@ void TestAutoLancasterToHershey() {
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567390,40.286640]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":918}},
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567482,40.286514]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":919}},
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567566,40.286381]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":920}},
-{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567642,40.286263]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":921}},
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.706596,40.246044]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":0,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.181,"distance_from_trace_point":3.247}},
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.706635,40.246193]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":1,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.263,"distance_from_trace_point":2.610}},
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.706673,40.246346]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":2,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.346,"distance_from_trace_point":1.977}},
@@ -7358,8 +7357,7 @@ void TestAutoLancasterToHershey() {
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567299,40.286743]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":917,"matched_point_type":"matched","edge_index":79,"distance_along_edge":0.582,"distance_from_trace_point":0.769}},
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567383,40.286636]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":918,"matched_point_type":"matched","edge_index":79,"distance_along_edge":0.655,"distance_from_trace_point":0.769}},
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567467,40.286510]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":919,"matched_point_type":"matched","edge_index":79,"distance_along_edge":0.738,"distance_from_trace_point":1.354}},
-{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567566,40.286381]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":920,"matched_point_type":"matched","edge_index":79,"distance_along_edge":0.826,"distance_from_trace_point":0.000}},
-{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567642,40.286263]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":921,"matched_point_type":"matched","edge_index":79,"distance_along_edge":0.903,"distance_from_trace_point":0.000}}
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.567566,40.286381]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":920,"matched_point_type":"matched","edge_index":79,"distance_along_edge":0.826,"distance_from_trace_point":0.000}}
 ]}
  */
 void TestAutoMiddletownRoadToLandingsDrive() {
@@ -7423,9 +7421,9 @@ void TestAutoMiddletownRoadToLandingsDrive() {
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.7065582f, 40.246048f, 1489614783, 0),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.7065964f, 40.2460442f, leg_index, 15.4219952f, 973,
-          maneuver_index, 1.33632565f, 88, instruction_index));
+          maneuver_index, 1.33632565f, 88, instruction_index), true);
   //----------------------------------------------------------------
   // trace point = 1
   maneuver_index = 0;
@@ -7434,7 +7432,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.706604f, 40.2461967f, 1489614784, 17.0408878),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7066345f, 40.2461929f, leg_index, 15.4051208f, 971,
-          maneuver_index, 1.31945133f, 86, instruction_index));
+          maneuver_index, 1.31945133f, 86), true);
   //----------------------------------------------------------------
   // trace point = 2
   maneuver_index = 0;
@@ -7443,7 +7441,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7066498f, 40.2463493f, 1489614785, 17.3661098),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7066727f, 40.2463455f, leg_index, 15.3878298f, 970,
-          maneuver_index, 1.30216026f, 85, instruction_index));
+          maneuver_index, 1.30216026f, 85));
   //----------------------------------------------------------------
   // trace point = 3
   maneuver_index = 0;
@@ -7452,7 +7450,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7066803f, 40.2464981f, 1489614786, 16.7813263),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7067032f, 40.2464943f, leg_index, 15.368866f, 969,
-          maneuver_index, 1.28319645f, 84, instruction_index));
+          maneuver_index, 1.28319645f, 84));
   //----------------------------------------------------------------
   // trace point = 4
   maneuver_index = 0;
@@ -7461,7 +7459,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7067261f, 40.2466545f, 1489614787, 17.9088612),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.706749f, 40.2466507f, leg_index, 15.3532391f, 968,
-          maneuver_index, 1.26756954f, 83, instruction_index));
+          maneuver_index, 1.26756954f, 83));
   //----------------------------------------------------------------
   // trace point = 5
   maneuver_index = 0;
@@ -7470,7 +7468,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7067642f, 40.2468071f, 1489614788, 17.2258587),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7067871f, 40.2468033f, leg_index, 15.3359489f, 967,
-          maneuver_index, 1.25027943f, 82, instruction_index));
+          maneuver_index, 1.25027943f, 82));
   //----------------------------------------------------------------
   // trace point = 6
   maneuver_index = 0;
@@ -7479,7 +7477,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7068024f, 40.2469673f, 1489614789, 18.1013985),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7068329f, 40.2469635f, leg_index, 15.3176947f, 966,
-          maneuver_index, 1.23202515f, 81, instruction_index));
+          maneuver_index, 1.23202515f, 81));
   //----------------------------------------------------------------
   // trace point = 7
   maneuver_index = 0;
@@ -7488,7 +7486,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7068405f, 40.2471237f, 1489614790, 17.7885265),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.706871f, 40.2471199f, leg_index, 15.2999868f, 965,
-          maneuver_index, 1.21431732f, 80, instruction_index));
+          maneuver_index, 1.21431732f, 80));
   //----------------------------------------------------------------
   // trace point = 8
   maneuver_index = 0;
@@ -7497,7 +7495,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7069016f, 40.2472878f, 1489614791, 18.9778519),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7069244f, 40.2472839f, leg_index, 15.281147f, 964,
-          maneuver_index, 1.19547749f, 79, instruction_index));
+          maneuver_index, 1.19547749f, 79));
   //----------------------------------------------------------------
   // trace point = 9
   maneuver_index = 0;
@@ -7506,7 +7504,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7069626f, 40.2474403f, 1489614792, 17.696558),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7069931f, 40.2474327f, leg_index, 15.2635937f, 963,
-          maneuver_index, 1.17792416f, 78, instruction_index));
+          maneuver_index, 1.17792416f, 78));
   //----------------------------------------------------------------
   // trace point = 10
   maneuver_index = 0;
@@ -7515,7 +7513,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7070389f, 40.2475929f, 1489614793, 18.2149124),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7070694f, 40.2475815f, leg_index, 15.2457237f, 961,
-          maneuver_index, 1.16005421f, 76, instruction_index));
+          maneuver_index, 1.16005421f, 76));
   //----------------------------------------------------------------
   // trace point = 11
   maneuver_index = 0;
@@ -7524,7 +7522,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7071381f, 40.2477493f, 1489614794, 19.295784),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7071762f, 40.2477341f, leg_index, 15.2246599f, 960,
-          maneuver_index, 1.1389904f, 75, instruction_index));
+          maneuver_index, 1.1389904f, 75));
   //----------------------------------------------------------------
   // trace point = 12
   maneuver_index = 0;
@@ -7533,7 +7531,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7072449f, 40.2478943f, 1489614795, 18.5254974),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.707283f, 40.2478752f, leg_index, 15.2083073f, 959,
-          maneuver_index, 1.12263775f, 74, instruction_index));
+          maneuver_index, 1.12263775f, 74));
   //----------------------------------------------------------------
   // trace point = 13
   maneuver_index = 0;
@@ -7542,7 +7540,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7073593f, 40.2480354f, 1489614796, 18.444109),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7073975f, 40.2480164f, leg_index, 15.1898308f, 958,
-          maneuver_index, 1.10416126f, 73, instruction_index));
+          maneuver_index, 1.10416126f, 73));
   //----------------------------------------------------------------
   // trace point = 14
   maneuver_index = 0;
@@ -7551,7 +7549,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7074738f, 40.2481766f, 1489614797, 18.5834579),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7075119f, 40.2481613f, leg_index, 15.17099f, 957,
-          maneuver_index, 1.08532047f, 72, instruction_index));
+          maneuver_index, 1.08532047f, 72));
   //----------------------------------------------------------------
   // trace point = 15
   maneuver_index = 0;
@@ -7560,7 +7558,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7075882f, 40.2483215f, 1489614798, 18.8244743),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7076263f, 40.2483025f, leg_index, 15.1525126f, 955,
-          maneuver_index, 1.06684303f, 70, instruction_index));
+          maneuver_index, 1.06684303f, 70));
   //----------------------------------------------------------------
   // trace point = 16
   maneuver_index = 0;
@@ -7569,7 +7567,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7077026f, 40.2484627f, 1489614799, 18.4888382),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7077408f, 40.2484436f, leg_index, 15.1340361f, 954,
-          maneuver_index, 1.04836655f, 69, instruction_index));
+          maneuver_index, 1.04836655f, 69));
   //----------------------------------------------------------------
   // trace point = 17
   maneuver_index = 0;
@@ -7578,7 +7576,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7078171f, 40.2486038f, 1489614800, 18.444067),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7078552f, 40.2485886f, leg_index, 15.1151962f, 953,
-          maneuver_index, 1.02952671f, 68, instruction_index));
+          maneuver_index, 1.02952671f, 68));
   //----------------------------------------------------------------
   // trace point = 18
   maneuver_index = 0;
@@ -7587,7 +7585,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7079239f, 40.2487373f, 1489614801, 17.3738937),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.707962f, 40.2487221f, leg_index, 15.0977821f, 951,
-          maneuver_index, 1.01211262f, 66, instruction_index));
+          maneuver_index, 1.01211262f, 66));
   //----------------------------------------------------------------
   // trace point = 19
   maneuver_index = 0;
@@ -7596,7 +7594,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7080307f, 40.2488747f, 1489614802, 17.8505764),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7080688f, 40.2488556f, leg_index, 15.080368f, 950,
-          maneuver_index, 0.994698524f, 65, instruction_index));
+          maneuver_index, 0.994698524f, 65));
   //----------------------------------------------------------------
   // trace point = 20
   maneuver_index = 0;
@@ -7605,7 +7603,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7081375f, 40.2490005f, 1489614803, 16.7148075),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7081757f, 40.2489853f, leg_index, 15.0633173f, 949,
-          maneuver_index, 0.977647781f, 64, instruction_index));
+          maneuver_index, 0.977647781f, 64));
   //----------------------------------------------------------------
   // trace point = 21
   maneuver_index = 0;
@@ -7614,7 +7612,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7082367f, 40.2491341f, 1489614804, 17.0280514),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7082748f, 40.2491188f, leg_index, 15.0462275f, 948,
-          maneuver_index, 0.960557938f, 63, instruction_index));
+          maneuver_index, 0.960557938f, 63));
   //----------------------------------------------------------------
   // trace point = 22
   maneuver_index = 0;
@@ -7623,7 +7621,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7083359f, 40.2492828f, 1489614805, 18.5975018),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7083664f, 40.2492714f, leg_index, 15.0275488f, 947,
-          maneuver_index, 0.941879272f, 62, instruction_index));
+          maneuver_index, 0.941879272f, 62));
   //----------------------------------------------------------------
   // trace point = 23
   maneuver_index = 0;
@@ -7632,7 +7630,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7084198f, 40.249424f, 1489614806, 17.2424393),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7084579f, 40.2494087f, leg_index, 15.0104017f, 946,
-          maneuver_index, 0.924732208f, 61, instruction_index));
+          maneuver_index, 0.924732208f, 61));
   //----------------------------------------------------------------
   // trace point = 24
   maneuver_index = 0;
@@ -7641,7 +7639,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085037f, 40.2495689f, 1489614807, 17.6487389),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7085342f, 40.2495613f, leg_index, 14.9921989f, 944,
-          maneuver_index, 0.906529427f, 59, instruction_index));
+          maneuver_index, 0.906529427f, 59));
   //----------------------------------------------------------------
   // trace point = 25
   maneuver_index = 0;
@@ -7650,7 +7648,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085495f, 40.2497215f, 1489614808, 17.4557419),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7085953f, 40.2497139f, leg_index, 14.9744253f, 943,
-          maneuver_index, 0.888755798f, 58, instruction_index));
+          maneuver_index, 0.888755798f, 58));
   //----------------------------------------------------------------
   // trace point = 26
   maneuver_index = 0;
@@ -7659,7 +7657,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086029f, 40.2498741f, 1489614809, 17.5315475),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086334f, 40.2498703f, leg_index, 14.9567223f, 942,
-          maneuver_index, 0.871052742f, 57, instruction_index));
+          maneuver_index, 0.871052742f, 57));
   //----------------------------------------------------------------
   // trace point = 27
   maneuver_index = 0;
@@ -7668,7 +7666,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086411f, 40.2500343f, 1489614810, 18.1013718),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086563f, 40.2500343f, leg_index, 14.9383268f, 941,
-          maneuver_index, 0.852657318f, 56, instruction_index));
+          maneuver_index, 0.852657318f, 56));
   //----------------------------------------------------------------
   // trace point = 28
   maneuver_index = 0;
@@ -7677,7 +7675,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086639f, 40.2501907f, 1489614811, 17.5860672),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086639f, 40.2501907f, leg_index, 14.9209051f, 940,
-          maneuver_index, 0.835235596f, 55, instruction_index));
+          maneuver_index, 0.835235596f, 55));
   //----------------------------------------------------------------
   // trace point = 29
   maneuver_index = 0;
@@ -7686,7 +7684,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086639f, 40.2503624f, 1489614812, 19.0356331),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086639f, 40.2503624f, leg_index, 14.9017448f, 938,
-          maneuver_index, 0.816075325f, 53, instruction_index));
+          maneuver_index, 0.816075325f, 53));
   //----------------------------------------------------------------
   // trace point = 30
   maneuver_index = 0;
@@ -7695,7 +7693,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086639f, 40.2505341f, 1489614813, 19.1469517),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086487f, 40.2505341f, leg_index, 14.8817444f, 937,
-          maneuver_index, 0.796074867f, 52, instruction_index));
+          maneuver_index, 0.796074867f, 52));
   //----------------------------------------------------------------
   // trace point = 31
   maneuver_index = 0;
@@ -7704,7 +7702,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086411f, 40.2507019f, 1489614814, 18.8034897),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086334f, 40.2507019f, leg_index, 14.863863f, 936,
-          maneuver_index, 0.778193474f, 51, instruction_index));
+          maneuver_index, 0.778193474f, 51));
   //----------------------------------------------------------------
   // trace point = 32
   maneuver_index = 0;
@@ -7713,7 +7711,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086105f, 40.2508736f, 1489614815, 19.3158588),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086182f, 40.2508736f, leg_index, 14.8447104f, 935,
-          maneuver_index, 0.759040833f, 50, instruction_index));
+          maneuver_index, 0.759040833f, 50));
   //----------------------------------------------------------------
   // trace point = 33
   maneuver_index = 0;
@@ -7722,7 +7720,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085953f, 40.2510376f, 1489614816, 18.3069363),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086105f, 40.2510376f, leg_index, 14.8264456f, 934,
-          maneuver_index, 0.740776062f, 49, instruction_index));
+          maneuver_index, 0.740776062f, 49));
   //----------------------------------------------------------------
   // trace point = 34
   maneuver_index = 0;
@@ -7731,7 +7729,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085724f, 40.2512207f, 1489614817, 20.4649754),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7085953f, 40.2512207f, leg_index, 14.8060207f, 932,
-          maneuver_index, 0.720351219f, 47, instruction_index));
+          maneuver_index, 0.720351219f, 47));
   //----------------------------------------------------------------
   // trace point = 35
   maneuver_index = 0;
@@ -7740,7 +7738,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085648f, 40.2513924f, 1489614818, 19.0449219),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.70858f, 40.2513924f, leg_index, 14.7868662f, 931,
-          maneuver_index, 0.701196671f, 46, instruction_index));
+          maneuver_index, 0.701196671f, 46));
   //----------------------------------------------------------------
   // trace point = 36
   maneuver_index = 0;
@@ -7749,7 +7747,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085648f, 40.2515717f, 1489614819, 20.037508),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7085724f, 40.2515717f, leg_index, 14.7668982f, 930,
-          maneuver_index, 0.681228638f, 45, instruction_index));
+          maneuver_index, 0.681228638f, 45));
   //----------------------------------------------------------------
   // trace point = 37
   maneuver_index = 0;
@@ -7758,7 +7756,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085648f, 40.2517509f, 1489614820, 19.9261894),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7085724f, 40.2517509f, leg_index, 14.7468977f, 929,
-          maneuver_index, 0.66122818f, 44, instruction_index));
+          maneuver_index, 0.66122818f, 44));
   //----------------------------------------------------------------
   // trace point = 38
   maneuver_index = 0;
@@ -7767,7 +7765,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085724f, 40.2519264f, 1489614821, 19.4899864),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.70858f, 40.2519264f, leg_index, 14.7273626f, 927,
-          maneuver_index, 0.641693115f, 42, instruction_index));
+          maneuver_index, 0.641693115f, 42));
   //----------------------------------------------------------------
   // trace point = 39
   maneuver_index = 0;
@@ -7776,7 +7774,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085876f, 40.2520905f, 1489614822, 18.3069344),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086029f, 40.2520905f, leg_index, 14.7090025f, 927,
-          maneuver_index, 0.623332977f, 42, instruction_index));
+          maneuver_index, 0.623332977f, 42));
   //----------------------------------------------------------------
   // trace point = 40
   maneuver_index = 0;
@@ -7785,7 +7783,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085953f, 40.2522545f, 1489614823, 18.2660809),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086182f, 40.2522545f, leg_index, 14.6906986f, 925,
-          maneuver_index, 0.605029106f, 40, instruction_index));
+          maneuver_index, 0.605029106f, 40));
   //----------------------------------------------------------------
   // trace point = 41
   maneuver_index = 0;
@@ -7794,7 +7792,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086182f, 40.2524223f, 1489614824, 18.803484),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086411f, 40.2524223f, leg_index, 14.671916f, 924,
-          maneuver_index, 0.58624649f, 39, instruction_index));
+          maneuver_index, 0.58624649f, 39));
   //----------------------------------------------------------------
   // trace point = 42
   maneuver_index = 0;
@@ -7803,7 +7801,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086334f, 40.2525864f, 1489614825, 18.3008213),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086563f, 40.2525864f, leg_index, 14.6536121f, 923,
-          maneuver_index, 0.567942619f, 38, instruction_index));
+          maneuver_index, 0.567942619f, 38));
   //----------------------------------------------------------------
   // trace point = 43
   maneuver_index = 0;
@@ -7812,7 +7810,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086563f, 40.2527504f, 1489614826, 18.3606739),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086792f, 40.2527504f, leg_index, 14.6352539f, 922,
-          maneuver_index, 0.549584389f, 37, instruction_index));
+          maneuver_index, 0.549584389f, 37));
   //----------------------------------------------------------------
   // trace point = 44
   maneuver_index = 0;
@@ -7821,7 +7819,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086716f, 40.2529182f, 1489614827, 18.7510128),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7086945f, 40.2529182f, leg_index, 14.6165276f, 920,
-          maneuver_index, 0.53085804f, 35, instruction_index));
+          maneuver_index, 0.53085804f, 35));
   //----------------------------------------------------------------
   // trace point = 45
   maneuver_index = 0;
@@ -7830,7 +7828,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7086868f, 40.2530785f, 1489614828, 17.8566513),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7087173f, 40.2530785f, leg_index, 14.598588f, 919,
-          maneuver_index, 0.512918472f, 34, instruction_index));
+          maneuver_index, 0.512918472f, 34));
   //----------------------------------------------------------------
   // trace point = 46
   maneuver_index = 0;
@@ -7839,7 +7837,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7087097f, 40.2532387f, 1489614829, 18.0286465),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7087326f, 40.2532387f, leg_index, 14.5807085f, 918,
-          maneuver_index, 0.495038986f, 33, instruction_index));
+          maneuver_index, 0.495038986f, 33));
   //----------------------------------------------------------------
   // trace point = 47
   maneuver_index = 0;
@@ -7848,7 +7846,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.708725f, 40.2534027f, 1489614830, 18.3008213),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7087555f, 40.2533989f, leg_index, 14.5627699f, 917,
-          maneuver_index, 0.477100372f, 32, instruction_index));
+          maneuver_index, 0.477100372f, 32));
   //----------------------------------------------------------------
   // trace point = 48
   maneuver_index = 0;
@@ -7857,16 +7855,16 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7087479f, 40.2535706f, 1489614831, 18.8034801),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7087708f, 40.2535706f, leg_index, 14.543622f, 915,
-          maneuver_index, 0.457952499f, 30, instruction_index));
+          maneuver_index, 0.457952499f, 30));
   //----------------------------------------------------------------
   // trace point = 49
   maneuver_index = 0;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.7087708f, 40.2537308f, 1489614832, 17.9179859),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.7087936f, 40.2537308f, leg_index, 14.5256834f, 914,
-          maneuver_index, 0.440013885f, 29, instruction_index));
+          maneuver_index, 0.440013885f, 29, instruction_index, 0.4f));
   //----------------------------------------------------------------
   // trace point = 50
   maneuver_index = 0;
@@ -7875,7 +7873,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7087936f, 40.2538986f, 1489614833, 18.8034801),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7088089f, 40.2538986f, leg_index, 14.506959f, 913,
-          maneuver_index, 0.421289444f, 28, instruction_index));
+          maneuver_index, 0.421289444f, 28));
   //----------------------------------------------------------------
   // trace point = 51
   maneuver_index = 0;
@@ -7884,7 +7882,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7088089f, 40.2540627f, 1489614834, 18.3008194),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7088318f, 40.2540627f, leg_index, 14.4885969f, 912,
-          maneuver_index, 0.402927399f, 27, instruction_index));
+          maneuver_index, 0.402927399f, 27));
   //----------------------------------------------------------------
   // trace point = 52
   maneuver_index = 0;
@@ -7893,7 +7891,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7088394f, 40.2542343f, 1489614835, 19.2055016),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7088547f, 40.2542343f, leg_index, 14.4693909f, 910,
-          maneuver_index, 0.383721352f, 25, instruction_index));
+          maneuver_index, 0.383721352f, 25));
   //----------------------------------------------------------------
   // trace point = 53
   maneuver_index = 0;
@@ -7902,7 +7900,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7088547f, 40.254406f, 1489614836, 19.1951427),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7088699f, 40.254406f, leg_index, 14.450243f, 909,
-          maneuver_index, 0.364573479f, 24, instruction_index));
+          maneuver_index, 0.364573479f, 24));
   //----------------------------------------------------------------
   // trace point = 54
   maneuver_index = 0;
@@ -7911,7 +7909,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7088852f, 40.2545776f, 1489614837, 19.3158417),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7088928f, 40.2545776f, leg_index, 14.431035f, 908,
-          maneuver_index, 0.345365524f, 23, instruction_index));
+          maneuver_index, 0.345365524f, 23));
   //----------------------------------------------------------------
   // trace point = 55
   maneuver_index = 0;
@@ -7920,7 +7918,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7089081f, 40.2547531f, 1489614838, 19.5786629),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7089157f, 40.2547531f, leg_index, 14.4114056f, 907,
-          maneuver_index, 0.325736046f, 22, instruction_index));
+          maneuver_index, 0.325736046f, 22));
   //----------------------------------------------------------------
   // trace point = 56
   maneuver_index = 0;
@@ -7929,7 +7927,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7089233f, 40.2549286f, 1489614839, 19.6336308),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7089386f, 40.2549286f, leg_index, 14.3917885f, 905,
-          maneuver_index, 0.306118965f, 20, instruction_index));
+          maneuver_index, 0.306118965f, 20));
   //----------------------------------------------------------------
   // trace point = 57
   maneuver_index = 0;
@@ -7938,7 +7936,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7089539f, 40.2551079f, 1489614840, 20.0994797),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7089539f, 40.2551079f, leg_index, 14.3717813f, 904,
-          maneuver_index, 0.286111832f, 19, instruction_index));
+          maneuver_index, 0.286111832f, 19));
   //----------------------------------------------------------------
   // trace point = 58
   maneuver_index = 0;
@@ -7947,7 +7945,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7089767f, 40.255291f, 1489614841, 20.4649639),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7089767f, 40.255291f, leg_index, 14.351306f, 903,
-          maneuver_index, 0.265636444f, 18, instruction_index));
+          maneuver_index, 0.265636444f, 18));
   //----------------------------------------------------------------
   // trace point = 59
   maneuver_index = 0;
@@ -7956,7 +7954,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.708992f, 40.2554741f, 1489614842, 20.4112854),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7089996f, 40.2554741f, leg_index, 14.3287153f, 901,
-          maneuver_index, 0.243045807f, 16, instruction_index));
+          maneuver_index, 0.243045807f, 16));
   //----------------------------------------------------------------
   // trace point = 60
   maneuver_index = 0;
@@ -7965,7 +7963,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7090149f, 40.2556572f, 1489614843, 20.464962),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7090225f, 40.2556572f, leg_index, 14.3103485f, 899,
-          maneuver_index, 0.224678993f, 14, instruction_index));
+          maneuver_index, 0.224678993f, 14));
   //----------------------------------------------------------------
   // trace point = 61
   maneuver_index = 0;
@@ -7974,7 +7972,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7090378f, 40.2558327f, 1489614844, 19.6894264),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7090378f, 40.2558327f, leg_index, 14.2907743f, 898,
-          maneuver_index, 0.205104828f, 13, instruction_index));
+          maneuver_index, 0.205104828f, 13));
   //----------------------------------------------------------------
   // trace point = 62
   maneuver_index = 0;
@@ -7983,7 +7981,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7090683f, 40.2560043f, 1489614845, 19.2054939),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7090607f, 40.2560043f, leg_index, 14.2715664f, 897,
-          maneuver_index, 0.185896873f, 12, instruction_index));
+          maneuver_index, 0.185896873f, 12));
   //----------------------------------------------------------------
   // trace point = 63
   maneuver_index = 0;
@@ -7992,7 +7990,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7090912f, 40.256176f, 1489614846, 19.246397),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7090836f, 40.256176f, leg_index, 14.2523594f, 896,
-          maneuver_index, 0.166689873f, 11, instruction_index));
+          maneuver_index, 0.166689873f, 11));
   //----------------------------------------------------------------
   // trace point = 64
   maneuver_index = 0;
@@ -8001,7 +7999,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7091141f, 40.2563362f, 1489614847, 17.9179764),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7090988f, 40.2563362f, leg_index, 14.2344828f, 894,
-          maneuver_index, 0.148813248f, 9, instruction_index));
+          maneuver_index, 0.148813248f, 9));
   //----------------------------------------------------------------
   // trace point = 65
   maneuver_index = 0;
@@ -8010,7 +8008,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7091293f, 40.2565002f, 1489614848, 18.3008175),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7091217f, 40.2565002f, leg_index, 14.2161198f, 893,
-          maneuver_index, 0.130450249f, 8, instruction_index));
+          maneuver_index, 0.130450249f, 8));
   //----------------------------------------------------------------
   // trace point = 66
   maneuver_index = 0;
@@ -8019,7 +8017,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.709137f, 40.2566528f, 1489614849, 17.0454369),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7091446f, 40.2566528f, leg_index, 14.1990252f, 892,
-          maneuver_index, 0.113355637f, 7, instruction_index));
+          maneuver_index, 0.113355637f, 7));
   //----------------------------------------------------------------
   // trace point = 67
   maneuver_index = 0;
@@ -8028,14 +8026,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7091522f, 40.2568054f, 1489614850, 16.9684792),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7091599f, 40.2568054f, leg_index, 14.1819944f, 891,
-          maneuver_index, 0.0963249207f, 6, instruction_index));
+          maneuver_index, 0.0963249207f, 6));
   //----------------------------------------------------------------
   // trace point = 68
   maneuver_index = 0;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.7091599f, 40.2569466f, 1489614851, 15.8219709),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.7091827f, 40.2569466f, leg_index, 14.1661663f, 890,
           maneuver_index, 0.080496788f, 5, instruction_index));
   //----------------------------------------------------------------
@@ -8046,7 +8044,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7091675f, 40.2570724f, 1489614852, 13.9276381),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.709198f, 40.2570686f, leg_index, 14.1525154f, 889,
-          maneuver_index, 0.0668458939f, 4, instruction_index));
+          maneuver_index, 0.0668458939f, 4));
   //----------------------------------------------------------------
   // trace point = 70
   maneuver_index = 0;
@@ -8055,7 +8053,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7091751f, 40.2571907f, 1489614853, 13.2644405),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7092133f, 40.2571907f, leg_index, 14.1388655f, 888,
-          maneuver_index, 0.0531959534f, 3, instruction_index));
+          maneuver_index, 0.0531959534f, 3));
   //----------------------------------------------------------------
   // trace point = 71
   maneuver_index = 0;
@@ -8064,7 +8062,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7091827f, 40.2572975f, 1489614854, 11.9305592),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7092209f, 40.2572975f, leg_index, 14.1269588f, 887,
-          maneuver_index, 0.0412893295f, 2, instruction_index));
+          maneuver_index, 0.0412893295f, 2));
   //----------------------------------------------------------------
   // trace point = 72
   maneuver_index = 0;
@@ -8073,7 +8071,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7091827f, 40.2573967f, 1489614855, 11.0206299),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7092209f, 40.2573967f, leg_index, 14.1159325f, 887,
-          maneuver_index, 0.0302629471f, 2, instruction_index));
+          maneuver_index, 0.0302629471f, 2));
   //----------------------------------------------------------------
   // trace point = 73
   maneuver_index = 0;
@@ -8082,25 +8080,26 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7091446f, 40.2575417f, 1489614857, 8.23048973),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7092209f, 40.2575455f, leg_index, 14.0993195f, 886,
-          maneuver_index, 0.0136499405f, 1, instruction_index));
+          maneuver_index, 0.0136499405f, 1));
   //----------------------------------------------------------------
   // trace point = 74
   maneuver_index = 1;
   instruction_index = maneuver_index;
+  std::cout << maneuver_index << " " << instruction_index << std::endl;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.7090225f, 40.2576218f, 1489614859, 6.83240986),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7090225f, 40.2576714f, leg_index, 14.0701094f, 884,
-          maneuver_index, 0.80796814f, 44, instruction_index));
+          maneuver_index, 0.80796814f, 44));
   //----------------------------------------------------------------
   // trace point = 75
   maneuver_index = 1;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.7088318f, 40.2576408f, 1489614861, 8.18165302),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
           -76.7088318f, 40.257679f, leg_index, 14.0538855f, 883,
-          maneuver_index, 0.791744232f, 43, instruction_index));
+          maneuver_index, 0.791744232f, 43));
   //----------------------------------------------------------------
   // trace point = 76
   maneuver_index = 1;
@@ -8109,7 +8108,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7085876f, 40.2576561f, 1489614863, 10.3978453),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7085876f, 40.2576866f, leg_index, 14.0331278f, 882,
-          maneuver_index, 0.770986557f, 42, instruction_index));
+          maneuver_index, 0.770986557f, 42));
   //----------------------------------------------------------------
   // trace point = 77
   maneuver_index = 1;
@@ -8118,7 +8117,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7084351f, 40.2576599f, 1489614864, 13.0054398),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7084351f, 40.2576904f, leg_index, 14.0201578f, 881,
-          maneuver_index, 0.758016586f, 41, instruction_index));
+          maneuver_index, 0.758016586f, 41));
   //----------------------------------------------------------------
   // trace point = 78
   maneuver_index = 1;
@@ -8127,7 +8126,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7082672f, 40.2576675f, 1489614865, 14.2998667),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7082672f, 40.2576942f, leg_index, 14.0058928f, 880,
-          maneuver_index, 0.743751526f, 40, instruction_index));
+          maneuver_index, 0.743751526f, 40));
   //----------------------------------------------------------------
   // trace point = 79
   maneuver_index = 1;
@@ -8136,7 +8135,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7080765f, 40.257679f, 1489614866, 16.2721653),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7080765f, 40.2576981f, leg_index, 13.9896841f, 879,
-          maneuver_index, 0.727542877f, 39, instruction_index));
+          maneuver_index, 0.727542877f, 39));
   //----------------------------------------------------------------
   // trace point = 80
   maneuver_index = 1;
@@ -8145,7 +8144,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7078705f, 40.2576866f, 1489614867, 17.5229645),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7078705f, 40.2577057f, leg_index, 13.9721651f, 878,
-          maneuver_index, 0.71002388f, 38, instruction_index));
+          maneuver_index, 0.71002388f, 38));
   //----------------------------------------------------------------
   // trace point = 81
   maneuver_index = 1;
@@ -8154,7 +8153,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7076492f, 40.2576981f, 1489614868, 18.8145008),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7076492f, 40.2577095f, leg_index, 13.9533691f, 877,
-          maneuver_index, 0.691227913f, 37, instruction_index));
+          maneuver_index, 0.691227913f, 37));
   //----------------------------------------------------------------
   // trace point = 82
   maneuver_index = 1;
@@ -8163,7 +8162,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.707428f, 40.2576981f, 1489614869, 18.7746105),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.707428f, 40.2577209f, leg_index, 13.9345303f, 877,
-          maneuver_index, 0.67238903f, 37, instruction_index));
+          maneuver_index, 0.67238903f, 37));
   //----------------------------------------------------------------
   // trace point = 83
   maneuver_index = 1;
@@ -8172,7 +8171,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7071838f, 40.2577057f, 1489614870, 20.7476482),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7071838f, 40.2577324f, leg_index, 13.9137506f, 875,
-          maneuver_index, 0.651609421f, 35, instruction_index));
+          maneuver_index, 0.651609421f, 35));
   //----------------------------------------------------------------
   // trace point = 84
   maneuver_index = 1;
@@ -8181,7 +8180,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7069397f, 40.2577209f, 1489614871, 20.7956696),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7069397f, 40.2577438f, leg_index, 13.892971f, 874,
-          maneuver_index, 0.630829811f, 34, instruction_index));
+          maneuver_index, 0.630829811f, 34));
   //----------------------------------------------------------------
   // trace point = 85
   maneuver_index = 1;
@@ -8190,7 +8189,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7066879f, 40.2577286f, 1489614872, 21.4266586),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7066879f, 40.2577553f, leg_index, 13.8702507f, 873,
-          maneuver_index, 0.608109474f, 33, instruction_index));
+          maneuver_index, 0.608109474f, 33));
   //----------------------------------------------------------------
   // trace point = 86
   maneuver_index = 1;
@@ -8199,7 +8198,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7064362f, 40.2577362f, 1489614873, 21.4223194),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7064362f, 40.2577591f, leg_index, 13.8501539f, 872,
-          maneuver_index, 0.588012695f, 32, instruction_index));
+          maneuver_index, 0.588012695f, 32));
   //----------------------------------------------------------------
   // trace point = 87
   maneuver_index = 1;
@@ -8208,7 +8207,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7061844f, 40.2577477f, 1489614874, 21.4497757),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7061844f, 40.2577629f, leg_index, 13.8287611f, 870,
-          maneuver_index, 0.566619873f, 30, instruction_index));
+          maneuver_index, 0.566619873f, 30));
   //----------------------------------------------------------------
   // trace point = 88
   maneuver_index = 1;
@@ -8217,7 +8216,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7059326f, 40.2577591f, 1489614875, 21.3583126),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7059326f, 40.2577667f, leg_index, 13.8073683f, 869,
-          maneuver_index, 0.545227051f, 29, instruction_index));
+          maneuver_index, 0.545227051f, 29));
   //----------------------------------------------------------------
   // trace point = 89
   maneuver_index = 1;
@@ -8226,7 +8225,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7056808f, 40.2577667f, 1489614876, 21.4266472),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7056808f, 40.2577705f, leg_index, 13.7859755f, 868,
-          maneuver_index, 0.523834229f, 28, instruction_index));
+          maneuver_index, 0.523834229f, 28));
   //----------------------------------------------------------------
   // trace point = 90
   maneuver_index = 1;
@@ -8235,7 +8234,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7054291f, 40.257782f, 1489614877, 21.4731503),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7054291f, 40.2577782f, leg_index, 13.7645702f, 866,
-          maneuver_index, 0.502429008f, 26, instruction_index));
+          maneuver_index, 0.502429008f, 26));
   //----------------------------------------------------------------
   // trace point = 91
   maneuver_index = 1;
@@ -8244,7 +8243,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7051773f, 40.2577896f, 1489614878, 21.4266396),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7051773f, 40.2577858f, leg_index, 13.7431669f, 865,
-          maneuver_index, 0.481025696f, 25, instruction_index));
+          maneuver_index, 0.481025696f, 25));
   //----------------------------------------------------------------
   // trace point = 92
   maneuver_index = 1;
@@ -8253,16 +8252,16 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7049255f, 40.2578049f, 1489614879, 21.3884487),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7049255f, 40.2577972f, leg_index, 13.7217312f, 864,
-          maneuver_index, 0.459589958f, 24, instruction_index));
+          maneuver_index, 0.459589958f, 24));
   //----------------------------------------------------------------
   // trace point = 93
   maneuver_index = 1;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.7046814f, 40.2578201f, 1489614880, 20.8803196),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.7046814f, 40.2578125f, leg_index, 13.7009211f, 863,
-          maneuver_index, 0.438779831f, 23, instruction_index));
+          maneuver_index, 0.438779831f, 23, instruction_index, 0.4f));
   //----------------------------------------------------------------
   // trace point = 94
   maneuver_index = 1;
@@ -8271,7 +8270,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7044373f, 40.2578354f, 1489614881, 20.7956352),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7044373f, 40.2578278f, leg_index, 13.6801205f, 862,
-          maneuver_index, 0.41797924f, 22, instruction_index));
+          maneuver_index, 0.41797924f, 22));
   //----------------------------------------------------------------
   // trace point = 95
   maneuver_index = 1;
@@ -8280,7 +8279,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7041855f, 40.2578583f, 1489614882, 21.560667),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7041855f, 40.2578583f, leg_index, 13.6584663f, 861,
-          maneuver_index, 0.396325111f, 21, instruction_index));
+          maneuver_index, 0.396325111f, 21));
   //----------------------------------------------------------------
   // trace point = 96
   maneuver_index = 1;
@@ -8289,7 +8288,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7039337f, 40.2578812f, 1489614883, 21.4763107),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7039337f, 40.257885f, leg_index, 13.6368723f, 860,
-          maneuver_index, 0.374731064f, 20, instruction_index));
+          maneuver_index, 0.374731064f, 20));
   //----------------------------------------------------------------
   // trace point = 97
   maneuver_index = 1;
@@ -8298,7 +8297,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7036743f, 40.2579002f, 1489614884, 22.1887493),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7036743f, 40.2579117f, leg_index, 13.6146364f, 859,
-          maneuver_index, 0.352495193f, 19, instruction_index));
+          maneuver_index, 0.352495193f, 19));
   //----------------------------------------------------------------
   // trace point = 98
   maneuver_index = 1;
@@ -8307,7 +8306,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7034302f, 40.2579308f, 1489614885, 21.0137539),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7034302f, 40.2579384f, leg_index, 13.5936842f, 858,
-          maneuver_index, 0.331542969f, 18, instruction_index));
+          maneuver_index, 0.331542969f, 18));
   //----------------------------------------------------------------
   // trace point = 99
   maneuver_index = 1;
@@ -8316,7 +8315,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7031784f, 40.2579613f, 1489614886, 21.6669903),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7031784f, 40.2579689f, leg_index, 13.5720301f, 856,
-          maneuver_index, 0.30988884f, 16, instruction_index));
+          maneuver_index, 0.30988884f, 16));
   //----------------------------------------------------------------
   // trace point = 100
   maneuver_index = 1;
@@ -8325,7 +8324,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7029266f, 40.2579994f, 1489614887, 21.7386551),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7029266f, 40.2579956f, leg_index, 13.550436f, 855,
-          maneuver_index, 0.288294792f, 15, instruction_index));
+          maneuver_index, 0.288294792f, 15));
   //----------------------------------------------------------------
   // trace point = 101
   maneuver_index = 1;
@@ -8334,7 +8333,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7026672f, 40.2580338f, 1489614888, 22.4286766),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7026672f, 40.2580261f, leg_index, 13.5281401f, 854,
-          maneuver_index, 0.26599884f, 14, instruction_index));
+          maneuver_index, 0.26599884f, 14));
   //----------------------------------------------------------------
   // trace point = 102
   maneuver_index = 1;
@@ -8343,7 +8342,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7024155f, 40.2580681f, 1489614889, 21.7400417),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7024155f, 40.2580528f, leg_index, 13.506546f, 853,
-          maneuver_index, 0.244404793f, 13, instruction_index));
+          maneuver_index, 0.244404793f, 13));
   //----------------------------------------------------------------
   // trace point = 103
   maneuver_index = 1;
@@ -8352,7 +8351,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7021637f, 40.2580986f, 1489614890, 21.6005192),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7021637f, 40.2580872f, leg_index, 13.4848185f, 852,
-          maneuver_index, 0.222677231f, 12, instruction_index));
+          maneuver_index, 0.222677231f, 12));
   //----------------------------------------------------------------
   // trace point = 104
   maneuver_index = 1;
@@ -8361,14 +8360,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7019043f, 40.2581291f, 1489614891, 22.3386822),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7019043f, 40.2581253f, leg_index, 13.4623775f, 851,
-          maneuver_index, 0.20023632f, 11, instruction_index));
+          maneuver_index, 0.20023632f, 11));
   //----------------------------------------------------------------
   // trace point = 105
   maneuver_index = 1;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.7016525f, 40.2581596f, 1489614892, 21.6005001),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.7016525f, 40.2581596f, leg_index, 13.44065f, 850,
           maneuver_index, 0.178508759f, 10, instruction_index));
   //----------------------------------------------------------------
@@ -8379,7 +8378,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7014084f, 40.2581902f, 1489614893, 21.0795574),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7014084f, 40.258194f, leg_index, 13.4195604f, 849,
-          maneuver_index, 0.157419205f, 9, instruction_index));
+          maneuver_index, 0.157419205f, 9));
   //----------------------------------------------------------------
   // trace point = 107
   maneuver_index = 1;
@@ -8388,7 +8387,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7011642f, 40.2582245f, 1489614894, 21.071085),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7011642f, 40.2582283f, leg_index, 13.3984709f, 847,
-          maneuver_index, 0.136329651f, 7, instruction_index));
+          maneuver_index, 0.136329651f, 7));
   //----------------------------------------------------------------
   // trace point = 108
   maneuver_index = 1;
@@ -8397,7 +8396,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7009277f, 40.2582512f, 1489614895, 20.272789),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7009277f, 40.2582588f, leg_index, 13.3780956f, 846,
-          maneuver_index, 0.115954399f, 6, instruction_index));
+          maneuver_index, 0.115954399f, 6));
   //----------------------------------------------------------------
   // trace point = 109
   maneuver_index = 1;
@@ -8406,7 +8405,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7007141f, 40.2582779f, 1489614896, 18.426569),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7007141f, 40.2582893f, leg_index, 13.3596325f, 845,
-          maneuver_index, 0.0974912643f, 5, instruction_index));
+          maneuver_index, 0.0974912643f, 5));
   //----------------------------------------------------------------
   // trace point = 110
   maneuver_index = 1;
@@ -8415,7 +8414,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7005157f, 40.2583084f, 1489614897, 17.1488628),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7005157f, 40.258316f, leg_index, 13.3425207f, 844,
-          maneuver_index, 0.0803794861f, 4, instruction_index));
+          maneuver_index, 0.0803794861f, 4));
   //----------------------------------------------------------------
   // trace point = 111
   maneuver_index = 1;
@@ -8424,7 +8423,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7003403f, 40.2583313f, 1489614898, 15.1692247),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7003403f, 40.2583389f, leg_index, 13.3273993f, 844,
-          maneuver_index, 0.0652580261f, 4, instruction_index));
+          maneuver_index, 0.0652580261f, 4));
   //----------------------------------------------------------------
   // trace point = 112
   maneuver_index = 1;
@@ -8433,7 +8432,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7001724f, 40.2583504f, 1489614899, 14.4278393),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7001724f, 40.2583656f, leg_index, 13.3128386f, 843,
-          maneuver_index, 0.0506973267f, 3, instruction_index));
+          maneuver_index, 0.0506973267f, 3));
   //----------------------------------------------------------------
   // trace point = 113
   maneuver_index = 1;
@@ -8442,7 +8441,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.7000351f, 40.2583694f, 1489614900, 11.829071),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.7000351f, 40.2583847f, leg_index, 13.3009796f, 842,
-          maneuver_index, 0.0388383865f, 2, instruction_index));
+          maneuver_index, 0.0388383865f, 2));
   //----------------------------------------------------------------
   // trace point = 114
   maneuver_index = 1;
@@ -8451,7 +8450,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6998291f, 40.2583923f, 1489614902, 8.84322071),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6998367f, 40.2584114f, leg_index, 13.2838688f, 841,
-          maneuver_index, 0.021727562f, 1, instruction_index));
+          maneuver_index, 0.021727562f, 1));
   //----------------------------------------------------------------
   // trace point = 115
   maneuver_index = 1;
@@ -8460,7 +8459,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6996918f, 40.2584229f, 1489614912, 1.21392703),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6996918f, 40.2584305f, leg_index, 13.2713728f, 841,
-          maneuver_index, 0.00923156738f, 1, instruction_index));
+          maneuver_index, 0.00923156738f, 1));
   //----------------------------------------------------------------
   // trace point = 116
   maneuver_index = 2;
@@ -8469,7 +8468,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6994934f, 40.2584953f, 1489614915, 6.23640394),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6994858f, 40.2584877f, leg_index, 13.2525082f, 840,
-          maneuver_index, 0.364323616f, 22, instruction_index));
+          maneuver_index, 0.364323616f, 22));
   //----------------------------------------------------------------
   // trace point = 117
   maneuver_index = 2;
@@ -8478,7 +8477,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6992874f, 40.2585869f, 1489614917, 10.1382875),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6992798f, 40.2585754f, leg_index, 13.2324677f, 839,
-          maneuver_index, 0.344283104f, 21, instruction_index));
+          maneuver_index, 0.344283104f, 21));
   //----------------------------------------------------------------
   // trace point = 118
   maneuver_index = 2;
@@ -8487,7 +8486,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6991501f, 40.2586365f, 1489614918, 12.8532352),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6991501f, 40.2586327f, leg_index, 13.2197409f, 838,
-          maneuver_index, 0.33155632f, 20, instruction_index));
+          maneuver_index, 0.33155632f, 20));
   //----------------------------------------------------------------
   // trace point = 119
   maneuver_index = 2;
@@ -8496,7 +8495,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6990128f, 40.2586975f, 1489614919, 13.5309696),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6990128f, 40.2586937f, leg_index, 13.2062416f, 837,
-          maneuver_index, 0.31805706f, 19, instruction_index));
+          maneuver_index, 0.31805706f, 19));
   //----------------------------------------------------------------
   // trace point = 120
   maneuver_index = 2;
@@ -8505,7 +8504,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6988602f, 40.2587662f, 1489614920, 15.0412283),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6988525f, 40.2587585f, leg_index, 13.1908407f, 836,
-          maneuver_index, 0.302656174f, 18, instruction_index));
+          maneuver_index, 0.302656174f, 18));
   //----------------------------------------------------------------
   // trace point = 121
   maneuver_index = 2;
@@ -8514,7 +8513,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6986923f, 40.2588425f, 1489614921, 16.5910397),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6986847f, 40.2588348f, leg_index, 13.1742487f, 835,
-          maneuver_index, 0.286064148f, 17, instruction_index));
+          maneuver_index, 0.286064148f, 17));
   //----------------------------------------------------------------
   // trace point = 122
   maneuver_index = 2;
@@ -8523,7 +8522,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6985168f, 40.2589264f, 1489614922, 17.5627823),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6985016f, 40.2589111f, leg_index, 13.1565275f, 834,
-          maneuver_index, 0.268342972f, 16, instruction_index));
+          maneuver_index, 0.268342972f, 16));
   //----------------------------------------------------------------
   // trace point = 123
   maneuver_index = 2;
@@ -8532,7 +8531,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6983337f, 40.2590065f, 1489614923, 17.971796),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6983185f, 40.2589912f, leg_index, 13.1385975f, 833,
-          maneuver_index, 0.250412941f, 15, instruction_index));
+          maneuver_index, 0.250412941f, 15));
   //----------------------------------------------------------------
   // trace point = 124
   maneuver_index = 2;
@@ -8541,7 +8540,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6981354f, 40.2590981f, 1489614924, 19.7080631),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6981201f, 40.2590828f, leg_index, 13.1189051f, 832,
-          maneuver_index, 0.23072052f, 14, instruction_index));
+          maneuver_index, 0.23072052f, 14));
   //----------------------------------------------------------------
   // trace point = 125
   maneuver_index = 2;
@@ -8550,7 +8549,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6979294f, 40.2591896f, 1489614925, 20.2764416),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6979218f, 40.2591782f, leg_index, 13.0989895f, 831,
-          maneuver_index, 0.210804939f, 13, instruction_index));
+          maneuver_index, 0.210804939f, 13));
   //----------------------------------------------------------------
   // trace point = 126
   maneuver_index = 2;
@@ -8559,7 +8558,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6977158f, 40.259285f, 1489614926, 20.9583321),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6977081f, 40.2592773f, leg_index, 13.0777473f, 829,
-          maneuver_index, 0.189562798f, 11, instruction_index));
+          maneuver_index, 0.189562798f, 11));
   //----------------------------------------------------------------
   // trace point = 127
   maneuver_index = 2;
@@ -8568,7 +8567,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6975021f, 40.2593803f, 1489614927, 21.0316963),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6975021f, 40.2593765f, leg_index, 13.0570574f, 828,
-          maneuver_index, 0.168872833f, 10, instruction_index));
+          maneuver_index, 0.168872833f, 10));
   //----------------------------------------------------------------
   // trace point = 128
   maneuver_index = 2;
@@ -8577,7 +8576,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6972733f, 40.2594833f, 1489614928, 22.581295),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6972733f, 40.2594833f, leg_index, 13.0342655f, 827,
-          maneuver_index, 0.146080971f, 9, instruction_index));
+          maneuver_index, 0.146080971f, 9));
   //----------------------------------------------------------------
   // trace point = 129
   maneuver_index = 2;
@@ -8586,7 +8585,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6970444f, 40.2595863f, 1489614929, 22.5812683),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6970444f, 40.2595901f, leg_index, 13.0114756f, 825,
-          maneuver_index, 0.123291016f, 7, instruction_index));
+          maneuver_index, 0.123291016f, 7));
   //----------------------------------------------------------------
   // trace point = 130
   maneuver_index = 2;
@@ -8595,7 +8594,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6968079f, 40.2596855f, 1489614930, 22.9315472),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6968231f, 40.2597008f, leg_index, 12.9890089f, 824,
-          maneuver_index, 0.100824356f, 6, instruction_index));
+          maneuver_index, 0.100824356f, 6));
   //----------------------------------------------------------------
   // trace point = 131
   maneuver_index = 2;
@@ -8604,7 +8603,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6965714f, 40.2597961f, 1489614931, 23.5646191),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6965866f, 40.2598114f, leg_index, 12.9654446f, 822,
-          maneuver_index, 0.0772600174f, 4, instruction_index));
+          maneuver_index, 0.0772600174f, 4));
   //----------------------------------------------------------------
   // trace point = 132
   maneuver_index = 2;
@@ -8613,7 +8612,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6963348f, 40.2599068f, 1489614932, 23.5502701),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6963501f, 40.2599258f, leg_index, 12.9416552f, 821,
-          maneuver_index, 0.0534706116f, 3, instruction_index));
+          maneuver_index, 0.0534706116f, 3));
   //----------------------------------------------------------------
   // trace point = 133
   maneuver_index = 2;
@@ -8622,7 +8621,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6960831f, 40.2600212f, 1489614933, 24.8862438),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.696106f, 40.2600441f, leg_index, 12.9170885f, 820,
-          maneuver_index, 0.0289039612f, 2, instruction_index));
+          maneuver_index, 0.0289039612f, 2));
   //----------------------------------------------------------------
   // trace point = 134
   maneuver_index = 2;
@@ -8631,7 +8630,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6958389f, 40.2601395f, 1489614934, 24.5395241),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6958618f, 40.26017f, leg_index, 12.8920584f, 818,
-          maneuver_index, 0.00387382507f, 0, instruction_index));
+          maneuver_index, 0.00387382507f, 0));
   //----------------------------------------------------------------
   // trace point = 135
   maneuver_index = 3;
@@ -8640,7 +8639,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6955948f, 40.2602615f, 1489614935, 24.8418827),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6956177f, 40.2602921f, leg_index, 12.8672647f, 817,
-          maneuver_index, 0.679763794f, 30, instruction_index));
+          maneuver_index, 0.679763794f, 30));
   //----------------------------------------------------------------
   // trace point = 136
   maneuver_index = 3;
@@ -8649,7 +8648,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.695343f, 40.2603912f, 1489614936, 25.7776871),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6953659f, 40.2604218f, leg_index, 12.8414574f, 816,
-          maneuver_index, 0.653956413f, 29, instruction_index));
+          maneuver_index, 0.653956413f, 29));
   //----------------------------------------------------------------
   // trace point = 137
   maneuver_index = 3;
@@ -8658,7 +8657,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6950912f, 40.2605171f, 1489614937, 25.5931149),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6951218f, 40.2605515f, leg_index, 12.8161879f, 815,
-          maneuver_index, 0.628686905f, 28, instruction_index));
+          maneuver_index, 0.628686905f, 28));
   //----------------------------------------------------------------
   // trace point = 138
   maneuver_index = 3;
@@ -8667,7 +8666,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6948471f, 40.2606468f, 1489614938, 25.2796478),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6948776f, 40.2606812f, leg_index, 12.7909174f, 814,
-          maneuver_index, 0.603416443f, 27, instruction_index));
+          maneuver_index, 0.603416443f, 27));
   //----------------------------------------------------------------
   // trace point = 139
   maneuver_index = 3;
@@ -8676,7 +8675,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.694603f, 40.2607803f, 1489614939, 25.4722633),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6946335f, 40.2608109f, leg_index, 12.7656469f, 813,
-          maneuver_index, 0.578145981f, 26, instruction_index));
+          maneuver_index, 0.578145981f, 26));
   //----------------------------------------------------------------
   // trace point = 140
   maneuver_index = 3;
@@ -8685,7 +8684,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6943588f, 40.2609215f, 1489614940, 25.999958),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6943817f, 40.2609444f, leg_index, 12.739604f, 812,
-          maneuver_index, 0.552103043f, 25, instruction_index));
+          maneuver_index, 0.552103043f, 25));
   //----------------------------------------------------------------
   // trace point = 141
   maneuver_index = 3;
@@ -8694,7 +8693,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6941223f, 40.2610626f, 1489614941, 25.5969849),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6941452f, 40.2610855f, leg_index, 12.7140999f, 811,
-          maneuver_index, 0.52659893f, 24, instruction_index));
+          maneuver_index, 0.52659893f, 24));
   //----------------------------------------------------------------
   // trace point = 142
   maneuver_index = 3;
@@ -8703,7 +8702,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6938705f, 40.2612038f, 1489614942, 26.4763775),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6938934f, 40.2612305f, leg_index, 12.6873083f, 810,
-          maneuver_index, 0.499807358f, 23, instruction_index));
+          maneuver_index, 0.499807358f, 23));
   //----------------------------------------------------------------
   // trace point = 143
   maneuver_index = 3;
@@ -8712,7 +8711,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6936264f, 40.2613411f, 1489614943, 25.8019619),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6936569f, 40.2613678f, leg_index, 12.6620617f, 809,
-          maneuver_index, 0.474560738f, 22, instruction_index));
+          maneuver_index, 0.474560738f, 22));
   //----------------------------------------------------------------
   // trace point = 144
   maneuver_index = 3;
@@ -8721,7 +8720,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6933899f, 40.2614937f, 1489614944, 26.3058815),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6934128f, 40.2615128f, leg_index, 12.6357851f, 807,
-          maneuver_index, 0.448284149f, 20, instruction_index));
+          maneuver_index, 0.448284149f, 20));
   //----------------------------------------------------------------
   // trace point = 145
   maneuver_index = 3;
@@ -8730,7 +8729,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6931458f, 40.2616463f, 1489614945, 26.756834),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.693161f, 40.2616577f, leg_index, 12.6089926f, 806,
-          maneuver_index, 0.421491623f, 19, instruction_index));
+          maneuver_index, 0.421491623f, 19));
   //----------------------------------------------------------------
   // trace point = 146
   maneuver_index = 3;
@@ -8739,7 +8738,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6929016f, 40.2618141f, 1489614946, 27.9172592),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6929169f, 40.2618256f, leg_index, 12.581068f, 805,
-          maneuver_index, 0.393567085f, 18, instruction_index));
+          maneuver_index, 0.393567085f, 18));
   //----------------------------------------------------------------
   // trace point = 147
   maneuver_index = 3;
@@ -8748,7 +8747,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6926651f, 40.2619705f, 1489614947, 26.6603279),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.692688f, 40.2619896f, leg_index, 12.5543966f, 804,
-          maneuver_index, 0.366895676f, 17, instruction_index));
+          maneuver_index, 0.366895676f, 17));
   //----------------------------------------------------------------
   // trace point = 148
   maneuver_index = 3;
@@ -8757,7 +8756,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.692421f, 40.2621346f, 1489614948, 27.6208725),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6924438f, 40.2621574f, leg_index, 12.5264835f, 803,
-          maneuver_index, 0.338982582f, 16, instruction_index));
+          maneuver_index, 0.338982582f, 16));
   //----------------------------------------------------------------
   // trace point = 149
   maneuver_index = 3;
@@ -8766,7 +8765,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6921844f, 40.2622948f, 1489614949, 26.8803654),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.692215f, 40.2623215f, leg_index, 12.4998112f, 801,
-          maneuver_index, 0.312310219f, 14, instruction_index));
+          maneuver_index, 0.312310219f, 14));
   //----------------------------------------------------------------
   // trace point = 150
   maneuver_index = 3;
@@ -8775,7 +8774,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6919556f, 40.2624664f, 1489614950, 27.1564426),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6919785f, 40.2624855f, leg_index, 12.4726629f, 800,
-          maneuver_index, 0.285161972f, 13, instruction_index));
+          maneuver_index, 0.285161972f, 13));
   //----------------------------------------------------------------
   // trace point = 151
   maneuver_index = 3;
@@ -8784,7 +8783,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6917267f, 40.2626266f, 1489614951, 26.4504585),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6917496f, 40.2626457f, leg_index, 12.4462795f, 799,
-          maneuver_index, 0.258778572f, 12, instruction_index));
+          maneuver_index, 0.258778572f, 12));
   //----------------------------------------------------------------
   // trace point = 152
   maneuver_index = 3;
@@ -8793,7 +8792,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6915054f, 40.2627869f, 1489614952, 25.9396687),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6915283f, 40.2628059f, leg_index, 12.4203701f, 798,
-          maneuver_index, 0.232869148f, 11, instruction_index));
+          maneuver_index, 0.232869148f, 11));
   //----------------------------------------------------------------
   // trace point = 153
   maneuver_index = 3;
@@ -8802,7 +8801,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6912842f, 40.2629395f, 1489614953, 25.2732582),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6913071f, 40.2629585f, leg_index, 12.3950396f, 797,
-          maneuver_index, 0.207538605f, 10, instruction_index));
+          maneuver_index, 0.207538605f, 10));
   //----------------------------------------------------------------
   // trace point = 154
   maneuver_index = 3;
@@ -8811,7 +8810,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6910553f, 40.263092f, 1489614954, 25.8552265),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6910858f, 40.2631187f, leg_index, 12.3691311f, 796,
-          maneuver_index, 0.181630135f, 9, instruction_index));
+          maneuver_index, 0.181630135f, 9));
   //----------------------------------------------------------------
   // trace point = 155
   maneuver_index = 3;
@@ -8820,7 +8819,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6908417f, 40.2632484f, 1489614955, 25.0788345),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6908722f, 40.2632713f, leg_index, 12.3442755f, 794,
-          maneuver_index, 0.156774521f, 7, instruction_index));
+          maneuver_index, 0.156774521f, 7));
   //----------------------------------------------------------------
   // trace point = 156
   maneuver_index = 3;
@@ -8829,7 +8828,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6906281f, 40.263401f, 1489614956, 24.9106445),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6906509f, 40.2634239f, leg_index, 12.318944f, 793,
-          maneuver_index, 0.131443024f, 6, instruction_index));
+          maneuver_index, 0.131443024f, 6));
   //----------------------------------------------------------------
   // trace point = 157
   maneuver_index = 3;
@@ -8838,7 +8837,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6904144f, 40.2635498f, 1489614957, 24.6083145),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6904373f, 40.2635727f, leg_index, 12.2943764f, 792,
-          maneuver_index, 0.10687542f, 5, instruction_index));
+          maneuver_index, 0.10687542f, 5));
   //----------------------------------------------------------------
   // trace point = 158
   maneuver_index = 3;
@@ -8847,7 +8846,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6902084f, 40.2637024f, 1489614958, 24.3415852),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6902313f, 40.2637215f, leg_index, 12.2702856f, 791,
-          maneuver_index, 0.0827846527f, 4, instruction_index));
+          maneuver_index, 0.0827846527f, 4));
   //----------------------------------------------------------------
   // trace point = 159
   maneuver_index = 3;
@@ -8856,7 +8855,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6900024f, 40.2638397f, 1489614959, 23.2851849),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.690033f, 40.2638626f, leg_index, 12.2472467f, 790,
-          maneuver_index, 0.0597457886f, 3, instruction_index));
+          maneuver_index, 0.0597457886f, 3));
   //----------------------------------------------------------------
   // trace point = 160
   maneuver_index = 3;
@@ -8865,7 +8864,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6897964f, 40.2639732f, 1489614960, 22.9217682),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6898346f, 40.2639999f, leg_index, 12.2244959f, 789,
-          maneuver_index, 0.0369949341f, 2, instruction_index));
+          maneuver_index, 0.0369949341f, 2));
   //----------------------------------------------------------------
   // trace point = 161
   maneuver_index = 4;
@@ -8874,7 +8873,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6893997f, 40.2642326f, 1489614962, 22.1879997),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6894302f, 40.264267f, leg_index, 12.1789808f, 787,
-          maneuver_index, 0.561860085f, 36, instruction_index));
+          maneuver_index, 0.561860085f, 36));
   //----------------------------------------------------------------
   // trace point = 162
   maneuver_index = 4;
@@ -8883,7 +8882,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6892166f, 40.2643509f, 1489614963, 20.3516579),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6892319f, 40.26437f, leg_index, 12.1585999f, 785,
-          maneuver_index, 0.541479111f, 34, instruction_index));
+          maneuver_index, 0.541479111f, 34));
   //----------------------------------------------------------------
   // trace point = 163
   maneuver_index = 4;
@@ -8892,7 +8891,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6890259f, 40.2644615f, 1489614964, 20.3939629),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6890411f, 40.264473f, leg_index, 12.1387529f, 784,
-          maneuver_index, 0.521632195f, 33, instruction_index));
+          maneuver_index, 0.521632195f, 33));
   //----------------------------------------------------------------
   // trace point = 164
   maneuver_index = 4;
@@ -8901,7 +8900,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6888275f, 40.2645607f, 1489614965, 20.1080322),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6888351f, 40.2645721f, leg_index, 12.1180639f, 783,
-          maneuver_index, 0.500943184f, 32, instruction_index));
+          maneuver_index, 0.500943184f, 32));
   //----------------------------------------------------------------
   // trace point = 165
   maneuver_index = 4;
@@ -8910,7 +8909,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6886215f, 40.2646523f, 1489614966, 20.2192211),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6886292f, 40.2646599f, leg_index, 12.0979815f, 782,
-          maneuver_index, 0.48086071f, 31, instruction_index));
+          maneuver_index, 0.48086071f, 31));
   //----------------------------------------------------------------
   // trace point = 166
   maneuver_index = 4;
@@ -8919,7 +8918,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6884079f, 40.2647285f, 1489614967, 20.0976162),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6884079f, 40.2647324f, leg_index, 12.0775261f, 780,
-          maneuver_index, 0.46040535f, 29, instruction_index));
+          maneuver_index, 0.46040535f, 29));
   //----------------------------------------------------------------
   // trace point = 167
   maneuver_index = 4;
@@ -8928,7 +8927,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6881866f, 40.2647934f, 1489614968, 20.0790977),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6881866f, 40.264801f, leg_index, 12.0572147f, 779,
-          maneuver_index, 0.440093994f, 28, instruction_index));
+          maneuver_index, 0.440093994f, 28));
   //----------------------------------------------------------------
   // trace point = 168
   maneuver_index = 4;
@@ -8937,7 +8936,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6879654f, 40.2648468f, 1489614969, 19.7925091),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6879654f, 40.2648506f, leg_index, 12.0376272f, 777,
-          maneuver_index, 0.420506477f, 26, instruction_index));
+          maneuver_index, 0.420506477f, 26));
   //----------------------------------------------------------------
   // trace point = 169
   maneuver_index = 4;
@@ -8946,7 +8945,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6877441f, 40.2648964f, 1489614970, 19.5490284),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6877441f, 40.264904f, leg_index, 12.0179176f, 776,
-          maneuver_index, 0.40079689f, 25, instruction_index));
+          maneuver_index, 0.40079689f, 25));
   //----------------------------------------------------------------
   // trace point = 170
   maneuver_index = 4;
@@ -8955,7 +8954,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6875305f, 40.2649345f, 1489614971, 18.606636),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6875381f, 40.2649498f, leg_index, 11.9996929f, 775,
-          maneuver_index, 0.382572174f, 24, instruction_index));
+          maneuver_index, 0.382572174f, 24));
   //----------------------------------------------------------------
   // trace point = 171
   maneuver_index = 4;
@@ -8964,7 +8963,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6873245f, 40.2649841f, 1489614972, 18.3288994),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6873322f, 40.2649994f, leg_index, 11.9813452f, 774,
-          maneuver_index, 0.364224434f, 23, instruction_index));
+          maneuver_index, 0.364224434f, 23));
   //----------------------------------------------------------------
   // trace point = 172
   maneuver_index = 4;
@@ -8973,7 +8972,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6871109f, 40.2650414f, 1489614973, 19.253582),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6871185f, 40.2650528f, leg_index, 11.9622259f, 773,
-          maneuver_index, 0.345105171f, 22, instruction_index));
+          maneuver_index, 0.345105171f, 22));
   //----------------------------------------------------------------
   // trace point = 173
   maneuver_index = 4;
@@ -8982,7 +8981,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6869125f, 40.26511f, 1489614974, 18.4897919),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6869202f, 40.2651176f, leg_index, 11.9438992f, 771,
-          maneuver_index, 0.326778412f, 20, instruction_index));
+          maneuver_index, 0.326778412f, 20));
   //----------------------------------------------------------------
   // trace point = 174
   maneuver_index = 4;
@@ -8991,7 +8990,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6867142f, 40.2651901f, 1489614975, 19.1061993),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6867218f, 40.2651978f, leg_index, 11.9247808f, 770,
-          maneuver_index, 0.307660103f, 19, instruction_index));
+          maneuver_index, 0.307660103f, 19));
   //----------------------------------------------------------------
   // trace point = 175
   maneuver_index = 4;
@@ -9000,7 +8999,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6865234f, 40.2652779f, 1489614976, 18.952282),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6865311f, 40.2652817f, leg_index, 11.9060783f, 769,
-          maneuver_index, 0.288957596f, 18, instruction_index));
+          maneuver_index, 0.288957596f, 18));
   //----------------------------------------------------------------
   // trace point = 176
   maneuver_index = 4;
@@ -9009,7 +9008,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6863174f, 40.2653809f, 1489614977, 20.9203014),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6863251f, 40.2653885f, leg_index, 11.884923f, 768,
-          maneuver_index, 0.267802238f, 17, instruction_index));
+          maneuver_index, 0.267802238f, 17));
   //----------------------------------------------------------------
   // trace point = 177
   maneuver_index = 4;
@@ -9018,7 +9017,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6861343f, 40.2654839f, 1489614978, 19.3158531),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6861343f, 40.2654877f, leg_index, 11.8653164f, 766,
-          maneuver_index, 0.248195648f, 15, instruction_index));
+          maneuver_index, 0.248195648f, 15));
   //----------------------------------------------------------------
   // trace point = 178
   maneuver_index = 4;
@@ -9027,7 +9026,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6859436f, 40.2655907f, 1489614979, 20.0586643),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6859436f, 40.2655907f, leg_index, 11.8454685f, 765,
-          maneuver_index, 0.228347778f, 14, instruction_index));
+          maneuver_index, 0.228347778f, 14));
   //----------------------------------------------------------------
   // trace point = 179
   maneuver_index = 4;
@@ -9036,7 +9035,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6855469f, 40.2658081f, 1489614981, 20.7408104),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6855469f, 40.2658081f, leg_index, 11.803978f, 762,
-          maneuver_index, 0.186857224f, 11, instruction_index));
+          maneuver_index, 0.186857224f, 11));
   //----------------------------------------------------------------
   // trace point = 180
   maneuver_index = 4;
@@ -9045,7 +9044,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6851501f, 40.2660179f, 1489614983, 20.5163231),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6851501f, 40.2660179f, leg_index, 11.7629738f, 760,
-          maneuver_index, 0.145853043f, 9, instruction_index));
+          maneuver_index, 0.145853043f, 9));
   //----------------------------------------------------------------
   // trace point = 181
   maneuver_index = 4;
@@ -9054,7 +9053,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6847534f, 40.2662315f, 1489614985, 20.6439323),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6847534f, 40.2662354f, leg_index, 11.7214708f, 758,
-          maneuver_index, 0.10435009f, 7, instruction_index));
+          maneuver_index, 0.10435009f, 7));
   //----------------------------------------------------------------
   // trace point = 182
   maneuver_index = 4;
@@ -9063,7 +9062,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6845703f, 40.2663269f, 1489614986, 18.800724),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6845856f, 40.2663383f, leg_index, 11.7031755f, 757,
-          maneuver_index, 0.0860548019f, 6, instruction_index));
+          maneuver_index, 0.0860548019f, 6));
   //----------------------------------------------------------------
   // trace point = 183
   maneuver_index = 4;
@@ -9072,7 +9071,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6843872f, 40.2664261f, 1489614987, 19.0547295),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6844101f, 40.2664452f, leg_index, 11.6841087f, 755,
-          maneuver_index, 0.0669879913f, 4, instruction_index));
+          maneuver_index, 0.0669879913f, 4));
   //----------------------------------------------------------------
   // trace point = 184
   maneuver_index = 4;
@@ -9081,7 +9080,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6841965f, 40.2665253f, 1489614988, 19.612999),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.684227f, 40.2665558f, leg_index, 11.6642694f, 754,
-          maneuver_index, 0.0471487045f, 3, instruction_index));
+          maneuver_index, 0.0471487045f, 3));
   //----------------------------------------------------------------
   // trace point = 185
   maneuver_index = 4;
@@ -9090,7 +9089,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6839981f, 40.2666245f, 1489614989, 20.1076031),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6840439f, 40.2666664f, leg_index, 11.6444311f, 753,
-          maneuver_index, 0.0273103714f, 2, instruction_index));
+          maneuver_index, 0.0273103714f, 2));
   //----------------------------------------------------------------
   // trace point = 186
   maneuver_index = 5;
@@ -9099,7 +9098,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.683609f, 40.266819f, 1489614991, 19.7674026),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6836624f, 40.26688f, leg_index, 11.6041765f, 750,
-          maneuver_index, 4.40131712f, 250, instruction_index));
+          maneuver_index, 4.40131712f, 250));
   //----------------------------------------------------------------
   // trace point = 187
   maneuver_index = 5;
@@ -9108,7 +9107,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6832275f, 40.2669983f, 1489614993, 19.0026054),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6832809f, 40.2670631f, leg_index, 11.5658998f, 748,
-          maneuver_index, 4.36304045f, 248, instruction_index));
+          maneuver_index, 4.36304045f, 248));
   //----------------------------------------------------------------
   // trace point = 188
   maneuver_index = 5;
@@ -9117,7 +9116,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.682869f, 40.2671738f, 1489614995, 18.1227264),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6829224f, 40.2672386f, leg_index, 11.5297155f, 746,
-          maneuver_index, 4.32685614f, 246, instruction_index));
+          maneuver_index, 4.32685614f, 246));
   //----------------------------------------------------------------
   // trace point = 189
   maneuver_index = 5;
@@ -9126,7 +9125,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6826859f, 40.2672539f, 1489614996, 17.9145603),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6827393f, 40.2673225f, leg_index, 11.5115738f, 745,
-          maneuver_index, 4.30871439f, 245, instruction_index));
+          maneuver_index, 4.30871439f, 245));
   //----------------------------------------------------------------
   // trace point = 190
   maneuver_index = 5;
@@ -9135,7 +9134,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6825333f, 40.2673225f, 1489614997, 15.0961428),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.682579f, 40.2673874f, leg_index, 11.4961576f, 744,
-          maneuver_index, 4.29329824f, 244, instruction_index));
+          maneuver_index, 4.29329824f, 244));
   //----------------------------------------------------------------
   // trace point = 191
   maneuver_index = 5;
@@ -9144,7 +9143,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6824036f, 40.2673683f, 1489614998, 12.0481482),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6824417f, 40.267437f, leg_index, 11.4832401f, 744,
-          maneuver_index, 4.28038073f, 244, instruction_index));
+          maneuver_index, 4.28038073f, 244));
   //----------------------------------------------------------------
   // trace point = 192
   maneuver_index = 5;
@@ -9153,7 +9152,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6821823f, 40.2674332f, 1489615001, 6.7324872),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6822052f, 40.2675056f, leg_index, 11.4616585f, 743,
-          maneuver_index, 4.25879908f, 243, instruction_index));
+          maneuver_index, 4.25879908f, 243));
   //----------------------------------------------------------------
   // trace point = 193
   maneuver_index = 5;
@@ -9162,7 +9161,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6820297f, 40.2674561f, 1489615027, 0.506246984),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6820526f, 40.2675362f, leg_index, 11.4482594f, 742,
-          maneuver_index, 4.24539995f, 242, instruction_index));
+          maneuver_index, 4.24539995f, 242));
   //----------------------------------------------------------------
   // trace point = 194
   maneuver_index = 5;
@@ -9171,7 +9170,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6817474f, 40.2675095f, 1489615030, 8.25055599),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6817627f, 40.2675781f, leg_index, 11.4231739f, 741,
-          maneuver_index, 4.2203145f, 241, instruction_index));
+          maneuver_index, 4.2203145f, 241));
   //----------------------------------------------------------------
   // trace point = 195
   maneuver_index = 5;
@@ -9180,7 +9179,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6815033f, 40.26754f, 1489615032, 10.5054255),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6815186f, 40.2676048f, leg_index, 11.4022255f, 740,
-          maneuver_index, 4.19936609f, 240, instruction_index));
+          maneuver_index, 4.19936609f, 240));
   //----------------------------------------------------------------
   // trace point = 196
   maneuver_index = 5;
@@ -9189,7 +9188,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6813507f, 40.2675552f, 1489615033, 13.0185041),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.681366f, 40.2676239f, leg_index, 11.3890924f, 739,
-          maneuver_index, 4.18623304f, 239, instruction_index));
+          maneuver_index, 4.18623304f, 239));
   //----------------------------------------------------------------
   // trace point = 197
   maneuver_index = 5;
@@ -9198,7 +9197,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6811981f, 40.2675743f, 1489615034, 13.1668987),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6812134f, 40.267643f, leg_index, 11.3759604f, 738,
-          maneuver_index, 4.17310095f, 238, instruction_index));
+          maneuver_index, 4.17310095f, 238));
   //----------------------------------------------------------------
   // trace point = 198
   maneuver_index = 5;
@@ -9207,7 +9206,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6810303f, 40.2675934f, 1489615035, 14.42591),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6810455f, 40.267662f, leg_index, 11.3615465f, 738,
-          maneuver_index, 4.15868711f, 238, instruction_index));
+          maneuver_index, 4.15868711f, 238));
   //----------------------------------------------------------------
   // trace point = 199
   maneuver_index = 5;
@@ -9216,7 +9215,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6808548f, 40.2676201f, 1489615036, 15.1654205),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6808701f, 40.2676811f, leg_index, 11.3464909f, 737,
-          maneuver_index, 4.14363146f, 237, instruction_index));
+          maneuver_index, 4.14363146f, 237));
   //----------------------------------------------------------------
   // trace point = 200
   maneuver_index = 5;
@@ -9225,7 +9224,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6806793f, 40.2676353f, 1489615037, 15.0424957),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6806946f, 40.2677002f, leg_index, 11.3314362f, 736,
-          maneuver_index, 4.12857676f, 236, instruction_index));
+          maneuver_index, 4.12857676f, 236));
   //----------------------------------------------------------------
   // trace point = 201
   maneuver_index = 5;
@@ -9234,7 +9233,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6804962f, 40.2676544f, 1489615038, 15.6873484),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6805115f, 40.2677231f, leg_index, 11.3156776f, 735,
-          maneuver_index, 4.11281824f, 235, instruction_index));
+          maneuver_index, 4.11281824f, 235));
   //----------------------------------------------------------------
   // trace point = 202
   maneuver_index = 5;
@@ -9243,7 +9242,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6803131f, 40.2676659f, 1489615039, 15.6014013),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6803284f, 40.2677422f, leg_index, 11.2999811f, 735,
-          maneuver_index, 4.09712172f, 235, instruction_index));
+          maneuver_index, 4.09712172f, 235));
   //----------------------------------------------------------------
   // trace point = 203
   maneuver_index = 5;
@@ -9252,7 +9251,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6801147f, 40.2676849f, 1489615040, 16.9506855),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.68013f, 40.267765f, leg_index, 11.2829409f, 734,
-          maneuver_index, 4.08008146f, 234, instruction_index));
+          maneuver_index, 4.08008146f, 234));
   //----------------------------------------------------------------
   // trace point = 204
   maneuver_index = 5;
@@ -9261,7 +9260,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6799011f, 40.267704f, 1489615041, 18.2998924),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6799164f, 40.2677917f, leg_index, 11.264555f, 733,
-          maneuver_index, 4.06169558f, 233, instruction_index));
+          maneuver_index, 4.06169558f, 233));
   //----------------------------------------------------------------
   // trace point = 205
   maneuver_index = 5;
@@ -9270,7 +9269,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6796951f, 40.2677307f, 1489615042, 17.7539883),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6797104f, 40.2678146f, leg_index, 11.2468729f, 732,
-          maneuver_index, 4.0440135f, 232, instruction_index));
+          maneuver_index, 4.0440135f, 232));
   //----------------------------------------------------------------
   // trace point = 206
   maneuver_index = 5;
@@ -9279,7 +9278,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6794815f, 40.2677536f, 1489615043, 18.2725658),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6794891f, 40.2678375f, leg_index, 11.2279043f, 730,
-          maneuver_index, 4.02504492f, 230, instruction_index));
+          maneuver_index, 4.02504492f, 230));
   //----------------------------------------------------------------
   // trace point = 207
   maneuver_index = 5;
@@ -9288,7 +9287,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6792679f, 40.2677727f, 1489615044, 18.2998734),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6792755f, 40.2678528f, leg_index, 11.2096806f, 729,
-          maneuver_index, 4.00682116f, 229, instruction_index));
+          maneuver_index, 4.00682116f, 229));
   //----------------------------------------------------------------
   // trace point = 208
   maneuver_index = 5;
@@ -9297,7 +9296,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6790466f, 40.2677956f, 1489615045, 18.9456139),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6790543f, 40.267868f, leg_index, 11.1908102f, 728,
-          maneuver_index, 3.9879508f, 228, instruction_index));
+          maneuver_index, 3.9879508f, 228));
   //----------------------------------------------------------------
   // trace point = 209
   maneuver_index = 5;
@@ -9306,7 +9305,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6788177f, 40.2678223f, 1489615046, 19.6654797),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6788254f, 40.2678833f, leg_index, 11.1712961f, 727,
-          maneuver_index, 3.96843672f, 227, instruction_index));
+          maneuver_index, 3.96843672f, 227));
   //----------------------------------------------------------------
   // trace point = 210
   maneuver_index = 5;
@@ -9315,7 +9314,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6785965f, 40.2678413f, 1489615047, 18.9749851),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6786041f, 40.2679024f, leg_index, 11.1523857f, 726,
-          maneuver_index, 3.94952631f, 226, instruction_index));
+          maneuver_index, 3.94952631f, 226));
   //----------------------------------------------------------------
   // trace point = 211
   maneuver_index = 5;
@@ -9324,7 +9323,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6783752f, 40.2678642f, 1489615048, 18.9455948),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6783829f, 40.2679176f, leg_index, 11.1335163f, 725,
-          maneuver_index, 3.93065691f, 225, instruction_index));
+          maneuver_index, 3.93065691f, 225));
   //----------------------------------------------------------------
   // trace point = 212
   maneuver_index = 5;
@@ -9333,7 +9332,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.678154f, 40.2678909f, 1489615049, 19.0108833),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6781616f, 40.2679329f, leg_index, 11.1146469f, 724,
-          maneuver_index, 3.91178751f, 224, instruction_index));
+          maneuver_index, 3.91178751f, 224));
   //----------------------------------------------------------------
   // trace point = 213
   maneuver_index = 5;
@@ -9342,7 +9341,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6779327f, 40.2679138f, 1489615050, 18.9455814),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6779404f, 40.2679482f, leg_index, 11.0957756f, 723,
-          maneuver_index, 3.8929162f, 223, instruction_index));
+          maneuver_index, 3.8929162f, 223));
   //----------------------------------------------------------------
   // trace point = 214
   maneuver_index = 5;
@@ -9351,7 +9350,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6777267f, 40.2679176f, 1489615051, 17.503336),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6777344f, 40.2679634f, leg_index, 11.0781965f, 722,
-          maneuver_index, 3.87533712f, 222, instruction_index));
+          maneuver_index, 3.87533712f, 222));
   //----------------------------------------------------------------
   // trace point = 215
   maneuver_index = 5;
@@ -9360,7 +9359,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6775055f, 40.2679367f, 1489615052, 18.9749584),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6775131f, 40.2679787f, leg_index, 11.0593271f, 721,
-          maneuver_index, 3.85646772f, 221, instruction_index));
+          maneuver_index, 3.85646772f, 221));
   //----------------------------------------------------------------
   // trace point = 216
   maneuver_index = 5;
@@ -9369,7 +9368,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6772842f, 40.2679558f, 1489615053, 18.8905449),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6772919f, 40.2679939f, leg_index, 11.0404558f, 720,
-          maneuver_index, 3.83759642f, 220, instruction_index));
+          maneuver_index, 3.83759642f, 220));
   //----------------------------------------------------------------
   // trace point = 217
   maneuver_index = 5;
@@ -9378,7 +9377,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.677063f, 40.2679634f, 1489615054, 18.7879295),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6770706f, 40.2680092f, leg_index, 11.0215864f, 719,
-          maneuver_index, 3.81872702f, 219, instruction_index));
+          maneuver_index, 3.81872702f, 219));
   //----------------------------------------------------------------
   // trace point = 218
   maneuver_index = 5;
@@ -9387,7 +9386,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6768417f, 40.2679787f, 1489615055, 18.8560677),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6768494f, 40.2680244f, leg_index, 11.002717f, 717,
-          maneuver_index, 3.79985762f, 217, instruction_index));
+          maneuver_index, 3.79985762f, 217));
   //----------------------------------------------------------------
   // trace point = 219
   maneuver_index = 5;
@@ -9396,7 +9395,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6766052f, 40.2679939f, 1489615056, 20.1999302),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6766129f, 40.2680435f, leg_index, 10.9825172f, 717,
-          maneuver_index, 3.77965784f, 217, instruction_index));
+          maneuver_index, 3.77965784f, 217));
   //----------------------------------------------------------------
   // trace point = 220
   maneuver_index = 5;
@@ -9405,7 +9404,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6763763f, 40.2680092f, 1489615057, 19.52281),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.676384f, 40.2680588f, leg_index, 10.9630022f, 715,
-          maneuver_index, 3.7601428f, 215, instruction_index));
+          maneuver_index, 3.7601428f, 215));
   //----------------------------------------------------------------
   // trace point = 221
   maneuver_index = 5;
@@ -9414,7 +9413,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6761551f, 40.2680206f, 1489615058, 18.8192177),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6761627f, 40.268074f, leg_index, 10.9441319f, 714,
-          maneuver_index, 3.74127245f, 214, instruction_index));
+          maneuver_index, 3.74127245f, 214));
   //----------------------------------------------------------------
   // trace point = 222
   maneuver_index = 5;
@@ -9423,7 +9422,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6759338f, 40.2680321f, 1489615059, 18.8116398),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6759415f, 40.2680893f, leg_index, 10.9252625f, 713,
-          maneuver_index, 3.72240305f, 213, instruction_index));
+          maneuver_index, 3.72240305f, 213));
   //----------------------------------------------------------------
   // trace point = 223
   maneuver_index = 5;
@@ -9432,7 +9431,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6754837f, 40.2680664f, 1489615061, 19.2049637),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6754913f, 40.2681198f, leg_index, 10.8868771f, 711,
-          maneuver_index, 3.68401766f, 211, instruction_index));
+          maneuver_index, 3.68401766f, 211));
   //----------------------------------------------------------------
   // trace point = 224
   maneuver_index = 5;
@@ -9441,7 +9440,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6752701f, 40.2680855f, 1489615062, 18.2997894),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6752777f, 40.2681351f, leg_index, 10.86866f, 710,
-          maneuver_index, 3.66580057f, 210, instruction_index));
+          maneuver_index, 3.66580057f, 210));
   //----------------------------------------------------------------
   // trace point = 225
   maneuver_index = 5;
@@ -9450,7 +9449,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6750412f, 40.2681046f, 1489615063, 19.5782452),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6750488f, 40.268158f, leg_index, 10.8490353f, 709,
-          maneuver_index, 3.64617586f, 209, instruction_index));
+          maneuver_index, 3.64617586f, 209));
   //----------------------------------------------------------------
   // trace point = 226
   maneuver_index = 5;
@@ -9459,7 +9458,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6748199f, 40.2681198f, 1489615064, 18.8458405),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6748276f, 40.2681808f, leg_index, 10.8300695f, 708,
-          maneuver_index, 3.62721014f, 208, instruction_index));
+          maneuver_index, 3.62721014f, 208));
   //----------------------------------------------------------------
   // trace point = 227
   maneuver_index = 5;
@@ -9468,7 +9467,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6745987f, 40.2681465f, 1489615065, 19.0108128),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6746063f, 40.2682037f, leg_index, 10.8111048f, 707,
-          maneuver_index, 3.60824537f, 207, instruction_index));
+          maneuver_index, 3.60824537f, 207));
   //----------------------------------------------------------------
   // trace point = 228
   maneuver_index = 5;
@@ -9477,7 +9476,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6743851f, 40.2681732f, 1489615066, 18.4061127),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6743927f, 40.2682266f, leg_index, 10.7927818f, 706,
-          maneuver_index, 3.58992243f, 206, instruction_index));
+          maneuver_index, 3.58992243f, 206));
   //----------------------------------------------------------------
   // trace point = 229
   maneuver_index = 5;
@@ -9486,7 +9485,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6741638f, 40.2682037f, 1489615067, 19.0862617),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6741714f, 40.2682495f, leg_index, 10.7738171f, 704,
-          maneuver_index, 3.57095766f, 204, instruction_index));
+          maneuver_index, 3.57095766f, 204));
   //----------------------------------------------------------------
   // trace point = 230
   maneuver_index = 5;
@@ -9495,7 +9494,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6739578f, 40.2682266f, 1489615068, 17.6839256),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6739578f, 40.2682724f, leg_index, 10.7554932f, 703,
-          maneuver_index, 3.55263376f, 203, instruction_index));
+          maneuver_index, 3.55263376f, 203));
   //----------------------------------------------------------------
   // trace point = 231
   maneuver_index = 5;
@@ -9504,7 +9503,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6737518f, 40.2682648f, 1489615069, 18.0016556),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6737595f, 40.2682991f, leg_index, 10.7383833f, 702,
-          maneuver_index, 3.53552389f, 202, instruction_index));
+          maneuver_index, 3.53552389f, 202));
   //----------------------------------------------------------------
   // trace point = 232
   maneuver_index = 5;
@@ -9513,7 +9512,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6735382f, 40.2682915f, 1489615070, 18.4060822),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6735458f, 40.2683258f, leg_index, 10.7199984f, 701,
-          maneuver_index, 3.51713896f, 201, instruction_index));
+          maneuver_index, 3.51713896f, 201));
   //----------------------------------------------------------------
   // trace point = 233
   maneuver_index = 5;
@@ -9522,7 +9521,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6733322f, 40.2683182f, 1489615071, 17.7538395),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6733398f, 40.2683563f, leg_index, 10.702178f, 700,
-          maneuver_index, 3.4993186f, 200, instruction_index));
+          maneuver_index, 3.4993186f, 200));
   //----------------------------------------------------------------
   // trace point = 234
   maneuver_index = 5;
@@ -9531,7 +9530,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6731186f, 40.2683449f, 1489615072, 18.3401031),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6731262f, 40.268383f, leg_index, 10.6837931f, 699,
-          maneuver_index, 3.48093367f, 199, instruction_index));
+          maneuver_index, 3.48093367f, 199));
   //----------------------------------------------------------------
   // trace point = 235
   maneuver_index = 5;
@@ -9540,7 +9539,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6728973f, 40.268383f, 1489615073, 19.3252449),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.672905f, 40.2684174f, leg_index, 10.6646147f, 698,
-          maneuver_index, 3.46175528f, 198, instruction_index));
+          maneuver_index, 3.46175528f, 198));
   //----------------------------------------------------------------
   // trace point = 236
   maneuver_index = 5;
@@ -9549,7 +9548,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6726837f, 40.2684135f, 1489615074, 18.4182968),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6726913f, 40.2684517f, leg_index, 10.6460724f, 697,
-          maneuver_index, 3.44321299f, 197, instruction_index));
+          maneuver_index, 3.44321299f, 197));
   //----------------------------------------------------------------
   // trace point = 237
   maneuver_index = 5;
@@ -9558,7 +9557,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6724625f, 40.2684441f, 1489615075, 19.1500168),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6724701f, 40.2684822f, leg_index, 10.626956f, 695,
-          maneuver_index, 3.42409658f, 195, instruction_index));
+          maneuver_index, 3.42409658f, 195));
   //----------------------------------------------------------------
   // trace point = 238
   maneuver_index = 5;
@@ -9567,7 +9566,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6722412f, 40.2684784f, 1489615076, 19.1493874),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6722488f, 40.2685165f, leg_index, 10.6077776f, 694,
-          maneuver_index, 3.40491819f, 194, instruction_index));
+          maneuver_index, 3.40491819f, 194));
   //----------------------------------------------------------------
   // trace point = 239
   maneuver_index = 5;
@@ -9576,7 +9575,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.67202f, 40.2685051f, 1489615077, 19.0107155),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6720276f, 40.2685471f, leg_index, 10.5886803f, 693,
-          maneuver_index, 3.38582087f, 193, instruction_index));
+          maneuver_index, 3.38582087f, 193));
   //----------------------------------------------------------------
   // trace point = 240
   maneuver_index = 5;
@@ -9585,7 +9584,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6717911f, 40.2685318f, 1489615078, 19.6819706),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6718063f, 40.2685814f, leg_index, 10.5695047f, 692,
-          maneuver_index, 3.36664534f, 192, instruction_index));
+          maneuver_index, 3.36664534f, 192));
   //----------------------------------------------------------------
   // trace point = 241
   maneuver_index = 5;
@@ -9594,7 +9593,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6715546f, 40.2685661f, 1489615079, 20.3998737),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6715698f, 40.2686157f, leg_index, 10.5490551f, 691,
-          maneuver_index, 3.3461957f, 191, instruction_index));
+          maneuver_index, 3.3461957f, 191));
   //----------------------------------------------------------------
   // trace point = 242
   maneuver_index = 5;
@@ -9603,7 +9602,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6713181f, 40.2686005f, 1489615080, 20.4833336),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6713257f, 40.2686462f, leg_index, 10.5280457f, 689,
-          maneuver_index, 3.32518625f, 189, instruction_index));
+          maneuver_index, 3.32518625f, 189));
   //----------------------------------------------------------------
   // trace point = 243
   maneuver_index = 5;
@@ -9612,7 +9611,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6710892f, 40.2686386f, 1489615081, 19.9297085),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6710968f, 40.2686806f, leg_index, 10.508234f, 688,
-          maneuver_index, 3.30537462f, 188, instruction_index));
+          maneuver_index, 3.30537462f, 188));
   //----------------------------------------------------------------
   // trace point = 244
   maneuver_index = 5;
@@ -9621,7 +9620,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6708679f, 40.2686729f, 1489615082, 19.149334),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6708755f, 40.2687111f, leg_index, 10.4891367f, 687,
-          maneuver_index, 3.28627729f, 187, instruction_index));
+          maneuver_index, 3.28627729f, 187));
   //----------------------------------------------------------------
   // trace point = 245
   maneuver_index = 5;
@@ -9630,7 +9629,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6706467f, 40.2687073f, 1489615083, 19.1493244),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6706543f, 40.2687416f, leg_index, 10.4700394f, 686,
-          maneuver_index, 3.26717997f, 186, instruction_index));
+          maneuver_index, 3.26717997f, 186));
   //----------------------------------------------------------------
   // trace point = 246
   maneuver_index = 5;
@@ -9639,7 +9638,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.670433f, 40.2687378f, 1489615084, 18.5016537),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6704407f, 40.2687721f, leg_index, 10.4515791f, 685,
-          maneuver_index, 3.24871969f, 185, instruction_index));
+          maneuver_index, 3.24871969f, 185));
   //----------------------------------------------------------------
   // trace point = 247
   maneuver_index = 5;
@@ -9648,7 +9647,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6702194f, 40.2687645f, 1489615085, 18.4059563),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6702271f, 40.2687988f, leg_index, 10.4331942f, 684,
-          maneuver_index, 3.23033476f, 184, instruction_index));
+          maneuver_index, 3.23033476f, 184));
   //----------------------------------------------------------------
   // trace point = 248
   maneuver_index = 5;
@@ -9657,7 +9656,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6699982f, 40.2688026f, 1489615086, 19.2670383),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6700058f, 40.2688293f, leg_index, 10.4140968f, 683,
-          maneuver_index, 3.21123743f, 183, instruction_index));
+          maneuver_index, 3.21123743f, 183));
   //----------------------------------------------------------------
   // trace point = 249
   maneuver_index = 5;
@@ -9666,7 +9665,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6697769f, 40.2688408f, 1489615087, 19.2422485),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6697845f, 40.2688599f, leg_index, 10.3949986f, 682,
-          maneuver_index, 3.19213915f, 182, instruction_index));
+          maneuver_index, 3.19213915f, 182));
   //----------------------------------------------------------------
   // trace point = 250
   maneuver_index = 5;
@@ -9675,7 +9674,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6695557f, 40.2688789f, 1489615088, 19.242239),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6695633f, 40.2688942f, leg_index, 10.3758192f, 680,
-          maneuver_index, 3.1729598f, 180, instruction_index));
+          maneuver_index, 3.1729598f, 180));
   //----------------------------------------------------------------
   // trace point = 251
   maneuver_index = 5;
@@ -9684,7 +9683,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6693268f, 40.2689209f, 1489615089, 20.0050354),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6693268f, 40.2689323f, leg_index, 10.3552866f, 679,
-          maneuver_index, 3.1524272f, 179, instruction_index));
+          maneuver_index, 3.1524272f, 179));
   //----------------------------------------------------------------
   // trace point = 252
   maneuver_index = 5;
@@ -9693,7 +9692,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6690903f, 40.2689667f, 1489615090, 20.7715912),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6690903f, 40.2689705f, leg_index, 10.334754f, 678,
-          maneuver_index, 3.13189459f, 178, instruction_index));
+          maneuver_index, 3.13189459f, 178));
   //----------------------------------------------------------------
   // trace point = 253
   maneuver_index = 5;
@@ -9702,7 +9701,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6688538f, 40.2690086f, 1489615091, 20.5835857),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6688538f, 40.2690163f, leg_index, 10.314024f, 677,
-          maneuver_index, 3.11116457f, 177, instruction_index));
+          maneuver_index, 3.11116457f, 177));
   //----------------------------------------------------------------
   // trace point = 254
   maneuver_index = 5;
@@ -9711,7 +9710,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6686249f, 40.2690544f, 1489615092, 20.0856743),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6686325f, 40.2690659f, leg_index, 10.2944374f, 676,
-          maneuver_index, 3.09157801f, 176, instruction_index));
+          maneuver_index, 3.09157801f, 176));
   //----------------------------------------------------------------
   // trace point = 255
   maneuver_index = 5;
@@ -9720,7 +9719,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6684113f, 40.2690964f, 1489615093, 18.7685528),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6684113f, 40.269104f, leg_index, 10.2751007f, 674,
-          maneuver_index, 3.07224131f, 174, instruction_index));
+          maneuver_index, 3.07224131f, 174));
   //----------------------------------------------------------------
   // trace point = 256
   maneuver_index = 5;
@@ -9729,7 +9728,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.66819f, 40.2691422f, 1489615094, 19.4573517),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.66819f, 40.269146f, leg_index, 10.2556915f, 673,
-          maneuver_index, 3.05283213f, 173, instruction_index));
+          maneuver_index, 3.05283213f, 173));
   //----------------------------------------------------------------
   // trace point = 257
   maneuver_index = 5;
@@ -9738,7 +9737,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.667984f, 40.2691879f, 1489615095, 18.2312584),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.667984f, 40.2691917f, leg_index, 10.2374687f, 672,
-          maneuver_index, 3.03460932f, 172, instruction_index));
+          maneuver_index, 3.03460932f, 172));
   //----------------------------------------------------------------
   // trace point = 258
   maneuver_index = 5;
@@ -9747,7 +9746,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.667778f, 40.2692413f, 1489615096, 18.4652634),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.667778f, 40.2692413f, leg_index, 10.2191181f, 671,
-          maneuver_index, 3.01625872f, 171, instruction_index));
+          maneuver_index, 3.01625872f, 171));
   //----------------------------------------------------------------
   // trace point = 259
   maneuver_index = 5;
@@ -9756,7 +9755,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6675797f, 40.2692947f, 1489615097, 17.8598442),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6675797f, 40.2692947f, leg_index, 10.2006388f, 670,
-          maneuver_index, 2.99777937f, 170, instruction_index));
+          maneuver_index, 2.99777937f, 170));
   //----------------------------------------------------------------
   // trace point = 260
   maneuver_index = 5;
@@ -9765,7 +9764,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6673737f, 40.2693481f, 1489615098, 18.4652386),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6673737f, 40.269352f, leg_index, 10.1826153f, 669,
-          maneuver_index, 2.97975588f, 169, instruction_index));
+          maneuver_index, 2.97975588f, 169));
   //----------------------------------------------------------------
   // trace point = 261
   maneuver_index = 5;
@@ -9774,7 +9773,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6671753f, 40.2694016f, 1489615099, 17.9398251),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6671753f, 40.2694054f, leg_index, 10.1647482f, 668,
-          maneuver_index, 2.96188879f, 168, instruction_index));
+          maneuver_index, 2.96188879f, 168));
   //----------------------------------------------------------------
   // trace point = 262
   maneuver_index = 5;
@@ -9783,7 +9782,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6669769f, 40.2694626f, 1489615100, 18.1369305),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6669769f, 40.2694588f, leg_index, 10.1468821f, 667,
-          maneuver_index, 2.94402266f, 167, instruction_index));
+          maneuver_index, 2.94402266f, 167));
   //----------------------------------------------------------------
   // trace point = 263
   maneuver_index = 5;
@@ -9792,7 +9791,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6667786f, 40.2695236f, 1489615101, 18.1369171),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6667709f, 40.269516f, leg_index, 10.1282244f, 666,
-          maneuver_index, 2.92536497f, 166, instruction_index));
+          maneuver_index, 2.92536497f, 166));
   //----------------------------------------------------------------
   // trace point = 264
   maneuver_index = 5;
@@ -9801,7 +9800,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6665802f, 40.2695923f, 1489615102, 18.5202961),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6665802f, 40.2695923f, leg_index, 10.1099319f, 665,
-          maneuver_index, 2.90707254f, 165, instruction_index));
+          maneuver_index, 2.90707254f, 165));
   //----------------------------------------------------------------
   // trace point = 265
   maneuver_index = 5;
@@ -9810,7 +9809,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6663895f, 40.2696571f, 1489615103, 17.763649),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6663971f, 40.2696686f, leg_index, 10.0922136f, 664,
-          maneuver_index, 2.88935423f, 164, instruction_index));
+          maneuver_index, 2.88935423f, 164));
   //----------------------------------------------------------------
   // trace point = 266
   maneuver_index = 5;
@@ -9819,7 +9818,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.666214f, 40.269722f, 1489615104, 16.5317535),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6662216f, 40.2697372f, leg_index, 10.0754642f, 663,
-          maneuver_index, 2.87260485f, 163, instruction_index));
+          maneuver_index, 2.87260485f, 163));
   //----------------------------------------------------------------
   // trace point = 267
   maneuver_index = 5;
@@ -9828,7 +9827,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6660309f, 40.2697945f, 1489615105, 17.4884129),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6660461f, 40.2698097f, leg_index, 10.0585155f, 661,
-          maneuver_index, 2.85565615f, 161, instruction_index));
+          maneuver_index, 2.85565615f, 161));
   //----------------------------------------------------------------
   // trace point = 268
   maneuver_index = 5;
@@ -9837,7 +9836,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6658554f, 40.2698631f, 1489615106, 16.8069153),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6658707f, 40.2698822f, leg_index, 10.0415678f, 661,
-          maneuver_index, 2.8387084f, 161, instruction_index));
+          maneuver_index, 2.8387084f, 161));
   //----------------------------------------------------------------
   // trace point = 269
   maneuver_index = 5;
@@ -9846,7 +9845,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6656876f, 40.2699242f, 1489615107, 15.7262001),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6657028f, 40.2699509f, leg_index, 10.0253916f, 660,
-          maneuver_index, 2.82253218f, 160, instruction_index));
+          maneuver_index, 2.82253218f, 160));
   //----------------------------------------------------------------
   // trace point = 270
   maneuver_index = 5;
@@ -9855,7 +9854,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6655045f, 40.2699928f, 1489615108, 17.4140453),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6655273f, 40.2700233f, leg_index, 10.0084438f, 659,
-          maneuver_index, 2.80558443f, 159, instruction_index));
+          maneuver_index, 2.80558443f, 159));
   //----------------------------------------------------------------
   // trace point = 271
   maneuver_index = 5;
@@ -9864,7 +9863,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6653442f, 40.2700577f, 1489615109, 15.3962479),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6653671f, 40.270092f, leg_index, 9.992836f, 658,
-          maneuver_index, 2.7899766f, 158, instruction_index));
+          maneuver_index, 2.7899766f, 158));
   //----------------------------------------------------------------
   // trace point = 272
   maneuver_index = 5;
@@ -9873,7 +9872,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6651764f, 40.2701187f, 1489615110, 15.8028164),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6652069f, 40.2701607f, leg_index, 9.97723007f, 657,
-          maneuver_index, 2.77437067f, 157, instruction_index));
+          maneuver_index, 2.77437067f, 157));
   //----------------------------------------------------------------
   // trace point = 273
   maneuver_index = 5;
@@ -9882,7 +9881,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6650238f, 40.2701912f, 1489615111, 15.1960735),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6650467f, 40.2702255f, leg_index, 9.96182537f, 656,
-          maneuver_index, 2.75896597f, 156, instruction_index));
+          maneuver_index, 2.75896597f, 156));
   //----------------------------------------------------------------
   // trace point = 274
   maneuver_index = 5;
@@ -9891,7 +9890,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6648483f, 40.2702599f, 1489615112, 16.8068371),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6648712f, 40.270298f, leg_index, 9.94410515f, 655,
-          maneuver_index, 2.74124575f, 155, instruction_index));
+          maneuver_index, 2.74124575f, 155));
   //----------------------------------------------------------------
   // trace point = 275
   maneuver_index = 5;
@@ -9900,7 +9899,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6646881f, 40.2703285f, 1489615113, 15.6104164),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.664711f, 40.2703629f, leg_index, 9.92947388f, 655,
-          maneuver_index, 2.72661448f, 155, instruction_index));
+          maneuver_index, 2.72661448f, 155));
   //----------------------------------------------------------------
   // trace point = 276
   maneuver_index = 5;
@@ -9909,7 +9908,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6645203f, 40.270401f, 1489615114, 16.3663349),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6645355f, 40.2704277f, leg_index, 9.91291523f, 654,
-          maneuver_index, 2.71005583f, 154, instruction_index));
+          maneuver_index, 2.71005583f, 154));
   //----------------------------------------------------------------
   // trace point = 277
   maneuver_index = 5;
@@ -9918,7 +9917,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6643448f, 40.2704773f, 1489615115, 17.1030426),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.66436f, 40.2704964f, leg_index, 9.89616489f, 653,
-          maneuver_index, 2.69330549f, 153, instruction_index));
+          maneuver_index, 2.69330549f, 153));
   //----------------------------------------------------------------
   // trace point = 278
   maneuver_index = 5;
@@ -9927,7 +9926,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6641769f, 40.2705421f, 1489615116, 15.9991274),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6641922f, 40.2705612f, leg_index, 9.88018513f, 652,
-          maneuver_index, 2.67732573f, 152, instruction_index));
+          maneuver_index, 2.67732573f, 152));
   //----------------------------------------------------------------
   // trace point = 279
   maneuver_index = 5;
@@ -9936,7 +9935,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6640015f, 40.270607f, 1489615117, 16.6079903),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6640167f, 40.2706299f, leg_index, 9.86343575f, 651,
-          maneuver_index, 2.66057634f, 151, instruction_index));
+          maneuver_index, 2.66057634f, 151));
   //----------------------------------------------------------------
   // trace point = 280
   maneuver_index = 5;
@@ -9945,7 +9944,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6638336f, 40.2706795f, 1489615118, 16.2922821),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6638412f, 40.2706947f, leg_index, 9.84687805f, 650,
-          maneuver_index, 2.64401865f, 150, instruction_index));
+          maneuver_index, 2.64401865f, 150));
   //----------------------------------------------------------------
   // trace point = 281
   maneuver_index = 5;
@@ -9954,7 +9953,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6636658f, 40.2707481f, 1489615119, 16.2053375),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6636734f, 40.2707596f, leg_index, 9.82935715f, 649,
-          maneuver_index, 2.62649775f, 149, instruction_index));
+          maneuver_index, 2.62649775f, 149));
   //----------------------------------------------------------------
   // trace point = 282
   maneuver_index = 5;
@@ -9963,7 +9962,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6634903f, 40.2708244f, 1489615120, 17.1768436),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6634903f, 40.2708282f, leg_index, 9.8135643f, 648,
-          maneuver_index, 2.6107049f, 148, instruction_index));
+          maneuver_index, 2.6107049f, 148));
   //----------------------------------------------------------------
   // trace point = 283
   maneuver_index = 5;
@@ -9972,7 +9971,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6633148f, 40.2708931f, 1489615121, 16.7312107),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6633148f, 40.2708931f, leg_index, 9.7970047f, 647,
-          maneuver_index, 2.5941453f, 147, instruction_index));
+          maneuver_index, 2.5941453f, 147));
   //----------------------------------------------------------------
   // trace point = 284
   maneuver_index = 5;
@@ -9981,7 +9980,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6631393f, 40.2709656f, 1489615122, 17.0148106),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6631317f, 40.2709579f, leg_index, 9.77985859f, 646,
-          maneuver_index, 2.57699919f, 146, instruction_index));
+          maneuver_index, 2.57699919f, 146));
   //----------------------------------------------------------------
   // trace point = 285
   maneuver_index = 5;
@@ -9990,7 +9989,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6629562f, 40.2710419f, 1489615123, 17.6966591),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6629486f, 40.2710266f, leg_index, 9.76253128f, 645,
-          maneuver_index, 2.55967188f, 145, instruction_index));
+          maneuver_index, 2.55967188f, 145));
   //----------------------------------------------------------------
   // trace point = 286
   maneuver_index = 5;
@@ -9999,7 +9998,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6627655f, 40.2711143f, 1489615124, 18.0186367),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6627579f, 40.2710953f, leg_index, 9.74461842f, 644,
-          maneuver_index, 2.54175901f, 144, instruction_index));
+          maneuver_index, 2.54175901f, 144));
   //----------------------------------------------------------------
   // trace point = 287
   maneuver_index = 5;
@@ -10008,7 +10007,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.66259f, 40.271183f, 1489615125, 16.8066559),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6625748f, 40.2711601f, leg_index, 9.72747326f, 644,
-          maneuver_index, 2.52461386f, 144, instruction_index));
+          maneuver_index, 2.52461386f, 144));
   //----------------------------------------------------------------
   // trace point = 288
   maneuver_index = 5;
@@ -10017,7 +10016,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6624146f, 40.2712479f, 1489615126, 16.5314522),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6623993f, 40.271225f, leg_index, 9.7109127f, 643,
-          maneuver_index, 2.5080533f, 143, instruction_index));
+          maneuver_index, 2.5080533f, 143));
   //----------------------------------------------------------------
   // trace point = 289
   maneuver_index = 5;
@@ -10026,7 +10025,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6622391f, 40.2713127f, 1489615127, 16.6078491),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6622238f, 40.2712898f, leg_index, 9.69435215f, 642,
-          maneuver_index, 2.49149275f, 142, instruction_index));
+          maneuver_index, 2.49149275f, 142));
   //----------------------------------------------------------------
   // trace point = 290
   maneuver_index = 5;
@@ -10035,7 +10034,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6620712f, 40.2713699f, 1489615128, 15.616416),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.662056f, 40.2713509f, leg_index, 9.67856026f, 641,
-          maneuver_index, 2.47570086f, 141, instruction_index));
+          maneuver_index, 2.47570086f, 141));
   //----------------------------------------------------------------
   // trace point = 291
   maneuver_index = 5;
@@ -10044,7 +10043,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6619186f, 40.2714233f, 1489615129, 14.1944876),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.661911f, 40.2714043f, leg_index, 9.66489124f, 640,
-          maneuver_index, 2.46203184f, 140, instruction_index));
+          maneuver_index, 2.46203184f, 140));
   //----------------------------------------------------------------
   // trace point = 292
   maneuver_index = 5;
@@ -10053,7 +10052,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6617813f, 40.2714729f, 1489615130, 12.9755516),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6617661f, 40.27145f, leg_index, 9.65157032f, 639,
-          maneuver_index, 2.44871092f, 139, instruction_index));
+          maneuver_index, 2.44871092f, 139));
   //----------------------------------------------------------------
   // trace point = 293
   maneuver_index = 5;
@@ -10062,7 +10061,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.661644f, 40.2715187f, 1489615131, 12.7130775),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6616287f, 40.2714958f, leg_index, 9.63884258f, 638,
-          maneuver_index, 2.43598318f, 138, instruction_index));
+          maneuver_index, 2.43598318f, 138));
   //----------------------------------------------------------------
   // trace point = 294
   maneuver_index = 5;
@@ -10071,7 +10070,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6615219f, 40.2715645f, 1489615132, 11.509469),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6615067f, 40.2715416f, leg_index, 9.62729836f, 638,
-          maneuver_index, 2.42443895f, 138, instruction_index));
+          maneuver_index, 2.42443895f, 138));
   //----------------------------------------------------------------
   // trace point = 295
   maneuver_index = 5;
@@ -10080,7 +10079,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6613998f, 40.2716026f, 1489615133, 11.2348633),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6613846f, 40.2715797f, leg_index, 9.61609936f, 637,
-          maneuver_index, 2.41323996f, 137, instruction_index));
+          maneuver_index, 2.41323996f, 137));
   //----------------------------------------------------------------
   // trace point = 296
   maneuver_index = 5;
@@ -10089,7 +10088,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6612854f, 40.2716446f, 1489615134, 10.8289061),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6612701f, 40.2716217f, leg_index, 9.60531902f, 636,
-          maneuver_index, 2.40245962f, 136, instruction_index));
+          maneuver_index, 2.40245962f, 136));
   //----------------------------------------------------------------
   // trace point = 297
   maneuver_index = 5;
@@ -10098,7 +10097,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.661171f, 40.2716789f, 1489615135, 10.3960924),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6611557f, 40.2716599f, leg_index, 9.59471226f, 636,
-          maneuver_index, 2.39185286f, 136, instruction_index));
+          maneuver_index, 2.39185286f, 136));
   //----------------------------------------------------------------
   // trace point = 298
   maneuver_index = 5;
@@ -10107,7 +10106,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6610641f, 40.2717171f, 1489615136, 10.0243425),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6610489f, 40.2716942f, leg_index, 9.58487129f, 635,
-          maneuver_index, 2.38201189f, 135, instruction_index));
+          maneuver_index, 2.38201189f, 135));
   //----------------------------------------------------------------
   // trace point = 299
   maneuver_index = 5;
@@ -10116,7 +10115,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6609497f, 40.2717514f, 1489615137, 10.3960829),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6609421f, 40.2717323f, leg_index, 9.57485867f, 635,
-          maneuver_index, 2.37199926f, 135, instruction_index));
+          maneuver_index, 2.37199926f, 135));
   //----------------------------------------------------------------
   // trace point = 300
   maneuver_index = 5;
@@ -10125,7 +10124,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6608353f, 40.2717857f, 1489615138, 10.5159636),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6608276f, 40.2717667f, leg_index, 9.56441593f, 634,
-          maneuver_index, 2.36155653f, 134, instruction_index));
+          maneuver_index, 2.36155653f, 134));
   //----------------------------------------------------------------
   // trace point = 301
   maneuver_index = 5;
@@ -10134,7 +10133,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6606369f, 40.271843f, 1489615140, 8.9872036),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6606293f, 40.2718277f, leg_index, 9.5462513f, 633,
-          maneuver_index, 2.3433919f, 133, instruction_index));
+          maneuver_index, 2.3433919f, 133));
   //----------------------------------------------------------------
   // trace point = 302
   maneuver_index = 5;
@@ -10143,7 +10142,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6605072f, 40.2718811f, 1489615142, 5.91207409),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6604996f, 40.2718697f, leg_index, 9.53428555f, 633,
-          maneuver_index, 2.33142614f, 133, instruction_index));
+          maneuver_index, 2.33142614f, 133));
   //----------------------------------------------------------------
   // trace point = 303
   maneuver_index = 5;
@@ -10152,7 +10151,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6603546f, 40.2719231f, 1489615145, 4.57688999),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6603546f, 40.2719193f, leg_index, 9.52079773f, 632,
-          maneuver_index, 2.31793833f, 132, instruction_index));
+          maneuver_index, 2.31793833f, 132));
   //----------------------------------------------------------------
   // trace point = 304
   maneuver_index = 5;
@@ -10161,7 +10160,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6602402f, 40.2719498f, 1489615148, 3.40650606),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6602402f, 40.2719536f, leg_index, 9.510355f, 631,
-          maneuver_index, 2.30749559f, 131, instruction_index));
+          maneuver_index, 2.30749559f, 131));
   //----------------------------------------------------------------
   // trace point = 305
   maneuver_index = 5;
@@ -10170,7 +10169,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6601334f, 40.2719841f, 1489615153, 1.96893799),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6601334f, 40.2719879f, leg_index, 9.50051022f, 631,
-          maneuver_index, 2.29765081f, 131, instruction_index));
+          maneuver_index, 2.29765081f, 131));
   //----------------------------------------------------------------
   // trace point = 306
   maneuver_index = 5;
@@ -10179,7 +10178,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6599045f, 40.2720261f, 1489615158, 4.00083399),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6599197f, 40.2720528f, leg_index, 9.48097992f, 630,
-          maneuver_index, 2.27812052f, 130, instruction_index));
+          maneuver_index, 2.27812052f, 130));
   //----------------------------------------------------------------
   // trace point = 307
   maneuver_index = 5;
@@ -10188,7 +10187,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.659729f, 40.2720718f, 1489615160, 7.86048222),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6597443f, 40.2720985f, leg_index, 9.46522903f, 629,
-          maneuver_index, 2.26236963f, 129, instruction_index));
+          maneuver_index, 2.26236963f, 129));
   //----------------------------------------------------------------
   // trace point = 308
   maneuver_index = 5;
@@ -10197,7 +10196,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6595154f, 40.2721291f, 1489615162, 9.62589169),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6595306f, 40.2721558f, leg_index, 9.44599915f, 628,
-          maneuver_index, 2.24313974f, 128, instruction_index));
+          maneuver_index, 2.24313974f, 128));
   //----------------------------------------------------------------
   // trace point = 309
   maneuver_index = 5;
@@ -10206,7 +10205,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6594009f, 40.2721634f, 1489615163, 10.3960276),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6594086f, 40.2721863f, leg_index, 9.43509293f, 627,
-          maneuver_index, 2.23223352f, 127, instruction_index));
+          maneuver_index, 2.23223352f, 127));
   //----------------------------------------------------------------
   // trace point = 310
   maneuver_index = 5;
@@ -10215,7 +10214,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6592789f, 40.2721977f, 1489615164, 11.0703306),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6592865f, 40.2722206f, leg_index, 9.4240427f, 626,
-          maneuver_index, 2.2211833f, 126, instruction_index));
+          maneuver_index, 2.2211833f, 126));
   //----------------------------------------------------------------
   // trace point = 311
   maneuver_index = 5;
@@ -10224,7 +10223,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6591568f, 40.2722282f, 1489615165, 10.8869057),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6591644f, 40.2722511f, leg_index, 9.41312981f, 625,
-          maneuver_index, 2.2102704f, 125, instruction_index));
+          maneuver_index, 2.2102704f, 125));
   //----------------------------------------------------------------
   // trace point = 312
   maneuver_index = 5;
@@ -10233,7 +10232,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6590424f, 40.2722588f, 1489615166, 10.3591824),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.65905f, 40.2722816f, leg_index, 9.40283394f, 625,
-          maneuver_index, 2.19997454f, 125, instruction_index));
+          maneuver_index, 2.19997454f, 125));
   //----------------------------------------------------------------
   // trace point = 313
   maneuver_index = 5;
@@ -10242,7 +10241,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6589127f, 40.2722893f, 1489615167, 11.4542284),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6589203f, 40.2723122f, leg_index, 9.39130878f, 624,
-          maneuver_index, 2.18844938f, 124, instruction_index));
+          maneuver_index, 2.18844938f, 124));
   //----------------------------------------------------------------
   // trace point = 314
   maneuver_index = 5;
@@ -10251,7 +10250,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.658783f, 40.2723312f, 1489615168, 11.990593),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6587906f, 40.2723465f, leg_index, 9.37965012f, 623,
-          maneuver_index, 2.17679071f, 123, instruction_index));
+          maneuver_index, 2.17679071f, 123));
   //----------------------------------------------------------------
   // trace point = 315
   maneuver_index = 5;
@@ -10260,7 +10259,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6586685f, 40.2723732f, 1489615169, 10.7522631),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6586685f, 40.272377f, leg_index, 9.36873913f, 623,
-          maneuver_index, 2.16587973f, 123, instruction_index));
+          maneuver_index, 2.16587973f, 123));
   //----------------------------------------------------------------
   // trace point = 316
   maneuver_index = 5;
@@ -10269,7 +10268,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6585464f, 40.2723999f, 1489615170, 10.870719),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6585464f, 40.2724075f, leg_index, 9.35782909f, 622,
-          maneuver_index, 2.15496969f, 122, instruction_index));
+          maneuver_index, 2.15496969f, 122));
   //----------------------------------------------------------------
   // trace point = 317
   maneuver_index = 5;
@@ -10278,7 +10277,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6584244f, 40.2724342f, 1489615171, 11.0316095),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6584244f, 40.272438f, leg_index, 9.34691906f, 622,
-          maneuver_index, 2.14405966f, 122, instruction_index));
+          maneuver_index, 2.14405966f, 122));
   //----------------------------------------------------------------
   // trace point = 318
   maneuver_index = 5;
@@ -10287,7 +10286,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6583023f, 40.2724648f, 1489615172, 10.9215326),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6583023f, 40.2724686f, leg_index, 9.33600807f, 621,
-          maneuver_index, 2.13314867f, 121, instruction_index));
+          maneuver_index, 2.13314867f, 121));
   //----------------------------------------------------------------
   // trace point = 319
   maneuver_index = 5;
@@ -10296,7 +10295,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6581726f, 40.2724953f, 1489615173, 11.454196),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6581726f, 40.2725029f, leg_index, 9.3243494f, 620,
-          maneuver_index, 2.12149f, 120, instruction_index));
+          maneuver_index, 2.12149f, 120));
   //----------------------------------------------------------------
   // trace point = 320
   maneuver_index = 5;
@@ -10305,7 +10304,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6580429f, 40.2725296f, 1489615174, 11.7087269),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6580429f, 40.2725372f, leg_index, 9.31269073f, 620,
-          maneuver_index, 2.10983133f, 120, instruction_index));
+          maneuver_index, 2.10983133f, 120));
   //----------------------------------------------------------------
   // trace point = 321
   maneuver_index = 5;
@@ -10314,7 +10313,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6579208f, 40.2725601f, 1489615175, 10.886857),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6579208f, 40.2725677f, leg_index, 9.30177975f, 619,
-          maneuver_index, 2.09892035f, 119, instruction_index));
+          maneuver_index, 2.09892035f, 119));
   //----------------------------------------------------------------
   // trace point = 322
   maneuver_index = 5;
@@ -10323,7 +10322,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6577835f, 40.2725906f, 1489615176, 12.1369362),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6577911f, 40.2726021f, leg_index, 9.29012108f, 618,
-          maneuver_index, 2.08726168f, 118, instruction_index));
+          maneuver_index, 2.08726168f, 118));
   //----------------------------------------------------------------
   // trace point = 323
   maneuver_index = 5;
@@ -10332,7 +10331,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6576462f, 40.2726288f, 1489615177, 12.4609089),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6576462f, 40.2726364f, leg_index, 9.27723217f, 618,
-          maneuver_index, 2.07437277f, 118, instruction_index));
+          maneuver_index, 2.07437277f, 118));
   //----------------------------------------------------------------
   // trace point = 324
   maneuver_index = 5;
@@ -10341,7 +10340,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6575165f, 40.2726555f, 1489615178, 11.4144907),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6575241f, 40.2726669f, leg_index, 9.26632118f, 617,
-          maneuver_index, 2.06346178f, 117, instruction_index));
+          maneuver_index, 2.06346178f, 117));
   //----------------------------------------------------------------
   // trace point = 325
   maneuver_index = 5;
@@ -10350,7 +10349,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6573944f, 40.272686f, 1489615179, 10.9215002),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.657402f, 40.2726974f, leg_index, 9.25541115f, 616,
-          maneuver_index, 2.05255175f, 116, instruction_index));
+          maneuver_index, 2.05255175f, 116));
   //----------------------------------------------------------------
   // trace point = 326
   maneuver_index = 5;
@@ -10359,7 +10358,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6572647f, 40.2727165f, 1489615180, 11.487112),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6572723f, 40.2727318f, leg_index, 9.24375248f, 616,
-          maneuver_index, 2.04089308f, 116, instruction_index));
+          maneuver_index, 2.04089308f, 116));
   //----------------------------------------------------------------
   // trace point = 327
   maneuver_index = 5;
@@ -10368,7 +10367,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.657135f, 40.2727509f, 1489615181, 11.672122),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6571426f, 40.2727623f, leg_index, 9.23222637f, 615,
-          maneuver_index, 2.02936697f, 115, instruction_index));
+          maneuver_index, 2.02936697f, 115));
   //----------------------------------------------------------------
   // trace point = 328
   maneuver_index = 5;
@@ -10377,7 +10376,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6570053f, 40.2727814f, 1489615182, 11.5354223),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6570129f, 40.2727966f, leg_index, 9.2205677f, 614,
-          maneuver_index, 2.0177083f, 114, instruction_index));
+          maneuver_index, 2.0177083f, 114));
   //----------------------------------------------------------------
   // trace point = 329
   maneuver_index = 5;
@@ -10386,7 +10385,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6568832f, 40.2728157f, 1489615183, 11.0702419),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6568909f, 40.2728271f, leg_index, 9.20965767f, 614,
-          maneuver_index, 2.00679827f, 114, instruction_index));
+          maneuver_index, 2.00679827f, 114));
   //----------------------------------------------------------------
   // trace point = 330
   maneuver_index = 5;
@@ -10395,7 +10394,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6567535f, 40.2728462f, 1489615184, 11.4541416),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6567612f, 40.2728615f, leg_index, 9.197999f, 613,
-          maneuver_index, 1.9951396f, 113, instruction_index));
+          maneuver_index, 1.9951396f, 113));
   //----------------------------------------------------------------
   // trace point = 331
   maneuver_index = 5;
@@ -10404,7 +10403,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6566315f, 40.2728806f, 1489615185, 11.1497726),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6566391f, 40.272892f, leg_index, 9.18708897f, 613,
-          maneuver_index, 1.98422956f, 113, instruction_index));
+          maneuver_index, 1.98422956f, 113));
   //----------------------------------------------------------------
   // trace point = 332
   maneuver_index = 5;
@@ -10413,7 +10412,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.656517f, 40.2729073f, 1489615186, 10.1057978),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6565247f, 40.2729187f, leg_index, 9.17692661f, 612,
-          maneuver_index, 1.97406721f, 112, instruction_index));
+          maneuver_index, 1.97406721f, 112));
   //----------------------------------------------------------------
   // trace point = 333
   maneuver_index = 5;
@@ -10422,7 +10421,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6563416f, 40.2729492f, 1489615188, 7.79071522),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6563492f, 40.2729645f, leg_index, 9.16117668f, 611,
-          maneuver_index, 1.95831728f, 111, instruction_index));
+          maneuver_index, 1.95831728f, 111));
   //----------------------------------------------------------------
   // trace point = 334
   maneuver_index = 5;
@@ -10431,7 +10430,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6562271f, 40.2729797f, 1489615190, 5.17954206),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6562347f, 40.2729912f, leg_index, 9.15101528f, 611,
-          maneuver_index, 1.94815588f, 111, instruction_index));
+          maneuver_index, 1.94815588f, 111));
   //----------------------------------------------------------------
   // trace point = 335
   maneuver_index = 5;
@@ -10440,7 +10439,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6560593f, 40.2730217f, 1489615239, 0.306434989),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6560669f, 40.273037f, leg_index, 9.13588238f, 610,
-          maneuver_index, 1.93302298f, 110, instruction_index));
+          maneuver_index, 1.93302298f, 110));
   //----------------------------------------------------------------
   // trace point = 336
   maneuver_index = 5;
@@ -10449,7 +10448,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6558838f, 40.2730598f, 1489615241, 7.72681713),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6558914f, 40.2730789f, leg_index, 9.1202631f, 609,
-          maneuver_index, 1.9174037f, 109, instruction_index));
+          maneuver_index, 1.9174037f, 109));
   //----------------------------------------------------------------
   // trace point = 337
   maneuver_index = 5;
@@ -10458,7 +10457,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6556625f, 40.2731056f, 1489615243, 9.72814465),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6556702f, 40.2731285f, leg_index, 9.10068035f, 608,
-          maneuver_index, 1.89782095f, 108, instruction_index));
+          maneuver_index, 1.89782095f, 108));
   //----------------------------------------------------------------
   // trace point = 338
   maneuver_index = 5;
@@ -10467,7 +10466,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6555405f, 40.2731361f, 1489615244, 10.9676428),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6555481f, 40.273159f, leg_index, 9.08977127f, 607,
-          maneuver_index, 1.88691187f, 107, instruction_index));
+          maneuver_index, 1.88691187f, 107));
   //----------------------------------------------------------------
   // trace point = 339
   maneuver_index = 5;
@@ -10476,7 +10475,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6553955f, 40.2731705f, 1489615245, 12.8026848),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6554031f, 40.2731934f, leg_index, 9.07688046f, 606,
-          maneuver_index, 1.87402105f, 106, instruction_index));
+          maneuver_index, 1.87402105f, 106));
   //----------------------------------------------------------------
   // trace point = 340
   maneuver_index = 5;
@@ -10485,7 +10484,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6552505f, 40.2732048f, 1489615246, 12.9169807),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6552582f, 40.2732277f, leg_index, 9.06398869f, 605,
-          maneuver_index, 1.86112928f, 105, instruction_index));
+          maneuver_index, 1.86112928f, 105));
   //----------------------------------------------------------------
   // trace point = 341
   maneuver_index = 5;
@@ -10494,7 +10493,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6551132f, 40.273243f, 1489615247, 12.4608088),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6551208f, 40.273262f, leg_index, 9.05171776f, 605,
-          maneuver_index, 1.84885836f, 105, instruction_index));
+          maneuver_index, 1.84885836f, 105));
   //----------------------------------------------------------------
   // trace point = 342
   maneuver_index = 5;
@@ -10503,7 +10502,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6549759f, 40.2732773f, 1489615248, 12.2359686),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6549835f, 40.2732925f, leg_index, 9.03956985f, 604,
-          maneuver_index, 1.83671045f, 104, instruction_index));
+          maneuver_index, 1.83671045f, 104));
   //----------------------------------------------------------------
   // trace point = 343
   maneuver_index = 5;
@@ -10512,7 +10511,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6548462f, 40.2733154f, 1489615249, 11.8239298),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6548462f, 40.2733192f, leg_index, 9.02753735f, 604,
-          maneuver_index, 1.82467794f, 104, instruction_index));
+          maneuver_index, 1.82467794f, 104));
   //----------------------------------------------------------------
   // trace point = 344
   maneuver_index = 5;
@@ -10521,7 +10520,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6547012f, 40.2733498f, 1489615250, 12.9169559),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6547012f, 40.2733498f, leg_index, 9.01476574f, 603,
-          maneuver_index, 1.81190634f, 103, instruction_index));
+          maneuver_index, 1.81190634f, 103));
   //----------------------------------------------------------------
   // trace point = 345
   maneuver_index = 5;
@@ -10530,7 +10529,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6545486f, 40.2733765f, 1489615251, 13.2303286),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6545486f, 40.2733841f, leg_index, 9.00125504f, 602,
-          maneuver_index, 1.79839563f, 102, instruction_index));
+          maneuver_index, 1.79839563f, 102));
   //----------------------------------------------------------------
   // trace point = 346
   maneuver_index = 5;
@@ -10539,7 +10538,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6543808f, 40.273407f, 1489615252, 14.6801615),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6543884f, 40.2734184f, leg_index, 8.98712063f, 601,
-          maneuver_index, 1.78426123f, 101, instruction_index));
+          maneuver_index, 1.78426123f, 101));
   //----------------------------------------------------------------
   // trace point = 347
   maneuver_index = 5;
@@ -10548,7 +10547,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.654213f, 40.2734375f, 1489615253, 14.6801548),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6542206f, 40.2734566f, leg_index, 8.97224712f, 600,
-          maneuver_index, 1.76938772f, 100, instruction_index));
+          maneuver_index, 1.76938772f, 100));
   //----------------------------------------------------------------
   // trace point = 348
   maneuver_index = 5;
@@ -10557,7 +10556,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6540222f, 40.2734718f, 1489615254, 16.6579189),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6540298f, 40.2734947f, leg_index, 8.95550346f, 600,
-          maneuver_index, 1.75264406f, 100, instruction_index));
+          maneuver_index, 1.75264406f, 100));
   //----------------------------------------------------------------
   // trace point = 349
   maneuver_index = 5;
@@ -10566,7 +10565,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6538467f, 40.27351f, 1489615255, 15.4535379),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6538544f, 40.2735329f, leg_index, 8.94000626f, 599,
-          maneuver_index, 1.73714685f, 99, instruction_index));
+          maneuver_index, 1.73714685f, 99));
   //----------------------------------------------------------------
   // trace point = 350
   maneuver_index = 5;
@@ -10575,7 +10574,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.653656f, 40.2735481f, 1489615256, 16.7646828),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6536636f, 40.2735748f, leg_index, 8.92314625f, 598,
-          maneuver_index, 1.72028685f, 98, instruction_index));
+          maneuver_index, 1.72028685f, 98));
   //----------------------------------------------------------------
   // trace point = 351
   maneuver_index = 5;
@@ -10584,7 +10583,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6534653f, 40.2735939f, 1489615257, 17.0112228),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6534729f, 40.2736168f, leg_index, 8.90628719f, 597,
-          maneuver_index, 1.70342779f, 97, instruction_index));
+          maneuver_index, 1.70342779f, 97));
   //----------------------------------------------------------------
   // trace point = 352
   maneuver_index = 5;
@@ -10593,7 +10592,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6532745f, 40.2736435f, 1489615258, 17.0342216),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6532822f, 40.2736588f, leg_index, 8.88942719f, 596,
-          maneuver_index, 1.68656778f, 96, instruction_index));
+          maneuver_index, 1.68656778f, 96));
   //----------------------------------------------------------------
   // trace point = 353
   maneuver_index = 5;
@@ -10602,7 +10601,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6530762f, 40.2736855f, 1489615259, 17.5364037),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6530838f, 40.2737007f, leg_index, 8.87194443f, 595,
-          maneuver_index, 1.66908503f, 95, instruction_index));
+          maneuver_index, 1.66908503f, 95));
   //----------------------------------------------------------------
   // trace point = 354
   maneuver_index = 5;
@@ -10611,7 +10610,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6528702f, 40.2737274f, 1489615260, 18.1100979),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6528778f, 40.2737465f, leg_index, 8.85372257f, 594,
-          maneuver_index, 1.65086317f, 94, instruction_index));
+          maneuver_index, 1.65086317f, 94));
   //----------------------------------------------------------------
   // trace point = 355
   maneuver_index = 5;
@@ -10620,7 +10619,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6526566f, 40.2737732f, 1489615261, 18.8014545),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6526642f, 40.2737923f, leg_index, 8.83487701f, 593,
-          maneuver_index, 1.63201761f, 93, instruction_index));
+          maneuver_index, 1.63201761f, 93));
   //----------------------------------------------------------------
   // trace point = 356
   maneuver_index = 5;
@@ -10629,7 +10628,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6524506f, 40.2738152f, 1489615262, 18.110075),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6524582f, 40.2738342f, leg_index, 8.8167696f, 592,
-          maneuver_index, 1.6139102f, 92, instruction_index));
+          maneuver_index, 1.6139102f, 92));
   //----------------------------------------------------------------
   // trace point = 357
   maneuver_index = 5;
@@ -10638,7 +10637,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6522446f, 40.2738571f, 1489615263, 18.1100655),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6522522f, 40.27388f, leg_index, 8.79854774f, 591,
-          maneuver_index, 1.59568834f, 91, instruction_index));
+          maneuver_index, 1.59568834f, 91));
   //----------------------------------------------------------------
   // trace point = 358
   maneuver_index = 5;
@@ -10647,7 +10646,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6520386f, 40.2739067f, 1489615264, 18.360136),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6520462f, 40.2739258f, leg_index, 8.78032589f, 590,
-          maneuver_index, 1.57746649f, 90, instruction_index));
+          maneuver_index, 1.57746649f, 90));
   //----------------------------------------------------------------
   // trace point = 359
   maneuver_index = 5;
@@ -10656,7 +10655,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6518402f, 40.2739525f, 1489615265, 17.6283169),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6518478f, 40.2739677f, leg_index, 8.76284313f, 589,
-          maneuver_index, 1.55998373f, 89, instruction_index));
+          maneuver_index, 1.55998373f, 89));
   //----------------------------------------------------------------
   // trace point = 360
   maneuver_index = 5;
@@ -10665,7 +10664,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6516418f, 40.2739983f, 1489615266, 17.5789948),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6516495f, 40.2740097f, leg_index, 8.74535942f, 588,
-          maneuver_index, 1.54250002f, 88, instruction_index));
+          maneuver_index, 1.54250002f, 88));
   //----------------------------------------------------------------
   // trace point = 361
   maneuver_index = 5;
@@ -10674,7 +10673,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6514435f, 40.2740479f, 1489615267, 17.7944641),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6514435f, 40.2740555f, leg_index, 8.72713661f, 587,
-          maneuver_index, 1.52427721f, 87, instruction_index));
+          maneuver_index, 1.52427721f, 87));
   //----------------------------------------------------------------
   // trace point = 362
   maneuver_index = 5;
@@ -10683,7 +10682,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6512375f, 40.2740936f, 1489615268, 18.2300396),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6512375f, 40.2741013f, leg_index, 8.70891476f, 586,
-          maneuver_index, 1.50605536f, 86, instruction_index));
+          maneuver_index, 1.50605536f, 86));
   //----------------------------------------------------------------
   // trace point = 363
   maneuver_index = 5;
@@ -10692,7 +10691,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6510391f, 40.2741356f, 1489615269, 17.4544525),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6510468f, 40.274147f, leg_index, 8.69193459f, 585,
-          maneuver_index, 1.48907518f, 85, instruction_index));
+          maneuver_index, 1.48907518f, 85));
   //----------------------------------------------------------------
   // trace point = 364
   maneuver_index = 5;
@@ -10701,7 +10700,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6508408f, 40.2741814f, 1489615270, 17.5468464),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6508484f, 40.2741928f, leg_index, 8.67433357f, 584,
-          maneuver_index, 1.47147417f, 84, instruction_index));
+          maneuver_index, 1.47147417f, 84));
   //----------------------------------------------------------------
   // trace point = 365
   maneuver_index = 5;
@@ -10710,7 +10709,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6506424f, 40.2742233f, 1489615271, 17.536274),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.65065f, 40.2742348f, leg_index, 8.65685368f, 583,
-          maneuver_index, 1.45399427f, 83, instruction_index));
+          maneuver_index, 1.45399427f, 83));
   //----------------------------------------------------------------
   // trace point = 366
   maneuver_index = 5;
@@ -10719,7 +10718,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.650444f, 40.2742691f, 1489615272, 17.5789299),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6504517f, 40.2742805f, leg_index, 8.63925171f, 582,
-          maneuver_index, 1.43639231f, 82, instruction_index));
+          maneuver_index, 1.43639231f, 82));
   //----------------------------------------------------------------
   // trace point = 367
   maneuver_index = 5;
@@ -10728,7 +10727,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6502457f, 40.2743149f, 1489615273, 17.5789185),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6502533f, 40.2743263f, leg_index, 8.6216507f, 581,
-          maneuver_index, 1.41879129f, 81, instruction_index));
+          maneuver_index, 1.41879129f, 81));
   //----------------------------------------------------------------
   // trace point = 368
   maneuver_index = 5;
@@ -10737,7 +10736,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6500549f, 40.2743607f, 1489615274, 17.0110474),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6500549f, 40.2743683f, leg_index, 8.6041708f, 580,
-          maneuver_index, 1.4013114f, 80, instruction_index));
+          maneuver_index, 1.4013114f, 80));
   //----------------------------------------------------------------
   // trace point = 369
   maneuver_index = 5;
@@ -10746,7 +10745,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6498566f, 40.2744026f, 1489615275, 17.4543877),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6498642f, 40.2744141f, leg_index, 8.58719063f, 579,
-          maneuver_index, 1.38433123f, 79, instruction_index));
+          maneuver_index, 1.38433123f, 79));
   //----------------------------------------------------------------
   // trace point = 370
   maneuver_index = 5;
@@ -10755,7 +10754,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6496582f, 40.2744446f, 1489615276, 17.5362206),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6496658f, 40.2744598f, leg_index, 8.56958961f, 578,
-          maneuver_index, 1.36673021f, 78, instruction_index));
+          maneuver_index, 1.36673021f, 78));
   //----------------------------------------------------------------
   // trace point = 371
   maneuver_index = 5;
@@ -10764,7 +10763,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6494598f, 40.2744865f, 1489615277, 17.4543667),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6494675f, 40.2745056f, leg_index, 8.5519886f, 577,
-          maneuver_index, 1.3491292f, 77, instruction_index));
+          maneuver_index, 1.3491292f, 77));
   //----------------------------------------------------------------
   // trace point = 372
   maneuver_index = 5;
@@ -10773,7 +10772,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6492691f, 40.2745171f, 1489615278, 16.5621796),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6492767f, 40.2745476f, leg_index, 8.53512955f, 576,
-          maneuver_index, 1.33227015f, 76, instruction_index));
+          maneuver_index, 1.33227015f, 76));
   //----------------------------------------------------------------
   // trace point = 373
   maneuver_index = 5;
@@ -10782,7 +10781,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.649086f, 40.2745514f, 1489615279, 15.9967289),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6491013f, 40.2745857f, leg_index, 8.51963425f, 575,
-          maneuver_index, 1.31677485f, 75, instruction_index));
+          maneuver_index, 1.31677485f, 75));
   //----------------------------------------------------------------
   // trace point = 374
   maneuver_index = 5;
@@ -10791,7 +10790,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6489182f, 40.2745857f, 1489615280, 14.7909279),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6489334f, 40.2746239f, leg_index, 8.5047617f, 574,
-          maneuver_index, 1.30190229f, 74, instruction_index));
+          maneuver_index, 1.30190229f, 74));
   //----------------------------------------------------------------
   // trace point = 375
   maneuver_index = 5;
@@ -10800,7 +10799,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6487732f, 40.2746201f, 1489615281, 12.8835936),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6487885f, 40.2746582f, leg_index, 8.49186897f, 574,
-          maneuver_index, 1.28900957f, 74, instruction_index));
+          maneuver_index, 1.28900957f, 74));
   //----------------------------------------------------------------
   // trace point = 376
   maneuver_index = 5;
@@ -10809,7 +10808,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6486435f, 40.2746506f, 1489615282, 11.5678492),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6486664f, 40.2746849f, leg_index, 8.48108387f, 573,
-          maneuver_index, 1.27822447f, 73, instruction_index));
+          maneuver_index, 1.27822447f, 73));
   //----------------------------------------------------------------
   // trace point = 377
   maneuver_index = 5;
@@ -10818,7 +10817,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6485138f, 40.2746735f, 1489615283, 11.2265654),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6485214f, 40.274704f, leg_index, 8.46859169f, 572,
-          maneuver_index, 1.26573229f, 72, instruction_index));
+          maneuver_index, 1.26573229f, 72));
   //----------------------------------------------------------------
   // trace point = 378
   maneuver_index = 5;
@@ -10827,7 +10826,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6483994f, 40.2746964f, 1489615284, 10.0971489),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.648407f, 40.2747231f, leg_index, 8.45865154f, 572,
-          maneuver_index, 1.25579214f, 72, instruction_index));
+          maneuver_index, 1.25579214f, 72));
   //----------------------------------------------------------------
   // trace point = 379
   maneuver_index = 5;
@@ -10836,7 +10835,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6482697f, 40.2747116f, 1489615285, 11.1000109),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6482773f, 40.2747383f, leg_index, 8.44750595f, 571,
-          maneuver_index, 1.24464655f, 71, instruction_index));
+          maneuver_index, 1.24464655f, 71));
   //----------------------------------------------------------------
   // trace point = 380
   maneuver_index = 5;
@@ -10845,7 +10844,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6481323f, 40.2747269f, 1489615286, 11.8389101),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.64814f, 40.2747536f, leg_index, 8.4357233f, 571,
-          maneuver_index, 1.2328639f, 71, instruction_index));
+          maneuver_index, 1.2328639f, 71));
   //----------------------------------------------------------------
   // trace point = 381
   maneuver_index = 5;
@@ -10854,7 +10853,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6479797f, 40.2747459f, 1489615287, 13.0817165),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6479874f, 40.2747765f, leg_index, 8.42252159f, 570,
-          maneuver_index, 1.21966219f, 70, instruction_index));
+          maneuver_index, 1.21966219f, 70));
   //----------------------------------------------------------------
   // trace point = 382
   maneuver_index = 5;
@@ -10863,7 +10862,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6478271f, 40.2747726f, 1489615288, 13.3375998),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6478348f, 40.2747917f, leg_index, 8.40945721f, 569,
-          maneuver_index, 1.20659781f, 69, instruction_index));
+          maneuver_index, 1.20659781f, 69));
   //----------------------------------------------------------------
   // trace point = 383
   maneuver_index = 5;
@@ -10872,7 +10871,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6476669f, 40.2747955f, 1489615289, 13.8281422),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6476669f, 40.2748146f, leg_index, 8.39497757f, 568,
-          maneuver_index, 1.19211817f, 68, instruction_index));
+          maneuver_index, 1.19211817f, 68));
   //----------------------------------------------------------------
   // trace point = 384
   maneuver_index = 5;
@@ -10881,7 +10880,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6474991f, 40.2748184f, 1489615290, 14.4771404),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6474991f, 40.2748337f, leg_index, 8.38056564f, 567,
-          maneuver_index, 1.17770624f, 67, instruction_index));
+          maneuver_index, 1.17770624f, 67));
   //----------------------------------------------------------------
   // trace point = 385
   maneuver_index = 5;
@@ -10890,7 +10889,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.647316f, 40.2748413f, 1489615291, 15.7519341),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.647316f, 40.2748566f, leg_index, 8.36480713f, 566,
-          maneuver_index, 1.16194773f, 66, instruction_index));
+          maneuver_index, 1.16194773f, 66));
   //----------------------------------------------------------------
   // trace point = 386
   maneuver_index = 5;
@@ -10899,7 +10898,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6471329f, 40.2748642f, 1489615292, 15.7519293),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6471329f, 40.2748795f, leg_index, 8.34904861f, 565,
-          maneuver_index, 1.14618921f, 65, instruction_index));
+          maneuver_index, 1.14618921f, 65));
   //----------------------------------------------------------------
   // trace point = 387
   maneuver_index = 5;
@@ -10908,7 +10907,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6469421f, 40.2748871f, 1489615293, 16.4227104),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6469421f, 40.2749023f, leg_index, 8.33264923f, 564,
-          maneuver_index, 1.12978983f, 64, instruction_index));
+          maneuver_index, 1.12978983f, 64));
   //----------------------------------------------------------------
   // trace point = 388
   maneuver_index = 5;
@@ -10917,7 +10916,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6467514f, 40.27491f, 1489615294, 16.4227047),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6467514f, 40.2749252f, leg_index, 8.3162508f, 563,
-          maneuver_index, 1.1133914f, 63, instruction_index));
+          maneuver_index, 1.1133914f, 63));
   //----------------------------------------------------------------
   // trace point = 389
   maneuver_index = 5;
@@ -10926,7 +10925,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6465454f, 40.2749329f, 1489615295, 17.682209),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6465454f, 40.2749519f, leg_index, 8.29850578f, 562,
-          maneuver_index, 1.09564638f, 62, instruction_index));
+          maneuver_index, 1.09564638f, 62));
   //----------------------------------------------------------------
   // trace point = 390
   maneuver_index = 5;
@@ -10935,7 +10934,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.646347f, 40.2749557f, 1489615296, 17.0101967),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.646347f, 40.274971f, leg_index, 8.2815237f, 561,
-          maneuver_index, 1.0786643f, 61, instruction_index));
+          maneuver_index, 1.0786643f, 61));
   //----------------------------------------------------------------
   // trace point = 391
   maneuver_index = 5;
@@ -10944,7 +10943,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6461487f, 40.2749786f, 1489615297, 17.010191),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6461487f, 40.2749939f, leg_index, 8.26448822f, 560,
-          maneuver_index, 1.06162882f, 60, instruction_index));
+          maneuver_index, 1.06162882f, 60));
   //----------------------------------------------------------------
   // trace point = 392
   maneuver_index = 5;
@@ -10953,7 +10952,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6459427f, 40.2749977f, 1489615298, 17.6232243),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6459427f, 40.275013f, leg_index, 8.24686527f, 559,
-          maneuver_index, 1.04400587f, 59, instruction_index));
+          maneuver_index, 1.04400587f, 59));
   //----------------------------------------------------------------
   // trace point = 393
   maneuver_index = 5;
@@ -10962,7 +10961,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6457367f, 40.2750168f, 1489615299, 17.6232185),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6457367f, 40.275032f, leg_index, 8.22924232f, 558,
-          maneuver_index, 1.02638292f, 58, instruction_index));
+          maneuver_index, 1.02638292f, 58));
   //----------------------------------------------------------------
   // trace point = 394
   maneuver_index = 5;
@@ -10971,7 +10970,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6455383f, 40.275032f, 1489615300, 16.9835987),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6455383f, 40.2750511f, leg_index, 8.21226215f, 557,
-          maneuver_index, 1.00940275f, 57, instruction_index));
+          maneuver_index, 1.00940275f, 57));
   //----------------------------------------------------------------
   // trace point = 395
   maneuver_index = 5;
@@ -10980,7 +10979,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6453247f, 40.2750511f, 1489615301, 18.2135715),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6453323f, 40.275074f, leg_index, 8.19458389f, 556,
-          maneuver_index, 0.991724491f, 56, instruction_index));
+          maneuver_index, 0.991724491f, 56));
   //----------------------------------------------------------------
   // trace point = 396
   maneuver_index = 5;
@@ -10989,7 +10988,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6451111f, 40.2750702f, 1489615302, 18.2979259),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6451187f, 40.2750931f, leg_index, 8.17632866f, 555,
-          maneuver_index, 0.973469257f, 55, instruction_index));
+          maneuver_index, 0.973469257f, 55));
   //----------------------------------------------------------------
   // trace point = 397
   maneuver_index = 5;
@@ -10998,7 +10997,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6448898f, 40.2750931f, 1489615303, 18.9436073),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6448898f, 40.2751122f, leg_index, 8.15676022f, 554,
-          maneuver_index, 0.953900814f, 54, instruction_index));
+          maneuver_index, 0.953900814f, 54));
   //----------------------------------------------------------------
   // trace point = 398
   maneuver_index = 5;
@@ -11007,7 +11006,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6446533f, 40.275116f, 1489615304, 20.2908611),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6446533f, 40.275135f, leg_index, 8.13651466f, 553,
-          maneuver_index, 0.933655262f, 53, instruction_index));
+          maneuver_index, 0.933655262f, 53));
   //----------------------------------------------------------------
   // trace point = 399
   maneuver_index = 5;
@@ -11016,7 +11015,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6444168f, 40.275135f, 1489615305, 20.1550255),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6444168f, 40.2751541f, leg_index, 8.11631489f, 551,
-          maneuver_index, 0.913455486f, 51, instruction_index));
+          maneuver_index, 0.913455486f, 51));
   //----------------------------------------------------------------
   // trace point = 400
   maneuver_index = 5;
@@ -11025,7 +11024,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6441803f, 40.2751541f, 1489615306, 20.2394829),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6441803f, 40.2751732f, leg_index, 8.09611702f, 550,
-          maneuver_index, 0.893257618f, 50, instruction_index));
+          maneuver_index, 0.893257618f, 50));
   //----------------------------------------------------------------
   // trace point = 401
   maneuver_index = 5;
@@ -11034,7 +11033,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6439362f, 40.2751732f, 1489615307, 20.8308334),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6439362f, 40.2751923f, leg_index, 8.075284f, 549,
-          maneuver_index, 0.872424603f, 49, instruction_index));
+          maneuver_index, 0.872424603f, 49));
   //----------------------------------------------------------------
   // trace point = 402
   maneuver_index = 5;
@@ -11043,7 +11042,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6436996f, 40.2751923f, 1489615308, 20.1550083),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6436996f, 40.2752075f, leg_index, 8.05510807f, 548,
-          maneuver_index, 0.852248669f, 48, instruction_index));
+          maneuver_index, 0.852248669f, 48));
   //----------------------------------------------------------------
   // trace point = 403
   maneuver_index = 5;
@@ -11052,7 +11051,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6434555f, 40.2752037f, 1489615309, 20.7661762),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6434555f, 40.275219f, leg_index, 8.03433418f, 547,
-          maneuver_index, 0.831474781f, 47, instruction_index));
+          maneuver_index, 0.831474781f, 47));
   //----------------------------------------------------------------
   // trace point = 404
   maneuver_index = 5;
@@ -11061,7 +11060,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.643219f, 40.2752075f, 1489615310, 20.1335716),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.643219f, 40.2752266f, leg_index, 8.01423168f, 545,
-          maneuver_index, 0.81137228f, 45, instruction_index));
+          maneuver_index, 0.81137228f, 45));
   //----------------------------------------------------------------
   // trace point = 405
   maneuver_index = 5;
@@ -11070,7 +11069,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6429825f, 40.2752113f, 1489615311, 20.1314163),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6429825f, 40.275238f, leg_index, 7.99410439f, 544,
-          maneuver_index, 0.791244984f, 44, instruction_index));
+          maneuver_index, 0.791244984f, 44));
   //----------------------------------------------------------------
   // trace point = 406
   maneuver_index = 5;
@@ -11079,7 +11078,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.642746f, 40.275219f, 1489615312, 20.063488),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.642746f, 40.2752419f, leg_index, 7.97400188f, 543,
-          maneuver_index, 0.771142483f, 43, instruction_index));
+          maneuver_index, 0.771142483f, 43));
   //----------------------------------------------------------------
   // trace point = 407
   maneuver_index = 5;
@@ -11088,7 +11087,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6425171f, 40.2752228f, 1489615313, 19.4542904),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6425171f, 40.2752457f, leg_index, 7.95455837f, 542,
-          maneuver_index, 0.751698971f, 42, instruction_index));
+          maneuver_index, 0.751698971f, 42));
   //----------------------------------------------------------------
   // trace point = 408
   maneuver_index = 5;
@@ -11097,7 +11096,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6422958f, 40.2752304f, 1489615314, 18.7859135),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6422958f, 40.2752495f, leg_index, 7.93576336f, 541,
-          maneuver_index, 0.732903957f, 41, instruction_index));
+          maneuver_index, 0.732903957f, 41));
   //----------------------------------------------------------------
   // trace point = 409
   maneuver_index = 5;
@@ -11106,7 +11105,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6420746f, 40.2752342f, 1489615315, 18.7750244),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6420746f, 40.2752495f, leg_index, 7.91697407f, 540,
-          maneuver_index, 0.714114666f, 40, instruction_index));
+          maneuver_index, 0.714114666f, 40));
   //----------------------------------------------------------------
   // trace point = 410
   maneuver_index = 5;
@@ -11115,7 +11114,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.641861f, 40.2752419f, 1489615316, 18.1970291),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.641861f, 40.2752533f, leg_index, 7.89882612f, 539,
-          maneuver_index, 0.695966721f, 39, instruction_index));
+          maneuver_index, 0.695966721f, 39));
   //----------------------------------------------------------------
   // trace point = 411
   maneuver_index = 5;
@@ -11124,7 +11123,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.641655f, 40.2752457f, 1489615317, 17.501442),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.641655f, 40.2752533f, leg_index, 7.8813343f, 538,
-          maneuver_index, 0.678474903f, 38, instruction_index));
+          maneuver_index, 0.678474903f, 38));
   //----------------------------------------------------------------
   // trace point = 412
   maneuver_index = 5;
@@ -11133,7 +11132,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.641449f, 40.2752495f, 1489615318, 17.4989624),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.641449f, 40.2752571f, leg_index, 7.86383295f, 537,
-          maneuver_index, 0.660973549f, 37, instruction_index));
+          maneuver_index, 0.660973549f, 37));
   //----------------------------------------------------------------
   // trace point = 413
   maneuver_index = 5;
@@ -11142,7 +11141,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6412582f, 40.2752571f, 1489615319, 16.2462368),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6412582f, 40.2752571f, leg_index, 7.84763479f, 536,
-          maneuver_index, 0.644775391f, 36, instruction_index));
+          maneuver_index, 0.644775391f, 36));
   //----------------------------------------------------------------
   // trace point = 414
   maneuver_index = 5;
@@ -11151,7 +11150,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6410675f, 40.2752571f, 1489615320, 16.1368771),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6410675f, 40.2752609f, leg_index, 7.83143187f, 535,
-          maneuver_index, 0.628572464f, 35, instruction_index));
+          maneuver_index, 0.628572464f, 35));
   //----------------------------------------------------------------
   // trace point = 415
   maneuver_index = 5;
@@ -11160,7 +11159,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6408768f, 40.2752609f, 1489615321, 16.2279186),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6408768f, 40.2752609f, leg_index, 7.81523323f, 534,
-          maneuver_index, 0.612373829f, 34, instruction_index));
+          maneuver_index, 0.612373829f, 34));
   //----------------------------------------------------------------
   // trace point = 416
   maneuver_index = 5;
@@ -11169,7 +11168,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6407013f, 40.2752647f, 1489615322, 14.9544725),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6407013f, 40.2752647f, leg_index, 7.80032635f, 533,
-          maneuver_index, 0.597466946f, 33, instruction_index));
+          maneuver_index, 0.597466946f, 33));
   //----------------------------------------------------------------
   // trace point = 417
   maneuver_index = 5;
@@ -11178,7 +11177,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6405334f, 40.2752647f, 1489615323, 14.2683954),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6405334f, 40.2752647f, leg_index, 7.78607178f, 532,
-          maneuver_index, 0.583212376f, 32, instruction_index));
+          maneuver_index, 0.583212376f, 32));
   //----------------------------------------------------------------
   // trace point = 418
   maneuver_index = 5;
@@ -11187,7 +11186,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6403732f, 40.2752686f, 1489615324, 13.596241),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6403732f, 40.2752647f, leg_index, 7.77246523f, 532,
-          maneuver_index, 0.569605827f, 32, instruction_index));
+          maneuver_index, 0.569605827f, 32));
   //----------------------------------------------------------------
   // trace point = 419
   maneuver_index = 5;
@@ -11196,7 +11195,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6402359f, 40.2752724f, 1489615325, 11.6403275),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6402359f, 40.2752686f, leg_index, 7.76079798f, 531,
-          maneuver_index, 0.557938576f, 31, instruction_index));
+          maneuver_index, 0.557938576f, 31));
   //----------------------------------------------------------------
   // trace point = 420
   maneuver_index = 5;
@@ -11205,7 +11204,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6401138f, 40.2752724f, 1489615326, 10.3615723),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6401138f, 40.2752686f, leg_index, 7.75043058f, 530,
-          maneuver_index, 0.547571182f, 30, instruction_index));
+          maneuver_index, 0.547571182f, 30));
   //----------------------------------------------------------------
   // trace point = 421
   maneuver_index = 5;
@@ -11214,7 +11213,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6399384f, 40.2752724f, 1489615328, 7.47392082),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6399384f, 40.2752686f, leg_index, 7.73552847f, 530,
-          maneuver_index, 0.532669067f, 30, instruction_index));
+          maneuver_index, 0.532669067f, 30));
   //----------------------------------------------------------------
   // trace point = 422
   maneuver_index = 5;
@@ -11223,7 +11222,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6398087f, 40.2752762f, 1489615331, 3.65504408),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6398087f, 40.2752724f, leg_index, 7.72450972f, 529,
-          maneuver_index, 0.521650314f, 29, instruction_index));
+          maneuver_index, 0.521650314f, 29));
   //----------------------------------------------------------------
   // trace point = 423
   maneuver_index = 5;
@@ -11232,7 +11231,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.639679f, 40.2752762f, 1489615354, 0.480044007),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.639679f, 40.2752724f, leg_index, 7.71349478f, 528,
-          maneuver_index, 0.510635376f, 28, instruction_index));
+          maneuver_index, 0.510635376f, 28));
   //----------------------------------------------------------------
   // trace point = 424
   maneuver_index = 5;
@@ -11241,7 +11240,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6395187f, 40.27528f, 1489615356, 6.79812002),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6395187f, 40.2752762f, leg_index, 7.69987631f, 527,
-          maneuver_index, 0.497016907f, 27, instruction_index));
+          maneuver_index, 0.497016907f, 27));
   //----------------------------------------------------------------
   // trace point = 425
   maneuver_index = 5;
@@ -11250,7 +11249,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6392746f, 40.27528f, 1489615358, 10.3615704),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6392746f, 40.2752838f, leg_index, 7.67912483f, 526,
-          maneuver_index, 0.47626543f, 26, instruction_index));
+          maneuver_index, 0.47626543f, 26));
   //----------------------------------------------------------------
   // trace point = 426
   maneuver_index = 5;
@@ -11259,7 +11258,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6391373f, 40.2752762f, 1489615359, 11.7289209),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6391373f, 40.2752876f, leg_index, 7.66745615f, 525,
-          maneuver_index, 0.464596748f, 25, instruction_index));
+          maneuver_index, 0.464596748f, 25));
   //----------------------------------------------------------------
   // trace point = 427
   maneuver_index = 5;
@@ -11268,7 +11267,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6389923f, 40.27528f, 1489615360, 12.3230305),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6389923f, 40.2752838f, leg_index, 7.65513563f, 525,
-          maneuver_index, 0.45227623f, 25, instruction_index));
+          maneuver_index, 0.45227623f, 25));
   //----------------------------------------------------------------
   // trace point = 428
   maneuver_index = 5;
@@ -11277,7 +11276,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6388092f, 40.2752686f, 1489615361, 15.5905199),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6388092f, 40.27528f, leg_index, 7.63957834f, 524,
-          maneuver_index, 0.436718941f, 24, instruction_index));
+          maneuver_index, 0.436718941f, 24));
   //----------------------------------------------------------------
   // trace point = 429
   maneuver_index = 5;
@@ -11286,7 +11285,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6386337f, 40.2752647f, 1489615362, 14.8695803),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6386337f, 40.2752762f, leg_index, 7.62466955f, 523,
-          maneuver_index, 0.42181015f, 23, instruction_index));
+          maneuver_index, 0.42181015f, 23));
   //----------------------------------------------------------------
   // trace point = 430
   maneuver_index = 5;
@@ -11295,7 +11294,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.638443f, 40.2752571f, 1489615363, 16.2462349),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.638443f, 40.2752724f, leg_index, 7.60846567f, 522,
-          maneuver_index, 0.40560627f, 22, instruction_index));
+          maneuver_index, 0.40560627f, 22));
   //----------------------------------------------------------------
   // trace point = 431
   maneuver_index = 5;
@@ -11304,7 +11303,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6382446f, 40.2752571f, 1489615364, 16.8163242),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6382446f, 40.2752686f, leg_index, 7.59161186f, 521,
-          maneuver_index, 0.38875246f, 21, instruction_index));
+          maneuver_index, 0.38875246f, 21));
   //----------------------------------------------------------------
   // trace point = 432
   maneuver_index = 5;
@@ -11313,7 +11312,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6380386f, 40.2752495f, 1489615365, 17.518425),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6380386f, 40.2752609f, leg_index, 7.57409716f, 520,
-          maneuver_index, 0.371237755f, 20, instruction_index));
+          maneuver_index, 0.371237755f, 20));
   //----------------------------------------------------------------
   // trace point = 433
   maneuver_index = 5;
@@ -11322,7 +11321,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6378403f, 40.2752419f, 1489615366, 16.9192123),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6378403f, 40.2752571f, leg_index, 7.55724621f, 519,
-          maneuver_index, 0.354386806f, 19, instruction_index));
+          maneuver_index, 0.354386806f, 19));
   //----------------------------------------------------------------
   // trace point = 434
   maneuver_index = 5;
@@ -11331,7 +11330,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6376266f, 40.2752342f, 1489615367, 18.1122017),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6376266f, 40.2752457f, leg_index, 7.53905535f, 519,
-          maneuver_index, 0.336195946f, 19, instruction_index));
+          maneuver_index, 0.336195946f, 19));
   //----------------------------------------------------------------
   // trace point = 435
   maneuver_index = 5;
@@ -11340,7 +11339,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6374207f, 40.2752304f, 1489615368, 17.5014439),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6374207f, 40.2752304f, leg_index, 7.52147818f, 518,
-          maneuver_index, 0.318618774f, 18, instruction_index));
+          maneuver_index, 0.318618774f, 18));
   //----------------------------------------------------------------
   // trace point = 436
   maneuver_index = 5;
@@ -11349,7 +11348,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.637207f, 40.2752151f, 1489615369, 18.2517719),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.637207f, 40.2752151f, leg_index, 7.50325632f, 517,
-          maneuver_index, 0.300396919f, 17, instruction_index));
+          maneuver_index, 0.300396919f, 17));
   //----------------------------------------------------------------
   // trace point = 437
   maneuver_index = 5;
@@ -11358,7 +11357,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6369934f, 40.2752037f, 1489615370, 18.2164364),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6369934f, 40.2752037f, leg_index, 7.48506784f, 516,
-          maneuver_index, 0.282208443f, 16, instruction_index));
+          maneuver_index, 0.282208443f, 16));
   //----------------------------------------------------------------
   // trace point = 438
   maneuver_index = 5;
@@ -11367,7 +11366,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6367722f, 40.2751884f, 1489615371, 18.8540707),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6367722f, 40.2751884f, leg_index, 7.46620321f, 515,
-          maneuver_index, 0.263343811f, 15, instruction_index));
+          maneuver_index, 0.263343811f, 15));
   //----------------------------------------------------------------
   // trace point = 439
   maneuver_index = 5;
@@ -11376,7 +11375,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6365509f, 40.275177f, 1489615372, 18.8096581),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6365509f, 40.275177f, leg_index, 7.4473691f, 514,
-          maneuver_index, 0.244509697f, 14, instruction_index));
+          maneuver_index, 0.244509697f, 14));
   //----------------------------------------------------------------
   // trace point = 440
   maneuver_index = 5;
@@ -11385,7 +11384,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6363297f, 40.2751617f, 1489615373, 18.8438892),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6363297f, 40.2751656f, leg_index, 7.42853451f, 513,
-          maneuver_index, 0.225675106f, 13, instruction_index));
+          maneuver_index, 0.225675106f, 13));
   //----------------------------------------------------------------
   // trace point = 441
   maneuver_index = 5;
@@ -11394,7 +11393,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6361084f, 40.2751503f, 1489615374, 18.9019585),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6361084f, 40.2751541f, leg_index, 7.40970039f, 512,
-          maneuver_index, 0.206840992f, 12, instruction_index));
+          maneuver_index, 0.206840992f, 12));
   //----------------------------------------------------------------
   // trace point = 442
   maneuver_index = 5;
@@ -11403,7 +11402,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6358871f, 40.2751312f, 1489615375, 18.8885612),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6358871f, 40.2751427f, leg_index, 7.39086676f, 511,
-          maneuver_index, 0.188007355f, 11, instruction_index));
+          maneuver_index, 0.188007355f, 11));
   //----------------------------------------------------------------
   // trace point = 443
   maneuver_index = 5;
@@ -11412,7 +11411,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6356735f, 40.275116f, 1489615376, 18.1672249),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6356735f, 40.2751312f, leg_index, 7.37268353f, 510,
-          maneuver_index, 0.169824123f, 10, instruction_index));
+          maneuver_index, 0.169824123f, 10));
   //----------------------------------------------------------------
   // trace point = 444
   maneuver_index = 5;
@@ -11421,7 +11420,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6354599f, 40.2751007f, 1489615377, 18.2518024),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6354599f, 40.2751122f, leg_index, 7.35441828f, 509,
-          maneuver_index, 0.151558876f, 9, instruction_index));
+          maneuver_index, 0.151558876f, 9));
   //----------------------------------------------------------------
   // trace point = 445
   maneuver_index = 5;
@@ -11430,7 +11429,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6352615f, 40.2750816f, 1489615378, 16.9488564),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6352615f, 40.2750969f, leg_index, 7.33748579f, 508,
-          maneuver_index, 0.134626389f, 8, instruction_index));
+          maneuver_index, 0.134626389f, 8));
   //----------------------------------------------------------------
   // trace point = 446
   maneuver_index = 5;
@@ -11439,7 +11438,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6350632f, 40.2750664f, 1489615379, 16.9948921),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6350632f, 40.2750816f, leg_index, 7.32055283f, 507,
-          maneuver_index, 0.117693424f, 7, instruction_index));
+          maneuver_index, 0.117693424f, 7));
   //----------------------------------------------------------------
   // trace point = 447
   maneuver_index = 5;
@@ -11448,7 +11447,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6348648f, 40.2750511f, 1489615380, 16.8990726),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6348648f, 40.2750664f, leg_index, 7.30361986f, 506,
-          maneuver_index, 0.10076046f, 6, instruction_index));
+          maneuver_index, 0.10076046f, 6));
   //----------------------------------------------------------------
   // trace point = 448
   maneuver_index = 5;
@@ -11457,7 +11456,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6346817f, 40.2750397f, 1489615381, 15.5905724),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6346817f, 40.2750511f, leg_index, 7.2879777f, 505,
-          maneuver_index, 0.0851182938f, 5, instruction_index));
+          maneuver_index, 0.0851182938f, 5));
   //----------------------------------------------------------------
   // trace point = 449
   maneuver_index = 5;
@@ -11466,7 +11465,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6344986f, 40.275032f, 1489615382, 15.5679045),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6344986f, 40.2750397f, leg_index, 7.27237749f, 504,
-          maneuver_index, 0.0695180893f, 4, instruction_index));
+          maneuver_index, 0.0695180893f, 4));
   //----------------------------------------------------------------
   // trace point = 450
   maneuver_index = 5;
@@ -11475,7 +11474,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6343384f, 40.275032f, 1489615383, 13.6739264),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6343384f, 40.275032f, leg_index, 7.25873327f, 504,
-          maneuver_index, 0.0558738708f, 4, instruction_index));
+          maneuver_index, 0.0558738708f, 4));
   //----------------------------------------------------------------
   // trace point = 451
   maneuver_index = 5;
@@ -11484,7 +11483,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6341858f, 40.2750282f, 1489615384, 12.917223),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6341858f, 40.2750282f, leg_index, 7.24577808f, 503,
-          maneuver_index, 0.0429186821f, 3, instruction_index));
+          maneuver_index, 0.0429186821f, 3));
   //----------------------------------------------------------------
   // trace point = 452
   maneuver_index = 5;
@@ -11493,7 +11492,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6340637f, 40.275032f, 1489615385, 10.371172),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6340714f, 40.2750092f, leg_index, 7.23583412f, 502,
-          maneuver_index, 0.03297472f, 2, instruction_index));
+          maneuver_index, 0.03297472f, 2));
   //----------------------------------------------------------------
   // trace point = 453
   maneuver_index = 5;
@@ -11502,7 +11501,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6338577f, 40.2750015f, 1489615387, 8.90585613),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6338806f, 40.274971f, leg_index, 7.2189641f, 501,
-          maneuver_index, 0.0161046982f, 1, instruction_index));
+          maneuver_index, 0.0161046982f, 1));
   //----------------------------------------------------------------
   // trace point = 454
   maneuver_index = 6;
@@ -11511,7 +11510,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6337051f, 40.2749138f, 1489615389, 8.13665581),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.633728f, 40.2748871f, leg_index, 7.2028594f, 500,
-          maneuver_index, 0.0267596245f, 0, instruction_index));
+          maneuver_index, 0.0267596245f, 0));
   //----------------------------------------------------------------
   // trace point = 455
   maneuver_index = 6;
@@ -11520,7 +11519,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6335373f, 40.274868f, 1489615391, 7.57975817),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6335297f, 40.274826f, leg_index, 7.18368959f, 500,
-          maneuver_index, 0.00758981705f, 0, instruction_index));
+          maneuver_index, 0.00758981705f, 0));
   //----------------------------------------------------------------
   // trace point = 456
   maneuver_index = 7;
@@ -11529,7 +11528,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6333542f, 40.2748909f, 1489615393, 7.87596083),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6333466f, 40.2748642f, leg_index, 7.16750765f, 499,
-          maneuver_index, 0.647401333f, 29, instruction_index));
+          maneuver_index, 0.647401333f, 29));
   //----------------------------------------------------------------
   // trace point = 457
   maneuver_index = 7;
@@ -11538,7 +11537,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6331329f, 40.2749176f, 1489615395, 9.50447845),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6331253f, 40.2748909f, leg_index, 7.14845943f, 498,
-          maneuver_index, 0.628353119f, 28, instruction_index));
+          maneuver_index, 0.628353119f, 28));
   //----------------------------------------------------------------
   // trace point = 458
   maneuver_index = 7;
@@ -11547,7 +11546,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6330032f, 40.2749252f, 1489615396, 11.0685396),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6330032f, 40.2748985f, leg_index, 7.13806009f, 498,
-          maneuver_index, 0.617953777f, 28, instruction_index));
+          maneuver_index, 0.617953777f, 28));
   //----------------------------------------------------------------
   // trace point = 459
   maneuver_index = 7;
@@ -11556,7 +11555,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6328583f, 40.274929f, 1489615397, 12.3230934),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6328583f, 40.27491f, leg_index, 7.12568712f, 497,
-          maneuver_index, 0.605580807f, 27, instruction_index));
+          maneuver_index, 0.605580807f, 27));
   //----------------------------------------------------------------
   // trace point = 460
   maneuver_index = 7;
@@ -11565,7 +11564,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6327057f, 40.274929f, 1489615398, 12.909565),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6327057f, 40.2749062f, leg_index, 7.11265945f, 497,
-          maneuver_index, 0.592553139f, 27, instruction_index));
+          maneuver_index, 0.592553139f, 27));
   //----------------------------------------------------------------
   // trace point = 461
   maneuver_index = 7;
@@ -11574,7 +11573,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6325378f, 40.2749252f, 1489615399, 14.2754126),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6325378f, 40.2748985f, leg_index, 7.09837914f, 496,
-          maneuver_index, 0.57827282f, 26, instruction_index));
+          maneuver_index, 0.57827282f, 26));
   //----------------------------------------------------------------
   // trace point = 462
   maneuver_index = 7;
@@ -11583,7 +11582,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6323624f, 40.2749176f, 1489615400, 14.9682159),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6323624f, 40.2748909f, leg_index, 7.08345175f, 495,
-          maneuver_index, 0.563345432f, 25, instruction_index));
+          maneuver_index, 0.563345432f, 25));
   //----------------------------------------------------------------
   // trace point = 463
   maneuver_index = 7;
@@ -11592,7 +11591,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6321793f, 40.2749062f, 1489615401, 15.599741),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6321793f, 40.2748833f, leg_index, 7.06787825f, 495,
-          maneuver_index, 0.547771931f, 25, instruction_index));
+          maneuver_index, 0.547771931f, 25));
   //----------------------------------------------------------------
   // trace point = 464
   maneuver_index = 7;
@@ -11601,7 +11600,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6319885f, 40.2748947f, 1489615402, 16.1833553),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6319885f, 40.2748718f, leg_index, 7.05163002f, 494,
-          maneuver_index, 0.531523705f, 24, instruction_index));
+          maneuver_index, 0.531523705f, 24));
   //----------------------------------------------------------------
   // trace point = 465
   maneuver_index = 7;
@@ -11610,7 +11609,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6317902f, 40.2748833f, 1489615403, 16.9540558),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6317902f, 40.2748642f, leg_index, 7.03476334f, 493,
-          maneuver_index, 0.514657021f, 23, instruction_index));
+          maneuver_index, 0.514657021f, 23));
   //----------------------------------------------------------------
   // trace point = 466
   maneuver_index = 7;
@@ -11619,7 +11618,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6315994f, 40.274868f, 1489615404, 16.3076134),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6315994f, 40.2748528f, leg_index, 7.01851511f, 492,
-          maneuver_index, 0.498408794f, 22, instruction_index));
+          maneuver_index, 0.498408794f, 22));
   //----------------------------------------------------------------
   // trace point = 467
   maneuver_index = 7;
@@ -11628,7 +11627,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6314011f, 40.2748566f, 1489615405, 16.8609467),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6314011f, 40.2748413f, leg_index, 7.00162077f, 491,
-          maneuver_index, 0.481514454f, 21, instruction_index));
+          maneuver_index, 0.481514454f, 21));
   //----------------------------------------------------------------
   // trace point = 468
   maneuver_index = 7;
@@ -11637,7 +11636,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6311951f, 40.2748413f, 1489615406, 17.5863056),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6311951f, 40.2748337f, leg_index, 6.98410702f, 491,
-          maneuver_index, 0.464000702f, 21, instruction_index));
+          maneuver_index, 0.464000702f, 21));
   //----------------------------------------------------------------
   // trace point = 469
   maneuver_index = 7;
@@ -11646,7 +11645,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6309891f, 40.274826f, 1489615407, 17.5753841),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6309891f, 40.2748222f, leg_index, 6.96656799f, 490,
-          maneuver_index, 0.446461678f, 20, instruction_index));
+          maneuver_index, 0.446461678f, 20));
   //----------------------------------------------------------------
   // trace point = 470
   maneuver_index = 7;
@@ -11655,7 +11654,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6307831f, 40.2748108f, 1489615408, 17.575388),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6307831f, 40.2748032f, leg_index, 6.94894791f, 489,
-          maneuver_index, 0.428841591f, 19, instruction_index));
+          maneuver_index, 0.428841591f, 19));
   //----------------------------------------------------------------
   // trace point = 471
   maneuver_index = 7;
@@ -11664,7 +11663,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6305771f, 40.2747955f, 1489615409, 17.5753918),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6305771f, 40.2747879f, leg_index, 6.93137026f, 488,
-          maneuver_index, 0.411263943f, 18, instruction_index));
+          maneuver_index, 0.411263943f, 18));
   //----------------------------------------------------------------
   // trace point = 472
   maneuver_index = 7;
@@ -11673,7 +11672,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6303787f, 40.2747803f, 1489615410, 16.9105015),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6303787f, 40.2747726f, leg_index, 6.91443729f, 487,
-          maneuver_index, 0.394330978f, 17, instruction_index));
+          maneuver_index, 0.394330978f, 17));
   //----------------------------------------------------------------
   // trace point = 473
   maneuver_index = 7;
@@ -11682,7 +11681,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6301727f, 40.2747612f, 1489615411, 17.6232796),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6301727f, 40.2747574f, leg_index, 6.89685965f, 486,
-          maneuver_index, 0.37675333f, 16, instruction_index));
+          maneuver_index, 0.37675333f, 16));
   //----------------------------------------------------------------
   // trace point = 474
   maneuver_index = 7;
@@ -11691,7 +11690,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6299591f, 40.2747459f, 1489615412, 18.2518978),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6299591f, 40.2747421f, leg_index, 6.87863731f, 486,
-          maneuver_index, 0.358530998f, 16, instruction_index));
+          maneuver_index, 0.358530998f, 16));
   //----------------------------------------------------------------
   // trace point = 475
   maneuver_index = 7;
@@ -11700,7 +11699,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6297531f, 40.2747307f, 1489615413, 17.575407),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6297531f, 40.2747269f, leg_index, 6.86105967f, 485,
-          maneuver_index, 0.34095335f, 15, instruction_index));
+          maneuver_index, 0.34095335f, 15));
   //----------------------------------------------------------------
   // trace point = 476
   maneuver_index = 7;
@@ -11709,7 +11708,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6295395f, 40.2747154f, 1489615414, 18.2624264),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6295395f, 40.2747078f, leg_index, 6.84279537f, 484,
-          maneuver_index, 0.322689056f, 14, instruction_index));
+          maneuver_index, 0.322689056f, 14));
   //----------------------------------------------------------------
   // trace point = 477
   maneuver_index = 7;
@@ -11718,7 +11717,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6293182f, 40.2746964f, 1489615415, 18.8886814),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6293182f, 40.2746925f, leg_index, 6.82392788f, 483,
-          maneuver_index, 0.303821564f, 13, instruction_index));
+          maneuver_index, 0.303821564f, 13));
   //----------------------------------------------------------------
   // trace point = 478
   maneuver_index = 7;
@@ -11727,7 +11726,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6290894f, 40.2746811f, 1489615416, 19.520895),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6290894f, 40.2746735f, leg_index, 6.80437422f, 482,
-          maneuver_index, 0.284267902f, 12, instruction_index));
+          maneuver_index, 0.284267902f, 12));
   //----------------------------------------------------------------
   // trace point = 479
   maneuver_index = 7;
@@ -11736,7 +11735,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6288605f, 40.2746582f, 1489615417, 19.6171532),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6288605f, 40.2746582f, leg_index, 6.78486347f, 481,
-          maneuver_index, 0.264757156f, 11, instruction_index));
+          maneuver_index, 0.264757156f, 11));
   //----------------------------------------------------------------
   // trace point = 480
   maneuver_index = 7;
@@ -11745,7 +11744,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6286392f, 40.2746391f, 1489615418, 18.8886967),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6286392f, 40.2746391f, leg_index, 6.76595163f, 481,
-          maneuver_index, 0.245845318f, 11, instruction_index));
+          maneuver_index, 0.245845318f, 11));
   //----------------------------------------------------------------
   // trace point = 481
   maneuver_index = 7;
@@ -11754,7 +11753,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6284103f, 40.2746239f, 1489615419, 19.5209103),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6284103f, 40.2746201f, leg_index, 6.74639654f, 480,
-          maneuver_index, 0.226290226f, 10, instruction_index));
+          maneuver_index, 0.226290226f, 10));
   //----------------------------------------------------------------
   // trace point = 482
   maneuver_index = 7;
@@ -11763,7 +11762,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6281815f, 40.274601f, 1489615420, 19.6171703),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6281815f, 40.274601f, leg_index, 6.72684193f, 479,
-          maneuver_index, 0.206735611f, 9, instruction_index));
+          maneuver_index, 0.206735611f, 9));
   //----------------------------------------------------------------
   // trace point = 483
   maneuver_index = 7;
@@ -11772,7 +11771,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6279602f, 40.2745819f, 1489615421, 18.8887119),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6279602f, 40.2745819f, leg_index, 6.70793056f, 478,
-          maneuver_index, 0.187824249f, 8, instruction_index));
+          maneuver_index, 0.187824249f, 8));
   //----------------------------------------------------------------
   // trace point = 484
   maneuver_index = 7;
@@ -11781,7 +11780,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6277313f, 40.2745667f, 1489615422, 19.5209274),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6277313f, 40.2745628f, leg_index, 6.68837595f, 477,
-          maneuver_index, 0.168269634f, 7, instruction_index));
+          maneuver_index, 0.168269634f, 7));
   //----------------------------------------------------------------
   // trace point = 485
   maneuver_index = 7;
@@ -11790,7 +11789,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6275177f, 40.2745476f, 1489615423, 18.2136993),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6275177f, 40.2745438f, leg_index, 6.67010641f, 476,
-          maneuver_index, 0.150000095f, 6, instruction_index));
+          maneuver_index, 0.150000095f, 6));
   //----------------------------------------------------------------
   // trace point = 486
   maneuver_index = 7;
@@ -11799,7 +11798,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6272964f, 40.2745323f, 1489615424, 18.9388065),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6272964f, 40.2745247f, leg_index, 6.651196f, 475,
-          maneuver_index, 0.131089687f, 5, instruction_index));
+          maneuver_index, 0.131089687f, 5));
   //----------------------------------------------------------------
   // trace point = 487
   maneuver_index = 7;
@@ -11808,7 +11807,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6270905f, 40.2745209f, 1489615425, 17.5387611),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6270981f, 40.2745018f, leg_index, 6.63415813f, 475,
-          maneuver_index, 0.114051819f, 5, instruction_index));
+          maneuver_index, 0.114051819f, 5));
   //----------------------------------------------------------------
   // trace point = 488
   maneuver_index = 7;
@@ -11817,7 +11816,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6268921f, 40.2745171f, 1489615426, 16.822403),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6268921f, 40.2744865f, leg_index, 6.61645937f, 474,
-          maneuver_index, 0.096353054f, 4, instruction_index));
+          maneuver_index, 0.096353054f, 4));
   //----------------------------------------------------------------
   // trace point = 489
   maneuver_index = 7;
@@ -11826,7 +11825,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6266937f, 40.2745247f, 1489615427, 16.8400726),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6266937f, 40.2744904f, leg_index, 6.59960842f, 473,
-          maneuver_index, 0.0795021057f, 3, instruction_index));
+          maneuver_index, 0.0795021057f, 3));
   //----------------------------------------------------------------
   // trace point = 490
   maneuver_index = 7;
@@ -11835,7 +11834,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.626503f, 40.2745476f, 1489615428, 16.4227905),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6264954f, 40.2745056f, leg_index, 6.58266306f, 473,
-          maneuver_index, 0.0625567436f, 3, instruction_index));
+          maneuver_index, 0.0625567436f, 3));
   //----------------------------------------------------------------
   // trace point = 491
   maneuver_index = 7;
@@ -11844,7 +11843,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6263275f, 40.2745705f, 1489615429, 15.0634823),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6263199f, 40.2745285f, leg_index, 6.56754351f, 472,
-          maneuver_index, 0.047437191f, 2, instruction_index));
+          maneuver_index, 0.047437191f, 2));
   //----------------------------------------------------------------
   // trace point = 492
   maneuver_index = 7;
@@ -11853,7 +11852,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6261826f, 40.2745934f, 1489615430, 12.5784454),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6261673f, 40.2745552f, leg_index, 6.55424309f, 471,
-          maneuver_index, 0.0341367722f, 1, instruction_index));
+          maneuver_index, 0.0341367722f, 1));
   //----------------------------------------------------------------
   // trace point = 493
   maneuver_index = 7;
@@ -11862,7 +11861,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6260452f, 40.2746162f, 1489615431, 11.9969759),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6260376f, 40.2745781f, leg_index, 6.54288769f, 471,
-          maneuver_index, 0.0227813721f, 1, instruction_index));
+          maneuver_index, 0.0227813721f, 1));
   //----------------------------------------------------------------
   // trace point = 494
   maneuver_index = 7;
@@ -11871,7 +11870,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.625824f, 40.2745972f, 1489615433, 9.44435406),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.625824f, 40.2745781f, leg_index, 6.52466249f, 470,
-          maneuver_index, 0.00455617905f, 0, instruction_index));
+          maneuver_index, 0.00455617905f, 0));
   //----------------------------------------------------------------
   // trace point = 495
   maneuver_index = 8;
@@ -11880,7 +11879,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6256561f, 40.2745323f, 1489615435, 7.99918222),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6256943f, 40.274498f, leg_index, 6.50940084f, 469,
-          maneuver_index, 0.0304069519f, 1, instruction_index));
+          maneuver_index, 0.0304069519f, 1));
   //----------------------------------------------------------------
   // trace point = 496
   maneuver_index = 8;
@@ -11889,7 +11888,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6254959f, 40.2745094f, 1489615437, 6.91409683),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6254807f, 40.2744751f, leg_index, 6.49022341f, 468,
-          maneuver_index, 0.0112295151f, 0, instruction_index));
+          maneuver_index, 0.0112295151f, 0));
   //----------------------------------------------------------------
   // trace point = 497
   maneuver_index = 9;
@@ -11898,7 +11897,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6253128f, 40.2745628f, 1489615439, 8.33224583),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6253052f, 40.2745514f, leg_index, 6.47279358f, 468,
-          maneuver_index, 4.12477875f, 198, instruction_index));
+          maneuver_index, 4.12477875f, 198));
   //----------------------------------------------------------------
   // trace point = 498
   maneuver_index = 9;
@@ -11907,7 +11906,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.625206f, 40.2745972f, 1489615440, 9.84436321),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6251984f, 40.2745857f, leg_index, 6.46295118f, 467,
-          maneuver_index, 4.11493587f, 197, instruction_index));
+          maneuver_index, 4.11493587f, 197));
   //----------------------------------------------------------------
   // trace point = 499
   maneuver_index = 9;
@@ -11916,7 +11915,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6250763f, 40.2746353f, 1489615441, 11.8237286),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6250687f, 40.2746162f, leg_index, 6.45138264f, 466,
-          maneuver_index, 4.10336781f, 196, instruction_index));
+          maneuver_index, 4.10336781f, 196));
   //----------------------------------------------------------------
   // trace point = 500
   maneuver_index = 9;
@@ -11925,7 +11924,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6249313f, 40.2746696f, 1489615442, 12.9167261),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6249237f, 40.2746468f, leg_index, 6.43861198f, 466,
-          maneuver_index, 4.09059715f, 196, instruction_index));
+          maneuver_index, 4.09059715f, 196));
   //----------------------------------------------------------------
   // trace point = 501
   maneuver_index = 9;
@@ -11934,7 +11933,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6247711f, 40.2747002f, 1489615443, 13.9934092),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6247635f, 40.2746811f, leg_index, 6.42448425f, 465,
-          maneuver_index, 4.07646942f, 195, instruction_index));
+          maneuver_index, 4.07646942f, 195));
   //----------------------------------------------------------------
   // trace point = 502
   maneuver_index = 9;
@@ -11943,7 +11942,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6245956f, 40.2747307f, 1489615444, 15.2583904),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.624588f, 40.2747078f, leg_index, 6.40928555f, 464,
-          maneuver_index, 4.06127071f, 194, instruction_index));
+          maneuver_index, 4.06127071f, 194));
   //----------------------------------------------------------------
   // trace point = 503
   maneuver_index = 9;
@@ -11952,7 +11951,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6244125f, 40.2747574f, 1489615445, 15.8096704),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6244049f, 40.2747345f, leg_index, 6.39345264f, 464,
-          maneuver_index, 4.04543781f, 194, instruction_index));
+          maneuver_index, 4.04543781f, 194));
   //----------------------------------------------------------------
   // trace point = 504
   maneuver_index = 9;
@@ -11961,7 +11960,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6242218f, 40.2747917f, 1489615446, 16.6832561),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6242142f, 40.2747612f, leg_index, 6.37698269f, 463,
-          maneuver_index, 4.02896786f, 193, instruction_index));
+          maneuver_index, 4.02896786f, 193));
   //----------------------------------------------------------------
   // trace point = 505
   maneuver_index = 9;
@@ -11970,7 +11969,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6240234f, 40.2748184f, 1489615447, 17.147398),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6240158f, 40.2747879f, leg_index, 6.35852385f, 462,
-          maneuver_index, 4.01050854f, 192, instruction_index));
+          maneuver_index, 4.01050854f, 192));
   //----------------------------------------------------------------
   // trace point = 506
   maneuver_index = 9;
@@ -11979,7 +11978,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6238251f, 40.2748451f, 1489615448, 17.0829201),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6238251f, 40.2748413f, leg_index, 6.34264421f, 461,
-          maneuver_index, 3.99462914f, 191, instruction_index));
+          maneuver_index, 3.99462914f, 191));
   //----------------------------------------------------------------
   // trace point = 507
   maneuver_index = 9;
@@ -11988,7 +11987,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6236267f, 40.2748718f, 1489615449, 17.0829124),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6236267f, 40.274868f, leg_index, 6.32552338f, 461,
-          maneuver_index, 3.97750831f, 191, instruction_index));
+          maneuver_index, 3.97750831f, 191));
   //----------------------------------------------------------------
   // trace point = 508
   maneuver_index = 9;
@@ -11997,7 +11996,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.623436f, 40.2749023f, 1489615450, 16.562088),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.623436f, 40.2748947f, leg_index, 6.30905581f, 460,
-          maneuver_index, 3.96104074f, 190, instruction_index));
+          maneuver_index, 3.96104074f, 190));
   //----------------------------------------------------------------
   // trace point = 509
   maneuver_index = 9;
@@ -12006,7 +12005,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6232376f, 40.2749252f, 1489615451, 17.0102043),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6232376f, 40.2749176f, leg_index, 6.29201889f, 459,
-          maneuver_index, 3.94400382f, 189, instruction_index));
+          maneuver_index, 3.94400382f, 189));
   //----------------------------------------------------------------
   // trace point = 510
   maneuver_index = 9;
@@ -12015,7 +12014,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6230392f, 40.2749519f, 1489615452, 17.1665058),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6230392f, 40.2749443f, leg_index, 6.27491188f, 458,
-          maneuver_index, 3.92689681f, 188, instruction_index));
+          maneuver_index, 3.92689681f, 188));
   //----------------------------------------------------------------
   // trace point = 511
   maneuver_index = 9;
@@ -12024,7 +12023,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6228333f, 40.274971f, 1489615453, 17.62323),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6228333f, 40.274971f, leg_index, 6.25716591f, 458,
-          maneuver_index, 3.90915084f, 188, instruction_index));
+          maneuver_index, 3.90915084f, 188));
   //----------------------------------------------------------------
   // trace point = 512
   maneuver_index = 9;
@@ -12033,7 +12032,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6226349f, 40.2749939f, 1489615454, 17.0101871),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6226349f, 40.2749939f, leg_index, 6.24012899f, 457,
-          maneuver_index, 3.89211392f, 187, instruction_index));
+          maneuver_index, 3.89211392f, 187));
   //----------------------------------------------------------------
   // trace point = 513
   maneuver_index = 9;
@@ -12042,7 +12041,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6224442f, 40.2750168f, 1489615455, 16.4226799),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6224442f, 40.2750206f, leg_index, 6.2236619f, 456,
-          maneuver_index, 3.87564683f, 186, instruction_index));
+          maneuver_index, 3.87564683f, 186));
   //----------------------------------------------------------------
   // trace point = 514
   maneuver_index = 9;
@@ -12051,7 +12050,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6222458f, 40.2750397f, 1489615456, 17.0101757),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6222458f, 40.2750435f, leg_index, 6.20662403f, 455,
-          maneuver_index, 3.85860896f, 185, instruction_index));
+          maneuver_index, 3.85860896f, 185));
   //----------------------------------------------------------------
   // trace point = 515
   maneuver_index = 9;
@@ -12060,7 +12059,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6220398f, 40.2750664f, 1489615457, 17.7336102),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6220398f, 40.2750702f, leg_index, 6.18887901f, 454,
-          maneuver_index, 3.84086394f, 184, instruction_index));
+          maneuver_index, 3.84086394f, 184));
   //----------------------------------------------------------------
   // trace point = 516
   maneuver_index = 9;
@@ -12069,7 +12068,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6218491f, 40.2750854f, 1489615458, 16.3591576),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6218491f, 40.2750931f, leg_index, 6.17247963f, 454,
-          maneuver_index, 3.82446456f, 184, instruction_index));
+          maneuver_index, 3.82446456f, 184));
   //----------------------------------------------------------------
   // trace point = 517
   maneuver_index = 9;
@@ -12078,7 +12077,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6216507f, 40.2751083f, 1489615459, 17.0101585),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6216507f, 40.275116f, leg_index, 6.15544081f, 453,
-          maneuver_index, 3.80742574f, 183, instruction_index));
+          maneuver_index, 3.80742574f, 183));
   //----------------------------------------------------------------
   // trace point = 518
   maneuver_index = 9;
@@ -12087,7 +12086,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.62146f, 40.2751312f, 1489615460, 16.4226532),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.62146f, 40.2751389f, leg_index, 6.13904238f, 452,
-          maneuver_index, 3.79102731f, 182, instruction_index));
+          maneuver_index, 3.79102731f, 182));
   //----------------------------------------------------------------
   // trace point = 519
   maneuver_index = 9;
@@ -12096,7 +12095,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6212692f, 40.2751503f, 1489615461, 16.3591404),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6212692f, 40.2751617f, leg_index, 6.12264395f, 451,
-          maneuver_index, 3.77462888f, 181, instruction_index));
+          maneuver_index, 3.77462888f, 181));
   //----------------------------------------------------------------
   // trace point = 520
   maneuver_index = 9;
@@ -12105,7 +12104,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6210861f, 40.275177f, 1489615462, 15.8303328),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6210861f, 40.2751846f, leg_index, 6.10688543f, 450,
-          maneuver_index, 3.75887036f, 180, instruction_index));
+          maneuver_index, 3.75887036f, 180));
   //----------------------------------------------------------------
   // trace point = 521
   maneuver_index = 9;
@@ -12114,7 +12113,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6209106f, 40.2751961f, 1489615463, 15.0126677),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6209106f, 40.2752075f, leg_index, 6.09176731f, 450,
-          maneuver_index, 3.74375224f, 180, instruction_index));
+          maneuver_index, 3.74375224f, 180));
   //----------------------------------------------------------------
   // trace point = 522
   maneuver_index = 9;
@@ -12123,7 +12122,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6207352f, 40.2752151f, 1489615464, 15.0967522),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6207352f, 40.2752266f, leg_index, 6.07671499f, 449,
-          maneuver_index, 3.72869992f, 179, instruction_index));
+          maneuver_index, 3.72869992f, 179));
   //----------------------------------------------------------------
   // trace point = 523
   maneuver_index = 9;
@@ -12132,7 +12131,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6205597f, 40.275238f, 1489615465, 15.0818367),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6205597f, 40.2752495f, leg_index, 6.06159639f, 448,
-          maneuver_index, 3.71358132f, 178, instruction_index));
+          maneuver_index, 3.71358132f, 178));
   //----------------------------------------------------------------
   // trace point = 524
   maneuver_index = 9;
@@ -12141,7 +12140,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6203766f, 40.2752571f, 1489615466, 15.6856174),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6203766f, 40.2752686f, leg_index, 6.04590416f, 448,
-          maneuver_index, 3.69788909f, 178, instruction_index));
+          maneuver_index, 3.69788909f, 178));
   //----------------------------------------------------------------
   // trace point = 525
   maneuver_index = 9;
@@ -12150,7 +12149,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6201935f, 40.2752762f, 1489615467, 15.7697725),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6201935f, 40.2752914f, leg_index, 6.03014565f, 447,
-          maneuver_index, 3.68213058f, 177, instruction_index));
+          maneuver_index, 3.68213058f, 177));
   //----------------------------------------------------------------
   // trace point = 526
   maneuver_index = 9;
@@ -12159,7 +12158,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6200104f, 40.2752991f, 1489615468, 15.7518301),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6200104f, 40.2753143f, leg_index, 6.01438713f, 446,
-          maneuver_index, 3.66637206f, 176, instruction_index));
+          maneuver_index, 3.66637206f, 176));
   //----------------------------------------------------------------
   // trace point = 527
   maneuver_index = 9;
@@ -12168,7 +12167,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6198273f, 40.275322f, 1489615469, 15.7518253),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6198273f, 40.2753372f, leg_index, 5.99862909f, 445,
-          maneuver_index, 3.65061402f, 175, instruction_index));
+          maneuver_index, 3.65061402f, 175));
   //----------------------------------------------------------------
   // trace point = 528
   maneuver_index = 9;
@@ -12177,7 +12176,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6196365f, 40.2753448f, 1489615470, 16.3387146),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6196365f, 40.2753601f, leg_index, 5.98223066f, 445,
-          maneuver_index, 3.63421559f, 175, instruction_index));
+          maneuver_index, 3.63421559f, 175));
   //----------------------------------------------------------------
   // trace point = 529
   maneuver_index = 9;
@@ -12186,7 +12185,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6194382f, 40.2753677f, 1489615471, 17.0940628),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6194382f, 40.275383f, leg_index, 5.96519184f, 444,
-          maneuver_index, 3.61717677f, 174, instruction_index));
+          maneuver_index, 3.61717677f, 174));
   //----------------------------------------------------------------
   // trace point = 530
   maneuver_index = 9;
@@ -12195,7 +12194,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6192474f, 40.2753906f, 1489615472, 16.4225922),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6192474f, 40.2754059f, leg_index, 5.94879341f, 443,
-          maneuver_index, 3.60077834f, 173, instruction_index));
+          maneuver_index, 3.60077834f, 173));
   //----------------------------------------------------------------
   // trace point = 531
   maneuver_index = 9;
@@ -12204,7 +12203,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6190491f, 40.2754173f, 1489615473, 17.0635452),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6190491f, 40.2754288f, leg_index, 5.93175507f, 442,
-          maneuver_index, 3.58374f, 172, instruction_index));
+          maneuver_index, 3.58374f, 172));
   //----------------------------------------------------------------
   // trace point = 532
   maneuver_index = 9;
@@ -12213,7 +12212,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6188507f, 40.2754364f, 1489615474, 16.9487724),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6188507f, 40.2754517f, leg_index, 5.91471672f, 441,
-          maneuver_index, 3.56670165f, 171, instruction_index));
+          maneuver_index, 3.56670165f, 171));
   //----------------------------------------------------------------
   // trace point = 533
   maneuver_index = 9;
@@ -12222,7 +12221,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6186447f, 40.2754593f, 1489615475, 17.6820736),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6186523f, 40.2754784f, leg_index, 5.89761162f, 441,
-          maneuver_index, 3.54959655f, 171, instruction_index));
+          maneuver_index, 3.54959655f, 171));
   //----------------------------------------------------------------
   // trace point = 534
   maneuver_index = 9;
@@ -12231,7 +12230,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6184464f, 40.2754784f, 1489615476, 17.0330334),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.618454f, 40.2755013f, leg_index, 5.88057327f, 440,
-          maneuver_index, 3.5325582f, 170, instruction_index));
+          maneuver_index, 3.5325582f, 170));
   //----------------------------------------------------------------
   // trace point = 535
   maneuver_index = 9;
@@ -12240,7 +12239,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6182404f, 40.2755051f, 1489615477, 17.7520065),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.618248f, 40.275528f, leg_index, 5.86282969f, 439,
-          maneuver_index, 3.51481462f, 169, instruction_index));
+          maneuver_index, 3.51481462f, 169));
   //----------------------------------------------------------------
   // trace point = 536
   maneuver_index = 9;
@@ -12249,7 +12248,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.618042f, 40.2755356f, 1489615478, 17.1666927),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.618042f, 40.2755508f, leg_index, 5.84514999f, 438,
-          maneuver_index, 3.49713492f, 168, instruction_index));
+          maneuver_index, 3.49713492f, 168));
   //----------------------------------------------------------------
   // trace point = 537
   maneuver_index = 9;
@@ -12258,7 +12257,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6178436f, 40.2755661f, 1489615479, 17.1446533),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6178513f, 40.2755852f, leg_index, 5.82850838f, 438,
-          maneuver_index, 3.48049331f, 168, instruction_index));
+          maneuver_index, 3.48049331f, 168));
   //----------------------------------------------------------------
   // trace point = 538
   maneuver_index = 9;
@@ -12267,7 +12266,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6176453f, 40.2755966f, 1489615480, 17.2498837),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6176529f, 40.2756157f, leg_index, 5.8113246f, 437,
-          maneuver_index, 3.46330953f, 167, instruction_index));
+          maneuver_index, 3.46330953f, 167));
   //----------------------------------------------------------------
   // trace point = 539
   maneuver_index = 9;
@@ -12276,7 +12275,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6174545f, 40.2756348f, 1489615481, 16.6820297),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6174622f, 40.27565f, leg_index, 5.79467678f, 436,
-          maneuver_index, 3.44666171f, 166, instruction_index));
+          maneuver_index, 3.44666171f, 166));
   //----------------------------------------------------------------
   // trace point = 540
   maneuver_index = 9;
@@ -12285,7 +12284,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6172562f, 40.2756691f, 1489615482, 17.319767),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6172638f, 40.275692f, leg_index, 5.77719402f, 435,
-          maneuver_index, 3.42917895f, 165, instruction_index));
+          maneuver_index, 3.42917895f, 165));
   //----------------------------------------------------------------
   // trace point = 541
   maneuver_index = 9;
@@ -12294,7 +12293,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6170654f, 40.2757072f, 1489615483, 16.764183),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6170731f, 40.2757339f, leg_index, 5.76033497f, 434,
-          maneuver_index, 3.4123199f, 164, instruction_index));
+          maneuver_index, 3.4123199f, 164));
   //----------------------------------------------------------------
   // trace point = 542
   maneuver_index = 9;
@@ -12303,7 +12302,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6168671f, 40.2757492f, 1489615484, 17.4540653),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6168747f, 40.2757759f, leg_index, 5.74285269f, 433,
-          maneuver_index, 3.39483762f, 163, instruction_index));
+          maneuver_index, 3.39483762f, 163));
   //----------------------------------------------------------------
   // trace point = 543
   maneuver_index = 9;
@@ -12312,7 +12311,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6166763f, 40.2757912f, 1489615485, 16.882021),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.616684f, 40.2758179f, leg_index, 5.72599363f, 433,
-          maneuver_index, 3.37797856f, 163, instruction_index));
+          maneuver_index, 3.37797856f, 163));
   //----------------------------------------------------------------
   // trace point = 544
   maneuver_index = 9;
@@ -12321,7 +12320,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6164932f, 40.2758369f, 1489615486, 16.3640633),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6165009f, 40.275856f, leg_index, 5.70987368f, 432,
-          maneuver_index, 3.36185861f, 162, instruction_index));
+          maneuver_index, 3.36185861f, 162));
   //----------------------------------------------------------------
   // trace point = 545
   maneuver_index = 9;
@@ -12330,7 +12329,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6163025f, 40.2758789f, 1489615487, 16.882),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6163101f, 40.275898f, leg_index, 5.69301367f, 431,
-          maneuver_index, 3.3449986f, 161, instruction_index));
+          maneuver_index, 3.3449986f, 161));
   //----------------------------------------------------------------
   // trace point = 546
   maneuver_index = 9;
@@ -12339,7 +12338,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6161194f, 40.2759209f, 1489615488, 16.230217),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.616127f, 40.2759399f, leg_index, 5.67677641f, 430,
-          maneuver_index, 3.32876134f, 160, instruction_index));
+          maneuver_index, 3.32876134f, 160));
   //----------------------------------------------------------------
   // trace point = 547
   maneuver_index = 9;
@@ -12348,7 +12347,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6159363f, 40.2759666f, 1489615489, 16.3640347),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6159439f, 40.2759819f, leg_index, 5.66052866f, 429,
-          maneuver_index, 3.31251359f, 159, instruction_index));
+          maneuver_index, 3.31251359f, 159));
   //----------------------------------------------------------------
   // trace point = 548
   maneuver_index = 9;
@@ -12357,7 +12356,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6157455f, 40.2760124f, 1489615490, 16.8963623),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6157455f, 40.2760201f, leg_index, 5.64315462f, 429,
-          maneuver_index, 3.29513955f, 159, instruction_index));
+          maneuver_index, 3.29513955f, 159));
   //----------------------------------------------------------------
   // trace point = 549
   maneuver_index = 9;
@@ -12366,7 +12365,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6155548f, 40.2760582f, 1489615491, 17.0106602),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6155548f, 40.2760582f, leg_index, 5.62639904f, 428,
-          maneuver_index, 3.27838397f, 158, instruction_index));
+          maneuver_index, 3.27838397f, 158));
   //----------------------------------------------------------------
   // trace point = 550
   maneuver_index = 9;
@@ -12375,7 +12374,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6153564f, 40.276104f, 1489615492, 17.6597576),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6153564f, 40.276104f, leg_index, 5.6087985f, 427,
-          maneuver_index, 3.26078343f, 157, instruction_index));
+          maneuver_index, 3.26078343f, 157));
   //----------------------------------------------------------------
   // trace point = 551
   maneuver_index = 9;
@@ -12384,7 +12383,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6151505f, 40.2761536f, 1489615493, 18.359581),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6151505f, 40.2761536f, leg_index, 5.5904541f, 426,
-          maneuver_index, 3.24243903f, 156, instruction_index));
+          maneuver_index, 3.24243903f, 156));
   //----------------------------------------------------------------
   // trace point = 552
   maneuver_index = 9;
@@ -12393,7 +12392,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6149445f, 40.2761993f, 1489615494, 18.1985607),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6149445f, 40.2761993f, leg_index, 5.5722332f, 425,
-          maneuver_index, 3.22421813f, 155, instruction_index));
+          maneuver_index, 3.22421813f, 155));
   //----------------------------------------------------------------
   // trace point = 553
   maneuver_index = 9;
@@ -12402,7 +12401,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6147308f, 40.2762451f, 1489615495, 18.8008175),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6147308f, 40.2762489f, leg_index, 5.55326891f, 425,
-          maneuver_index, 3.20525384f, 155, instruction_index));
+          maneuver_index, 3.20525384f, 155));
   //----------------------------------------------------------------
   // trace point = 554
   maneuver_index = 9;
@@ -12411,7 +12410,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6145248f, 40.2762947f, 1489615496, 18.3595467),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6145248f, 40.2762985f, leg_index, 5.53492451f, 424,
-          maneuver_index, 3.18690944f, 154, instruction_index));
+          maneuver_index, 3.18690944f, 154));
   //----------------------------------------------------------------
   // trace point = 555
   maneuver_index = 9;
@@ -12420,7 +12419,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6143112f, 40.2763443f, 1489615497, 18.9758129),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6143112f, 40.2763481f, leg_index, 5.51596022f, 423,
-          maneuver_index, 3.16794515f, 153, instruction_index));
+          maneuver_index, 3.16794515f, 153));
   //----------------------------------------------------------------
   // trace point = 556
   maneuver_index = 9;
@@ -12429,7 +12428,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6140976f, 40.2763977f, 1489615498, 19.0626049),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6140976f, 40.2763977f, leg_index, 5.49699593f, 422,
-          maneuver_index, 3.14898086f, 152, instruction_index));
+          maneuver_index, 3.14898086f, 152));
   //----------------------------------------------------------------
   // trace point = 557
   maneuver_index = 9;
@@ -12438,7 +12437,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.613884f, 40.2764511f, 1489615499, 19.1085434),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.613884f, 40.2764473f, leg_index, 5.47803164f, 421,
-          maneuver_index, 3.13001657f, 151, instruction_index));
+          maneuver_index, 3.13001657f, 151));
   //----------------------------------------------------------------
   // trace point = 558
   maneuver_index = 9;
@@ -12447,7 +12446,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6136703f, 40.2765007f, 1489615500, 19.0080719),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6136703f, 40.2764969f, leg_index, 5.45906734f, 420,
-          maneuver_index, 3.11105227f, 150, instruction_index));
+          maneuver_index, 3.11105227f, 150));
   //----------------------------------------------------------------
   // trace point = 559
   maneuver_index = 9;
@@ -12456,7 +12455,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6134567f, 40.2765503f, 1489615501, 18.8944321),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6134567f, 40.2765465f, leg_index, 5.44010305f, 419,
-          maneuver_index, 3.09208798f, 149, instruction_index));
+          maneuver_index, 3.09208798f, 149));
   //----------------------------------------------------------------
   // trace point = 560
   maneuver_index = 9;
@@ -12465,7 +12464,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6132431f, 40.2765999f, 1489615502, 19.0080471),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6132431f, 40.2765961f, leg_index, 5.42113924f, 418,
-          maneuver_index, 3.07312417f, 148, instruction_index));
+          maneuver_index, 3.07312417f, 148));
   //----------------------------------------------------------------
   // trace point = 561
   maneuver_index = 9;
@@ -12474,7 +12473,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6130295f, 40.2766495f, 1489615503, 18.9757347),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6130295f, 40.2766457f, leg_index, 5.40217495f, 417,
-          maneuver_index, 3.05415988f, 147, instruction_index));
+          maneuver_index, 3.05415988f, 147));
   //----------------------------------------------------------------
   // trace point = 562
   maneuver_index = 9;
@@ -12483,7 +12482,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6128235f, 40.2766953f, 1489615504, 18.229393),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6128235f, 40.2766953f, leg_index, 5.3838315f, 417,
-          maneuver_index, 3.03581643f, 147, instruction_index));
+          maneuver_index, 3.03581643f, 147));
   //----------------------------------------------------------------
   // trace point = 563
   maneuver_index = 9;
@@ -12492,7 +12491,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6126175f, 40.276741f, 1489615505, 18.2293816),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6126175f, 40.276741f, leg_index, 5.36560965f, 416,
-          maneuver_index, 3.01759458f, 146, instruction_index));
+          maneuver_index, 3.01759458f, 146));
   //----------------------------------------------------------------
   // trace point = 564
   maneuver_index = 9;
@@ -12501,7 +12500,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6124268f, 40.276783f, 1489615506, 16.8002014),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6124268f, 40.2767868f, leg_index, 5.34862947f, 415,
-          maneuver_index, 3.0006144f, 145, instruction_index));
+          maneuver_index, 3.0006144f, 145));
   //----------------------------------------------------------------
   // trace point = 565
   maneuver_index = 9;
@@ -12510,7 +12509,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6122284f, 40.2768288f, 1489615507, 17.659584),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6122284f, 40.2768326f, leg_index, 5.33102942f, 414,
-          maneuver_index, 2.98301435f, 144, instruction_index));
+          maneuver_index, 2.98301435f, 144));
   //----------------------------------------------------------------
   // trace point = 566
   maneuver_index = 9;
@@ -12519,7 +12518,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.61203f, 40.2768669f, 1489615508, 17.3398266),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.61203f, 40.2768745f, leg_index, 5.31356716f, 413,
-          maneuver_index, 2.96555209f, 143, instruction_index));
+          maneuver_index, 2.96555209f, 143));
   //----------------------------------------------------------------
   // trace point = 567
   maneuver_index = 9;
@@ -12528,7 +12527,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6118317f, 40.2769051f, 1489615509, 17.339817),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6118317f, 40.2769089f, leg_index, 5.29624796f, 412,
-          maneuver_index, 2.94823289f, 142, instruction_index));
+          maneuver_index, 2.94823289f, 142));
   //----------------------------------------------------------------
   // trace point = 568
   maneuver_index = 9;
@@ -12537,7 +12536,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6116257f, 40.2769356f, 1489615510, 17.8324356),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6116257f, 40.2769394f, leg_index, 5.27842665f, 411,
-          maneuver_index, 2.93041158f, 141, instruction_index));
+          maneuver_index, 2.93041158f, 141));
   //----------------------------------------------------------------
   // trace point = 569
   maneuver_index = 9;
@@ -12546,7 +12545,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.611412f, 40.2769585f, 1489615511, 18.3390255),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.611412f, 40.2769699f, leg_index, 5.25996828f, 410,
-          maneuver_index, 2.91195321f, 140, instruction_index));
+          maneuver_index, 2.91195321f, 140));
   //----------------------------------------------------------------
   // trace point = 570
   maneuver_index = 9;
@@ -12555,7 +12554,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6111908f, 40.2769699f, 1489615512, 18.81674),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6111908f, 40.276989f, leg_index, 5.24101162f, 410,
-          maneuver_index, 2.89299655f, 140, instruction_index));
+          maneuver_index, 2.89299655f, 140));
   //----------------------------------------------------------------
   // trace point = 571
   maneuver_index = 9;
@@ -12564,7 +12563,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6109695f, 40.2769775f, 1489615513, 18.7903748),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6109695f, 40.2770004f, leg_index, 5.22217989f, 409,
-          maneuver_index, 2.87416482f, 139, instruction_index));
+          maneuver_index, 2.87416482f, 139));
   //----------------------------------------------------------------
   // trace point = 572
   maneuver_index = 9;
@@ -12573,7 +12572,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6107407f, 40.276989f, 1489615514, 19.4871979),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6107407f, 40.2770081f, leg_index, 5.2027235f, 408,
-          maneuver_index, 2.85470843f, 138, instruction_index));
+          maneuver_index, 2.85470843f, 138));
   //----------------------------------------------------------------
   // trace point = 573
   maneuver_index = 9;
@@ -12582,7 +12581,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6105118f, 40.2769966f, 1489615515, 19.4690628),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6105118f, 40.2770157f, leg_index, 5.18326664f, 407,
-          maneuver_index, 2.83525157f, 137, instruction_index));
+          maneuver_index, 2.83525157f, 137));
   //----------------------------------------------------------------
   // trace point = 574
   maneuver_index = 9;
@@ -12591,7 +12590,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6102829f, 40.2770081f, 1489615516, 19.4871922),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6102829f, 40.2770271f, leg_index, 5.16378784f, 406,
-          maneuver_index, 2.81577277f, 136, instruction_index));
+          maneuver_index, 2.81577277f, 136));
   //----------------------------------------------------------------
   // trace point = 575
   maneuver_index = 9;
@@ -12600,7 +12599,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6100464f, 40.2770195f, 1489615517, 20.1723881),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6100464f, 40.2770348f, leg_index, 5.14368439f, 405,
-          maneuver_index, 2.79566932f, 135, instruction_index));
+          maneuver_index, 2.79566932f, 135));
   //----------------------------------------------------------------
   // trace point = 576
   maneuver_index = 9;
@@ -12609,7 +12608,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6098175f, 40.2770309f, 1489615518, 19.4024258),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6098175f, 40.2770462f, leg_index, 5.12420559f, 404,
-          maneuver_index, 2.77619052f, 134, instruction_index));
+          maneuver_index, 2.77619052f, 134));
   //----------------------------------------------------------------
   // trace point = 577
   maneuver_index = 9;
@@ -12618,7 +12617,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6095963f, 40.2770386f, 1489615519, 18.8751926),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6095963f, 40.2770538f, leg_index, 5.10539627f, 403,
-          maneuver_index, 2.7573812f, 133, instruction_index));
+          maneuver_index, 2.7573812f, 133));
   //----------------------------------------------------------------
   // trace point = 578
   maneuver_index = 9;
@@ -12627,7 +12626,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6093674f, 40.27705f, 1489615520, 19.4871807),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6093674f, 40.2770615f, leg_index, 5.08593988f, 402,
-          maneuver_index, 2.73792481f, 132, instruction_index));
+          maneuver_index, 2.73792481f, 132));
   //----------------------------------------------------------------
   // trace point = 579
   maneuver_index = 9;
@@ -12636,7 +12635,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6091385f, 40.2770576f, 1489615521, 19.4690456),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6091385f, 40.2770729f, leg_index, 5.06646109f, 401,
-          maneuver_index, 2.71844602f, 131, instruction_index));
+          maneuver_index, 2.71844602f, 131));
   //----------------------------------------------------------------
   // trace point = 580
   maneuver_index = 9;
@@ -12645,7 +12644,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6089172f, 40.2770653f, 1489615522, 18.7854042),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6089172f, 40.2770805f, leg_index, 5.04765177f, 400,
-          maneuver_index, 2.6996367f, 130, instruction_index));
+          maneuver_index, 2.6996367f, 130));
   //----------------------------------------------------------------
   // trace point = 581
   maneuver_index = 9;
@@ -12654,7 +12653,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6086884f, 40.2770729f, 1489615523, 19.4690418),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6086884f, 40.2770882f, leg_index, 5.02819538f, 399,
-          maneuver_index, 2.68018031f, 129, instruction_index));
+          maneuver_index, 2.68018031f, 129));
   //----------------------------------------------------------------
   // trace point = 582
   maneuver_index = 9;
@@ -12663,7 +12662,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6084671f, 40.2770805f, 1489615524, 18.7903461),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6084671f, 40.2770996f, leg_index, 5.00936365f, 399,
-          maneuver_index, 2.66134858f, 129, instruction_index));
+          maneuver_index, 2.66134858f, 129));
   //----------------------------------------------------------------
   // trace point = 583
   maneuver_index = 9;
@@ -12672,7 +12671,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6082458f, 40.277092f, 1489615525, 18.8091297),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6082458f, 40.2771072f, leg_index, 4.99055386f, 398,
-          maneuver_index, 2.64253879f, 128, instruction_index));
+          maneuver_index, 2.64253879f, 128));
   //----------------------------------------------------------------
   // trace point = 584
   maneuver_index = 9;
@@ -12681,7 +12680,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6080322f, 40.2770996f, 1489615526, 18.1965313),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6080322f, 40.2771149f, leg_index, 4.97239161f, 397,
-          maneuver_index, 2.62437654f, 127, instruction_index));
+          maneuver_index, 2.62437654f, 127));
   //----------------------------------------------------------------
   // trace point = 585
   maneuver_index = 9;
@@ -12690,7 +12689,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.607811f, 40.2771111f, 1489615527, 18.8091259),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.607811f, 40.2771263f, leg_index, 4.95355988f, 396,
-          maneuver_index, 2.60554481f, 126, instruction_index));
+          maneuver_index, 2.60554481f, 126));
   //----------------------------------------------------------------
   // trace point = 586
   maneuver_index = 9;
@@ -12699,7 +12698,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6075897f, 40.2771149f, 1489615528, 18.7745018),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6075897f, 40.2771339f, leg_index, 4.93475056f, 395,
-          maneuver_index, 2.58673549f, 125, instruction_index));
+          maneuver_index, 2.58673549f, 125));
   //----------------------------------------------------------------
   // trace point = 587
   maneuver_index = 9;
@@ -12708,7 +12707,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6073608f, 40.2771263f, 1489615529, 19.4871578),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6073608f, 40.2771416f, leg_index, 4.91529465f, 394,
-          maneuver_index, 2.56727958f, 124, instruction_index));
+          maneuver_index, 2.56727958f, 124));
   //----------------------------------------------------------------
   // trace point = 588
   maneuver_index = 9;
@@ -12717,7 +12716,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6071243f, 40.2771339f, 1489615530, 20.1477661),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6071243f, 40.277153f, leg_index, 4.89387417f, 393,
-          maneuver_index, 2.5458591f, 123, instruction_index));
+          maneuver_index, 2.5458591f, 123));
   //----------------------------------------------------------------
   // trace point = 589
   maneuver_index = 9;
@@ -12726,7 +12725,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6068878f, 40.2771416f, 1489615531, 20.0629177),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6068878f, 40.2771568f, leg_index, 4.87507963f, 392,
-          maneuver_index, 2.52706456f, 122, instruction_index));
+          maneuver_index, 2.52706456f, 122));
   //----------------------------------------------------------------
   // trace point = 590
   maneuver_index = 9;
@@ -12735,7 +12734,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6066437f, 40.277153f, 1489615532, 20.7587166),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6066437f, 40.2771645f, leg_index, 4.85432816f, 391,
-          maneuver_index, 2.50631309f, 121, instruction_index));
+          maneuver_index, 2.50631309f, 121));
   //----------------------------------------------------------------
   // trace point = 591
   maneuver_index = 9;
@@ -12744,7 +12743,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6064072f, 40.2771606f, 1489615533, 20.1477585),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6064072f, 40.2771721f, leg_index, 4.83422422f, 390,
-          maneuver_index, 2.48620915f, 120, instruction_index));
+          maneuver_index, 2.48620915f, 120));
   //----------------------------------------------------------------
   // trace point = 592
   maneuver_index = 9;
@@ -12753,7 +12752,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.606163f, 40.2771721f, 1489615534, 20.7587109),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.606163f, 40.2771759f, leg_index, 4.81348753f, 389,
-          maneuver_index, 2.46547246f, 119, instruction_index));
+          maneuver_index, 2.46547246f, 119));
   //----------------------------------------------------------------
   // trace point = 593
   maneuver_index = 9;
@@ -12762,7 +12761,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6059113f, 40.2771797f, 1489615535, 21.4205093),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6059113f, 40.2771835f, leg_index, 4.79208803f, 388,
-          maneuver_index, 2.44407296f, 118, instruction_index));
+          maneuver_index, 2.44407296f, 118));
   //----------------------------------------------------------------
   // trace point = 594
   maneuver_index = 9;
@@ -12771,7 +12770,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6056595f, 40.2771873f, 1489615536, 21.4161663),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6056595f, 40.2771912f, leg_index, 4.77068901f, 387,
-          maneuver_index, 2.42267394f, 117, instruction_index));
+          maneuver_index, 2.42267394f, 117));
   //----------------------------------------------------------------
   // trace point = 595
   maneuver_index = 9;
@@ -12780,7 +12779,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6054153f, 40.277195f, 1489615537, 20.7416821),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6054153f, 40.277195f, leg_index, 4.74995232f, 386,
-          maneuver_index, 2.40193725f, 116, instruction_index));
+          maneuver_index, 2.40193725f, 116));
   //----------------------------------------------------------------
   // trace point = 596
   maneuver_index = 9;
@@ -12789,7 +12788,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6051712f, 40.2772064f, 1489615538, 20.7586994),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6051712f, 40.2772026f, leg_index, 4.72920084f, 385,
-          maneuver_index, 2.38118577f, 115, instruction_index));
+          maneuver_index, 2.38118577f, 115));
   //----------------------------------------------------------------
   // trace point = 597
   maneuver_index = 9;
@@ -12798,7 +12797,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6049194f, 40.2772179f, 1489615539, 21.4436245),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6049194f, 40.2772102f, leg_index, 4.70780182f, 384,
-          maneuver_index, 2.35978675f, 114, instruction_index));
+          maneuver_index, 2.35978675f, 114));
   //----------------------------------------------------------------
   // trace point = 598
   maneuver_index = 9;
@@ -12807,7 +12806,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6046829f, 40.2772255f, 1489615540, 20.05826),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6046829f, 40.2772141f, leg_index, 4.68771219f, 383,
-          maneuver_index, 2.33969712f, 113, instruction_index));
+          maneuver_index, 2.33969712f, 113));
   //----------------------------------------------------------------
   // trace point = 599
   maneuver_index = 9;
@@ -12816,7 +12815,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6044464f, 40.2772293f, 1489615541, 20.1329708),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6044464f, 40.2772217f, leg_index, 4.66760826f, 382,
-          maneuver_index, 2.31959319f, 112, instruction_index));
+          maneuver_index, 2.31959319f, 112));
   //----------------------------------------------------------------
   // trace point = 600
   maneuver_index = 9;
@@ -12825,7 +12824,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6042099f, 40.2772369f, 1489615542, 20.0628891),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6042099f, 40.2772293f, leg_index, 4.64750481f, 381,
-          maneuver_index, 2.29948974f, 111, instruction_index));
+          maneuver_index, 2.29948974f, 111));
   //----------------------------------------------------------------
   // trace point = 601
   maneuver_index = 9;
@@ -12834,7 +12833,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.603981f, 40.2772408f, 1489615543, 19.4537106),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.603981f, 40.2772331f, leg_index, 4.62806273f, 380,
-          maneuver_index, 2.28004766f, 110, instruction_index));
+          maneuver_index, 2.28004766f, 110));
   //----------------------------------------------------------------
   // trace point = 602
   maneuver_index = 9;
@@ -12843,7 +12842,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6037598f, 40.2772446f, 1489615544, 18.7744675),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6037598f, 40.2772408f, leg_index, 4.60925436f, 379,
-          maneuver_index, 2.26123929f, 109, instruction_index));
+          maneuver_index, 2.26123929f, 109));
   //----------------------------------------------------------------
   // trace point = 603
   maneuver_index = 9;
@@ -12852,7 +12851,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6035385f, 40.2772484f, 1489615545, 18.7721558),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6035385f, 40.2772446f, leg_index, 4.59045982f, 378,
-          maneuver_index, 2.24244475f, 108, instruction_index));
+          maneuver_index, 2.24244475f, 108));
   //----------------------------------------------------------------
   // trace point = 604
   maneuver_index = 9;
@@ -12861,7 +12860,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6033096f, 40.2772484f, 1489615546, 19.4486122),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6033096f, 40.2772522f, leg_index, 4.57100391f, 377,
-          maneuver_index, 2.22298884f, 107, instruction_index));
+          maneuver_index, 2.22298884f, 107));
   //----------------------------------------------------------------
   // trace point = 605
   maneuver_index = 9;
@@ -12870,7 +12869,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.603096f, 40.2772484f, 1489615547, 18.1746845),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.603096f, 40.277256f, leg_index, 4.55285692f, 376,
-          maneuver_index, 2.20484185f, 106, instruction_index));
+          maneuver_index, 2.20484185f, 106));
   //----------------------------------------------------------------
   // trace point = 606
   maneuver_index = 9;
@@ -12879,7 +12878,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6028824f, 40.2772484f, 1489615548, 18.1746845),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6028824f, 40.2772598f, leg_index, 4.53470898f, 375,
-          maneuver_index, 2.18669391f, 105, instruction_index));
+          maneuver_index, 2.18669391f, 105));
   //----------------------------------------------------------------
   // trace point = 607
   maneuver_index = 9;
@@ -12888,7 +12887,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6026764f, 40.2772484f, 1489615549, 17.4952583),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6026764f, 40.2772522f, leg_index, 4.51720047f, 374,
-          maneuver_index, 2.1691854f, 104, instruction_index));
+          maneuver_index, 2.1691854f, 104));
   //----------------------------------------------------------------
   // trace point = 608
   maneuver_index = 9;
@@ -12897,7 +12896,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6024704f, 40.2772446f, 1489615550, 17.4984455),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6024704f, 40.2772522f, leg_index, 4.49970675f, 374,
-          maneuver_index, 2.15169168f, 104, instruction_index));
+          maneuver_index, 2.15169168f, 104));
   //----------------------------------------------------------------
   // trace point = 609
   maneuver_index = 9;
@@ -12906,7 +12905,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6022644f, 40.2772408f, 1489615551, 17.5009251),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6022644f, 40.2772484f, leg_index, 4.4822073f, 373,
-          maneuver_index, 2.13419223f, 103, instruction_index));
+          maneuver_index, 2.13419223f, 103));
   //----------------------------------------------------------------
   // trace point = 610
   maneuver_index = 9;
@@ -12915,7 +12914,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.602066f, 40.2772331f, 1489615552, 16.8393974),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.602066f, 40.2772446f, leg_index, 4.46535587f, 372,
-          maneuver_index, 2.1173408f, 102, instruction_index));
+          maneuver_index, 2.1173408f, 102));
   //----------------------------------------------------------------
   // trace point = 611
   maneuver_index = 9;
@@ -12924,7 +12923,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.60186f, 40.2772293f, 1489615553, 17.500927),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.60186f, 40.2772446f, leg_index, 4.44786358f, 371,
-          maneuver_index, 2.09984851f, 101, instruction_index));
+          maneuver_index, 2.09984851f, 101));
   //----------------------------------------------------------------
   // trace point = 612
   maneuver_index = 9;
@@ -12933,7 +12932,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6016617f, 40.2772255f, 1489615554, 16.8217297),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6016617f, 40.2772408f, leg_index, 4.43101168f, 370,
-          maneuver_index, 2.08299661f, 100, instruction_index));
+          maneuver_index, 2.08299661f, 100));
   //----------------------------------------------------------------
   // trace point = 613
   maneuver_index = 9;
@@ -12942,7 +12941,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6014481f, 40.2772179f, 1489615555, 18.1913891),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6014481f, 40.2772369f, leg_index, 4.41286469f, 369,
-          maneuver_index, 2.06484962f, 99, instruction_index));
+          maneuver_index, 2.06484962f, 99));
   //----------------------------------------------------------------
   // trace point = 614
   maneuver_index = 9;
@@ -12951,7 +12950,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6012497f, 40.2772141f, 1489615556, 16.8217316),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6012497f, 40.2772331f, leg_index, 4.39601469f, 369,
-          maneuver_index, 2.04799962f, 99, instruction_index));
+          maneuver_index, 2.04799962f, 99));
   //----------------------------------------------------------------
   // trace point = 615
   maneuver_index = 9;
@@ -12960,7 +12959,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6010437f, 40.2772026f, 1489615557, 17.5380688),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6010437f, 40.2772293f, leg_index, 4.37850761f, 368,
-          maneuver_index, 2.03049254f, 98, instruction_index));
+          maneuver_index, 2.03049254f, 98));
   //----------------------------------------------------------------
   // trace point = 616
   maneuver_index = 9;
@@ -12969,7 +12968,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6008377f, 40.2771912f, 1489615558, 17.5461941),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6008377f, 40.2772255f, leg_index, 4.3610096f, 367,
-          maneuver_index, 2.01299453f, 97, instruction_index));
+          maneuver_index, 2.01299453f, 97));
   //----------------------------------------------------------------
   // trace point = 617
   maneuver_index = 9;
@@ -12978,7 +12977,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6006241f, 40.2771835f, 1489615559, 18.1913986),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6006241f, 40.2772179f, leg_index, 4.34284735f, 366,
-          maneuver_index, 1.99483228f, 96, instruction_index));
+          maneuver_index, 1.99483228f, 96));
   //----------------------------------------------------------------
   // trace point = 618
   maneuver_index = 9;
@@ -12987,7 +12986,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6004028f, 40.2771721f, 1489615560, 18.8166809),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6004028f, 40.2772102f, leg_index, 4.32403803f, 365,
-          maneuver_index, 1.97602296f, 95, instruction_index));
+          maneuver_index, 1.97602296f, 95));
   //----------------------------------------------------------------
   // trace point = 619
   maneuver_index = 9;
@@ -12996,7 +12995,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.6001816f, 40.2771606f, 1489615561, 18.8091087),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6001816f, 40.2772026f, leg_index, 4.30522823f, 364,
-          maneuver_index, 1.95721316f, 94, instruction_index));
+          maneuver_index, 1.95721316f, 94));
   //----------------------------------------------------------------
   // trace point = 620
   maneuver_index = 9;
@@ -13005,7 +13004,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5999603f, 40.2771492f, 1489615562, 18.9014015),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5999603f, 40.2771988f, leg_index, 4.2864356f, 363,
-          maneuver_index, 1.93842053f, 93, instruction_index));
+          maneuver_index, 1.93842053f, 93));
   //----------------------------------------------------------------
   // trace point = 621
   maneuver_index = 9;
@@ -13014,7 +13013,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5997314f, 40.2771416f, 1489615563, 19.4642448),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5997314f, 40.2771912f, leg_index, 4.26697874f, 362,
-          maneuver_index, 1.91896367f, 92, instruction_index));
+          maneuver_index, 1.91896367f, 92));
   //----------------------------------------------------------------
   // trace point = 622
   maneuver_index = 9;
@@ -13023,7 +13022,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5995026f, 40.2771339f, 1489615564, 19.384182),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5995026f, 40.2771835f, leg_index, 4.2475214f, 361,
-          maneuver_index, 1.89950633f, 91, instruction_index));
+          maneuver_index, 1.89950633f, 91));
   //----------------------------------------------------------------
   // trace point = 623
   maneuver_index = 9;
@@ -13032,7 +13031,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5992737f, 40.2771263f, 1489615565, 19.4690247),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5992737f, 40.2771759f, leg_index, 4.22806454f, 361,
-          maneuver_index, 1.88004947f, 91, instruction_index));
+          maneuver_index, 1.88004947f, 91));
   //----------------------------------------------------------------
   // trace point = 624
   maneuver_index = 9;
@@ -13041,7 +13040,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5990448f, 40.2771187f, 1489615566, 19.4642525),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5990448f, 40.2771645f, leg_index, 4.20858526f, 360,
-          maneuver_index, 1.86057019f, 90, instruction_index));
+          maneuver_index, 1.86057019f, 90));
   //----------------------------------------------------------------
   // trace point = 625
   maneuver_index = 9;
@@ -13050,7 +13049,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5988083f, 40.2771111f, 1489615567, 20.1477699),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5988083f, 40.2771568f, leg_index, 4.18848228f, 359,
-          maneuver_index, 1.84046721f, 89, instruction_index));
+          maneuver_index, 1.84046721f, 89));
   //----------------------------------------------------------------
   // trace point = 626
   maneuver_index = 9;
@@ -13059,7 +13058,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5985794f, 40.2771034f, 1489615568, 19.4690304),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5985794f, 40.2771454f, leg_index, 4.16900301f, 358,
-          maneuver_index, 1.82098794f, 88, instruction_index));
+          maneuver_index, 1.82098794f, 88));
   //----------------------------------------------------------------
   // trace point = 627
   maneuver_index = 9;
@@ -13068,7 +13067,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5983505f, 40.2770958f, 1489615569, 19.3793983),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5983505f, 40.2771378f, leg_index, 4.1495471f, 357,
-          maneuver_index, 1.80153203f, 87, instruction_index));
+          maneuver_index, 1.80153203f, 87));
   //----------------------------------------------------------------
   // trace point = 628
   maneuver_index = 9;
@@ -13077,7 +13076,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5981293f, 40.2770882f, 1489615570, 18.8751774),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5981293f, 40.2771263f, leg_index, 4.13071585f, 356,
-          maneuver_index, 1.78270078f, 86, instruction_index));
+          maneuver_index, 1.78270078f, 86));
   //----------------------------------------------------------------
   // trace point = 629
   maneuver_index = 9;
@@ -13086,7 +13085,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.597908f, 40.2770767f, 1489615571, 18.8091316),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.597908f, 40.2771187f, leg_index, 4.11190557f, 355,
-          maneuver_index, 1.7638905f, 85, instruction_index));
+          maneuver_index, 1.7638905f, 85));
   //----------------------------------------------------------------
   // trace point = 630
   maneuver_index = 9;
@@ -13095,7 +13094,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5976944f, 40.2770729f, 1489615572, 18.1801853),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5976944f, 40.2771111f, leg_index, 4.09374285f, 354,
-          maneuver_index, 1.74572778f, 84, instruction_index));
+          maneuver_index, 1.74572778f, 84));
   //----------------------------------------------------------------
   // trace point = 631
   maneuver_index = 9;
@@ -13104,7 +13103,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5974808f, 40.2770691f, 1489615573, 18.0952835),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5974808f, 40.2771034f, leg_index, 4.07558012f, 354,
-          maneuver_index, 1.72756505f, 84, instruction_index));
+          maneuver_index, 1.72756505f, 84));
   //----------------------------------------------------------------
   // trace point = 632
   maneuver_index = 9;
@@ -13113,7 +13112,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5972824f, 40.2770615f, 1489615574, 16.9242516),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5972824f, 40.2770958f, leg_index, 4.05871201f, 353,
-          maneuver_index, 1.71069694f, 83, instruction_index));
+          maneuver_index, 1.71069694f, 83));
   //----------------------------------------------------------------
   // trace point = 633
   maneuver_index = 9;
@@ -13122,7 +13121,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.597084f, 40.2770538f, 1489615575, 16.8339214),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.597084f, 40.2770882f, leg_index, 4.04184437f, 352,
-          maneuver_index, 1.6938293f, 82, instruction_index));
+          maneuver_index, 1.6938293f, 82));
   //----------------------------------------------------------------
   // trace point = 634
   maneuver_index = 9;
@@ -13131,7 +13130,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5969009f, 40.27705f, 1489615576, 15.5483255),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5969009f, 40.2770844f, leg_index, 4.02629042f, 351,
-          maneuver_index, 1.67827535f, 81, instruction_index));
+          maneuver_index, 1.67827535f, 81));
   //----------------------------------------------------------------
   // trace point = 635
   maneuver_index = 9;
@@ -13140,7 +13139,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5967407f, 40.2770462f, 1489615577, 13.5958834),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5967407f, 40.2770767f, leg_index, 4.0126586f, 351,
-          maneuver_index, 1.66464353f, 81, instruction_index));
+          maneuver_index, 1.66464353f, 81));
   //----------------------------------------------------------------
   // trace point = 636
   maneuver_index = 9;
@@ -13149,7 +13148,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5965881f, 40.2770462f, 1489615578, 12.9940891),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5965881f, 40.2770729f, leg_index, 3.99969268f, 350,
-          maneuver_index, 1.65167761f, 80, instruction_index));
+          maneuver_index, 1.65167761f, 80));
   //----------------------------------------------------------------
   // trace point = 637
   maneuver_index = 9;
@@ -13158,7 +13157,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5964432f, 40.2770424f, 1489615579, 12.3227081),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5964432f, 40.2770767f, leg_index, 3.98737431f, 350,
-          maneuver_index, 1.63935924f, 80, instruction_index));
+          maneuver_index, 1.63935924f, 80));
   //----------------------------------------------------------------
   // trace point = 638
   maneuver_index = 9;
@@ -13167,7 +13166,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5962982f, 40.2770424f, 1489615580, 12.3146601),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5962982f, 40.2770805f, leg_index, 3.97505593f, 349,
-          maneuver_index, 1.62704086f, 79, instruction_index));
+          maneuver_index, 1.62704086f, 79));
   //----------------------------------------------------------------
   // trace point = 639
   maneuver_index = 9;
@@ -13176,7 +13175,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5961609f, 40.2770462f, 1489615581, 11.6437483),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5961609f, 40.2770844f, leg_index, 3.96338534f, 349,
-          maneuver_index, 1.61537027f, 79, instruction_index));
+          maneuver_index, 1.61537027f, 79));
   //----------------------------------------------------------------
   // trace point = 640
   maneuver_index = 9;
@@ -13185,7 +13184,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5960159f, 40.2770462f, 1489615582, 12.3146601),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5960159f, 40.2770882f, leg_index, 3.95106792f, 348,
-          maneuver_index, 1.60305285f, 78, instruction_index));
+          maneuver_index, 1.60305285f, 78));
   //----------------------------------------------------------------
   // trace point = 641
   maneuver_index = 9;
@@ -13194,7 +13193,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5958633f, 40.2770462f, 1489615583, 12.9940891),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5958633f, 40.2770882f, leg_index, 3.93811584f, 347,
-          maneuver_index, 1.59010077f, 77, instruction_index));
+          maneuver_index, 1.59010077f, 77));
   //----------------------------------------------------------------
   // trace point = 642
   maneuver_index = 9;
@@ -13203,7 +13202,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5957108f, 40.27705f, 1489615584, 12.9168377),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5957108f, 40.277092f, leg_index, 3.92514777f, 347,
-          maneuver_index, 1.5771327f, 77, instruction_index));
+          maneuver_index, 1.5771327f, 77));
   //----------------------------------------------------------------
   // trace point = 643
   maneuver_index = 9;
@@ -13212,7 +13211,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5955505f, 40.2770538f, 1489615585, 13.5958824),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5955505f, 40.2770958f, leg_index, 3.91153407f, 346,
-          maneuver_index, 1.563519f, 76, instruction_index));
+          maneuver_index, 1.563519f, 76));
   //----------------------------------------------------------------
   // trace point = 644
   maneuver_index = 9;
@@ -13221,7 +13220,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5953751f, 40.2770538f, 1489615586, 14.9474478),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5953751f, 40.2770996f, leg_index, 3.89662528f, 346,
-          maneuver_index, 1.54861021f, 76, instruction_index));
+          maneuver_index, 1.54861021f, 76));
   //----------------------------------------------------------------
   // trace point = 645
   maneuver_index = 9;
@@ -13230,7 +13229,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5951996f, 40.2770576f, 1489615587, 14.8691874),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5951996f, 40.2771072f, leg_index, 3.8817029f, 345,
-          maneuver_index, 1.53368783f, 75, instruction_index));
+          maneuver_index, 1.53368783f, 75));
   //----------------------------------------------------------------
   // trace point = 646
   maneuver_index = 9;
@@ -13239,7 +13238,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5950165f, 40.2770615f, 1489615588, 15.6304436),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5950165f, 40.2771111f, leg_index, 3.86614609f, 344,
-          maneuver_index, 1.51813102f, 74, instruction_index));
+          maneuver_index, 1.51813102f, 74));
   //----------------------------------------------------------------
   // trace point = 647
   maneuver_index = 9;
@@ -13248,7 +13247,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5948257f, 40.2770653f, 1489615589, 16.1425896),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5948257f, 40.2771149f, leg_index, 3.84994173f, 343,
-          maneuver_index, 1.50192666f, 73, instruction_index));
+          maneuver_index, 1.50192666f, 73));
   //----------------------------------------------------------------
   // trace point = 648
   maneuver_index = 9;
@@ -13257,7 +13256,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.594635f, 40.2770691f, 1489615590, 16.2274857),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.594635f, 40.2771187f, leg_index, 3.83373833f, 343,
-          maneuver_index, 1.48572326f, 73, instruction_index));
+          maneuver_index, 1.48572326f, 73));
   //----------------------------------------------------------------
   // trace point = 649
   maneuver_index = 9;
@@ -13266,7 +13265,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5944443f, 40.2770767f, 1489615591, 16.2458),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5944443f, 40.2771225f, leg_index, 3.81753159f, 341,
-          maneuver_index, 1.46951652f, 71, instruction_index));
+          maneuver_index, 1.46951652f, 71));
   //----------------------------------------------------------------
   // trace point = 650
   maneuver_index = 9;
@@ -13275,7 +13274,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5942535f, 40.2770805f, 1489615592, 16.1425858),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5942535f, 40.2771263f, leg_index, 3.80132771f, 341,
-          maneuver_index, 1.45331264f, 71, instruction_index));
+          maneuver_index, 1.45331264f, 71));
   //----------------------------------------------------------------
   // trace point = 651
   maneuver_index = 9;
@@ -13284,7 +13283,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5940628f, 40.2770882f, 1489615593, 16.2400761),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5940628f, 40.2771301f, leg_index, 3.78512383f, 340,
-          maneuver_index, 1.43710876f, 70, instruction_index));
+          maneuver_index, 1.43710876f, 70));
   //----------------------------------------------------------------
   // trace point = 652
   maneuver_index = 9;
@@ -13293,7 +13292,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5938797f, 40.2770958f, 1489615594, 15.5674334),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5938797f, 40.2771301f, leg_index, 3.76957536f, 339,
-          maneuver_index, 1.42156029f, 69, instruction_index));
+          maneuver_index, 1.42156029f, 69));
   //----------------------------------------------------------------
   // trace point = 653
   maneuver_index = 9;
@@ -13302,7 +13301,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.593689f, 40.2770996f, 1489615595, 16.227478),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.593689f, 40.2771339f, leg_index, 3.75337148f, 338,
-          maneuver_index, 1.40535641f, 68, instruction_index));
+          maneuver_index, 1.40535641f, 68));
   //----------------------------------------------------------------
   // trace point = 654
   maneuver_index = 9;
@@ -13311,7 +13310,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5935059f, 40.2771072f, 1489615596, 15.5614586),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5935059f, 40.2771378f, leg_index, 3.73781562f, 338,
-          maneuver_index, 1.38980055f, 68, instruction_index));
+          maneuver_index, 1.38980055f, 68));
   //----------------------------------------------------------------
   // trace point = 655
   maneuver_index = 9;
@@ -13320,7 +13319,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5933151f, 40.2771149f, 1489615597, 16.2457905),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5933151f, 40.2771378f, leg_index, 3.72161984f, 337,
-          maneuver_index, 1.37360477f, 67, instruction_index));
+          maneuver_index, 1.37360477f, 67));
   //----------------------------------------------------------------
   // trace point = 656
   maneuver_index = 9;
@@ -13329,7 +13328,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.593132f, 40.2771187f, 1489615598, 15.5483112),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.593132f, 40.2771416f, leg_index, 3.70606303f, 336,
-          maneuver_index, 1.35804796f, 66, instruction_index));
+          maneuver_index, 1.35804796f, 66));
   //----------------------------------------------------------------
   // trace point = 657
   maneuver_index = 9;
@@ -13338,7 +13337,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5929489f, 40.2771301f, 1489615599, 15.5900965),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5929489f, 40.2771454f, leg_index, 3.69050622f, 335,
-          maneuver_index, 1.34249115f, 65, instruction_index));
+          maneuver_index, 1.34249115f, 65));
   //----------------------------------------------------------------
   // trace point = 658
   maneuver_index = 9;
@@ -13347,7 +13346,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5927658f, 40.2771378f, 1489615600, 15.5674229),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5927658f, 40.2771492f, leg_index, 3.67494965f, 335,
-          maneuver_index, 1.32693458f, 65, instruction_index));
+          maneuver_index, 1.32693458f, 65));
   //----------------------------------------------------------------
   // trace point = 659
   maneuver_index = 9;
@@ -13356,7 +13355,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5925903f, 40.2771416f, 1489615601, 14.9540596),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5925903f, 40.277153f, leg_index, 3.66004062f, 334,
-          maneuver_index, 1.31202555f, 64, instruction_index));
+          maneuver_index, 1.31202555f, 64));
   //----------------------------------------------------------------
   // trace point = 660
   maneuver_index = 9;
@@ -13365,7 +13364,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5924149f, 40.2771492f, 1489615602, 14.8829117),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5924149f, 40.2771568f, leg_index, 3.64513183f, 333,
-          maneuver_index, 1.29711676f, 63, instruction_index));
+          maneuver_index, 1.29711676f, 63));
   //----------------------------------------------------------------
   // trace point = 661
   maneuver_index = 9;
@@ -13374,7 +13373,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5922318f, 40.2771492f, 1489615603, 15.5419264),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5922318f, 40.2771606f, leg_index, 3.62957501f, 332,
-          maneuver_index, 1.28155994f, 62, instruction_index));
+          maneuver_index, 1.28155994f, 62));
   //----------------------------------------------------------------
   // trace point = 662
   maneuver_index = 9;
@@ -13383,7 +13382,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5920486f, 40.2771568f, 1489615604, 15.5674191),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5920486f, 40.2771645f, leg_index, 3.61401844f, 332,
-          maneuver_index, 1.26600337f, 62, instruction_index));
+          maneuver_index, 1.26600337f, 62));
   //----------------------------------------------------------------
   // trace point = 663
   maneuver_index = 9;
@@ -13392,7 +13391,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5918655f, 40.2771606f, 1489615605, 15.5483017),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5918655f, 40.2771683f, leg_index, 3.5984621f, 331,
-          maneuver_index, 1.25044703f, 61, instruction_index));
+          maneuver_index, 1.25044703f, 61));
   //----------------------------------------------------------------
   // trace point = 664
   maneuver_index = 9;
@@ -13401,7 +13400,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5916748f, 40.2771645f, 1489615606, 16.2247887),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5916748f, 40.2771721f, leg_index, 3.58225822f, 330,
-          maneuver_index, 1.23424315f, 60, instruction_index));
+          maneuver_index, 1.23424315f, 60));
   //----------------------------------------------------------------
   // trace point = 665
   maneuver_index = 9;
@@ -13410,7 +13409,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5914917f, 40.2771683f, 1489615607, 15.5482998),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5914917f, 40.2771721f, leg_index, 3.56671381f, 329,
-          maneuver_index, 1.21869874f, 59, instruction_index));
+          maneuver_index, 1.21869874f, 59));
   //----------------------------------------------------------------
   // trace point = 666
   maneuver_index = 9;
@@ -13419,7 +13418,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5912857f, 40.2771683f, 1489615608, 17.4952774),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5912857f, 40.2771797f, leg_index, 3.54919934f, 329,
-          maneuver_index, 1.20118427f, 59, instruction_index));
+          maneuver_index, 1.20118427f, 59));
   //----------------------------------------------------------------
   // trace point = 667
   maneuver_index = 9;
@@ -13428,7 +13427,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.591095f, 40.2771759f, 1489615609, 16.2457771),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.591095f, 40.2771835f, leg_index, 3.53299499f, 328,
-          maneuver_index, 1.18497992f, 58, instruction_index));
+          maneuver_index, 1.18497992f, 58));
   //----------------------------------------------------------------
   // trace point = 668
   maneuver_index = 9;
@@ -13437,7 +13436,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5908966f, 40.2771759f, 1489615610, 16.8158474),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5908966f, 40.2771873f, leg_index, 3.51614308f, 328,
-          maneuver_index, 1.16812801f, 58, instruction_index));
+          maneuver_index, 1.16812801f, 58));
   //----------------------------------------------------------------
   // trace point = 669
   maneuver_index = 9;
@@ -13446,7 +13445,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5907059f, 40.2771797f, 1489615611, 16.227459),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5907059f, 40.2771912f, leg_index, 3.49993896f, 327,
-          maneuver_index, 1.15192389f, 57, instruction_index));
+          maneuver_index, 1.15192389f, 57));
   //----------------------------------------------------------------
   // trace point = 670
   maneuver_index = 9;
@@ -13455,7 +13454,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5904999f, 40.2771797f, 1489615612, 17.4952755),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5904999f, 40.2771988f, leg_index, 3.4824264f, 326,
-          maneuver_index, 1.13441133f, 56, instruction_index));
+          maneuver_index, 1.13441133f, 56));
   //----------------------------------------------------------------
   // trace point = 671
   maneuver_index = 9;
@@ -13464,7 +13463,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5902939f, 40.2771835f, 1489615613, 17.5009403),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5902939f, 40.2772026f, leg_index, 3.46492648f, 325,
-          maneuver_index, 1.11691141f, 55, instruction_index));
+          maneuver_index, 1.11691141f, 55));
   //----------------------------------------------------------------
   // trace point = 672
   maneuver_index = 9;
@@ -13473,7 +13472,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5900879f, 40.2771873f, 1489615614, 17.4984608),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5900879f, 40.2772064f, leg_index, 3.44742703f, 324,
-          maneuver_index, 1.09941196f, 54, instruction_index));
+          maneuver_index, 1.09941196f, 54));
   //----------------------------------------------------------------
   // trace point = 673
   maneuver_index = 9;
@@ -13482,7 +13481,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5898819f, 40.277195f, 1489615615, 17.5179234),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5898819f, 40.2772102f, leg_index, 3.42992854f, 323,
-          maneuver_index, 1.08191347f, 53, instruction_index));
+          maneuver_index, 1.08191347f, 53));
   //----------------------------------------------------------------
   // trace point = 674
   maneuver_index = 9;
@@ -13491,7 +13490,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5896835f, 40.2772026f, 1489615616, 16.839407),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5896835f, 40.2772141f, leg_index, 3.41307211f, 322,
-          maneuver_index, 1.06505704f, 52, instruction_index));
+          maneuver_index, 1.06505704f, 52));
   //----------------------------------------------------------------
   // trace point = 675
   maneuver_index = 9;
@@ -13500,7 +13499,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5894928f, 40.2772026f, 1489615617, 16.2213421),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5894928f, 40.2772179f, leg_index, 3.39686966f, 321,
-          maneuver_index, 1.04885459f, 51, instruction_index));
+          maneuver_index, 1.04885459f, 51));
   //----------------------------------------------------------------
   // trace point = 676
   maneuver_index = 9;
@@ -13509,7 +13508,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5893021f, 40.2772026f, 1489615618, 16.2213421),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5893021f, 40.2772179f, leg_index, 3.38067174f, 321,
-          maneuver_index, 1.03265667f, 51, instruction_index));
+          maneuver_index, 1.03265667f, 51));
   //----------------------------------------------------------------
   // trace point = 677
   maneuver_index = 9;
@@ -13518,7 +13517,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5891266f, 40.2772102f, 1489615619, 14.8828983),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5891266f, 40.2772179f, leg_index, 3.36576962f, 320,
-          maneuver_index, 1.01775455f, 50, instruction_index));
+          maneuver_index, 1.01775455f, 50));
   //----------------------------------------------------------------
   // trace point = 678
   maneuver_index = 9;
@@ -13527,7 +13526,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5889587f, 40.2772102f, 1489615620, 14.2679853),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5889587f, 40.2772217f, leg_index, 3.35151076f, 319,
-          maneuver_index, 1.00349569f, 49, instruction_index));
+          maneuver_index, 1.00349569f, 49));
   //----------------------------------------------------------------
   // trace point = 679
   maneuver_index = 9;
@@ -13536,7 +13535,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5887909f, 40.2772217f, 1489615621, 14.3303804),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5887909f, 40.2772217f, leg_index, 3.33725667f, 319,
-          maneuver_index, 0.9892416f, 49, instruction_index));
+          maneuver_index, 0.9892416f, 49));
   //----------------------------------------------------------------
   // trace point = 680
   maneuver_index = 9;
@@ -13545,7 +13544,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.588623f, 40.2772179f, 1489615622, 14.274929),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.588623f, 40.2772217f, leg_index, 3.32300258f, 318,
-          maneuver_index, 0.974987507f, 48, instruction_index));
+          maneuver_index, 0.974987507f, 48));
   //----------------------------------------------------------------
   // trace point = 681
   maneuver_index = 9;
@@ -13554,7 +13553,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5884705f, 40.2772217f, 1489615623, 13.0016832),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5884705f, 40.2772255f, leg_index, 3.31003952f, 317,
-          maneuver_index, 0.96202445f, 47, instruction_index));
+          maneuver_index, 0.96202445f, 47));
   //----------------------------------------------------------------
   // trace point = 682
   maneuver_index = 9;
@@ -13563,7 +13562,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5883026f, 40.2772217f, 1489615624, 14.183054),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5883026f, 40.2772255f, leg_index, 3.29578519f, 317,
-          maneuver_index, 0.947770119f, 47, instruction_index));
+          maneuver_index, 0.947770119f, 47));
   //----------------------------------------------------------------
   // trace point = 683
   maneuver_index = 9;
@@ -13572,7 +13571,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5881424f, 40.2772217f, 1489615625, 13.6734829),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5881424f, 40.2772255f, leg_index, 3.28217912f, 316,
-          maneuver_index, 0.934164047f, 46, instruction_index));
+          maneuver_index, 0.934164047f, 46));
   //----------------------------------------------------------------
   // trace point = 684
   maneuver_index = 9;
@@ -13581,7 +13580,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5879669f, 40.2772255f, 1489615626, 14.8662329),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5879669f, 40.2772293f, leg_index, 3.26727247f, 315,
-          maneuver_index, 0.919257402f, 45, instruction_index));
+          maneuver_index, 0.919257402f, 45));
   //----------------------------------------------------------------
   // trace point = 685
   maneuver_index = 9;
@@ -13590,7 +13589,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5877914f, 40.2772255f, 1489615627, 14.9474096),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5877914f, 40.2772293f, leg_index, 3.25237036f, 315,
-          maneuver_index, 0.904355288f, 45, instruction_index));
+          maneuver_index, 0.904355288f, 45));
   //----------------------------------------------------------------
   // trace point = 686
   maneuver_index = 9;
@@ -13599,7 +13598,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5876236f, 40.2772217f, 1489615628, 14.186985),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5876236f, 40.2772331f, leg_index, 3.23811245f, 314,
-          maneuver_index, 0.89009738f, 44, instruction_index));
+          maneuver_index, 0.89009738f, 44));
   //----------------------------------------------------------------
   // trace point = 687
   maneuver_index = 9;
@@ -13608,7 +13607,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5874481f, 40.2772179f, 1489615629, 14.9540405),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5874481f, 40.2772331f, leg_index, 3.22320962f, 313,
-          maneuver_index, 0.87519455f, 43, instruction_index));
+          maneuver_index, 0.87519455f, 43));
   //----------------------------------------------------------------
   // trace point = 688
   maneuver_index = 9;
@@ -13617,7 +13616,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5872803f, 40.2772179f, 1489615630, 14.2679834),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5872803f, 40.2772408f, leg_index, 3.20892286f, 312,
-          maneuver_index, 0.860907793f, 42, instruction_index));
+          maneuver_index, 0.860907793f, 42));
   //----------------------------------------------------------------
   // trace point = 689
   maneuver_index = 9;
@@ -13626,7 +13625,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5871201f, 40.2772217f, 1489615631, 13.595849),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5871201f, 40.2772522f, leg_index, 3.19525623f, 312,
-          maneuver_index, 0.847241163f, 42, instruction_index));
+          maneuver_index, 0.847241163f, 42));
   //----------------------------------------------------------------
   // trace point = 690
   maneuver_index = 9;
@@ -13635,7 +13634,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5869675f, 40.2772293f, 1489615632, 13.0173988),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5869751f, 40.2772636f, leg_index, 3.1828804f, 311,
-          maneuver_index, 0.834865332f, 41, instruction_index));
+          maneuver_index, 0.834865332f, 41));
   //----------------------------------------------------------------
   // trace point = 691
   maneuver_index = 9;
@@ -13644,7 +13643,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5868225f, 40.2772369f, 1489615633, 12.2620792),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5868301f, 40.2772751f, leg_index, 3.17050457f, 310,
-          maneuver_index, 0.8224895f, 40, instruction_index));
+          maneuver_index, 0.8224895f, 40));
   //----------------------------------------------------------------
   // trace point = 692
   maneuver_index = 9;
@@ -13653,7 +13652,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5866928f, 40.2772446f, 1489615634, 11.0765562),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5867004f, 40.2772827f, leg_index, 3.15945768f, 310,
-          maneuver_index, 0.811442614f, 40, instruction_index));
+          maneuver_index, 0.811442614f, 40));
   //----------------------------------------------------------------
   // trace point = 693
   maneuver_index = 9;
@@ -13662,7 +13661,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5865707f, 40.2772522f, 1489615635, 10.3905296),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5865784f, 40.2772903f, leg_index, 3.14905596f, 309,
-          maneuver_index, 0.801040888f, 39, instruction_index));
+          maneuver_index, 0.801040888f, 39));
   //----------------------------------------------------------------
   // trace point = 694
   maneuver_index = 9;
@@ -13671,7 +13670,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5863647f, 40.2772675f, 1489615637, 8.78737926),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5863724f, 40.2773056f, leg_index, 3.13147926f, 309,
-          maneuver_index, 0.783464193f, 39, instruction_index));
+          maneuver_index, 0.783464193f, 39));
   //----------------------------------------------------------------
   // trace point = 695
   maneuver_index = 9;
@@ -13680,7 +13679,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5861816f, 40.2772789f, 1489615639, 7.79960012),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5861893f, 40.277317f, leg_index, 3.11587691f, 308,
-          maneuver_index, 0.767861843f, 38, instruction_index));
+          maneuver_index, 0.767861843f, 38));
   //----------------------------------------------------------------
   // trace point = 696
   maneuver_index = 9;
@@ -13689,7 +13688,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5860367f, 40.2772865f, 1489615641, 6.173388),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5860443f, 40.2773285f, leg_index, 3.10350108f, 307,
-          maneuver_index, 0.755486012f, 37, instruction_index));
+          maneuver_index, 0.755486012f, 37));
   //----------------------------------------------------------------
   // trace point = 697
   maneuver_index = 9;
@@ -13698,7 +13697,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5859146f, 40.2772942f, 1489615643, 5.195261),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5859222f, 40.2773361f, leg_index, 3.09309936f, 307,
-          maneuver_index, 0.745084286f, 37, instruction_index));
+          maneuver_index, 0.745084286f, 37));
   //----------------------------------------------------------------
   // trace point = 698
   maneuver_index = 9;
@@ -13707,7 +13706,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5857773f, 40.2773094f, 1489615646, 3.94615602),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5857849f, 40.2773476f, leg_index, 3.08136988f, 306,
-          maneuver_index, 0.733354807f, 36, instruction_index));
+          maneuver_index, 0.733354807f, 36));
   //----------------------------------------------------------------
   // trace point = 699
   maneuver_index = 9;
@@ -13716,7 +13715,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5856552f, 40.277317f, 1489615648, 5.19972992),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5856628f, 40.2773552f, leg_index, 3.07096767f, 306,
-          maneuver_index, 0.722952604f, 36, instruction_index));
+          maneuver_index, 0.722952604f, 36));
   //----------------------------------------------------------------
   // trace point = 700
   maneuver_index = 9;
@@ -13725,7 +13724,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5854721f, 40.2773361f, 1489615650, 7.84257221),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5854797f, 40.2773666f, leg_index, 3.05536485f, 305,
-          maneuver_index, 0.707349777f, 35, instruction_index));
+          maneuver_index, 0.707349777f, 35));
   //----------------------------------------------------------------
   // trace point = 701
   maneuver_index = 9;
@@ -13734,7 +13733,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5852661f, 40.2773552f, 1489615652, 8.81130886),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5852737f, 40.2773895f, leg_index, 3.03768158f, 305,
-          maneuver_index, 0.68966651f, 35, instruction_index));
+          maneuver_index, 0.68966651f, 35));
   //----------------------------------------------------------------
   // trace point = 702
   maneuver_index = 9;
@@ -13743,7 +13742,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.585022f, 40.2773781f, 1489615654, 10.4400368),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5850296f, 40.27742f, leg_index, 3.01667166f, 304,
-          maneuver_index, 0.668656588f, 34, instruction_index));
+          maneuver_index, 0.668656588f, 34));
   //----------------------------------------------------------------
   // trace point = 703
   maneuver_index = 9;
@@ -13752,7 +13751,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5848999f, 40.2773895f, 1489615655, 10.4470053),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5849075f, 40.2774315f, leg_index, 3.00623226f, 303,
-          maneuver_index, 0.658217192f, 33, instruction_index));
+          maneuver_index, 0.658217192f, 33));
   //----------------------------------------------------------------
   // trace point = 704
   maneuver_index = 9;
@@ -13761,7 +13760,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5847702f, 40.2774048f, 1489615656, 11.1662283),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5847778f, 40.2774467f, leg_index, 2.99508786f, 303,
-          maneuver_index, 0.647072792f, 33, instruction_index));
+          maneuver_index, 0.647072792f, 33));
   //----------------------------------------------------------------
   // trace point = 705
   maneuver_index = 9;
@@ -13770,7 +13769,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5846481f, 40.27742f, 1489615657, 10.4949312),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5846558f, 40.277462f, leg_index, 2.98458409f, 302,
-          maneuver_index, 0.636569023f, 32, instruction_index));
+          maneuver_index, 0.636569023f, 32));
   //----------------------------------------------------------------
   // trace point = 706
   maneuver_index = 9;
@@ -13779,7 +13778,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5845184f, 40.2774391f, 1489615658, 11.2414341),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5845261f, 40.2774773f, leg_index, 2.97343445f, 301,
-          maneuver_index, 0.625419378f, 31, instruction_index));
+          maneuver_index, 0.625419378f, 31));
   //----------------------------------------------------------------
   // trace point = 707
   maneuver_index = 9;
@@ -13788,7 +13787,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5843964f, 40.2774544f, 1489615659, 10.4949265),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.584404f, 40.2774925f, leg_index, 2.96293163f, 301,
-          maneuver_index, 0.614916563f, 31, instruction_index));
+          maneuver_index, 0.614916563f, 31));
   //----------------------------------------------------------------
   // trace point = 708
   maneuver_index = 9;
@@ -13797,7 +13796,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5842743f, 40.2774696f, 1489615660, 10.5132093),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5842819f, 40.277504f, leg_index, 2.95248818f, 300,
-          maneuver_index, 0.604473114f, 30, instruction_index));
+          maneuver_index, 0.604473114f, 30));
   //----------------------------------------------------------------
   // trace point = 709
   maneuver_index = 9;
@@ -13806,7 +13805,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5841522f, 40.2774849f, 1489615661, 10.4949217),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5841599f, 40.2775154f, leg_index, 2.94204473f, 300,
-          maneuver_index, 0.594029665f, 30, instruction_index));
+          maneuver_index, 0.594029665f, 30));
   //----------------------------------------------------------------
   // trace point = 710
   maneuver_index = 9;
@@ -13815,7 +13814,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5840302f, 40.277504f, 1489615662, 10.5749063),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5840378f, 40.2775307f, leg_index, 2.93154168f, 299,
-          maneuver_index, 0.583526611f, 29, instruction_index));
+          maneuver_index, 0.583526611f, 29));
   //----------------------------------------------------------------
   // trace point = 711
   maneuver_index = 9;
@@ -13824,7 +13823,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5838013f, 40.2775307f, 1489615664, 9.83970642),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5838089f, 40.2775536f, leg_index, 2.91193819f, 298,
-          maneuver_index, 0.56392312f, 28, instruction_index));
+          maneuver_index, 0.56392312f, 28));
   //----------------------------------------------------------------
   // trace point = 712
   maneuver_index = 9;
@@ -13833,7 +13832,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5836792f, 40.2775459f, 1489615665, 10.4949121),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5836868f, 40.2775688f, leg_index, 2.9014349f, 298,
-          maneuver_index, 0.553419828f, 28, instruction_index));
+          maneuver_index, 0.553419828f, 28));
   //----------------------------------------------------------------
   // trace point = 713
   maneuver_index = 9;
@@ -13842,7 +13841,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5835571f, 40.2775574f, 1489615666, 10.4333296),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5835648f, 40.2775803f, leg_index, 2.89099193f, 297,
-          maneuver_index, 0.542976856f, 27, instruction_index));
+          maneuver_index, 0.542976856f, 27));
   //----------------------------------------------------------------
   // trace point = 714
   maneuver_index = 9;
@@ -13851,7 +13850,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5834274f, 40.2775688f, 1489615667, 11.1211643),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5834351f, 40.2775955f, leg_index, 2.87984705f, 297,
-          maneuver_index, 0.53183198f, 27, instruction_index));
+          maneuver_index, 0.53183198f, 27));
   //----------------------------------------------------------------
   // trace point = 715
   maneuver_index = 9;
@@ -13860,7 +13859,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5833054f, 40.2775803f, 1489615668, 10.4333258),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.583313f, 40.277607f, leg_index, 2.86940503f, 296,
-          maneuver_index, 0.521389961f, 26, instruction_index));
+          maneuver_index, 0.521389961f, 26));
   //----------------------------------------------------------------
   // trace point = 716
   maneuver_index = 9;
@@ -13869,7 +13868,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5831757f, 40.2775917f, 1489615669, 11.0368519),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5831757f, 40.2776222f, leg_index, 2.8576169f, 296,
-          maneuver_index, 0.509601831f, 26, instruction_index));
+          maneuver_index, 0.509601831f, 26));
   //----------------------------------------------------------------
   // trace point = 717
   maneuver_index = 9;
@@ -13878,7 +13877,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5830536f, 40.2776031f, 1489615670, 10.4333229),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5830536f, 40.2776299f, leg_index, 2.8472147f, 295,
-          maneuver_index, 0.499199629f, 25, instruction_index));
+          maneuver_index, 0.499199629f, 25));
   //----------------------------------------------------------------
   // trace point = 718
   maneuver_index = 9;
@@ -13887,7 +13886,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5829239f, 40.2776146f, 1489615671, 11.1211567),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5829239f, 40.2776375f, leg_index, 2.8361671f, 295,
-          maneuver_index, 0.488152027f, 25, instruction_index));
+          maneuver_index, 0.488152027f, 25));
   //----------------------------------------------------------------
   // trace point = 719
   maneuver_index = 9;
@@ -13896,7 +13895,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5828018f, 40.2776222f, 1489615672, 10.3904734),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5828018f, 40.2776451f, leg_index, 2.82576537f, 294,
-          maneuver_index, 0.477750301f, 24, instruction_index));
+          maneuver_index, 0.477750301f, 24));
   //----------------------------------------------------------------
   // trace point = 720
   maneuver_index = 9;
@@ -13905,7 +13904,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5826721f, 40.2776299f, 1489615673, 11.0764933),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5826721f, 40.2776527f, leg_index, 2.81471801f, 294,
-          maneuver_index, 0.466702938f, 24, instruction_index));
+          maneuver_index, 0.466702938f, 24));
   //----------------------------------------------------------------
   // trace point = 721
   maneuver_index = 9;
@@ -13914,7 +13913,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5825348f, 40.2776375f, 1489615674, 11.6611938),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5825348f, 40.2776604f, leg_index, 2.80303288f, 293,
-          maneuver_index, 0.455017805f, 23, instruction_index));
+          maneuver_index, 0.455017805f, 23));
   //----------------------------------------------------------------
   // trace point = 722
   maneuver_index = 9;
@@ -13923,7 +13922,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5823975f, 40.2776489f, 1489615675, 11.7959375),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5823975f, 40.2776718f, leg_index, 2.79129553f, 292,
-          maneuver_index, 0.443280458f, 22, instruction_index));
+          maneuver_index, 0.443280458f, 22));
   //----------------------------------------------------------------
   // trace point = 723
   maneuver_index = 9;
@@ -13932,7 +13931,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5822601f, 40.2776566f, 1489615676, 11.669158),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5822601f, 40.2776833f, leg_index, 2.77956295f, 292,
-          maneuver_index, 0.43154788f, 22, instruction_index));
+          maneuver_index, 0.43154788f, 22));
   //----------------------------------------------------------------
   // trace point = 724
   maneuver_index = 9;
@@ -13941,7 +13940,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5821228f, 40.277668f, 1489615677, 11.6993828),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5821228f, 40.2776947f, leg_index, 2.7671864f, 291,
-          maneuver_index, 0.419171333f, 21, instruction_index));
+          maneuver_index, 0.419171333f, 21));
   //----------------------------------------------------------------
   // trace point = 725
   maneuver_index = 9;
@@ -13950,7 +13949,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5819778f, 40.2776794f, 1489615678, 12.3752766),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5819855f, 40.2777061f, leg_index, 2.75609803f, 290,
-          maneuver_index, 0.408082962f, 20, instruction_index));
+          maneuver_index, 0.408082962f, 20));
   //----------------------------------------------------------------
   // trace point = 726
   maneuver_index = 9;
@@ -13959,7 +13958,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5818329f, 40.2776909f, 1489615679, 12.3867846),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5818405f, 40.2777176f, leg_index, 2.74372149f, 290,
-          maneuver_index, 0.395706415f, 20, instruction_index));
+          maneuver_index, 0.395706415f, 20));
   //----------------------------------------------------------------
   // trace point = 727
   maneuver_index = 9;
@@ -13968,7 +13967,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5816727f, 40.2777023f, 1489615680, 13.6435213),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5816803f, 40.2777328f, leg_index, 2.73001194f, 289,
-          maneuver_index, 0.38199687f, 19, instruction_index));
+          maneuver_index, 0.38199687f, 19));
   //----------------------------------------------------------------
   // trace point = 728
   maneuver_index = 9;
@@ -13977,7 +13976,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5815277f, 40.2777176f, 1489615681, 12.4426765),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5815277f, 40.2777405f, leg_index, 2.71702671f, 288,
-          maneuver_index, 0.369011641f, 18, instruction_index));
+          maneuver_index, 0.369011641f, 18));
   //----------------------------------------------------------------
   // trace point = 729
   maneuver_index = 9;
@@ -13986,7 +13985,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5813675f, 40.2777252f, 1489615682, 13.6955681),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5813675f, 40.2777519f, leg_index, 2.70336175f, 288,
-          maneuver_index, 0.35534668f, 18, instruction_index));
+          maneuver_index, 0.35534668f, 18));
   //----------------------------------------------------------------
   // trace point = 730
   maneuver_index = 9;
@@ -13995,7 +13994,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5811996f, 40.2777328f, 1489615683, 14.2108793),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5811996f, 40.2777596f, leg_index, 2.68908429f, 287,
-          maneuver_index, 0.341069221f, 17, instruction_index));
+          maneuver_index, 0.341069221f, 17));
   //----------------------------------------------------------------
   // trace point = 731
   maneuver_index = 9;
@@ -14004,7 +14003,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5810318f, 40.2777405f, 1489615684, 14.2891369),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5810318f, 40.277771f, leg_index, 2.67477345f, 286,
-          maneuver_index, 0.326758385f, 16, instruction_index));
+          maneuver_index, 0.326758385f, 16));
   //----------------------------------------------------------------
   // trace point = 732
   maneuver_index = 9;
@@ -14013,7 +14012,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5808563f, 40.2777481f, 1489615685, 14.9738007),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5808563f, 40.2777824f, leg_index, 2.65981722f, 286,
-          maneuver_index, 0.311802149f, 16, instruction_index));
+          maneuver_index, 0.311802149f, 16));
   //----------------------------------------------------------------
   // trace point = 733
   maneuver_index = 9;
@@ -14022,7 +14021,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5806656f, 40.2777596f, 1489615686, 16.1914806),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5806656f, 40.2777939f, leg_index, 2.64356804f, 285,
-          maneuver_index, 0.295552969f, 15, instruction_index));
+          maneuver_index, 0.295552969f, 15));
   //----------------------------------------------------------------
   // trace point = 734
   maneuver_index = 9;
@@ -14031,7 +14030,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5804749f, 40.277771f, 1489615687, 16.2673588),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5804749f, 40.2778015f, leg_index, 2.62735105f, 284,
-          maneuver_index, 0.279335976f, 14, instruction_index));
+          maneuver_index, 0.279335976f, 14));
   //----------------------------------------------------------------
   // trace point = 735
   maneuver_index = 9;
@@ -14040,7 +14039,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5802765f, 40.2777824f, 1489615688, 16.9449291),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5802765f, 40.277813f, leg_index, 2.61045623f, 283,
-          maneuver_index, 0.262441158f, 13, instruction_index));
+          maneuver_index, 0.262441158f, 13));
   //----------------------------------------------------------------
   // trace point = 736
   maneuver_index = 9;
@@ -14049,7 +14048,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5800781f, 40.2777939f, 1489615689, 16.8686714),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5800781f, 40.2778244f, leg_index, 2.59356141f, 282,
-          maneuver_index, 0.245546341f, 12, instruction_index));
+          maneuver_index, 0.245546341f, 12));
   //----------------------------------------------------------------
   // trace point = 737
   maneuver_index = 9;
@@ -14058,7 +14057,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5798798f, 40.2778053f, 1489615690, 16.860218),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5798798f, 40.2778358f, leg_index, 2.57666659f, 281,
-          maneuver_index, 0.228651524f, 11, instruction_index));
+          maneuver_index, 0.228651524f, 11));
   //----------------------------------------------------------------
   // trace point = 738
   maneuver_index = 9;
@@ -14067,7 +14066,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5796738f, 40.2778206f, 1489615691, 17.5855427),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5796738f, 40.2778473f, leg_index, 2.5591259f, 281,
-          maneuver_index, 0.21111083f, 11, instruction_index));
+          maneuver_index, 0.21111083f, 11));
   //----------------------------------------------------------------
   // trace point = 739
   maneuver_index = 9;
@@ -14076,7 +14075,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5794678f, 40.2778358f, 1489615692, 17.5746117),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5794678f, 40.2778587f, leg_index, 2.54158497f, 280,
-          maneuver_index, 0.193569899f, 10, instruction_index));
+          maneuver_index, 0.193569899f, 10));
   //----------------------------------------------------------------
   // trace point = 740
   maneuver_index = 9;
@@ -14085,7 +14084,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5792618f, 40.2778473f, 1489615693, 17.5379047),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5792618f, 40.2778702f, leg_index, 2.52404404f, 279,
-          maneuver_index, 0.176028967f, 9, instruction_index));
+          maneuver_index, 0.176028967f, 9));
   //----------------------------------------------------------------
   // trace point = 741
   maneuver_index = 9;
@@ -14094,7 +14093,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5790558f, 40.2778587f, 1489615694, 17.5460262),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5790558f, 40.2778854f, leg_index, 2.50647163f, 278,
-          maneuver_index, 0.158456564f, 8, instruction_index));
+          maneuver_index, 0.158456564f, 8));
   //----------------------------------------------------------------
   // trace point = 742
   maneuver_index = 9;
@@ -14103,7 +14102,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5788498f, 40.2778702f, 1489615695, 17.537899),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5788498f, 40.2778969f, leg_index, 2.48893094f, 277,
-          maneuver_index, 0.140915871f, 7, instruction_index));
+          maneuver_index, 0.140915871f, 7));
   //----------------------------------------------------------------
   // trace point = 743
   maneuver_index = 9;
@@ -14112,7 +14111,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5786514f, 40.2778854f, 1489615696, 16.9828892),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5786514f, 40.2779083f, leg_index, 2.47203636f, 276,
-          maneuver_index, 0.124021292f, 6, instruction_index));
+          maneuver_index, 0.124021292f, 6));
   //----------------------------------------------------------------
   // trace point = 744
   maneuver_index = 9;
@@ -14121,7 +14120,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5784454f, 40.2778893f, 1489615697, 17.5007572),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5784454f, 40.2779198f, leg_index, 2.45449615f, 276,
-          maneuver_index, 0.106481075f, 6, instruction_index));
+          maneuver_index, 0.106481075f, 6));
   //----------------------------------------------------------------
   // trace point = 745
   maneuver_index = 9;
@@ -14130,7 +14129,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5782394f, 40.2779007f, 1489615698, 17.5460148),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5782394f, 40.2779312f, leg_index, 2.43695569f, 275,
-          maneuver_index, 0.0889406204f, 5, instruction_index));
+          maneuver_index, 0.0889406204f, 5));
   //----------------------------------------------------------------
   // trace point = 746
   maneuver_index = 9;
@@ -14139,7 +14138,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5780411f, 40.2779121f, 1489615699, 16.8601913),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5780411f, 40.2779388f, leg_index, 2.42008901f, 274,
-          maneuver_index, 0.0720739365f, 4, instruction_index));
+          maneuver_index, 0.0720739365f, 4));
   //----------------------------------------------------------------
   // trace point = 747
   maneuver_index = 9;
@@ -14148,7 +14147,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5778427f, 40.2779236f, 1489615700, 16.868639),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5778427f, 40.2779503f, leg_index, 2.40319562f, 273,
-          maneuver_index, 0.0551805496f, 3, instruction_index));
+          maneuver_index, 0.0551805496f, 3));
   //----------------------------------------------------------------
   // trace point = 748
   maneuver_index = 9;
@@ -14157,7 +14156,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5776596f, 40.277935f, 1489615701, 15.5899115),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5776596f, 40.2779579f, leg_index, 2.38762164f, 272,
-          maneuver_index, 0.0396065712f, 2, instruction_index));
+          maneuver_index, 0.0396065712f, 2));
   //----------------------------------------------------------------
   // trace point = 749
   maneuver_index = 9;
@@ -14166,7 +14165,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.577507f, 40.2779465f, 1489615702, 13.0514879),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.577507f, 40.2779655f, leg_index, 2.37463522f, 271,
-          maneuver_index, 0.0266201496f, 1, instruction_index));
+          maneuver_index, 0.0266201496f, 1));
   //----------------------------------------------------------------
   // trace point = 750
   maneuver_index = 9;
@@ -14175,7 +14174,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5773849f, 40.2779617f, 1489615703, 10.513135),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5773849f, 40.2779732f, leg_index, 2.36423612f, 271,
-          maneuver_index, 0.0162210464f, 1, instruction_index));
+          maneuver_index, 0.0162210464f, 1));
   //----------------------------------------------------------------
   // trace point = 751
   maneuver_index = 9;
@@ -14184,7 +14183,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5772552f, 40.2779694f, 1489615705, 5.53402185),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5772552f, 40.277977f, leg_index, 2.35321736f, 270,
-          maneuver_index, 0.0052022934f, 0, instruction_index));
+          maneuver_index, 0.0052022934f, 0));
   //----------------------------------------------------------------
   // trace point = 752
   maneuver_index = 10;
@@ -14193,7 +14192,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5771637f, 40.2780418f, 1489615710, 2.24290299),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5771713f, 40.2780457f, leg_index, 2.34054255f, 268,
-          maneuver_index, 0.692618966f, 103, instruction_index));
+          maneuver_index, 0.692618966f, 103));
   //----------------------------------------------------------------
   // trace point = 753
   maneuver_index = 10;
@@ -14202,7 +14201,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5771179f, 40.2781792f, 1489615712, 7.87159395),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5771332f, 40.278183f, leg_index, 2.32492304f, 266,
-          maneuver_index, 0.67699945f, 101, instruction_index));
+          maneuver_index, 0.67699945f, 101));
   //----------------------------------------------------------------
   // trace point = 754
   maneuver_index = 10;
@@ -14211,7 +14210,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5770493f, 40.278347f, 1489615714, 9.79913139),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5770645f, 40.2783508f, leg_index, 2.30533981f, 263,
-          maneuver_index, 0.657416224f, 98, instruction_index));
+          maneuver_index, 0.657416224f, 98));
   //----------------------------------------------------------------
   // trace point = 755
   maneuver_index = 10;
@@ -14220,7 +14219,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5770111f, 40.2784309f, 1489615715, 9.89207458),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5770264f, 40.2784348f, leg_index, 2.29545212f, 261,
-          maneuver_index, 0.647528529f, 96, instruction_index));
+          maneuver_index, 0.647528529f, 96));
   //----------------------------------------------------------------
   // trace point = 756
   maneuver_index = 10;
@@ -14229,7 +14228,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.576973f, 40.2785263f, 1489615716, 11.0568085),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5769882f, 40.2785301f, leg_index, 2.28435755f, 260,
-          maneuver_index, 0.636433959f, 95, instruction_index));
+          maneuver_index, 0.636433959f, 95));
   //----------------------------------------------------------------
   // trace point = 757
   maneuver_index = 10;
@@ -14238,7 +14237,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5769348f, 40.2786255f, 1489615717, 11.4834318),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5769424f, 40.2786293f, leg_index, 2.2726531f, 258,
-          maneuver_index, 0.624729514f, 93, instruction_index));
+          maneuver_index, 0.624729514f, 93));
   //----------------------------------------------------------------
   // trace point = 758
   maneuver_index = 10;
@@ -14247,7 +14246,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5768967f, 40.2787323f, 1489615718, 12.3406334),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5768967f, 40.2787323f, leg_index, 2.26054597f, 256,
-          maneuver_index, 0.61262238f, 91, instruction_index));
+          maneuver_index, 0.61262238f, 91));
   //----------------------------------------------------------------
   // trace point = 759
   maneuver_index = 10;
@@ -14256,7 +14255,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5768585f, 40.2788429f, 1489615719, 12.7709455),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5768509f, 40.2788391f, leg_index, 2.24803805f, 254,
-          maneuver_index, 0.600114465f, 89, instruction_index));
+          maneuver_index, 0.600114465f, 89));
   //----------------------------------------------------------------
   // trace point = 760
   maneuver_index = 10;
@@ -14265,7 +14264,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5768051f, 40.2789574f, 1489615720, 13.4936438),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5767975f, 40.2789536f, leg_index, 2.23229694f, 252,
-          maneuver_index, 0.584373355f, 87, instruction_index));
+          maneuver_index, 0.584373355f, 87));
   //----------------------------------------------------------------
   // trace point = 761
   maneuver_index = 10;
@@ -14274,7 +14273,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5767593f, 40.2790756f, 1489615721, 13.8110495),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5767517f, 40.2790718f, leg_index, 2.22079253f, 250,
-          maneuver_index, 0.572868943f, 85, instruction_index));
+          maneuver_index, 0.572868943f, 85));
   //----------------------------------------------------------------
   // trace point = 762
   maneuver_index = 10;
@@ -14283,7 +14282,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5767136f, 40.2791901f, 1489615722, 13.253377),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5766983f, 40.2791862f, leg_index, 2.20728016f, 248,
-          maneuver_index, 0.55935657f, 83, instruction_index));
+          maneuver_index, 0.55935657f, 83));
   //----------------------------------------------------------------
   // trace point = 763
   maneuver_index = 10;
@@ -14292,7 +14291,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5766525f, 40.2793159f, 1489615723, 14.9523659),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5766525f, 40.2793159f, leg_index, 2.19233966f, 246,
-          maneuver_index, 0.54441607f, 81, instruction_index));
+          maneuver_index, 0.54441607f, 81));
   //----------------------------------------------------------------
   // trace point = 764
   maneuver_index = 10;
@@ -14301,7 +14300,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5765991f, 40.2794418f, 1489615724, 14.7569361),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5765991f, 40.2794418f, leg_index, 2.17761087f, 243,
-          maneuver_index, 0.529687285f, 78, instruction_index));
+          maneuver_index, 0.529687285f, 78));
   //----------------------------------------------------------------
   // trace point = 765
   maneuver_index = 10;
@@ -14310,7 +14309,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5765457f, 40.2795639f, 1489615725, 14.3074274),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5765457f, 40.2795639f, leg_index, 2.16328788f, 241,
-          maneuver_index, 0.515364289f, 76, instruction_index));
+          maneuver_index, 0.515364289f, 76));
   //----------------------------------------------------------------
   // trace point = 766
   maneuver_index = 10;
@@ -14319,7 +14318,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5764923f, 40.279686f, 1489615726, 14.3343687),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5764999f, 40.279686f, leg_index, 2.14915848f, 239,
-          maneuver_index, 0.501234889f, 74, instruction_index));
+          maneuver_index, 0.501234889f, 74));
   //----------------------------------------------------------------
   // trace point = 767
   maneuver_index = 10;
@@ -14328,7 +14327,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5764465f, 40.279808f, 1489615727, 14.1084328),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5764465f, 40.279808f, leg_index, 2.13483477f, 237,
-          maneuver_index, 0.486911178f, 72, instruction_index));
+          maneuver_index, 0.486911178f, 72));
   //----------------------------------------------------------------
   // trace point = 768
   maneuver_index = 10;
@@ -14337,7 +14336,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5763931f, 40.2799301f, 1489615728, 14.334363),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5763931f, 40.2799301f, leg_index, 2.12051606f, 235,
-          maneuver_index, 0.472592473f, 70, instruction_index));
+          maneuver_index, 0.472592473f, 70));
   //----------------------------------------------------------------
   // trace point = 769
   maneuver_index = 10;
@@ -14346,7 +14345,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5763397f, 40.280056f, 1489615729, 14.7307529),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5763474f, 40.280056f, leg_index, 2.10597253f, 233,
-          maneuver_index, 0.45804894f, 68, instruction_index));
+          maneuver_index, 0.45804894f, 68));
   //----------------------------------------------------------------
   // trace point = 770
   maneuver_index = 10;
@@ -14355,7 +14354,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5762787f, 40.2801781f, 1489615730, 14.5354624),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5763092f, 40.2801781f, leg_index, 2.09200287f, 231,
-          maneuver_index, 0.44407928f, 66, instruction_index));
+          maneuver_index, 0.44407928f, 66));
   //----------------------------------------------------------------
   // trace point = 771
   maneuver_index = 10;
@@ -14364,7 +14363,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5762253f, 40.280304f, 1489615731, 14.756918),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5762482f, 40.2803116f, leg_index, 2.07626462f, 228,
-          maneuver_index, 0.428341031f, 63, instruction_index));
+          maneuver_index, 0.428341031f, 63));
   //----------------------------------------------------------------
   // trace point = 772
   maneuver_index = 10;
@@ -14373,7 +14372,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5761719f, 40.2804375f, 1489615732, 15.4745464),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5761948f, 40.2804413f, leg_index, 2.06113219f, 226,
-          maneuver_index, 0.413208604f, 61, instruction_index));
+          maneuver_index, 0.413208604f, 61));
   //----------------------------------------------------------------
   // trace point = 773
   maneuver_index = 10;
@@ -14382,7 +14381,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5761185f, 40.2805634f, 1489615733, 14.7569122),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5761414f, 40.2805672f, leg_index, 2.04640341f, 224,
-          maneuver_index, 0.398479819f, 59, instruction_index));
+          maneuver_index, 0.398479819f, 59));
   //----------------------------------------------------------------
   // trace point = 774
   maneuver_index = 10;
@@ -14391,7 +14390,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5760651f, 40.2806969f, 1489615734, 15.5810814),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5760803f, 40.2807007f, leg_index, 2.03066492f, 222,
-          maneuver_index, 0.382741332f, 57, instruction_index));
+          maneuver_index, 0.382741332f, 57));
   //----------------------------------------------------------------
   // trace point = 775
   maneuver_index = 10;
@@ -14400,7 +14399,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5760117f, 40.2808189f, 1489615735, 14.3074007),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5760269f, 40.2808228f, leg_index, 2.01633954f, 219,
-          maneuver_index, 0.368415952f, 54, instruction_index));
+          maneuver_index, 0.368415952f, 54));
   //----------------------------------------------------------------
   // trace point = 776
   maneuver_index = 10;
@@ -14409,7 +14408,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5759583f, 40.2809334f, 1489615736, 13.493598),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5759811f, 40.2809372f, leg_index, 2.00302386f, 217,
-          maneuver_index, 0.355100274f, 52, instruction_index));
+          maneuver_index, 0.355100274f, 52));
   //----------------------------------------------------------------
   // trace point = 777
   maneuver_index = 10;
@@ -14418,7 +14417,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5759125f, 40.2810516f, 1489615737, 13.811017),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5759277f, 40.2810555f, leg_index, 1.98688126f, 215,
-          maneuver_index, 0.338957667f, 50, instruction_index));
+          maneuver_index, 0.338957667f, 50));
   //----------------------------------------------------------------
   // trace point = 778
   maneuver_index = 10;
@@ -14427,7 +14426,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5758514f, 40.2811661f, 1489615738, 13.7070312),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5758667f, 40.2811699f, leg_index, 1.97533727f, 213,
-          maneuver_index, 0.327413678f, 48, instruction_index));
+          maneuver_index, 0.327413678f, 48));
   //----------------------------------------------------------------
   // trace point = 779
   maneuver_index = 10;
@@ -14436,7 +14435,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.575798f, 40.2812805f, 1489615739, 13.569932),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5758057f, 40.2812843f, leg_index, 1.96158385f, 211,
-          maneuver_index, 0.313660264f, 46, instruction_index));
+          maneuver_index, 0.313660264f, 46));
   //----------------------------------------------------------------
   // trace point = 780
   maneuver_index = 10;
@@ -14445,7 +14444,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5757294f, 40.2813911f, 1489615740, 13.5749664),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5757446f, 40.281395f, leg_index, 1.94822299f, 209,
-          maneuver_index, 0.300299406f, 44, instruction_index));
+          maneuver_index, 0.300299406f, 44));
   //----------------------------------------------------------------
   // trace point = 781
   maneuver_index = 10;
@@ -14454,7 +14453,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5756531f, 40.2814941f, 1489615741, 13.15763),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5756683f, 40.2815018f, leg_index, 1.9346385f, 207,
-          maneuver_index, 0.286714911f, 42, instruction_index));
+          maneuver_index, 0.286714911f, 42));
   //----------------------------------------------------------------
   // trace point = 782
   maneuver_index = 10;
@@ -14463,7 +14462,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5755615f, 40.2815819f, 1489615742, 12.4774122),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5755768f, 40.2815933f, leg_index, 1.92173564f, 205,
-          maneuver_index, 0.273812056f, 40, instruction_index));
+          maneuver_index, 0.273812056f, 40));
   //----------------------------------------------------------------
   // trace point = 783
   maneuver_index = 10;
@@ -14472,7 +14471,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5754471f, 40.2816658f, 1489615743, 13.5209322),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5754471f, 40.2816696f, leg_index, 1.90781033f, 204,
-          maneuver_index, 0.259886742f, 39, instruction_index));
+          maneuver_index, 0.259886742f, 39));
   //----------------------------------------------------------------
   // trace point = 784
   maneuver_index = 10;
@@ -14481,7 +14480,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5753174f, 40.2817345f, 1489615744, 13.3858757),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.575325f, 40.2817383f, leg_index, 1.89493191f, 202,
-          maneuver_index, 0.247008324f, 37, instruction_index));
+          maneuver_index, 0.247008324f, 37));
   //----------------------------------------------------------------
   // trace point = 785
   maneuver_index = 10;
@@ -14490,7 +14489,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5751724f, 40.2818108f, 1489615745, 15.0033989),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5751801f, 40.2818184f, leg_index, 1.87973189f, 199,
-          maneuver_index, 0.231808305f, 34, instruction_index));
+          maneuver_index, 0.231808305f, 34));
   //----------------------------------------------------------------
   // trace point = 786
   maneuver_index = 10;
@@ -14499,7 +14498,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5750351f, 40.2818832f, 1489615746, 14.1279736),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5750427f, 40.2818909f, leg_index, 1.86555099f, 197,
-          maneuver_index, 0.217627406f, 32, instruction_index));
+          maneuver_index, 0.217627406f, 32));
   //----------------------------------------------------------------
   // trace point = 787
   maneuver_index = 10;
@@ -14508,7 +14507,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5748901f, 40.2819672f, 1489615747, 15.4617958),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5748901f, 40.2819672f, leg_index, 1.85004544f, 195,
-          maneuver_index, 0.202121854f, 30, instruction_index));
+          maneuver_index, 0.202121854f, 30));
   //----------------------------------------------------------------
   // trace point = 788
   maneuver_index = 10;
@@ -14517,7 +14516,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5747299f, 40.2820473f, 1489615748, 16.2459736),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5747299f, 40.2820511f, leg_index, 1.83353853f, 193,
-          maneuver_index, 0.185614944f, 28, instruction_index));
+          maneuver_index, 0.185614944f, 28));
   //----------------------------------------------------------------
   // trace point = 789
   maneuver_index = 10;
@@ -14526,7 +14525,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5745697f, 40.2821312f, 1489615749, 16.4942532),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5745697f, 40.282135f, leg_index, 1.81703436f, 190,
-          maneuver_index, 0.169110775f, 25, instruction_index));
+          maneuver_index, 0.169110775f, 25));
   //----------------------------------------------------------------
   // trace point = 790
   maneuver_index = 10;
@@ -14535,7 +14534,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5744095f, 40.2822151f, 1489615750, 16.5642662),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5744095f, 40.2822189f, leg_index, 1.8005302f, 188,
-          maneuver_index, 0.152606606f, 23, instruction_index));
+          maneuver_index, 0.152606606f, 23));
   //----------------------------------------------------------------
   // trace point = 791
   maneuver_index = 10;
@@ -14544,7 +14543,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5742493f, 40.2823029f, 1489615751, 16.7506771),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5742493f, 40.2823067f, leg_index, 1.78378296f, 185,
-          maneuver_index, 0.13585937f, 20, instruction_index));
+          maneuver_index, 0.13585937f, 20));
   //----------------------------------------------------------------
   // trace point = 792
   maneuver_index = 10;
@@ -14553,7 +14552,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5740891f, 40.2823906f, 1489615752, 16.7506618),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5740891f, 40.2823906f, leg_index, 1.76727879f, 183,
-          maneuver_index, 0.119355202f, 18, instruction_index));
+          maneuver_index, 0.119355202f, 18));
   //----------------------------------------------------------------
   // trace point = 793
   maneuver_index = 10;
@@ -14562,7 +14561,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5739288f, 40.2824745f, 1489615753, 16.4941959),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5739288f, 40.2824745f, leg_index, 1.75077486f, 180,
-          maneuver_index, 0.102851272f, 15, instruction_index));
+          maneuver_index, 0.102851272f, 15));
   //----------------------------------------------------------------
   // trace point = 794
   maneuver_index = 10;
@@ -14571,7 +14570,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5737762f, 40.2825584f, 1489615754, 15.9432659),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5737762f, 40.2825584f, leg_index, 1.73480177f, 178,
-          maneuver_index, 0.0868781805f, 13, instruction_index));
+          maneuver_index, 0.0868781805f, 13));
   //----------------------------------------------------------------
   // trace point = 795
   maneuver_index = 10;
@@ -14580,7 +14579,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5736237f, 40.2826385f, 1489615755, 15.7455759),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5736237f, 40.2826385f, leg_index, 1.71907198f, 176,
-          maneuver_index, 0.0711483955f, 11, instruction_index));
+          maneuver_index, 0.0711483955f, 11));
   //----------------------------------------------------------------
   // trace point = 796
   maneuver_index = 10;
@@ -14589,7 +14588,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5734863f, 40.2827072f, 1489615756, 13.9513435),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5734863f, 40.282711f, leg_index, 1.70489097f, 174,
-          maneuver_index, 0.0569673777f, 9, instruction_index));
+          maneuver_index, 0.0569673777f, 9));
   //----------------------------------------------------------------
   // trace point = 797
   maneuver_index = 10;
@@ -14598,7 +14597,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5733719f, 40.2827721f, 1489615757, 12.0863209),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5733719f, 40.2827721f, leg_index, 1.69303286f, 172,
-          maneuver_index, 0.045109272f, 7, instruction_index));
+          maneuver_index, 0.045109272f, 7));
   //----------------------------------------------------------------
   // trace point = 798
   maneuver_index = 10;
@@ -14607,7 +14606,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5732727f, 40.2828217f, 1489615758, 10.0827332),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5732727f, 40.2828255f, leg_index, 1.68272352f, 170,
-          maneuver_index, 0.0347999334f, 5, instruction_index));
+          maneuver_index, 0.0347999334f, 5));
   //----------------------------------------------------------------
   // trace point = 799
   maneuver_index = 10;
@@ -14616,7 +14615,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5731201f, 40.2828979f, 1489615760, 7.75231695),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5731277f, 40.2829056f, leg_index, 1.66752625f, 168,
-          maneuver_index, 0.0196026564f, 3, instruction_index));
+          maneuver_index, 0.0196026564f, 3));
   //----------------------------------------------------------------
   // trace point = 800
   maneuver_index = 10;
@@ -14625,7 +14624,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5730133f, 40.2829475f, 1489615763, 3.5519321),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5730209f, 40.282959f, leg_index, 1.65668499f, 166,
-          maneuver_index, 0.00876140594f, 1, instruction_index));
+          maneuver_index, 0.00876140594f, 1));
   //----------------------------------------------------------------
   // trace point = 801
   maneuver_index = 11;
@@ -14634,7 +14633,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5729523f, 40.2830505f, 1489615771, 1.57272398),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5729523f, 40.2830505f, leg_index, 1.6426698f, 164,
-          maneuver_index, 0.153226972f, 21, instruction_index));
+          maneuver_index, 0.153226972f, 21));
   //----------------------------------------------------------------
   // trace point = 802
   maneuver_index = 11;
@@ -14643,7 +14642,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5729828f, 40.2831879f, 1489615773, 7.73815823),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5729904f, 40.2831879f, leg_index, 1.62704277f, 162,
-          maneuver_index, 0.137599945f, 19, instruction_index));
+          maneuver_index, 0.137599945f, 19));
   //----------------------------------------------------------------
   // trace point = 803
   maneuver_index = 11;
@@ -14652,7 +14651,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5730286f, 40.2833557f, 1489615775, 9.55264759),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5730362f, 40.2833557f, leg_index, 1.6079582f, 160,
-          maneuver_index, 0.118515372f, 17, instruction_index));
+          maneuver_index, 0.118515372f, 17));
   //----------------------------------------------------------------
   // trace point = 804
   maneuver_index = 11;
@@ -14661,7 +14660,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5730515f, 40.2834473f, 1489615776, 10.3009109),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5730591f, 40.2834473f, leg_index, 1.59758532f, 158,
-          maneuver_index, 0.108142495f, 15, instruction_index));
+          maneuver_index, 0.108142495f, 15));
   //----------------------------------------------------------------
   // trace point = 805
   maneuver_index = 11;
@@ -14670,7 +14669,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5730743f, 40.2835503f, 1489615777, 11.6310759),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5730896f, 40.2835464f, leg_index, 1.58624661f, 156,
-          maneuver_index, 0.0968037844f, 13, instruction_index));
+          maneuver_index, 0.0968037844f, 13));
   //----------------------------------------------------------------
   // trace point = 806
   maneuver_index = 11;
@@ -14679,7 +14678,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5730972f, 40.2836533f, 1489615778, 11.6310749),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5731201f, 40.2836494f, leg_index, 1.57449293f, 155,
-          maneuver_index, 0.085050106f, 12, instruction_index));
+          maneuver_index, 0.085050106f, 12));
   //----------------------------------------------------------------
   // trace point = 807
   maneuver_index = 11;
@@ -14688,7 +14687,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5731277f, 40.2837563f, 1489615779, 11.7642365),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.573143f, 40.2837524f, leg_index, 1.5628742f, 153,
-          maneuver_index, 0.0734313726f, 10, instruction_index));
+          maneuver_index, 0.0734313726f, 10));
   //----------------------------------------------------------------
   // trace point = 808
   maneuver_index = 11;
@@ -14697,7 +14696,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5731583f, 40.2838554f, 1489615780, 11.3112583),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5731735f, 40.2838516f, leg_index, 1.55153513f, 152,
-          maneuver_index, 0.0620923042f, 9, instruction_index));
+          maneuver_index, 0.0620923042f, 9));
   //----------------------------------------------------------------
   // trace point = 809
   maneuver_index = 11;
@@ -14706,7 +14705,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5731888f, 40.2839508f, 1489615781, 11.0061398),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.573204f, 40.283947f, leg_index, 1.54061282f, 150,
-          maneuver_index, 0.0511699915f, 7, instruction_index));
+          maneuver_index, 0.0511699915f, 7));
   //----------------------------------------------------------------
   // trace point = 810
   maneuver_index = 11;
@@ -14715,7 +14714,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5732117f, 40.2840385f, 1489615782, 9.98892879),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5732269f, 40.2840347f, leg_index, 1.53065455f, 149,
-          maneuver_index, 0.0412117243f, 6, instruction_index));
+          maneuver_index, 0.0412117243f, 6));
   //----------------------------------------------------------------
   // trace point = 811
   maneuver_index = 11;
@@ -14724,7 +14723,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5732498f, 40.2841835f, 1489615784, 8.2303648),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5732651f, 40.2841797f, leg_index, 1.51419663f, 146,
-          maneuver_index, 0.024753809f, 3, instruction_index));
+          maneuver_index, 0.024753809f, 3));
   //----------------------------------------------------------------
   // trace point = 812
   maneuver_index = 11;
@@ -14733,7 +14732,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5732651f, 40.2842979f, 1489615786, 6.37709522),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5732956f, 40.2842941f, leg_index, 1.50119805f, 145,
-          maneuver_index, 0.011755228f, 2, instruction_index));
+          maneuver_index, 0.011755228f, 2));
   //----------------------------------------------------------------
   // trace point = 813
   maneuver_index = 12;
@@ -14742,7 +14741,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5732498f, 40.2844009f, 1489615788, 5.76822281),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5732651f, 40.28442f, leg_index, 1.482898f, 142,
-          maneuver_index, 0.0544025898f, 7, instruction_index));
+          maneuver_index, 0.0544025898f, 7));
   //----------------------------------------------------------------
   // trace point = 814
   maneuver_index = 12;
@@ -14751,7 +14750,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5732117f, 40.2845345f, 1489615791, 5.05102491),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5731659f, 40.2845306f, leg_index, 1.46832931f, 140,
-          maneuver_index, 0.0398339033f, 5, instruction_index));
+          maneuver_index, 0.0398339033f, 5));
   //----------------------------------------------------------------
   // trace point = 815
   maneuver_index = 12;
@@ -14760,7 +14759,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5732269f, 40.2846298f, 1489615793, 5.38115883),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5731812f, 40.2846489f, leg_index, 1.45483768f, 138,
-          maneuver_index, 0.0263422728f, 3, instruction_index));
+          maneuver_index, 0.0263422728f, 3));
   //----------------------------------------------------------------
   // trace point = 816
   maneuver_index = 12;
@@ -14769,7 +14768,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5733032f, 40.2847214f, 1489615795, 6.00563478),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5732956f, 40.2847328f, leg_index, 1.44108915f, 136,
-          maneuver_index, 0.0125937462f, 1, instruction_index));
+          maneuver_index, 0.0125937462f, 1));
   //----------------------------------------------------------------
   // trace point = 817
   maneuver_index = 13;
@@ -14778,7 +14777,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5733948f, 40.2848206f, 1489615797, 6.7999301),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5734634f, 40.2848091f, leg_index, 1.42102563f, 134,
-          maneuver_index, 0.432891071f, 27, instruction_index));
+          maneuver_index, 0.432891071f, 27));
   //----------------------------------------------------------------
   // trace point = 818
   maneuver_index = 13;
@@ -14787,7 +14786,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5734634f, 40.2849388f, 1489615799, 7.17445612),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.573494f, 40.284935f, leg_index, 1.40678549f, 134,
-          maneuver_index, 0.418650925f, 27, instruction_index));
+          maneuver_index, 0.418650925f, 27));
   //----------------------------------------------------------------
   // trace point = 819
   maneuver_index = 13;
@@ -14796,7 +14795,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5735016f, 40.2850685f, 1489615801, 7.4228282),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5735321f, 40.2850609f, leg_index, 1.39240253f, 133,
-          maneuver_index, 0.404267967f, 26, instruction_index));
+          maneuver_index, 0.404267967f, 26));
   //----------------------------------------------------------------
   // trace point = 820
   maneuver_index = 13;
@@ -14805,7 +14804,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5735474f, 40.285202f, 1489615803, 7.64534521),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5735779f, 40.2851982f, leg_index, 1.37663436f, 132,
-          maneuver_index, 0.388499796f, 25, instruction_index));
+          maneuver_index, 0.388499796f, 25));
   //----------------------------------------------------------------
   // trace point = 821
   maneuver_index = 13;
@@ -14814,7 +14813,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5735855f, 40.2853355f, 1489615805, 7.64001703),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.573616f, 40.2853317f, leg_index, 1.36142302f, 131,
-          maneuver_index, 0.373288453f, 24, instruction_index));
+          maneuver_index, 0.373288453f, 24));
   //----------------------------------------------------------------
   // trace point = 822
   maneuver_index = 13;
@@ -14823,7 +14822,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5736313f, 40.2854691f, 1489615807, 7.64534283),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5736542f, 40.2854652f, leg_index, 1.34621167f, 130,
-          maneuver_index, 0.358077109f, 23, instruction_index));
+          maneuver_index, 0.358077109f, 23));
   //----------------------------------------------------------------
   // trace point = 823
   maneuver_index = 13;
@@ -14832,7 +14831,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5736694f, 40.2856064f, 1489615809, 7.794209),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5736923f, 40.2856026f, leg_index, 1.33058619f, 129,
-          maneuver_index, 0.342451632f, 22, instruction_index));
+          maneuver_index, 0.342451632f, 22));
   //----------------------------------------------------------------
   // trace point = 824
   maneuver_index = 13;
@@ -14841,7 +14840,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5737152f, 40.2857513f, 1489615811, 8.30362797),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5737381f, 40.2857475f, leg_index, 1.31398952f, 128,
-          maneuver_index, 0.325854957f, 21, instruction_index));
+          maneuver_index, 0.325854957f, 21));
   //----------------------------------------------------------------
   // trace point = 825
   maneuver_index = 13;
@@ -14850,7 +14849,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.573761f, 40.2859039f, 1489615813, 8.73704147),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5737839f, 40.2859001f, leg_index, 1.29656446f, 127,
-          maneuver_index, 0.308429897f, 20, instruction_index));
+          maneuver_index, 0.308429897f, 20));
   //----------------------------------------------------------------
   // trace point = 826
   maneuver_index = 13;
@@ -14859,7 +14858,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5738068f, 40.2860565f, 1489615815, 8.73703957),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5738297f, 40.2860527f, leg_index, 1.27913928f, 125,
-          maneuver_index, 0.291004717f, 18, instruction_index));
+          maneuver_index, 0.291004717f, 18));
   //----------------------------------------------------------------
   // trace point = 827
   maneuver_index = 13;
@@ -14868,7 +14867,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5738602f, 40.2862167f, 1489615817, 9.18547058),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5738754f, 40.2862129f, leg_index, 1.26088572f, 124,
-          maneuver_index, 0.272751153f, 17, instruction_index));
+          maneuver_index, 0.272751153f, 17));
   //----------------------------------------------------------------
   // trace point = 828
   maneuver_index = 13;
@@ -14877,7 +14876,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5739136f, 40.286377f, 1489615819, 9.19596291),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5739212f, 40.286377f, leg_index, 1.24221802f, 123,
-          maneuver_index, 0.254083455f, 16, instruction_index));
+          maneuver_index, 0.254083455f, 16));
   //----------------------------------------------------------------
   // trace point = 829
   maneuver_index = 13;
@@ -14886,7 +14885,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5739594f, 40.2865448f, 1489615821, 9.54403782),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5739746f, 40.286541f, leg_index, 1.22340763f, 122,
-          maneuver_index, 0.235273063f, 15, instruction_index));
+          maneuver_index, 0.235273063f, 15));
   //----------------------------------------------------------------
   // trace point = 830
   maneuver_index = 13;
@@ -14895,7 +14894,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5739899f, 40.2866325f, 1489615822, 10.1436434),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5739975f, 40.2866325f, leg_index, 1.21303809f, 121,
-          maneuver_index, 0.224903524f, 14, instruction_index));
+          maneuver_index, 0.224903524f, 14));
   //----------------------------------------------------------------
   // trace point = 831
   maneuver_index = 13;
@@ -14904,7 +14903,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5740128f, 40.2867279f, 1489615823, 10.7541885),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.574028f, 40.2867241f, leg_index, 1.20252585f, 121,
-          maneuver_index, 0.214391291f, 14, instruction_index));
+          maneuver_index, 0.214391291f, 14));
   //----------------------------------------------------------------
   // trace point = 832
   maneuver_index = 13;
@@ -14913,7 +14912,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5740433f, 40.2868195f, 1489615824, 10.4454832),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5740509f, 40.2868195f, leg_index, 1.19174266f, 120,
-          maneuver_index, 0.203608096f, 13, instruction_index));
+          maneuver_index, 0.203608096f, 13));
   //----------------------------------------------------------------
   // trace point = 833
   maneuver_index = 13;
@@ -14922,7 +14921,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5740814f, 40.2869148f, 1489615825, 11.1632128),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5740814f, 40.2869148f, leg_index, 1.18081594f, 119,
-          maneuver_index, 0.192681372f, 12, instruction_index));
+          maneuver_index, 0.192681372f, 12));
   //----------------------------------------------------------------
   // trace point = 834
   maneuver_index = 13;
@@ -14931,7 +14930,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5741043f, 40.2870102f, 1489615826, 10.7541876),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5741119f, 40.2870102f, leg_index, 1.16988945f, 119,
-          maneuver_index, 0.181754887f, 12, instruction_index));
+          maneuver_index, 0.181754887f, 12));
   //----------------------------------------------------------------
   // trace point = 835
   maneuver_index = 13;
@@ -14940,7 +14939,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5741348f, 40.2871094f, 1489615827, 11.330658),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5741425f, 40.2871094f, leg_index, 1.15854895f, 118,
-          maneuver_index, 0.170414388f, 11, instruction_index));
+          maneuver_index, 0.170414388f, 11));
   //----------------------------------------------------------------
   // trace point = 836
   maneuver_index = 13;
@@ -14949,7 +14948,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5741653f, 40.2872086f, 1489615828, 11.4197168),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.574173f, 40.2872086f, leg_index, 1.14720869f, 117,
-          maneuver_index, 0.159074128f, 10, instruction_index));
+          maneuver_index, 0.159074128f, 10));
   //----------------------------------------------------------------
   // trace point = 837
   maneuver_index = 13;
@@ -14958,7 +14957,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5741959f, 40.2873116f, 1489615829, 11.764205),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5742035f, 40.2873116f, leg_index, 1.13545394f, 116,
-          maneuver_index, 0.147319376f, 9, instruction_index));
+          maneuver_index, 0.147319376f, 9));
   //----------------------------------------------------------------
   // trace point = 838
   maneuver_index = 13;
@@ -14967,7 +14966,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.574234f, 40.2874146f, 1489615830, 11.9113083),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.574234f, 40.2874146f, leg_index, 1.12369931f, 116,
-          maneuver_index, 0.135564744f, 9, instruction_index));
+          maneuver_index, 0.135564744f, 9));
   //----------------------------------------------------------------
   // trace point = 839
   maneuver_index = 13;
@@ -14976,7 +14975,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5742645f, 40.2875214f, 1489615831, 12.0899248),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5742645f, 40.2875214f, leg_index, 1.11153007f, 115,
-          maneuver_index, 0.123395503f, 8, instruction_index));
+          maneuver_index, 0.123395503f, 8));
   //----------------------------------------------------------------
   // trace point = 840
   maneuver_index = 13;
@@ -14985,7 +14984,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.574295f, 40.2876205f, 1489615832, 11.419714),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.574295f, 40.2876205f, leg_index, 1.10018992f, 114,
-          maneuver_index, 0.112055361f, 7, instruction_index));
+          maneuver_index, 0.112055361f, 7));
   //----------------------------------------------------------------
   // trace point = 841
   maneuver_index = 13;
@@ -14994,7 +14993,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5743179f, 40.2877274f, 1489615833, 11.9604034),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5743256f, 40.2877274f, leg_index, 1.08802092f, 113,
-          maneuver_index, 0.0998863578f, 6, instruction_index));
+          maneuver_index, 0.0998863578f, 6));
   //----------------------------------------------------------------
   // trace point = 842
   maneuver_index = 13;
@@ -15003,7 +15002,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5743484f, 40.2878304f, 1489615834, 11.745491),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5743561f, 40.2878304f, leg_index, 1.07626641f, 113,
-          maneuver_index, 0.088131845f, 6, instruction_index));
+          maneuver_index, 0.088131845f, 6));
   //----------------------------------------------------------------
   // trace point = 843
   maneuver_index = 13;
@@ -15012,7 +15011,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5743713f, 40.2879295f, 1489615835, 11.3019772),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.574379f, 40.2879295f, leg_index, 1.06505454f, 112,
-          maneuver_index, 0.0769199729f, 5, instruction_index));
+          maneuver_index, 0.0769199729f, 5));
   //----------------------------------------------------------------
   // trace point = 844
   maneuver_index = 13;
@@ -15021,7 +15020,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5744019f, 40.2880325f, 1489615836, 11.7641993),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5744095f, 40.2880325f, leg_index, 1.05330873f, 111,
-          maneuver_index, 0.0651741624f, 4, instruction_index));
+          maneuver_index, 0.0651741624f, 4));
   //----------------------------------------------------------------
   // trace point = 845
   maneuver_index = 13;
@@ -15030,7 +15029,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5744247f, 40.2881279f, 1489615837, 10.7541819),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5744324f, 40.2881279f, leg_index, 1.04251599f, 110,
-          maneuver_index, 0.0543814301f, 3, instruction_index));
+          maneuver_index, 0.0543814301f, 3));
   //----------------------------------------------------------------
   // trace point = 846
   maneuver_index = 13;
@@ -15039,7 +15038,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5744781f, 40.2882919f, 1489615839, 9.40146637),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5744705f, 40.2882919f, leg_index, 1.02397108f, 109,
-          maneuver_index, 0.0358365178f, 2, instruction_index));
+          maneuver_index, 0.0358365178f, 2));
   //----------------------------------------------------------------
   // trace point = 847
   maneuver_index = 13;
@@ -15048,7 +15047,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5745087f, 40.2884064f, 1489615841, 6.48027897),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.574501f, 40.2884064f, leg_index, 1.01097429f, 108,
-          maneuver_index, 0.022839725f, 1, instruction_index));
+          maneuver_index, 0.022839725f, 1));
   //----------------------------------------------------------------
   // trace point = 848
   maneuver_index = 13;
@@ -15057,7 +15056,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5745087f, 40.2884979f, 1489615843, 5.12069702),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5745163f, 40.2884979f, leg_index, 1.00071967f, 108,
-          maneuver_index, 0.0125851035f, 1, instruction_index));
+          maneuver_index, 0.0125851035f, 1));
   //----------------------------------------------------------------
   // trace point = 849
   maneuver_index = 14;
@@ -15066,7 +15065,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5743866f, 40.2886086f, 1489615846, 5.37486076),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5743942f, 40.2886353f, leg_index, 0.974841118f, 105,
-          maneuver_index, 0.303573132f, 39, instruction_index));
+          maneuver_index, 0.303573132f, 39));
   //----------------------------------------------------------------
   // trace point = 850
   maneuver_index = 14;
@@ -15075,7 +15074,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.574234f, 40.2886505f, 1489615848, 6.90376806),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.574234f, 40.288662f, leg_index, 0.9609164f, 103,
-          maneuver_index, 0.289648414f, 37, instruction_index));
+          maneuver_index, 0.289648414f, 37));
   //----------------------------------------------------------------
   // trace point = 851
   maneuver_index = 14;
@@ -15084,7 +15083,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5740433f, 40.2887039f, 1489615850, 8.62919235),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5740356f, 40.2887001f, leg_index, 0.943503141f, 101,
-          maneuver_index, 0.272235155f, 35, instruction_index));
+          maneuver_index, 0.272235155f, 35));
   //----------------------------------------------------------------
   // trace point = 852
   maneuver_index = 14;
@@ -15093,7 +15092,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5739365f, 40.2887497f, 1489615851, 10.4294434),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5739441f, 40.2887573f, leg_index, 0.933456421f, 100,
-          maneuver_index, 0.262188435f, 34, instruction_index));
+          maneuver_index, 0.262188435f, 34));
   //----------------------------------------------------------------
   // trace point = 853
   maneuver_index = 14;
@@ -15102,7 +15101,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5738373f, 40.2888069f, 1489615852, 10.532361),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5738449f, 40.2888145f, leg_index, 0.922897577f, 99,
-          maneuver_index, 0.251629591f, 33, instruction_index));
+          maneuver_index, 0.251629591f, 33));
   //----------------------------------------------------------------
   // trace point = 854
   maneuver_index = 14;
@@ -15111,7 +15110,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5737228f, 40.2888641f, 1489615853, 11.574439),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5737381f, 40.2888794f, leg_index, 0.9113065f, 97,
-          maneuver_index, 0.240038514f, 31, instruction_index));
+          maneuver_index, 0.240038514f, 31));
   //----------------------------------------------------------------
   // trace point = 855
   maneuver_index = 14;
@@ -15120,7 +15119,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5736084f, 40.288929f, 1489615854, 12.1537342),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5736237f, 40.2889442f, leg_index, 0.8992033f, 95,
-          maneuver_index, 0.227935314f, 29, instruction_index));
+          maneuver_index, 0.227935314f, 29));
   //----------------------------------------------------------------
   // trace point = 856
   maneuver_index = 14;
@@ -15129,7 +15128,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.573494f, 40.2890015f, 1489615855, 12.5676508),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5735092f, 40.2890129f, leg_index, 0.886839986f, 94,
-          maneuver_index, 0.215572f, 28, instruction_index));
+          maneuver_index, 0.215572f, 28));
   //----------------------------------------------------------------
   // trace point = 857
   maneuver_index = 14;
@@ -15138,7 +15137,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5733719f, 40.2890739f, 1489615856, 13.1664562),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5733871f, 40.2890854f, leg_index, 0.873704493f, 92,
-          maneuver_index, 0.202436507f, 26, instruction_index));
+          maneuver_index, 0.202436507f, 26));
   //----------------------------------------------------------------
   // trace point = 858
   maneuver_index = 14;
@@ -15147,7 +15146,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5732422f, 40.2891541f, 1489615857, 14.1832008),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5732498f, 40.2891655f, leg_index, 0.859024644f, 90,
-          maneuver_index, 0.187756658f, 24, instruction_index));
+          maneuver_index, 0.187756658f, 24));
   //----------------------------------------------------------------
   // trace point = 859
   maneuver_index = 14;
@@ -15156,7 +15155,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5730972f, 40.289238f, 1489615858, 15.460741),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5731049f, 40.2892494f, leg_index, 0.843572736f, 88,
-          maneuver_index, 0.172304749f, 22, instruction_index));
+          maneuver_index, 0.172304749f, 22));
   //----------------------------------------------------------------
   // trace point = 860
   maneuver_index = 14;
@@ -15165,7 +15164,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5729523f, 40.2893219f, 1489615859, 15.4607286),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5729675f, 40.2893333f, leg_index, 0.828632593f, 86,
-          maneuver_index, 0.157364607f, 20, instruction_index));
+          maneuver_index, 0.157364607f, 20));
   //----------------------------------------------------------------
   // trace point = 861
   maneuver_index = 14;
@@ -15174,7 +15173,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5728226f, 40.2894096f, 1489615860, 14.6952276),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5728302f, 40.2894135f, leg_index, 0.813952804f, 84,
-          maneuver_index, 0.142684817f, 18, instruction_index));
+          maneuver_index, 0.142684817f, 18));
   //----------------------------------------------------------------
   // trace point = 862
   maneuver_index = 14;
@@ -15183,7 +15182,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5726776f, 40.2894897f, 1489615861, 15.1955318),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5726852f, 40.2894974f, leg_index, 0.798501074f, 82,
-          maneuver_index, 0.127233088f, 16, instruction_index));
+          maneuver_index, 0.127233088f, 16));
   //----------------------------------------------------------------
   // trace point = 863
   maneuver_index = 14;
@@ -15192,7 +15191,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5725327f, 40.2895775f, 1489615862, 15.6649323),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5725403f, 40.2895851f, leg_index, 0.782788754f, 80,
-          maneuver_index, 0.111520767f, 14, instruction_index));
+          maneuver_index, 0.111520767f, 14));
   //----------------------------------------------------------------
   // trace point = 864
   maneuver_index = 14;
@@ -15201,7 +15200,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5723877f, 40.2896652f, 1489615863, 15.7339859),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5723953f, 40.2896729f, leg_index, 0.767076612f, 78,
-          maneuver_index, 0.0958086252f, 12, instruction_index));
+          maneuver_index, 0.0958086252f, 12));
   //----------------------------------------------------------------
   // trace point = 865
   maneuver_index = 14;
@@ -15210,7 +15209,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5722504f, 40.2897491f, 1489615864, 14.9916258),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.572258f, 40.289753f, leg_index, 0.752396762f, 76,
-          maneuver_index, 0.0811287761f, 10, instruction_index));
+          maneuver_index, 0.0811287761f, 10));
   //----------------------------------------------------------------
   // trace point = 866
   maneuver_index = 14;
@@ -15219,7 +15218,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.572113f, 40.2898293f, 1489615865, 14.6504793),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5721207f, 40.2898331f, leg_index, 0.737717032f, 75,
-          maneuver_index, 0.0664490461f, 9, instruction_index));
+          maneuver_index, 0.0664490461f, 9));
   //----------------------------------------------------------------
   // trace point = 867
   maneuver_index = 14;
@@ -15228,7 +15227,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5719757f, 40.2899094f, 1489615866, 14.6504679),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5719833f, 40.289917f, leg_index, 0.722777426f, 73,
-          maneuver_index, 0.0515094399f, 7, instruction_index));
+          maneuver_index, 0.0515094399f, 7));
   //----------------------------------------------------------------
   // trace point = 868
   maneuver_index = 14;
@@ -15237,7 +15236,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5718536f, 40.2899818f, 1489615867, 13.1663485),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5718613f, 40.2899895f, leg_index, 0.709642231f, 71,
-          maneuver_index, 0.0383742452f, 5, instruction_index));
+          maneuver_index, 0.0383742452f, 5));
   //----------------------------------------------------------------
   // trace point = 869
   maneuver_index = 14;
@@ -15246,7 +15245,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5717468f, 40.2900429f, 1489615868, 11.3428106),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5717545f, 40.2900505f, leg_index, 0.698310733f, 69,
-          maneuver_index, 0.0270427465f, 3, instruction_index));
+          maneuver_index, 0.0270427465f, 3));
   //----------------------------------------------------------------
   // trace point = 870
   maneuver_index = 14;
@@ -15255,7 +15254,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.571579f, 40.2901306f, 1489615870, 8.65248108),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5715942f, 40.2901459f, leg_index, 0.681054056f, 67,
-          maneuver_index, 0.00978606939f, 1, instruction_index));
+          maneuver_index, 0.00978606939f, 1));
   //----------------------------------------------------------------
   // trace point = 871
   maneuver_index = 15;
@@ -15264,7 +15263,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5714417f, 40.290123f, 1489615872, 5.83350801),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.571434f, 40.2901306f, leg_index, 0.661657214f, 65,
-          maneuver_index, 0.489900321f, 47, instruction_index));
+          maneuver_index, 0.489900321f, 47));
   //----------------------------------------------------------------
   // trace point = 872
   maneuver_index = 15;
@@ -15273,7 +15272,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5713272f, 40.2900314f, 1489615874, 7.07530499),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5713272f, 40.2900314f, leg_index, 0.647369802f, 63,
-          maneuver_index, 0.475612909f, 45, instruction_index));
+          maneuver_index, 0.475612909f, 45));
   //----------------------------------------------------------------
   // trace point = 873
   maneuver_index = 15;
@@ -15282,7 +15281,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5711975f, 40.2899094f, 1489615876, 8.72391319),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5711975f, 40.2899094f, leg_index, 0.629880965f, 62,
-          maneuver_index, 0.458124071f, 44, instruction_index));
+          maneuver_index, 0.458124071f, 44));
   //----------------------------------------------------------------
   // trace point = 874
   maneuver_index = 15;
@@ -15291,7 +15290,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5711136f, 40.2898369f, 1489615877, 10.7291689),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5711136f, 40.2898407f, leg_index, 0.619305372f, 61,
-          maneuver_index, 0.447548479f, 43, instruction_index));
+          maneuver_index, 0.447548479f, 43));
   //----------------------------------------------------------------
   // trace point = 875
   maneuver_index = 15;
@@ -15300,7 +15299,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.571022f, 40.2897682f, 1489615878, 10.9556036),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5710068f, 40.2897835f, leg_index, 0.608223557f, 60,
-          maneuver_index, 0.436466664f, 42, instruction_index));
+          maneuver_index, 0.436466664f, 42));
   //----------------------------------------------------------------
   // trace point = 876
   maneuver_index = 15;
@@ -15309,7 +15308,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5709229f, 40.2897072f, 1489615879, 10.8063707),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5709f, 40.2897301f, leg_index, 0.597380698f, 59,
-          maneuver_index, 0.425623804f, 41, instruction_index));
+          maneuver_index, 0.425623804f, 41));
   //----------------------------------------------------------------
   // trace point = 877
   maneuver_index = 15;
@@ -15318,7 +15317,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5708237f, 40.2896538f, 1489615880, 10.2701626),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5708008f, 40.2896767f, leg_index, 0.587073267f, 58,
-          maneuver_index, 0.415316373f, 40, instruction_index));
+          maneuver_index, 0.415316373f, 40));
   //----------------------------------------------------------------
   // trace point = 878
   maneuver_index = 15;
@@ -15327,7 +15326,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5707169f, 40.2896042f, 1489615881, 10.6550283),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5707016f, 40.2896233f, leg_index, 0.576766133f, 57,
-          maneuver_index, 0.40500924f, 39, instruction_index));
+          maneuver_index, 0.40500924f, 39));
   //----------------------------------------------------------------
   // trace point = 879
   maneuver_index = 15;
@@ -15336,7 +15335,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.57061f, 40.2895508f, 1489615882, 10.833231),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5705948f, 40.2895699f, leg_index, 0.565923035f, 56,
-          maneuver_index, 0.394166142f, 38, instruction_index));
+          maneuver_index, 0.394166142f, 38));
   //----------------------------------------------------------------
   // trace point = 880
   maneuver_index = 15;
@@ -15345,7 +15344,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5704956f, 40.2894936f, 1489615883, 11.5743561),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5704803f, 40.2895126f, leg_index, 0.554305732f, 55,
-          maneuver_index, 0.382548839f, 37, instruction_index));
+          maneuver_index, 0.382548839f, 37));
   //----------------------------------------------------------------
   // trace point = 881
   maneuver_index = 15;
@@ -15354,7 +15353,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5703735f, 40.2894325f, 1489615884, 12.3865995),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5703583f, 40.2894478f, leg_index, 0.541674852f, 54,
-          maneuver_index, 0.369917959f, 36, instruction_index));
+          maneuver_index, 0.369917959f, 36));
   //----------------------------------------------------------------
   // trace point = 882
   maneuver_index = 15;
@@ -15363,7 +15362,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5702515f, 40.2893677f, 1489615885, 12.7059097),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5702362f, 40.2893829f, leg_index, 0.529044032f, 52,
-          maneuver_index, 0.357287139f, 34, instruction_index));
+          maneuver_index, 0.357287139f, 34));
   //----------------------------------------------------------------
   // trace point = 883
   maneuver_index = 15;
@@ -15372,7 +15371,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5701294f, 40.2893066f, 1489615886, 12.3866158),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5701141f, 40.2893219f, leg_index, 0.516652107f, 51,
-          maneuver_index, 0.344895214f, 33, instruction_index));
+          maneuver_index, 0.344895214f, 33));
   //----------------------------------------------------------------
   // trace point = 884
   maneuver_index = 15;
@@ -15381,7 +15380,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5699997f, 40.2892418f, 1489615887, 13.1279278),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5699844f, 40.289257f, leg_index, 0.503486335f, 50,
-          maneuver_index, 0.331729442f, 32, instruction_index));
+          maneuver_index, 0.331729442f, 32));
   //----------------------------------------------------------------
   // trace point = 885
   maneuver_index = 15;
@@ -15390,7 +15389,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5698776f, 40.2891769f, 1489615888, 12.6362267),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5698624f, 40.2891922f, leg_index, 0.490855098f, 49,
-          maneuver_index, 0.319098204f, 31, instruction_index));
+          maneuver_index, 0.319098204f, 31));
   //----------------------------------------------------------------
   // trace point = 886
   maneuver_index = 15;
@@ -15399,7 +15398,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5697479f, 40.2891121f, 1489615889, 13.1988792),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5697403f, 40.2891235f, leg_index, 0.477985442f, 47,
-          maneuver_index, 0.306228548f, 29, instruction_index));
+          maneuver_index, 0.306228548f, 29));
   //----------------------------------------------------------------
   // trace point = 887
   maneuver_index = 15;
@@ -15408,7 +15407,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5696182f, 40.2890472f, 1489615890, 13.1988878),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5696106f, 40.2890587f, leg_index, 0.464818478f, 46,
-          maneuver_index, 0.293061584f, 28, instruction_index));
+          maneuver_index, 0.293061584f, 28));
   //----------------------------------------------------------------
   // trace point = 888
   maneuver_index = 15;
@@ -15417,7 +15416,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5694962f, 40.2889824f, 1489615891, 12.6362514),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5694885f, 40.2889938f, leg_index, 0.452187777f, 45,
-          maneuver_index, 0.280430883f, 27, instruction_index));
+          maneuver_index, 0.280430883f, 27));
   //----------------------------------------------------------------
   // trace point = 889
   maneuver_index = 15;
@@ -15426,7 +15425,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5693665f, 40.2889175f, 1489615892, 13.1382093),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5693588f, 40.288929f, leg_index, 0.4390212f, 44,
-          maneuver_index, 0.267264307f, 26, instruction_index));
+          maneuver_index, 0.267264307f, 26));
   //----------------------------------------------------------------
   // trace point = 890
   maneuver_index = 15;
@@ -15435,7 +15434,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5692444f, 40.2888565f, 1489615893, 12.386673),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5692368f, 40.2888641f, leg_index, 0.426391482f, 42,
-          maneuver_index, 0.254634589f, 24, instruction_index));
+          maneuver_index, 0.254634589f, 24));
   //----------------------------------------------------------------
   // trace point = 891
   maneuver_index = 15;
@@ -15444,7 +15443,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5691223f, 40.2887917f, 1489615894, 12.6362753),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5691147f, 40.2888031f, leg_index, 0.413997412f, 42,
-          maneuver_index, 0.242240518f, 24, instruction_index));
+          maneuver_index, 0.242240518f, 24));
   //----------------------------------------------------------------
   // trace point = 892
   maneuver_index = 15;
@@ -15453,7 +15452,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5690002f, 40.2887268f, 1489615895, 12.6362839),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5689926f, 40.2887383f, leg_index, 0.401368022f, 40,
-          maneuver_index, 0.229611129f, 22, instruction_index));
+          maneuver_index, 0.229611129f, 22));
   //----------------------------------------------------------------
   // trace point = 893
   maneuver_index = 15;
@@ -15462,7 +15461,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5688705f, 40.2886581f, 1489615896, 13.3785896),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5688553f, 40.2886734f, leg_index, 0.387662053f, 39,
-          maneuver_index, 0.21590516f, 21, instruction_index));
+          maneuver_index, 0.21590516f, 21));
   //----------------------------------------------------------------
   // trace point = 894
   maneuver_index = 15;
@@ -15471,7 +15470,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5687485f, 40.2885971f, 1489615897, 12.4578104),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5687408f, 40.2886086f, leg_index, 0.375570834f, 38,
-          maneuver_index, 0.20381394f, 20, instruction_index));
+          maneuver_index, 0.20381394f, 20));
   //----------------------------------------------------------------
   // trace point = 895
   maneuver_index = 15;
@@ -15480,7 +15479,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5686264f, 40.2885323f, 1489615898, 12.6363077),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5686111f, 40.2885475f, leg_index, 0.36263895f, 37,
-          maneuver_index, 0.190882057f, 19, instruction_index));
+          maneuver_index, 0.190882057f, 19));
   //----------------------------------------------------------------
   // trace point = 896
   maneuver_index = 15;
@@ -15489,7 +15488,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5685043f, 40.2884674f, 1489615899, 12.6363163),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5684891f, 40.2884827f, leg_index, 0.350009203f, 35,
-          maneuver_index, 0.17825231f, 17, instruction_index));
+          maneuver_index, 0.17825231f, 17));
   //----------------------------------------------------------------
   // trace point = 897
   maneuver_index = 15;
@@ -15498,7 +15497,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5683823f, 40.2884064f, 1489615900, 12.3867311),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.568367f, 40.2884216f, leg_index, 0.337615967f, 34,
-          maneuver_index, 0.165859073f, 16, instruction_index));
+          maneuver_index, 0.165859073f, 16));
   //----------------------------------------------------------------
   // trace point = 898
   maneuver_index = 15;
@@ -15507,7 +15506,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5682526f, 40.2883453f, 1489615901, 12.8879824),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5682449f, 40.2883568f, leg_index, 0.324986517f, 33,
-          maneuver_index, 0.153229624f, 15, instruction_index));
+          maneuver_index, 0.153229624f, 15));
   //----------------------------------------------------------------
   // trace point = 899
   maneuver_index = 15;
@@ -15516,7 +15515,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5681381f, 40.2882843f, 1489615902, 11.8940868),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5681229f, 40.2882996f, leg_index, 0.312830448f, 32,
-          maneuver_index, 0.141073555f, 14, instruction_index));
+          maneuver_index, 0.141073555f, 14));
   //----------------------------------------------------------------
   // trace point = 900
   maneuver_index = 15;
@@ -15525,7 +15524,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5680161f, 40.2882233f, 1489615903, 12.386754),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5680084f, 40.2882347f, leg_index, 0.300739259f, 31,
-          maneuver_index, 0.128982365f, 13, instruction_index));
+          maneuver_index, 0.128982365f, 13));
   //----------------------------------------------------------------
   // trace point = 901
   maneuver_index = 15;
@@ -15534,7 +15533,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.567894f, 40.2881584f, 1489615904, 12.6363554),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5678787f, 40.2881737f, leg_index, 0.287807435f, 29,
-          maneuver_index, 0.116050541f, 11, instruction_index));
+          maneuver_index, 0.116050541f, 11));
   //----------------------------------------------------------------
   // trace point = 902
   maneuver_index = 15;
@@ -15543,7 +15542,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5677719f, 40.2880974f, 1489615905, 12.3867702),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5677567f, 40.2881126f, leg_index, 0.275434822f, 28,
-          maneuver_index, 0.103677928f, 10, instruction_index));
+          maneuver_index, 0.103677928f, 10));
   //----------------------------------------------------------------
   // trace point = 903
   maneuver_index = 15;
@@ -15552,7 +15551,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5676498f, 40.2880325f, 1489615906, 12.5729589),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5676346f, 40.2880516f, leg_index, 0.26300934f, 27,
-          maneuver_index, 0.0912524462f, 9, instruction_index));
+          maneuver_index, 0.0912524462f, 9));
   //----------------------------------------------------------------
   // trace point = 904
   maneuver_index = 15;
@@ -15561,7 +15560,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5675278f, 40.2879677f, 1489615907, 12.6363792),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5675049f, 40.2879944f, leg_index, 0.250287801f, 26,
-          maneuver_index, 0.0785309076f, 8, instruction_index));
+          maneuver_index, 0.0785309076f, 8));
   //----------------------------------------------------------------
   // trace point = 905
   maneuver_index = 15;
@@ -15570,7 +15569,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5674057f, 40.2879066f, 1489615908, 12.386795),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5673828f, 40.2879372f, leg_index, 0.238122344f, 24,
-          maneuver_index, 0.0663654506f, 6, instruction_index));
+          maneuver_index, 0.0663654506f, 6));
   //----------------------------------------------------------------
   // trace point = 906
   maneuver_index = 15;
@@ -15579,7 +15578,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5672989f, 40.2878532f, 1489615909, 10.8944473),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.567276f, 40.2878876f, leg_index, 0.227504998f, 23,
-          maneuver_index, 0.055748105f, 5, instruction_index));
+          maneuver_index, 0.055748105f, 5));
   //----------------------------------------------------------------
   // trace point = 907
   maneuver_index = 15;
@@ -15588,7 +15587,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5671082f, 40.2877655f, 1489615911, 9.44516563),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5670776f, 40.2877998f, leg_index, 0.208035558f, 21,
-          maneuver_index, 0.0362786651f, 3, instruction_index));
+          maneuver_index, 0.0362786651f, 3));
   //----------------------------------------------------------------
   // trace point = 908
   maneuver_index = 15;
@@ -15597,7 +15596,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5669556f, 40.2876968f, 1489615913, 7.5098629),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.566925f, 40.2877312f, leg_index, 0.192992344f, 20,
-          maneuver_index, 0.0212354511f, 2, instruction_index));
+          maneuver_index, 0.0212354511f, 2));
   //----------------------------------------------------------------
   // trace point = 909
   maneuver_index = 15;
@@ -15606,7 +15605,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5668488f, 40.2876511f, 1489615915, 5.21478319),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5668259f, 40.2876816f, leg_index, 0.182933927f, 19,
-          maneuver_index, 0.0111770332f, 1, instruction_index));
+          maneuver_index, 0.0111770332f, 1));
   //----------------------------------------------------------------
   // trace point = 910
   maneuver_index = 16;
@@ -15615,7 +15614,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5667801f, 40.2875519f, 1489615920, 2.49626994),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5667648f, 40.2875481f, leg_index, 0.161372095f, 17,
-          maneuver_index, 0.161372095f, 17, instruction_index));
+          maneuver_index, 0.161372095f, 17));
   //----------------------------------------------------------------
   // trace point = 911
   maneuver_index = 16;
@@ -15624,7 +15623,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5668259f, 40.2874641f, 1489615922, 5.27308321),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5668182f, 40.2874603f, leg_index, 0.150606364f, 16,
-          maneuver_index, 0.150606364f, 16, instruction_index));
+          maneuver_index, 0.150606364f, 16));
   //----------------------------------------------------------------
   // trace point = 912
   maneuver_index = 16;
@@ -15633,7 +15632,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5669022f, 40.2873611f, 1489615924, 6.57867479),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5668869f, 40.2873573f, leg_index, 0.137744263f, 14,
-          maneuver_index, 0.137744263f, 14, instruction_index));
+          maneuver_index, 0.137744263f, 14));
   //----------------------------------------------------------------
   // trace point = 913
   maneuver_index = 16;
@@ -15642,7 +15641,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5670013f, 40.2872276f, 1489615926, 8.51285267),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5669785f, 40.28722f, leg_index, 0.120596804f, 12,
-          maneuver_index, 0.120596804f, 12, instruction_index));
+          maneuver_index, 0.120596804f, 12));
   //----------------------------------------------------------------
   // trace point = 914
   maneuver_index = 16;
@@ -15651,7 +15650,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5671082f, 40.2870674f, 1489615928, 10.0470066),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5670776f, 40.287056f, leg_index, 0.0980155766f, 10,
-          maneuver_index, 0.0980155766f, 10, instruction_index));
+          maneuver_index, 0.0980155766f, 10));
   //----------------------------------------------------------------
   // trace point = 915
   maneuver_index = 16;
@@ -15660,7 +15659,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5671844f, 40.2869415f, 1489615930, 7.66933489),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5671692f, 40.2869339f, leg_index, 0.0848487169f, 9,
-          maneuver_index, 0.0848487169f, 9, instruction_index));
+          maneuver_index, 0.0848487169f, 9));
   //----------------------------------------------------------------
   // trace point = 916
   maneuver_index = 16;
@@ -15669,7 +15668,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5672455f, 40.2868309f, 1489615935, 2.67965293),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5672379f, 40.2868271f, leg_index, 0.0716166496f, 7,
-          maneuver_index, 0.0716166496f, 7, instruction_index));
+          maneuver_index, 0.0716166496f, 7));
   //----------------------------------------------------------------
   // trace point = 917
   maneuver_index = 16;
@@ -15678,7 +15677,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5673065f, 40.286747f, 1489615937, 5.36555004),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5672989f, 40.2867432f, leg_index, 0.0609332621f, 6,
-          maneuver_index, 0.0609332621f, 6, instruction_index));
+          maneuver_index, 0.0609332621f, 6));
   //----------------------------------------------------------------
   // trace point = 918
   maneuver_index = 16;
@@ -15687,7 +15686,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5673904f, 40.2866402f, 1489615939, 6.92011023),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5673752f, 40.2866364f, leg_index, 0.0473925173f, 5,
-          maneuver_index, 0.0473925173f, 5, instruction_index));
+          maneuver_index, 0.0473925173f, 5));
   //----------------------------------------------------------------
   // trace point = 919
   maneuver_index = 16;
@@ -15696,7 +15695,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.567482f, 40.2865143f, 1489615941, 8.02758503),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5674667f, 40.2865067f, leg_index, 0.0309944768f, 3,
-          maneuver_index, 0.0309944768f, 3, instruction_index));
+          maneuver_index, 0.0309944768f, 3));
   //----------------------------------------------------------------
   // trace point = 920
   maneuver_index = 16;
@@ -15705,7 +15704,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetFixLocation(-76.5675659f, 40.2863808f, 1489615943, 8.21709442),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5675583f, 40.286377f, leg_index, 0.0145969158f, 2,
-          maneuver_index, 0.0145969158f, 2, instruction_index));
+          maneuver_index, 0.0145969158f, 2));
 
 }
 
