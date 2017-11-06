@@ -4,14 +4,12 @@ namespace valhalla {
 namespace meili {
 
 float EnlargedEmissionCostModel::operator()(const StateId& stateid) {
-  //if this was a removed state bail
+  // If this was a removed state bail
   const auto& original_stateid = evs_.GetOrigin(stateid);
-  if(evs_.IsRemoved(original_stateid))
-    return - 1;
+  if (evs_.IsRemoved(original_stateid))
+    return -1.0;
 
-  //TODO: remove this
-  return calculate_cost(stateid, original_stateid);
-
+  // Check for cache and compute if its not there
   auto c = cached_costs_.find(stateid);
   if (c == cached_costs_.cend())
     c = cached_costs_.emplace(stateid, calculate_cost(stateid, original_stateid)).first;
@@ -42,8 +40,6 @@ float EnlargedEmissionCostModel::calculate_cost(const StateId& stateid, const St
 }
 
 float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) {
-  //TODO: remove this
-  return calculate_cost(lhs, rhs);
   auto couple = std::make_pair(lhs, rhs);
   auto c = cached_costs_.find(couple);
   if (c == cached_costs_.cend())
@@ -78,9 +74,8 @@ float EnlargedTransitionCostModel::calculate_cost(const StateId& lhs, const Stat
 
 void EnlargedViterbiSearch::ClonePath(const std::vector<StateId>& path)
 {
-  for (auto it = path.rbegin(); it != path.rend(); it++) {
+  for (const auto& origin : path) {
     // Did we actually get to this state
-    const auto& origin = *it;
     if (origin.IsValid()) {
       // Get a new id to map to and from this paths use of this candidate
       auto clone = claim_stateid_(origin.time());

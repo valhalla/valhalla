@@ -287,6 +287,12 @@ struct path_t{
   bool operator!=(const path_t& p) const {
     return std::search(e1, e2, p.e1, p.e2) == e2 && std::search(p.e1, p.e2, e1, e2) == p.e2;
   }
+  bool crosses(const baldr::PathLocation& candidate) const {
+    for(const auto& edge: candidate.edges)
+      if(std::find(edges.cbegin(), edges.cend(), edge.id) != edges.cend())
+        return true;
+    return false;
+  }
   std::vector<uint64_t> edges;
   std::vector<uint64_t>::const_iterator e1;
   std::vector<uint64_t>::const_iterator e2;
@@ -358,8 +364,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
     std::cout << std::endl << "Paths from left winner:" << std::endl;
     for(const auto& kv:paths_from_winner) {
       std::cout << R"({"type":"FeatureCollection","features":[)";
-      std::cout << container_.geojson(left_used_candidate) << ',' << container_.geojson(kv.first);
-      std::cout << R"(]})" << std::endl;
+      std::cout << container_.geojson(left_used_candidate) << ',' << container_.geojson(kv.first) << R"(]})" << std::endl;
     }
 */
     // For each candidate of the left state that isnt the winner
@@ -376,23 +381,30 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 
       // For each candidate in the right state
       bool found_unique = false;
-      std::cout << std::endl << "Paths from left loser:" << std::endl;
+     // std::cout << std::endl << "Paths from left loser:" << std::endl;
       for(const auto& right_candidate : container_.column(time + 1)) {
-        // Get the potentially redundant path and bail if isn't redundant with the winner path
-        path_t path_from_loser(MergeRoute(left_unused_candidate, right_candidate));
-        /*std::cout << R"({"type":"FeatureCollection","features":[)";
+/*
+        std::cout << R"({"type":"FeatureCollection","features":[)";
         std::cout << container_.geojson(left_unused_candidate) << ',' << container_.geojson(right_candidate);
-        std::cout << R"(]})" << std::endl;*/
+        std::cout << R"(]})" << std::endl;
+*/
 
+        // If there is no route its not really unique since we dont need discontinuities
+        std::vector<EdgeSegment> edges;
+        if(!MergeRoute(edges, left_unused_candidate, right_candidate))
+          continue;
+
+        // This subpath is unique if: there is no path from the winner
+        // or its node to node (no edges) and not on winner path or they dont overlap
+        path_t path_from_loser(std::move(edges));
         auto path_from_winner = paths_from_winner.find(right_candidate.stateid());
-        if(path_from_loser.edges.size() &&
-            (path_from_winner == paths_from_winner.end() || path_from_winner->second != path_from_loser)) {
+        if(path_from_winner == paths_from_winner.end() ||
+            (path_from_loser.edges.empty() && !path_from_winner->second.crosses(right_candidate.candidate())) ||
+            path_from_winner->second != path_from_loser) {
           found_unique = true;
           right_uniques.emplace(right_candidate.stateid());
-          std::cout << "Unique!" << std::endl;
           break;
         }
-        std::cout << "Duplicate!" << std::endl;
       }
 
       // We didnt find any unique paths for this left candidate so we need to mark it has useless
@@ -400,53 +412,48 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
         redundancies.emplace(left_unused_candidate.stateid());
     }
 
-    std::cout << std::endl << "Removing: ";
-    std::cout << R"({"type":"FeatureCollection","features":[)";
-    std::string fsep = "";
-    for(auto r : redundancies) {
-      std::cout << fsep << container_.geojson(r);
-      fsep = ",";
+/*
+    if(redundancies.size()) {
+      std::cout << std::endl << "Removing: " << R"({"type":"FeatureCollection","features":[)";
+      std::string fsep = "";
+      for(auto r : redundancies) { std::cout << fsep << container_.geojson(r); fsep = ","; }
+      std::cout << R"(]})" << std::endl;
     }
-    std::cout << R"(]})" << std::endl;
-
+*/
     // Clean up the left hand redundancies
-    std::cout << "removed: " << container_.RemoveCandidates(time, redundancies) << std::endl;
+    container_.RemoveCandidates(time, redundancies);
     for(const auto& r : redundancies) {
       ts_.RemoveStateId(r);
-      if(!vs_.RemoveStateId(r))
-        throw std::runtime_error("WTF");
+      vs_.RemoveStateId(r);
     }
 
     // If this was the last state pair we can possibly remove some of the right candidates
     if(left_state_id_itr == result.cend() - 2) {
-      auto right_state_id = ts_.GetOrigin(*(left_state_id_itr + 1));
-      if(!right_state_id.IsValid())
-        right_state_id = *(left_state_id_itr + 1);
+      auto right_state_id = *(left_state_id_itr + 1);
       // For each right candidate
       redundancies.clear();
       for(const auto& right_candidate : container_.column(time + 1)) {
-        // If we ended up finding no uniques for this right candidate we can remove it unless its winner
+        // If its not the winner and there are no uniques for this right candidate we can remove it
         if(right_candidate.stateid() != right_state_id &&
             right_uniques.find(right_candidate.stateid()) == right_uniques.cend()) {
           redundancies.emplace(right_candidate.stateid());
         }
       }
 
-      std::cout << std::endl << "Removing: ";
-      std::cout << R"({"type":"FeatureCollection","features":[)";
-      std::string fsep = "";
-      for(auto r : redundancies) {
-        std::cout << fsep << container_.geojson(r);
-        fsep = ",";
+/*
+      if(redundancies.size()) {
+        std::cout << std::endl << "Removing: " << R"({"type":"FeatureCollection","features":[)";
+        std::string fsep = "";
+        for(auto r : redundancies) { std::cout << fsep << container_.geojson(r); fsep = ","; }
+        std::cout << R"(]})" << std::endl;
       }
-      std::cout << R"(]})" << std::endl;
+*/
 
       // Cleanup the right hand redundancies
-      std::cout << "removed: " << container_.RemoveCandidates(time + 1, redundancies) << std::endl;
+      container_.RemoveCandidates(time + 1, redundancies);
       for(const auto& r : redundancies) {
         ts_.RemoveStateId(r);
-        if(!vs_.RemoveStateId(r))
-          throw std::runtime_error("WTF");
+        vs_.RemoveStateId(r);
       }
     }
   }
@@ -541,7 +548,6 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   std::vector<MatchResults> best_paths;
   std::vector<StateId> state_ids, original_state_ids;
   bool continuous = true;
-  size_t c = 0;
   while(best_paths.size() < k && continuous) {
     // If we just got some results then we need to remove them from consideration
     // we avoid doing this for the common case where k==1 by putting this at the start of the loop
@@ -610,17 +616,18 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     MatchResults match_results(std::move(best_path), std::move(segments), accumulated_cost);
 
     // We'll keep it if we don't have a duplicate already
-    std::cout << "Result: " << c++ << std::endl;
-    std::cout << R"({"type":"FeatureCollection","features":[)";
-    std::string fsep = "";
-    for(auto s : original_state_ids) {
-      std::cout << fsep << container_.geojson(s);
-      fsep = ",";
-    }
-    std::cout << R"(]})" << std::endl;
     auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
-    if(found_path == best_paths.rend())
+    if(found_path == best_paths.rend()) {
+      std::cout << "Result: " << best_paths.size() << std::endl;
+      std::cout << R"({"type":"FeatureCollection","features":[)";
+      std::string fsep = "";
+      for(auto s : original_state_ids) {
+        std::cout << fsep << container_.geojson(s);
+        fsep = ",";
+      }
+      std::cout << R"(]})" << std::endl;
       best_paths.emplace_back(std::move(match_results));
+    }
   }
 
   // Give back anywhere from 1 to k results

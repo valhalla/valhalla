@@ -297,10 +297,6 @@ void ViterbiSearch::ClearSearch()
   scanned_labels_.clear();
   winner_.clear();
   unreached_states_ = states_;
-  for(auto& j : unreached_states_)
-    for(auto& i : j)
-      std::cout << i.time() << "|" << i.id() << " ,";
-  std::cout << " some ids at state 3" << std::endl;
 }
 
 void ViterbiSearch::InitQueue(const std::vector<StateId>& column)
@@ -312,8 +308,6 @@ void ViterbiSearch::InitQueue(const std::vector<StateId>& column)
       continue;
     }
     queue_.push(StateLabel(emission_cost, stateid, {}));
-    if(stateid.time() == 3 && stateid.id() == 1)
-      std::cout << "init" << std::endl;
   }
 }
 
@@ -351,9 +345,6 @@ void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid)
     if (IsInvalidCost(next_costsofar)) {
       continue;
     }
-
-    if(next_stateid.time() == 3 && next_stateid.id() == 1)
-      std::cout << "successor" << std::endl;
 
     queue_.push(StateLabel(next_costsofar, next_stateid, stateid));
   }
