@@ -242,10 +242,13 @@ void DirectedEdge::set_truck_route(const bool truck_route) {
 
 // Sets the number of lanes
 void DirectedEdge::set_lanecount(const uint32_t lanecount) {
-  // TOTO - make sure we don't exceed some max value
+  // Make sure we don't exceed max lane count. Also make sure lane count
+  // is at least 1.
   if (lanecount > kMaxLaneCount) {
     LOG_WARN("Exceeding maximum lane count: " + std::to_string(lanecount));
     lanecount_ = kMaxLaneCount;
+  } else if (lanecount == 0) {
+    lanecount_ = 1;
   } else {
     lanecount_ = lanecount;
   }
