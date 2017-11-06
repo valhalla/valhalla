@@ -412,13 +412,14 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
         redundancies.emplace(left_unused_candidate.stateid());
     }
 
-
+/*
     if(redundancies.size()) {
       std::cout << std::endl << "Removing: " << R"({"type":"FeatureCollection","features":[)";
       std::string fsep = "";
       for(auto r : redundancies) { std::cout << fsep << container_.geojson(r); fsep = ","; }
       std::cout << R"(]})" << std::endl;
     }
+*/
 
     // Clean up the left hand redundancies
     for(const auto& r : redundancies) {
@@ -439,14 +440,14 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
         }
       }
 
-
+/*
       if(redundancies.size()) {
         std::cout << std::endl << "Removing: " << R"({"type":"FeatureCollection","features":[)";
         std::string fsep = "";
         for(auto r : redundancies) { std::cout << fsep << container_.geojson(r); fsep = ","; }
         std::cout << R"(]})" << std::endl;
       }
-
+*/
 
       // Cleanup the right hand redundancies
       for(const auto& r : redundancies) {
@@ -545,7 +546,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
   //For k paths
   std::vector<MatchResults> best_paths;
   std::vector<StateId> state_ids, original_state_ids;
-  while(best_paths.size() < k + 5) {
+  while(best_paths.size() < k) {
     // If we just got some results then we need to remove them from consideration
     // we avoid doing this for the common case where k==1 by putting this at the start of the loop
     if(best_paths.size()) {
@@ -619,14 +620,14 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     // We'll keep it if we don't have a duplicate already
     auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
     if(found_path == best_paths.rend()) {
-      std::cout << "Result: " << best_paths.size() << std::endl;
+      /*std::cout << "Result: " << best_paths.size() << std::endl;
       std::cout << R"({"type":"FeatureCollection","features":[)";
       std::string fsep = "";
       for(auto s : original_state_ids) {
         std::cout << fsep << container_.geojson(s);
         fsep = ",";
       }
-      std::cout << R"(]})" << std::endl;
+      std::cout << R"(]})" << std::endl;*/
       best_paths.emplace_back(std::move(match_results));
     }
   }
