@@ -140,6 +140,7 @@ class TopKSearch
     last_claimed_stateids_.clear();
     evss_.clear();
     initial_origins_.clear();
+    removed_origins_.clear();
   }
 
   // remove path from first state to last state
