@@ -217,8 +217,15 @@ namespace valhalla {
 
       // Populate a map for each level of the tiles that exist
       for(const auto& t : tiles) {
+
         auto& level_colors = colors.insert({t.level(), std::unordered_map<uint32_t, size_t>{}}).first->second;
         level_colors.insert({t.tileid(), 0});
+	// Populate transit colors.
+        if (t.level() == transit_level-1 && reader.DoesTileExist(GraphId(t.tileid(),transit_level,t.id()))){
+          auto& level_colors = colors.insert({transit_level, std::unordered_map<uint32_t, size_t>{}}).first->second;
+          level_colors.insert({t.tileid(), 0});
+
+        }
       }
 
       // All tiles have color 0 (not connected), go through and connect
@@ -266,8 +273,8 @@ namespace valhalla {
 
     std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const {
       //bail if we dont have the level
-      auto bbox = TileHierarchy::levels().find(
-        hierarchy_level == transit_level ? transit_level - 1 : hierarchy_level);
+      uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
+      auto bbox = TileHierarchy::levels().find(tile_level);
       if(bbox == TileHierarchy::levels().cend())
         throw std::runtime_error("hierarchy level not found");
 
