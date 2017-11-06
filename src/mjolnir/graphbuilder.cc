@@ -770,13 +770,22 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             LOG_WARN("Failed to import lane connectivity for way: " + std::to_string(w.way_id()) + " : " + e.what());
           }
 
-          //set the number of lanes.
+          // Set the number of lanes.
           if (w.forward_tagged_lanes() && w.backward_tagged_lanes()) {
             if (forward)
               directededge.set_lanecount(w.forward_lanes());
             else directededge.set_lanecount(w.backward_lanes());
-
-          } else directededge.set_lanecount(w.lanes());
+          } else  {
+            // The lanes tag in OSM means total number of lanes. For ways with
+            // 2-way travel divide by 2. This will not be accurate for an odd
+            // number of lanes, but in these cases there really should be
+            // lanes:forward and lanes:backward tags.
+            if (w.oneway() || w.oneway_reverse()) {
+              directededge.set_lanecount(w.lanes());
+            } else {
+              directededge.set_lanecount(std::max(1, static_cast<int>(w.lanes()) / 2));
+            }
+          }
 
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
