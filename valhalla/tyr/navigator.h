@@ -74,14 +74,14 @@ constexpr float kInitialShortTransitionAlertMinManeuverMetricLength = kInitialSh
 
 // Final long transition alert length, length bounds, and
 // minimum maneuver length threshold
-constexpr float kFinalLongTransitionAlertMetricLength = 0.5f; // half kilometer = 500 meters
+constexpr float kFinalLongTransitionAlertMetricLength = 0.8f; // 800 meters
 constexpr float kFinalLongTransitionAlertLowerMetricLength = kFinalLongTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
 constexpr float kFinalLongTransitionAlertUpperMetricLength = kFinalLongTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
 constexpr float kFinalLongTransitionAlertMinManeuverMetricLength = kFinalLongTransitionAlertMetricLength * 2.0f;
 
 // Final medium transition alert length, length bounds, and
 // minimum maneuver length threshold
-constexpr float kFinalMediumTransitionAlertMetricLength = 0.25f; // quarter kilometer = 250 meters
+constexpr float kFinalMediumTransitionAlertMetricLength = 0.4f; // 400 meters
 constexpr float kFinalMediumTransitionAlertLowerMetricLength = kFinalMediumTransitionAlertMetricLength - kTransitionAlertLowerMetricDelta;
 constexpr float kFinalMediumTransitionAlertUpperMetricLength = kFinalMediumTransitionAlertMetricLength + kTransitionAlertUpperMetricDelta;
 constexpr float kFinalMediumTransitionAlertMinManeuverMetricLength = kFinalMediumTransitionAlertMetricLength * 2.0f;
@@ -89,7 +89,7 @@ constexpr float kFinalMediumTransitionAlertMinManeuverMetricLength = kFinalMediu
 // Final short transition alert length, length bounds, and
 // minimum maneuver length threshold
 // TODO: maybe refactor for just short values less than medium length?
-constexpr float kFinalShortTransitionAlertMetricLength = 0.125f; // eighth of a kilometer = 125 meters
+constexpr float kFinalShortTransitionAlertMetricLength = 0.15f; // 150 meters
 constexpr float kFinalShortTransitionAlertLowerMetricLength = kFinalShortTransitionAlertMetricLength - (kTransitionAlertLowerMetricDelta * 0.6667f);
 constexpr float kFinalShortTransitionAlertUpperMetricLength = kFinalShortTransitionAlertMetricLength + (kTransitionAlertUpperMetricDelta * 0.6667f);
 
