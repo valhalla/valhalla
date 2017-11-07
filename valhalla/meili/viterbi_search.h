@@ -262,10 +262,9 @@ class NaiveViterbiSearch: public IViterbiSearch
     }
     // remove it from columns
     auto& column = states_[stateid.time()];
-    auto size = column.size();
     const auto it = std::find(column.begin(), column.end(), stateid);
     column.erase(it);
-    return size != column.size();
+    return true;
   }
 
   StateId SearchWinner(StateId::Time time) override;
@@ -323,10 +322,9 @@ class ViterbiSearch: public IViterbiSearch
     }
     // remove it from columns
     auto& column = states_[stateid.time()];
-    auto size = column.size();
     const auto it = std::find(column.begin(), column.end(), stateid);
     column.erase(it);
-    return size != column.size();
+    return true;
   }
 
   StateId SearchWinner(StateId::Time time) override;
