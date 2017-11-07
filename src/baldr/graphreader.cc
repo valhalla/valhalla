@@ -459,6 +459,7 @@ std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* t
   return std::make_pair(start_node, end_node);
 }
 
+// Note: this will grab all road tiles and transit tiles.
 std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   //either mmap'd tiles
   std::unordered_set<GraphId> tiles;
@@ -468,7 +469,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   }//or individually on disk
   else {
     //for each level
-    for(uint8_t level = 0; level < TileHierarchy::levels().rbegin()->first + 1; ++level) {
+    for(uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
       //crack open this level of tiles directory
       boost::filesystem::path root_dir(tile_dir_ + '/' + std::to_string(level) + '/');
       if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
