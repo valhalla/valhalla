@@ -509,6 +509,8 @@ json::MapPtr thor_worker_t::trace_attributes(
           } catch (const std::exception& e) {
             throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
+        } else {
+          map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
         }
         break;
       }
