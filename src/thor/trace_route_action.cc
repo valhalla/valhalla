@@ -402,7 +402,7 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
     }
     // Keep the result
     map_match_results.emplace_back(
-        map_match_results.empty() ? 1.0f : std::get<0>(map_match_results.front()) / result.score,
+        map_match_results.empty() ? 1.0f : std::get<kRawScoreIndex>(map_match_results.front()) / result.score,
         result.score, enhanced_match_results, trip_path);
   }
 
