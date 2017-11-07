@@ -7416,7 +7416,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
   ////////////////////////////////////////////////////////////////////////////
 
   //----------------------------------------------------------------
-  // trace point = 0
+  // trace point = 0 | Pre | Drive north on Middletown Road for 1.3 kilometers.
   maneuver_index = 0;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
@@ -7857,7 +7857,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.7087708f, 40.2535706f, leg_index, 14.543622f, 915,
           maneuver_index, 0.457952499f, 30));
   //----------------------------------------------------------------
-  // trace point = 49
+  // trace point = 49 | Alert 0.4 | Turn right.
   maneuver_index = 0;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
@@ -8028,7 +8028,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.7091599f, 40.2568054f, leg_index, 14.1819944f, 891,
           maneuver_index, 0.0963249207f, 6));
   //----------------------------------------------------------------
-  // trace point = 68
+  // trace point = 68 | Pre | Turn right.
   maneuver_index = 0;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
@@ -8092,7 +8092,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.7090225f, 40.2576714f, leg_index, 14.0701094f, 884,
           maneuver_index, 0.80796814f, 44));
   //----------------------------------------------------------------
-  // trace point = 75
+  // trace point = 75 | Post | Continue for 800 meters.
   maneuver_index = 1;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
@@ -8254,7 +8254,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.7049255f, 40.2577972f, leg_index, 13.7217312f, 864,
           maneuver_index, 0.459589958f, 24));
   //----------------------------------------------------------------
-  // trace point = 93
+  // trace point = 93 | Alert 0.4 | Stay straight to take the U.S. 3 22 East ramp.
   maneuver_index = 1;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
@@ -8362,7 +8362,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.7019043f, 40.2581253f, leg_index, 13.4623775f, 851,
           maneuver_index, 0.20023632f, 11));
   //----------------------------------------------------------------
-  // trace point = 105
+  // trace point = 105 | Pre | Stay straight to take the U.S. 3 22 East ramp.
   maneuver_index = 1;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
@@ -8569,14 +8569,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6975021f, 40.2593765f, leg_index, 13.0570574f, 828,
           maneuver_index, 0.168872833f, 10));
   //----------------------------------------------------------------
-  // trace point = 128
+  // trace point = 128 | Pre | Merge onto U.S. 3 22 East.
   maneuver_index = 2;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6972733f, 40.2594833f, 1489614928, 22.581295),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6972733f, 40.2594833f, leg_index, 13.0342655f, 827,
-          maneuver_index, 0.146080971f, 9));
+          maneuver_index, 0.146080971f, 9, instruction_index));
   //----------------------------------------------------------------
   // trace point = 129
   maneuver_index = 2;
@@ -8650,12 +8650,12 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6953659f, 40.2604218f, leg_index, 12.8414574f, 816,
           maneuver_index, 0.653956413f, 29));
   //----------------------------------------------------------------
-  // trace point = 137
+  // trace point = 137 | Post | Continue for 700 meters.
   maneuver_index = 3;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6950912f, 40.2605171f, 1489614937, 25.5931149),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
           -76.6951218f, 40.2605515f, leg_index, 12.8161879f, 815,
           maneuver_index, 0.628686905f, 28));
   //----------------------------------------------------------------
@@ -8786,13 +8786,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           maneuver_index, 0.258778572f, 12));
   //----------------------------------------------------------------
   // trace point = 152
+  // Take the U.S. 3 22 East exit on the right toward Ephrata.
   maneuver_index = 3;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6915054f, 40.2627869f, 1489614952, 25.9396687),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6915283f, 40.2628059f, leg_index, 12.4203701f, 798,
-          maneuver_index, 0.232869148f, 11));
+          maneuver_index, 0.232869148f, 11, instruction_index));
   //----------------------------------------------------------------
   // trace point = 153
   maneuver_index = 3;
@@ -8804,13 +8805,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           maneuver_index, 0.207538605f, 10));
   //----------------------------------------------------------------
   // trace point = 154
+  // Continue on U.S. 3 22.
   maneuver_index = 3;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6910553f, 40.263092f, 1489614954, 25.8552265),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.6910858f, 40.2631187f, leg_index, 12.3691311f, 796,
-          maneuver_index, 0.181630135f, 9));
+          maneuver_index, 0.181630135f, 9, instruction_index, 0.15));
   //----------------------------------------------------------------
   // trace point = 155
   maneuver_index = 3;
@@ -9038,13 +9040,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           maneuver_index, 0.186857224f, 11));
   //----------------------------------------------------------------
   // trace point = 180
+  // Continue on U.S. 3 22 for 4.4 kilometers.
   maneuver_index = 4;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6851501f, 40.2660179f, 1489614983, 20.5163231),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6851501f, 40.2660179f, leg_index, 11.7629738f, 760,
-          maneuver_index, 0.145853043f, 9));
+          maneuver_index, 0.145853043f, 9, instruction_index));
   //----------------------------------------------------------------
   // trace point = 181
   maneuver_index = 4;
