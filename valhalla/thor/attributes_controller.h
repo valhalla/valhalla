@@ -109,6 +109,7 @@ const std::string kMatchedEndRouteDiscontinuity = "matched.end_route_discontinui
 const std::string kMatchedDistanceAlongEdge = "matched.distance_along_edge";
 const std::string kMatchedDistanceFromTracePoint = "matched.distance_from_trace_point";
 const std::string kConfidenceScore = "confidence_score";
+const std::string kRawScore = "raw_score";
 
 // Categories
 const std::string kNodeCategory = "node.";

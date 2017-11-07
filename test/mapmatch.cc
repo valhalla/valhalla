@@ -268,6 +268,8 @@ namespace {
         streets += n + ", ";
       throw std::logic_error("The most obvious result is stay left but got: " + streets);
     }
+    if(matched.get<float>("confidence_score") != 1.0f)
+      throw std::logic_error("Confidence of the first result is always 1");
 
     /*** Alternate path - right at the fork
       {"type":"FeatureCollection","features":[
@@ -290,6 +292,10 @@ namespace {
         streets += n + ", ";
       throw std::logic_error("The second most obvious result is stay right but got: " + streets);
     }
+    if(alternate.get<float>("confidence_score") >= 1.0f)
+      throw std::logic_error("Confidence of the second result is always less than 1");
+    if(matched.get<float>("raw_score") >= alternate.get<float>("raw_score"))
+      throw std::logic_error("The raw score of the first result is always less than that of the second");
 
   }
 
@@ -328,6 +334,8 @@ namespace {
         streets += n + ", ";
       throw std::logic_error("The most obvious result is stay left on the same road - but got: " + streets);
     }
+    if(matched.get<float>("confidence_score") != 1.0f)
+      throw std::logic_error("Confidence of the first result is always 1");
 
     /*** Alternate path - loop around to the right
       {"type":"FeatureCollection","features":[
@@ -354,6 +362,10 @@ namespace {
         streets += n + ", ";
       throw std::logic_error("The second most obvious result is loop around to the right - but got: " + streets);
     }
+    if(alternate.get<float>("confidence_score") >= 1.0f)
+      throw std::logic_error("Confidence of the second result is always less than 1");
+    if(matched.get<float>("raw_score") >= alternate.get<float>("raw_score"))
+      throw std::logic_error("The raw score of the first result is always less than that of the second");
 
   }
 
@@ -407,6 +419,8 @@ namespace {
         streets += n + ", ";
       throw std::logic_error("The most obvious result is stay straight on the same road - but got: " + streets);
     }
+    if(matched.get<float>("confidence_score") != 1.0f)
+      throw std::logic_error("Confidence of the first result is always 1");
 
     /*** Alternate path - take frontage road to the right
       {"type":"FeatureCollection","features":[
@@ -449,6 +463,10 @@ namespace {
         streets += n + ", ";
       throw std::logic_error("The second most obvious result is fronatge road to the right - but got: " + streets);
     }
+    if(alternate.get<float>("confidence_score") >= 1.0f)
+      throw std::logic_error("Confidence of the second result is always less than 1");
+    if(matched.get<float>("raw_score") >= alternate.get<float>("raw_score"))
+      throw std::logic_error("The raw score of the first result is always less than that of the second");
 
   }
 

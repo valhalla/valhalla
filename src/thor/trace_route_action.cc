@@ -137,10 +137,10 @@ odin::TripPath thor_worker_t::route_match(const AttributesController& controller
 // PathInfo is primarily a list of edge Ids but it also include elapsed time to the end
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
-std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> thor_worker_t::map_match(
+std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> thor_worker_t::map_match(
     const AttributesController& controller, bool trace_attributes_action,
     uint32_t best_paths) {
-  std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
 
   // Call Meili for map matching to get a collection of pathLocation Edges
   matcher->set_interrupt(interrupt);
@@ -401,7 +401,9 @@ std::vector<std::tuple<float, std::vector<thor::MatchResult>, odin::TripPath>> t
       throw valhalla_exception_t { 442 };
     }
     // Keep the result
-    map_match_results.emplace_back(result.score, enhanced_match_results, trip_path);
+    map_match_results.emplace_back(
+        map_match_results.empty() ? 1.0f : std::get<0>(map_match_results.front()) / result.score,
+        result.score, enhanced_match_results, trip_path);
   }
 
   return map_match_results;
