@@ -558,7 +558,8 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     }
 
     // Get the states for the kth best path in reversed order then fix the order
-    state_ids.assign(vs_.SearchPath(time, best_paths.empty()), vs_.PathEnd());
+    state_ids.clear();
+    std::copy(vs_.SearchPath(time, best_paths.empty()), vs_.PathEnd(), std::back_inserter(state_ids));
 
     // If we ended up finding a break in the path and this is not the first result we are done
     if(state_ids.empty() || state_ids.back().time() != 0)
