@@ -217,14 +217,12 @@ namespace valhalla {
 
       // Populate a map for each level of the tiles that exist
       for(const auto& t : tiles) {
-
         auto& level_colors = colors.insert({t.level(), std::unordered_map<uint32_t, size_t>{}}).first->second;
         level_colors.insert({t.tileid(), 0});
 	// Populate transit colors.
         if (t.level() == transit_level-1 && reader.DoesTileExist(GraphId(t.tileid(),transit_level,t.id()))){
           auto& level_colors = colors.insert({transit_level, std::unordered_map<uint32_t, size_t>{}}).first->second;
           level_colors.insert({t.tileid(), 0});
-
         }
       }
 
