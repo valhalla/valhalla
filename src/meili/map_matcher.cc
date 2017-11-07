@@ -13,7 +13,6 @@ using namespace valhalla;
 using namespace valhalla::meili;
 
 constexpr float MAX_ACCUMULATED_COST = 99999999;
-constexpr size_t MAX_RESULTS = 20;
 
 inline float
 GreatCircleDistanceSquared(const Measurement& left,
@@ -163,9 +162,9 @@ InterpolateMeasurements(
     return results;
   }
 
-  std::vector<EdgeSegment> route;
-  // route is updated in-place
-  MergeRoute(route, mapmatcher.state_container().state(stateid), mapmatcher.state_container().state(next_stateid));
+  std::vector<EdgeSegment> route = MergeRoute(
+      mapmatcher.state_container().state(stateid),
+      mapmatcher.state_container().state(next_stateid));
 
   //for each point that needs interpolated
   for (const auto& measurement: measurements) {
@@ -275,8 +274,30 @@ FindMatchResults(const MapMatcher& mapmatcher, const std::vector<StateId>& state
   return results;
 }
 
-}
+struct path_t{
+  path_t(const std::vector<EdgeSegment>& segments) {
+    edges.reserve(segments.size());
+    for(const auto& segment : segments)
+      if(edges.empty() || edges.back() != segment.edgeid)
+        edges.push_back(segment.edgeid);
+    e1 = segments.empty() || segments.front().source < 1.0f ? edges.cbegin() : edges.cbegin() + 1;
+    e2 = segments.empty() || segments.back().target > 0.0f ? edges.cend() : edges.cend() - 1;
+  }
+  bool operator!=(const path_t& p) const {
+    return std::search(e1, e2, p.e1, p.e2) == e2 && std::search(p.e1, p.e2, e1, e2) == p.e2;
+  }
+  bool crosses(const baldr::PathLocation& candidate) const {
+    for(const auto& edge: candidate.edges)
+      if(std::find(edges.cbegin(), edges.cend(), edge.id) != edges.cend())
+        return true;
+    return false;
+  }
+  std::vector<uint64_t> edges;
+  std::vector<uint64_t>::const_iterator e1;
+  std::vector<uint64_t>::const_iterator e2;
+};
 
+}
 
 namespace valhalla {
 namespace meili {
@@ -325,15 +346,297 @@ void MapMatcher::Clear()
   container_.Clear();
 }
 
+void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
+{
+  // For each pair of states in the last sequence of states
+  for(auto left_state_id_itr = result.cbegin(); left_state_id_itr != result.cend() - 1; ++left_state_id_itr) {
+    // Get all the paths that use the left winner
+    auto time = left_state_id_itr->time();
+    auto left_used_candidate = container_.state(*left_state_id_itr);
+    std::unordered_map<StateId, path_t> paths_from_winner;
+    for(const auto& right_candidate : container_.column(time + 1)) {
+      std::vector<EdgeSegment> edges;
+      if(!ts_.IsRemoved(right_candidate.stateid()) && MergeRoute(edges, left_used_candidate, right_candidate))
+        paths_from_winner.emplace(right_candidate.stateid(), std::move(edges));
+    }
+/*
+    std::cout << std::endl << "Paths from left winner:" << std::endl;
+    for(const auto& kv:paths_from_winner) {
+      std::cout << R"({"type":"FeatureCollection","features":[)";
+      std::cout << container_.geojson(left_used_candidate) << ',' << container_.geojson(kv.first) << R"(]})" << std::endl;
+    }
+*/
+    // For each candidate of the left state that isnt the winner
+    std::unordered_set<StateId> right_uniques;
+    std::unordered_set<StateId> redundancies;
+    for(const auto& left_unused_candidate : container_.column(time)) {
+      // We cant remove candidates that were used in the result or already removed
+      if(left_used_candidate.stateid() == left_unused_candidate.stateid() || ts_.IsRemoved(left_unused_candidate.stateid()))
+        continue;
+
+      // If we didnt compute the paths from this loser we need to do it now
+      if(!left_unused_candidate.routed())
+        vs_.transition_cost_model()(left_unused_candidate.stateid(), StateId(time + 1, 0));
+
+      // For each candidate in the right state
+      bool found_unique = false;
+     // std::cout << std::endl << "Paths from left loser:" << std::endl;
+      for(const auto& right_candidate : container_.column(time + 1)) {
+/*
+        std::cout << R"({"type":"FeatureCollection","features":[)";
+        std::cout << container_.geojson(left_unused_candidate) << ',' << container_.geojson(right_candidate);
+        std::cout << R"(]})" << std::endl;
+*/
+
+        // If there is no route its not really unique since we dont need discontinuities
+        std::vector<EdgeSegment> edges;
+        if(ts_.IsRemoved(right_candidate.stateid()) || !MergeRoute(edges, left_unused_candidate, right_candidate))
+          continue;
+
+        // This subpath is unique if: there is no path from the winner
+        // or its node to node (no edges) and not on winner path or they dont overlap
+        path_t path_from_loser(std::move(edges));
+        auto path_from_winner = paths_from_winner.find(right_candidate.stateid());
+        if(path_from_winner == paths_from_winner.end() ||
+            (path_from_loser.edges.empty() && !path_from_winner->second.crosses(right_candidate.candidate())) ||
+            path_from_winner->second != path_from_loser) {
+          found_unique = true;
+          right_uniques.emplace(right_candidate.stateid());
+          break;
+        }
+      }
+
+      // We didnt find any unique paths for this left candidate so we need to mark it has useless
+      if(!found_unique)
+        redundancies.emplace(left_unused_candidate.stateid());
+    }
+
+/*
+    if(redundancies.size()) {
+      std::cout << std::endl << "Removing: " << R"({"type":"FeatureCollection","features":[)";
+      std::string fsep = "";
+      for(auto r : redundancies) { std::cout << fsep << container_.geojson(r); fsep = ","; }
+      std::cout << R"(]})" << std::endl;
+    }
+*/
+
+    // Clean up the left hand redundancies
+    for(const auto& r : redundancies) {
+      ts_.RemoveStateId(r);
+      vs_.RemoveStateId(r);
+    }
+
+    // If this was the last state pair we can possibly remove some of the right candidates
+    if(left_state_id_itr == result.cend() - 2) {
+      auto right_state_id = *(left_state_id_itr + 1);
+      // For each right candidate
+      redundancies.clear();
+      for(const auto& right_candidate : container_.column(time + 1)) {
+        // If its not the winner and there are no uniques for this right candidate we can remove it
+        if(right_candidate.stateid() != right_state_id &&
+            right_uniques.find(right_candidate.stateid()) == right_uniques.cend()) {
+          redundancies.emplace(right_candidate.stateid());
+        }
+      }
+
+/*
+      if(redundancies.size()) {
+        std::cout << std::endl << "Removing: " << R"({"type":"FeatureCollection","features":[)";
+        std::string fsep = "";
+        for(auto r : redundancies) { std::cout << fsep << container_.geojson(r); fsep = ","; }
+        std::cout << R"(]})" << std::endl;
+      }
+*/
+
+      // Cleanup the right hand redundancies
+      for(const auto& r : redundancies) {
+        ts_.RemoveStateId(r);
+        vs_.RemoveStateId(r);
+      }
+    }
+  }
+}
+
+// Mark any sub paths (pairs of candidates between two states) that are redundant with this one
+/*void MapMatcher::RemoveRedundancies(const path_t& path, std::vector<StateId>& state_ids) {
+  // For each state pair
+  for(StateId::Time time = 0; time < state_ids.back().time(); ++time) {
+    // For each left candidate
+    for(const auto& lhs : container_.column(time)) {
+      // If we dont have routes from this state
+      if(!lhs.routed())
+        vs_.transition_cost_model()(lhs.stateid(), StateId(time + 1, 0));
+
+      // For each right candidate
+      for(const auto& rhs : container_.column(time + 1)) {
+
+        // If this is the path we already used skip it
+        if(lhs.stateid() == state_ids[time] && rhs.stateid() == state_ids[time + 1])
+          continue;
+
+        // Get the path for this pair of candidates
+        path_t sub_path(MergeRoute(lhs, rhs));
+
+        // If this is redundant if its empty (because we dont want discontinuities in subsequent results
+        // or the first subpath starts the original path or the last subpath ends the original path or
+        // the intermediate subpath is contained within the original path
+        if(sub_path.edges.empty() ||
+           (time == state_ids.front().time() && sub_path.start_of(path)) ||
+           (time == state_ids.back().time() - 1 && sub_path.end_of(path)) ||
+           sub_path.within(path)) {
+
+          // Swap out the real candidates for the redundant ones
+          auto lid = lhs.stateid(); std::swap(lid, state_ids[time]);
+          auto rid = rhs.stateid(); std::swap(rid, state_ids[time + 1]);
+
+          std::cout << std::endl << "Removing: ";
+          std::cout << R"({"type":"FeatureCollection","features":[)";
+          std::string fsep = "";
+          for(auto s : state_ids) {
+            std::cout << fsep << container_.geojson(s);
+            fsep = ",";
+          }
+          std::cout << R"(]})" << std::endl;
+
+          // Mark them redundant in searching
+          ts_.RemovePath(state_ids);
+          // Swap back the real candidates for the redundant ones
+          std::swap(lid, state_ids[time]);
+          std::swap(rid, state_ids[time + 1]);
+          // TODO: Mark them so we dont consider them again in another pass
+        }
+        else {
+          auto lid = lhs.stateid(); std::swap(lid, state_ids[time]);
+          auto rid = rhs.stateid(); std::swap(rid, state_ids[time + 1]);
+
+          std::cout << std::endl << "Keeping: ";
+          std::cout << R"({"type":"FeatureCollection","features":[)";
+          std::string fsep = "";
+          for(auto s : state_ids) {
+            std::cout << fsep << container_.geojson(s);
+            fsep = ",";
+          }
+          std::cout << R"(]})" << std::endl;
+
+          std::swap(lid, state_ids[time]);
+          std::swap(rid, state_ids[time + 1]);
+        }
+      }
+    }
+  }
+}*/
+
 std::vector<MatchResults>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
+  // Reset everything
   Clear();
 
-  if (measurements.empty()) {
+  // Nothing to do
+  if (measurements.empty())
     return {};
+
+  // Separate the measurements we are using for matching from the ones we'll just interpolate
+  auto interpolated = AppendMeasurements(measurements);
+
+  // Get the time at the last column of states
+  auto time = container_.size() - 1;
+
+  //For k paths
+  std::vector<MatchResults> best_paths;
+  std::vector<StateId> state_ids, original_state_ids;
+  while(best_paths.size() < k) {
+    // If we just got some results then we need to remove them from consideration
+    // we avoid doing this for the common case where k==1 by putting this at the start of the loop
+    if(best_paths.size()) {
+      // Remove all the candidates pairs whose paths are redundant with this one
+      RemoveRedundancies(original_state_ids);
+      // Remove this particular sequence of stateids
+      ts_.RemovePath(state_ids);
+      // Prepare for a fresh search in the next search iteration
+      vs_.ClearSearch();
+    }
+
+    // Get the states for the kth best path in reversed order then fix the order
+    state_ids.assign(vs_.SearchPath(time, best_paths.empty()), vs_.PathEnd());
+
+    // If we ended up finding a break in the path and this is not the first result we are done
+    if(state_ids.empty() || state_ids.back().time() != 0)
+      break;
+
+    // Get back the real state ids in order
+    original_state_ids.clear();
+    for(auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr)
+      original_state_ids.push_back(ts_.GetOrigin(*s_itr, *s_itr));
+
+    // Verify that stateids are in correct order
+    for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
+      if (original_state_ids[time].time() != time) {
+        throw std::logic_error("got state with time " + std::to_string(original_state_ids[time].time()) + " at time " + std::to_string(time));
+      }
+    }
+
+    // Get the match result for each of the states
+    auto results = FindMatchResults(*this, original_state_ids);
+
+    // Insert the interpolated results into the result list
+    std::vector<MatchResult> best_path;
+    for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
+      // Add in this states result
+      best_path.emplace_back(std::move(results[time]));
+
+      // See if there were any interpolated points with this state move on if not
+      const auto it = interpolated.find(time);
+      if (it == interpolated.end()) {
+        continue;
+      }
+
+      // Interpolate the points between this and the next state
+      const auto& this_stateid = original_state_ids[time];
+      const auto& next_stateid = time + 1 < original_state_ids.size() ? original_state_ids[time + 1] : StateId();
+      const auto& interpolated_results = InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
+
+      // Copy the interpolated match results into the final set
+      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_path));
+    }
+
+    // TODO: do something to get real cost later, if we dont like sending back cost from here we can simply send
+    // back k as the float value so that at least we know the smaller ones are relatively better than the larger
+    // ones we just dont know how much and then if we want to call back in with the result to get the real cost
+    // we can do that later
+
+    // Keep the path and the cost for it, if you cant find a valid state id we just give it a huge cost
+    auto found_state = std::find_if(original_state_ids.rbegin(), original_state_ids.rend(), [](const StateId& si) {
+      return si.IsValid();
+    });
+    auto accumulated_cost = found_state != original_state_ids.rend() ? static_cast<float>(vs_.AccumulatedCost(*found_state)) : MAX_ACCUMULATED_COST;
+
+    // Construct a result
+    auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
+    MatchResults match_results(std::move(best_path), std::move(segments), accumulated_cost);
+
+    // We'll keep it if we don't have a duplicate already
+    auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
+    if(found_path == best_paths.rend()) {
+      /*std::cout << "Result: " << best_paths.size() << std::endl;
+      std::cout << R"({"type":"FeatureCollection","features":[)";
+      std::string fsep = "";
+      for(auto s : original_state_ids) {
+        std::cout << fsep << container_.geojson(s);
+        fsep = ",";
+      }
+      std::cout << R"(]})" << std::endl;*/
+      best_paths.emplace_back(std::move(match_results));
+    }
   }
 
+  // Give back anywhere from 1 to k results
+  return best_paths;
+}
+
+std::unordered_map<StateId::Time, std::vector<Measurement>>
+MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements)
+{
   const float max_search_radius = config_.get<float>("max_search_radius"),
            sq_max_search_radius = max_search_radius * max_search_radius;
   const float interpolation_distance = config_.get<float>("interpolation_distance"),
@@ -374,93 +677,8 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     }
   }
 
-  //For k paths
-  std::vector<MatchResults> best_paths;
-  size_t results = 0;
-  while(best_paths.size() < k && results++ < MAX_RESULTS) {
-    // Get the states for the kth best path its in reverse order
-    std::vector<StateId> stateids;
-    try {
-      std::copy(vs_.SearchPath(time, !best_paths.empty()), vs_.PathEnd(), std::back_inserter(stateids));
-      std::reverse(stateids.begin(), stateids.end());
-    }// There was a discontinuous path and we already had at least one result so we bail
-    catch (const discontinuity_exception_t&) {
-      break;
-    }
-
-    // Get back the real state ids
-    std::transform(
-        stateids.begin(),
-        stateids.end(),
-        stateids.begin(),
-        [this](const StateId& stateid) {
-          const auto& origin = ts_.GetOrigin(stateid);
-          return origin.IsValid() ? origin : stateid;
-        });
-
-    // Verify that stateids are in correct order
-    for (StateId::Time time = 0; time < stateids.size(); time++) {
-      if (!(!stateids[time].IsValid() || stateids[time].time() == time)) {
-        throw std::logic_error("got state with time " + std::to_string(stateids[time].time()) + " at time " + std::to_string(time));
-      }
-    }
-
-    // Get the match result for each of the states
-    auto results = FindMatchResults(*this, stateids);
-    //TODO: figure out when we cant get any more results
-
-    // Insert the interpolated results into the result list
-    std::vector<MatchResult> best_path;
-    for (StateId::Time time = 0; time < stateids.size(); time++) {
-      // Add in this states result
-      best_path.emplace_back(std::move(results[time]));
-
-      // See if there were any interpolated points with this state move on if not
-      const auto it = interpolated.find(time);
-      if (it == interpolated.end()) {
-        continue;
-      }
-
-      // Interpolate the points between this and the next state
-      const auto& this_stateid = stateids[time];
-      const auto& next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
-      const auto& interpolated_results = InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
-
-      // Copy the interpolated match results into the final set
-      std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_path));
-    }
-
-    // TODO: do something to get real cost later, if we dont like sending back cost from here we can simply send
-    // back k as the float value so that at least we know the smaller ones are relatively better than the larger
-    // ones we just dont know how much and then if we want to call back in with the result to get the real cost
-    // we can do that later
-
-    // Keep the path and the cost for it, if you cant find a valid state id we just give it a huge cost
-    auto found_state = std::find_if(stateids.rbegin(), stateids.rend(), [](const StateId& si) {
-      return si.IsValid();
-    });
-    auto accumulated_cost = found_state != stateids.rend() ? vs_.AccumulatedCost(*found_state) : MAX_ACCUMULATED_COST;
-
-    // Construct a result
-    auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
-    MatchResults match_results(std::move(best_path), std::move(segments));
-    match_results.score = accumulated_cost;
-
-    // We'll keep it if we don't have a duplicate already
-    auto found_path = std::find_if(best_paths.rbegin(), best_paths.rend(), [&match_results](const MatchResults& r) {
-      return match_results == r;
-    });
-    if(found_path == best_paths.rend())
-      best_paths.emplace_back(std::move(match_results));
-
-    // Remove this particular sequence of stateids
-    ts_.RemovePath(time);
-  }
-
-  // Give back anywhere from 1 to k results
-  return best_paths;
+  return interpolated;
 }
-
 
 StateId::Time
 MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius)
@@ -481,10 +699,16 @@ MapMatcher::AppendMeasurement(const Measurement& measurement, const float sq_max
 
   const auto time = container_.AppendMeasurement(measurement);
 
+//  std::string fsep = "";
+//  std::cout << std::endl << "Candidates at time " << time << std::endl << R"({"type":"FeatureCollection","features":[)";
   for (const auto& candidate: candidates) {
     const auto& stateid = container_.AppendCandidate(candidate);
     vs_.AddStateId(stateid);
+
+//    std::cout << fsep << container_.geojson(stateid);
+//    fsep = ",";
   }
+//  std::cout << R"(]})" << std::endl;
 
   return time;
 }

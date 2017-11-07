@@ -71,10 +71,11 @@ class IViterbiSearch;
 class StateIdIterator: public std::iterator<std::forward_iterator_tag, StateId>
 {
  public:
-  StateIdIterator(IViterbiSearch& vs, StateId::Time time, const StateId& stateid)
+  StateIdIterator(IViterbiSearch& vs, StateId::Time time, const StateId& stateid, bool allow_breaks = true)
       : vs_(vs),
         time_(time),
-        stateid_(stateid)
+        stateid_(stateid),
+        allow_breaks_(allow_breaks)
   { ValidateStateId(time, stateid); }
 
   StateIdIterator(IViterbiSearch& vs)
@@ -128,6 +129,8 @@ class StateIdIterator: public std::iterator<std::forward_iterator_tag, StateId>
 
   StateId stateid_;
 
+  bool allow_breaks_;
+
   void Next();
 };
 
@@ -140,10 +143,6 @@ using ITransitionCostModel = std::function<float(const StateId& lhs, const State
 
 inline float DefaultTransitionCostModel(const StateId&, const StateId&)
 { return 1; }
-
-struct discontinuity_exception_t : public std::runtime_error {
-  using std::runtime_error::runtime_error;
-};
 
 class IViterbiSearch
 {
@@ -185,10 +184,10 @@ class IViterbiSearch
   virtual bool HasStateId(const StateId& stateid) const
   { return added_states_.find(stateid) != added_states_.end(); }
 
-  virtual StateId SearchWinner(StateId::Time time, bool force_continuous) = 0;
+  virtual StateId SearchWinner(StateId::Time time) = 0;
 
-  stateid_iterator SearchPath(StateId::Time time, bool force_continuous = false)
-  { return stateid_iterator(*this, time, SearchWinner(time, force_continuous)); }
+  stateid_iterator SearchPath(StateId::Time time, bool allow_breaks = true)
+  { return stateid_iterator(*this, time, SearchWinner(time), allow_breaks); }
 
   stateid_iterator PathEnd() const
   { return path_end_; }
@@ -265,12 +264,10 @@ class NaiveViterbiSearch: public IViterbiSearch
     auto& column = states_[stateid.time()];
     const auto it = std::find(column.begin(), column.end(), stateid);
     column.erase(it);
-    // clear current search status to remove possible uses of the removed state ID
-    ClearSearch();
     return true;
   }
 
-  StateId SearchWinner(StateId::Time time, bool force_continuous) override;
+  StateId SearchWinner(StateId::Time time) override;
 
   StateId Predecessor(const StateId& stateid) const override;
 
@@ -327,12 +324,10 @@ class ViterbiSearch: public IViterbiSearch
     auto& column = states_[stateid.time()];
     const auto it = std::find(column.begin(), column.end(), stateid);
     column.erase(it);
-    // clear current search status to remove possible uses of the removed state ID
-    ClearSearch();
     return true;
   }
 
-  StateId SearchWinner(StateId::Time time, bool force_continuous) override;
+  StateId SearchWinner(StateId::Time time) override;
 
   StateId Predecessor(const StateId& stateid) const override;
 

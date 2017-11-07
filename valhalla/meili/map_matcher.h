@@ -3,6 +3,7 @@
 #define MMP_MAP_MATCHER_H_
 
 #include <vector>
+#include <unordered_set>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -71,8 +72,14 @@ class MapMatcher final
   }
 
  private:
+  std::unordered_map<StateId::Time, std::vector<Measurement>>
+  AppendMeasurements(const std::vector<Measurement>& measurements);
+
   StateId::Time
   AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
+
+  void RemoveRedundancies(const std::vector<StateId>& result);
+  //void RemoveRedundancies(const MatchResults& path, std::vector<StateId>& result);
 
   boost::property_tree::ptree config_;
 
@@ -98,10 +105,8 @@ class MapMatcher final
   TransitionCostModel transition_cost_model_;
 };
 
-
-std::vector<EdgeSegment>&
+bool
 MergeRoute(std::vector<EdgeSegment>& route, const State& source, const State& target);
-
 
 std::vector<EdgeSegment>
 MergeRoute(const State& source, const State& target);

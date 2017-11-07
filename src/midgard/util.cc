@@ -78,7 +78,7 @@ memory_status::memory_status(const std::unordered_set<std::string> interest){
       if(interest.size() > 0 && interest.find(name) == interest.end())
         continue;
       //try to get the number of bytes
-      std::remove_if(line.begin(), line.end(), [](const char c) {return !std::isdigit(c);});
+      line.erase(std::remove_if(line.begin(), line.end(), [](const char c) {return !std::isdigit(c);}), line.end());
       if(line.size() == 0)
         continue;
       auto bytes = std::stod(line) * 1024.0;
