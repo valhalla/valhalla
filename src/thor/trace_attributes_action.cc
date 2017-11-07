@@ -362,7 +362,7 @@ namespace {
           json::fp_t { std::get<kConfidenceScoreIndex>(map_match_result), 3 });
     }
 
-    // Add confidence_score, if requested and there is more than one match
+    // Add raw_score, if requested and there is more than one match
     if (controller.attributes.at(kRawScore)) {
       json->emplace("raw_score",
           json::fp_t { std::get<kRawScoreIndex>(map_match_result), 3 });
