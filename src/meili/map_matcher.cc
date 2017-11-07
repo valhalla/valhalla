@@ -162,7 +162,6 @@ InterpolateMeasurements(
     return results;
   }
 
-  bool no_route;
   std::vector<EdgeSegment> route = MergeRoute(
       mapmatcher.state_container().state(stateid),
       mapmatcher.state_container().state(next_stateid));
