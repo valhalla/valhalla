@@ -566,10 +566,9 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       break;
 
     // Get back the real state ids in order
-    std::reverse(state_ids.begin(), state_ids.end());
     original_state_ids.clear();
-    for(const auto& s : state_ids)
-      original_state_ids.push_back(ts_.GetOrigin(s, s));
+    for(auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr)
+      original_state_ids.push_back(ts_.GetOrigin(*s_itr, *s_itr));
 
     // Verify that stateids are in correct order
     for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
