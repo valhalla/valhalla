@@ -356,13 +356,13 @@ namespace {
     if (trip_path.has_shape())
       json->emplace("shape", trip_path.shape());
 
-    // Add confidence_score, if requested and there is more than one match
+    // Add confidence_score
     if (controller.attributes.at(kConfidenceScore)) {
       json->emplace("confidence_score",
           json::fp_t { std::get<kConfidenceScoreIndex>(map_match_result), 3 });
     }
 
-    // Add raw_score, if requested and there is more than one match
+    // Add raw_score
     if (controller.attributes.at(kRawScore)) {
       json->emplace("raw_score",
           json::fp_t { std::get<kRawScoreIndex>(map_match_result), 3 });
