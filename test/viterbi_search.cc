@@ -257,10 +257,10 @@ void test_viterbi_search(const std::vector<Column>& columns)
         print_trellis_diagram_vertically(columns);
 
         std::cout << "PATH OF NA" << std::endl;
-        print_path_reversely(columns, na.SearchPath(time, false), na.PathEnd());
+        print_path_reversely(columns, na.SearchPath(time), na.PathEnd());
 
         std::cout << "PATH OF VS" << std::endl;
-        print_path_reversely(columns, vs.SearchPath(time, false), vs.PathEnd());
+        print_path_reversely(columns, vs.SearchPath(time), vs.PathEnd());
       }
 
       test::assert_bool(
@@ -509,7 +509,7 @@ void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbi
 
     std::vector<StateId> vs_path, original_state_ids;
     std::copy(
-        vs.SearchPath(time, false),
+        vs.SearchPath(time),
         vs.PathEnd(),
         std::back_inserter(vs_path));
     for(auto s_itr = vs_path.rbegin(); s_itr != vs_path.rend(); ++s_itr)

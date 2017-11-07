@@ -186,7 +186,7 @@ class IViterbiSearch
 
   virtual StateId SearchWinner(StateId::Time time) = 0;
 
-  stateid_iterator SearchPath(StateId::Time time, bool allow_breaks)
+  stateid_iterator SearchPath(StateId::Time time, bool allow_breaks = true)
   { return stateid_iterator(*this, time, SearchWinner(time), allow_breaks); }
 
   stateid_iterator PathEnd() const

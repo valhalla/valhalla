@@ -10,9 +10,10 @@ void StateIdIterator::Next()
 {
   ValidateStateId(time_, stateid_);
 
-  // We done searching between states time == 0 meaning we found the last one or
-  // We are at a state and didnt find a path to it but also arent allowing breaks
-  if(0 == time_ || (stateid_.IsValid() && !(stateid_ = vs_.Predecessor(stateid_)).IsValid() && !allow_breaks_)) {
+  // We're done searching between states if time == 0 meaning we found the last one or
+  // we are at a state without a path to it but aren't allowing breaks in the path
+  if(0 == time_ ||
+      (stateid_.IsValid() && !(stateid_ = vs_.Predecessor(stateid_)).IsValid() && !allow_breaks_)) {
     time_ = kInvalidTime;
     stateid_ = StateId();
     return;
