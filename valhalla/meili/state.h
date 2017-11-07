@@ -79,7 +79,7 @@ class State
  private:
   StateId stateid_;
 
-  const baldr::PathLocation candidate_;
+  baldr::PathLocation candidate_;
 
   mutable std::shared_ptr<LabelSet> labelset_;
 
@@ -121,6 +121,21 @@ class StateContainer
   const Column&
   column(const StateId::Time& time) const
   { return columns_[time]; }
+
+  StateId::Time size() const
+  { return static_cast<StateId::Time>(columns_.size()); }
+
+  std::string geojson(const StateId& s)
+  { return geojson(state(s)); }
+
+  std::string geojson(const State& s)
+  {
+    std::stringstream ss;
+    ss << std::setprecision(7) << std::fixed << R"({"type":"Feature","geometry":{"type":"Point","coordinates":[)";
+    ss << s.candidate().edges[0].projected.lng() << ',' << s.candidate().edges[0].projected.lat() << "]}";
+    ss << ',' << R"("properties":{"time":)" << s.stateid().time() << R"(,"id":)" << s.stateid().id() << R"(,"edge":")" << s.candidate().edges[0].id << "\"}}";
+    return ss.str();
+  }
 
   StateId
   NewStateId() const

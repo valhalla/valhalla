@@ -36,8 +36,8 @@ std::vector<uint32_t> Optimizer::Solve(const uint32_t count,
   // Perform simulated annealing. Set a run limit per annealing step and a
   // success limit to break out early if enough successes are found.
   ntry_ = 0;
-  attempts_  = 200 * count_;
-  successes_ = 20  * count_;
+  attempts_  = 400 * count_;
+  successes_ = 40  * count_;
   for (uint32_t i = 0; i < 100; i++) {
     // Break if no successes were found during this annealing step.
     if (Anneal(costs, temperature) == 0)
@@ -68,19 +68,20 @@ uint32_t Optimizer::Anneal(const std::vector<float>& costs, float temperature) {
     // declines with time.
     // (http://www.technical-recipes.com/2012/c-implementation-of-hill-climbing-and-simulated-annealing-applied-to-travelling-salesman-problems/
     if (diff < 0.0f || r01() < std::exp(-diff / temperature)) {
-      if (alteration.alt == KReverse) {
+      if (alteration.alt == kReverse) {
         // Alter the tour by reversing the locations in the tour between a
         // start and end location. Add 1 to the end index since STL algorithm
-        // reverse does not include the iterator at position it2
+        // reverse does not include the iterator at position it2.
         auto it1 = tour_.begin() + alteration.start;
         auto it2 = tour_.begin() + alteration.end + 1;
         std::reverse(it1, it2);
       } else {
         // Alter the tour by rotating the locations about a middle point.
-        // The middle location becomes the new first location.
+        // The middle location becomes the new first location. Add 1 to
+        // the end index so that is included in the rotated set.
         auto it1 = tour_.begin() + alteration.start;
         auto it2 = tour_.begin() + alteration.mid;
-        auto it3 = tour_.begin() + alteration.end;
+        auto it3 = tour_.begin() + alteration.end + 1;
         std::rotate(it1, it2, it3);
       }
       success_count++;
@@ -115,10 +116,9 @@ TourAlteration Optimizer::GetTourAlteration() {
   // Select three unique locations between 1 and count-2
   std::vector<uint32_t> loc(3);
   while (true) {
-    // TODO - is there a better way to choose 3 random locations?
-    loc[0] = static_cast<uint32_t>(r01() * (count_ - 2) + 1);
-    loc[1] = static_cast<uint32_t>(r01() * (count_ - 2) + 1);
-    loc[2] = static_cast<uint32_t>(r01() * (count_ - 2) + 1);
+    loc[0] = get_random_location();
+    loc[1] = get_random_location();
+    loc[2] = get_random_location();
     if (loc[0] != loc[1] && loc[0] != loc[2] && loc[1] != loc[2]) {
       break;
     }
@@ -131,7 +131,7 @@ TourAlteration Optimizer::GetTourAlteration() {
 
   // Randomly select the alteration type and return the
   // tour alteration (indexes and type).
-  AlterationType t = (r01() < 0.5f) ? KReverse : kRotate;
+  AlterationType t = (r01() < 0.5f) ? kReverse : kRotate;
   return { loc[0], loc[1], loc[2], t };
 }
 
@@ -145,12 +145,12 @@ float Optimizer::TemperatureDifference(const std::vector<float>& costs,
     uint32_t mid = alteration.mid;
     c -= Cost(costs, tour_[start-1], tour_[start]);
     c -= Cost(costs, tour_[end], tour_[end+1]);
-    c -= Cost(costs, tour_[mid], tour_[mid-1]);
+    c -= Cost(costs, tour_[mid-1], tour_[mid]);
 
     // Add costs for the new connections
     c += Cost(costs, tour_[start-1], tour_[mid]);
     c += Cost(costs, tour_[end], tour_[start]);
-    c += Cost(costs, tour_[end-1], tour_[start]);
+    c += Cost(costs, tour_[mid-1], tour_[end+1]);
   } else {
     // Reverse tour locations between a start and an end index.
     // Subtract costs between successive locations from start-1 to end+1

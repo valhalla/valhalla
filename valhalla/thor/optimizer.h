@@ -21,7 +21,7 @@ constexpr float kCoolingRate = 0.93f;
 //            location in the range.
 // kReverse - Alters the tour by reversing the locations in the tour between
 //            a start and end location.
-enum AlterationType { kRotate, KReverse };
+enum AlterationType { kRotate, kReverse };
 
 // Simple structure with 3 values describing a possible tour alteration
 struct TourAlteration {
@@ -124,6 +124,15 @@ protected:
   float Cost(const std::vector<float>& costs, const uint32_t loc1,
              const uint32_t loc2) const {
     return costs[(loc1 * count_) + loc2];
+  }
+
+  /**
+   * Get a random location. Makes sure it isn't the first or last location
+   * (which are fixed).
+   * @return  Returns the index of a random location.
+   */
+  uint32_t get_random_location() {
+    return static_cast<uint32_t>(r01() * (count_ - 2) + 1);
   }
 
   /**

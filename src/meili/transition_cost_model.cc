@@ -135,10 +135,10 @@ TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) const
   std::vector<StateId> unreached_stateids;
   unreached_stateids.reserve(right_column.size());
   for (const auto& state : right_column) {
-    if (!vs_.Predecessor(state.stateid()).IsValid()) {
+    //if (!vs_.Predecessor(state.stateid()).IsValid()) {
       locations.push_back(state.candidate());
       unreached_stateids.push_back(state.stateid());
-    }
+    //}
   }
 
   const auto& left_measurement = container_.measurement(lhs.time());

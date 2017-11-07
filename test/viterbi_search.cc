@@ -236,8 +236,8 @@ void test_viterbi_search(const std::vector<Column>& columns)
   SimpleViterbiSearch vs(columns);
 
   for (StateId::Time time = 0; time < columns.size(); time++) {
-    const auto& na_winner = na.SearchWinner(time, false);
-    const auto& vs_winner = vs.SearchWinner(time, false);
+    const auto& na_winner = na.SearchWinner(time);
+    const auto& vs_winner = vs.SearchWinner(time);
 
     if (na_winner.IsValid()) {
       test::assert_bool(
@@ -507,21 +507,14 @@ void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbi
     const auto c = total_cost(columns, pc.path());
     validate_path(columns, pc.path());
 
-    std::vector<StateId> vs_path;
+    std::vector<StateId> vs_path, original_state_ids;
     std::copy(
         vs.SearchPath(time),
         vs.PathEnd(),
         std::back_inserter(vs_path));
-    std::reverse(vs_path.begin(), vs_path.end());
-    std::transform(
-        vs_path.begin(),
-        vs_path.end(),
-        vs_path.begin(),
-        [&ts](const StateId& stateid) {
-          const auto& origin = ts.GetOrigin(stateid);
-          return origin.IsValid() ? origin : stateid;
-        });
-    validate_path(columns, vs_path);
+    for(auto s_itr = vs_path.rbegin(); s_itr != vs_path.rend(); ++s_itr)
+      original_state_ids.push_back(ts.GetOrigin(*s_itr, *s_itr));
+    validate_path(columns, original_state_ids);
 
     // std::cout << "top total cost     : " << c << std::endl;
     // std::cout << "top brute force    : " << pc.cost() << std::endl;
@@ -532,10 +525,11 @@ void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbi
         c == pc.cost(),
         "total cost by brute force mush be correct");
     test::assert_bool(
-        c == total_cost(columns, vs_path),
-        "total cost by viterbisearch must be " + std::to_string(c) + " but got " + std::to_string(total_cost(columns, vs_path)));
+        c == total_cost(columns, original_state_ids),
+        "total cost by viterbisearch must be " + std::to_string(c) + " but got " + std::to_string(total_cost(columns, original_state_ids)));
 
-    ts.RemovePath(time);
+    ts.RemovePath(vs_path);
+    vs.ClearSearch();
   }
 }
 

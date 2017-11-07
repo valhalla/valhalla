@@ -260,6 +260,16 @@ uint32_t OSMWay::bike_local_ref_index() const {
   return bike_local_ref_index_;
 }
 
+//Sets the duration for ferries.
+void OSMWay::set_duration(const uint32_t duration) {
+  duration_ = duration;
+}
+
+//Gets the duration for ferries.
+uint32_t OSMWay::duration() const {
+  return duration_;
+}
+
 // Set auto forward flag.
 void OSMWay::set_auto_forward(const bool auto_forward) {
   access_.fields.auto_forward = auto_forward;

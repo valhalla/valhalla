@@ -266,8 +266,8 @@ namespace valhalla {
 
     std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const {
       //bail if we dont have the level
-      auto bbox = TileHierarchy::levels().find(
-        hierarchy_level == transit_level ? transit_level - 1 : hierarchy_level);
+      uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
+      auto bbox = TileHierarchy::levels().find(tile_level);
       if(bbox == TileHierarchy::levels().cend())
         throw std::runtime_error("hierarchy level not found");
 

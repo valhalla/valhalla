@@ -511,6 +511,9 @@ class GraphReader {
   /**
    * Gets back a set of available tiles
    * @return  returns the list of available tiles
+   *          Note: this will grab all road tiles
+   *          and transit tiles.
+   *
    */
   std::unordered_set<GraphId> GetTileSet() const;
 

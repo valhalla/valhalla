@@ -302,6 +302,18 @@ struct OSMWay {
   uint32_t bike_local_ref_index() const;
 
   /**
+   * Sets the duration for ferries.
+   * @param  duration  The time it takes to take this ferry (in seconds).
+   */
+  void set_duration(const uint32_t duration);
+
+  /**
+   * Gets the duration for ferries.
+   * @return  Returns the time it takes to take this ferry (in seconds).
+   */
+  uint32_t duration() const;
+
+  /**
    * Sets the auto_forward flag.
    * @param  auto_forward   Can you drive in the forward direction?
    */
@@ -1055,6 +1067,9 @@ struct OSMWay {
   uint32_t bike_national_ref_index_;
   uint32_t bike_regional_ref_index_;
   uint32_t bike_local_ref_index_;
+
+  // duration of a ferry in seconds
+  uint32_t duration_;
 
   // Way attributes
   union WayAttributes {

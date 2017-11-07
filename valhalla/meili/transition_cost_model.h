@@ -55,6 +55,7 @@ class TransitionCostModel
   float operator()(const StateId& lhs, const StateId& rhs) const;
 
  private:
+
   void UpdateRoute(const StateId& lhs, const StateId& rhs) const;
 
   float
