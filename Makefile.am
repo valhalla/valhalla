@@ -893,6 +893,7 @@ test/data/utrecht_tiles: valhalla_build_tiles
 TEST_CLEANFILES += test/data/utrecht_tiles
 
 check_PROGRAMS += \
+	test/mapmatch \
 	test/utrecht \
 	test/edgeinfobuilder \
 	test/uniquenames \
@@ -906,8 +907,11 @@ check_PROGRAMS += \
 	test/graphtilebuilder \
 	test/search \
 	test/node_search \
-	test/mapmatch \
 	test/matrix
+test_mapmatch_DEPENDENCIES = test/data/utrecht_tiles
+test_mapmatch_SOURCES = test/mapmatch.cc test/test.cc
+test_mapmatch_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_mapmatch_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -947,10 +951,6 @@ test_search_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_L
 test_node_search_SOURCES = test/node_search.cc test/test.cc
 test_node_search_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_node_search_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-test_mapmatch_DEPENDENCIES = test/data/utrecht_tiles
-test_mapmatch_SOURCES = test/mapmatch.cc test/test.cc
-test_mapmatch_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
-test_mapmatch_LDADD = $(DEPS_LIBS) $(DATA_DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_matrix_DEPENDENCIES = test/data/utrecht_tiles
 test_matrix_SOURCES = test/matrix.cc test/test.cc
 test_matrix_CPPFLAGS = $(DEPS_CFLAGS) $(DATA_DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
