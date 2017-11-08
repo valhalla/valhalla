@@ -348,6 +348,9 @@ void MapMatcher::Clear()
 
 void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 {
+  if (result.empty()) {
+    return;
+  }
   // For each pair of states in the last sequence of states
   for(auto left_state_id_itr = result.cbegin(); left_state_id_itr != result.cend() - 1; ++left_state_id_itr) {
     // Get all the paths that use the left winner
@@ -562,16 +565,21 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     std::copy(vs_.SearchPath(time, best_paths.empty()), vs_.PathEnd(), std::back_inserter(state_ids));
 
     // If we ended up finding a break in the path and this is not the first result we are done
-    if(state_ids.empty() || state_ids.back().time() != 0)
+    if(state_ids.empty() || state_ids.back().time() != 0) {
       break;
+    }
 
     // Get back the real state ids in order
     original_state_ids.clear();
-    for(auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr)
+    for(auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr) {
       original_state_ids.push_back(ts_.GetOrigin(*s_itr, *s_itr));
+    }
 
     // Verify that stateids are in correct order
     for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
+      if (!original_state_ids[time].IsValid()) {
+        continue;
+      }
       if (original_state_ids[time].time() != time) {
         throw std::logic_error("got state with time " + std::to_string(original_state_ids[time].time()) + " at time " + std::to_string(time));
       }
