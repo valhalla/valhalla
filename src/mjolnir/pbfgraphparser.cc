@@ -1188,7 +1188,10 @@ struct graph_callback : public OSMPBF::Callback {
       // Add the restriction to the list.
       if (from_way_id != 0 && (restriction.via() || vias.size()) && restriction.to()) {
         // check for exceptions
+        // isTypeRestriction == true means has restriction:<vehicle> key; otherwise, just a
+        // restriction key
         if (!isTypeRestriction) {
+
           modes = (kAutoAccess |  kTaxiAccess | kBusAccess | kBicycleAccess |
                    kTruckAccess | kEmergencyAccess);
           // remove access as the restriction does not apply to these modes.
@@ -1209,7 +1212,15 @@ struct graph_callback : public OSMPBF::Callback {
             else if (t == "emergency")
               modes = modes & ~kEmergencyAccess;
           }
-        } else if (vias.size() == 0) {
+        }
+        // restriction:<vehicle> key exists but it is a simple restriction
+        // change to a complex restriction with modes.
+        // or
+        // restriction = x with except tags; change to a complex
+        // restriction with modes.
+        if (vias.size() == 0 && (isTypeRestriction ||
+            (!isTypeRestriction && except.size())))  {
+
           restriction.set_via(0);
           vias.push_back(restriction.to());
           osmdata_.via_set.insert(restriction.to());
@@ -1224,7 +1235,8 @@ struct graph_callback : public OSMPBF::Callback {
           osmdata_.end_map.insert(EndMap::value_type(restriction.to(), from_way_id));
           complex_restrictions_->push_back(restriction);
         }
-        else osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
+        else
+          osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
       }
     }
   }
