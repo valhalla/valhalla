@@ -348,6 +348,9 @@ void MapMatcher::Clear()
 
 void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 {
+  if (result.empty()) {
+    return;
+  }
   // For each pair of states in the last sequence of states
   for(auto left_state_id_itr = result.cbegin(); left_state_id_itr != result.cend() - 1; ++left_state_id_itr) {
     // Get all the paths that use the left winner
