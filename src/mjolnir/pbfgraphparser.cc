@@ -989,17 +989,17 @@ struct graph_callback : public OSMPBF::Callback {
           isTypeRestriction = true;
 
         if (tag.first == "restriction:motorcar")
-          modes = modes | kAutoAccess;
+          modes |= (kAutoAccess | kMopedAccess);
         else if (tag.first == "restriction:taxi")
-          modes = modes | kTaxiAccess;
+          modes |= kTaxiAccess;
         else if (tag.first == "restriction:bus")
-          modes = modes | kBusAccess;
+          modes |= kBusAccess;
         else if (tag.first == "restriction:bicycle")
-          modes = modes | kBicycleAccess;
+          modes |= kBicycleAccess;
         else if (tag.first == "restriction:hgv" || tag.first == "restriction:hazmat")
-          modes = modes | kTruckAccess;
+          modes |= kTruckAccess;
         else if (tag.first == "restriction:emergency")
-          modes = modes | kEmergencyAccess;
+          modes |= kEmergencyAccess;
 
         RestrictionType type = (RestrictionType) std::stoi(tag.second);
 
@@ -1192,13 +1192,13 @@ struct graph_callback : public OSMPBF::Callback {
         // restriction key
         if (!isTypeRestriction) {
 
-          modes = (kAutoAccess |  kTaxiAccess | kBusAccess | kBicycleAccess |
+          modes = (kAutoAccess |  kMopedAccess | kTaxiAccess | kBusAccess | kBicycleAccess |
                    kTruckAccess | kEmergencyAccess);
           // remove access as the restriction does not apply to these modes.
           std::vector<std::string> tokens  = GetTagTokens(except);
           for (const auto& t : tokens) {
             if (t == "motorcar")
-              modes = modes & ~kAutoAccess;
+              modes = modes & ~(kAutoAccess | kMopedAccess);
             else if (t == "psv")
               modes = modes & ~(kTaxiAccess | kBusAccess);
             else if (t == "taxi")
