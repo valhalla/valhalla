@@ -101,7 +101,7 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
     // Build shortcuts if specified in the config file. Shortcuts can only be
     // applied if hierarchies are also generated.
     auto build_shortcuts = config.get<bool>("mjolnir.shortcuts", true);
-    if (build_hierarchy) {
+    if (build_shortcuts) {
       ShortcutBuilder::Build(config);
     } else {
       LOG_INFO("Skipping shortcut builder");
