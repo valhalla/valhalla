@@ -8785,8 +8785,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6917496f, 40.2626457f, leg_index, 12.4462795f, 799,
           maneuver_index, 0.258778572f, 12));
   //----------------------------------------------------------------
-  // trace point = 152
-  // Take the U.S. 3 22 East exit on the right toward Ephrata.
+  // trace point = 152 | Pre | Take the U.S. 3 22 East exit on the right toward Ephrata.
   maneuver_index = 3;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
@@ -8804,8 +8803,8 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6913071f, 40.2629585f, leg_index, 12.3950396f, 797,
           maneuver_index, 0.207538605f, 10));
   //----------------------------------------------------------------
-  // trace point = 154
-  // Continue on U.S. 3 22.
+  // TODO- need to fix this; final alert happens after the pre
+  // trace point = 154 | Alert 0.15 | Take the U.S. 3 22 East exit on the right.
   maneuver_index = 3;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
@@ -9039,8 +9038,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6855469f, 40.2658081f, leg_index, 11.803978f, 762,
           maneuver_index, 0.186857224f, 11));
   //----------------------------------------------------------------
-  // trace point = 180
-  // Continue on U.S. 3 22 for 4.4 kilometers.
+  // trace point = 180 | Pre | Continue on U.S. 3 22 for 4.4 kilometers.
   maneuver_index = 4;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
