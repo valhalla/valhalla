@@ -398,12 +398,22 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
 
 #ifdef LOGGING_LEVEL_TRACE
   // Output to help build unit tests
-  std::cout << std::endl << "------------------------------------------------------------------------" << std::setprecision(9) << std::endl
-            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << (remaining_leg_values_.at(0).second - nav_status.remaining_leg_time()) << "),"  << std::endl
+  std::cout << "  maneuver_index = " << nav_status.maneuver_index() << ";" << std::setprecision(9) << std::endl
+            << "  instruction_index = maneuver_index;" << std::endl
+            << "  TryRouteOnLocationChanged(nav," << std:: endl
+            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << fix_location.time() << ", " << fix_location.speed()  << "),"  << std::endl
             << "      GetNavigationStatus(NavigationStatus_RouteState_kTracking," << std::endl
             << "          " << nav_status.lon() << "f, " << nav_status.lat() << "f, leg_index, " << nav_status.remaining_leg_length() << "f, " << nav_status.remaining_leg_time() << "," << std::endl
-            << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << ", instruction_index));" << std::endl;
+            << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << "));" << std::endl;
 #endif
+//#ifdef LOGGING_LEVEL_TRACE
+//  // Output to help build unit tests
+//  std::cout << std::endl << "//----------------------------------------------------------------------" << std::setprecision(9) << std::endl
+//            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << (remaining_leg_values_.at(0).second - nav_status.remaining_leg_time()) << "),"  << std::endl
+//            << "      GetNavigationStatus(NavigationStatus_RouteState_kTracking," << std::endl
+//            << "          " << nav_status.lon() << "f, " << nav_status.lat() << "f, leg_index, " << nav_status.remaining_leg_length() << "f, " << nav_status.remaining_leg_time() << "," << std::endl
+//            << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << ", instruction_index));" << std::endl;
+//#endif
 
 
   return nav_status;
@@ -543,9 +553,10 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
         > GetInitialLongTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kInitialLongTransitionAlertMinSpeed)) // ~62.6 MPH
-            || (UnitsToMeters(nav_status.remaining_maneuver_length())
-                / nav_status.remaining_maneuver_time()
-                > kInitialLongTransitionAlertMinSpeed))
+            || (!fix_location.has_speed()
+                && (UnitsToMeters(nav_status.remaining_maneuver_length())
+                    / nav_status.remaining_maneuver_time()
+                    > kInitialLongTransitionAlertMinSpeed)))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             GetInitialLongTransitionAlertLowerLength(),
             GetInitialLongTransitionAlertUpperLength())) {
@@ -561,9 +572,10 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
         > GetInitialShortTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kInitialShortTransitionAlertMinSpeed)) // ~40.3 MPH
-            || (UnitsToMeters(nav_status.remaining_maneuver_length())
-                / nav_status.remaining_maneuver_time()
-                > kInitialShortTransitionAlertMinSpeed))
+            || (!fix_location.has_speed()
+                && (UnitsToMeters(nav_status.remaining_maneuver_length())
+                    / nav_status.remaining_maneuver_time()
+                    > kInitialShortTransitionAlertMinSpeed)))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             GetInitialShortTransitionAlertLowerLength(),
             GetInitialShortTransitionAlertUpperLength())) {
@@ -674,9 +686,10 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
         > GetFinalLongTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kFinalLongTransitionAlertMinSpeed)) // ~62.6 MPH
-            || (UnitsToMeters(nav_status.remaining_maneuver_length())
-                / nav_status.remaining_maneuver_time()
-                > kFinalLongTransitionAlertMinSpeed))
+            || (!fix_location.has_speed()
+                && (UnitsToMeters(nav_status.remaining_maneuver_length())
+                    / nav_status.remaining_maneuver_time()
+                    > kFinalLongTransitionAlertMinSpeed)))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             GetFinalLongTransitionAlertLowerLength(),
             GetFinalLongTransitionAlertUpperLength())) {
@@ -692,9 +705,10 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
         > GetFinalMediumTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kFinalMediumTransitionAlertMinSpeed)) // ~22.4 MPH
-            || (UnitsToMeters(nav_status.remaining_maneuver_length())
-                / nav_status.remaining_maneuver_time()
-                > kFinalMediumTransitionAlertMinSpeed))
+            || (!fix_location.has_speed()
+                && (UnitsToMeters(nav_status.remaining_maneuver_length())
+                    / nav_status.remaining_maneuver_time()
+                    > kFinalMediumTransitionAlertMinSpeed)))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             GetFinalMediumTransitionAlertLowerLength(),
             GetFinalMediumTransitionAlertUpperLength())) {
