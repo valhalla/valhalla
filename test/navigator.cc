@@ -11270,14 +11270,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6389923f, 40.2752838f, leg_index, 7.65513563f, 525,
           maneuver_index, 0.45227623f, 25));
   //----------------------------------------------------------------
-  // trace point = 428
+  // trace point = 428 | Alert 0.4 | Enter the roundabout and take the 2nd exit.
   maneuver_index = 5;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6388092f, 40.2752686f, 1489615361, 15.5905199),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.6388092f, 40.27528f, leg_index, 7.63957834f, 524,
-          maneuver_index, 0.436718941f, 24));
+          maneuver_index, 0.436718941f, 24, instruction_index, 0.4f));
   //----------------------------------------------------------------
   // trace point = 429
   maneuver_index = 5;
@@ -11432,14 +11432,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6352615f, 40.2750969f, leg_index, 7.33748579f, 508,
           maneuver_index, 0.134626389f, 8));
   //----------------------------------------------------------------
-  // trace point = 446
+  // trace point = 446 | Pre | Enter the roundabout and take the 2nd exit.
   maneuver_index = 5;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6350632f, 40.2750664f, 1489615379, 16.9948921),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6350632f, 40.2750816f, leg_index, 7.32055283f, 507,
-          maneuver_index, 0.117693424f, 7));
+          maneuver_index, 0.117693424f, 7, instruction_index));
   //----------------------------------------------------------------
   // trace point = 447
   maneuver_index = 5;
@@ -15706,7 +15706,6 @@ void TestAutoMiddletownRoadToLandingsDrive() {
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5675583f, 40.286377f, leg_index, 0.0145969158f, 2,
           maneuver_index, 0.0145969158f, 2));
-
 }
 
 /* PedestrianCatalinasToOffice geojson to visualize test route

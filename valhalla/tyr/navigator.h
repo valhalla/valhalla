@@ -32,7 +32,7 @@ constexpr float kMinSpeedThreshold = 0.277f;
 
 // Minimum speed in meters per second for certain transition alert types
 constexpr uint32_t kInitialLongTransitionAlertMinSpeed = 28; // ~62.6 MPH
-constexpr uint32_t kInitialShortTransitionAlertMinSpeed = 18; // ~40.3 MPH
+constexpr uint32_t kInitialShortTransitionAlertMinSpeed = 20; // ~44.7 MPH
 constexpr uint32_t kFinalLongTransitionAlertMinSpeed = 28; // ~62.6 MPH
 constexpr uint32_t kFinalMediumTransitionAlertMinSpeed = 10; // ~22.4 MPH
 

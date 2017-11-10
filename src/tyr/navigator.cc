@@ -553,9 +553,10 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
         > GetInitialLongTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kInitialLongTransitionAlertMinSpeed)) // ~62.6 MPH
-            || (UnitsToMeters(nav_status.remaining_maneuver_length())
-                / nav_status.remaining_maneuver_time()
-                > kInitialLongTransitionAlertMinSpeed))
+            || (!fix_location.has_speed()
+                && (UnitsToMeters(nav_status.remaining_maneuver_length())
+                    / nav_status.remaining_maneuver_time()
+                    > kInitialLongTransitionAlertMinSpeed)))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             GetInitialLongTransitionAlertLowerLength(),
             GetInitialLongTransitionAlertUpperLength())) {
@@ -571,9 +572,10 @@ bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
         > GetInitialShortTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kInitialShortTransitionAlertMinSpeed)) // ~40.3 MPH
-            || (UnitsToMeters(nav_status.remaining_maneuver_length())
-                / nav_status.remaining_maneuver_time()
-                > kInitialShortTransitionAlertMinSpeed))
+            || (!fix_location.has_speed()
+                && (UnitsToMeters(nav_status.remaining_maneuver_length())
+                    / nav_status.remaining_maneuver_time()
+                    > kInitialShortTransitionAlertMinSpeed)))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             GetInitialShortTransitionAlertLowerLength(),
             GetInitialShortTransitionAlertUpperLength())) {
@@ -684,9 +686,10 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
         > GetFinalLongTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kFinalLongTransitionAlertMinSpeed)) // ~62.6 MPH
-            || (UnitsToMeters(nav_status.remaining_maneuver_length())
-                / nav_status.remaining_maneuver_time()
-                > kFinalLongTransitionAlertMinSpeed))
+            || (!fix_location.has_speed()
+                && (UnitsToMeters(nav_status.remaining_maneuver_length())
+                    / nav_status.remaining_maneuver_time()
+                    > kFinalLongTransitionAlertMinSpeed)))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             GetFinalLongTransitionAlertLowerLength(),
             GetFinalLongTransitionAlertUpperLength())) {
@@ -702,9 +705,10 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
         > GetFinalMediumTransitionAlertMinManeuverLength())
         && ((fix_location.has_speed()
             && (fix_location.speed() > kFinalMediumTransitionAlertMinSpeed)) // ~22.4 MPH
-            || (UnitsToMeters(nav_status.remaining_maneuver_length())
-                / nav_status.remaining_maneuver_time()
-                > kFinalMediumTransitionAlertMinSpeed))
+            || (!fix_location.has_speed()
+                && (UnitsToMeters(nav_status.remaining_maneuver_length())
+                    / nav_status.remaining_maneuver_time()
+                    > kFinalMediumTransitionAlertMinSpeed)))
         && IsLengthWithinBounds(nav_status.remaining_maneuver_length(),
             GetFinalMediumTransitionAlertLowerLength(),
             GetFinalMediumTransitionAlertUpperLength())) {
