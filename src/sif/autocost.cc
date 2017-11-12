@@ -33,10 +33,8 @@ constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
-
-constexpr float kDefaultUseHills                = 0.5f;   // Factor between 0 and 1
-constexpr float kDefaultUsePrimary              = 0.5f;   // Factor between 0 and 1
-constexpr uint32_t kDefaultTopSpeed             = 45;     // Kilometers per hour
+constexpr float kDefaultUseHighway              = 1.0f;   // Factor between 0 and 1
+constexpr float kDefaultUseToll                 = 0.25f;   // Factor between 0 and 1
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -79,20 +77,8 @@ constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeco
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
-
-// Weighting factor based on road class. These apply penalties to higher class
-// roads. These penalties are modulated by the useroads factor - further
-// avoiding higher class roads for those with low propensity for using roads.
-constexpr float kRoadClassFactor[] = {
-    1.0f,   // Motorway
-    0.4f,   // Trunk
-    0.2f,   // Primary
-    0.1f,   // Secondary
-    0.05f,  // Tertiary
-    0.05f,  // Unclassified
-    0.0f,   // Residential
-    0.5f    // Service, other
-};
+constexpr ranged_default_t<float> kUseHighwayRange{0, kDefaultUseHighway, 1.0f};
+constexpr ranged_default_t<float> kUseTollRange{0, kDefaultUseToll, 1.0f};
 
 }
 
@@ -268,7 +254,9 @@ class AutoCost : public DynamicCost {
   float alley_penalty_;             // Penalty (seconds) to use a alley
   float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
-  float use_ferry_;
+  float use_ferry_;                 // Preference to use ferries. Is a value from 0 to 1
+  float use_highway_;              // Preference to use highways. Is a value from 0 to 1
+  float use_toll_;                 // Preference to use tolls. Is a value from 0 to 1
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -347,6 +335,14 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     ferry_penalty_ = 0.0f;
     ferry_factor_  = 1.5f - use_ferry_;
   }
+
+  use_highway_ = kUseHighwayRange(
+    pt.get<float>("use_highway", kDefaultUseHighway)
+  );
+
+  use_toll_ = kUseTollRange(
+    pt.get<float>("use_toll", kDefaultUseToll)
+  );
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
