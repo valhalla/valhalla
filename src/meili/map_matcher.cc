@@ -641,9 +641,9 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       best_paths.emplace_back(std::move(match_results));
     }
 
-    // If we just got some results then we need to remove them from consideration
-    // we avoid doing this for the common case where k==1 by putting this at the start of the loop
-    if (!found_broken_path) {
+    // RemoveRedundancies doesn't work with broken paths yet,
+    // also we want to avoid removing path for the last best path
+    if (!found_broken_path && best_paths.size() < k) {
       // Remove all the candidates pairs whose paths are redundant with this one
       RemoveRedundancies(original_state_ids);
       // Remove this particular sequence of stateids
