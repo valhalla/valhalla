@@ -13,6 +13,8 @@ config = {
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
+    'hierarchy': True,
+    'shortcuts': True,
     'logging': {
       'type': 'std_out',
       'color': True,
@@ -220,6 +222,8 @@ help_text = {
     'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
     'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
     'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
+    'hierarchy': 'bool indicating whether road hierarchy is to be built - default to True',
+    'shortcuts': 'bool indicating whether shortcuts are to be builr - default to True',
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',

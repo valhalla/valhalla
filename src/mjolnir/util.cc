@@ -92,12 +92,23 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
   // Add transit
   TransitBuilder::Build(config);
 
-  // Builds additional hierarchies based on the config file. Connections
+  // Builds additional hierarchies if specified within config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
-  HierarchyBuilder::Build(config);
+  auto build_hierarchy = config.get<bool>("mjolnir.hierarchy", true);
+  if (build_hierarchy) {
+    HierarchyBuilder::Build(config);
 
-  // Build shortcuts
-  ShortcutBuilder::Build(config);
+    // Build shortcuts if specified in the config file. Shortcuts can only be
+    // applied if hierarchies are also generated.
+    auto build_shortcuts = config.get<bool>("mjolnir.shortcuts", true);
+    if (build_shortcuts) {
+      ShortcutBuilder::Build(config);
+    } else {
+      LOG_INFO("Skipping shortcut builder");
+    }
+  } else {
+    LOG_INFO("Skipping hierarchy builder and shortcut builder");
+  }
 
   // Build the Complex Restrictions
   RestrictionBuilder::Build(config, bin_file_prefix + "complex_restrictions.bin", osm_data.end_map);
