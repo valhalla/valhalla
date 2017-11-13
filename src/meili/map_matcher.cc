@@ -546,7 +546,7 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
     best_paths.emplace_back(
         std::vector<MatchResult>{},
         std::vector<EdgeSegment>{},
-        -1.0);
+        0);
     return best_paths;
   }
 
