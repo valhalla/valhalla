@@ -8803,15 +8803,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6913071f, 40.2629585f, leg_index, 12.3950396f, 797,
           maneuver_index, 0.207538605f, 10));
   //----------------------------------------------------------------
-  // TODO- need to fix this; final alert happens after the pre
-  // trace point = 154 | Alert 0.15 | Take the U.S. 3 22 East exit on the right.
+  // trace point = 154
   maneuver_index = 3;
-  instruction_index = maneuver_index + 1;
+  instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6910553f, 40.263092f, 1489614954, 25.8552265),
-      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6910858f, 40.2631187f, leg_index, 12.3691311f, 796,
-          maneuver_index, 0.181630135f, 9, instruction_index, 0.15));
+          maneuver_index, 0.181630135f, 9));
   //----------------------------------------------------------------
   // trace point = 155
   maneuver_index = 3;
