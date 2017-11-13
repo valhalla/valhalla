@@ -578,11 +578,6 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       }
     }
 
-    // TODO: do something to get real cost later, if we dont like sending back cost from here we can simply send
-    // back k as the float value so that at least we know the smaller ones are relatively better than the larger
-    // ones we just dont know how much and then if we want to call back in with the result to get the real cost
-    // we can do that later
-
     // Get back the real state ids in order
     std::vector<StateId> original_state_ids;
     for(auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr) {
