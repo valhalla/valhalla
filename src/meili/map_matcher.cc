@@ -578,6 +578,11 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       }
     }
 
+    // early quit if we found best paths
+    if (!best_paths.empty() && found_broken_path) {
+      break;
+    }
+
     // Get back the real state ids in order
     std::vector<StateId> original_state_ids;
     for(auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr) {
