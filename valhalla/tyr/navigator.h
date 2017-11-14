@@ -24,6 +24,9 @@ constexpr uint32_t kOnRouteCloseToOriginThreshold = 20;
 // Pre-transition base threshold in seconds
 constexpr uint32_t kPreTransitionBaseThreshold = 4;
 
+// Transition alert and pre-transition time delta in seconds
+constexpr uint32_t kAlertPreTimeDelta = 2;
+
 // Number of words per second - used to calculate pre-transition threshold
 constexpr float kWordsPerSecond = 2.5f;
 
@@ -351,6 +354,19 @@ class Navigator {
      */
     uint32_t GetPreTransitionThreshold(size_t instruction_index) const;
 
+    /**
+     * Returns true if the current transition alert is close to the
+     * pre-transition; otherwise, return false.
+     *
+     * @param  fix_location  The current fix location of user.
+     * @param  nav_status  The current navigation status.
+     * @param  instruction_index  The instruction index to process.
+     *
+     * @return true if the current transition alert is close to the
+     * pre-transition; otherwise, return false.
+     */
+    bool IsAlertCloseToPre(const FixLocation& fix_location,
+        const NavigationStatus& nav_status, size_t instruction_index) const;
     /**
      * Returns true if the specified time in seconds is within the specified
      * lower and upper bounds; otherwise, returns false.
