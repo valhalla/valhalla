@@ -568,12 +568,14 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       if (winner.IsValid()) {
         accumulated_cost += vs_.AccumulatedCost(winner);
       } else {
+        // TODO need a sane constant cost for invalid state
         accumulated_cost += MAX_ACCUMULATED_COST;
         found_broken_path = true;
       }
 
       if (state_ids.size() < container_.size()) {
         found_broken_path = true;
+        // cost for disconnection
         accumulated_cost += MAX_ACCUMULATED_COST;
       }
     }
