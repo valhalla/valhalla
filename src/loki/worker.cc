@@ -256,6 +256,9 @@ namespace valhalla {
             trace(action->second, request_rj);
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
+          case TRANSIT_AVAILABLE:
+            result = to_response(transit_available(request_rj), jsonp, info);
+            break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
             return jsonify_error({107}, info);

@@ -1,10 +1,3 @@
-#include "baldr/connectivity_map.h"
-#include "baldr/json.h"
-#include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
-#include <valhalla/baldr/tilehierarchy.h>
-
-#include "midgard/pointll.h"
 #include <boost/filesystem.hpp>
 #include <list>
 #include <iomanip>
@@ -12,6 +5,13 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "baldr/connectivity_map.h"
+#include "baldr/json.h"
+#include "baldr/graphtile.h"
+#include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/constants.h"
+#include "midgard/pointll.h"
 #include "midgard/logging.h"
 
 using namespace valhalla::baldr;
