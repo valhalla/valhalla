@@ -1650,9 +1650,7 @@ namespace valhalla {
       //start the gpx, we'll use 6 digits of precision
       std::stringstream gpx;
       gpx << std::setprecision(6) << std::fixed;
-      gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<gpx version="1.1" creator="libvalhalla">
-<metadata></metadata>)";
+      gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
 
       //for each leg
       for(const auto& leg : legs) {
