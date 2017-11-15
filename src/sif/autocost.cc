@@ -33,8 +33,8 @@ constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
-constexpr float kDefaultUseHighway              = 1.0f;   // Factor between 0 and 1
-constexpr float kDefaultUseToll                 = 0.25f;   // Factor between 0 and 1
+constexpr float kDefaultUseHighways             = 1.0f;   // Factor between 0 and 1
+constexpr float kDefaultUseTolls                = 0.5f;   // Factor between 0 and 1
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -77,8 +77,8 @@ constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeco
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
-constexpr ranged_default_t<float> kUseHighwayRange{0, kDefaultUseHighway, 1.0f};
-constexpr ranged_default_t<float> kUseTollRange{0, kDefaultUseToll, 1.0f};
+constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
+constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 
 }
 
@@ -255,8 +255,9 @@ class AutoCost : public DynamicCost {
   float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float use_ferry_;                 // Preference to use ferries. Is a value from 0 to 1
-  float use_highway_;              // Preference to use highways. Is a value from 0 to 1
-  float use_toll_;                 // Preference to use tolls. Is a value from 0 to 1
+  float use_highways_;               // Preference to use highways. Is a value from 0 to 1
+  float use_tolls_;                  // Preference to use tolls. Is a value from 0 to 1
+  float toll_factor_;               // Factor applied when road has a toll
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -336,13 +337,17 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     ferry_factor_  = 1.5f - use_ferry_;
   }
 
-  use_highway_ = kUseHighwayRange(
-    pt.get<float>("use_highway", kDefaultUseHighway)
+  use_highways_ = kUseHighwaysRange(
+    pt.get<float>("use_highways", kDefaultUseHighways)
   );
 
-  use_toll_ = kUseTollRange(
-    pt.get<float>("use_toll", kDefaultUseToll)
+  use_tolls_ = kUseTollsRange(
+    pt.get<float>("use_tolls", kDefaultUseTolls)
   );
+
+  toll_factor_ = use_tolls_ < 0.5f ?
+      3.0f - 5 * use_tolls_ :
+      1.0f - use_tolls_;
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
@@ -424,6 +429,10 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
   float factor = (edge->use() == Use::kFerry) ?
         ferry_factor_ : density_factor_[edge->density()];
+  if (edge->toll())
+  {
+    factor += toll_factor_;
+  }
 
   float sec = (edge->length() * speedfactor_[edge->speed()]);
   return Cost(sec * factor, sec);
