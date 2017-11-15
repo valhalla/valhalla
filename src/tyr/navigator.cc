@@ -78,10 +78,18 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
   if (nav_status.route_state() != NavigationStatus_RouteState_kInvalid) {
 
     //////////////////////////////////////////////////////////////////////////
+    // If destination maneuver index then mark as complete
+    if (IsDestinationManeuverIndex(maneuver_index_)) {
+      // Set route state
+      route_state_ = NavigationStatus_RouteState_kComplete;
+      nav_status.set_route_state(route_state_);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     // If start maneuver index and instruction has not been used
     // and starting navigation and close to origin
     // then set route state to kPreTransition
-    if (IsStartManeuverIndex(maneuver_index_)
+    else if (IsStartManeuverIndex(maneuver_index_)
         && !(std::get<kPreTransition>(used_instructions_.at(curr_instruction_index)))
         && StartingNavigation(prev_route_state, route_state_)
         && OnRouteLocationCloseToOrigin(nav_status)) {
@@ -97,12 +105,10 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // else if not destination maneuver
-    // and instruction has not been used
-    // and route location is pre transition
+    // else if pre-transition instruction has not been used
+    // and route location is a pre-transition
     // then set route state to kPreTransition
-    else if (!IsDestinationManeuverIndex(maneuver_index_)
-        && !(std::get<kPreTransition>(used_instructions_.at(next_instruction_index)))
+    else if (!(std::get<kPreTransition>(used_instructions_.at(next_instruction_index)))
         && (GetRemainingManeuverTime(fix_location, nav_status)
             <= GetPreTransitionThreshold(next_instruction_index))) {
 
@@ -141,7 +147,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // else if instruction has not been used
+    // else if initial transition alert instruction has not been used
     // and route location is an initial transition alert
     // then set route state to kTransitionAlert
     else if (!(std::get<kInitialTransitionAlert>(used_instructions_.at(next_instruction_index)))
@@ -161,7 +167,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // else if instruction has not been used
+    // else if final transition alert instruction has not been used
     // and route location is a final transition alert
     // and alert is not close to the pre-transition
     // then set route state to kTransitionAlert
@@ -690,7 +696,6 @@ bool Navigator::IsFinalTransitionAlert(const FixLocation& fix_location,
   size_t next_instruction_index = (maneuver_index_ + 1);
 
   // Verify that the current maneuver is not a destination maneuver
-
   // and the next maneuver has a transition alert instruction
   if (!IsDestinationManeuverIndex(curr_instruction_index)
       && route_.trip().legs(leg_index_).maneuvers(next_instruction_index).has_verbal_transition_alert_instruction()) {
