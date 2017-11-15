@@ -91,6 +91,16 @@ constexpr float kHighwayFactor[] = {
     0.0f    // Service, other
 };
 
+constexpr float kSurfaceFactor[] = {
+    0.0f,   // kPavedSmooth
+    0.0f,   // kPaved
+    0.0f,   // kPaveRough
+    0.0f,   // kCompacted
+    0.2f,   // kDirt
+    0.5f,   // kGravel
+    1.0f    // kPath
+};
+
 }
 
 /**
@@ -443,8 +453,9 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
   float factor = (edge->use() == Use::kFerry) ?
         ferry_factor_ : density_factor_[edge->density()];
-  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())];
 
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll())
   {
     factor += toll_factor_;
