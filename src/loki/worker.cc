@@ -27,7 +27,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
 
-
 namespace valhalla {
   namespace loki {
     std::vector<baldr::Location> loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
