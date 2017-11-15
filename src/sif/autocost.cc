@@ -80,6 +80,17 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 
+constexpr float kHighwayFactor[] = {
+    1.0f,   // Motorway
+    0.5f,   // Trunk
+    0.0f,   // Primary
+    0.0f,   // Secondary
+    0.0f,   // Tertiary
+    0.0f,   // Unclassified
+    0.0f,   // Residential
+    0.0f    // Service, other
+};
+
 }
 
 /**
@@ -255,8 +266,9 @@ class AutoCost : public DynamicCost {
   float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float use_ferry_;                 // Preference to use ferries. Is a value from 0 to 1
-  float use_highways_;               // Preference to use highways. Is a value from 0 to 1
-  float use_tolls_;                  // Preference to use tolls. Is a value from 0 to 1
+  float use_highways_;              // Preference to use highways. Is a value from 0 to 1
+  float highway_factor_;            // Factor applied when road is a motorway or trunk
+  float use_tolls_;                 // Preference to use tolls. Is a value from 0 to 1
   float toll_factor_;               // Factor applied when road has a toll
 
   // Density factor used in edge transition costing
@@ -340,6 +352,8 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   use_highways_ = kUseHighwaysRange(
     pt.get<float>("use_highways", kDefaultUseHighways)
   );
+
+  highway_factor_ = 2.0f - 2.0f * use_highways_;
 
   use_tolls_ = kUseTollsRange(
     pt.get<float>("use_tolls", kDefaultUseTolls)
@@ -429,6 +443,8 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
   float factor = (edge->use() == Use::kFerry) ?
         ferry_factor_ : density_factor_[edge->density()];
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())];
+
   if (edge->toll())
   {
     factor += toll_factor_;
