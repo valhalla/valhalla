@@ -33,17 +33,18 @@ namespace valhalla {
     void odin_worker_t::cleanup(){}
 
     DirectionsOptions odin_worker_t::parse_options(boost::property_tree::ptree& request) const {
-      // Grab language from options and set
-      auto language = request.get_optional<std::string>("directions_options.language");
-      // If language is not found then set to the default language (en-US)
-      if (!language || (odin::get_locales().find(*language) == odin::get_locales().end()))
-        request.put<std::string>("directions_options.language", odin::DirectionsOptions::default_instance().language());
-
       //see if we can get some options
-      valhalla::odin::DirectionsOptions directions_options;
+      auto directions_options = DirectionsOptions::default_instance();
       auto options = request.get_child_optional("directions_options");
       if(options)
         directions_options = valhalla::odin::GetDirectionsOptions(*options);
+
+      // Grab language from options and set
+      request.put<std::string>("directions_options.language", directions_options.language());
+
+      // Grab the output format and set
+      request.put<std::string>("directions_options.format",
+          DirectionsOptions::Format_Name(directions_options.format()));
 
       return directions_options;
     }
@@ -99,6 +100,10 @@ namespace valhalla {
 
         //narrate them and serialize them along
         auto directions_options = parse_options(request);
+
+        //gpx output
+        if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
+          return to_response_xml(pathToGPX(legs), info);
 
         auto narrated = narrate(directions_options, legs);
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));

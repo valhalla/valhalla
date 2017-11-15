@@ -89,6 +89,9 @@ namespace valhalla {
       auto legs = pimpl->thor_worker.route(request_pt, date_time_type);
       //parse the options for directions
       auto directions_options = pimpl->odin_worker.parse_options(request_pt);
+      //gpx output
+      if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
+        return pathToGPX(legs);
       //get some directions back from them
       auto directions = pimpl->odin_worker.narrate(directions_options, legs);
       //serialize them out to json string
@@ -146,6 +149,9 @@ namespace valhalla {
       auto legs = pimpl->thor_worker.optimized_route(request_pt);
       //parse the options for directions
       auto directions_options = pimpl->odin_worker.parse_options(request_pt);
+      //gpx output
+      if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
+        return pathToGPX(legs);
       //get some directions back from them
       auto directions = pimpl->odin_worker.narrate(directions_options, legs);
       //serialize them out to json string
@@ -188,6 +194,9 @@ namespace valhalla {
       std::list<TripPath> legs{pimpl->thor_worker.trace_route(request_pt)};
       //parse the options for directions
       auto directions_options = pimpl->odin_worker.parse_options(request_pt);
+      //gpx output
+      if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
+        return pathToGPX(legs);
       //get some directions back from them
       auto directions = pimpl->odin_worker.narrate(directions_options, legs);
       //serialize them out to json string
