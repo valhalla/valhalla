@@ -263,10 +263,6 @@ namespace valhalla {
           if(color != level->second.cend())
             result.emplace(color->second);
         }
-        auto id = tiles.TileId(edge.projected);
-        auto color = level->second.find(id);
-        if(color != level->second.cend())
-          result.emplace(color->second);
       }
       return result;
     }
