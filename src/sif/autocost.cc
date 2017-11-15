@@ -353,14 +353,14 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     pt.get<float>("use_highways", kDefaultUseHighways)
   );
 
-  highway_factor_ = 2.0f - 2.0f * use_highways_;
+  highway_factor_ = 1.0f - use_highways_;
 
   use_tolls_ = kUseTollsRange(
     pt.get<float>("use_tolls", kDefaultUseTolls)
   );
 
   toll_factor_ = use_tolls_ < 0.5f ?
-      3.0f - 5 * use_tolls_ :
+      2.0f - 3 * use_tolls_ :
       1.0f - use_tolls_;
 
   // Create speed cost table
