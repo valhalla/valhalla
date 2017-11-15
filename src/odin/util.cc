@@ -90,7 +90,7 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
   }
 
   auto lang_ptr = pt.get_optional<std::string>("language");
-  if (lang_ptr && odin::get_locales().find(*lang_ptr) == odin::get_locales().end()) {
+  if (lang_ptr && odin::get_locales().find(*lang_ptr) != odin::get_locales().end()) {
     directions_options.set_language(*lang_ptr);
   }
 
