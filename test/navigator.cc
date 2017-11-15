@@ -17058,8 +17058,8 @@ void TestAutoMiddletownRoadToLandingsDrive() {
    TryRouteOnLocationChanged(nav,
        GetFixLocation(-76.2981644f, 40.0426407f, 1510692627, 5.86975288),
        GetNavigationStatus(NavigationStatus_RouteState_kTracking,
-           -76.2981644f, 40.0426292f, leg_index, 0f, 0,
-           maneuver_index, 0f, 0));
+           -76.2981644f, 40.0426292f, leg_index, 0.f, 0,
+           maneuver_index, 0.f, 0));
  }
 
 /* PedestrianCatalinasToOffice geojson to visualize test route
