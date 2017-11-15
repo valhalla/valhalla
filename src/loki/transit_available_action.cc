@@ -25,6 +25,7 @@ json::MapPtr serialize(const PathLocation& location, bool istransit) {
     ({
       {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
       {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
+      {"radius", location.radius_},
     });
     json->emplace("istransit", istransit);
     return json;
