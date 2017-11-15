@@ -8,6 +8,7 @@
 
 #include <valhalla/worker.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/route.pb.h>
 #include <valhalla/tyr/actor.h>
 
@@ -25,6 +26,12 @@ namespace valhalla {
      */
     void jsonToProtoRoute (const std::string& json_route, Route& proto_route);
 
+    /**
+     * Returns GPX formatted route responses given the legs of the route
+     * @param  legs  The legs of the route
+     * @return the gpx string
+     */
+    std::string pathToGPX(const std::list<odin::TripPath>& legs);
   }
 }
 
