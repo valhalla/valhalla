@@ -15707,6 +15707,254 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           maneuver_index, 0.0145969158f, 2));
 }
 
+/* AutoLancasterVerbalMultiCue geojson to visualize test route
+{"type":"FeatureCollection","features":[
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.300018,40.042339]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":0}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299995,40.042233]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":1}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299934,40.042110]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":2}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299919,40.042000]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":3}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299919,40.041908]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":4}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299835,40.041851]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":5}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299690,40.041878]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":6}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299492,40.041885]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":7}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299377,40.041893]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":8}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299271,40.041904]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":9}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299156,40.041920]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":10}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299034,40.041931]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":11}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298912,40.041946]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":12}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298798,40.041950]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":13}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298607,40.041969]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":14}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298454,40.041981]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":15}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298355,40.042007]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":16}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298187,40.042027]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":17}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298035,40.042034]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":18}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297852,40.042057]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":19}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297638,40.042076]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":20}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297523,40.042076]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":21}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297401,40.042091]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":22}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297264,40.042103]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":23}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297127,40.042110]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":24}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296989,40.042130]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":25}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296844,40.042145]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":26}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296707,40.042156]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":27}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296570,40.042168]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":28}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296432,40.042179]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":29}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296295,40.042202]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":30}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296173,40.042210]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":31}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296043,40.042217]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":32}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295906,40.042236]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":33}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295761,40.042252]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":34}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295624,40.042267]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":35}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295479,40.042274]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":36}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295334,40.042294]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":37}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295189,40.042313]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":38}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295044,40.042332]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":39}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294891,40.042343]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":40}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294739,40.042362]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":41}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294594,40.042374]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":42}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294449,40.042393]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":43}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294304,40.042408]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":44}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294167,40.042419]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":45}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294037,40.042435]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":46}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293854,40.042461]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":47}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293777,40.042534]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":48}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293793,40.042667]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":49}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293823,40.042820]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":50}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293846,40.042908]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":51}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293877,40.043076]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":52}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293739,40.043129]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":53}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293564,40.043140]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":54}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293449,40.043159]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":55}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293320,40.043171]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":56}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293182,40.043194]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":57}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293060,40.043205]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":58}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292938,40.043221]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":59}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292816,40.043236]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":60}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292702,40.043247]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":61}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292580,40.043255]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":62}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292465,40.043266]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":63}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292351,40.043282]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":64}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292183,40.043297]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":65}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292076,40.043293]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":66}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.291992,40.043388]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":67}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292007,40.043537]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":68}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292030,40.043655]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":69}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292061,40.043797]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":70}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292076,40.043911]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":71}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292091,40.044014]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":72}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292114,40.044121]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":73}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292221,40.044182]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":74}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292389,40.044170]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":75}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292496,40.044159]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":76}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292625,40.044144]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":77}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292763,40.044132]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":78}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292900,40.044121]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":79}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293053,40.044109]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":80}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293205,40.044086]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":81}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293365,40.044067]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":82}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293541,40.044044]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":83}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293716,40.044029]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":84}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293892,40.044014]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":85}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294075,40.044003]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":86}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294243,40.043983]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":87}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294426,40.043961]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":88}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294609,40.043949]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":89}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294769,40.043930]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":90}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294930,40.043900]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":91}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295090,40.043880]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":92}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295250,40.043861]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":93}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295410,40.043846]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":94}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295570,40.043819]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":95}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295731,40.043793]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":96}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295898,40.043781]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":97}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296059,40.043762]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":98}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296211,40.043751]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":99}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296379,40.043739]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":100}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296539,40.043720]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":101}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296700,40.043701]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296852,40.043682]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":103}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296997,40.043655]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":104}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297134,40.043633]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":105}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297256,40.043610]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":106}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297363,40.043591]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":107}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297531,40.043552]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":108}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297646,40.043522]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":109}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297775,40.043518]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":110}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.043480]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":111}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297981,40.043404]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":112}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297989,40.043274]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":113}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297958,40.043121]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":114}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297935,40.043037]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":115}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297920,40.042946]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":116}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.042793]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":117}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.042690]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":118}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298027,40.042648]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":119}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298164,40.042641]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":120}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298164,40.042641]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":121}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.300003,40.042339]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":0,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.141,"distance_from_trace_point":1.292}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299980,40.042233]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":1,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.306,"distance_from_trace_point":1.292}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299957,40.042107]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":2,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.500,"distance_from_trace_point":1.983}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299934,40.041996]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":3,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.671,"distance_from_trace_point":1.359}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299919,40.041908]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":4,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.806,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299904,40.041843]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":5,"matched_point_type":"interpolated","edge_index":0,"distance_along_edge":0.907,"distance_from_trace_point":5.873}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299675,40.041805]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":6,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.100,"distance_from_trace_point":8.117}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299484,40.041824]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":7,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.187,"distance_from_trace_point":6.779}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299370,40.041840]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":8,"matched_point_type":"interpolated","edge_index":1,"distance_along_edge":0.239,"distance_from_trace_point":5.940}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299263,40.041851]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":9,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.287,"distance_from_trace_point":5.940}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299149,40.041862]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":10,"matched_point_type":"interpolated","edge_index":1,"distance_along_edge":0.339,"distance_from_trace_point":6.360}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299026,40.041874]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":11,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.394,"distance_from_trace_point":6.360}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298904,40.041889]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":12,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.450,"distance_from_trace_point":6.360}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298790,40.041901]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":13,"matched_point_type":"interpolated","edge_index":1,"distance_along_edge":0.502,"distance_from_trace_point":5.521}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298599,40.041920]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":14,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.588,"distance_from_trace_point":5.521}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298447,40.041935]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":15,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.657,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298347,40.041946]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":16,"matched_point_type":"interpolated","edge_index":1,"distance_along_edge":0.702,"distance_from_trace_point":6.779}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298180,40.041965]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":17,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.779,"distance_from_trace_point":6.779}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298027,40.041981]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":18,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.848,"distance_from_trace_point":5.940}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297844,40.042000]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":19,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.931,"distance_from_trace_point":6.360}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297630,40.042023]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":20,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.072,"distance_from_trace_point":5.940}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297516,40.042034]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":21,"matched_point_type":"interpolated","edge_index":2,"distance_along_edge":0.206,"distance_from_trace_point":4.684}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297394,40.042046]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":22,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.348,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297256,40.042057]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":23,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.509,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297119,40.042072]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":24,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.670,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296982,40.042084]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":25,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.830,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296837,40.042099]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":26,"matched_point_type":"matched","edge_index":2,"distance_along_edge":1.000,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296700,40.042114]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":27,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.115,"distance_from_trace_point":4.684}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296562,40.042130]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":28,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.231,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296425,40.042141]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":29,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.346,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296288,40.042156]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":30,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.461,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296165,40.042171]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":31,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.564,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296036,40.042183]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":32,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.673,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295898,40.042198]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":33,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.788,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295753,40.042213]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":34,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.910,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295616,40.042229]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":35,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.016,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295471,40.042244]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":36,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.094,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295326,40.042263]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":37,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.172,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295181,40.042278]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":38,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.250,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295036,40.042294]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":39,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.328,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294884,40.042313]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":40,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.410,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294731,40.042332]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":41,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.492,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294586,40.042347]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":42,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.570,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294441,40.042362]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":43,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.647,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294296,40.042381]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":44,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.726,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294159,40.042397]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":45,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.799,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294029,40.042412]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":46,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.869,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293846,40.042431]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":47,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.967,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293800,40.042530]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":48,"matched_point_type":"matched","edge_index":5,"distance_along_edge":0.142,"distance_from_trace_point":1.983}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293823,40.042664]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":49,"matched_point_type":"matched","edge_index":5,"distance_along_edge":0.349,"distance_from_trace_point":2.617}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293854,40.042816]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":50,"matched_point_type":"matched","edge_index":5,"distance_along_edge":0.586,"distance_from_trace_point":2.617}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293869,40.042904]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":51,"matched_point_type":"interpolated","edge_index":5,"distance_along_edge":0.722,"distance_from_trace_point":1.983}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293900,40.043083]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":52,"matched_point_type":"matched","edge_index":5,"distance_along_edge":1.000,"distance_from_trace_point":2.113}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293732,40.043102]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":53,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.087,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293556,40.043118]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":54,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.177,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293442,40.043133]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":55,"matched_point_type":"interpolated","edge_index":6,"distance_along_edge":0.236,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293312,40.043144]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":56,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.303,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293175,40.043159]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":57,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.374,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293053,40.043175]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":58,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.437,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292931,40.043186]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":59,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.500,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292809,40.043198]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":60,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.563,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292694,40.043213]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":61,"matched_point_type":"interpolated","edge_index":6,"distance_along_edge":0.622,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292572,40.043224]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":62,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.685,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292458,40.043236]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":63,"matched_point_type":"interpolated","edge_index":6,"distance_along_edge":0.744,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292343,40.043247]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":64,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.803,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292175,40.043266]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":65,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.890,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292076,40.043278]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":66,"matched_point_type":"interpolated","edge_index":6,"distance_along_edge":0.941,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.291977,40.043388]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":67,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.111,"distance_from_trace_point":1.292}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292007,40.043537]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":68,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.278,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292030,40.043655]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":69,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.411,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292053,40.043797]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":70,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.568,"distance_from_trace_point":0.646}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292076,40.043911]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":71,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.697,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292091,40.044014]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":72,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.812,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292114,40.044121]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":73,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.932,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292221,40.044170]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":74,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.051,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292389,40.044155]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":75,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.138,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292496,40.044144]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":76,"matched_point_type":"interpolated","edge_index":8,"distance_along_edge":0.193,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292625,40.044128]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":77,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.260,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292763,40.044117]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":78,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.331,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292900,40.044102]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":79,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.401,"distance_from_trace_point":2.109}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293045,40.044086]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":80,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.476,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293205,40.044067]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":81,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.559,"distance_from_trace_point":2.109}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293365,40.044052]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":82,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.642,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293541,40.044033]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":83,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.732,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293716,40.044014]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":84,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.823,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293892,40.043999]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":85,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.913,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294067,40.043980]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":86,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.005,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294235,40.043961]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":87,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.125,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294426,40.043941]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":88,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.261,"distance_from_trace_point":2.109}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294601,40.043922]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":89,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.386,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294762,40.043907]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":90,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.500,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294930,40.043892]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":91,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.619,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295090,40.043873]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":92,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.734,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295250,40.043858]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":93,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.848,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295410,40.043839]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":94,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.962,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295570,40.043823]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":95,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.043,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295731,40.043808]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":96,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.106,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295898,40.043789]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":97,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.173,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296059,40.043770]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":98,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.237,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296211,40.043755]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":99,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.298,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296379,40.043732]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":100,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.365,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296539,40.043716]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":101,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.428,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296700,40.043697]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":102,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.492,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296852,40.043671]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":103,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.554,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296997,40.043648]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":104,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.612,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297134,40.043621]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":105,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.668,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297256,40.043598]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":106,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.718,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297356,40.043579]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":107,"matched_point_type":"interpolated","edge_index":10,"distance_along_edge":0.758,"distance_from_trace_point":1.421}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297523,40.043541]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":108,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.827,"distance_from_trace_point":1.421}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297646,40.043518]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":109,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.877,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297768,40.043495]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":110,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.926,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.043476]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":111,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.975,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297943,40.043407]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":112,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.072,"distance_from_trace_point":3.256}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297920,40.043282]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":113,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.230,"distance_from_trace_point":5.873}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.043129]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":114,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.423,"distance_from_trace_point":5.873}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297874,40.043045]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":115,"matched_point_type":"interpolated","edge_index":11,"distance_along_edge":0.529,"distance_from_trace_point":5.235}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297859,40.042953]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":116,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.644,"distance_from_trace_point":5.235}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297829,40.042801]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":117,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.837,"distance_from_trace_point":5.235}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297882,40.042664]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":118,"matched_point_type":"matched","edge_index":12,"distance_along_edge":0.073,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298027,40.042645]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":119,"matched_point_type":"matched","edge_index":12,"distance_along_edge":0.212,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298164,40.042629]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":120,"matched_point_type":"matched","edge_index":12,"distance_along_edge":0.343,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298164,40.042629]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":121,"matched_point_type":"matched","edge_index":12,"distance_along_edge":0.343,"distance_from_trace_point":1.265}}
+]}
+ */
  void TestAutoLancasterVerbalMultiCue() {
    std::string route_json_str = R"({"trip":{"language":"en-US","summary":{"max_lon":-76.291962,"max_lat":40.044182,"time":242,"length":0.963,"min_lat":40.041782,"min_lon":-76.300003},"locations":[{"lon":-76.300018,"lat":40.042339,"type":"break"},{"lon":-76.298164,"lat":40.042641,"type":"break"}],"units":"miles","legs":[{"shape":"eu~jkAfm~opCxa@uEqMyhCeDmt@{FkiAkLisBig@bF{KcxBwv@~HrKbxB`HvvAhBn^nDdn@rAfNTvCxBpRxBrPjBpRpp@aHrAlU","summary":{"max_lon":-76.291962,"max_lat":40.044182,"time":242,"length":0.963,"min_lat":40.041782,"min_lon":-76.300003},"maneuvers":[{"travel_type":"car","street_names":["North Shippen Street"],"verbal_pre_transition_instruction":"Drive south on North Shippen Street for 200 feet. Then Turn left onto East Chestnut Street.","instruction":"Drive south on North Shippen Street.","end_shape_index":1,"type":1,"time":6,"verbal_multi_cue":true,"length":0.039,"begin_shape_index":0,"travel_mode":"drive"},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left onto East Chestnut Street, Pennsylvania 23 East.","verbal_transition_alert_instruction":"Turn left onto East Chestnut Street.","length":0.326,"instruction":"Turn left onto East Chestnut Street\/PA 23 East.","end_shape_index":5,"type":15,"time":87,"verbal_post_transition_instruction":"Continue for 3 tenths of a mile.","street_names":["East Chestnut Street","PA 23 East"],"begin_shape_index":1},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Marshall Street. Then Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn left onto North Marshall Street.","length":0.045,"instruction":"Turn left onto North Marshall Street.","end_shape_index":6,"type":15,"time":8,"verbal_post_transition_instruction":"Continue for 200 feet.","street_names":["North Marshall Street"],"begin_shape_index":5},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn right onto East Fulton Street.","length":0.104,"instruction":"Turn right onto East Fulton Street.","end_shape_index":7,"type":10,"time":21,"verbal_post_transition_instruction":"Continue for 1 tenth of a mile.","street_names":["East Fulton Street"],"begin_shape_index":6},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Franklin Street. Then Turn left onto East Walnut Street.","verbal_transition_alert_instruction":"Turn left onto North Franklin Street.","length":0.062,"instruction":"Turn left onto North Franklin Street.","end_shape_index":8,"type":15,"time":25,"verbal_post_transition_instruction":"Continue for 300 feet.","street_names":["North Franklin Street"],"begin_shape_index":7},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left onto East Walnut Street, Pennsylvania 23 West.","verbal_transition_alert_instruction":"Turn left onto East Walnut Street.","length":0.313,"instruction":"Turn left onto East Walnut Street\/PA 23 West\/PA 462 West.","end_shape_index":17,"type":15,"time":66,"verbal_post_transition_instruction":"Continue for 3 tenths of a mile.","street_names":["East Walnut Street","PA 23 West","PA 462 West"],"begin_shape_index":8},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Plum Street. Then Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn left onto North Plum Street.","length":0.055,"instruction":"Turn left onto North Plum Street.","end_shape_index":18,"type":15,"time":20,"verbal_post_transition_instruction":"Continue for 300 feet.","street_names":["North Plum Street"],"begin_shape_index":17},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn right onto East Fulton Street. Then You will arrive at your destination.","verbal_transition_alert_instruction":"Turn right onto East Fulton Street.","length":0.019,"instruction":"Turn right onto East Fulton Street.","end_shape_index":19,"type":10,"time":9,"verbal_post_transition_instruction":"Continue for 100 feet.","street_names":["East Fulton Street"],"begin_shape_index":18},{"travel_type":"car","travel_mode":"drive","begin_shape_index":19,"time":0,"type":4,"end_shape_index":19,"instruction":"You have arrived at your destination.","length":0.000,"verbal_transition_alert_instruction":"You will arrive at your destination.","verbal_pre_transition_instruction":"You have arrived at your destination."}]}],"status_message":"Found route between points","status":0}})";
    NavigatorTest nav;
@@ -15723,6 +15971,1095 @@ void TestAutoMiddletownRoadToLandingsDrive() {
    uint32_t instruction_index = 0;
    ////////////////////////////////////////////////////////////////////////////
 
+   //----------------------------------------------------------------
+   // trace point = 0
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.3000183f, 40.0423393f, 1510692420, 0),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.3000031f, 40.0423393f, leg_index, 0.964204311f, 244,
+           maneuver_index, 0.0389375091f, 6));
+   //----------------------------------------------------------------
+   // trace point = 1
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2999954f, 40.0422325f, 1510692424, 2.93912911),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999802f, 40.0422325f, leg_index, 0.956718624f, 243,
+           maneuver_index, 0.0314518213f, 5));
+   //----------------------------------------------------------------
+   // trace point = 2
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2999344f, 40.0421104f, 1510692426, 7.18354702),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999573f, 40.0421066f, leg_index, 0.947927177f, 241,
+           maneuver_index, 0.0226603746f, 3));
+   //----------------------------------------------------------------
+   // trace point = 3
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2999191f, 40.0419998f, 1510692429, 4.27199888),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999344f, 40.041996f, leg_index, 0.940180719f, 240,
+           maneuver_index, 0.0149139166f, 2));
+   //----------------------------------------------------------------
+   // trace point = 4
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2999191f, 40.0419083f, 1510692439, 1.00187504),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999191f, 40.0419083f, leg_index, 0.934058487f, 239,
+           maneuver_index, 0.0087916851f, 1));
+   //----------------------------------------------------------------
+   // trace point = 5
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2998352f, 40.041851f, 1510692449, 0.926688015),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999115f, 40.0418434f, leg_index, 0.92956537f, 239,
+           maneuver_index, 0.00429856777f, 1));
+   //----------------------------------------------------------------
+   // trace point = 6
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2996902f, 40.0418777f, 1510692450, 12.8004837),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.299675f, 40.0418053f, leg_index, 0.913443804f, 235,
+           maneuver_index, 0.314969718f, 84));
+   //----------------------------------------------------------------
+   // trace point = 7
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2994919f, 40.0418854f, 1510692452, 8.4519701),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2994843f, 40.0418243f, leg_index, 0.903257847f, 233,
+           maneuver_index, 0.304783762f, 82));
+   //----------------------------------------------------------------
+   // trace point = 8
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2993774f, 40.041893f, 1510692453, 9.83161354),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2993698f, 40.0418396f, leg_index, 0.897110224f, 231,
+           maneuver_index, 0.298636138f, 80));
+   //----------------------------------------------------------------
+   // trace point = 9
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2992706f, 40.0419044f, 1510692454, 9.56984138),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.299263f, 40.041851f, leg_index, 0.891398907f, 229,
+           maneuver_index, 0.292924821f, 78));
+   //----------------------------------------------------------------
+   // trace point = 10
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2991562f, 40.0419197f, 1510692455, 9.97574806),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2991486f, 40.0418625f, leg_index, 0.885287225f, 228,
+           maneuver_index, 0.28681314f, 77));
+   //----------------------------------------------------------------
+   // trace point = 11
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2990341f, 40.0419312f, 1510692456, 10.0079918),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2990265f, 40.0418739f, leg_index, 0.878775358f, 226,
+           maneuver_index, 0.280301273f, 75));
+   //----------------------------------------------------------------
+   // trace point = 12
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.298912f, 40.0419464f, 1510692457, 10.6327038),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2989044f, 40.0418892f, leg_index, 0.872227609f, 224,
+           maneuver_index, 0.273753524f, 73));
+   //----------------------------------------------------------------
+   // trace point = 13
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2987976f, 40.0419502f, 1510692458, 9.81078529),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.29879f, 40.0419006f, leg_index, 0.866115928f, 223,
+           maneuver_index, 0.267641842f, 72));
+   //----------------------------------------------------------------
+   // trace point = 14
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2986069f, 40.0419693f, 1510692460, 8.36296844),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2985992f, 40.0419197f, leg_index, 0.855929852f, 220,
+           maneuver_index, 0.257455766f, 69));
+   //----------------------------------------------------------------
+   // trace point = 15
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2984543f, 40.0419807f, 1510692462, 6.30556107),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2984467f, 40.041935f, leg_index, 0.847781062f, 218,
+           maneuver_index, 0.249306977f, 67));
+   //----------------------------------------------------------------
+   // trace point = 16
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2983551f, 40.0420074f, 1510692466, 2.31070995),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2983475f, 40.0419464f, leg_index, 0.842469931f, 216,
+           maneuver_index, 0.243995845f, 65));
+   //----------------------------------------------------------------
+   // trace point = 17
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2981873f, 40.0420265f, 1510692475, 1.61746597),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2981796f, 40.0419655f, leg_index, 0.833484948f, 214,
+           maneuver_index, 0.235010862f, 63));
+   //----------------------------------------------------------------
+   // trace point = 18
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2980347f, 40.0420341f, 1510692477, 6.57727289),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.298027f, 40.0419807f, leg_index, 0.825336158f, 212,
+           maneuver_index, 0.226862073f, 61));
+   //----------------------------------------------------------------
+   // trace point = 19
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2978516f, 40.042057f, 1510692479, 7.88503313),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978439f, 40.0419998f, leg_index, 0.815550208f, 209,
+           maneuver_index, 0.217076123f, 58));
+   //----------------------------------------------------------------
+   // trace point = 20
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2976379f, 40.0420761f, 1510692481, 9.03182125),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2976303f, 40.0420227f, leg_index, 0.804128468f, 206,
+           maneuver_index, 0.205654383f, 55));
+   //----------------------------------------------------------------
+   // trace point = 21
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2975235f, 40.0420761f, 1510692482, 9.88838673),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2975159f, 40.0420341f, leg_index, 0.798016846f, 205,
+           maneuver_index, 0.199542761f, 54));
+   //----------------------------------------------------------------
+   // trace point = 22
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2974014f, 40.0420914f, 1510692483, 10.6326818),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2973938f, 40.0420456f, leg_index, 0.791504204f, 203,
+           maneuver_index, 0.193030119f, 52));
+   //----------------------------------------------------------------
+   // trace point = 23
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2972641f, 40.0421028f, 1510692484, 11.4006214),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2972565f, 40.042057f, leg_index, 0.784190238f, 201,
+           maneuver_index, 0.185716152f, 50));
+   //----------------------------------------------------------------
+   // trace point = 24
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2971268f, 40.0421104f, 1510692485, 11.80338),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2971191f, 40.0420723f, leg_index, 0.776843011f, 199,
+           maneuver_index, 0.178368926f, 48));
+   //----------------------------------------------------------------
+   // trace point = 25
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2969894f, 40.0421295f, 1510692486, 12.2320423),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2969818f, 40.0420837f, leg_index, 0.769529283f, 197,
+           maneuver_index, 0.171055198f, 46));
+   //----------------------------------------------------------------
+   // trace point = 26
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2968445f, 40.0421448f, 1510692487, 12.3163605),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2968369f, 40.042099f, leg_index, 0.7617805f, 195,
+           maneuver_index, 0.163306415f, 44));
+   //----------------------------------------------------------------
+   // trace point = 27
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2967072f, 40.0421562f, 1510692488, 11.6803265),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2966995f, 40.0421143f, leg_index, 0.754432142f, 193,
+           maneuver_index, 0.155958056f, 42));
+   //----------------------------------------------------------------
+   // trace point = 28
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2965698f, 40.0421677f, 1510692489, 11.8363953),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2965622f, 40.0421295f, leg_index, 0.747083962f, 191,
+           maneuver_index, 0.148609877f, 40));
+   //----------------------------------------------------------------
+   // trace point = 29
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2964325f, 40.0421791f, 1510692490, 11.4131021),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2964249f, 40.042141f, leg_index, 0.739771783f, 189,
+           maneuver_index, 0.141297698f, 38));
+   //----------------------------------------------------------------
+   // trace point = 30
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2962952f, 40.042202f, 1510692491, 11.9696493),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2962875f, 40.0421562f, leg_index, 0.732423425f, 187,
+           maneuver_index, 0.133949339f, 36));
+   //----------------------------------------------------------------
+   // trace point = 31
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2961731f, 40.0422096f, 1510692492, 10.6900272),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2961655f, 40.0421715f, leg_index, 0.725875616f, 185,
+           maneuver_index, 0.127401531f, 34));
+   //----------------------------------------------------------------
+   // trace point = 32
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2960434f, 40.0422173f, 1510692493, 10.8804092),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2960358f, 40.0421829f, leg_index, 0.718963504f, 184,
+           maneuver_index, 0.120489419f, 33));
+   //----------------------------------------------------------------
+   // trace point = 33
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2959061f, 40.0422363f, 1510692494, 11.9961939),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2958984f, 40.0421982f, leg_index, 0.711615145f, 182,
+           maneuver_index, 0.11314106f, 31));
+   //----------------------------------------------------------------
+   // trace point = 34
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2957611f, 40.0422516f, 1510692495, 12.3163414),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2957535f, 40.0422134f, leg_index, 0.703866303f, 180,
+           maneuver_index, 0.105392218f, 29));
+   //----------------------------------------------------------------
+   // trace point = 35
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2956238f, 40.0422668f, 1510692496, 12.1878691),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2956161f, 40.0422287f, leg_index, 0.696517944f, 177,
+           maneuver_index, 0.098043859f, 26));
+   //----------------------------------------------------------------
+   // trace point = 36
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2954788f, 40.0422745f, 1510692497, 12.5026474),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2954712f, 40.042244f, leg_index, 0.688769996f, 175,
+           maneuver_index, 0.0902959108f, 24));
+   //----------------------------------------------------------------
+   // trace point = 37
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2953339f, 40.0422935f, 1510692498, 12.2850847),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2953262f, 40.042263f, leg_index, 0.680982947f, 173,
+           maneuver_index, 0.082508862f, 22));
+   //----------------------------------------------------------------
+   // trace point = 38
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2951889f, 40.0423126f, 1510692499, 12.5013752),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2951813f, 40.0422783f, leg_index, 0.67323494f, 171,
+           maneuver_index, 0.0747608542f, 20));
+   //----------------------------------------------------------------
+   // trace point = 39
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2950439f, 40.0423317f, 1510692500, 12.7050419),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2950363f, 40.0422935f, leg_index, 0.665487051f, 169,
+           maneuver_index, 0.0670129657f, 18));
+   //----------------------------------------------------------------
+   // trace point = 40
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2948914f, 40.0423431f, 1510692501, 12.9626675),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2948837f, 40.0423126f, leg_index, 0.657300353f, 167,
+           maneuver_index, 0.0588262677f, 16));
+   //----------------------------------------------------------------
+   // trace point = 41
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2947388f, 40.0423622f, 1510692502, 12.8384333),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2947311f, 40.0423317f, leg_index, 0.649113894f, 165,
+           maneuver_index, 0.0506398082f, 14));
+   //----------------------------------------------------------------
+   // trace point = 42
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2945938f, 40.0423737f, 1510692503, 12.5987616),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2945862f, 40.042347f, leg_index, 0.641365826f, 162,
+           maneuver_index, 0.0428917408f, 11));
+   //----------------------------------------------------------------
+   // trace point = 43
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2944489f, 40.0423927f, 1510692504, 12.7541418),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2944412f, 40.0423622f, leg_index, 0.633617878f, 160,
+           maneuver_index, 0.0351437926f, 9));
+   //----------------------------------------------------------------
+   // trace point = 44
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2943039f, 40.042408f, 1510692505, 12.518693),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2942963f, 40.0423813f, leg_index, 0.625831008f, 158,
+           maneuver_index, 0.0273569226f, 7));
+   //----------------------------------------------------------------
+   // trace point = 45
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2941666f, 40.0424194f, 1510692506, 11.5587912),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2941589f, 40.0423965f, leg_index, 0.618482411f, 156,
+           maneuver_index, 0.0200083256f, 5));
+   //----------------------------------------------------------------
+   // trace point = 46
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2940369f, 40.0424347f, 1510692507, 11.1880255),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2940292f, 40.0424118f, leg_index, 0.61153394f, 154,
+           maneuver_index, 0.0130598545f, 3));
+   //----------------------------------------------------------------
+   // trace point = 47
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938538f, 40.0424614f, 1510692509, 7.82676888),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938461f, 40.0424309f, leg_index, 0.60174942f, 152,
+           maneuver_index, 0.00327533484f, 1));
+   //----------------------------------------------------------------
+   // trace point = 48
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2937775f, 40.0425339f, 1510692511, 5.13638687),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938004f, 40.0425301f, leg_index, 0.59209013f, 150,
+           maneuver_index, 0.0386193395f, 7));
+   //----------------------------------------------------------------
+   // trace point = 49
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2937927f, 40.0426674f, 1510692513, 7.485744),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938232f, 40.0426636f, leg_index, 0.58277595f, 148,
+           maneuver_index, 0.02930516f, 5));
+   //----------------------------------------------------------------
+   // trace point = 50
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938232f, 40.04282f, 1510692515, 8.72780132),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938538f, 40.0428162f, leg_index, 0.572099686f, 146,
+           maneuver_index, 0.0186288953f, 3));
+   //----------------------------------------------------------------
+   // trace point = 51
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938461f, 40.0429077f, 1510692516, 9.709445),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.293869f, 40.0429039f, leg_index, 0.565977335f, 145,
+           maneuver_index, 0.0125065446f, 2));
+   //----------------------------------------------------------------
+   // trace point = 52
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938766f, 40.0430756f, 1510692518, 9.46240425),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938766f, 40.043087f, leg_index, 0.552234054f, 143,
+           maneuver_index, 0.102366507f, 21));
+   //----------------------------------------------------------------
+   // trace point = 53
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2937393f, 40.043129f, 1510692521, 4.54608583),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2937317f, 40.0431023f, leg_index, 0.544485569f, 141,
+           maneuver_index, 0.0946180224f, 19));
+   //----------------------------------------------------------------
+   // trace point = 54
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2935638f, 40.0431404f, 1510692523, 7.48675919),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2935562f, 40.0431175f, leg_index, 0.53513658f, 139,
+           maneuver_index, 0.0852690339f, 17));
+   //----------------------------------------------------------------
+   // trace point = 55
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2934494f, 40.0431595f, 1510692524, 9.66950607),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2934418f, 40.0431328f, leg_index, 0.528988719f, 138,
+           maneuver_index, 0.0791211724f, 16));
+   //----------------------------------------------------------------
+   // trace point = 56
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2933197f, 40.0431709f, 1510692525, 11.134613),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2933121f, 40.0431442f, leg_index, 0.522076964f, 137,
+           maneuver_index, 0.0722094178f, 15));
+   //----------------------------------------------------------------
+   // trace point = 57
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2931824f, 40.0431938f, 1510692526, 11.7539282),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2931747f, 40.0431595f, leg_index, 0.514728665f, 135,
+           maneuver_index, 0.0648611188f, 13));
+   //----------------------------------------------------------------
+   // trace point = 58
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2930603f, 40.0432053f, 1510692527, 10.4689083),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2930527f, 40.0431747f, leg_index, 0.508180857f, 134,
+           maneuver_index, 0.0583133101f, 12));
+   //----------------------------------------------------------------
+   // trace point = 59
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2929382f, 40.0432205f, 1510692528, 10.8669863),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2929306f, 40.0431862f, leg_index, 0.501669168f, 132,
+           maneuver_index, 0.0518016219f, 10));
+   //----------------------------------------------------------------
+   // trace point = 60
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2928162f, 40.0432358f, 1510692529, 10.2441111),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2928085f, 40.0431976f, leg_index, 0.495157629f, 131,
+           maneuver_index, 0.0452900827f, 9));
+   //----------------------------------------------------------------
+   // trace point = 61
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2927017f, 40.0432472f, 1510692530, 10.0600176),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2926941f, 40.0432129f, leg_index, 0.489009917f, 130,
+           maneuver_index, 0.0391423702f, 8));
+   //----------------------------------------------------------------
+   // trace point = 62
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2925797f, 40.0432549f, 1510692531, 10.2562418),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.292572f, 40.0432243f, leg_index, 0.482498139f, 129,
+           maneuver_index, 0.0326305926f, 7));
+   //----------------------------------------------------------------
+   // trace point = 63
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2924652f, 40.0432663f, 1510692532, 9.97555447),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2924576f, 40.0432358f, leg_index, 0.476386786f, 127,
+           maneuver_index, 0.0265192389f, 5));
+   //----------------------------------------------------------------
+   // trace point = 64
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2923508f, 40.0432816f, 1510692533, 9.73061657),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2923431f, 40.0432472f, leg_index, 0.470275581f, 126,
+           maneuver_index, 0.0204080343f, 4));
+   //----------------------------------------------------------------
+   // trace point = 65
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2921829f, 40.0432968f, 1510692535, 7.28562689),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2921753f, 40.0432663f, leg_index, 0.46129033f, 124,
+           maneuver_index, 0.0114227831f, 2));
+   //----------------------------------------------------------------
+   // trace point = 66
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920761f, 40.043293f, 1510692538, 3.0416081),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920761f, 40.0432777f, leg_index, 0.455979228f, 123,
+           maneuver_index, 0.00611168146f, 1));
+   //----------------------------------------------------------------
+   // trace point = 67
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2919922f, 40.0433884f, 1510692542, 3.27460003),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2919769f, 40.0433884f, leg_index, 0.442961097f, 119,
+           maneuver_index, 0.0554183722f, 22));
+   //----------------------------------------------------------------
+   // trace point = 68
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920074f, 40.0435371f, 1510692544, 8.33697319),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920074f, 40.0435371f, leg_index, 0.43254596f, 115,
+           maneuver_index, 0.0450032353f, 18));
+   //----------------------------------------------------------------
+   // trace point = 69
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920303f, 40.0436554f, 1510692545, 13.1586323),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920303f, 40.0436554f, leg_index, 0.424277574f, 112,
+           maneuver_index, 0.0367348492f, 15));
+   //----------------------------------------------------------------
+   // trace point = 70
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920609f, 40.0437965f, 1510692546, 15.8070602),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920532f, 40.0437965f, leg_index, 0.414440155f, 108,
+           maneuver_index, 0.0268974304f, 11));
+   //----------------------------------------------------------------
+   // trace point = 71
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920761f, 40.043911f, 1510692547, 12.9761791),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920761f, 40.043911f, leg_index, 0.406433374f, 105,
+           maneuver_index, 0.0188906491f, 8));
+   //----------------------------------------------------------------
+   // trace point = 72
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920914f, 40.044014f, 1510692548, 11.5466986),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920914f, 40.044014f, leg_index, 0.399264783f, 102,
+           maneuver_index, 0.0117220581f, 5));
+   //----------------------------------------------------------------
+   // trace point = 73
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2921143f, 40.0441208f, 1510692549, 11.8001652),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2921143f, 40.0441208f, leg_index, 0.391784102f, 99,
+           maneuver_index, 0.00424137712f, 2));
+   //----------------------------------------------------------------
+   // trace point = 74
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2922211f, 40.0441818f, 1510692551, 5.718081),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2922211f, 40.0441704f, leg_index, 0.382231891f, 96,
+           maneuver_index, 0.307604313f, 67));
+   //----------------------------------------------------------------
+   // trace point = 75
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2923889f, 40.0441704f, 1510692553, 7.35449123),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2923889f, 40.0441551f, leg_index, 0.373282671f, 94,
+           maneuver_index, 0.298655093f, 65));
+   //----------------------------------------------------------------
+   // trace point = 76
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2924957f, 40.0441589f, 1510692554, 9.31688976),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2924957f, 40.0441437f, leg_index, 0.367571473f, 93,
+           maneuver_index, 0.292943895f, 64));
+   //----------------------------------------------------------------
+   // trace point = 77
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2926254f, 40.0441437f, 1510692555, 10.8845015),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2926254f, 40.0441284f, leg_index, 0.360623777f, 91,
+           maneuver_index, 0.285996199f, 62));
+   //----------------------------------------------------------------
+   // trace point = 78
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2927628f, 40.0441322f, 1510692556, 11.5483122),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2927628f, 40.044117f, leg_index, 0.353311509f, 90,
+           maneuver_index, 0.278683931f, 61));
+   //----------------------------------------------------------------
+   // trace point = 79
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2929001f, 40.0441208f, 1510692557, 12.1748238),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2929001f, 40.0441017f, leg_index, 0.345963418f, 88,
+           maneuver_index, 0.27133584f, 59));
+   //----------------------------------------------------------------
+   // trace point = 80
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2930527f, 40.0441093f, 1510692558, 12.8777351),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.293045f, 40.0440865f, leg_index, 0.338215113f, 86,
+           maneuver_index, 0.263587534f, 57));
+   //----------------------------------------------------------------
+   // trace point = 81
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2932053f, 40.0440865f, 1510692559, 13.2274628),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2932053f, 40.0440674f, leg_index, 0.329630554f, 85,
+           maneuver_index, 0.255002975f, 56));
+   //----------------------------------------------------------------
+   // trace point = 82
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2933655f, 40.0440674f, 1510692560, 14.189127),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2933655f, 40.0440521f, leg_index, 0.321081549f, 83,
+           maneuver_index, 0.246453971f, 54));
+   //----------------------------------------------------------------
+   // trace point = 83
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.293541f, 40.0440445f, 1510692561, 14.674902),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.293541f, 40.0440331f, leg_index, 0.31169641f, 81,
+           maneuver_index, 0.237068832f, 52));
+   //----------------------------------------------------------------
+   // trace point = 84
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2937164f, 40.0440292f, 1510692562, 15.1042175),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2937164f, 40.044014f, leg_index, 0.30231145f, 79,
+           maneuver_index, 0.227683872f, 50));
+   //----------------------------------------------------------------
+   // trace point = 85
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938919f, 40.044014f, 1510692563, 15.2609062),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938919f, 40.0439987f, leg_index, 0.292962253f, 77,
+           maneuver_index, 0.218334675f, 48));
+   //----------------------------------------------------------------
+   // trace point = 86
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.294075f, 40.0440025f, 1510692564, 15.5584278),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2940674f, 40.0439796f, leg_index, 0.283576429f, 75,
+           maneuver_index, 0.208948851f, 46));
+   //----------------------------------------------------------------
+   // trace point = 87
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2942429f, 40.0439835f, 1510692565, 14.6575947),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2942352f, 40.0439606f, leg_index, 0.274591684f, 73,
+           maneuver_index, 0.199964106f, 44));
+   //----------------------------------------------------------------
+   // trace point = 88
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.294426f, 40.0439606f, 1510692566, 15.8707104),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.294426f, 40.0439415f, leg_index, 0.264405817f, 71,
+           maneuver_index, 0.189778239f, 42));
+   //----------------------------------------------------------------
+   // trace point = 89
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2946091f, 40.0439491f, 1510692567, 15.1250944),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2946014f, 40.0439224f, leg_index, 0.255020797f, 69,
+           maneuver_index, 0.180393219f, 40));
+   //----------------------------------------------------------------
+   // trace point = 90
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2947693f, 40.0439301f, 1510692568, 14.1703653),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2947617f, 40.0439072f, leg_index, 0.246471643f, 67,
+           maneuver_index, 0.171844065f, 38));
+   //----------------------------------------------------------------
+   // trace point = 91
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2949295f, 40.0438995f, 1510692569, 14.12113),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2949295f, 40.0438919f, leg_index, 0.237522453f, 65,
+           maneuver_index, 0.162894875f, 36));
+   //----------------------------------------------------------------
+   // trace point = 92
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2950897f, 40.0438805f, 1510692570, 13.4144936),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2950897f, 40.0438728f, leg_index, 0.228937835f, 63,
+           maneuver_index, 0.154310256f, 34));
+   //----------------------------------------------------------------
+   // trace point = 93
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2952499f, 40.0438614f, 1510692571, 14.0892553),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2952499f, 40.0438576f, leg_index, 0.220388889f, 61,
+           maneuver_index, 0.145761311f, 32));
+   //----------------------------------------------------------------
+   // trace point = 94
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2954102f, 40.0438461f, 1510692572, 13.6131754),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2954102f, 40.0438385f, leg_index, 0.211806029f, 60,
+           maneuver_index, 0.137178451f, 31));
+   //----------------------------------------------------------------
+   // trace point = 95
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2955704f, 40.0438194f, 1510692573, 14.3130074),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2955704f, 40.0438232f, leg_index, 0.203255221f, 57,
+           maneuver_index, 0.128627628f, 28));
+   //----------------------------------------------------------------
+   // trace point = 96
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2957306f, 40.0437927f, 1510692574, 13.9626856),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2957306f, 40.043808f, leg_index, 0.19470717f, 56,
+           maneuver_index, 0.120079584f, 27));
+   //----------------------------------------------------------------
+   // trace point = 97
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2958984f, 40.0437813f, 1510692575, 14.0628624),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2958984f, 40.0437889f, leg_index, 0.185721666f, 54,
+           maneuver_index, 0.11109408f, 25));
+   //----------------------------------------------------------------
+   // trace point = 98
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2960587f, 40.0437622f, 1510692576, 13.6131916),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2960587f, 40.0437698f, leg_index, 0.177135438f, 51,
+           maneuver_index, 0.102507852f, 22));
+   //----------------------------------------------------------------
+   // trace point = 99
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2962112f, 40.0437508f, 1510692577, 13.4259272),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2962112f, 40.0437546f, leg_index, 0.168988556f, 50,
+           maneuver_index, 0.09436097f, 21));
+   //----------------------------------------------------------------
+   // trace point = 100
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2963791f, 40.0437393f, 1510692578, 14.1475697),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2963791f, 40.0437317f, leg_index, 0.159963638f, 48,
+           maneuver_index, 0.0853360519f, 19));
+   //----------------------------------------------------------------
+   // trace point = 101
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2965393f, 40.0437202f, 1510692579, 14.2196522),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2965393f, 40.0437164f, leg_index, 0.151417524f, 46,
+           maneuver_index, 0.0767899379f, 17));
+   //----------------------------------------------------------------
+   // trace point = 102
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2966995f, 40.0437012f, 1510692580, 13.4977379),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2966995f, 40.0436974f, leg_index, 0.142833024f, 44,
+           maneuver_index, 0.0682054386f, 15));
+   //----------------------------------------------------------------
+   // trace point = 103
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2968521f, 40.0436821f, 1510692581, 13.3306227),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2968521f, 40.0436707f, leg_index, 0.134544641f, 42,
+           maneuver_index, 0.0599170551f, 13));
+   //----------------------------------------------------------------
+   // trace point = 104
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2969971f, 40.0436554f, 1510692582, 12.5834446),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2969971f, 40.0436478f, leg_index, 0.126706213f, 41,
+           maneuver_index, 0.052078627f, 12));
+   //----------------------------------------------------------------
+   // trace point = 105
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2971344f, 40.0436325f, 1510692583, 12.1432838),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2971344f, 40.0436211f, leg_index, 0.119202264f, 39,
+           maneuver_index, 0.0445746779f, 10));
+   //----------------------------------------------------------------
+   // trace point = 106
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2972565f, 40.0436096f, 1510692584, 10.5156965),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2972565f, 40.0435982f, leg_index, 0.1125471f, 37,
+           maneuver_index, 0.0379195139f, 8));
+   //----------------------------------------------------------------
+   // trace point = 107
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2973633f, 40.0435905f, 1510692585, 9.63508797),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2973557f, 40.0435791f, leg_index, 0.107131921f, 36,
+           maneuver_index, 0.032504335f, 7));
+   //----------------------------------------------------------------
+   // trace point = 108
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2975311f, 40.0435524f, 1510692587, 7.45613098),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2975235f, 40.043541f, leg_index, 0.0978620723f, 34,
+           maneuver_index, 0.0232344866f, 5));
+   //----------------------------------------------------------------
+   // trace point = 109
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2976456f, 40.0435219f, 1510692589, 4.89905787),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2976456f, 40.0435181f, leg_index, 0.091204755f, 32,
+           maneuver_index, 0.0165771693f, 3));
+   //----------------------------------------------------------------
+   // trace point = 110
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2977753f, 40.0435181f, 1510692608, 0.588307977),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2977676f, 40.0434952f, leg_index, 0.0845508054f, 31,
+           maneuver_index, 0.00992321968f, 2));
+   //----------------------------------------------------------------
+   // trace point = 111
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2978897f, 40.0434799f, 1510692610, 5.25906801),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978897f, 40.0434761f, leg_index, 0.077954717f, 30,
+           maneuver_index, 0.00332713127f, 1));
+   //----------------------------------------------------------------
+   // trace point = 112
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979813f, 40.0434036f, 1510692612, 5.84461498),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2979431f, 40.0434074f, leg_index, 0.070652023f, 28,
+           maneuver_index, 0.0514428206f, 19));
+   //----------------------------------------------------------------
+   // trace point = 113
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979889f, 40.0432739f, 1510692614, 7.29752493),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2979202f, 40.0432816f, leg_index, 0.061860472f, 25,
+           maneuver_index, 0.0426512696f, 16));
+   //----------------------------------------------------------------
+   // trace point = 114
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979584f, 40.0431213f, 1510692616, 8.69317341),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978897f, 40.043129f, leg_index, 0.0511835031f, 21,
+           maneuver_index, 0.0319743007f, 12));
+   //----------------------------------------------------------------
+   // trace point = 115
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979355f, 40.0430374f, 1510692617, 9.1927681),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978745f, 40.043045f, leg_index, 0.0453225225f, 18,
+           maneuver_index, 0.0261133201f, 9));
+   //----------------------------------------------------------------
+   // trace point = 116
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979202f, 40.0429459f, 1510692618, 10.3106565),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978592f, 40.0429535f, leg_index, 0.0389390588f, 16,
+           maneuver_index, 0.0197298564f, 7));
+   //----------------------------------------------------------------
+   // trace point = 117
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2978897f, 40.0427933f, 1510692620, 8.74806118),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978287f, 40.0428009f, leg_index, 0.0282621756f, 12,
+           maneuver_index, 0.00905297324f, 3));
+   //----------------------------------------------------------------
+   // trace point = 118
+   maneuver_index = 7;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2978897f, 40.0426903f, 1510692622, 5.73865223),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978821f, 40.0426636f, leg_index, 0.0151359448f, 7,
+           maneuver_index, 0.0151359448f, 7));
+   //----------------------------------------------------------------
+   // trace point = 119
+   maneuver_index = 7;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.298027f, 40.0426483f, 1510692625, 4.01934481),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.298027f, 40.0426445f, leg_index, 0.00734865898f, 3,
+           maneuver_index, 0.00734865898f, 3));
+   //----------------------------------------------------------------
+   // trace point = 120
+   maneuver_index = 8;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2981644f, 40.0426407f, 1510692627, 5.86975288),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2981644f, 40.0426292f, leg_index, 0f, 0,
+           maneuver_index, 0f, 0));
  }
 
 /* PedestrianCatalinasToOffice geojson to visualize test route
