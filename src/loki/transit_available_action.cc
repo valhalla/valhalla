@@ -67,9 +67,6 @@ namespace valhalla {
           for (auto id : tilelist) {
             auto transit_color = connectivity_map->get_color(GraphId(id, 3, 0));
             if (transit_color != 0) {
-              LOG_DEBUG("Transit is available for bbox");
-              LOG_DEBUG("minx :" + std::to_string(bbox.maxx()) + ", " + "miny :" + std::to_string(bbox.miny()));
-              LOG_DEBUG("maxx :" + std::to_string(bbox.maxx()) + ", " + "maxy :" + std::to_string(bbox.maxy()));
               istransit = true;
               break;
             }
