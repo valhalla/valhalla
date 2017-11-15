@@ -87,8 +87,10 @@ namespace valhalla {
       auto date_time_type = GetOptionalFromRapidJson<int>(request, "/date_time.type");
       auto request_pt = to_ptree(request);
       auto legs = pimpl->thor_worker.route(request_pt, date_time_type);
+      //parse the options for directions
+      auto directions_options = pimpl->odin_worker.parse_options(request_pt);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(request_pt, legs);
+      auto directions = pimpl->odin_worker.narrate(directions_options, legs);
       //serialize them out to json string
       auto json = tyr::serializeDirections(action, request_pt, directions);
       std::stringstream ss;
@@ -142,8 +144,10 @@ namespace valhalla {
       auto request_pt = to_ptree(request);
       //compute compute all pairs and then the shortest path through them all
       auto legs = pimpl->thor_worker.optimized_route(request_pt);
+      //parse the options for directions
+      auto directions_options = pimpl->odin_worker.parse_options(request_pt);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(request_pt, legs);
+      auto directions = pimpl->odin_worker.narrate(directions_options, legs);
       //serialize them out to json string
       auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
@@ -182,8 +186,10 @@ namespace valhalla {
       //route between the locations in the graph to find the best path
       auto request_pt = to_ptree(request);
       std::list<TripPath> legs{pimpl->thor_worker.trace_route(request_pt)};
+      //parse the options for directions
+      auto directions_options = pimpl->odin_worker.parse_options(request_pt);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(request_pt, legs);
+      auto directions = pimpl->odin_worker.narrate(directions_options, legs);
       //serialize them out to json string
       auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
