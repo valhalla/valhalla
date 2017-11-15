@@ -8803,15 +8803,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6913071f, 40.2629585f, leg_index, 12.3950396f, 797,
           maneuver_index, 0.207538605f, 10));
   //----------------------------------------------------------------
-  // TODO- need to fix this; final alert happens after the pre
-  // trace point = 154 | Alert 0.15 | Take the U.S. 3 22 East exit on the right.
+  // trace point = 154
   maneuver_index = 3;
-  instruction_index = maneuver_index + 1;
+  instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6910553f, 40.263092f, 1489614954, 25.8552265),
-      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6910858f, 40.2631187f, leg_index, 12.3691311f, 796,
-          maneuver_index, 0.181630135f, 9, instruction_index, 0.15));
+          maneuver_index, 0.181630135f, 9));
   //----------------------------------------------------------------
   // trace point = 155
   maneuver_index = 3;
@@ -11774,14 +11773,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.6279602f, 40.2745819f, leg_index, 6.70793056f, 478,
           maneuver_index, 0.187824249f, 8));
   //----------------------------------------------------------------
-  // trace point = 484 | Alert 0.15 | Enter the roundabout and take the 2nd exit.
+  // trace point = 484
   maneuver_index = 7;
-  instruction_index = maneuver_index + 1;
+  instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6277313f, 40.2745667f, 1489615422, 19.5209274),
-      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.6277313f, 40.2745628f, leg_index, 6.68837595f, 477,
-          maneuver_index, 0.168269634f, 7, instruction_index, 0.15f));
+          maneuver_index, 0.168269634f, 7));
   //----------------------------------------------------------------
   // trace point = 485
   maneuver_index = 7;
@@ -14519,14 +14518,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.5747299f, 40.2820511f, leg_index, 1.83353853f, 193,
           maneuver_index, 0.185614944f, 28));
   //----------------------------------------------------------------
-  // trace point = 789 | Alert 0.15 | Turn left onto South Forge Road.
+  // trace point = 789
   maneuver_index = 10;
-  instruction_index = maneuver_index + 1;
+  instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.5745697f, 40.2821312f, 1489615749, 16.4942532),
-      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5745697f, 40.282135f, leg_index, 1.81703436f, 190,
-          maneuver_index, 0.169110775f, 25, instruction_index, 0.15f));
+          maneuver_index, 0.169110775f, 25));
   //----------------------------------------------------------------
   // trace point = 790
   maneuver_index = 10;

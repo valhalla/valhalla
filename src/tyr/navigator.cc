@@ -105,6 +105,7 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
         && !(std::get<kPreTransition>(used_instructions_.at(next_instruction_index)))
         && (GetRemainingManeuverTime(fix_location, nav_status)
             <= GetPreTransitionThreshold(next_instruction_index))) {
+
       // Set route state
       route_state_ = NavigationStatus_RouteState_kPreTransition;
       nav_status.set_route_state(route_state_);
@@ -112,8 +113,10 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
       // Set the instruction maneuver index for the next maneuver
       nav_status.set_instruction_maneuver_index(next_instruction_index);
 
-      // Mark that the pre-transition was used
+      // Mark that the pre-transition was used as well as the final transition alert
       std::get<kPreTransition>(used_instructions_.at(next_instruction_index)) = true;
+      std::get<kFinalTransitionAlert>(used_instructions_.at(next_instruction_index)) = true;
+
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -160,9 +163,11 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     //////////////////////////////////////////////////////////////////////////
     // else if instruction has not been used
     // and route location is a final transition alert
+    // and alert is not close to the pre-transition
     // then set route state to kTransitionAlert
     else if (!(std::get<kFinalTransitionAlert>(used_instructions_.at(next_instruction_index)))
-        && IsFinalTransitionAlert(fix_location, nav_status, alert_length)) {
+        && IsFinalTransitionAlert(fix_location, nav_status, alert_length)
+        && !IsAlertCloseToPre(fix_location, nav_status, next_instruction_index)) {
       // Set route state
       route_state_ = NavigationStatus_RouteState_kTransitionAlert;
       nav_status.set_route_state(route_state_);
@@ -522,6 +527,18 @@ uint32_t Navigator::GetPreTransitionThreshold(size_t instruction_index) const {
       + (static_cast<uint32_t>(round(
           GetWordCount(maneuver.verbal_pre_transition_instruction())
               / kWordsPerSecond * adjustment_factor))));
+}
+
+bool Navigator::IsAlertCloseToPre(const FixLocation& fix_location,
+    const NavigationStatus& nav_status, size_t instruction_index) const {
+  const auto& maneuver = route_.trip().legs(leg_index_).maneuvers(instruction_index);
+
+  // TODO handle the transition alert pre-phrase of "In 500 feet..."
+  int remaining_time_after_alert = (GetRemainingManeuverTime(fix_location, nav_status)
+      - (static_cast<uint32_t>(round(GetWordCount(maneuver.verbal_transition_alert_instruction()) / kWordsPerSecond)))
+      - kAlertPreTimeDelta);
+
+  return (remaining_time_after_alert < GetPreTransitionThreshold(instruction_index));
 }
 
 bool Navigator::IsTimeWithinBounds(uint32_t time, uint32_t lower_bound,
