@@ -34,10 +34,10 @@ namespace valhalla {
 
     DirectionsOptions odin_worker_t::parse_options(boost::property_tree::ptree& request) const {
       //see if we can get some options
-      auto directions_options = DirectionsOptions::default_instance();
+      DirectionsOptions directions_options;
       auto options = request.get_child_optional("directions_options");
       if(options)
-        directions_options = valhalla::odin::GetDirectionsOptions(*options);
+        directions_options = odin::GetDirectionsOptions(*options);
 
       // Grab language from options and set
       request.put<std::string>("directions_options.language", directions_options.language());
