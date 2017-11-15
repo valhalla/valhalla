@@ -339,7 +339,7 @@ libvalhalla_la_SOURCES = \
 	src/loki/matrix_action.cc \
 	src/loki/isochrone_action.cc \
 	src/loki/trace_route_action.cc \
-        src/loki/transit_available_action.cc \
+	src/loki/transit_available_action.cc \
 	src/loki/node_search.cc \
 	src/proto/tripcommon.pb.cc \
 	src/proto/trippath.pb.cc \
