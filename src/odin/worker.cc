@@ -12,7 +12,6 @@
 #include "baldr/json.h"
 #include "midgard/logging.h"
 
-#include "proto/directions_options.pb.h"
 #include "proto/trippath.pb.h"
 #include "odin/worker.h"
 #include "odin/util.h"
@@ -33,7 +32,7 @@ namespace valhalla {
 
     void odin_worker_t::cleanup(){}
 
-    std::list<TripDirections> odin_worker_t::narrate(boost::property_tree::ptree& request, std::list<TripPath>& legs) const {
+    DirectionsOptions odin_worker_t::parse_options(boost::property_tree::ptree& request) const {
       // Grab language from options and set
       auto language = request.get_optional<std::string>("directions_options.language");
       // If language is not found then set to the default language (en-US)
@@ -46,6 +45,10 @@ namespace valhalla {
       if(options)
         directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
+      return directions_options;
+    }
+
+    std::list<TripDirections> odin_worker_t::narrate(const DirectionsOptions& directions_options, std::list<TripPath>& legs) const {
       //get some annotated directions
       std::list<TripDirections> narrated;
       try{
@@ -95,7 +98,9 @@ namespace valhalla {
         }
 
         //narrate them and serialize them along
-        auto narrated = narrate(request, legs);
+        auto directions_options = parse_options(request);
+
+        auto narrated = narrate(directions_options, legs);
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
         return to_response(tyr::serializeDirections(action, request, narrated), jsonp, info);
       }
