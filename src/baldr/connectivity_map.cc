@@ -251,7 +251,7 @@ namespace valhalla {
       const auto& tiles = TileHierarchy::levels().find(hierarchy_level)->second.tiles;
       for(const auto& edge : location.edges) {
         // Get a list of tiles required within the radius of the projected point
-        PointLL ll = edge.projected;
+        const auto& ll = edge.projected;
         DistanceApproximator approximator(ll);
         float latdeg = (radius / kMetersPerDegreeLat);
         float lngdeg = (radius / DistanceApproximator::MetersPerLngDegree(ll.lat()));

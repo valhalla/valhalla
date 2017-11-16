@@ -19,6 +19,7 @@ namespace valhalla {
     {112,"Insufficiently specified required parameter 'locations' or 'sources & targets'"},
     {113,"Insufficiently specified required parameter 'contours'"},
     {114,"Insufficiently specified required parameter 'shape' or 'encoded_polyline'"},
+    {115,"Insufficiently specified required parameter 'level'"},
 
     {120,"Insufficient number of locations provided"},
     {121,"Insufficient number of sources provided"},
