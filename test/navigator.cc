@@ -15707,6 +15707,1364 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           maneuver_index, 0.0145969158f, 2));
 }
 
+/* AutoLancasterVerbalMultiCue geojson to visualize test route
+{"type":"FeatureCollection","features":[
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.300018,40.042339]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":0}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299995,40.042233]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":1}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299934,40.042110]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":2}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299919,40.042000]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":3}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299919,40.041908]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":4}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299835,40.041851]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":5}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299690,40.041878]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":6}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299492,40.041885]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":7}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299377,40.041893]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":8}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299271,40.041904]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":9}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299156,40.041920]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":10}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299034,40.041931]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":11}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298912,40.041946]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":12}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298798,40.041950]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":13}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298607,40.041969]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":14}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298454,40.041981]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":15}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298355,40.042007]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":16}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298187,40.042027]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":17}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298035,40.042034]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":18}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297852,40.042057]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":19}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297638,40.042076]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":20}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297523,40.042076]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":21}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297401,40.042091]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":22}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297264,40.042103]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":23}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297127,40.042110]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":24}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296989,40.042130]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":25}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296844,40.042145]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":26}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296707,40.042156]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":27}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296570,40.042168]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":28}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296432,40.042179]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":29}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296295,40.042202]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":30}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296173,40.042210]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":31}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296043,40.042217]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":32}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295906,40.042236]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":33}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295761,40.042252]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":34}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295624,40.042267]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":35}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295479,40.042274]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":36}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295334,40.042294]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":37}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295189,40.042313]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":38}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295044,40.042332]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":39}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294891,40.042343]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":40}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294739,40.042362]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":41}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294594,40.042374]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":42}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294449,40.042393]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":43}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294304,40.042408]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":44}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294167,40.042419]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":45}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294037,40.042435]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":46}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293854,40.042461]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":47}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293777,40.042534]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":48}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293793,40.042667]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":49}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293823,40.042820]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":50}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293846,40.042908]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":51}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293877,40.043076]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":52}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293739,40.043129]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":53}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293564,40.043140]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":54}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293449,40.043159]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":55}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293320,40.043171]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":56}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293182,40.043194]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":57}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293060,40.043205]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":58}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292938,40.043221]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":59}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292816,40.043236]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":60}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292702,40.043247]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":61}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292580,40.043255]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":62}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292465,40.043266]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":63}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292351,40.043282]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":64}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292183,40.043297]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":65}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292076,40.043293]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":66}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.291992,40.043388]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":67}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292007,40.043537]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":68}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292030,40.043655]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":69}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292061,40.043797]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":70}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292076,40.043911]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":71}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292091,40.044014]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":72}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292114,40.044121]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":73}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292221,40.044182]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":74}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292389,40.044170]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":75}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292496,40.044159]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":76}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292625,40.044144]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":77}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292763,40.044132]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":78}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292900,40.044121]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":79}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293053,40.044109]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":80}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293205,40.044086]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":81}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293365,40.044067]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":82}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293541,40.044044]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":83}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293716,40.044029]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":84}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293892,40.044014]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":85}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294075,40.044003]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":86}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294243,40.043983]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":87}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294426,40.043961]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":88}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294609,40.043949]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":89}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294769,40.043930]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":90}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294930,40.043900]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":91}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295090,40.043880]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":92}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295250,40.043861]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":93}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295410,40.043846]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":94}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295570,40.043819]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":95}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295731,40.043793]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":96}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295898,40.043781]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":97}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296059,40.043762]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":98}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296211,40.043751]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":99}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296379,40.043739]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":100}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296539,40.043720]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":101}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296700,40.043701]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296852,40.043682]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":103}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296997,40.043655]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":104}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297134,40.043633]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":105}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297256,40.043610]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":106}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297363,40.043591]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":107}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297531,40.043552]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":108}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297646,40.043522]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":109}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297775,40.043518]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":110}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.043480]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":111}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297981,40.043404]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":112}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297989,40.043274]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":113}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297958,40.043121]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":114}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297935,40.043037]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":115}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297920,40.042946]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":116}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.042793]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":117}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.042690]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":118}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298027,40.042648]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":119}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298164,40.042641]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":120}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298164,40.042641]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":121}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.300003,40.042339]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":0,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.141,"distance_from_trace_point":1.292}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299980,40.042233]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":1,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.306,"distance_from_trace_point":1.292}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299957,40.042107]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":2,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.500,"distance_from_trace_point":1.983}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299934,40.041996]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":3,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.671,"distance_from_trace_point":1.359}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299919,40.041908]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":4,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.806,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299904,40.041843]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":5,"matched_point_type":"interpolated","edge_index":0,"distance_along_edge":0.907,"distance_from_trace_point":5.873}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299675,40.041805]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":6,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.100,"distance_from_trace_point":8.117}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299484,40.041824]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":7,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.187,"distance_from_trace_point":6.779}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299370,40.041840]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":8,"matched_point_type":"interpolated","edge_index":1,"distance_along_edge":0.239,"distance_from_trace_point":5.940}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299263,40.041851]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":9,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.287,"distance_from_trace_point":5.940}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299149,40.041862]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":10,"matched_point_type":"interpolated","edge_index":1,"distance_along_edge":0.339,"distance_from_trace_point":6.360}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.299026,40.041874]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":11,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.394,"distance_from_trace_point":6.360}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298904,40.041889]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":12,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.450,"distance_from_trace_point":6.360}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298790,40.041901]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":13,"matched_point_type":"interpolated","edge_index":1,"distance_along_edge":0.502,"distance_from_trace_point":5.521}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298599,40.041920]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":14,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.588,"distance_from_trace_point":5.521}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298447,40.041935]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":15,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.657,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298347,40.041946]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":16,"matched_point_type":"interpolated","edge_index":1,"distance_along_edge":0.702,"distance_from_trace_point":6.779}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298180,40.041965]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":17,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.779,"distance_from_trace_point":6.779}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298027,40.041981]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":18,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.848,"distance_from_trace_point":5.940}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297844,40.042000]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":19,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.931,"distance_from_trace_point":6.360}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297630,40.042023]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":20,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.072,"distance_from_trace_point":5.940}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297516,40.042034]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":21,"matched_point_type":"interpolated","edge_index":2,"distance_along_edge":0.206,"distance_from_trace_point":4.684}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297394,40.042046]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":22,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.348,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297256,40.042057]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":23,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.509,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297119,40.042072]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":24,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.670,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296982,40.042084]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":25,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.830,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296837,40.042099]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":26,"matched_point_type":"matched","edge_index":2,"distance_along_edge":1.000,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296700,40.042114]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":27,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.115,"distance_from_trace_point":4.684}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296562,40.042130]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":28,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.231,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296425,40.042141]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":29,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.346,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296288,40.042156]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":30,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.461,"distance_from_trace_point":5.102}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296165,40.042171]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":31,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.564,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296036,40.042183]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":32,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.673,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295898,40.042198]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":33,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.788,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295753,40.042213]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":34,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.910,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295616,40.042229]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":35,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.016,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295471,40.042244]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":36,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.094,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295326,40.042263]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":37,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.172,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295181,40.042278]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":38,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.250,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295036,40.042294]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":39,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.328,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294884,40.042313]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":40,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.410,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294731,40.042332]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":41,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.492,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294586,40.042347]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":42,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.570,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294441,40.042362]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":43,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.647,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294296,40.042381]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":44,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.726,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294159,40.042397]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":45,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.799,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294029,40.042412]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":46,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.869,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293846,40.042431]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":47,"matched_point_type":"matched","edge_index":4,"distance_along_edge":0.967,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293800,40.042530]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":48,"matched_point_type":"matched","edge_index":5,"distance_along_edge":0.142,"distance_from_trace_point":1.983}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293823,40.042664]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":49,"matched_point_type":"matched","edge_index":5,"distance_along_edge":0.349,"distance_from_trace_point":2.617}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293854,40.042816]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":50,"matched_point_type":"matched","edge_index":5,"distance_along_edge":0.586,"distance_from_trace_point":2.617}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293869,40.042904]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":51,"matched_point_type":"interpolated","edge_index":5,"distance_along_edge":0.722,"distance_from_trace_point":1.983}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293900,40.043083]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":52,"matched_point_type":"matched","edge_index":5,"distance_along_edge":1.000,"distance_from_trace_point":2.113}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293732,40.043102]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":53,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.087,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293556,40.043118]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":54,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.177,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293442,40.043133]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":55,"matched_point_type":"interpolated","edge_index":6,"distance_along_edge":0.236,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293312,40.043144]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":56,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.303,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293175,40.043159]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":57,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.374,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293053,40.043175]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":58,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.437,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292931,40.043186]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":59,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.500,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292809,40.043198]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":60,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.563,"distance_from_trace_point":4.267}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292694,40.043213]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":61,"matched_point_type":"interpolated","edge_index":6,"distance_along_edge":0.622,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292572,40.043224]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":62,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.685,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292458,40.043236]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":63,"matched_point_type":"interpolated","edge_index":6,"distance_along_edge":0.744,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292343,40.043247]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":64,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.803,"distance_from_trace_point":3.851}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292175,40.043266]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":65,"matched_point_type":"matched","edge_index":6,"distance_along_edge":0.890,"distance_from_trace_point":3.435}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292076,40.043278]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":66,"matched_point_type":"interpolated","edge_index":6,"distance_along_edge":0.941,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.291977,40.043388]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":67,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.111,"distance_from_trace_point":1.292}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292007,40.043537]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":68,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.278,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292030,40.043655]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":69,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.411,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292053,40.043797]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":70,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.568,"distance_from_trace_point":0.646}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292076,40.043911]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":71,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.697,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292091,40.044014]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":72,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.812,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292114,40.044121]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":73,"matched_point_type":"matched","edge_index":7,"distance_along_edge":0.932,"distance_from_trace_point":0.000}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292221,40.044170]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":74,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.051,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292389,40.044155]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":75,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.138,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292496,40.044144]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":76,"matched_point_type":"interpolated","edge_index":8,"distance_along_edge":0.193,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292625,40.044128]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":77,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.260,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292763,40.044117]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":78,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.331,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.292900,40.044102]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":79,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.401,"distance_from_trace_point":2.109}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293045,40.044086]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":80,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.476,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293205,40.044067]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":81,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.559,"distance_from_trace_point":2.109}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293365,40.044052]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":82,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.642,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293541,40.044033]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":83,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.732,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293716,40.044014]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":84,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.823,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.293892,40.043999]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":85,"matched_point_type":"matched","edge_index":8,"distance_along_edge":0.913,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294067,40.043980]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":86,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.005,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294235,40.043961]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":87,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.125,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294426,40.043941]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":88,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.261,"distance_from_trace_point":2.109}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294601,40.043922]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":89,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.386,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294762,40.043907]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":90,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.500,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.294930,40.043892]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":91,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.619,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295090,40.043873]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":92,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.734,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295250,40.043858]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":93,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.848,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295410,40.043839]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":94,"matched_point_type":"matched","edge_index":9,"distance_along_edge":0.962,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295570,40.043823]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":95,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.043,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295731,40.043808]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":96,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.106,"distance_from_trace_point":1.687}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.295898,40.043789]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":97,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.173,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296059,40.043770]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":98,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.237,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296211,40.043755]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":99,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.298,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296379,40.043732]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":100,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.365,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296539,40.043716]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":101,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.428,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296700,40.043697]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":102,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.492,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296852,40.043671]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":103,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.554,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.296997,40.043648]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":104,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.612,"distance_from_trace_point":0.844}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297134,40.043621]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":105,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.668,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297256,40.043598]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":106,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.718,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297356,40.043579]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":107,"matched_point_type":"interpolated","edge_index":10,"distance_along_edge":0.758,"distance_from_trace_point":1.421}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297523,40.043541]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":108,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.827,"distance_from_trace_point":1.421}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297646,40.043518]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":109,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.877,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297768,40.043495]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":110,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.926,"distance_from_trace_point":2.612}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.043476]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":111,"matched_point_type":"matched","edge_index":10,"distance_along_edge":0.975,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297943,40.043407]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":112,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.072,"distance_from_trace_point":3.256}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297920,40.043282]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":113,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.230,"distance_from_trace_point":5.873}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297890,40.043129]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":114,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.423,"distance_from_trace_point":5.873}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297874,40.043045]},"properties":{"marker-color":"#ffffbf","marker-size":"small","matched_point_index":115,"matched_point_type":"interpolated","edge_index":11,"distance_along_edge":0.529,"distance_from_trace_point":5.235}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297859,40.042953]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":116,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.644,"distance_from_trace_point":5.235}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297829,40.042801]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":117,"matched_point_type":"matched","edge_index":11,"distance_along_edge":0.837,"distance_from_trace_point":5.235}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.297882,40.042664]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":118,"matched_point_type":"matched","edge_index":12,"distance_along_edge":0.073,"distance_from_trace_point":3.022}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298027,40.042645]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":119,"matched_point_type":"matched","edge_index":12,"distance_along_edge":0.212,"distance_from_trace_point":0.422}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298164,40.042629]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":120,"matched_point_type":"matched","edge_index":12,"distance_along_edge":0.343,"distance_from_trace_point":1.265}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[-76.298164,40.042629]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":121,"matched_point_type":"matched","edge_index":12,"distance_along_edge":0.343,"distance_from_trace_point":1.265}}
+]}
+ */
+ void TestAutoLancasterVerbalMultiCue() {
+   std::string route_json_str = R"({"trip":{"language":"en-US","summary":{"max_lon":-76.291962,"max_lat":40.044182,"time":242,"length":0.963,"min_lat":40.041782,"min_lon":-76.300003},"locations":[{"lon":-76.300018,"lat":40.042339,"type":"break"},{"lon":-76.298164,"lat":40.042641,"type":"break"}],"units":"miles","legs":[{"shape":"eu~jkAfm~opCxa@uEqMyhCeDmt@{FkiAkLisBig@bF{KcxBwv@~HrKbxB`HvvAhBn^nDdn@rAfNTvCxBpRxBrPjBpRpp@aHrAlU","summary":{"max_lon":-76.291962,"max_lat":40.044182,"time":242,"length":0.963,"min_lat":40.041782,"min_lon":-76.300003},"maneuvers":[{"travel_type":"car","street_names":["North Shippen Street"],"verbal_pre_transition_instruction":"Drive south on North Shippen Street for 200 feet. Then Turn left onto East Chestnut Street.","instruction":"Drive south on North Shippen Street.","end_shape_index":1,"type":1,"time":6,"verbal_multi_cue":true,"length":0.039,"begin_shape_index":0,"travel_mode":"drive"},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left onto East Chestnut Street, Pennsylvania 23 East.","verbal_transition_alert_instruction":"Turn left onto East Chestnut Street.","length":0.326,"instruction":"Turn left onto East Chestnut Street\/PA 23 East.","end_shape_index":5,"type":15,"time":87,"verbal_post_transition_instruction":"Continue for 3 tenths of a mile.","street_names":["East Chestnut Street","PA 23 East"],"begin_shape_index":1},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Marshall Street. Then Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn left onto North Marshall Street.","length":0.045,"instruction":"Turn left onto North Marshall Street.","end_shape_index":6,"type":15,"time":8,"verbal_post_transition_instruction":"Continue for 200 feet.","street_names":["North Marshall Street"],"begin_shape_index":5},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn right onto East Fulton Street.","length":0.104,"instruction":"Turn right onto East Fulton Street.","end_shape_index":7,"type":10,"time":21,"verbal_post_transition_instruction":"Continue for 1 tenth of a mile.","street_names":["East Fulton Street"],"begin_shape_index":6},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Franklin Street. Then Turn left onto East Walnut Street.","verbal_transition_alert_instruction":"Turn left onto North Franklin Street.","length":0.062,"instruction":"Turn left onto North Franklin Street.","end_shape_index":8,"type":15,"time":25,"verbal_post_transition_instruction":"Continue for 300 feet.","street_names":["North Franklin Street"],"begin_shape_index":7},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left onto East Walnut Street, Pennsylvania 23 West.","verbal_transition_alert_instruction":"Turn left onto East Walnut Street.","length":0.313,"instruction":"Turn left onto East Walnut Street\/PA 23 West\/PA 462 West.","end_shape_index":17,"type":15,"time":66,"verbal_post_transition_instruction":"Continue for 3 tenths of a mile.","street_names":["East Walnut Street","PA 23 West","PA 462 West"],"begin_shape_index":8},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Plum Street. Then Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn left onto North Plum Street.","length":0.055,"instruction":"Turn left onto North Plum Street.","end_shape_index":18,"type":15,"time":20,"verbal_post_transition_instruction":"Continue for 300 feet.","street_names":["North Plum Street"],"begin_shape_index":17},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn right onto East Fulton Street. Then You will arrive at your destination.","verbal_transition_alert_instruction":"Turn right onto East Fulton Street.","length":0.019,"instruction":"Turn right onto East Fulton Street.","end_shape_index":19,"type":10,"time":9,"verbal_post_transition_instruction":"Continue for 100 feet.","street_names":["East Fulton Street"],"begin_shape_index":18},{"travel_type":"car","travel_mode":"drive","begin_shape_index":19,"time":0,"type":4,"end_shape_index":19,"instruction":"You have arrived at your destination.","length":0.000,"verbal_transition_alert_instruction":"You will arrive at your destination.","verbal_pre_transition_instruction":"You have arrived at your destination."}]}],"status_message":"Found route between points","status":0}})";
+   NavigatorTest nav;
+   nav.SetRoute(route_json_str);
+   uint32_t leg_index = 0;
+
+   TryRouteLegCount(nav, 1);
+   TryRouteManeuverCount(nav, leg_index, 9);
+   TryRouteLanguage(nav, "en-US");
+   TryRouteUnits(nav, "miles", false);
+
+   ////////////////////////////////////////////////////////////////////////////
+   uint32_t maneuver_index = 0;
+   uint32_t instruction_index = 0;
+   ////////////////////////////////////////////////////////////////////////////
+
+   //----------------------------------------------------------------
+   // trace point = 0 | Pre | Drive south on North Shippen Street for 200 feet. Then Turn left onto East Chestnut Street.
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.3000183f, 40.0423393f, 1510692420, 0),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.3000031f, 40.0423393f, leg_index, 0.964204311f, 244,
+           maneuver_index, 0.0389375091f, 6, instruction_index), true);
+   //----------------------------------------------------------------
+   // trace point = 1
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2999954f, 40.0422325f, 1510692424, 2.93912911),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999802f, 40.0422325f, leg_index, 0.956718624f, 243,
+           maneuver_index, 0.0314518213f, 5), true);
+   //----------------------------------------------------------------
+   // trace point = 2 | Pre | Turn left onto East Chestnut Street, Pennsylvania 23 East.
+   maneuver_index = 0;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2999344f, 40.0421104f, 1510692426, 7.18354702),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.2999573f, 40.0421066f, leg_index, 0.947927177f, 241,
+           maneuver_index, 0.0226603746f, 3, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 3
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2999191f, 40.0419998f, 1510692429, 4.27199888),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999344f, 40.041996f, leg_index, 0.940180719f, 240,
+           maneuver_index, 0.0149139166f, 2));
+   //----------------------------------------------------------------
+   // trace point = 4
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2999191f, 40.0419083f, 1510692439, 1.00187504),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999191f, 40.0419083f, leg_index, 0.934058487f, 239,
+           maneuver_index, 0.0087916851f, 1));
+   //----------------------------------------------------------------
+   // trace point = 5
+   maneuver_index = 0;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2998352f, 40.041851f, 1510692449, 0.926688015),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2999115f, 40.0418434f, leg_index, 0.92956537f, 239,
+           maneuver_index, 0.00429856777f, 1));
+   //----------------------------------------------------------------
+   // trace point = 6
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2996902f, 40.0418777f, 1510692450, 12.8004837),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.299675f, 40.0418053f, leg_index, 0.913443804f, 235,
+           maneuver_index, 0.314969718f, 84));
+   //----------------------------------------------------------------
+   // trace point = 7 | Post | Continue for 3 tenths of a mile.
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2994919f, 40.0418854f, 1510692452, 8.4519701),
+       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+           -76.2994843f, 40.0418243f, leg_index, 0.903257847f, 233,
+           maneuver_index, 0.304783762f, 82, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 8
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2993774f, 40.041893f, 1510692453, 9.83161354),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2993698f, 40.0418396f, leg_index, 0.897110224f, 231,
+           maneuver_index, 0.298636138f, 80));
+   //----------------------------------------------------------------
+   // trace point = 9
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2992706f, 40.0419044f, 1510692454, 9.56984138),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.299263f, 40.041851f, leg_index, 0.891398907f, 229,
+           maneuver_index, 0.292924821f, 78));
+   //----------------------------------------------------------------
+   // trace point = 10
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2991562f, 40.0419197f, 1510692455, 9.97574806),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2991486f, 40.0418625f, leg_index, 0.885287225f, 228,
+           maneuver_index, 0.28681314f, 77));
+   //----------------------------------------------------------------
+   // trace point = 11
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2990341f, 40.0419312f, 1510692456, 10.0079918),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2990265f, 40.0418739f, leg_index, 0.878775358f, 226,
+           maneuver_index, 0.280301273f, 75));
+   //----------------------------------------------------------------
+   // trace point = 12
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.298912f, 40.0419464f, 1510692457, 10.6327038),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2989044f, 40.0418892f, leg_index, 0.872227609f, 224,
+           maneuver_index, 0.273753524f, 73));
+   //----------------------------------------------------------------
+   // trace point = 13
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2987976f, 40.0419502f, 1510692458, 9.81078529),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.29879f, 40.0419006f, leg_index, 0.866115928f, 223,
+           maneuver_index, 0.267641842f, 72));
+   //----------------------------------------------------------------
+   // trace point = 14
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2986069f, 40.0419693f, 1510692460, 8.36296844),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2985992f, 40.0419197f, leg_index, 0.855929852f, 220,
+           maneuver_index, 0.257455766f, 69));
+   //----------------------------------------------------------------
+   // trace point = 15
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2984543f, 40.0419807f, 1510692462, 6.30556107),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2984467f, 40.041935f, leg_index, 0.847781062f, 218,
+           maneuver_index, 0.249306977f, 67));
+   //----------------------------------------------------------------
+   // trace point = 16
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2983551f, 40.0420074f, 1510692466, 2.31070995),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2983475f, 40.0419464f, leg_index, 0.842469931f, 216,
+           maneuver_index, 0.243995845f, 65));
+   //----------------------------------------------------------------
+   // trace point = 17
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2981873f, 40.0420265f, 1510692475, 1.61746597),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2981796f, 40.0419655f, leg_index, 0.833484948f, 214,
+           maneuver_index, 0.235010862f, 63));
+   //----------------------------------------------------------------
+   // trace point = 18
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2980347f, 40.0420341f, 1510692477, 6.57727289),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.298027f, 40.0419807f, leg_index, 0.825336158f, 212,
+           maneuver_index, 0.226862073f, 61));
+   //----------------------------------------------------------------
+   // trace point = 19
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2978516f, 40.042057f, 1510692479, 7.88503313),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978439f, 40.0419998f, leg_index, 0.815550208f, 209,
+           maneuver_index, 0.217076123f, 58));
+   //----------------------------------------------------------------
+   // trace point = 20
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2976379f, 40.0420761f, 1510692481, 9.03182125),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2976303f, 40.0420227f, leg_index, 0.804128468f, 206,
+           maneuver_index, 0.205654383f, 55));
+   //----------------------------------------------------------------
+   // trace point = 21
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2975235f, 40.0420761f, 1510692482, 9.88838673),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2975159f, 40.0420341f, leg_index, 0.798016846f, 205,
+           maneuver_index, 0.199542761f, 54));
+   //----------------------------------------------------------------
+   // trace point = 22
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2974014f, 40.0420914f, 1510692483, 10.6326818),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2973938f, 40.0420456f, leg_index, 0.791504204f, 203,
+           maneuver_index, 0.193030119f, 52));
+   //----------------------------------------------------------------
+   // trace point = 23
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2972641f, 40.0421028f, 1510692484, 11.4006214),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2972565f, 40.042057f, leg_index, 0.784190238f, 201,
+           maneuver_index, 0.185716152f, 50));
+   //----------------------------------------------------------------
+   // trace point = 24
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2971268f, 40.0421104f, 1510692485, 11.80338),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2971191f, 40.0420723f, leg_index, 0.776843011f, 199,
+           maneuver_index, 0.178368926f, 48));
+   //----------------------------------------------------------------
+   // trace point = 25
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2969894f, 40.0421295f, 1510692486, 12.2320423),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2969818f, 40.0420837f, leg_index, 0.769529283f, 197,
+           maneuver_index, 0.171055198f, 46));
+   //----------------------------------------------------------------
+   // trace point = 26
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2968445f, 40.0421448f, 1510692487, 12.3163605),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2968369f, 40.042099f, leg_index, 0.7617805f, 195,
+           maneuver_index, 0.163306415f, 44));
+   //----------------------------------------------------------------
+   // trace point = 27
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2967072f, 40.0421562f, 1510692488, 11.6803265),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2966995f, 40.0421143f, leg_index, 0.754432142f, 193,
+           maneuver_index, 0.155958056f, 42));
+   //----------------------------------------------------------------
+   // trace point = 28
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2965698f, 40.0421677f, 1510692489, 11.8363953),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2965622f, 40.0421295f, leg_index, 0.747083962f, 191,
+           maneuver_index, 0.148609877f, 40));
+   //----------------------------------------------------------------
+   // trace point = 29
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2964325f, 40.0421791f, 1510692490, 11.4131021),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2964249f, 40.042141f, leg_index, 0.739771783f, 189,
+           maneuver_index, 0.141297698f, 38));
+   //----------------------------------------------------------------
+   // trace point = 30
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2962952f, 40.042202f, 1510692491, 11.9696493),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2962875f, 40.0421562f, leg_index, 0.732423425f, 187,
+           maneuver_index, 0.133949339f, 36));
+   //----------------------------------------------------------------
+   // trace point = 31
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2961731f, 40.0422096f, 1510692492, 10.6900272),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2961655f, 40.0421715f, leg_index, 0.725875616f, 185,
+           maneuver_index, 0.127401531f, 34));
+   //----------------------------------------------------------------
+   // trace point = 32
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2960434f, 40.0422173f, 1510692493, 10.8804092),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2960358f, 40.0421829f, leg_index, 0.718963504f, 184,
+           maneuver_index, 0.120489419f, 33));
+   //----------------------------------------------------------------
+   // trace point = 33 | Alert 500 feet | Turn left onto North Marshall Street.
+   maneuver_index = 1;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2959061f, 40.0422363f, 1510692494, 11.9961939),
+       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+           -76.2958984f, 40.0421982f, leg_index, 0.711615145f, 182,
+           maneuver_index, 0.11314106f, 31, instruction_index,
+           kFinalShortTransitionAlertImperialLength));
+   //----------------------------------------------------------------
+   // trace point = 34
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2957611f, 40.0422516f, 1510692495, 12.3163414),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2957535f, 40.0422134f, leg_index, 0.703866303f, 180,
+           maneuver_index, 0.105392218f, 29));
+   //----------------------------------------------------------------
+   // trace point = 35
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2956238f, 40.0422668f, 1510692496, 12.1878691),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2956161f, 40.0422287f, leg_index, 0.696517944f, 177,
+           maneuver_index, 0.098043859f, 26));
+   //----------------------------------------------------------------
+   // trace point = 36
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2954788f, 40.0422745f, 1510692497, 12.5026474),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2954712f, 40.042244f, leg_index, 0.688769996f, 175,
+           maneuver_index, 0.0902959108f, 24));
+   //----------------------------------------------------------------
+   // trace point = 37
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2953339f, 40.0422935f, 1510692498, 12.2850847),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2953262f, 40.042263f, leg_index, 0.680982947f, 173,
+           maneuver_index, 0.082508862f, 22));
+   //----------------------------------------------------------------
+   // trace point = 38
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2951889f, 40.0423126f, 1510692499, 12.5013752),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2951813f, 40.0422783f, leg_index, 0.67323494f, 171,
+           maneuver_index, 0.0747608542f, 20));
+   //----------------------------------------------------------------
+   // trace point = 39 | Pre | Turn left onto North Marshall Street. Then Turn right onto East Fulton Street.
+   maneuver_index = 1;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2950439f, 40.0423317f, 1510692500, 12.7050419),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.2950363f, 40.0422935f, leg_index, 0.665487051f, 169,
+           maneuver_index, 0.0670129657f, 18, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 40
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2948914f, 40.0423431f, 1510692501, 12.9626675),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2948837f, 40.0423126f, leg_index, 0.657300353f, 167,
+           maneuver_index, 0.0588262677f, 16));
+   //----------------------------------------------------------------
+   // trace point = 41
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2947388f, 40.0423622f, 1510692502, 12.8384333),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2947311f, 40.0423317f, leg_index, 0.649113894f, 165,
+           maneuver_index, 0.0506398082f, 14));
+   //----------------------------------------------------------------
+   // trace point = 42
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2945938f, 40.0423737f, 1510692503, 12.5987616),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2945862f, 40.042347f, leg_index, 0.641365826f, 162,
+           maneuver_index, 0.0428917408f, 11));
+   //----------------------------------------------------------------
+   // trace point = 43
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2944489f, 40.0423927f, 1510692504, 12.7541418),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2944412f, 40.0423622f, leg_index, 0.633617878f, 160,
+           maneuver_index, 0.0351437926f, 9));
+   //----------------------------------------------------------------
+   // trace point = 44
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2943039f, 40.042408f, 1510692505, 12.518693),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2942963f, 40.0423813f, leg_index, 0.625831008f, 158,
+           maneuver_index, 0.0273569226f, 7));
+   //----------------------------------------------------------------
+   // trace point = 45
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2941666f, 40.0424194f, 1510692506, 11.5587912),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2941589f, 40.0423965f, leg_index, 0.618482411f, 156,
+           maneuver_index, 0.0200083256f, 5));
+   //----------------------------------------------------------------
+   // trace point = 46
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2940369f, 40.0424347f, 1510692507, 11.1880255),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2940292f, 40.0424118f, leg_index, 0.61153394f, 154,
+           maneuver_index, 0.0130598545f, 3));
+   //----------------------------------------------------------------
+   // trace point = 47
+   maneuver_index = 1;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938538f, 40.0424614f, 1510692509, 7.82676888),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938461f, 40.0424309f, leg_index, 0.60174942f, 152,
+           maneuver_index, 0.00327533484f, 1));
+   //----------------------------------------------------------------
+   // trace point = 48
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2937775f, 40.0425339f, 1510692511, 5.13638687),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938004f, 40.0425301f, leg_index, 0.59209013f, 150,
+           maneuver_index, 0.0386193395f, 7));
+   //----------------------------------------------------------------
+   // trace point = 49 | Pre | Turn right onto East Fulton Street.
+   maneuver_index = 2;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2937927f, 40.0426674f, 1510692513, 7.485744),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.2938232f, 40.0426636f, leg_index, 0.58277595f, 148,
+           maneuver_index, 0.02930516f, 5, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 50
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938232f, 40.04282f, 1510692515, 8.72780132),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938538f, 40.0428162f, leg_index, 0.572099686f, 146,
+           maneuver_index, 0.0186288953f, 3));
+   //----------------------------------------------------------------
+   // trace point = 51
+   maneuver_index = 2;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938461f, 40.0429077f, 1510692516, 9.709445),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.293869f, 40.0429039f, leg_index, 0.565977335f, 145,
+           maneuver_index, 0.0125065446f, 2));
+   //----------------------------------------------------------------
+   // trace point = 52 | TODO Should it be this close to start of maneuver? Alert 500 feet | Turn left onto North Franklin Street.
+   maneuver_index = 3;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938766f, 40.0430756f, 1510692518, 9.46240425),
+       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+           -76.2938766f, 40.043087f, leg_index, 0.552234054f, 143,
+           maneuver_index, 0.102366507f, 21, instruction_index,
+           kFinalShortTransitionAlertImperialLength));
+   //----------------------------------------------------------------
+   // trace point = 53 | TODO Post after next maneuver alert | Continue for 1 tenth of a mile.
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2937393f, 40.043129f, 1510692521, 4.54608583),
+       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+           -76.2937317f, 40.0431023f, leg_index, 0.544485569f, 141,
+           maneuver_index, 0.0946180224f, 19, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 54
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2935638f, 40.0431404f, 1510692523, 7.48675919),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2935562f, 40.0431175f, leg_index, 0.53513658f, 139,
+           maneuver_index, 0.0852690339f, 17));
+   //----------------------------------------------------------------
+   // trace point = 55
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2934494f, 40.0431595f, 1510692524, 9.66950607),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2934418f, 40.0431328f, leg_index, 0.528988719f, 138,
+           maneuver_index, 0.0791211724f, 16));
+   //----------------------------------------------------------------
+   // trace point = 56
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2933197f, 40.0431709f, 1510692525, 11.134613),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2933121f, 40.0431442f, leg_index, 0.522076964f, 137,
+           maneuver_index, 0.0722094178f, 15));
+   //----------------------------------------------------------------
+   // trace point = 57
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2931824f, 40.0431938f, 1510692526, 11.7539282),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2931747f, 40.0431595f, leg_index, 0.514728665f, 135,
+           maneuver_index, 0.0648611188f, 13));
+   //----------------------------------------------------------------
+   // trace point = 58
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2930603f, 40.0432053f, 1510692527, 10.4689083),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2930527f, 40.0431747f, leg_index, 0.508180857f, 134,
+           maneuver_index, 0.0583133101f, 12));
+   //----------------------------------------------------------------
+   // trace point = 59 | Pre | Turn left onto North Franklin Street. Then Turn left onto East Walnut Street.
+   maneuver_index = 3;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2929382f, 40.0432205f, 1510692528, 10.8669863),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.2929306f, 40.0431862f, leg_index, 0.501669168f, 132,
+           maneuver_index, 0.0518016219f, 10, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 60
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2928162f, 40.0432358f, 1510692529, 10.2441111),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2928085f, 40.0431976f, leg_index, 0.495157629f, 131,
+           maneuver_index, 0.0452900827f, 9));
+   //----------------------------------------------------------------
+   // trace point = 61
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2927017f, 40.0432472f, 1510692530, 10.0600176),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2926941f, 40.0432129f, leg_index, 0.489009917f, 130,
+           maneuver_index, 0.0391423702f, 8));
+   //----------------------------------------------------------------
+   // trace point = 62
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2925797f, 40.0432549f, 1510692531, 10.2562418),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.292572f, 40.0432243f, leg_index, 0.482498139f, 129,
+           maneuver_index, 0.0326305926f, 7));
+   //----------------------------------------------------------------
+   // trace point = 63
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2924652f, 40.0432663f, 1510692532, 9.97555447),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2924576f, 40.0432358f, leg_index, 0.476386786f, 127,
+           maneuver_index, 0.0265192389f, 5));
+   //----------------------------------------------------------------
+   // trace point = 64
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2923508f, 40.0432816f, 1510692533, 9.73061657),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2923431f, 40.0432472f, leg_index, 0.470275581f, 126,
+           maneuver_index, 0.0204080343f, 4));
+   //----------------------------------------------------------------
+   // trace point = 65
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2921829f, 40.0432968f, 1510692535, 7.28562689),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2921753f, 40.0432663f, leg_index, 0.46129033f, 124,
+           maneuver_index, 0.0114227831f, 2));
+   //----------------------------------------------------------------
+   // trace point = 66
+   maneuver_index = 3;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920761f, 40.043293f, 1510692538, 3.0416081),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920761f, 40.0432777f, leg_index, 0.455979228f, 123,
+           maneuver_index, 0.00611168146f, 1));
+   //----------------------------------------------------------------
+   // trace point = 67
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2919922f, 40.0433884f, 1510692542, 3.27460003),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2919769f, 40.0433884f, leg_index, 0.442961097f, 119,
+           maneuver_index, 0.0554183722f, 22));
+   //----------------------------------------------------------------
+   // trace point = 68
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920074f, 40.0435371f, 1510692544, 8.33697319),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920074f, 40.0435371f, leg_index, 0.43254596f, 115,
+           maneuver_index, 0.0450032353f, 18));
+   //----------------------------------------------------------------
+   // trace point = 69 | Pre | Turn left onto East Walnut Street, Pennsylvania 23 West.
+   maneuver_index = 4;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920303f, 40.0436554f, 1510692545, 13.1586323),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.2920303f, 40.0436554f, leg_index, 0.424277574f, 112,
+           maneuver_index, 0.0367348492f, 15, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 70
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920609f, 40.0437965f, 1510692546, 15.8070602),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920532f, 40.0437965f, leg_index, 0.414440155f, 108,
+           maneuver_index, 0.0268974304f, 11));
+   //----------------------------------------------------------------
+   // trace point = 71
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920761f, 40.043911f, 1510692547, 12.9761791),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920761f, 40.043911f, leg_index, 0.406433374f, 105,
+           maneuver_index, 0.0188906491f, 8));
+   //----------------------------------------------------------------
+   // trace point = 72
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2920914f, 40.044014f, 1510692548, 11.5466986),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2920914f, 40.044014f, leg_index, 0.399264783f, 102,
+           maneuver_index, 0.0117220581f, 5));
+   //----------------------------------------------------------------
+   // trace point = 73
+   maneuver_index = 4;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2921143f, 40.0441208f, 1510692549, 11.8001652),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2921143f, 40.0441208f, leg_index, 0.391784102f, 99,
+           maneuver_index, 0.00424137712f, 2));
+   //----------------------------------------------------------------
+   // trace point = 74
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2922211f, 40.0441818f, 1510692551, 5.718081),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2922211f, 40.0441704f, leg_index, 0.382231891f, 96,
+           maneuver_index, 0.307604313f, 67));
+   //----------------------------------------------------------------
+   // trace point = 75 | Post  | Continue for 3 tenths of a mile.
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2923889f, 40.0441704f, 1510692553, 7.35449123),
+       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+           -76.2923889f, 40.0441551f, leg_index, 0.373282671f, 94,
+           maneuver_index, 0.298655093f, 65, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 76
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2924957f, 40.0441589f, 1510692554, 9.31688976),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2924957f, 40.0441437f, leg_index, 0.367571473f, 93,
+           maneuver_index, 0.292943895f, 64));
+   //----------------------------------------------------------------
+   // trace point = 77
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2926254f, 40.0441437f, 1510692555, 10.8845015),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2926254f, 40.0441284f, leg_index, 0.360623777f, 91,
+           maneuver_index, 0.285996199f, 62));
+   //----------------------------------------------------------------
+   // trace point = 78
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2927628f, 40.0441322f, 1510692556, 11.5483122),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2927628f, 40.044117f, leg_index, 0.353311509f, 90,
+           maneuver_index, 0.278683931f, 61));
+   //----------------------------------------------------------------
+   // trace point = 79
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2929001f, 40.0441208f, 1510692557, 12.1748238),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2929001f, 40.0441017f, leg_index, 0.345963418f, 88,
+           maneuver_index, 0.27133584f, 59));
+   //----------------------------------------------------------------
+   // trace point = 80
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2930527f, 40.0441093f, 1510692558, 12.8777351),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.293045f, 40.0440865f, leg_index, 0.338215113f, 86,
+           maneuver_index, 0.263587534f, 57));
+   //----------------------------------------------------------------
+   // trace point = 81
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2932053f, 40.0440865f, 1510692559, 13.2274628),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2932053f, 40.0440674f, leg_index, 0.329630554f, 85,
+           maneuver_index, 0.255002975f, 56));
+   //----------------------------------------------------------------
+   // trace point = 82
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2933655f, 40.0440674f, 1510692560, 14.189127),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2933655f, 40.0440521f, leg_index, 0.321081549f, 83,
+           maneuver_index, 0.246453971f, 54));
+   //----------------------------------------------------------------
+   // trace point = 83
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.293541f, 40.0440445f, 1510692561, 14.674902),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.293541f, 40.0440331f, leg_index, 0.31169641f, 81,
+           maneuver_index, 0.237068832f, 52));
+   //----------------------------------------------------------------
+   // trace point = 84
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2937164f, 40.0440292f, 1510692562, 15.1042175),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2937164f, 40.044014f, leg_index, 0.30231145f, 79,
+           maneuver_index, 0.227683872f, 50));
+   //----------------------------------------------------------------
+   // trace point = 85
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938919f, 40.044014f, 1510692563, 15.2609062),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938919f, 40.0439987f, leg_index, 0.292962253f, 77,
+           maneuver_index, 0.218334675f, 48));
+   //----------------------------------------------------------------
+   // trace point = 86
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.294075f, 40.0440025f, 1510692564, 15.5584278),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2940674f, 40.0439796f, leg_index, 0.283576429f, 75,
+           maneuver_index, 0.208948851f, 46));
+   //----------------------------------------------------------------
+   // trace point = 87
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2942429f, 40.0439835f, 1510692565, 14.6575947),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2942352f, 40.0439606f, leg_index, 0.274591684f, 73,
+           maneuver_index, 0.199964106f, 44));
+   //----------------------------------------------------------------
+   // trace point = 88
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.294426f, 40.0439606f, 1510692566, 15.8707104),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.294426f, 40.0439415f, leg_index, 0.264405817f, 71,
+           maneuver_index, 0.189778239f, 42));
+   //----------------------------------------------------------------
+   // trace point = 89
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2946091f, 40.0439491f, 1510692567, 15.1250944),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2946014f, 40.0439224f, leg_index, 0.255020797f, 69,
+           maneuver_index, 0.180393219f, 40));
+   //----------------------------------------------------------------
+   // trace point = 90
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2947693f, 40.0439301f, 1510692568, 14.1703653),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2947617f, 40.0439072f, leg_index, 0.246471643f, 67,
+           maneuver_index, 0.171844065f, 38));
+   //----------------------------------------------------------------
+   // trace point = 91
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2949295f, 40.0438995f, 1510692569, 14.12113),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2949295f, 40.0438919f, leg_index, 0.237522453f, 65,
+           maneuver_index, 0.162894875f, 36));
+   //----------------------------------------------------------------
+   // trace point = 92
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2950897f, 40.0438805f, 1510692570, 13.4144936),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2950897f, 40.0438728f, leg_index, 0.228937835f, 63,
+           maneuver_index, 0.154310256f, 34));
+   //----------------------------------------------------------------
+   // trace point = 93
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2952499f, 40.0438614f, 1510692571, 14.0892553),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2952499f, 40.0438576f, leg_index, 0.220388889f, 61,
+           maneuver_index, 0.145761311f, 32));
+   //----------------------------------------------------------------
+   // trace point = 94
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2954102f, 40.0438461f, 1510692572, 13.6131754),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2954102f, 40.0438385f, leg_index, 0.211806029f, 60,
+           maneuver_index, 0.137178451f, 31));
+   //----------------------------------------------------------------
+   // trace point = 95
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2955704f, 40.0438194f, 1510692573, 14.3130074),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2955704f, 40.0438232f, leg_index, 0.203255221f, 57,
+           maneuver_index, 0.128627628f, 28));
+   //----------------------------------------------------------------
+   // trace point = 96
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2957306f, 40.0437927f, 1510692574, 13.9626856),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2957306f, 40.043808f, leg_index, 0.19470717f, 56,
+           maneuver_index, 0.120079584f, 27));
+   //----------------------------------------------------------------
+   // trace point = 97 | Alert 500 feet | Turn left onto North Plum Street.
+   maneuver_index = 5;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2958984f, 40.0437813f, 1510692575, 14.0628624),
+       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+           -76.2958984f, 40.0437889f, leg_index, 0.185721666f, 54,
+           maneuver_index, 0.11109408f, 25, instruction_index,
+           kFinalShortTransitionAlertImperialLength));
+   //----------------------------------------------------------------
+   // trace point = 98
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2960587f, 40.0437622f, 1510692576, 13.6131916),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2960587f, 40.0437698f, leg_index, 0.177135438f, 51,
+           maneuver_index, 0.102507852f, 22));
+   //----------------------------------------------------------------
+   // trace point = 99
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2962112f, 40.0437508f, 1510692577, 13.4259272),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2962112f, 40.0437546f, leg_index, 0.168988556f, 50,
+           maneuver_index, 0.09436097f, 21));
+   //----------------------------------------------------------------
+   // trace point = 100
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2963791f, 40.0437393f, 1510692578, 14.1475697),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2963791f, 40.0437317f, leg_index, 0.159963638f, 48,
+           maneuver_index, 0.0853360519f, 19));
+   //----------------------------------------------------------------
+   // trace point = 101
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2965393f, 40.0437202f, 1510692579, 14.2196522),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2965393f, 40.0437164f, leg_index, 0.151417524f, 46,
+           maneuver_index, 0.0767899379f, 17));
+   //----------------------------------------------------------------
+   // trace point = 102 | Pre | Turn left onto North Plum Street. Then Turn right onto East Fulton Street.
+   maneuver_index = 5;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2966995f, 40.0437012f, 1510692580, 13.4977379),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.2966995f, 40.0436974f, leg_index, 0.142833024f, 44,
+           maneuver_index, 0.0682054386f, 15, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 103
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2968521f, 40.0436821f, 1510692581, 13.3306227),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2968521f, 40.0436707f, leg_index, 0.134544641f, 42,
+           maneuver_index, 0.0599170551f, 13));
+   //----------------------------------------------------------------
+   // trace point = 104
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2969971f, 40.0436554f, 1510692582, 12.5834446),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2969971f, 40.0436478f, leg_index, 0.126706213f, 41,
+           maneuver_index, 0.052078627f, 12));
+   //----------------------------------------------------------------
+   // trace point = 105
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2971344f, 40.0436325f, 1510692583, 12.1432838),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2971344f, 40.0436211f, leg_index, 0.119202264f, 39,
+           maneuver_index, 0.0445746779f, 10));
+   //----------------------------------------------------------------
+   // trace point = 106
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2972565f, 40.0436096f, 1510692584, 10.5156965),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2972565f, 40.0435982f, leg_index, 0.1125471f, 37,
+           maneuver_index, 0.0379195139f, 8));
+   //----------------------------------------------------------------
+   // trace point = 107
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2973633f, 40.0435905f, 1510692585, 9.63508797),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2973557f, 40.0435791f, leg_index, 0.107131921f, 36,
+           maneuver_index, 0.032504335f, 7));
+   //----------------------------------------------------------------
+   // trace point = 108
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2975311f, 40.0435524f, 1510692587, 7.45613098),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2975235f, 40.043541f, leg_index, 0.0978620723f, 34,
+           maneuver_index, 0.0232344866f, 5));
+   //----------------------------------------------------------------
+   // trace point = 109
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2976456f, 40.0435219f, 1510692589, 4.89905787),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2976456f, 40.0435181f, leg_index, 0.091204755f, 32,
+           maneuver_index, 0.0165771693f, 3));
+   //----------------------------------------------------------------
+   // trace point = 110
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2977753f, 40.0435181f, 1510692608, 0.588307977),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2977676f, 40.0434952f, leg_index, 0.0845508054f, 31,
+           maneuver_index, 0.00992321968f, 2));
+   //----------------------------------------------------------------
+   // trace point = 111
+   maneuver_index = 5;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2978897f, 40.0434799f, 1510692610, 5.25906801),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978897f, 40.0434761f, leg_index, 0.077954717f, 30,
+           maneuver_index, 0.00332713127f, 1));
+   //----------------------------------------------------------------
+   // trace point = 112
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979813f, 40.0434036f, 1510692612, 5.84461498),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2979431f, 40.0434074f, leg_index, 0.070652023f, 28,
+           maneuver_index, 0.0514428206f, 19));
+   //----------------------------------------------------------------
+   // trace point = 113
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979889f, 40.0432739f, 1510692614, 7.29752493),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2979202f, 40.0432816f, leg_index, 0.061860472f, 25,
+           maneuver_index, 0.0426512696f, 16));
+   //----------------------------------------------------------------
+   // trace point = 114 | Pre | Turn right onto East Fulton Street. Then You will arrive at your destination.
+   maneuver_index = 6;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979584f, 40.0431213f, 1510692616, 8.69317341),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.2978897f, 40.043129f, leg_index, 0.0511835031f, 21,
+           maneuver_index, 0.0319743007f, 12, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 115
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979355f, 40.0430374f, 1510692617, 9.1927681),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978745f, 40.043045f, leg_index, 0.0453225225f, 18,
+           maneuver_index, 0.0261133201f, 9));
+   //----------------------------------------------------------------
+   // trace point = 116
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2979202f, 40.0429459f, 1510692618, 10.3106565),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978592f, 40.0429535f, leg_index, 0.0389390588f, 16,
+           maneuver_index, 0.0197298564f, 7));
+   //----------------------------------------------------------------
+   // trace point = 117
+   maneuver_index = 6;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2978897f, 40.0427933f, 1510692620, 8.74806118),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2978287f, 40.0428009f, leg_index, 0.0282621756f, 12,
+           maneuver_index, 0.00905297324f, 3));
+   //----------------------------------------------------------------
+   // trace point = 118 | Pre | You have arrived at your destination.
+   maneuver_index = 7;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2978897f, 40.0426903f, 1510692622, 5.73865223),
+       GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
+           -76.2978821f, 40.0426636f, leg_index, 0.0151359448f, 7,
+           maneuver_index, 0.0151359448f, 7, instruction_index));
+   //----------------------------------------------------------------
+   // trace point = 119
+   maneuver_index = 7;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.298027f, 40.0426483f, 1510692625, 4.01934481),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.298027f, 40.0426445f, leg_index, 0.00734865898f, 3,
+           maneuver_index, 0.00734865898f, 3));
+   //----------------------------------------------------------------
+   // trace point = 120 | Complete
+   maneuver_index = 8;
+   instruction_index = maneuver_index;
+   TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2981644f, 40.0426407f, 1510692627, 5.86975288),
+       GetNavigationStatus(NavigationStatus_RouteState_kComplete,
+           -76.2981644f, 40.0426292f, leg_index, 0.f, 0,
+           maneuver_index, 0.f, 0));
+ }
+
 /* PedestrianCatalinasToOffice geojson to visualize test route
 {"type":"FeatureCollection","features":[
 {"type":"Feature","geometry":{"type":"Point","coordinates":[-76.307518,40.039223]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":0}},
@@ -18788,2772 +20146,614 @@ void TestIsTimeWithinBounds() {
 }
 
 void CreateTestSeed() {
-  std::string route_json_str = R"({"trip":{"language":"en-US","summary":{"max_lon":-76.566711,"max_lat":40.290199,"time":976,"length":15.425,"min_lat":40.246044,"min_lon":-76.709229},"locations":[{"lon":-76.706558,"lat":40.246048,"type":"break"},{"lon":-76.567642,"lat":40.286263,"type":"break"}],"units":"kilometers","legs":[{"shape":"wplwkAhqxhqCi\\bFmYdFkQvCsQbGyLnHeOzKiMlJoXpSmZzTiWhNyMdEsPxBwS\\qLm@us@gCyR_@{Pl@w|@dF_{BvMk`@xB}D\\{UlAglA~HsP\\eKm@{AqdBsAww@]_}@]ya@sA}h@{Lm|BwWyqDca@cnAqa@mhAy[a{@oJmUuN_^g^sy@gm@enAqa@ap@sz@msA{_A_{AeO_^iGePgDwMgEqRgH_h@oDkV}DsQiH}SaHuPgYco@uT_h@cf@k_A_DoIgMq\\{KeZgDkLyCiMqBqQsF{_AqBm^eEmt@eFw`BsAaf@{Aag@mEo|AyF{hAWeFuEaq@uDed@?Mu@_JuEgm@yG}}@cGsz@kFyk@uEo]MuE_EeZuDkUkB_J_Ice@qQyl@_^kiAc\\ijAqf@wkBaRgw@oSk_A{Keo@wr@_lEmJeo@cp@mbFmd@_dDaByLeAgNiBgY}Jg`BiGmsAgE{hAyA_}@_@syA]{rB]k`@\\}h@d@}h@bB{k@nC}qA~DglALuOt@mJ\\wDrAuEpBeDdA{Al@kBLyBMyBe@yB}@{JcAwYlDsmBvIujChCar@jAa\\t@sPjAsQWkUkAqR{AiMMuETmJjB{AjAyBd@wCGgDm@iCe@{@m@}@gCyLqCkU]yCmEyk@qBkLiM_pBq\\auF_Egb@oN_gAmDkVaC}Tei@etDaIkj@mE{j@oIgeGsEoaGLwWd@qzAjBgkBxB_{AzAaqAe@or@}@cnAe@ytAcAglBmAccBe@isCiGswBOgDuDun@qHewA{Ayk@{@iWsA_^kBww@qGsvCcA{j@e@iWuOgDil@aSiaAeZaHyA_w@iWsUmKsFeEoDcG{P{_@aCqG}}@guBavAhWs@iC{AyBqB}@yBMcB\\iBzAmAxBe@vCFfDceEry@kj@nIoDm^}|Ay}CnTkUj~@cyBnm@azAb\\{~@dd@xVjo@ja@","summary":{"max_lon":-76.566711,"max_lat":40.290199,"time":976,"length":15.425,"min_lat":40.246044,"min_lon":-76.709229},"maneuvers":[{"travel_mode":"drive","begin_shape_index":0,"length":1.336,"time":90,"type":1,"end_shape_index":25,"instruction":"Drive north on Middletown Road.","verbal_pre_transition_instruction":"Drive north on Middletown Road for 1.3 kilometers.","travel_type":"car","street_names":["Middletown Road"]},{"travel_type":"car","verbal_pre_transition_instruction":"Turn right.","verbal_transition_alert_instruction":"Turn right.","length":0.824,"instruction":"Turn right.","end_shape_index":32,"type":10,"time":45,"verbal_post_transition_instruction":"Continue for 800 meters.","begin_shape_index":25,"travel_mode":"drive"},{"travel_type":"car","verbal_pre_transition_instruction":"Stay straight to take the U.S. 3 22 East ramp.","verbal_transition_alert_instruction":"Stay straight to take the U.S. 3 22 East ramp.","instruction":"Stay straight to take the US 322 East ramp.","end_shape_index":36,"type":17,"time":22,"begin_shape_index":32,"length":0.374,"sign":{"exit_branch_elements":[{"consecutive_count":1,"text":"US 322 East"}]},"travel_mode":"drive"},{"travel_type":"car","verbal_pre_transition_instruction":"Merge onto U.S. 3 22 East.","verbal_post_transition_instruction":"Continue for 700 meters.","instruction":"Merge onto US 322 East.","end_shape_index":42,"type":25,"time":32,"street_names":["US 322 East"],"length":0.701,"begin_shape_index":36,"travel_mode":"drive"},{"travel_type":"car","verbal_pre_transition_instruction":"Take the U.S. 3 22 East exit on the right toward Ephrata.","verbal_transition_alert_instruction":"Take the U.S. 3 22 East exit on the right.","instruction":"Take the US 322 East exit on the right toward Ephrata.","end_shape_index":54,"type":20,"time":37,"begin_shape_index":42,"length":0.570,"sign":{"exit_toward_elements":[{"text":"Ephrata"}],"exit_branch_elements":[{"text":"US 322 East"}]},"travel_mode":"drive"},{"travel_type":"car","verbal_pre_transition_instruction":"Continue on U.S. 3 22 for 4.4 kilometers.","verbal_transition_alert_instruction":"Continue on U.S. 3 22.","length":4.414,"instruction":"Continue on US 322.","end_shape_index":114,"type":8,"time":250,"street_names":["US 322"],"begin_shape_index":54,"travel_mode":"drive"},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Enter the roundabout and take the 2nd exit.","verbal_transition_alert_instruction":"Enter the roundabout and take the 2nd exit.","length":0.027,"instruction":"Enter the roundabout and take the 2nd exit.","end_shape_index":119,"type":26,"time":2,"street_names":["US 322"],"begin_shape_index":114,"roundabout_exit_count":2},{"travel_type":"car","verbal_pre_transition_instruction":"Exit the roundabout onto East Governor Road, U.S. 3 22 East.","verbal_post_transition_instruction":"Continue for 700 meters.","instruction":"Exit the roundabout onto East Governor Road\/US 322 East.","end_shape_index":132,"type":27,"time":31,"street_names":["East Governor Road","US 322 East"],"length":0.656,"begin_shape_index":119,"travel_mode":"drive"},{"travel_type":"car","verbal_pre_transition_instruction":"Enter the roundabout and take the 2nd exit.","verbal_transition_alert_instruction":"Enter the roundabout and take the 2nd exit.","length":0.042,"instruction":"Enter the roundabout and take the 2nd exit.","end_shape_index":139,"type":26,"time":3,"begin_shape_index":132,"roundabout_exit_count":2,"travel_mode":"drive"},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Exit the roundabout onto East Governor Road, U.S. 3 22 East.","begin_street_names":["East Governor Road","US 322 East"],"verbal_post_transition_instruction":"Continue on U.S. 3 22 East for 4.1 kilometers.","instruction":"Exit the roundabout onto East Governor Road\/US 322 East. Continue on US 322 East.","end_shape_index":177,"type":27,"time":197,"street_names":["US 322 East"],"length":4.131,"begin_shape_index":139},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left onto Hinkle Road.","verbal_transition_alert_instruction":"Turn left onto Hinkle Road.","length":0.701,"instruction":"Turn left onto Hinkle Road.","end_shape_index":188,"type":15,"time":105,"verbal_post_transition_instruction":"Continue for 700 meters.","street_names":["Hinkle Road"],"begin_shape_index":177},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left onto South Forge Road, Pennsylvania 1 17.","verbal_transition_alert_instruction":"Turn left onto South Forge Road.","length":0.158,"instruction":"Turn left onto South Forge Road\/PA 117.","end_shape_index":189,"type":15,"time":22,"verbal_post_transition_instruction":"Continue for 200 meters.","street_names":["South Forge Road","PA 117"],"begin_shape_index":188},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Enter the roundabout and take the 1st exit.","verbal_transition_alert_instruction":"Enter the roundabout and take the 1st exit.","length":0.061,"instruction":"Enter the roundabout and take the 1st exit.","end_shape_index":198,"type":26,"time":5,"street_names":["South Forge Road","PA 117"],"begin_shape_index":189,"roundabout_exit_count":1},{"travel_type":"car","verbal_pre_transition_instruction":"Exit the roundabout onto South Forge Road, Pennsylvania 1 17.","verbal_post_transition_instruction":"Continue for 400 meters.","instruction":"Exit the roundabout onto South Forge Road\/PA 117.","end_shape_index":200,"type":27,"time":28,"street_names":["South Forge Road","PA 117"],"length":0.441,"begin_shape_index":198,"travel_mode":"drive"},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn right onto Airport Road.","verbal_transition_alert_instruction":"Turn right onto Airport Road.","length":0.317,"instruction":"Turn right onto Airport Road.","end_shape_index":202,"type":10,"time":41,"verbal_post_transition_instruction":"Continue for 300 meters.","street_names":["Airport Road"],"begin_shape_index":200},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn right onto Taxiway Road.","verbal_transition_alert_instruction":"Turn right onto Taxiway Road.","length":0.500,"instruction":"Turn right onto Taxiway Road.","end_shape_index":206,"type":10,"time":48,"verbal_post_transition_instruction":"Continue for a half kilometer.","street_names":["Taxiway Road"],"begin_shape_index":202},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn right onto Landings Drive.","verbal_transition_alert_instruction":"Turn right onto Landings Drive.","length":0.172,"instruction":"Turn right onto Landings Drive.","end_shape_index":208,"type":10,"time":18,"verbal_post_transition_instruction":"Continue for 200 meters.","street_names":["Landings Drive"],"begin_shape_index":206},{"travel_type":"car","travel_mode":"drive","begin_shape_index":208,"time":0,"type":4,"end_shape_index":208,"instruction":"You have arrived at your destination.","length":0.000,"verbal_transition_alert_instruction":"You will arrive at your destination.","verbal_pre_transition_instruction":"You have arrived at your destination."}]}],"status_message":"Found route between points","status":0}})";
+  std::string route_json_str = R"({"trip":{"language":"en-US","summary":{"max_lon":-76.291962,"max_lat":40.044182,"time":242,"length":0.963,"min_lat":40.041782,"min_lon":-76.300003},"locations":[{"lon":-76.300018,"lat":40.042339,"type":"break"},{"lon":-76.298164,"lat":40.042641,"type":"break"}],"units":"miles","legs":[{"shape":"eu~jkAfm~opCxa@uEqMyhCeDmt@{FkiAkLisBig@bF{KcxBwv@~HrKbxB`HvvAhBn^nDdn@rAfNTvCxBpRxBrPjBpRpp@aHrAlU","summary":{"max_lon":-76.291962,"max_lat":40.044182,"time":242,"length":0.963,"min_lat":40.041782,"min_lon":-76.300003},"maneuvers":[{"travel_type":"car","street_names":["North Shippen Street"],"verbal_pre_transition_instruction":"Drive south on North Shippen Street for 200 feet. Then Turn left onto East Chestnut Street.","instruction":"Drive south on North Shippen Street.","end_shape_index":1,"type":1,"time":6,"verbal_multi_cue":true,"length":0.039,"begin_shape_index":0,"travel_mode":"drive"},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left onto East Chestnut Street, Pennsylvania 23 East.","verbal_transition_alert_instruction":"Turn left onto East Chestnut Street.","length":0.326,"instruction":"Turn left onto East Chestnut Street\/PA 23 East.","end_shape_index":5,"type":15,"time":87,"verbal_post_transition_instruction":"Continue for 3 tenths of a mile.","street_names":["East Chestnut Street","PA 23 East"],"begin_shape_index":1},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Marshall Street. Then Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn left onto North Marshall Street.","length":0.045,"instruction":"Turn left onto North Marshall Street.","end_shape_index":6,"type":15,"time":8,"verbal_post_transition_instruction":"Continue for 200 feet.","street_names":["North Marshall Street"],"begin_shape_index":5},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn right onto East Fulton Street.","length":0.104,"instruction":"Turn right onto East Fulton Street.","end_shape_index":7,"type":10,"time":21,"verbal_post_transition_instruction":"Continue for 1 tenth of a mile.","street_names":["East Fulton Street"],"begin_shape_index":6},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Franklin Street. Then Turn left onto East Walnut Street.","verbal_transition_alert_instruction":"Turn left onto North Franklin Street.","length":0.062,"instruction":"Turn left onto North Franklin Street.","end_shape_index":8,"type":15,"time":25,"verbal_post_transition_instruction":"Continue for 300 feet.","street_names":["North Franklin Street"],"begin_shape_index":7},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left onto East Walnut Street, Pennsylvania 23 West.","verbal_transition_alert_instruction":"Turn left onto East Walnut Street.","length":0.313,"instruction":"Turn left onto East Walnut Street\/PA 23 West\/PA 462 West.","end_shape_index":17,"type":15,"time":66,"verbal_post_transition_instruction":"Continue for 3 tenths of a mile.","street_names":["East Walnut Street","PA 23 West","PA 462 West"],"begin_shape_index":8},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn left onto North Plum Street. Then Turn right onto East Fulton Street.","verbal_transition_alert_instruction":"Turn left onto North Plum Street.","length":0.055,"instruction":"Turn left onto North Plum Street.","end_shape_index":18,"type":15,"time":20,"verbal_post_transition_instruction":"Continue for 300 feet.","street_names":["North Plum Street"],"begin_shape_index":17},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn right onto East Fulton Street. Then You will arrive at your destination.","verbal_transition_alert_instruction":"Turn right onto East Fulton Street.","length":0.019,"instruction":"Turn right onto East Fulton Street.","end_shape_index":19,"type":10,"time":9,"verbal_post_transition_instruction":"Continue for 100 feet.","street_names":["East Fulton Street"],"begin_shape_index":18},{"travel_type":"car","travel_mode":"drive","begin_shape_index":19,"time":0,"type":4,"end_shape_index":19,"instruction":"You have arrived at your destination.","length":0.000,"verbal_transition_alert_instruction":"You will arrive at your destination.","verbal_pre_transition_instruction":"You have arrived at your destination."}]}],"status_message":"Found route between points","status":0}})";
   NavigatorTest nav;
   nav.SetRoute(route_json_str);
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 0" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706558000f, 40.246048000f, 1489614783, 0.000000f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.300017000f, 40.042338000f, 1510692420, 0.000000f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706604000f, 40.246197000f, 1489614784, 17.040888f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299993000f, 40.042234000f, 1510692424, 2.939129f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 2" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706650000f, 40.246349000f, 1489614785, 17.366110f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299938000f, 40.042112000f, 1510692426, 7.183547f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 3" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706680000f, 40.246498000f, 1489614786, 16.781326f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299917000f, 40.041998000f, 1510692429, 4.271999f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 4" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706726000f, 40.246655000f, 1489614787, 17.908861f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299917000f, 40.041908000f, 1510692439, 1.001875f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 5" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706764000f, 40.246807000f, 1489614788, 17.225859f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299839000f, 40.041850000f, 1510692449, 0.926688f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 6" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706802000f, 40.246967000f, 1489614789, 18.101398f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299693000f, 40.041877000f, 1510692450, 12.800484f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 7" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706841000f, 40.247124000f, 1489614790, 17.788527f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299495000f, 40.041886000f, 1510692452, 8.451970f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 8" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706902000f, 40.247288000f, 1489614791, 18.977852f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299380000f, 40.041893000f, 1510692453, 9.831614f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 9" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706963000f, 40.247440000f, 1489614792, 17.696558f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299269000f, 40.041906000f, 1510692454, 9.569841f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 10" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707039000f, 40.247593000f, 1489614793, 18.214912f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299153000f, 40.041918000f, 1510692455, 9.975748f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 11" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707138000f, 40.247749000f, 1489614794, 19.295784f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.299037000f, 40.041932000f, 1510692456, 10.007992f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 12" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707245000f, 40.247894000f, 1489614795, 18.525497f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298914000f, 40.041948000f, 1510692457, 10.632704f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 13" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707359000f, 40.248035000f, 1489614796, 18.444109f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298799000f, 40.041952000f, 1510692458, 9.810785f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 14" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707474000f, 40.248177000f, 1489614797, 18.583458f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298604000f, 40.041969000f, 1510692460, 8.362968f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 15" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707588000f, 40.248322000f, 1489614798, 18.824474f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298457000f, 40.041982000f, 1510692462, 6.305561f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 16" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707703000f, 40.248463000f, 1489614799, 18.488838f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298354000f, 40.042008000f, 1510692466, 2.310710f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 17" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707817000f, 40.248604000f, 1489614800, 18.444067f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298185000f, 40.042027000f, 1510692475, 1.617466f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 18" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707924000f, 40.248737000f, 1489614801, 17.373894f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298031000f, 40.042035000f, 1510692477, 6.577273f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 19" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708031000f, 40.248875000f, 1489614802, 17.850576f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297848000f, 40.042056000f, 1510692479, 7.885033f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 20" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708138000f, 40.249001000f, 1489614803, 16.714808f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297638000f, 40.042078000f, 1510692481, 9.031821f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 21" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708237000f, 40.249134000f, 1489614804, 17.028051f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297522000f, 40.042076000f, 1510692482, 9.888387f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 22" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708336000f, 40.249283000f, 1489614805, 18.597502f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297399000f, 40.042092000f, 1510692483, 10.632682f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 23" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708420000f, 40.249424000f, 1489614806, 17.242439f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297266000f, 40.042103000f, 1510692484, 11.400621f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 24" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708504000f, 40.249569000f, 1489614807, 17.648739f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297128000f, 40.042112000f, 1510692485, 11.803380f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 25" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708549000f, 40.249722000f, 1489614808, 17.455742f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296986000f, 40.042128000f, 1510692486, 12.232042f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 26" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708603000f, 40.249874000f, 1489614809, 17.531548f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296843000f, 40.042144000f, 1510692487, 12.316360f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 27" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708641000f, 40.250034000f, 1489614810, 18.101372f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296707000f, 40.042157000f, 1510692488, 11.680326f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 28" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708664000f, 40.250191000f, 1489614811, 17.586067f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296569000f, 40.042169000f, 1510692489, 11.836395f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 29" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708664000f, 40.250362000f, 1489614812, 19.035633f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296436000f, 40.042181000f, 1510692490, 11.413102f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 30" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708664000f, 40.250534000f, 1489614813, 19.146952f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296298000f, 40.042201000f, 1510692491, 11.969649f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 31" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708641000f, 40.250702000f, 1489614814, 18.803490f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296173000f, 40.042209000f, 1510692492, 10.690027f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 32" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708611000f, 40.250874000f, 1489614815, 19.315859f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296046000f, 40.042219000f, 1510692493, 10.880409f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 33" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708595000f, 40.251038000f, 1489614816, 18.306936f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295907000f, 40.042236000f, 1510692494, 11.996194f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 34" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708572000f, 40.251221000f, 1489614817, 20.464975f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295764000f, 40.042252000f, 1510692495, 12.316341f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 35" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708565000f, 40.251392000f, 1489614818, 19.044922f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295622000f, 40.042265000f, 1510692496, 12.187869f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 36" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708565000f, 40.251572000f, 1489614819, 20.037508f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295476000f, 40.042276000f, 1510692497, 12.502647f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 37" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708565000f, 40.251751000f, 1489614820, 19.926189f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295334000f, 40.042295000f, 1510692498, 12.285085f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 38" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708572000f, 40.251926000f, 1489614821, 19.489986f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295189000f, 40.042312000f, 1510692499, 12.501375f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 39" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708588000f, 40.252090000f, 1489614822, 18.306934f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295042000f, 40.042331000f, 1510692500, 12.705042f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 40" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708595000f, 40.252254000f, 1489614823, 18.266081f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294891000f, 40.042345000f, 1510692501, 12.962667f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 41" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708618000f, 40.252422000f, 1489614824, 18.803484f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294742000f, 40.042362000f, 1510692502, 12.838433f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 42" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708633000f, 40.252586000f, 1489614825, 18.300821f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294595000f, 40.042374000f, 1510692503, 12.598762f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 43" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708656000f, 40.252750000f, 1489614826, 18.360674f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294447000f, 40.042391000f, 1510692504, 12.754142f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 44" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708672000f, 40.252918000f, 1489614827, 18.751013f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294302000f, 40.042409000f, 1510692505, 12.518693f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 45" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708687000f, 40.253078000f, 1489614828, 17.856651f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294167000f, 40.042419000f, 1510692506, 11.558791f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 46" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708710000f, 40.253239000f, 1489614829, 18.028646f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294037000f, 40.042433000f, 1510692507, 11.188025f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 47" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708725000f, 40.253403000f, 1489614830, 18.300821f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293857000f, 40.042461000f, 1510692509, 7.826769f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 48" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708748000f, 40.253571000f, 1489614831, 18.803480f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293780000f, 40.042532000f, 1510692511, 5.136387f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 49" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708771000f, 40.253731000f, 1489614832, 17.917986f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293795000f, 40.042666000f, 1510692513, 7.485744f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 50" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708794000f, 40.253899000f, 1489614833, 18.803480f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293826000f, 40.042821000f, 1510692515, 8.727801f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 51" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708809000f, 40.254063000f, 1489614834, 18.300819f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293845000f, 40.042907000f, 1510692516, 9.709445f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 52" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708839000f, 40.254234000f, 1489614835, 19.205502f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293879000f, 40.043075000f, 1510692518, 9.462404f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 53" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708855000f, 40.254406000f, 1489614836, 19.195143f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293736000f, 40.043130000f, 1510692521, 4.546086f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 54" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708885000f, 40.254578000f, 1489614837, 19.315842f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293561000f, 40.043142000f, 1510692523, 7.486759f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 55" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708908000f, 40.254753000f, 1489614838, 19.578663f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293450000f, 40.043160000f, 1510692524, 9.669506f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 56" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708923000f, 40.254929000f, 1489614839, 19.633631f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293320000f, 40.043170000f, 1510692525, 11.134613f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 57" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708954000f, 40.255108000f, 1489614840, 20.099480f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293186000f, 40.043195000f, 1510692526, 11.753928f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 58" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708977000f, 40.255291000f, 1489614841, 20.464964f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293064000f, 40.043206000f, 1510692527, 10.468908f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 59" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708992000f, 40.255474000f, 1489614842, 20.411285f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292938000f, 40.043221000f, 1510692528, 10.866986f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 60" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709015000f, 40.255657000f, 1489614843, 20.464962f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292819000f, 40.043234000f, 1510692529, 10.244111f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 61" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709038000f, 40.255833000f, 1489614844, 19.689426f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292702000f, 40.043246000f, 1510692530, 10.060018f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 62" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709068000f, 40.256004000f, 1489614845, 19.205494f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292582000f, 40.043253000f, 1510692531, 10.256242f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 63" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709091000f, 40.256176000f, 1489614846, 19.246397f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292466000f, 40.043265000f, 1510692532, 9.975554f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 64" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709114000f, 40.256336000f, 1489614847, 17.917976f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292354000f, 40.043282000f, 1510692533, 9.730617f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 65" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709129000f, 40.256500000f, 1489614848, 18.300817f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292184000f, 40.043296000f, 1510692535, 7.285627f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 66" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709137000f, 40.256653000f, 1489614849, 17.045437f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292077000f, 40.043293000f, 1510692538, 3.041608f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 67" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709152000f, 40.256805000f, 1489614850, 16.968479f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.291990000f, 40.043390000f, 1510692542, 3.274600f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 68" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709160000f, 40.256947000f, 1489614851, 15.821971f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292010000f, 40.043539000f, 1510692544, 8.336973f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 69" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709167000f, 40.257072000f, 1489614852, 13.927638f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292032000f, 40.043656000f, 1510692545, 13.158632f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 70" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709175000f, 40.257191000f, 1489614853, 13.264441f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292063000f, 40.043796000f, 1510692546, 15.807060f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 71" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709183000f, 40.257298000f, 1489614854, 11.930559f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292078000f, 40.043912000f, 1510692547, 12.976179f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 72" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709183000f, 40.257397000f, 1489614855, 11.020630f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292094000f, 40.044015000f, 1510692548, 11.546699f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 73" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709145000f, 40.257542000f, 1489614857, 8.230490f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292113000f, 40.044120000f, 1510692549, 11.800165f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 74" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.709023000f, 40.257622000f, 1489614859, 6.832410f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292219000f, 40.044183000f, 1510692551, 5.718081f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 75" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708832000f, 40.257641000f, 1489614861, 8.181653f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292391000f, 40.044172000f, 1510692553, 7.354491f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 76" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708588000f, 40.257656000f, 1489614863, 10.397845f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292499000f, 40.044159000f, 1510692554, 9.316890f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 77" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708435000f, 40.257660000f, 1489614864, 13.005440f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292625000f, 40.044143000f, 1510692555, 10.884501f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 78" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708267000f, 40.257668000f, 1489614865, 14.299867f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292760000f, 40.044134000f, 1510692556, 11.548312f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 79" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.708076000f, 40.257679000f, 1489614866, 16.272165f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.292902000f, 40.044122000f, 1510692557, 12.174824f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 80" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707870000f, 40.257687000f, 1489614867, 17.522964f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293052000f, 40.044108000f, 1510692558, 12.877735f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 81" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707649000f, 40.257698000f, 1489614868, 18.814501f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293205000f, 40.044088000f, 1510692559, 13.227463f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 82" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707428000f, 40.257698000f, 1489614869, 18.774611f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293369000f, 40.044066000f, 1510692560, 14.189127f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 83" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.707184000f, 40.257706000f, 1489614870, 20.747648f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293539000f, 40.044045000f, 1510692561, 14.674902f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 84" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706940000f, 40.257721000f, 1489614871, 20.795670f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293715000f, 40.044029000f, 1510692562, 15.104218f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 85" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706688000f, 40.257729000f, 1489614872, 21.426659f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.293893000f, 40.044014000f, 1510692563, 15.260906f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 86" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706436000f, 40.257736000f, 1489614873, 21.422319f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294075000f, 40.044003000f, 1510692564, 15.558428f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 87" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.706184000f, 40.257748000f, 1489614874, 21.449776f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294245000f, 40.043983000f, 1510692565, 14.657595f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 88" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.705933000f, 40.257759000f, 1489614875, 21.358313f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294429000f, 40.043961000f, 1510692566, 15.870710f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 89" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.705681000f, 40.257767000f, 1489614876, 21.426647f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294606000f, 40.043951000f, 1510692567, 15.125094f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 90" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.705429000f, 40.257782000f, 1489614877, 21.473150f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294770000f, 40.043930000f, 1510692568, 14.170365f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 91" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.705177000f, 40.257790000f, 1489614878, 21.426640f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.294931000f, 40.043900000f, 1510692569, 14.121130f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 92" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.704926000f, 40.257805000f, 1489614879, 21.388449f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295086000f, 40.043879000f, 1510692570, 13.414494f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 93" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.704681000f, 40.257820000f, 1489614880, 20.880320f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295250000f, 40.043863000f, 1510692571, 14.089255f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 94" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.704437000f, 40.257835000f, 1489614881, 20.795635f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295408000f, 40.043845000f, 1510692572, 13.613175f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 95" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.704185000f, 40.257858000f, 1489614882, 21.560667f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295573000f, 40.043821000f, 1510692573, 14.313007f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 96" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.703934000f, 40.257881000f, 1489614883, 21.476311f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295733000f, 40.043794000f, 1510692574, 13.962686f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 97" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.703674000f, 40.257900000f, 1489614884, 22.188749f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.295897000f, 40.043780000f, 1510692575, 14.062862f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 98" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.703430000f, 40.257931000f, 1489614885, 21.013754f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296055000f, 40.043762000f, 1510692576, 13.613192f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 99" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.703178000f, 40.257961000f, 1489614886, 21.666990f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296212000f, 40.043752000f, 1510692577, 13.425927f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 100" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.702927000f, 40.257999000f, 1489614887, 21.738655f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296377000f, 40.043738000f, 1510692578, 14.147570f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 101" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.702667000f, 40.258034000f, 1489614888, 22.428677f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296542000f, 40.043719000f, 1510692579, 14.219652f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 102" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.702415000f, 40.258068000f, 1489614889, 21.740042f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296699000f, 40.043703000f, 1510692580, 13.497738f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 103" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.702164000f, 40.258099000f, 1489614890, 21.600519f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296853000f, 40.043682000f, 1510692581, 13.330623f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 104" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.701904000f, 40.258129000f, 1489614891, 22.338682f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.296997000f, 40.043657000f, 1510692582, 12.583445f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 105" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.701653000f, 40.258160000f, 1489614892, 21.600500f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297136000f, 40.043633000f, 1510692583, 12.143284f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 106" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.701408000f, 40.258190000f, 1489614893, 21.079557f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297256000f, 40.043611000f, 1510692584, 10.515697f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 107" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.701164000f, 40.258224000f, 1489614894, 21.071085f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297366000f, 40.043591000f, 1510692585, 9.635088f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 108" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.700928000f, 40.258251000f, 1489614895, 20.272789f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297533000f, 40.043551000f, 1510692587, 7.456131f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 109" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.700714000f, 40.258278000f, 1489614896, 18.426569f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297642000f, 40.043523000f, 1510692589, 4.899058f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 110" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.700516000f, 40.258308000f, 1489614897, 17.148863f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297773000f, 40.043518000f, 1510692608, 0.588308f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 111" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.700340000f, 40.258331000f, 1489614898, 15.169225f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297886000f, 40.043480000f, 1510692610, 5.259068f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 112" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.700172000f, 40.258350000f, 1489614899, 14.427839f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297982000f, 40.043405000f, 1510692612, 5.844615f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 113" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.700035000f, 40.258369000f, 1489614900, 11.829071f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297989000f, 40.043274000f, 1510692614, 7.297525f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 114" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.699829000f, 40.258392000f, 1489614902, 8.843221f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297955000f, 40.043120000f, 1510692616, 8.693173f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 115" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.699692000f, 40.258423000f, 1489614912, 1.213927f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297934000f, 40.043039000f, 1510692617, 9.192768f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 116" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.699493000f, 40.258495000f, 1489614915, 6.236404f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297920000f, 40.042947000f, 1510692618, 10.310657f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 117" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.699287000f, 40.258587000f, 1489614917, 10.138288f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297886000f, 40.042792000f, 1510692620, 8.748061f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 118" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.699150000f, 40.258636000f, 1489614918, 12.853235f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.297892000f, 40.042689000f, 1510692622, 5.738652f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 119" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.699013000f, 40.258698000f, 1489614919, 13.530970f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298024000f, 40.042650000f, 1510692625, 4.019345f));
+#ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 120" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.698860000f, 40.258766000f, 1489614920, 15.041228f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 121" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.698692000f, 40.258842000f, 1489614921, 16.591040f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 122" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.698517000f, 40.258926000f, 1489614922, 17.562782f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 123" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.698334000f, 40.259007000f, 1489614923, 17.971796f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 124" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.698135000f, 40.259098000f, 1489614924, 19.708063f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 125" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.697929000f, 40.259190000f, 1489614925, 20.276442f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 126" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.697716000f, 40.259285000f, 1489614926, 20.958332f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 127" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.697502000f, 40.259380000f, 1489614927, 21.031696f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 128" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.697273000f, 40.259483000f, 1489614928, 22.581295f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 129" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.697044000f, 40.259586000f, 1489614929, 22.581268f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 130" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.696808000f, 40.259686000f, 1489614930, 22.931547f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 131" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.696571000f, 40.259796000f, 1489614931, 23.564619f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 132" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.696335000f, 40.259907000f, 1489614932, 23.550270f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 133" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.696083000f, 40.260021000f, 1489614933, 24.886244f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 134" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.695839000f, 40.260139000f, 1489614934, 24.539524f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 135" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.695595000f, 40.260262000f, 1489614935, 24.841883f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 136" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.695343000f, 40.260391000f, 1489614936, 25.777687f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 137" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.695091000f, 40.260517000f, 1489614937, 25.593115f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 138" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.694847000f, 40.260647000f, 1489614938, 25.279648f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 139" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.694603000f, 40.260780000f, 1489614939, 25.472263f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 140" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.694359000f, 40.260921000f, 1489614940, 25.999958f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 141" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.694122000f, 40.261063000f, 1489614941, 25.596985f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 142" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.693871000f, 40.261204000f, 1489614942, 26.476377f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 143" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.693626000f, 40.261341000f, 1489614943, 25.801962f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 144" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.693390000f, 40.261494000f, 1489614944, 26.305882f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 145" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.693146000f, 40.261646000f, 1489614945, 26.756834f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 146" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.692902000f, 40.261814000f, 1489614946, 27.917259f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 147" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.692665000f, 40.261971000f, 1489614947, 26.660328f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 148" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.692421000f, 40.262135000f, 1489614948, 27.620872f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 149" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.692184000f, 40.262295000f, 1489614949, 26.880365f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 150" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.691956000f, 40.262466000f, 1489614950, 27.156443f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 151" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.691727000f, 40.262627000f, 1489614951, 26.450459f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 152" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.691505000f, 40.262787000f, 1489614952, 25.939669f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 153" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.691284000f, 40.262939000f, 1489614953, 25.273258f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 154" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.691055000f, 40.263092000f, 1489614954, 25.855227f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 155" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.690842000f, 40.263248000f, 1489614955, 25.078835f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 156" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.690628000f, 40.263401000f, 1489614956, 24.910645f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 157" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.690414000f, 40.263550000f, 1489614957, 24.608315f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 158" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.690208000f, 40.263702000f, 1489614958, 24.341585f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 159" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.690002000f, 40.263840000f, 1489614959, 23.285185f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 160" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.689796000f, 40.263973000f, 1489614960, 22.921768f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 161" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.689400000f, 40.264233000f, 1489614962, 22.188000f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 162" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.689217000f, 40.264351000f, 1489614963, 20.351658f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 163" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.689026000f, 40.264462000f, 1489614964, 20.393963f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 164" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.688828000f, 40.264561000f, 1489614965, 20.108032f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 165" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.688622000f, 40.264652000f, 1489614966, 20.219221f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 166" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.688408000f, 40.264729000f, 1489614967, 20.097616f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 167" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.688187000f, 40.264793000f, 1489614968, 20.079098f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 168" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.687965000f, 40.264847000f, 1489614969, 19.792509f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 169" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.687744000f, 40.264896000f, 1489614970, 19.549028f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 170" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.687531000f, 40.264935000f, 1489614971, 18.606636f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 171" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.687325000f, 40.264984000f, 1489614972, 18.328899f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 172" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.687111000f, 40.265041000f, 1489614973, 19.253582f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 173" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.686913000f, 40.265110000f, 1489614974, 18.489792f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 174" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.686714000f, 40.265190000f, 1489614975, 19.106199f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 175" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.686523000f, 40.265278000f, 1489614976, 18.952282f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 176" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.686317000f, 40.265381000f, 1489614977, 20.920301f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 177" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.686134000f, 40.265484000f, 1489614978, 19.315853f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 178" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.685944000f, 40.265591000f, 1489614979, 20.058664f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 179" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.685547000f, 40.265808000f, 1489614981, 20.740810f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 180" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.685150000f, 40.266018000f, 1489614983, 20.516323f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 181" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.684753000f, 40.266232000f, 1489614985, 20.643932f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 182" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.684570000f, 40.266327000f, 1489614986, 18.800724f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 183" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.684387000f, 40.266426000f, 1489614987, 19.054729f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 184" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.684196000f, 40.266525000f, 1489614988, 19.612999f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 185" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.683998000f, 40.266624000f, 1489614989, 20.107603f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 186" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.683609000f, 40.266819000f, 1489614991, 19.767403f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 187" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.683228000f, 40.266998000f, 1489614993, 19.002605f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 188" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.682869000f, 40.267174000f, 1489614995, 18.122726f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 189" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.682686000f, 40.267254000f, 1489614996, 17.914560f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 190" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.682533000f, 40.267323000f, 1489614997, 15.096143f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 191" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.682404000f, 40.267368000f, 1489614998, 12.048148f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 192" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.682182000f, 40.267433000f, 1489615001, 6.732487f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 193" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.682030000f, 40.267456000f, 1489615027, 0.506247f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 194" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.681747000f, 40.267509000f, 1489615030, 8.250556f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 195" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.681503000f, 40.267540000f, 1489615032, 10.505425f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 196" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.681351000f, 40.267555000f, 1489615033, 13.018504f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 197" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.681198000f, 40.267574000f, 1489615034, 13.166899f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 198" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.681030000f, 40.267593000f, 1489615035, 14.425910f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 199" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.680855000f, 40.267620000f, 1489615036, 15.165421f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 200" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.680679000f, 40.267635000f, 1489615037, 15.042496f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 201" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.680496000f, 40.267654000f, 1489615038, 15.687348f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 202" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.680313000f, 40.267666000f, 1489615039, 15.601401f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 203" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.680115000f, 40.267685000f, 1489615040, 16.950686f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 204" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.679901000f, 40.267704000f, 1489615041, 18.299892f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 205" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.679695000f, 40.267731000f, 1489615042, 17.753988f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 206" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.679482000f, 40.267754000f, 1489615043, 18.272566f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 207" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.679268000f, 40.267773000f, 1489615044, 18.299873f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 208" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.679047000f, 40.267796000f, 1489615045, 18.945614f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 209" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.678818000f, 40.267822000f, 1489615046, 19.665480f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 210" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.678596000f, 40.267841000f, 1489615047, 18.974985f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 211" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.678375000f, 40.267864000f, 1489615048, 18.945595f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 212" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.678154000f, 40.267891000f, 1489615049, 19.010883f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 213" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.677933000f, 40.267914000f, 1489615050, 18.945581f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 214" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.677727000f, 40.267918000f, 1489615051, 17.503336f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 215" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.677505000f, 40.267937000f, 1489615052, 18.974958f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 216" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.677284000f, 40.267956000f, 1489615053, 18.890545f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 217" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.677063000f, 40.267963000f, 1489615054, 18.787930f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 218" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.676842000f, 40.267979000f, 1489615055, 18.856068f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 219" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.676605000f, 40.267994000f, 1489615056, 20.199930f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 220" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.676376000f, 40.268009000f, 1489615057, 19.522810f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 221" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.676155000f, 40.268021000f, 1489615058, 18.819218f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 222" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.675934000f, 40.268032000f, 1489615059, 18.811640f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 223" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.675484000f, 40.268066000f, 1489615061, 19.204964f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 224" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.675270000f, 40.268085000f, 1489615062, 18.299789f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 225" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.675041000f, 40.268105000f, 1489615063, 19.578245f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 226" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.674820000f, 40.268120000f, 1489615064, 18.845840f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 227" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.674599000f, 40.268147000f, 1489615065, 19.010813f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 228" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.674385000f, 40.268173000f, 1489615066, 18.406113f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 229" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.674164000f, 40.268204000f, 1489615067, 19.086262f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 230" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.673958000f, 40.268227000f, 1489615068, 17.683926f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 231" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.673752000f, 40.268265000f, 1489615069, 18.001656f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 232" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.673538000f, 40.268291000f, 1489615070, 18.406082f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 233" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.673332000f, 40.268318000f, 1489615071, 17.753839f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 234" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.673119000f, 40.268345000f, 1489615072, 18.340103f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 235" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.672897000f, 40.268383000f, 1489615073, 19.325245f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 236" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.672684000f, 40.268414000f, 1489615074, 18.418297f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 237" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.672462000f, 40.268444000f, 1489615075, 19.150017f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 238" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.672241000f, 40.268478000f, 1489615076, 19.149387f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 239" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.672020000f, 40.268505000f, 1489615077, 19.010715f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 240" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.671791000f, 40.268532000f, 1489615078, 19.681971f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 241" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.671555000f, 40.268566000f, 1489615079, 20.399874f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 242" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.671318000f, 40.268600000f, 1489615080, 20.483334f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 243" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.671089000f, 40.268639000f, 1489615081, 19.929708f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 244" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.670868000f, 40.268673000f, 1489615082, 19.149334f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 245" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.670647000f, 40.268707000f, 1489615083, 19.149324f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 246" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.670433000f, 40.268738000f, 1489615084, 18.501654f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 247" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.670219000f, 40.268764000f, 1489615085, 18.405956f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 248" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.669998000f, 40.268803000f, 1489615086, 19.267038f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 249" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.669777000f, 40.268841000f, 1489615087, 19.242249f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 250" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.669556000f, 40.268879000f, 1489615088, 19.242239f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 251" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.669327000f, 40.268921000f, 1489615089, 20.005035f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 252" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.669090000f, 40.268967000f, 1489615090, 20.771591f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 253" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.668854000f, 40.269009000f, 1489615091, 20.583586f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 254" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.668625000f, 40.269054000f, 1489615092, 20.085674f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 255" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.668411000f, 40.269096000f, 1489615093, 18.768553f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 256" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.668190000f, 40.269142000f, 1489615094, 19.457352f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 257" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.667984000f, 40.269188000f, 1489615095, 18.231258f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 258" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.667778000f, 40.269241000f, 1489615096, 18.465263f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 259" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.667580000f, 40.269295000f, 1489615097, 17.859844f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 260" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.667374000f, 40.269348000f, 1489615098, 18.465239f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 261" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.667175000f, 40.269402000f, 1489615099, 17.939825f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 262" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.666977000f, 40.269463000f, 1489615100, 18.136930f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 263" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.666779000f, 40.269524000f, 1489615101, 18.136917f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 264" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.666580000f, 40.269592000f, 1489615102, 18.520296f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 265" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.666389000f, 40.269657000f, 1489615103, 17.763649f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 266" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.666214000f, 40.269722000f, 1489615104, 16.531754f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 267" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.666031000f, 40.269794000f, 1489615105, 17.488413f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 268" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.665855000f, 40.269863000f, 1489615106, 16.806915f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 269" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.665688000f, 40.269924000f, 1489615107, 15.726200f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 270" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.665504000f, 40.269993000f, 1489615108, 17.414045f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 271" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.665344000f, 40.270058000f, 1489615109, 15.396248f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 272" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.665176000f, 40.270119000f, 1489615110, 15.802816f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 273" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.665024000f, 40.270191000f, 1489615111, 15.196074f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 274" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.664848000f, 40.270260000f, 1489615112, 16.806837f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 275" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.664688000f, 40.270329000f, 1489615113, 15.610416f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 276" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.664520000f, 40.270401000f, 1489615114, 16.366335f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 277" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.664345000f, 40.270477000f, 1489615115, 17.103043f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 278" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.664177000f, 40.270542000f, 1489615116, 15.999127f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 279" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.664001000f, 40.270607000f, 1489615117, 16.607990f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 280" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.663834000f, 40.270679000f, 1489615118, 16.292282f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 281" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.663666000f, 40.270748000f, 1489615119, 16.205338f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 282" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.663490000f, 40.270824000f, 1489615120, 17.176844f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 283" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.663315000f, 40.270893000f, 1489615121, 16.731211f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 284" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.663139000f, 40.270966000f, 1489615122, 17.014811f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 285" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.662956000f, 40.271042000f, 1489615123, 17.696659f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 286" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.662766000f, 40.271114000f, 1489615124, 18.018637f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 287" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.662590000f, 40.271183000f, 1489615125, 16.806656f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 288" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.662415000f, 40.271248000f, 1489615126, 16.531452f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 289" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.662239000f, 40.271313000f, 1489615127, 16.607849f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 290" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.662071000f, 40.271370000f, 1489615128, 15.616416f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 291" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.661919000f, 40.271423000f, 1489615129, 14.194488f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 292" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.661781000f, 40.271473000f, 1489615130, 12.975552f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 293" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.661644000f, 40.271519000f, 1489615131, 12.713078f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 294" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.661522000f, 40.271564000f, 1489615132, 11.509469f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 295" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.661400000f, 40.271603000f, 1489615133, 11.234863f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 296" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.661285000f, 40.271645000f, 1489615134, 10.828906f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 297" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.661171000f, 40.271679000f, 1489615135, 10.396092f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 298" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.661064000f, 40.271717000f, 1489615136, 10.024343f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 299" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.660950000f, 40.271751000f, 1489615137, 10.396083f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 300" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.660835000f, 40.271786000f, 1489615138, 10.515964f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 301" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.660637000f, 40.271843000f, 1489615140, 8.987204f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 302" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.660507000f, 40.271881000f, 1489615142, 5.912074f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 303" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.660355000f, 40.271923000f, 1489615145, 4.576890f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 304" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.660240000f, 40.271950000f, 1489615148, 3.406506f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 305" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.660133000f, 40.271984000f, 1489615153, 1.968938f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 306" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.659904000f, 40.272026000f, 1489615158, 4.000834f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 307" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.659729000f, 40.272072000f, 1489615160, 7.860482f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 308" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.659515000f, 40.272129000f, 1489615162, 9.625892f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 309" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.659401000f, 40.272163000f, 1489615163, 10.396028f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 310" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.659279000f, 40.272198000f, 1489615164, 11.070331f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 311" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.659157000f, 40.272228000f, 1489615165, 10.886906f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 312" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.659042000f, 40.272259000f, 1489615166, 10.359182f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 313" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.658913000f, 40.272289000f, 1489615167, 11.454228f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 314" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.658783000f, 40.272331000f, 1489615168, 11.990593f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 315" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.658669000f, 40.272373000f, 1489615169, 10.752263f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 316" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.658546000f, 40.272400000f, 1489615170, 10.870719f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 317" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.658424000f, 40.272434000f, 1489615171, 11.031610f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 318" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.658302000f, 40.272465000f, 1489615172, 10.921533f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 319" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.658173000f, 40.272495000f, 1489615173, 11.454196f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 320" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.658043000f, 40.272530000f, 1489615174, 11.708727f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 321" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.657921000f, 40.272560000f, 1489615175, 10.886857f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 322" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.657784000f, 40.272591000f, 1489615176, 12.136936f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 323" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.657646000f, 40.272629000f, 1489615177, 12.460909f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 324" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.657516000f, 40.272655000f, 1489615178, 11.414491f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 325" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.657394000f, 40.272686000f, 1489615179, 10.921500f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 326" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.657265000f, 40.272717000f, 1489615180, 11.487112f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 327" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.657135000f, 40.272751000f, 1489615181, 11.672122f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 328" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.657005000f, 40.272781000f, 1489615182, 11.535422f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 329" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.656883000f, 40.272816000f, 1489615183, 11.070242f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 330" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.656754000f, 40.272846000f, 1489615184, 11.454142f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 331" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.656631000f, 40.272881000f, 1489615185, 11.149773f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 332" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.656517000f, 40.272907000f, 1489615186, 10.105798f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 333" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.656342000f, 40.272949000f, 1489615188, 7.790715f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 334" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.656227000f, 40.272980000f, 1489615190, 5.179542f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 335" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.656059000f, 40.273022000f, 1489615239, 0.306435f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 336" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.655884000f, 40.273060000f, 1489615241, 7.726817f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 337" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.655663000f, 40.273106000f, 1489615243, 9.728145f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 338" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.655540000f, 40.273136000f, 1489615244, 10.967643f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 339" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.655396000f, 40.273170000f, 1489615245, 12.802685f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 340" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.655251000f, 40.273205000f, 1489615246, 12.916981f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 341" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.655113000f, 40.273243000f, 1489615247, 12.460809f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 342" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.654976000f, 40.273277000f, 1489615248, 12.235969f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 343" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.654846000f, 40.273315000f, 1489615249, 11.823930f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 344" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.654701000f, 40.273350000f, 1489615250, 12.916956f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 345" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.654549000f, 40.273376000f, 1489615251, 13.230329f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 346" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.654381000f, 40.273407000f, 1489615252, 14.680161f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 347" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.654213000f, 40.273438000f, 1489615253, 14.680155f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 348" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.654022000f, 40.273472000f, 1489615254, 16.657919f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 349" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.653847000f, 40.273510000f, 1489615255, 15.453538f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 350" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.653656000f, 40.273548000f, 1489615256, 16.764683f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 351" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.653465000f, 40.273594000f, 1489615257, 17.011223f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 352" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.653275000f, 40.273643000f, 1489615258, 17.034222f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 353" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.653076000f, 40.273685000f, 1489615259, 17.536404f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 354" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.652870000f, 40.273727000f, 1489615260, 18.110098f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 355" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.652657000f, 40.273773000f, 1489615261, 18.801455f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 356" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.652451000f, 40.273815000f, 1489615262, 18.110075f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 357" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.652245000f, 40.273857000f, 1489615263, 18.110065f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 358" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.652039000f, 40.273907000f, 1489615264, 18.360136f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 359" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.651840000f, 40.273952000f, 1489615265, 17.628317f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 360" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.651642000f, 40.273998000f, 1489615266, 17.578995f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 361" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.651443000f, 40.274048000f, 1489615267, 17.794464f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 362" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.651237000f, 40.274094000f, 1489615268, 18.230040f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 363" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.651039000f, 40.274136000f, 1489615269, 17.454453f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 364" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.650841000f, 40.274181000f, 1489615270, 17.546846f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 365" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.650642000f, 40.274223000f, 1489615271, 17.536274f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 366" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.650444000f, 40.274269000f, 1489615272, 17.578930f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 367" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.650246000f, 40.274315000f, 1489615273, 17.578918f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 368" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.650055000f, 40.274361000f, 1489615274, 17.011047f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 369" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.649857000f, 40.274403000f, 1489615275, 17.454388f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 370" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.649658000f, 40.274445000f, 1489615276, 17.536221f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 371" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.649460000f, 40.274487000f, 1489615277, 17.454367f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 372" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.649269000f, 40.274517000f, 1489615278, 16.562180f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 373" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.649086000f, 40.274551000f, 1489615279, 15.996729f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 374" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.648918000f, 40.274586000f, 1489615280, 14.790928f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 375" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.648773000f, 40.274620000f, 1489615281, 12.883594f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 376" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.648643000f, 40.274651000f, 1489615282, 11.567849f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 377" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.648514000f, 40.274673000f, 1489615283, 11.226565f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 378" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.648399000f, 40.274696000f, 1489615284, 10.097149f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 379" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.648270000f, 40.274712000f, 1489615285, 11.100011f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 380" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.648132000f, 40.274727000f, 1489615286, 11.838910f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 381" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.647980000f, 40.274746000f, 1489615287, 13.081717f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 382" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.647827000f, 40.274773000f, 1489615288, 13.337600f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 383" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.647667000f, 40.274796000f, 1489615289, 13.828142f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 384" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.647499000f, 40.274818000f, 1489615290, 14.477140f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 385" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.647316000f, 40.274841000f, 1489615291, 15.751934f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 386" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.647133000f, 40.274864000f, 1489615292, 15.751929f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 387" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.646942000f, 40.274887000f, 1489615293, 16.422710f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 388" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.646751000f, 40.274910000f, 1489615294, 16.422705f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 389" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.646545000f, 40.274933000f, 1489615295, 17.682209f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 390" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.646347000f, 40.274956000f, 1489615296, 17.010197f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 391" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.646149000f, 40.274979000f, 1489615297, 17.010191f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 392" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.645943000f, 40.274998000f, 1489615298, 17.623224f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 393" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.645737000f, 40.275017000f, 1489615299, 17.623219f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 394" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.645538000f, 40.275032000f, 1489615300, 16.983599f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 395" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.645325000f, 40.275051000f, 1489615301, 18.213572f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 396" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.645111000f, 40.275070000f, 1489615302, 18.297926f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 397" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.644890000f, 40.275093000f, 1489615303, 18.943607f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 398" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.644653000f, 40.275116000f, 1489615304, 20.290861f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 399" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.644417000f, 40.275135000f, 1489615305, 20.155025f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 400" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.644180000f, 40.275154000f, 1489615306, 20.239483f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 401" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.643936000f, 40.275173000f, 1489615307, 20.830833f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 402" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.643700000f, 40.275192000f, 1489615308, 20.155008f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 403" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.643456000f, 40.275204000f, 1489615309, 20.766176f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 404" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.643219000f, 40.275208000f, 1489615310, 20.133572f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 405" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.642982000f, 40.275211000f, 1489615311, 20.131416f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 406" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.642746000f, 40.275219000f, 1489615312, 20.063488f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 407" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.642517000f, 40.275223000f, 1489615313, 19.454290f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 408" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.642296000f, 40.275230000f, 1489615314, 18.785913f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 409" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.642075000f, 40.275234000f, 1489615315, 18.775024f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 410" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.641861000f, 40.275242000f, 1489615316, 18.197029f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 411" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.641655000f, 40.275246000f, 1489615317, 17.501442f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 412" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.641449000f, 40.275249000f, 1489615318, 17.498962f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 413" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.641258000f, 40.275257000f, 1489615319, 16.246237f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 414" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.641068000f, 40.275257000f, 1489615320, 16.136877f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 415" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.640877000f, 40.275261000f, 1489615321, 16.227919f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 416" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.640701000f, 40.275265000f, 1489615322, 14.954473f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 417" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.640533000f, 40.275265000f, 1489615323, 14.268395f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 418" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.640373000f, 40.275269000f, 1489615324, 13.596241f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 419" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.640236000f, 40.275272000f, 1489615325, 11.640327f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 420" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.640114000f, 40.275272000f, 1489615326, 10.361572f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 421" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.639938000f, 40.275272000f, 1489615328, 7.473921f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 422" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.639809000f, 40.275276000f, 1489615331, 3.655044f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 423" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.639679000f, 40.275276000f, 1489615354, 0.480044f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 424" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.639519000f, 40.275280000f, 1489615356, 6.798120f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 425" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.639275000f, 40.275280000f, 1489615358, 10.361570f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 426" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.639137000f, 40.275276000f, 1489615359, 11.728921f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 427" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.638992000f, 40.275280000f, 1489615360, 12.323030f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 428" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.638809000f, 40.275269000f, 1489615361, 15.590520f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 429" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.638634000f, 40.275265000f, 1489615362, 14.869580f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 430" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.638443000f, 40.275257000f, 1489615363, 16.246235f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 431" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.638245000f, 40.275257000f, 1489615364, 16.816324f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 432" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.638039000f, 40.275249000f, 1489615365, 17.518425f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 433" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.637840000f, 40.275242000f, 1489615366, 16.919212f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 434" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.637627000f, 40.275234000f, 1489615367, 18.112202f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 435" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.637421000f, 40.275230000f, 1489615368, 17.501444f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 436" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.637207000f, 40.275215000f, 1489615369, 18.251772f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 437" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.636993000f, 40.275204000f, 1489615370, 18.216436f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 438" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.636772000f, 40.275188000f, 1489615371, 18.854071f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 439" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.636551000f, 40.275177000f, 1489615372, 18.809658f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 440" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.636330000f, 40.275162000f, 1489615373, 18.843889f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 441" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.636108000f, 40.275150000f, 1489615374, 18.901958f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 442" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.635887000f, 40.275131000f, 1489615375, 18.888561f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 443" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.635674000f, 40.275116000f, 1489615376, 18.167225f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 444" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.635460000f, 40.275101000f, 1489615377, 18.251802f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 445" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.635262000f, 40.275082000f, 1489615378, 16.948856f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 446" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.635063000f, 40.275066000f, 1489615379, 16.994892f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 447" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.634865000f, 40.275051000f, 1489615380, 16.899073f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 448" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.634682000f, 40.275040000f, 1489615381, 15.590572f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 449" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.634499000f, 40.275032000f, 1489615382, 15.567904f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 450" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.634338000f, 40.275032000f, 1489615383, 13.673926f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 451" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.634186000f, 40.275028000f, 1489615384, 12.917223f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 452" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.634064000f, 40.275032000f, 1489615385, 10.371172f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 453" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.633858000f, 40.275002000f, 1489615387, 8.905856f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 454" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.633705000f, 40.274914000f, 1489615389, 8.136656f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 455" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.633537000f, 40.274868000f, 1489615391, 7.579758f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 456" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.633354000f, 40.274891000f, 1489615393, 7.875961f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 457" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.633133000f, 40.274918000f, 1489615395, 9.504478f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 458" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.633003000f, 40.274925000f, 1489615396, 11.068540f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 459" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.632858000f, 40.274929000f, 1489615397, 12.323093f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 460" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.632706000f, 40.274929000f, 1489615398, 12.909565f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 461" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.632538000f, 40.274925000f, 1489615399, 14.275413f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 462" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.632362000f, 40.274918000f, 1489615400, 14.968216f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 463" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.632179000f, 40.274906000f, 1489615401, 15.599741f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 464" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.631989000f, 40.274895000f, 1489615402, 16.183355f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 465" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.631790000f, 40.274883000f, 1489615403, 16.954056f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 466" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.631599000f, 40.274868000f, 1489615404, 16.307613f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 467" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.631401000f, 40.274857000f, 1489615405, 16.860947f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 468" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.631195000f, 40.274841000f, 1489615406, 17.586306f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 469" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.630989000f, 40.274826000f, 1489615407, 17.575384f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 470" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.630783000f, 40.274811000f, 1489615408, 17.575388f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 471" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.630577000f, 40.274796000f, 1489615409, 17.575392f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 472" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.630379000f, 40.274780000f, 1489615410, 16.910501f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 473" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.630173000f, 40.274761000f, 1489615411, 17.623280f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 474" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.629959000f, 40.274746000f, 1489615412, 18.251898f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 475" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.629753000f, 40.274731000f, 1489615413, 17.575407f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 476" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.629539000f, 40.274715000f, 1489615414, 18.262426f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 477" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.629318000f, 40.274696000f, 1489615415, 18.888681f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 478" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.629089000f, 40.274681000f, 1489615416, 19.520895f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 479" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.628860000f, 40.274658000f, 1489615417, 19.617153f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 480" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.628639000f, 40.274639000f, 1489615418, 18.888697f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 481" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.628410000f, 40.274624000f, 1489615419, 19.520910f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 482" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.628181000f, 40.274601000f, 1489615420, 19.617170f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 483" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.627960000f, 40.274582000f, 1489615421, 18.888712f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 484" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.627731000f, 40.274567000f, 1489615422, 19.520927f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 485" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.627518000f, 40.274548000f, 1489615423, 18.213699f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 486" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.627296000f, 40.274532000f, 1489615424, 18.938807f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 487" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.627090000f, 40.274521000f, 1489615425, 17.538761f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 488" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.626892000f, 40.274517000f, 1489615426, 16.822403f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 489" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.626694000f, 40.274525000f, 1489615427, 16.840073f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 490" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.626503000f, 40.274548000f, 1489615428, 16.422791f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 491" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.626328000f, 40.274570000f, 1489615429, 15.063482f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 492" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.626183000f, 40.274593000f, 1489615430, 12.578445f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 493" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.626045000f, 40.274616000f, 1489615431, 11.996976f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 494" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.625824000f, 40.274597000f, 1489615433, 9.444354f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 495" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.625656000f, 40.274532000f, 1489615435, 7.999182f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 496" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.625496000f, 40.274509000f, 1489615437, 6.914097f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 497" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.625313000f, 40.274563000f, 1489615439, 8.332246f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 498" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.625206000f, 40.274597000f, 1489615440, 9.844363f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 499" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.625076000f, 40.274635000f, 1489615441, 11.823729f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 500" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.624931000f, 40.274670000f, 1489615442, 12.916726f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 501" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.624771000f, 40.274700000f, 1489615443, 13.993409f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 502" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.624596000f, 40.274731000f, 1489615444, 15.258390f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 503" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.624413000f, 40.274757000f, 1489615445, 15.809670f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 504" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.624222000f, 40.274792000f, 1489615446, 16.683256f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 505" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.624023000f, 40.274818000f, 1489615447, 17.147398f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 506" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.623825000f, 40.274845000f, 1489615448, 17.082920f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 507" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.623627000f, 40.274872000f, 1489615449, 17.082912f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 508" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.623436000f, 40.274902000f, 1489615450, 16.562088f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 509" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.623238000f, 40.274925000f, 1489615451, 17.010204f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 510" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.623039000f, 40.274952000f, 1489615452, 17.166506f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 511" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.622833000f, 40.274971000f, 1489615453, 17.623230f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 512" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.622635000f, 40.274994000f, 1489615454, 17.010187f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 513" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.622444000f, 40.275017000f, 1489615455, 16.422680f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 514" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.622246000f, 40.275040000f, 1489615456, 17.010176f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 515" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.622040000f, 40.275066000f, 1489615457, 17.733610f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 516" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.621849000f, 40.275085000f, 1489615458, 16.359158f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 517" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.621651000f, 40.275108000f, 1489615459, 17.010159f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 518" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.621460000f, 40.275131000f, 1489615460, 16.422653f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 519" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.621269000f, 40.275150000f, 1489615461, 16.359140f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 520" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.621086000f, 40.275177000f, 1489615462, 15.830333f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 521" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.620911000f, 40.275196000f, 1489615463, 15.012668f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 522" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.620735000f, 40.275215000f, 1489615464, 15.096752f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 523" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.620560000f, 40.275238000f, 1489615465, 15.081837f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 524" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.620377000f, 40.275257000f, 1489615466, 15.685617f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 525" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.620193000f, 40.275276000f, 1489615467, 15.769773f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 526" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.620010000f, 40.275299000f, 1489615468, 15.751830f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 527" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.619827000f, 40.275322000f, 1489615469, 15.751825f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 528" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.619637000f, 40.275345000f, 1489615470, 16.338715f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 529" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.619438000f, 40.275368000f, 1489615471, 17.094063f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 530" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.619247000f, 40.275391000f, 1489615472, 16.422592f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 531" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.619049000f, 40.275417000f, 1489615473, 17.063545f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 532" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.618851000f, 40.275436000f, 1489615474, 16.948772f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 533" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.618645000f, 40.275459000f, 1489615475, 17.682074f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 534" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.618446000f, 40.275478000f, 1489615476, 17.033033f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 535" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.618240000f, 40.275505000f, 1489615477, 17.752007f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 536" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.618042000f, 40.275536000f, 1489615478, 17.166693f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 537" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.617844000f, 40.275566000f, 1489615479, 17.144653f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 538" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.617645000f, 40.275597000f, 1489615480, 17.249884f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 539" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.617455000f, 40.275635000f, 1489615481, 16.682030f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 540" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.617256000f, 40.275669000f, 1489615482, 17.319767f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 541" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.617065000f, 40.275707000f, 1489615483, 16.764183f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 542" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.616867000f, 40.275749000f, 1489615484, 17.454065f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 543" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.616676000f, 40.275791000f, 1489615485, 16.882021f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 544" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.616493000f, 40.275837000f, 1489615486, 16.364063f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 545" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.616302000f, 40.275879000f, 1489615487, 16.882000f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 546" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.616119000f, 40.275921000f, 1489615488, 16.230217f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 547" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.615936000f, 40.275967000f, 1489615489, 16.364035f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 548" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.615746000f, 40.276012000f, 1489615490, 16.896362f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 549" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.615555000f, 40.276058000f, 1489615491, 17.010660f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 550" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.615356000f, 40.276104000f, 1489615492, 17.659758f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 551" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.615150000f, 40.276154000f, 1489615493, 18.359581f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 552" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.614944000f, 40.276199000f, 1489615494, 18.198561f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 553" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.614731000f, 40.276245000f, 1489615495, 18.800817f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 554" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.614525000f, 40.276295000f, 1489615496, 18.359547f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 555" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.614311000f, 40.276344000f, 1489615497, 18.975813f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 556" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.614098000f, 40.276398000f, 1489615498, 19.062605f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 557" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.613884000f, 40.276451000f, 1489615499, 19.108543f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 558" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.613670000f, 40.276501000f, 1489615500, 19.008072f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 559" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.613457000f, 40.276550000f, 1489615501, 18.894432f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 560" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.613243000f, 40.276600000f, 1489615502, 19.008047f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 561" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.613029000f, 40.276649000f, 1489615503, 18.975735f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 562" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.612823000f, 40.276695000f, 1489615504, 18.229393f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 563" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.612617000f, 40.276741000f, 1489615505, 18.229382f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 564" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.612427000f, 40.276783000f, 1489615506, 16.800201f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 565" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.612228000f, 40.276829000f, 1489615507, 17.659584f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 566" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.612030000f, 40.276867000f, 1489615508, 17.339827f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 567" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.611832000f, 40.276905000f, 1489615509, 17.339817f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 568" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.611626000f, 40.276936000f, 1489615510, 17.832436f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 569" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.611412000f, 40.276958000f, 1489615511, 18.339025f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 570" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.611191000f, 40.276970000f, 1489615512, 18.816740f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 571" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.610970000f, 40.276978000f, 1489615513, 18.790375f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 572" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.610741000f, 40.276989000f, 1489615514, 19.487198f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 573" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.610512000f, 40.276997000f, 1489615515, 19.469063f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 574" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.610283000f, 40.277008000f, 1489615516, 19.487192f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 575" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.610046000f, 40.277020000f, 1489615517, 20.172388f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 576" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.609818000f, 40.277031000f, 1489615518, 19.402426f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 577" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.609596000f, 40.277039000f, 1489615519, 18.875193f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 578" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.609367000f, 40.277050000f, 1489615520, 19.487181f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 579" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.609138000f, 40.277058000f, 1489615521, 19.469046f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 580" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.608917000f, 40.277065000f, 1489615522, 18.785404f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 581" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.608688000f, 40.277073000f, 1489615523, 19.469042f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 582" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.608467000f, 40.277081000f, 1489615524, 18.790346f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 583" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.608246000f, 40.277092000f, 1489615525, 18.809130f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 584" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.608032000f, 40.277100000f, 1489615526, 18.196531f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 585" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.607811000f, 40.277111000f, 1489615527, 18.809126f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 586" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.607590000f, 40.277115000f, 1489615528, 18.774502f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 587" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.607361000f, 40.277126000f, 1489615529, 19.487158f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 588" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.607124000f, 40.277134000f, 1489615530, 20.147766f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 589" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.606888000f, 40.277142000f, 1489615531, 20.062918f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 590" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.606644000f, 40.277153000f, 1489615532, 20.758717f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 591" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.606407000f, 40.277161000f, 1489615533, 20.147758f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 592" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.606163000f, 40.277172000f, 1489615534, 20.758711f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 593" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.605911000f, 40.277180000f, 1489615535, 21.420509f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 594" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.605659000f, 40.277187000f, 1489615536, 21.416166f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 595" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.605415000f, 40.277195000f, 1489615537, 20.741682f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 596" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.605171000f, 40.277206000f, 1489615538, 20.758699f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 597" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.604919000f, 40.277218000f, 1489615539, 21.443624f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 598" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.604683000f, 40.277225000f, 1489615540, 20.058260f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 599" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.604446000f, 40.277229000f, 1489615541, 20.132971f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 600" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.604210000f, 40.277237000f, 1489615542, 20.062889f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 601" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.603981000f, 40.277241000f, 1489615543, 19.453711f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 602" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.603760000f, 40.277245000f, 1489615544, 18.774467f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 603" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.603539000f, 40.277248000f, 1489615545, 18.772156f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 604" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.603310000f, 40.277248000f, 1489615546, 19.448612f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 605" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.603096000f, 40.277248000f, 1489615547, 18.174685f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 606" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.602882000f, 40.277248000f, 1489615548, 18.174685f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 607" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.602676000f, 40.277248000f, 1489615549, 17.495258f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 608" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.602470000f, 40.277245000f, 1489615550, 17.498446f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 609" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.602264000f, 40.277241000f, 1489615551, 17.500925f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 610" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.602066000f, 40.277233000f, 1489615552, 16.839397f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 611" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.601860000f, 40.277229000f, 1489615553, 17.500927f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 612" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.601662000f, 40.277225000f, 1489615554, 16.821730f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 613" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.601448000f, 40.277218000f, 1489615555, 18.191389f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 614" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.601250000f, 40.277214000f, 1489615556, 16.821732f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 615" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.601044000f, 40.277203000f, 1489615557, 17.538069f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 616" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.600838000f, 40.277191000f, 1489615558, 17.546194f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 617" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.600624000f, 40.277184000f, 1489615559, 18.191399f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 618" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.600403000f, 40.277172000f, 1489615560, 18.816681f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 619" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.600182000f, 40.277161000f, 1489615561, 18.809109f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 620" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.599960000f, 40.277149000f, 1489615562, 18.901402f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 621" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.599731000f, 40.277142000f, 1489615563, 19.464245f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 622" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.599503000f, 40.277134000f, 1489615564, 19.384182f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 623" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.599274000f, 40.277126000f, 1489615565, 19.469025f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 624" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.599045000f, 40.277119000f, 1489615566, 19.464252f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 625" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.598808000f, 40.277111000f, 1489615567, 20.147770f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 626" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.598579000f, 40.277103000f, 1489615568, 19.469030f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 627" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.598351000f, 40.277096000f, 1489615569, 19.379398f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 628" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.598129000f, 40.277088000f, 1489615570, 18.875177f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 629" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.597908000f, 40.277077000f, 1489615571, 18.809132f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 630" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.597694000f, 40.277073000f, 1489615572, 18.180185f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 631" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.597481000f, 40.277069000f, 1489615573, 18.095284f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 632" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.597282000f, 40.277061000f, 1489615574, 16.924252f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 633" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.597084000f, 40.277054000f, 1489615575, 16.833921f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 634" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.596901000f, 40.277050000f, 1489615576, 15.548326f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 635" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.596741000f, 40.277046000f, 1489615577, 13.595883f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 636" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.596588000f, 40.277046000f, 1489615578, 12.994089f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 637" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.596443000f, 40.277042000f, 1489615579, 12.322708f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 638" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.596298000f, 40.277042000f, 1489615580, 12.314660f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 639" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.596161000f, 40.277046000f, 1489615581, 11.643748f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 640" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.596016000f, 40.277046000f, 1489615582, 12.314660f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 641" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.595863000f, 40.277046000f, 1489615583, 12.994089f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 642" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.595711000f, 40.277050000f, 1489615584, 12.916838f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 643" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.595551000f, 40.277054000f, 1489615585, 13.595882f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 644" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.595375000f, 40.277054000f, 1489615586, 14.947448f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 645" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.595200000f, 40.277058000f, 1489615587, 14.869187f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 646" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.595016000f, 40.277061000f, 1489615588, 15.630444f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 647" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.594826000f, 40.277065000f, 1489615589, 16.142590f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 648" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.594635000f, 40.277069000f, 1489615590, 16.227486f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 649" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.594444000f, 40.277077000f, 1489615591, 16.245800f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 650" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.594254000f, 40.277081000f, 1489615592, 16.142586f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 651" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.594063000f, 40.277088000f, 1489615593, 16.240076f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 652" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.593880000f, 40.277096000f, 1489615594, 15.567433f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 653" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.593689000f, 40.277100000f, 1489615595, 16.227478f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 654" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.593506000f, 40.277107000f, 1489615596, 15.561459f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 655" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.593315000f, 40.277115000f, 1489615597, 16.245790f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 656" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.593132000f, 40.277119000f, 1489615598, 15.548311f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 657" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.592949000f, 40.277130000f, 1489615599, 15.590096f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 658" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.592766000f, 40.277138000f, 1489615600, 15.567423f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 659" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.592590000f, 40.277142000f, 1489615601, 14.954060f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 660" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.592415000f, 40.277149000f, 1489615602, 14.882912f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 661" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.592232000f, 40.277149000f, 1489615603, 15.541926f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 662" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.592049000f, 40.277157000f, 1489615604, 15.567419f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 663" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.591866000f, 40.277161000f, 1489615605, 15.548302f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 664" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.591675000f, 40.277164000f, 1489615606, 16.224789f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 665" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.591492000f, 40.277168000f, 1489615607, 15.548300f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 666" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.591286000f, 40.277168000f, 1489615608, 17.495277f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 667" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.591095000f, 40.277176000f, 1489615609, 16.245777f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 668" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.590897000f, 40.277176000f, 1489615610, 16.815847f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 669" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.590706000f, 40.277180000f, 1489615611, 16.227459f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 670" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.590500000f, 40.277180000f, 1489615612, 17.495275f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 671" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.590294000f, 40.277184000f, 1489615613, 17.500940f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 672" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.590088000f, 40.277187000f, 1489615614, 17.498461f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 673" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.589882000f, 40.277195000f, 1489615615, 17.517923f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 674" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.589684000f, 40.277203000f, 1489615616, 16.839407f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 675" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.589493000f, 40.277203000f, 1489615617, 16.221342f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 676" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.589302000f, 40.277203000f, 1489615618, 16.221342f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 677" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.589127000f, 40.277210000f, 1489615619, 14.882898f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 678" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.588959000f, 40.277210000f, 1489615620, 14.267985f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 679" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.588791000f, 40.277222000f, 1489615621, 14.330380f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 680" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.588623000f, 40.277218000f, 1489615622, 14.274929f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 681" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.588470000f, 40.277222000f, 1489615623, 13.001683f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 682" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.588303000f, 40.277222000f, 1489615624, 14.183054f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 683" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.588142000f, 40.277222000f, 1489615625, 13.673483f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 684" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.587967000f, 40.277225000f, 1489615626, 14.866233f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 685" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.587791000f, 40.277225000f, 1489615627, 14.947410f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 686" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.587624000f, 40.277222000f, 1489615628, 14.186985f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 687" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.587448000f, 40.277218000f, 1489615629, 14.954041f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 688" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.587280000f, 40.277218000f, 1489615630, 14.267983f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 689" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.587120000f, 40.277222000f, 1489615631, 13.595849f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 690" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.586967000f, 40.277229000f, 1489615632, 13.017399f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 691" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.586823000f, 40.277237000f, 1489615633, 12.262079f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 692" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.586693000f, 40.277245000f, 1489615634, 11.076556f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 693" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.586571000f, 40.277252000f, 1489615635, 10.390530f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 694" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.586365000f, 40.277267000f, 1489615637, 8.787379f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 695" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.586182000f, 40.277279000f, 1489615639, 7.799600f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 696" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.586037000f, 40.277287000f, 1489615641, 6.173388f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 697" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.585915000f, 40.277294000f, 1489615643, 5.195261f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 698" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.585777000f, 40.277309000f, 1489615646, 3.946156f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 699" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.585655000f, 40.277317000f, 1489615648, 5.199730f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 700" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.585472000f, 40.277336000f, 1489615650, 7.842572f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 701" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.585266000f, 40.277355000f, 1489615652, 8.811309f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 702" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.585022000f, 40.277378000f, 1489615654, 10.440037f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 703" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.584900000f, 40.277390000f, 1489615655, 10.447005f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 704" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.584770000f, 40.277405000f, 1489615656, 11.166228f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 705" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.584648000f, 40.277420000f, 1489615657, 10.494931f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 706" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.584518000f, 40.277439000f, 1489615658, 11.241434f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 707" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.584396000f, 40.277454000f, 1489615659, 10.494926f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 708" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.584274000f, 40.277470000f, 1489615660, 10.513209f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 709" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.584152000f, 40.277485000f, 1489615661, 10.494922f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 710" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.584030000f, 40.277504000f, 1489615662, 10.574906f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 711" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.583801000f, 40.277531000f, 1489615664, 9.839706f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 712" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.583679000f, 40.277546000f, 1489615665, 10.494912f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 713" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.583557000f, 40.277557000f, 1489615666, 10.433330f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 714" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.583427000f, 40.277569000f, 1489615667, 11.121164f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 715" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.583305000f, 40.277580000f, 1489615668, 10.433326f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 716" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.583176000f, 40.277592000f, 1489615669, 11.036852f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 717" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.583054000f, 40.277603000f, 1489615670, 10.433323f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 718" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.582924000f, 40.277615000f, 1489615671, 11.121157f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 719" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.582802000f, 40.277622000f, 1489615672, 10.390473f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 720" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.582672000f, 40.277630000f, 1489615673, 11.076493f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 721" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.582535000f, 40.277637000f, 1489615674, 11.661194f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 722" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.582397000f, 40.277649000f, 1489615675, 11.795938f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 723" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.582260000f, 40.277657000f, 1489615676, 11.669158f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 724" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.582123000f, 40.277668000f, 1489615677, 11.699383f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 725" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.581978000f, 40.277679000f, 1489615678, 12.375277f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 726" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.581833000f, 40.277691000f, 1489615679, 12.386785f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 727" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.581673000f, 40.277702000f, 1489615680, 13.643521f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 728" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.581528000f, 40.277718000f, 1489615681, 12.442677f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 729" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.581367000f, 40.277725000f, 1489615682, 13.695568f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 730" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.581200000f, 40.277733000f, 1489615683, 14.210879f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 731" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.581032000f, 40.277740000f, 1489615684, 14.289137f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 732" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.580856000f, 40.277748000f, 1489615685, 14.973801f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 733" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.580666000f, 40.277760000f, 1489615686, 16.191481f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 734" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.580475000f, 40.277771000f, 1489615687, 16.267359f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 735" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.580276000f, 40.277782000f, 1489615688, 16.944929f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 736" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.580078000f, 40.277794000f, 1489615689, 16.868671f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 737" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.579880000f, 40.277805000f, 1489615690, 16.860218f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 738" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.579674000f, 40.277821000f, 1489615691, 17.585543f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 739" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.579468000f, 40.277836000f, 1489615692, 17.574612f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 740" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.579262000f, 40.277847000f, 1489615693, 17.537905f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 741" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.579056000f, 40.277859000f, 1489615694, 17.546026f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 742" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.578850000f, 40.277870000f, 1489615695, 17.537899f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 743" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.578651000f, 40.277885000f, 1489615696, 16.982889f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 744" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.578445000f, 40.277889000f, 1489615697, 17.500757f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 745" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.578239000f, 40.277901000f, 1489615698, 17.546015f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 746" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.578041000f, 40.277912000f, 1489615699, 16.860191f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 747" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577843000f, 40.277924000f, 1489615700, 16.868639f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 748" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577660000f, 40.277935000f, 1489615701, 15.589911f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 749" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577507000f, 40.277946000f, 1489615702, 13.051488f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 750" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577385000f, 40.277962000f, 1489615703, 10.513135f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 751" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577255000f, 40.277969000f, 1489615705, 5.534022f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 752" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577164000f, 40.278042000f, 1489615710, 2.242903f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 753" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577118000f, 40.278179000f, 1489615712, 7.871594f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 754" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577049000f, 40.278347000f, 1489615714, 9.799131f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 755" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.577011000f, 40.278431000f, 1489615715, 9.892075f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 756" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576973000f, 40.278526000f, 1489615716, 11.056808f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 757" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576935000f, 40.278625000f, 1489615717, 11.483432f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 758" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576897000f, 40.278732000f, 1489615718, 12.340633f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 759" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576859000f, 40.278843000f, 1489615719, 12.770946f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 760" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576805000f, 40.278957000f, 1489615720, 13.493644f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 761" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576759000f, 40.279076000f, 1489615721, 13.811049f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 762" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576714000f, 40.279190000f, 1489615722, 13.253377f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 763" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576653000f, 40.279316000f, 1489615723, 14.952366f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 764" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576599000f, 40.279442000f, 1489615724, 14.756936f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 765" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576546000f, 40.279564000f, 1489615725, 14.307427f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 766" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576492000f, 40.279686000f, 1489615726, 14.334369f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 767" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576447000f, 40.279808000f, 1489615727, 14.108433f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 768" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576393000f, 40.279930000f, 1489615728, 14.334363f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 769" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576340000f, 40.280056000f, 1489615729, 14.730753f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 770" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576279000f, 40.280178000f, 1489615730, 14.535462f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 771" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576225000f, 40.280304000f, 1489615731, 14.756918f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 772" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576172000f, 40.280437000f, 1489615732, 15.474546f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 773" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576118000f, 40.280563000f, 1489615733, 14.756912f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 774" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576065000f, 40.280697000f, 1489615734, 15.581081f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 775" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.576012000f, 40.280819000f, 1489615735, 14.307401f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 776" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575958000f, 40.280933000f, 1489615736, 13.493598f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 777" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575912000f, 40.281052000f, 1489615737, 13.811017f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 778" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575851000f, 40.281166000f, 1489615738, 13.707031f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 779" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575798000f, 40.281281000f, 1489615739, 13.569932f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 780" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575729000f, 40.281391000f, 1489615740, 13.574966f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 781" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575653000f, 40.281494000f, 1489615741, 13.157630f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 782" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575562000f, 40.281582000f, 1489615742, 12.477412f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 783" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575447000f, 40.281666000f, 1489615743, 13.520932f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 784" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575317000f, 40.281734000f, 1489615744, 13.385876f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 785" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575172000f, 40.281811000f, 1489615745, 15.003399f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 786" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.575035000f, 40.281883000f, 1489615746, 14.127974f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 787" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574890000f, 40.281967000f, 1489615747, 15.461796f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 788" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574730000f, 40.282047000f, 1489615748, 16.245974f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 789" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574570000f, 40.282131000f, 1489615749, 16.494253f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 790" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574409000f, 40.282215000f, 1489615750, 16.564266f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 791" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574249000f, 40.282303000f, 1489615751, 16.750677f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 792" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574089000f, 40.282391000f, 1489615752, 16.750662f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 793" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573929000f, 40.282475000f, 1489615753, 16.494196f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 794" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573776000f, 40.282558000f, 1489615754, 15.943266f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 795" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573624000f, 40.282639000f, 1489615755, 15.745576f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 796" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573486000f, 40.282707000f, 1489615756, 13.951344f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 797" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573372000f, 40.282772000f, 1489615757, 12.086321f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 798" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573273000f, 40.282822000f, 1489615758, 10.082733f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 799" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573120000f, 40.282898000f, 1489615760, 7.752317f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 800" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573013000f, 40.282948000f, 1489615763, 3.551932f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 801" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572952000f, 40.283051000f, 1489615771, 1.572724f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 802" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572983000f, 40.283188000f, 1489615773, 7.738158f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 803" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573029000f, 40.283356000f, 1489615775, 9.552648f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 804" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573051000f, 40.283447000f, 1489615776, 10.300911f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 805" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573074000f, 40.283550000f, 1489615777, 11.631076f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 806" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573097000f, 40.283653000f, 1489615778, 11.631075f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 807" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573128000f, 40.283756000f, 1489615779, 11.764236f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 808" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573158000f, 40.283855000f, 1489615780, 11.311258f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 809" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573189000f, 40.283951000f, 1489615781, 11.006140f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 810" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573212000f, 40.284039000f, 1489615782, 9.988929f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 811" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573250000f, 40.284184000f, 1489615784, 8.230365f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 812" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573265000f, 40.284298000f, 1489615786, 6.377095f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 813" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573250000f, 40.284401000f, 1489615788, 5.768223f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 814" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573212000f, 40.284534000f, 1489615791, 5.051025f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 815" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573227000f, 40.284630000f, 1489615793, 5.381159f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 816" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573303000f, 40.284721000f, 1489615795, 6.005635f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 817" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573395000f, 40.284821000f, 1489615797, 6.799930f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 818" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573463000f, 40.284939000f, 1489615799, 7.174456f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 819" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573502000f, 40.285069000f, 1489615801, 7.422828f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 820" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573547000f, 40.285202000f, 1489615803, 7.645345f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 821" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573586000f, 40.285336000f, 1489615805, 7.640017f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 822" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573631000f, 40.285469000f, 1489615807, 7.645343f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 823" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573669000f, 40.285606000f, 1489615809, 7.794209f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 824" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573715000f, 40.285751000f, 1489615811, 8.303628f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 825" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573761000f, 40.285904000f, 1489615813, 8.737041f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 826" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573807000f, 40.286057000f, 1489615815, 8.737040f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 827" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573860000f, 40.286217000f, 1489615817, 9.185471f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 828" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573914000f, 40.286377000f, 1489615819, 9.195963f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 829" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573959000f, 40.286545000f, 1489615821, 9.544038f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 830" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573990000f, 40.286633000f, 1489615822, 10.143643f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 831" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574013000f, 40.286728000f, 1489615823, 10.754189f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 832" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574043000f, 40.286819000f, 1489615824, 10.445483f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 833" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574081000f, 40.286915000f, 1489615825, 11.163213f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 834" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574104000f, 40.287010000f, 1489615826, 10.754188f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 835" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574135000f, 40.287109000f, 1489615827, 11.330658f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 836" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574165000f, 40.287209000f, 1489615828, 11.419717f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 837" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574196000f, 40.287312000f, 1489615829, 11.764205f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 838" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574234000f, 40.287415000f, 1489615830, 11.911308f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 839" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574265000f, 40.287521000f, 1489615831, 12.089925f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 840" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574295000f, 40.287621000f, 1489615832, 11.419714f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 841" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574318000f, 40.287727000f, 1489615833, 11.960403f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 842" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574348000f, 40.287830000f, 1489615834, 11.745491f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 843" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574371000f, 40.287930000f, 1489615835, 11.301977f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 844" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574402000f, 40.288033000f, 1489615836, 11.764199f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 845" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574425000f, 40.288128000f, 1489615837, 10.754182f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 846" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574478000f, 40.288292000f, 1489615839, 9.401466f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 847" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574509000f, 40.288406000f, 1489615841, 6.480279f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 848" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574509000f, 40.288498000f, 1489615843, 5.120697f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 849" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574387000f, 40.288609000f, 1489615846, 5.374861f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 850" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574234000f, 40.288651000f, 1489615848, 6.903768f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 851" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.574043000f, 40.288704000f, 1489615850, 8.629192f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 852" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573936000f, 40.288750000f, 1489615851, 10.429443f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 853" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573837000f, 40.288807000f, 1489615852, 10.532361f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 854" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573723000f, 40.288864000f, 1489615853, 11.574439f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 855" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573608000f, 40.288929000f, 1489615854, 12.153734f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 856" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573494000f, 40.289001000f, 1489615855, 12.567651f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 857" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573372000f, 40.289074000f, 1489615856, 13.166456f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 858" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573242000f, 40.289154000f, 1489615857, 14.183201f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 859" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.573097000f, 40.289238000f, 1489615858, 15.460741f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 860" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572952000f, 40.289322000f, 1489615859, 15.460729f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 861" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572823000f, 40.289410000f, 1489615860, 14.695228f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 862" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572678000f, 40.289490000f, 1489615861, 15.195532f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 863" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572533000f, 40.289577000f, 1489615862, 15.664932f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 864" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572388000f, 40.289665000f, 1489615863, 15.733986f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 865" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572250000f, 40.289749000f, 1489615864, 14.991626f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 866" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.572113000f, 40.289829000f, 1489615865, 14.650479f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 867" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571976000f, 40.289909000f, 1489615866, 14.650468f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 868" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571854000f, 40.289982000f, 1489615867, 13.166348f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 869" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571747000f, 40.290043000f, 1489615868, 11.342811f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 870" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571579000f, 40.290131000f, 1489615870, 8.652481f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 871" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571442000f, 40.290123000f, 1489615872, 5.833508f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 872" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571327000f, 40.290031000f, 1489615874, 7.075305f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 873" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571198000f, 40.289909000f, 1489615876, 8.723913f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 874" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571114000f, 40.289837000f, 1489615877, 10.729169f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 875" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.571022000f, 40.289768000f, 1489615878, 10.955604f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 876" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570923000f, 40.289707000f, 1489615879, 10.806371f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 877" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570824000f, 40.289654000f, 1489615880, 10.270163f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 878" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570717000f, 40.289604000f, 1489615881, 10.655028f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 879" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570610000f, 40.289551000f, 1489615882, 10.833231f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 880" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570496000f, 40.289494000f, 1489615883, 11.574356f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 881" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570374000f, 40.289433000f, 1489615884, 12.386600f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 882" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570251000f, 40.289368000f, 1489615885, 12.705910f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 883" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570129000f, 40.289307000f, 1489615886, 12.386616f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 884" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.570000000f, 40.289242000f, 1489615887, 13.127928f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 885" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.569878000f, 40.289177000f, 1489615888, 12.636227f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 886" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.569748000f, 40.289112000f, 1489615889, 13.198879f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 887" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.569618000f, 40.289047000f, 1489615890, 13.198888f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 888" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.569496000f, 40.288982000f, 1489615891, 12.636251f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 889" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.569366000f, 40.288918000f, 1489615892, 13.138209f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 890" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.569244000f, 40.288857000f, 1489615893, 12.386673f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 891" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.569122000f, 40.288792000f, 1489615894, 12.636275f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 892" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.569000000f, 40.288727000f, 1489615895, 12.636284f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 893" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.568871000f, 40.288658000f, 1489615896, 13.378590f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 894" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.568748000f, 40.288597000f, 1489615897, 12.457810f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 895" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.568626000f, 40.288532000f, 1489615898, 12.636308f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 896" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.568504000f, 40.288467000f, 1489615899, 12.636316f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 897" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.568382000f, 40.288406000f, 1489615900, 12.386731f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 898" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.568253000f, 40.288345000f, 1489615901, 12.887982f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 899" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.568138000f, 40.288284000f, 1489615902, 11.894087f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 900" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.568016000f, 40.288223000f, 1489615903, 12.386754f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 901" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567894000f, 40.288158000f, 1489615904, 12.636355f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 902" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567772000f, 40.288097000f, 1489615905, 12.386770f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 903" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567650000f, 40.288033000f, 1489615906, 12.572959f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 904" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567528000f, 40.287968000f, 1489615907, 12.636379f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 905" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567406000f, 40.287907000f, 1489615908, 12.386795f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 906" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567299000f, 40.287853000f, 1489615909, 10.894447f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 907" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567108000f, 40.287766000f, 1489615911, 9.445166f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 908" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.566956000f, 40.287697000f, 1489615913, 7.509863f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 909" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.566849000f, 40.287651000f, 1489615915, 5.214783f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 910" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.566780000f, 40.287552000f, 1489615920, 2.496270f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 911" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.566826000f, 40.287464000f, 1489615922, 5.273083f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 912" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.566902000f, 40.287361000f, 1489615924, 6.578675f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 913" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567001000f, 40.287228000f, 1489615926, 8.512853f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 914" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567108000f, 40.287067000f, 1489615928, 10.047007f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 915" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567184000f, 40.286942000f, 1489615930, 7.669335f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 916" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567245000f, 40.286831000f, 1489615935, 2.679653f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 917" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567307000f, 40.286747000f, 1489615937, 5.365550f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 918" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567390000f, 40.286640000f, 1489615939, 6.920110f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 919" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567482000f, 40.286514000f, 1489615941, 8.027585f));
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 920" << std::endl;
-  nav.SnapToRoute(GetFixLocation(-76.567566000f, 40.286381000f, 1489615943, 8.217094f));
+#endif
+  nav.SnapToRoute(GetFixLocation(-76.298161000f, 40.042639000f, 1510692627, 5.869753f));
 }
 
 }
@@ -21569,6 +20769,9 @@ int main() {
 
   // TestAutoMiddletownRoadToLandingsDrive
   suite.test(TEST_CASE(TestAutoMiddletownRoadToLandingsDrive));
+
+  // TestAutoLancasterVerbalMultiCue
+  suite.test(TEST_CASE(TestAutoLancasterVerbalMultiCue));
 
   // TestPedestrianCatalinasToOffice
   suite.test(TEST_CASE(TestPedestrianCatalinasToOffice));
