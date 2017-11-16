@@ -16423,14 +16423,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
            -76.2938232f, 40.0426636f, leg_index, 0.58277595f, 148,
            maneuver_index, 0.02930516f, 5, instruction_index));
    //----------------------------------------------------------------
-   // trace point = 50 | TODO FIX Post | Continue for 200 feet.
+   // trace point = 50
    maneuver_index = 2;
    instruction_index = maneuver_index;
    TryRouteOnLocationChanged(nav,
        GetFixLocation(-76.2938232f, 40.04282f, 1510692515, 8.72780132),
-       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
            -76.2938538f, 40.0428162f, leg_index, 0.572099686f, 146,
-           maneuver_index, 0.0186288953f, 3, instruction_index));
+           maneuver_index, 0.0186288953f, 3));
    //----------------------------------------------------------------
    // trace point = 51
    maneuver_index = 2;
@@ -16577,14 +16577,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
            -76.2920761f, 40.0432777f, leg_index, 0.455979228f, 123,
            maneuver_index, 0.00611168146f, 1));
    //----------------------------------------------------------------
-   // trace point = 67 | TODO post on multi cue maneuver Post | Continue for 300 feet.
+   // trace point = 67
    maneuver_index = 4;
    instruction_index = maneuver_index;
    TryRouteOnLocationChanged(nav,
        GetFixLocation(-76.2919922f, 40.0433884f, 1510692542, 3.27460003),
-       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
            -76.2919769f, 40.0433884f, leg_index, 0.442961097f, 119,
-           maneuver_index, 0.0554183722f, 22, instruction_index));
+           maneuver_index, 0.0554183722f, 22));
    //----------------------------------------------------------------
    // trace point = 68
    maneuver_index = 4;
@@ -16992,14 +16992,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
            -76.2979431f, 40.0434074f, leg_index, 0.070652023f, 28,
            maneuver_index, 0.0514428206f, 19));
    //----------------------------------------------------------------
-   // trace point = 113 | TODO post on multi cue Post | Continue for 300 feet.
+   // trace point = 113
    maneuver_index = 6;
    instruction_index = maneuver_index;
    TryRouteOnLocationChanged(nav,
        GetFixLocation(-76.2979889f, 40.0432739f, 1510692614, 7.29752493),
-       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
            -76.2979202f, 40.0432816f, leg_index, 0.061860472f, 25,
-           maneuver_index, 0.0426512696f, 16, instruction_index));
+           maneuver_index, 0.0426512696f, 16));
    //----------------------------------------------------------------
    // trace point = 114 | Pre | Turn right onto East Fulton Street. Then You will arrive at your destination.
    maneuver_index = 6;
@@ -17046,14 +17046,14 @@ void TestAutoMiddletownRoadToLandingsDrive() {
            -76.2978821f, 40.0426636f, leg_index, 0.0151359448f, 7,
            maneuver_index, 0.0151359448f, 7, instruction_index));
    //----------------------------------------------------------------
-   // trace point = 119 | TODO fix post after next maneuver pre Post | Continue for 100 feet.
+   // trace point = 119
    maneuver_index = 7;
    instruction_index = maneuver_index;
    TryRouteOnLocationChanged(nav,
        GetFixLocation(-76.298027f, 40.0426483f, 1510692625, 4.01934481),
-       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
            -76.298027f, 40.0426445f, leg_index, 0.00734865898f, 3,
-           maneuver_index, 0.00734865898f, 3, instruction_index));
+           maneuver_index, 0.00734865898f, 3));
    //----------------------------------------------------------------
    // trace point = 120 | Complete
    maneuver_index = 8;

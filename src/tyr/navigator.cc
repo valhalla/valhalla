@@ -126,15 +126,11 @@ NavigationStatus Navigator::OnLocationChanged(const FixLocation& fix_location) {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // else if maneuver has a post transition
-    // and instruction has not been used
+    // if post instruction has not been used
     // and route location is post transition
     // then set route state to kPostTransition
-    else if (route_.trip().legs(leg_index_).maneuvers(maneuver_index_).has_verbal_post_transition_instruction()
-        && !(std::get<kPostTransition>(
-            used_instructions_.at(curr_instruction_index)))
-        && (IsTimeWithinBounds(GetSpentManeuverTime(fix_location, nav_status),
-            kPostTransitionLowerBound, kPostTransitionUpperBound))) {
+    else if (!(std::get<kPostTransition>(used_instructions_.at(curr_instruction_index)))
+        && IsPostTransition(fix_location, nav_status)) {
       // Set route state
       route_state_ = NavigationStatus_RouteState_kPostTransition;
       nav_status.set_route_state(route_state_);
@@ -555,6 +551,24 @@ bool Navigator::IsTimeWithinBounds(uint32_t time, uint32_t lower_bound,
 bool Navigator::IsLengthWithinBounds(float length, float lower_bound,
     float upper_bound) const {
   return ((length > lower_bound) && (length < upper_bound));
+}
+
+bool Navigator::IsPostTransition(const FixLocation& fix_location,
+    const NavigationStatus& nav_status) const {
+
+  const auto& maneuver = route_.trip().legs(leg_index_).maneuvers(maneuver_index_);
+
+  // If the maneuver has a verbal post transition instruction
+  // and the maneuver is NOT a verbal multi-cue
+  // and the fix location is within the post instruction bounds
+  // then return true
+  if (maneuver.has_verbal_post_transition_instruction()
+      && !maneuver.has_verbal_multi_cue()
+      && (IsTimeWithinBounds(GetSpentManeuverTime(fix_location, nav_status),
+          kPostTransitionLowerBound, kPostTransitionUpperBound))) {
+    return true;
+  }
+  return false;
 }
 
 bool Navigator::IsInitialTransitionAlert(const FixLocation& fix_location,
