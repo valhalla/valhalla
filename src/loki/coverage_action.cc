@@ -1,25 +1,18 @@
 #include "loki/worker.h"
-#include "loki/search.h"
-#include <functional>
-#include <string>
-#include <stdexcept>
-#include <unordered_map>
+
 #include <unordered_set>
 #include <cstdint>
-#include <sstream>
 
 #include "baldr/json.h"
-#include "baldr/pathlocation.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/connectivity_map.h"
-#include "midgard/logging.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
 
-json::MapPtr serialize(const PathLocation& location, const std::unordered_set<int32_t>& ids) {
+json::MapPtr serialize(const PathLocation& location, const std::unordered_set<GraphId>& ids) {
   //put the ids in an array
   json::ArrayPtr covered_ids = json::array({});
   for(auto id : ids)
@@ -41,21 +34,34 @@ json::MapPtr serialize(const PathLocation& location, const std::unordered_set<in
 namespace valhalla {
   namespace loki {
 
-    const TileLevel& loki_worker_t::init_check_coverage(rapidjson::Document& request) {
-      size_t level = GetFromRapidJson<size_t>(request, "level", -1);
-      auto l = TileHierarchy::levels().find(level);
-      if(l == TileHierarchy::levels().end())
+    std::vector<const baldr::TileLevel*> loki_worker_t::init_coverage(rapidjson::Document& request) {
+      std::vector<const baldr::TileLevel*> levels;
+      const auto& transit_level = TileHierarchy::GetTransitLevel();
+      auto request_levels = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, "/levels");
+      if (request_levels) {
+        for(const auto& request_level : *request_levels) {
+          if(!request_level.IsInt())
+            continue;
+          auto level = request_level.GetInt();
+          auto l = TileHierarchy::levels().find(level);
+          if(l != TileHierarchy::levels().end())
+            levels.emplace_back(&l->second);
+          else if(level == transit_level.level)
+            levels.emplace_back(&transit_level);
+        }
+      }
+      if(levels.empty())
         throw valhalla_exception_t{115};
 
       locations = parse_locations(request, "locations");
       if(locations.size() < 1)
         throw valhalla_exception_t{120};
 
-      return l->second;
+      return levels;
     }
 
-    json::ArrayPtr loki_worker_t::check_coverage(rapidjson::Document& request) {
-      auto level = init_check_coverage(request);
+    json::ArrayPtr loki_worker_t::coverage(rapidjson::Document& request) {
+      auto levels = init_coverage(request);
       auto json = json::array({});
 
       for (const auto& location : locations) {
@@ -66,11 +72,15 @@ namespace valhalla {
         float lngdeg = (location.radius_ / DistanceApproximator::MetersPerLngDegree(ll.lat()));
         AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
                             Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
-        std::vector<int32_t> tilelist = level.tiles.TileList(bbox);
-        std::unordered_set<int32_t> covered;
-        for (auto id : tilelist)
-          if (connectivity_map->get_color(GraphId(id, 3, 0)) != 0 )
-            covered.emplace(id);
+        std::unordered_set<GraphId> covered;
+        for(const auto& level : levels) {
+          std::vector<int32_t> tilelist = level->tiles.TileList(bbox);
+          for (auto id : tilelist) {
+            GraphId gid(id, level->level, 0);
+            if (connectivity_map->get_color(gid) != 0 )
+              covered.emplace(gid);
+          }
+        }
         json->emplace_back(serialize(location, covered));
       }
 

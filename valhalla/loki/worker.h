@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
+#include <functional>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -36,7 +38,7 @@ namespace valhalla {
       void matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void isochrones(rapidjson::Document& request);
       void trace(tyr::ACTION_TYPE action, rapidjson::Document& request);
-      baldr::json::ArrayPtr check_coverage(rapidjson::Document& request);
+      baldr::json::ArrayPtr coverage(rapidjson::Document& request);
 
      protected:
 
@@ -51,7 +53,7 @@ namespace valhalla {
       void init_matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void init_isochrones(rapidjson::Document& request);
       void init_trace(rapidjson::Document& request);
-      const baldr::TileLevel&  init_check_coverage(rapidjson::Document& request);
+      std::vector<const baldr::TileLevel*> init_coverage(rapidjson::Document& request);
 
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;
