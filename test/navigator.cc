@@ -5517,14 +5517,14 @@ void TestAutoLancasterToHershey() {
   nav.SetRoute(route_json_str);
 
   //----------------------------------------------------------------
-  // trace point = 0
+  // trace point = 0 | Pre | Drive east on East Fulton Street for 400 feet.
   maneuver_index = 0;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.2991791f, 40.042572f, 1491514643, 0),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.2991714f, 40.0425186f, leg_index, 31.3227901f, 2423,
-          maneuver_index, 0.0730895996f, 14));
+          maneuver_index, 0.0730895996f, 14, instruction_index), true);
   //----------------------------------------------------------------
   // trace point = 1
   maneuver_index = 0;
@@ -5533,7 +5533,7 @@ void TestAutoLancasterToHershey() {
       GetFixLocation(-76.299057f, 40.0425949f, 1491514645, 5.25819588),
       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.2990494f, 40.0425301f, leg_index, 31.3162785f, 2422,
-          maneuver_index, 0.0665779114f, 13));
+          maneuver_index, 0.0665779114f, 13), true);
   //----------------------------------------------------------------
   // trace point = 2
   maneuver_index = 0;
@@ -5553,14 +5553,14 @@ void TestAutoLancasterToHershey() {
           -76.2986832f, 40.0425682f, leg_index, 31.2967052f, 2418,
           maneuver_index, 0.0470046997f, 9));
   //----------------------------------------------------------------
-  // trace point = 4
+  // trace point = 4 | Pre | Turn right onto North Plum Street. Then Turn left onto East Chestnut Street.
   maneuver_index = 0;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.298584f, 40.0426331f, 1491514650, 9.53861332),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.2985764f, 40.0425797f, leg_index, 31.2909946f, 2417,
-          maneuver_index, 0.0412940979f, 8));
+          maneuver_index, 0.0412940979f, 8, instruction_index));
   //----------------------------------------------------------------
   // trace point = 5
   maneuver_index = 0;
@@ -5625,14 +5625,14 @@ void TestAutoLancasterToHershey() {
           -76.2977982f, 40.0426216f, leg_index, 31.2462463f, 2406,
           maneuver_index, 0.0423336029f, 31));
   //----------------------------------------------------------------
-  // trace point = 12
+  // trace point = 12 | Pre | Turn left onto East Chestnut Street, Pennsylvania 23 East.
   maneuver_index = 1;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.2977676f, 40.0425034f, 1491514666, 6.66063595),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.2977753f, 40.0425034f, leg_index, 31.237978f, 2400,
-          maneuver_index, 0.0340652466f, 25));
+          maneuver_index, 0.0340652466f, 25, instruction_index));
   //----------------------------------------------------------------
   // trace point = 13
   maneuver_index = 1;
@@ -5679,14 +5679,14 @@ void TestAutoLancasterToHershey() {
           -76.2975769f, 40.0420265f, leg_index, 31.1978016f, 2374,
           maneuver_index, 2.04964066f, 210));
   //----------------------------------------------------------------
-  // trace point = 18
+  // trace point = 18 | Post | Continue on Pennsylvania 23 East for 2.1 miles.
   maneuver_index = 2;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.2974091f, 40.0420952f, 1491514712, 7.50597715),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
           -76.2974014f, 40.0420418f, leg_index, 31.1884518f, 2373,
-          maneuver_index, 2.04029083f, 209));
+          maneuver_index, 2.04029083f, 209, instruction_index));
   //----------------------------------------------------------------
   // trace point = 19
   maneuver_index = 2;
@@ -6633,14 +6633,15 @@ void TestAutoLancasterToHershey() {
           -76.2802811f, 40.0466652f, leg_index, 30.1820202f, 2270,
           maneuver_index, 1.03385925f, 106));
   //----------------------------------------------------------------
-  // trace point = 124
+  // trace point = 124 | Alert | In 1 mile Turn left to take the U.S. 30 West ramp.
   maneuver_index = 2;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.2801208f, 40.0468292f, 1491514868, 22.9399128),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.2801285f, 40.046833f, leg_index, 30.1678772f, 2269,
-          maneuver_index, 1.01971626f, 105));
+          maneuver_index, 1.01971626f, 105, instruction_index,
+          kInitialShortTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 125
   maneuver_index = 2;
@@ -7092,14 +7093,15 @@ void TestAutoLancasterToHershey() {
           -76.2712631f, 40.0538025f, leg_index, 29.439806f, 2194,
           maneuver_index, 0.29164505f, 30));
   //----------------------------------------------------------------
-  // trace point = 175
+  // trace point = 175 | Alert | In a quarter mile Turn left to take the U.S. 30 West ramp.
   maneuver_index = 2;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.2709961f, 40.0539093f, 1491514919, 25.754179),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.2709885f, 40.053894f, leg_index, 29.4239464f, 2192,
-          maneuver_index, 0.275785446f, 28));
+          maneuver_index, 0.275785446f, 28, instruction_index,
+          kFinalMediumTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 176
   maneuver_index = 2;
@@ -7164,14 +7166,14 @@ void TestAutoLancasterToHershey() {
           -76.2690964f, 40.0545273f, leg_index, 29.3146057f, 2182,
           maneuver_index, 0.166444778f, 18));
   //----------------------------------------------------------------
-  // trace point = 183
+  // trace point = 183 | Pre | Turn left to take the U.S. 30 West ramp toward New Holland, Harrisburg.
   maneuver_index = 2;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.268837f, 40.0546341f, 1491514927, 24.6915874),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.2688293f, 40.0546188f, leg_index, 29.2991142f, 2180,
-          maneuver_index, 0.150953293f, 16));
+          maneuver_index, 0.150953293f, 16, instruction_index));
   //----------------------------------------------------------------
   // trace point = 184
   maneuver_index = 2;
@@ -7551,14 +7553,14 @@ void TestAutoLancasterToHershey() {
           -76.2703552f, 40.0564766f, leg_index, 28.8638363f, 2134,
           maneuver_index, 0.0907649994f, 10));
   //----------------------------------------------------------------
-  // trace point = 226
+  // trace point = 226 | Pre | Merge onto U.S. 30 West.
   maneuver_index = 3;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.2705688f, 40.0565681f, 1491514971, 20.6166859),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.2705688f, 40.056572f, leg_index, 28.8507385f, 2133,
-          maneuver_index, 0.0776672363f, 9));
+          maneuver_index, 0.0776672363f, 9, instruction_index));
   //----------------------------------------------------------------
   // trace point = 227
   maneuver_index = 3;
@@ -7632,14 +7634,14 @@ void TestAutoLancasterToHershey() {
           -76.272377f, 40.057518f, leg_index, 28.734726f, 2122,
           maneuver_index, 2.70833206f, 159));
   //----------------------------------------------------------------
-  // trace point = 235
+  // trace point = 235 | Post | Continue for 2.7 miles.
   maneuver_index = 4;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.2726135f, 40.0576706f, 1491514980, 25.9348812),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
           -76.2726288f, 40.0576515f, leg_index, 28.7185116f, 2121,
-          maneuver_index, 2.69211769f, 158));
+          maneuver_index, 2.69211769f, 158, instruction_index));
   //----------------------------------------------------------------
   // trace point = 236
   maneuver_index = 4;
@@ -8496,14 +8498,15 @@ void TestAutoLancasterToHershey() {
           -76.2991333f, 40.0680771f, leg_index, 27.0677013f, 2025,
           maneuver_index, 1.04130745f, 62));
   //----------------------------------------------------------------
-  // trace point = 331
+  // trace point = 331 | Alert | In 1 mile Keep left to take Pennsylvania 2 83 West.
   maneuver_index = 4;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.2994919f, 40.0680542f, 1491515076, 30.6643696),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.2994843f, 40.0680923f, leg_index, 27.0490875f, 2024,
-          maneuver_index, 1.02269363f, 61));
+          maneuver_index, 1.02269363f, 61, instruction_index,
+          kInitialShortTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 332
   maneuver_index = 4;
@@ -8739,14 +8742,15 @@ void TestAutoLancasterToHershey() {
           -76.3083115f, 40.0692406f, leg_index, 26.5748768f, 1995,
           maneuver_index, 0.548482895f, 32));
   //----------------------------------------------------------------
-  // trace point = 358
+  // trace point = 358 | Alert | In a half mile Keep left to take Pennsylvania 2 83 West.
   maneuver_index = 4;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.3086548f, 40.0692406f, 1491515103, 28.7426262),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.3086472f, 40.0692825f, leg_index, 26.5568733f, 1994,
-          maneuver_index, 0.530479431f, 31));
+          maneuver_index, 0.530479431f, 31, instruction_index,
+          kFinalLongTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 359
   maneuver_index = 4;
@@ -8919,14 +8923,14 @@ void TestAutoLancasterToHershey() {
           -76.3152618f, 40.0702133f, leg_index, 26.2008476f, 1973,
           maneuver_index, 0.174453735f, 10));
   //----------------------------------------------------------------
-  // trace point = 378
+  // trace point = 378 | Pre | Keep left to take Pennsylvania 2 83 West toward Harrisburg.
   maneuver_index = 4;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.3156281f, 40.0702133f, 1491515123, 30.163393),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.3156128f, 40.0702667f, leg_index, 26.1819077f, 1972,
-          maneuver_index, 0.155513763f, 9));
+          maneuver_index, 0.155513763f, 9, instruction_index));
   //----------------------------------------------------------------
   // trace point = 379
   maneuver_index = 4;
@@ -9018,14 +9022,14 @@ void TestAutoLancasterToHershey() {
           -76.3190918f, 40.0706978f, leg_index, 25.9952087f, 1961,
           maneuver_index, 16.8129082f, 954));
   //----------------------------------------------------------------
-  // trace point = 389
+  // trace point = 389 | Post | Continue for 16.8 miles.
   maneuver_index = 5;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.3194504f, 40.0707016f, 1491515134, 30.3369904),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
           -76.3194427f, 40.0707283f, leg_index, 25.9765129f, 1960,
-          maneuver_index, 16.7942123f, 953));
+          maneuver_index, 16.7942123f, 953, instruction_index));
   //----------------------------------------------------------------
   // trace point = 390
   maneuver_index = 5;
@@ -15768,14 +15772,15 @@ void TestAutoLancasterToHershey() {
           -76.5673676f, 40.1523743f, leg_index, 11.2273712f, 1123,
           maneuver_index, 2.04507065f, 116));
   //----------------------------------------------------------------
-  // trace point = 1139
+  // trace point = 1139 | Alert | In 2 miles Take the Pennsylvania 7 43 exit on the right.
   maneuver_index = 5;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.5676041f, 40.1525841f, 1491515884, 30.8117695),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.5676193f, 40.1525688f, leg_index, 11.2084436f, 1122,
-          maneuver_index, 2.02614307f, 115));
+          maneuver_index, 2.02614307f, 115, instruction_index,
+          kInitialLongTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 1140
   maneuver_index = 5;
@@ -16497,14 +16502,15 @@ void TestAutoLancasterToHershey() {
           -76.5875778f, 40.1679764f, leg_index, 9.70875359f, 1037,
           maneuver_index, 0.526453018f, 30));
   //----------------------------------------------------------------
-  // trace point = 1220
+  // trace point = 1220 | Alert | In a half mile Take the Pennsylvania 7 43 exit on the right.
   maneuver_index = 5;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.5877991f, 40.1681671f, 1491515965, 28.1443062),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.5878143f, 40.1681595f, leg_index, 9.69095802f, 1036,
-          maneuver_index, 0.508657455f, 29));
+          maneuver_index, 0.508657455f, 29, instruction_index,
+          kFinalLongTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 1221
   maneuver_index = 5;
@@ -16704,14 +16710,14 @@ void TestAutoLancasterToHershey() {
           -76.59272f, 40.1719437f, leg_index, 9.32251167f, 1015,
           maneuver_index, 0.140211105f, 8));
   //----------------------------------------------------------------
-  // trace point = 1243
+  // trace point = 1243 | Pre | Take the Pennsylvania 7 43 exit on the right toward Hershey.
   maneuver_index = 5;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.5929337f, 40.1721115f, 1491515988, 25.9587898),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.5929413f, 40.1721077f, leg_index, 9.3062191f, 1014,
-          maneuver_index, 0.123918533f, 7));
+          maneuver_index, 0.123918533f, 7, instruction_index));
   //----------------------------------------------------------------
   // trace point = 1244
   maneuver_index = 5;
@@ -16965,14 +16971,14 @@ void TestAutoLancasterToHershey() {
           -76.5988083f, 40.1768684f, leg_index, 8.85349464f, 984,
           maneuver_index, 0.139489174f, 8));
   //----------------------------------------------------------------
-  // trace point = 1272
+  // trace point = 1272 | Pre | Keep right to take Pennsylvania 7 43 North toward Hershey. Then Continue on Pennsylvania 7 43 North.
   maneuver_index = 6;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.5989609f, 40.1770325f, 1491516017, 22.3266468),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.5989609f, 40.1770325f, leg_index, 8.83957291f, 983,
-          maneuver_index, 0.125567436f, 7));
+          maneuver_index, 0.125567436f, 7, instruction_index));
   //----------------------------------------------------------------
   // trace point = 1273
   maneuver_index = 6;
@@ -17091,14 +17097,14 @@ void TestAutoLancasterToHershey() {
           -76.6002426f, 40.1786461f, leg_index, 8.7089138f, 975,
           maneuver_index, 0.0622158051f, 2));
   //----------------------------------------------------------------
-  // trace point = 1286
+  // trace point = 1286 | Pre | Continue on Pennsylvania 7 43 North for 4.9 miles.
   maneuver_index = 7;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6003036f, 40.17873f, 1491516031, 10.7237387),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6003113f, 40.17873f, leg_index, 8.7020731f, 975,
-          maneuver_index, 0.0553750992f, 2));
+          maneuver_index, 0.0553750992f, 2, instruction_index));
   //----------------------------------------------------------------
   // trace point = 1287
   maneuver_index = 7;
@@ -20439,14 +20445,15 @@ void TestAutoLancasterToHershey() {
           -76.6255569f, 40.2423134f, leg_index, 4.05040121f, 482,
           maneuver_index, 0.289046764f, 30));
   //----------------------------------------------------------------
-  // trace point = 1658
+  // trace point = 1658 | Alert | In a quarter mile Continue on Fishburn Road.
   maneuver_index = 8;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6255646f, 40.2425499f, 1491516431, 26.3894234),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.6255569f, 40.2425499f, leg_index, 4.03404236f, 481,
-          maneuver_index, 0.272687912f, 29));
+          maneuver_index, 0.272687912f, 29, instruction_index,
+          kFinalMediumTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 1659
   maneuver_index = 8;
@@ -20529,14 +20536,14 @@ void TestAutoLancasterToHershey() {
           -76.625618f, 40.2446022f, leg_index, 3.89204502f, 466,
           maneuver_index, 0.130690575f, 14));
   //----------------------------------------------------------------
-  // trace point = 1668
+  // trace point = 1668 | Pre | Continue on Fishburn Road for 2.5 miles.
   maneuver_index = 8;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6256409f, 40.2448311f, 1491516441, 25.3923626),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6256332f, 40.2448311f, leg_index, 3.87619257f, 465,
-          maneuver_index, 0.114838123f, 13));
+          maneuver_index, 0.114838123f, 13, instruction_index));
   //----------------------------------------------------------------
   // trace point = 1669
   maneuver_index = 8;
@@ -22356,14 +22363,15 @@ void TestAutoLancasterToHershey() {
           -76.6523743f, 40.2700386f, leg_index, 1.52662683f, 224,
           maneuver_index, 0.29047215f, 31));
   //----------------------------------------------------------------
-  // trace point = 1871
+  // trace point = 1871 | Alert | In a quarter mile Bear left onto Hockersville Road.
   maneuver_index = 9;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6525192f, 40.2701302f, 1491516644, 15.9411068),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.6525269f, 40.2701225f, leg_index, 1.51669967f, 223,
-          maneuver_index, 0.280544996f, 30));
+          maneuver_index, 0.280544996f, 30, instruction_index,
+          kFinalMediumTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 1872
   maneuver_index = 9;
@@ -22599,7 +22607,7 @@ void TestAutoLancasterToHershey() {
           -76.6555099f, 40.2723045f, leg_index, 1.2935431f, 199,
           maneuver_index, 0.0573884249f, 6));
   //----------------------------------------------------------------
-  // trace point = 1898
+  // trace point = 1898 | TODO why no Pre????????
   maneuver_index = 9;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
@@ -22680,14 +22688,14 @@ void TestAutoLancasterToHershey() {
           -76.6560745f, 40.2731514f, leg_index, 1.22686887f, 192,
           maneuver_index, 0.563094854f, 90));
   //----------------------------------------------------------------
-  // trace point = 1907
+  // trace point = 1907 | Post | Continue for 6 tenths of a mile.
   maneuver_index = 10;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6561432f, 40.2732201f, 1491516718, 9.53092003),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
           -76.6561584f, 40.2732048f, leg_index, 1.22110307f, 191,
-          maneuver_index, 0.557329059f, 89));
+          maneuver_index, 0.557329059f, 89, instruction_index));
   //----------------------------------------------------------------
   // trace point = 1908
   maneuver_index = 10;
@@ -22950,14 +22958,15 @@ void TestAutoLancasterToHershey() {
           -76.6601868f, 40.2757187f, leg_index, 0.946447432f, 147,
           maneuver_index, 0.282673419f, 45));
   //----------------------------------------------------------------
-  // trace point = 1937
+  // trace point = 1937 | Alert | In a quarter mile Turn right onto U.S. 4 22.
   maneuver_index = 10;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6603088f, 40.2758408f, 1491516748, 16.6880398),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.6603394f, 40.2758141f, leg_index, 0.936038792f, 145,
-          maneuver_index, 0.272264779f, 43));
+          maneuver_index, 0.272264779f, 43, instruction_index,
+          kFinalMediumTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 1938
   maneuver_index = 10;
@@ -23139,14 +23148,14 @@ void TestAutoLancasterToHershey() {
           -76.6631775f, 40.2776031f, leg_index, 0.741721034f, 114,
           maneuver_index, 0.0779470205f, 12));
   //----------------------------------------------------------------
-  // trace point = 1958
+  // trace point = 1958 | Pre | Turn right onto U.S. 4 22, West Chocolate Avenue.
   maneuver_index = 10;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6633224f, 40.2776756f, 1491516769, 14.4683704),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6633148f, 40.2776833f, leg_index, 0.732598782f, 113,
-          maneuver_index, 0.0688247681f, 11));
+          maneuver_index, 0.0688247681f, 11, instruction_index));
   //----------------------------------------------------------------
   // trace point = 1959
   maneuver_index = 10;
@@ -23229,14 +23238,14 @@ void TestAutoLancasterToHershey() {
           -76.6643066f, 40.2783432f, leg_index, 0.658479869f, 101,
           maneuver_index, 0.658479869f, 101));
   //----------------------------------------------------------------
-  // trace point = 1968
+  // trace point = 1968 | Post | Continue for 7 tenths of a mile.
   maneuver_index = 11;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6641846f, 40.2784309f, 1491516782, 7.32250881),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
           -76.6642151f, 40.2784462f, leg_index, 0.649871826f, 99,
-          maneuver_index, 0.649871826f, 99));
+          maneuver_index, 0.649871826f, 99, instruction_index));
   //----------------------------------------------------------------
   // trace point = 1969
   maneuver_index = 11;
@@ -23580,14 +23589,15 @@ void TestAutoLancasterToHershey() {
           -76.6594543f, 40.2821465f, leg_index, 0.28316915f, 43,
           maneuver_index, 0.28316915f, 43));
   //----------------------------------------------------------------
-  // trace point = 2007
+  // trace point = 2007 | Alert | In a quarter mile You will arrive at your destination.
   maneuver_index = 11;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6592712f, 40.2821884f, 1491516821, 15.9540434),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
           -76.6592865f, 40.2822075f, leg_index, 0.2733576f, 41,
-          maneuver_index, 0.2733576f, 41));
+          maneuver_index, 0.2733576f, 41, instruction_index,
+          kFinalMediumTransitionAlertImperialLength));
   //----------------------------------------------------------------
   // trace point = 2008
   maneuver_index = 11;
@@ -23796,14 +23806,14 @@ void TestAutoLancasterToHershey() {
           -76.6555405f, 40.2836037f, leg_index, 0.0533545092f, 8,
           maneuver_index, 0.0533545092f, 8));
   //----------------------------------------------------------------
-  // trace point = 2031
+  // trace point = 2031 | Pre | You have arrived at your destination.
   maneuver_index = 11;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6553879f, 40.2836304f, 1491516845, 12.8339186),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6554031f, 40.2836533f, leg_index, 0.0453380719f, 7,
-          maneuver_index, 0.0453380719f, 7));
+          maneuver_index, 0.0453380719f, 7, instruction_index));
   //----------------------------------------------------------------
   // trace point = 2032
   maneuver_index = 11;
@@ -23850,12 +23860,12 @@ void TestAutoLancasterToHershey() {
           -76.6547394f, 40.283905f, leg_index, 0.00622309279f, 1,
           maneuver_index, 0.00622309279f, 1));
   //----------------------------------------------------------------
-  // trace point = 2037
+  // trace point = 2037 | Complete
   maneuver_index = 12;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.6546249f, 40.2839241f, 1491516854, 5.14119196),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kComplete,
           -76.6546326f, 40.2839432f, leg_index, 0.f, 0,
           maneuver_index, 0.f, 0));
 
