@@ -14626,23 +14626,24 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.5730209f, 40.282959f, leg_index, 1.65668499f, 166,
           maneuver_index, 0.00876140594f, 1));
   //----------------------------------------------------------------
-  // trace point = 801 | Post | Continue for 200 meters.
-  maneuver_index = 11;
-  instruction_index = maneuver_index;
-  TryRouteOnLocationChanged(nav,
-      GetFixLocation(-76.5729523f, 40.2830505f, 1489615771, 1.57272398),
-      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
-          -76.5729523f, 40.2830505f, leg_index, 1.6426698f, 164,
-          maneuver_index, 0.153226972f, 21, instruction_index));
-  //----------------------------------------------------------------
-  // trace point = 802 | Alert 0.15 | Enter the roundabout and take the 1st exit.
+  // trace point = 801 | Alert In 150 meters | Enter the roundabout and take the 1st exit.
   maneuver_index = 11;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
-      GetFixLocation(-76.5729828f, 40.2831879f, 1489615773, 7.73815823),
+      GetFixLocation(-76.5729523f, 40.2830505f, 1489615771, 1.57272398),
       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+          -76.5729523f, 40.2830505f, leg_index, 1.6426698f, 164,
+          maneuver_index, 0.153226972f, 21, instruction_index,
+          kFinalShortTransitionAlertMetricLength));
+  //----------------------------------------------------------------
+  // trace point = 802
+  maneuver_index = 11;
+  instruction_index = maneuver_index;
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.5729828f, 40.2831879f, 1489615773, 7.73815823),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5729904f, 40.2831879f, leg_index, 1.62704277f, 162,
-          maneuver_index, 0.137599945f, 19, instruction_index, 0.15f));
+          maneuver_index, 0.137599945f, 19));
   //----------------------------------------------------------------
   // trace point = 803
   maneuver_index = 11;
@@ -15607,23 +15608,24 @@ void TestAutoMiddletownRoadToLandingsDrive() {
           -76.5668259f, 40.2876816f, leg_index, 0.182933927f, 19,
           maneuver_index, 0.0111770332f, 1));
   //----------------------------------------------------------------
-  // trace point = 910 | Post | Continue for 200 meters.
-  maneuver_index = 16;
-  instruction_index = maneuver_index;
-  TryRouteOnLocationChanged(nav,
-      GetFixLocation(-76.5667801f, 40.2875519f, 1489615920, 2.49626994),
-      GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
-          -76.5667648f, 40.2875481f, leg_index, 0.161372095f, 17,
-          maneuver_index, 0.161372095f, 17, instruction_index));
-  //----------------------------------------------------------------
-  // trace point = 911 | ALert 0.15 | You will arrive at your destination.
+  // trace point = 910 | Alert In 150 meters | You will arrive at your destination.
   maneuver_index = 16;
   instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
-      GetFixLocation(-76.5668259f, 40.2874641f, 1489615922, 5.27308321),
+      GetFixLocation(-76.5667801f, 40.2875519f, 1489615920, 2.49626994),
       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
+          -76.5667648f, 40.2875481f, leg_index, 0.161372095f, 17,
+          maneuver_index, 0.161372095f, 17, instruction_index,
+          kFinalShortTransitionAlertMetricLength));
+  //----------------------------------------------------------------
+  // trace point = 911
+  maneuver_index = 16;
+  instruction_index = maneuver_index;
+  TryRouteOnLocationChanged(nav,
+      GetFixLocation(-76.5668259f, 40.2874641f, 1489615922, 5.27308321),
+      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
           -76.5668182f, 40.2874603f, leg_index, 0.150606364f, 16,
-          maneuver_index, 0.150606364f, 16, instruction_index, 0.15f));
+          maneuver_index, 0.150606364f, 16));
   //----------------------------------------------------------------
   // trace point = 912
   maneuver_index = 16;
@@ -16441,24 +16443,24 @@ void TestAutoMiddletownRoadToLandingsDrive() {
            -76.293869f, 40.0429039f, leg_index, 0.565977335f, 145,
            maneuver_index, 0.0125065446f, 2));
    //----------------------------------------------------------------
-   // trace point = 52 | TODO Should it be this close to start of maneuver? Alert 500 feet | Turn left onto North Franklin Street.
-   maneuver_index = 3;
-   instruction_index = maneuver_index + 1;
-   TryRouteOnLocationChanged(nav,
-       GetFixLocation(-76.2938766f, 40.0430756f, 1510692518, 9.46240425),
-       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
-           -76.2938766f, 40.043087f, leg_index, 0.552234054f, 143,
-           maneuver_index, 0.102366507f, 21, instruction_index,
-           kFinalShortTransitionAlertImperialLength));
-   //----------------------------------------------------------------
-   // trace point = 53 | TODO Post after next maneuver alert | Continue for 1 tenth of a mile.
+   // trace point = 52
    maneuver_index = 3;
    instruction_index = maneuver_index;
    TryRouteOnLocationChanged(nav,
+       GetFixLocation(-76.2938766f, 40.0430756f, 1510692518, 9.46240425),
+       GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+           -76.2938766f, 40.043087f, leg_index, 0.552234054f, 143,
+           maneuver_index, 0.102366507f, 21));
+   //----------------------------------------------------------------
+   // trace point = 53 | Alert In 500 feet | Turn left onto North Franklin Street.
+   maneuver_index = 3;
+   instruction_index = maneuver_index + 1;
+   TryRouteOnLocationChanged(nav,
        GetFixLocation(-76.2937393f, 40.043129f, 1510692521, 4.54608583),
-       GetNavigationStatus(NavigationStatus_RouteState_kPostTransition,
+       GetNavigationStatus(NavigationStatus_RouteState_kTransitionAlert,
            -76.2937317f, 40.0431023f, leg_index, 0.544485569f, 141,
-           maneuver_index, 0.0946180224f, 19, instruction_index));
+           maneuver_index, 0.0946180224f, 19, instruction_index,
+           kFinalShortTransitionAlertImperialLength));
    //----------------------------------------------------------------
    // trace point = 54
    maneuver_index = 3;
@@ -17037,7 +17039,7 @@ void TestAutoMiddletownRoadToLandingsDrive() {
            -76.2978287f, 40.0428009f, leg_index, 0.0282621756f, 12,
            maneuver_index, 0.00905297324f, 3));
    //----------------------------------------------------------------
-   // trace point = 118 | Pre | You have arrived at your destination.
+   // trace point = 118 |  Pre | You have arrived at your destination.
    maneuver_index = 7;
    instruction_index = maneuver_index + 1;
    TryRouteOnLocationChanged(nav,
