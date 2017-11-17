@@ -54,6 +54,7 @@ namespace valhalla {
 
     {170,"Locations are in unconnected regions. Go check/edit the map at osm.org"},
     {171,"No suitable edges near location"},
+    {172,"No coverage checks for tile level. Try level 3 for transit level coverage availability"},
 
     {199,"Unknown"},
 

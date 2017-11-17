@@ -23,7 +23,7 @@ namespace {
     return json_to_pt(R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "loki":{
-        "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
+        "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","check_coverage"],
         "logging":{"long_request": 100},
         "service_defaults":{"minimum_reachability": 50,"radius": 0}
       },
@@ -74,6 +74,15 @@ namespace {
     auto attributes = json_to_pt(attributes_json);
     attributes_json.find("Tulpehocken");
 
+    actor.check_coverage(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
+      {"lat":34.766908, "lon":-80.325936,"radius":10}],"level":3})");
+    actor.cleanup();
+    auto coverage_json = actor.check_coverage(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
+      {"lat":34.766908, "lon":-80.325936,"radius":10}],"level":3})");
+    actor.cleanup();
+    auto coverage = json_to_pt(coverage_json);
+    coverage_json.find(std::to_string(false));
+
     //TODO: test the rest of them
 
   }
@@ -94,6 +103,13 @@ namespace {
         {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})", []()->void{throw test_exception_t{};});
       throw std::logic_error("this should have thrown already");
     } catch (const test_exception_t& e) { }
+/*
+    try {
+      actor.check_coverage(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
+        {"lat":34.766908, "lon":-80.325936,"radius":10}],"level":1})", []()->void{throw test_exception_t{};});
+      throw std::logic_error("this should have thrown already");
+    } catch (const test_exception_t& e) { }
+*/
 
     //TODO: test the rest of them
   }
