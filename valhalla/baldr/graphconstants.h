@@ -340,7 +340,7 @@ inline std::string to_string(CycleLane c) {
 }
 
 enum class SacScale : uint8_t {
-  kNoSacScale = 0,
+  kNone = 0,
   kHiking = 1,
   kMountainHiking = 2,
   kAlpineHiking = 3

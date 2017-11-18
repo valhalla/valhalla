@@ -614,6 +614,23 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "int_ref" && !tag.second.empty())
         w.set_int_ref_index(osmdata_.ref_offset_map.index(tag.second));
 
+      else if (tag.first == "sac_scale") {
+        std::string value = tag.second;
+        boost::algorithm::to_lower(value);
+
+        if (value.find("alpine_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kAlpineHiking);
+
+        else if (value.find("mountain_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kMountainHiking);
+
+        else if (value.find("hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kHiking);
+
+        else
+          w.set_sac_scale(SacScale::kNone);
+      }
+
       else if (tag.first == "surface") {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
