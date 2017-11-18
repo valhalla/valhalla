@@ -51,6 +51,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
 
   set_dismount (way.dismount());
   set_use_sidepath (way.use_sidepath());
+  set_sac_scale (way.sac_scale());
   set_surface(way.surface());
   set_tunnel(way.tunnel());
   set_roundabout(way.roundabout());

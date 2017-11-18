@@ -72,7 +72,6 @@ constexpr float kMaxPedestrianSpeed = 25.0f;
 // Crossing penalties. TODO - may want to lower stop impact when
 // 2 cycleways or walkways cross
 constexpr uint32_t kCrossingCosts[] = { 0, 0, 1, 1, 2, 3, 5, 15 };
-}
 
 // Maximum amount of seconds that will be allowed to be passed in to influence paths
 // This can't be too high because sometimes a certain kind of path is required to be taken
@@ -110,6 +109,15 @@ constexpr ranged_default_t<uint32_t> kTransitStartEndMaxDistanceRange{0, kTransi
 constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{0, kTransitTransferMaxDistance,
                                                                       50000}; // Max 50k
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+
+constexpr float kSacScaleFactor[] = {
+    0.0f,   // kNone
+    1.0f,   // kHiking
+    2.0f,   // kMountainHiking
+    3.0f    // kAlpineHiking
+};
+
+}
 
 /**
  * Derived class providing dynamic edge costing for pedestrian routes.
@@ -549,21 +557,23 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return { sec * ferry_factor_, sec };
   }
 
+  float factor = 1.0f + kSacScaleFactor[static_cast<uint8_t>(edge->sac_scale())];
+
+  if (edge->use() == Use::kFootway) {
+    factor *= walkway_factor_;
+  } else if (edge->use() == Use::kAlley) {
+    factor *= alley_factor_;
+  } else if (edge->use() == Use::kDriveway) {
+    factor *= driveway_factor_;
+  } else if (edge->use() == Use::kSidewalk) {
+    factor *= sidewalk_factor_;
+  } else if (edge->roundabout()) {
+    factor *= kRoundaboutFactor;
+  }
+
   // Slightly favor walkways/paths and penalize alleys and driveways.
   float sec = edge->length() * speedfactor_;
-  if (edge->use() == Use::kFootway) {
-    return { sec * walkway_factor_, sec };
-  } else if (edge->use() == Use::kAlley) {
-    return { sec * alley_factor_, sec };
-  } else if (edge->use() == Use::kDriveway) {
-    return { sec * driveway_factor_, sec };
-  } else if (edge->use() == Use::kSidewalk) {
-    return { sec * sidewalk_factor_, sec };
-  } else if (edge->roundabout()) {
-    return { sec * kRoundaboutFactor, sec };
-  } else {
-    return { sec, sec };
-  }
+  return { sec * factor, sec };
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
