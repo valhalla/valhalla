@@ -530,6 +530,18 @@ Surface OSMWay::surface() const {
   return static_cast<Surface>(attributes_.fields.surface);
 }
 
+// Set the sac scale.
+void OSMWay::set_sac_scale(const SacScale sac_scale)
+{
+  attributes_.fields.sac_scale = static_cast<uint8_t>(sac_scale);
+}
+
+// Get the sac scale.
+SacScale OSMWay::sac_scale() const
+{
+  return static_cast<SacScale>(attributes_.fields.sac_scale);
+}
+
 // Set the right cycle lane.
 void OSMWay::set_cyclelane_right(const CycleLane cyclelane) {
   bike_info_.fields.cycle_lane_right = static_cast<uint8_t>(cyclelane);
