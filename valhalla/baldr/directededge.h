@@ -1107,9 +1107,8 @@ class DirectedEdge {
   uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed
   uint64_t lane_conn_      : 1;  // 1 if has lane connectivity, 0 otherwise
   uint64_t traffic_seg_    : 1;  // 1 if has a traffic segment, 0 otherwise
-  uint64_t sac_scale_      : 2;  // Is this edge for hiking and if so how difficult is the hike?
-                                 // WARNING: MAY INCREASE BY 1 BIT. KEEP ONE BIT OPEN IN FRONT.
-  uint64_t spare_          : 7;
+  uint64_t sac_scale_      : 3;  // Is this edge for hiking and if so how difficult is the hike?
+  uint64_t spare_          : 6;
 
   // Geometric attributes: length, weighted grade, curvature factor.
   // Turn types between edges.

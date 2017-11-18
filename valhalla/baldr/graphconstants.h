@@ -343,7 +343,10 @@ enum class SacScale : uint8_t {
   kNone = 0,
   kHiking = 1,
   kMountainHiking = 2,
-  kAlpineHiking = 3
+  kDemandingMountainHiking = 3,
+  kAlpineHiking = 4,
+  kDemandingAlpineHiking = 5,
+  kDifficultAlpineHiking = 6
 };
 
 // Generalized representation of surface types. Lower values indicate smoother

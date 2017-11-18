@@ -112,9 +112,12 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 constexpr float kSacScaleFactor[] = {
     0.0f,   // kNone
-    1.0f,   // kHiking
-    2.0f,   // kMountainHiking
-    3.0f    // kAlpineHiking
+    0.5f,   // kHiking
+    1.0f,   // kMountainHiking
+    1.5f,   // kDemandingMountainHiking
+    2.0f,   // kAlpineHiking
+    2.5f,   // kDemandingAlpineHiking
+    3.0f    // kDifficultAlpineHiking
 };
 
 }

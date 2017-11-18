@@ -618,8 +618,17 @@ struct graph_callback : public OSMPBF::Callback {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
 
-        if (value.find("alpine_hiking") != std::string::npos)
+        if (value.find("difficult_alpine_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kDifficultAlpineHiking);
+
+        else if (value.find("demanding_alpine_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kDemandingAlpineHiking);
+
+        else if (value.find("alpine_hiking") != std::string::npos)
           w.set_sac_scale(SacScale::kAlpineHiking);
+
+        else if (value.find("demanding_mountain_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kDemandingMountainHiking);
 
         else if (value.find("mountain_hiking") != std::string::npos)
           w.set_sac_scale(SacScale::kMountainHiking);

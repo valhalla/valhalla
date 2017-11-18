@@ -1110,8 +1110,7 @@ struct OSMWay {
       uint32_t truck_route            :1;
       uint32_t sidewalk_right         :1;
       uint32_t sidewalk_left          :1;
-      uint32_t sac_scale              :2;
-      uint32_t spare                  :1;
+      uint32_t sac_scale              :3;
     } fields;
     uint32_t v;
   };
