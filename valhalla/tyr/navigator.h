@@ -316,7 +316,6 @@ class Navigator {
      */
     size_t GetWordCount(const std::string& instruction) const;
 
-
     /**
      * Returns the time traveled on the current maneuver.
      *
@@ -394,6 +393,19 @@ class Navigator {
      */
     bool IsLengthWithinBounds(float length, float lower_bound,
         float upper_bound) const;
+
+    /**
+     * Returns true if a post transition should be announced;
+     * otherwise, returns false.
+     *
+     * @param  fix_location  The current fix location of user.
+     * @param  nav_status  The current navigation status.
+     *
+     * @return true if a post transition should be announced;
+     * otherwise, returns false.
+     */
+    bool IsPostTransition(const FixLocation& fix_location,
+        const NavigationStatus& nav_status) const;
 
     /**
      * Returns true if an initial transition alert should be announced;
