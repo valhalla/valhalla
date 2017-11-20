@@ -22607,7 +22607,7 @@ void TestAutoLancasterToHershey() {
           -76.6555099f, 40.2723045f, leg_index, 1.2935431f, 199,
           maneuver_index, 0.0573884249f, 6));
   //----------------------------------------------------------------
-  // trace point = 1898 | TODO why no Pre????????
+  // trace point = 1898
   maneuver_index = 9;
   instruction_index = maneuver_index;
   TryRouteOnLocationChanged(nav,
@@ -22652,14 +22652,14 @@ void TestAutoLancasterToHershey() {
           -76.6557846f, 40.2727852f, leg_index, 1.25727618f, 195,
           maneuver_index, 0.0211215019f, 2));
   //----------------------------------------------------------------
-  // trace point = 1903
+  // trace point = 1903 | Pre | Bear left onto Hockersville Road.
   maneuver_index = 9;
-  instruction_index = maneuver_index;
+  instruction_index = maneuver_index + 1;
   TryRouteOnLocationChanged(nav,
       GetFixLocation(-76.655777f, 40.2728767f, 1491516695, 0.911692977),
-      GetNavigationStatus(NavigationStatus_RouteState_kTracking,
+      GetNavigationStatus(NavigationStatus_RouteState_kPreTransition,
           -76.6558228f, 40.2728615f, leg_index, 1.25163054f, 195,
-          maneuver_index, 0.0154758692f, 2));
+          maneuver_index, 0.0154758692f, 2, instruction_index));
   //----------------------------------------------------------------
   // trace point = 1904
   maneuver_index = 9;
@@ -23868,7 +23868,6 @@ void TestAutoLancasterToHershey() {
       GetNavigationStatus(NavigationStatus_RouteState_kComplete,
           -76.6546326f, 40.2839432f, leg_index, 0.f, 0,
           maneuver_index, 0.f, 0));
-
 }
 
 /* AutoMiddletownRoadToLandingsDrive geojson to visualize test route
