@@ -227,5 +227,20 @@ namespace valhalla {
       return ss.str();
     }
 
+    std::string actor_t::transit_available(const std::string& request_str, const std::function<void ()>& interrupt) {
+      //set the interrupts
+      pimpl->set_interrupts(interrupt);
+      //parse the request
+      auto request = to_document(request_str);
+      //check the request and locate the locations in the graph
+      auto json = pimpl->loki_worker.transit_available(request);
+      std::stringstream ss;
+      ss << *json;
+      //if they want you do to do the cleanup automatically
+      if(auto_cleanup)
+        cleanup();
+      return ss.str();
+   }
+
   }
 }
