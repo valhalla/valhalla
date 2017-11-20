@@ -30,8 +30,8 @@ constexpr uint32_t kAlertPreTimeDelta = 2;
 // Number of words per second - used to calculate pre-transition threshold
 constexpr float kWordsPerSecond = 2.5f;
 
-// Minimum speed threshold in meters per second (~1 KPH)
-constexpr float kMinSpeedThreshold = 0.277f;
+// Minimum speed threshold in meters per second (3.6 KPH or ~2.2 MPH)
+constexpr float kMinSpeedThreshold = 1.f;
 
 // Minimum speed in meters per second for certain transition alert types
 constexpr uint32_t kInitialLongTransitionAlertMinSpeed = 28; // ~62.6 MPH
