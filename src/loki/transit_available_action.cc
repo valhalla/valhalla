@@ -64,7 +64,7 @@ namespace valhalla {
           json->emplace_back(serialize(location, istransit));
         }
       } catch (const std::exception&) {
-        throw valhalla_exception_t { 172 };
+        throw valhalla_exception_t { 170 };
       }
       return json;
     }
