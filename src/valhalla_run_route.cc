@@ -483,8 +483,9 @@ int main(int argc, char *argv[]) {
   // Directions options - set defaults
   DirectionsOptions directions_options;
   directions_options.set_units(
-      DirectionsOptions::Units::DirectionsOptions_Units_kMiles);
+      DirectionsOptions::Units::DirectionsOptions_Units_kKilometers);
   directions_options.set_language("en-US");
+  directions_options.set_narrative(true);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
