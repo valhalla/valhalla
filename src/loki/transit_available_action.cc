@@ -18,7 +18,7 @@ namespace {
     ({
       {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
       {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
-      {"radius", location.radius_}
+      {"radius", static_cast<uint64_t>(location.radius_)}
     });
     json->emplace("istransit", istransit);
     return json;
