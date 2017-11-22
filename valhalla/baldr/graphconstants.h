@@ -269,6 +269,7 @@ const std::unordered_map<uint8_t, std::string> UseStrings = {
   {static_cast<uint8_t>(Use::kEmergencyAccess), "emergency_access"},
   {static_cast<uint8_t>(Use::kDriveThru), "drive_through"},
   {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
+  {static_cast<uint8_t>(Use::kLivingStreet), "live_street"},
   {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
   {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
   {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
