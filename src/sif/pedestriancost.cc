@@ -110,11 +110,21 @@ constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{0, kTransi
                                                                       50000}; // Max 50k
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
-constexpr float kSacScaleFactor[] = {
+constexpr float kSacScaleSpeedFactor[] = {
+    1.0f,   // kNone
+    1.11f,  // kHiking (~90% speed)
+    1.25f,  // kMountainHiking (80% speed)
+    1.54f,  // kDemandingMountainHiking (~65% speed)
+    2.5f,   // kAlpineHiking (40% speed)
+    4.0f,   // kDemandingAlpineHiking (25% speed)
+    6.67f   // kDifficultAlpineHiking (~15% speed)
+};
+
+constexpr float kSacScaleCostFactor[] = {
     0.0f,   // kNone
-    0.5f,   // kHiking
-    1.0f,   // kMountainHiking
-    1.5f,   // kDemandingMountainHiking
+    0.25f,  // kHiking
+    0.75f,  // kMountainHiking
+    1.25f,  // kDemandingMountainHiking
     2.0f,   // kAlpineHiking
     2.5f,   // kDemandingAlpineHiking
     3.0f    // kDifficultAlpineHiking
@@ -560,7 +570,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return { sec * ferry_factor_, sec };
   }
 
-  float factor = 1.0f + kSacScaleFactor[static_cast<uint8_t>(edge->sac_scale())];
+  float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())];
 
   if (edge->use() == Use::kFootway) {
     factor *= walkway_factor_;
@@ -575,7 +585,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   }
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
-  float sec = edge->length() * speedfactor_;
+  float sec = edge->length() * speedfactor_
+      * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())];
   return { sec * factor, sec };
 }
 
