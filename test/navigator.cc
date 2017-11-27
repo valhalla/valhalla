@@ -38504,10199 +38504,6204 @@ void TestIsTimeWithinBounds() {
 }
 
 void CreateTestSeed() {
-  std::string route_json_str = R"({"trip":{"language":"en-US","summary":{"max_lon":-76.266228,"max_lat":40.283943,"time":2438,"length":31.322,"min_lat":40.042015,"min_lon":-76.664360},"locations":[{"lon":-76.299179,"lat":40.042572,"type":"break"},{"lon":-76.654625,"lat":40.283924,"type":"break"}],"units":"miles","legs":[{"shape":"k`_kkAfy|opC}@_SsFk`A~g@cFeDmt@{FkiAkLisBmJcxBsKcxBaHytAWaIqBm^u@wNsAo]yAyMsAqGyBsFiCeEeZs[iBiBsA{AgDyC{QsPaMiMcFaH}@yA{@{AgDoIgDyLU}@eAcFcAmJm@oIe@_JiBwXOaGm@mKu@{K{@oHcBkLgCeOiC}JoDyLaCaIuDgMeF}J}IuOaMqRcLwNgDcFiHcGoNkLke@y`@uDyCu@MeEgDuOqHsKuEuEiBcu@gX_EkB{~@a\\}JeEc[yM}IgDoNcFsFyBcGgDqGeEiHcG{FcGcGoHmEqHsEmJoD}JqC{KaCiLyAkLeKo|@aCsPaCuOoCuO_DePgI_^uy@ejDaGiWoTi`AkKgc@mZapAaWucAmEzAcB\\iBl@qLdFqXzKkFvCuEtDmDtEyCrFoCpH{A|Iu@lJEnJj@zJbBlJ`C`HhHrQtD|JxBnIbBhLt@pGd@~IDpHElJe@zJsA|JaCzKqCnIsZ~r@{KrZow@nfB}JhW{Vzi@cVbf@sZjk@s`@`q@{iArlB}c@ju@iHxLoHhMg}@`{AiWx`@_r@jjAya@~q@ePxWcGxLwCdF_r@bnAkLzUkLhWkFjLgSli@aHjVkQzt@wCdO{Fb\\cF~]iCjUeFxk@{@dPkAhWu@tZe@`\\Nz_Ad@fkAd@liAGxgCkAxkAoDhjA{F`fA{F|s@mEdn@gb@znFyHhjAaGl}@qRjhCuUjeDaRpyByBdZgNhtB{@z_@cBfc@cBdn@eEvbA{FdwA{@nScBtOgCnTaDbQs@rF_DhWcGtc@aXh_BwC`RcB|JoM`q@yHb[kFlU}Jj`@aG|TiHzVaHzTiHpSwNx`@}IxW}bAhrCqW`r@mPbe@cK`]gIlT_Oha@gD~IgNz_@mx@n{Bi\\z~@yRli@i`AbmC}EtNoHlUqMvb@}Jl_@qGzUkB~HeEbQgI|_@wHx`@{AlKeOpeAcBvNaH`p@iCtZqB~SgDdc@aCvXcUpnCeAvMiGju@gYjqDaCzUmEjj@mc@ffFoIpeAgNx_B_JjiAoH~|@aHpq@oDfYuJ|r@kFb[yHja@uIxa@kGfXuTrz@uJp[cQ|i@erAjpDsGtOsEjL_Yfw@_Oz_@s@zB{Ll^s@hCoSzi@gEjLiGdPwm@pdB{d@rnAaSjj@oNj`@oMb\\iRzi@{Lb\\{JfXakApbDyWls@ib@hjAed@dnAgg@huA_Tvm@qMfb@wNli@iLde@m@fCgNrp@eJ`g@}EtYoIro@aHhk@G|@_Dp\\oDbe@}Dre@yBb\\oSdkCcL~zAeOtlB_J|hA_Idx@iCzUwH~h@iCtOoNvw@aMvl@qGfXwI`]oHxWmFpQ]jA_Srp@uUhv@iL~]mZbdAwIr[u^dmAgS~q@ke@|}A__@`oAeOrf@aWvw@sKz_@_JdZgDxLgCzK{nAldEwqA|mEiRhl@{K~]_Ozi@mc@pzAenA~bEeEfN{F`R{e@x_B{EvN}Y~{@gOz`@uc@jiAe~@~yBmO~^s`@~eAeKzViQdd@cRbe@aa@tcAscBdiEkLdYyVxl@_IpR{Qre@y[by@sVbp@y{@rxB}m@l|AmTjk@sxBdrFqQdc@eKxWs`@dcA{KhXmOz_@w|@nzBei@jtAya@rcAkBdE{EzK}_@xaA}Ovb@erAjfDcKvWyH|TqQ|i@gItYcQ`q@wI|^cGfYuJ|h@aG`]_J`q@{Ftd@sFli@aBnSaC`\\wCrf@m@vMu@`Se@nScAz_@u@li@OlUN~]G~\\NbQbApg@hCby@pB|_@vRx|CjBtYlEdo@pGbeAnDli@hCvb@vHzhAtJj~AxG`fApChb@bArPrArPj[naFzj@rzInCjj@|@|TbAl_@l@l_@TlTNfc@?z`@e@tYcBz~@kAtYaBn^oDfm@iCdZiHxu@gw@jwGor@n`G_TpdB{o@~uFuTjiBsPtwAiGrd@{F~^oIbe@oD`RwIha@eJl`@_N~f@oIvYyMxa@yL~\\sPvc@wNn]{P|^{Pn]wX`g@yQtZ{QdYqoFjaIqMpRaoAfkBoXvb@cRvXaGlJ{hB`mCwNnTs_@hk@wqArnB{z@rnAopApnBe_@|i@a]~g@_StYaMrQusA`nB_vApoBckIrlLcyAhtB_Yj`@g]`f@md@to@gYx`@gpAxiBqaAlsAqG|Iom@p{@ioB|oC{JvNqHjKwCtE}s@tcA{j@vw@m_@|h@uYhb@evBlzCucAvvAqzArwByGbGanCdtD}IlJ_Y`]mTxVgI~HoT`SoNhLgN|J}s@pf@yGtEgIdFwCz@cBN{ELiCMqR{AyGkAmJ{AeKyB{K{AoMm@yWm@uON{P?wSNyRl@oXhBmThBeKzAiGjA_c@lKsV~HwMrFaNpGmn@tZ{UhLucAz`@}iDtlBkKrFytK`tFuqBreAitA|r@wm@fY}T|Jsj@`Q{[~Ice@jLm_IjgB}i@~Sqp@rQuy@pQuuBbp@m}Ahv@u^r[}hAbdAqq@~]w_Bp{@_n@`HyoEeFy`AtFauBj`@ggEdmA{cAtY}mA`]ePdE}kBnh@kGhBmIvCm~@zVk[lJk[nI}IhBeo@rQ_IxBmU`GyGjBeJhCkxBtm@i\\|J}wAl_@}JxBmJxBmJhBuJzAeJjAmJjAcVjBsf@jAw\\Lud@N}d@l@iu@l@e_@z@ca@Nun@jAgNNcf@?{o@z@_]^ib@pGob@xLsQpGcP`IcVbPo`CliAiLrEwNrGyf@l^_d@`g@kPlUqM|TcQ|^sZ|}@{Vzt@yQzj@oNfc@kKzUaIhMaLvNqMhLyMxLsPpRiq@haAe}A|eC}IvMyQvXaM`SsLdOog@pg@uOfNmUzUsz@zt@{n@jj@aw@vw@uDtE_JjLkF`HwC`HgE`Hye@z~@cyAr`Dq]ns@aLvXs{D`qIkKlToIxM}JhLqLbGaNbFyu@p]i\\bo@mJbQ_{BzdE{nAn{B_Ylh@y`@bz@gTfd@qjAgbAy\\iXif@ya@cLwM_ImJoIyLmE_JkFkKaI}TsK}_@}EwM{EmJqb@k~AuOkk@e^ksAgIuYcLwb@eJq\\mFaS","summary":{"max_lon":-76.266228,"max_lat":40.283943,"time":2438,"length":31.322,"min_lat":40.042015,"min_lon":-76.664360},"maneuvers":[{"travel_mode":"drive","begin_shape_index":0,"length":0.073,"time":14,"type":1,"end_shape_index":2,"instruction":"Drive east on East Fulton Street.","verbal_pre_transition_instruction":"Drive east on East Fulton Street for 400 feet.","travel_type":"car","street_names":["East Fulton Street"]},{"travel_type":"car","travel_mode":"drive","verbal_multi_cue":true,"verbal_pre_transition_instruction":"Turn right onto North Plum Street. Then Turn left onto East Chestnut Street.","verbal_transition_alert_instruction":"Turn right onto North Plum Street.","length":0.046,"instruction":"Turn right onto North Plum Street.","end_shape_index":3,"type":10,"time":34,"verbal_post_transition_instruction":"Continue for 200 feet.","street_names":["North Plum Street"],"begin_shape_index":2},{"travel_type":"car","travel_mode":"drive","end_shape_index":89,"verbal_pre_transition_instruction":"Turn left onto East Chestnut Street, Pennsylvania 23 East.","begin_street_names":["East Chestnut Street","PA 23 East"],"verbal_transition_alert_instruction":"Turn left onto East Chestnut Street.","length":2.054,"instruction":"Turn left onto East Chestnut Street\/PA 23 East. Continue on PA 23 East.","type":15,"time":213,"verbal_post_transition_instruction":"Continue on Pennsylvania 23 East for 2.1 miles.","street_names":["PA 23 East"],"begin_shape_index":3},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn left to take the U.S. 30 West ramp toward New Holland, Harrisburg.","verbal_transition_alert_instruction":"Turn left to take the U.S. 30 West ramp.","instruction":"Turn left to take the US 30 West ramp toward New Holland\/Harrisburg.","end_shape_index":119,"type":19,"time":45,"street_names":["PA 23 East"],"begin_shape_index":89,"length":0.375,"sign":{"exit_toward_elements":[{"text":"New Holland"},{"text":"Harrisburg"}],"exit_branch_elements":[{"consecutive_count":1,"text":"US 30 West"},{"text":"PA 23 East"}]}},{"travel_type":"car","verbal_pre_transition_instruction":"Merge onto U.S. 30 West.","verbal_post_transition_instruction":"Continue for 2.7 miles.","instruction":"Merge onto US 30 West.","end_shape_index":169,"type":25,"time":164,"street_names":["US 30 West"],"length":2.746,"begin_shape_index":119,"travel_mode":"drive"},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Keep left to take Pennsylvania 2 83 West toward Harrisburg.","verbal_transition_alert_instruction":"Keep left to take Pennsylvania 2 83 West.","sign":{"exit_toward_elements":[{"text":"Harrisburg"}],"exit_branch_elements":[{"text":"PA 283 West"}]},"length":16.845,"instruction":"Keep left to take PA 283 West toward Harrisburg.","end_shape_index":475,"type":24,"time":956,"verbal_post_transition_instruction":"Continue for 16.8 miles.","street_names":["PA 283 West"],"begin_shape_index":169},{"travel_type":"car","verbal_pre_transition_instruction":"Take the Pennsylvania 7 43 exit on the right toward Hershey.","verbal_transition_alert_instruction":"Take the Pennsylvania 7 43 exit on the right.","instruction":"Take the PA 743 exit on the right toward Hershey.","end_shape_index":485,"type":20,"time":31,"begin_shape_index":475,"length":0.469,"sign":{"exit_toward_elements":[{"consecutive_count":1,"text":"Hershey"},{"text":"Elizabethtown"}],"exit_branch_elements":[{"text":"PA 743"}]},"travel_mode":"drive"},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Keep right to take Pennsylvania 7 43 North toward Hershey. Then Continue on Pennsylvania 7 43 North.","verbal_transition_alert_instruction":"Keep right to take Pennsylvania 7 43 North.","instruction":"Keep right to take PA 743 North toward Hershey.","end_shape_index":492,"type":23,"time":4,"verbal_multi_cue":true,"begin_shape_index":485,"length":0.067,"sign":{"exit_toward_elements":[{"consecutive_count":1,"text":"Hershey"}],"exit_branch_elements":[{"consecutive_count":1,"text":"PA 743 North"}]}},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Continue on Pennsylvania 7 43 North for 4.9 miles.","begin_street_names":["Hershey Road","PA 743 North","PA 341 Truck"],"verbal_transition_alert_instruction":"Continue on Pennsylvania 7 43 North.","length":4.885,"instruction":"Continue on PA 743 North.","end_shape_index":572,"type":8,"time":522,"street_names":["PA 743 North"],"begin_shape_index":492},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Continue on Fishburn Road for 2.5 miles.","begin_street_names":["Fishburn Road","PA 743"],"verbal_transition_alert_instruction":"Continue on Fishburn Road.","length":2.526,"instruction":"Continue on Fishburn Road.","end_shape_index":626,"type":8,"time":261,"street_names":["Fishburn Road"],"begin_shape_index":572},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Bear left onto Hockersville Road.","verbal_transition_alert_instruction":"Bear left onto Hockersville Road.","length":0.572,"instruction":"Bear left onto Hockersville Road.","end_shape_index":633,"type":16,"time":92,"verbal_post_transition_instruction":"Continue for 6 tenths of a mile.","street_names":["Hockersville Road"],"begin_shape_index":626},{"travel_type":"car","travel_mode":"drive","verbal_pre_transition_instruction":"Turn right onto U.S. 4 22, West Chocolate Avenue.","verbal_transition_alert_instruction":"Turn right onto U.S. 4 22.","length":0.664,"instruction":"Turn right onto US 422\/West Chocolate Avenue.","end_shape_index":652,"type":10,"time":102,"verbal_post_transition_instruction":"Continue for 7 tenths of a mile.","street_names":["US 422","West Chocolate Avenue"],"begin_shape_index":633},{"travel_type":"car","travel_mode":"drive","begin_shape_index":652,"time":0,"type":4,"end_shape_index":652,"instruction":"You have arrived at your destination.","length":0.000,"verbal_transition_alert_instruction":"You will arrive at your destination.","verbal_pre_transition_instruction":"You have arrived at your destination."}]}],"status_message":"Found route between points","status":0}})";
+  std::string route_json_str = R"({"trip":{"language":"en-US","summary":{"max_lon":-75.985947,"max_lat":39.746597,"time":6389,"length":27.065,"min_lat":39.625179,"min_lon":-76.122726},"locations":[{"lon":-76.122696,"lat":39.651386,"type":"break"},{"lon":-76.120949,"lat":39.640343,"type":"break"}],"units":"miles","legs":[{"shape":"accsjAledepCuKgDsJcF{KgEgc@oR{KuE_O_I}EiCqV}JmKcF{JwDgNgDiSqGsd@yLqWqHsAm@eEkAcB]wHiCcGyByB{@uYeP}@m@}EiCsFwCoHuDkG{BqGiB}JiB}NiCqC]ms@oIkFm@gJ}@mYeD{KkBwH{AiNeEwR_Iwc@aRqa@gOuT_IwS}JcQ{JcFwDkVwNaHgD}EkA{FiBqLiCsKgCgIkBwIm@sj@{@yGOkGm@}DM{Fm@iHkAwH{AqGkBqMeEwIuD_D{AuOaHiLcFmKeF_D{Am@]qQoImKcFaW{K}@m@kKuEkV{KmD{AmA{@{JuE_JeEqMeFwXyL{EiBiMsF_IgDsGyC{EiBmKuEwMqGyB}@e@]qCiBuDgDwCwDgDeEaDqGqAgEsAsFkBoSiCag@oCmi@cAcP{As[_D}}@yCq{@{K_yCuDecAsKelCoIamCqBen@cBgc@cA}^]yM?{K~BgNxCsQTgD\\cFNuE]{KsGey@gDaf@cAePyG{sA}Em~@m@mIoH{tAcAcPiCee@}@qRyLqcC]mI}@gn@cAk`@aC}^}Dq{@aC{i@aCil@u@aSyBco@kAoTMwCOuEGuDm@sQMmJWqHkAmi@]uOGgC_DogAcBwm@iBso@]iL{Awc@sGqdBqBse@{@sPyBikAmFy_ByAc[}@aR{@eO}@aSU}I}@{UiBag@uEm~@iBk`@sAiWeFazA{@e[gEyk@iB_^{A_]m@oSyB__@aCse@aBaf@}Dyl@sBed@cAwMwCmTwDiNcFmJ{LkUkFoIiBuEkBsFaBqHyBgN{A}SwCmi@_@aHiBya@sAil@sAq\\sAkVgDqq@oCso@m@kKaC}i@cBud@aBsd@OeFsAwXyBed@{@eP{A_SmE_h@_DuZe@uDcBsPsAsQUeE_Dm@aC]eAOsAOkA{@aCyBsEwDgDgCgJsG{PiMgCkAcLoIyBkA{FgCeEyBgNcGqMsF}n@{UaMeFyLcFqMeFkKgDyLaG}PaHsKwDiGkAeF]sFz@yGjBkKdEsFhBab@dPkQpGk[xMgCz@ab@vNib@fNuJfDgh@rPcFzAkGjAmEl@kF\\{EM{GkAyGm@wMeEwXmKiXiL_X{LiXyL}XiM}OaHmU{JkKuEmE{AqB}@|Daf@pCwb@tDah@jA_SxBkVjB_ShBuOjAoIdFmUz@wCfDmJvC_I~IaSzEkKlKaSpRm^`R_^hHiM`ByB|EaH|JiLeAaHs@uF}@{KyBq\\cAsPmA_SoCm_@}@}Jk@oIGwCOuE]mJNiLDyBN_Jd@gNl@gY\\_It@qQbAq]t@a\\l@_^zAib@j@kUFwN?cFU{Lu@{KaBo]gEk_AyBse@yGscBG{AeOkpDiB_h@WcQkAcPcAsQsA}IgDuOqC_JmDaHmAyBiG{KiCgDgCeEaCcFcBuEqBsGsAqGu@sF}I_s@kBsPcA_I{AkLaB{KiR_fAaNsp@{E{U}@gDqBuEsAiCsAiBiCiCkKmJkVoRiHeFgDyBs_@wNkKgDaDM}N?uJl@k`@hBc`@?u_@?c`@?yC]sEkBmKaH_ImImEuFoDsEqBwD_D_IyBqGoDiM}DgNwCmKkBqGyBsFqByC}EsE{FsFgIaHuJsG{ZqQg]aSaXeOqWyMuEyB{~@qQ_{AkV_rA_T_^sFif@{KyC{@yBm@qB]uE?{Jj@{`@xC{`@fCy`@xBe`@xBqa@jBc`@hBuT|@eFl@qGOkKl@ud@hCiq@dE}n@fDyp@fDso@fDaSxBw\\xA}Ol@kiBnI}}@bGm^fCouBzLmJl@_lArFqpA`GwDNw\\hB{L|@}`CdOqp@vDwqA`HsqCtOcdAbF{zDnT}YjAm_@\\}Dl@eFhBo]`S_YoIuJyBwC]qG?}J\\_c@dEmENyHO{P{AaMyAwg@_JmPeEwX_I}ScGiw@sQyQwCqGOqCN_DjAmEhCoeBdwAkAzA_@\\qBzAgDjA}Dl@yBMiBm@_YyMueD_fB}YsPqRiMo|@un@p_BmmEdUwm@nm@g`BnN}_@bp@{hBpk@eaBfw@eaCfD{KvDkLlD_IfIuOzVya@jyAkgCbVwb@flAwuBnIgNdi@ux@rAkBrj@y_AhGwNnNuc@b`@oqA|EsQlEaR~CmTbBiM~Hl@fNOtjDkLzJMdFL`C^|DhBhCxBnDtE~CrFz_@fx@pC`HlEfN~BzJnJre@v\\nfB~CdO`Ifc@~M`q@jFzUxCnIpBdE`G|JtOlUlKpQlElKhH`RrAhBxBjBfDhBdE?xdAcGvYkA~H]tD]`I_@|D?piByKdj@kBh\\kArUiBnYmAjj@gCveBoIbGOhk@iBn}@iCl`CaHxRm@r_@iB|wAwCxHOrnAgDpB?fhDmJnIO`HMr`@}@rV{@`MLhMl@x\\hClm@tD~N|@vb@hBzVjA|^zBdZz@bP]dFkBxGm@pGMfx@kBx{@uDv{@eFb{@eEtm@kAh|@uEh{@uDjy@yCvw@oHbk@wDzAdFxB~HpGxVlKvc@hL`g@rL|h@pLnh@nIz`@hBm@jB?tTkAje@}@be@Ode@k@dd@?ld@z@rd@hCxkA\\zd@?dd@l@dd@?zL}@vC{@zAm@nDiCdEeEbe@yk@jLwNrPcQrPuO~SuOre@y`@fSwOjL{KtDsEdF{K~Rse@|JiXxBcFnDqGtTya@~b@uy@`b@ey@`eA_pBhb@gw@jQa]zOc[tJsPpRiWzKiMdKkLrK{J`BmAxHmItDeFbB|@~WrPnJbGtDvCbBhBjA|@l@z@rAxBjAfEzA~HxBhM`Hfc@nHbe@rGvb@`B~HzAtEbAxBjAhC~S|^|JrQtEzJ|DnIvCpHdFxLbLtYnN|_@bKb[xB`H`CfNtJzj@zFdZfDhMpGpQzK|_@bGbZlJre@fNpq@pLxl@|E~RpMxa@x[xjAbLha@vXp{@vNtd@vb@huAtTjt@tT`r@xGjU`IzUbo@xtBzQtn@fNbe@dExLz@hCzGrPfHbQbf@xkAxVvl@jLfXtY~r@|Ylt@tZzs@fDrGnIdZt^fsCpGli@t@nI~ClJ|EvNb`@|gA|EbQxBzL`CtOvC|TpBrP~Hdn@`XvjBdEtZnCpQrGde@~C~RrFzV~CxLhHrQjK`Q`MbQrKhM|T`RjL~IlTfNdZnSbLpGhHbGzKjLlZl_@jUp\\tZng@jZz_@|_DrvDlP`R`a@li@l~@huAb[dd@z[tc@tOlUlE`HzKpRiXbe@_IhMaMxLyGdF}J`HwMnIcRzKgIrF_I`GkFrFgDvDoDrFwCrFwDxLoHfYeKvb@gI`]}Nvl@q]ztAmJ|]cQbp@_Nbf@wClJdJrPjPdZfOjV|I`RvX~g@fItOjGxMfSha@pHfO\\j@pBfEjFlJpHdOvC`Hd@xB?hC?vCvDjAbGpHnNnS|TtYvRjVvSvXnSfYjp@n{@|s@haAllAj~A`MrPlZz`@p\\fb@rVp\\|IjLpHlJpQ|ThHnIxCvChLlKrLtO~\\vb@zPlT`CfDfDdE`ChCbVfYdZ|^fIzK`RhWpHhLvWz`@bLnSpMlTxBvD`Wpf@~NdZbAhCpH`RbFhMjLfXfIdPpVli@`NvXlOb[bVpg@j[tm@z[fn@bUvb@dUx`@|EzKLtO{EtZyGp\\bKdElKrFvRfNpRhNvChBnI`H`RrPvNrPzF`IfNnSnaAvuA~Xfc@ba@xl@~|D`~Fl_@jk@n]ng@|OnTdx@fkArVn^jQxWzAxBtJfNdO|Tjj@bz@~IfNvHzKpCdEhWj`@bFpHdP|TpBfCjF`HiG`Ia]pQ}IbGcMpGiVpGmF|@{PjAgIN}h@rFia@dEiCl@wCzAoTfNgDvC}IlJyMfNmEtEaH`HmEdFeJ~HuDfD}ExBmEhBoD|@yWdE_NhBuJjAsPxBqRhCoNjAgI\\sUlAgOm@uI_@yB]sA]eA}@_C`eBm@`q@mA`|@{@vb@e@vb@OlTGtEEbQWtPe@tYUhLe@zLm@xL{AbQyBxLiCxL{EdPqHzU{AdEaBbGsAtEcB~H}I~g@w]lqB{Kfm@gIrf@wTjhAqQddAyHpf@gCrP}O`|@mEp\\gIl^sFxWgDfOwChL{G~]eD`R}Jbf@qB|IyB`IiC`H}ExKoMhXuE|JeFzJ}D|JwClJ{ArFcA`HcBbGkA`He@bFkA~I_@`H]~Hm@pHu@|I_Dz`@mDj_@_DhXuE~S}EzUqGvXmOhl@u@fCqHr[oSh`AeJp\\oDzKwHnT_@jA{Jb[","summary":{"max_lon":-75.985947,"max_lat":39.746597,"time":6389,"length":27.065,"min_lat":39.625179,"min_lon":-76.122726},"maneuvers":[{"travel_mode":"bicycle","begin_shape_index":0,"length":3.602,"time":906,"type":1,"end_shape_index":157,"instruction":"Bike north on Liberty Grove Road.","verbal_pre_transition_instruction":"Bike north on Liberty Grove Road for 3.6 miles.","travel_type":"road","street_names":["Liberty Grove Road"]},{"travel_type":"road","verbal_pre_transition_instruction":"Continue on Barnes Corner Road for 1.4 miles.","verbal_transition_alert_instruction":"Continue on Barnes Corner Road.","length":1.399,"instruction":"Continue on Barnes Corner Road.","end_shape_index":213,"type":8,"time":341,"street_names":["Barnes Corner Road"],"begin_shape_index":157,"travel_mode":"bicycle"},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn left onto Montgomery Road.","verbal_transition_alert_instruction":"Turn left onto Montgomery Road.","length":0.941,"instruction":"Turn left onto Montgomery Road.","end_shape_index":270,"type":15,"time":228,"verbal_post_transition_instruction":"Continue for 9 tenths of a mile.","street_names":["Montgomery Road"],"begin_shape_index":213},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn right onto Biggs Highway, Maryland 2 74.","verbal_transition_alert_instruction":"Turn right onto Biggs Highway.","length":0.399,"instruction":"Turn right onto Biggs Highway\/MD 274.","end_shape_index":291,"type":10,"time":94,"verbal_post_transition_instruction":"Continue for 4 tenths of a mile.","street_names":["Biggs Highway","MD 274"],"begin_shape_index":270},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn left onto Wilson Road.","verbal_transition_alert_instruction":"Turn left onto Wilson Road.","length":3.444,"instruction":"Turn left onto Wilson Road.","end_shape_index":430,"type":15,"time":793,"verbal_post_transition_instruction":"Continue for 3.4 miles.","street_names":["Wilson Road"],"begin_shape_index":291},{"travel_type":"road","verbal_pre_transition_instruction":"Continue on Stoney Lane for 1.8 miles.","verbal_transition_alert_instruction":"Continue on Stoney Lane.","length":1.798,"instruction":"Continue on Stoney Lane.","end_shape_index":474,"type":8,"time":459,"street_names":["Stoney Lane"],"begin_shape_index":430,"travel_mode":"bicycle"},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn right onto East Christine Road, Pennsylvania 2 72.","verbal_transition_alert_instruction":"Turn right onto East Christine Road.","length":1.492,"instruction":"Turn right onto East Christine Road\/PA 272.","end_shape_index":500,"type":10,"time":334,"verbal_post_transition_instruction":"Continue for 1.5 miles.","street_names":["East Christine Road","PA 272"],"begin_shape_index":474},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn right onto McCoury Road.","verbal_transition_alert_instruction":"Turn right onto McCoury Road.","length":1.142,"instruction":"Turn right onto McCoury Road.","end_shape_index":542,"type":10,"time":229,"verbal_post_transition_instruction":"Continue for 1.1 miles.","street_names":["McCoury Road"],"begin_shape_index":500},{"travel_type":"road","verbal_pre_transition_instruction":"Continue on Chandlee Road for 1.3 miles.","verbal_transition_alert_instruction":"Continue on Chandlee Road.","length":1.250,"instruction":"Continue on Chandlee Road.","end_shape_index":569,"type":8,"time":297,"street_names":["Chandlee Road"],"begin_shape_index":542,"travel_mode":"bicycle"},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Bear left onto Thankless Lane.","verbal_transition_alert_instruction":"Bear left onto Thankless Lane.","length":0.657,"instruction":"Bear left onto Thankless Lane.","end_shape_index":582,"type":16,"time":163,"verbal_post_transition_instruction":"Continue for 7 tenths of a mile.","street_names":["Thankless Lane"],"begin_shape_index":569},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn right onto Calvert Road.","verbal_transition_alert_instruction":"Turn right onto Calvert Road.","length":0.218,"instruction":"Turn right onto Calvert Road.","end_shape_index":590,"type":10,"time":52,"verbal_post_transition_instruction":"Continue for 2 tenths of a mile.","street_names":["Calvert Road"],"begin_shape_index":582},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn left onto England Creamery Road.","verbal_transition_alert_instruction":"Turn left onto England Creamery Road.","length":1.430,"instruction":"Turn left onto England Creamery Road.","end_shape_index":637,"type":15,"time":335,"verbal_post_transition_instruction":"Continue for 1.4 miles.","street_names":["England Creamery Road"],"begin_shape_index":590},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn right onto Crothers Road.","verbal_transition_alert_instruction":"Turn right onto Crothers Road.","length":1.767,"instruction":"Turn right onto Crothers Road.","end_shape_index":700,"type":10,"time":424,"verbal_post_transition_instruction":"Continue for 1.8 miles.","street_names":["Crothers Road"],"begin_shape_index":637},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Bear right onto Principio Road.","verbal_transition_alert_instruction":"Bear right onto Principio Road.","length":1.612,"instruction":"Bear right onto Principio Road.","end_shape_index":744,"type":9,"time":338,"verbal_post_transition_instruction":"Continue for 1.6 miles.","street_names":["Principio Road"],"begin_shape_index":700},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn right onto Red Toad Road.","verbal_transition_alert_instruction":"Turn right onto Red Toad Road.","length":0.556,"instruction":"Turn right onto Red Toad Road.","end_shape_index":767,"type":10,"time":154,"verbal_post_transition_instruction":"Continue for 6 tenths of a mile.","street_names":["Red Toad Road"],"begin_shape_index":744},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn left onto Post Road.","verbal_transition_alert_instruction":"Turn left onto Post Road.","length":0.289,"instruction":"Turn left onto Post Road.","end_shape_index":784,"type":15,"time":90,"verbal_post_transition_instruction":"Continue for 3 tenths of a mile.","street_names":["Post Road"],"begin_shape_index":767},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn left onto Hopewell Road.","verbal_transition_alert_instruction":"Turn left onto Hopewell Road.","length":1.587,"instruction":"Turn left onto Hopewell Road.","end_shape_index":838,"type":15,"time":386,"verbal_post_transition_instruction":"Continue for 1.6 miles.","street_names":["Hopewell Road"],"begin_shape_index":784},{"travel_type":"road","travel_mode":"bicycle","end_shape_index":870,"verbal_pre_transition_instruction":"Turn left onto Jacob Tome Highway, Maryland 2 76.","begin_street_names":["Jacob Tome Highway","MD 276","MD 222 Truck"],"verbal_transition_alert_instruction":"Turn left onto Jacob Tome Highway.","length":1.226,"instruction":"Turn left onto Jacob Tome Highway\/MD 276\/MD 222 Truck. Continue on Jacob Tome Highway\/MD 276.","type":15,"time":290,"verbal_post_transition_instruction":"Continue on Jacob Tome Highway, Maryland 2 76 for 1.2 miles.","street_names":["Jacob Tome Highway","MD 276"],"begin_shape_index":838},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn right onto Waibel Road.","verbal_transition_alert_instruction":"Turn right onto Waibel Road.","length":0.583,"instruction":"Turn right onto Waibel Road.","end_shape_index":907,"type":10,"time":121,"verbal_post_transition_instruction":"Continue for 6 tenths of a mile.","street_names":["Waibel Road"],"begin_shape_index":870},{"travel_type":"road","travel_mode":"bicycle","verbal_pre_transition_instruction":"Turn left onto Doctor Jack Road.","verbal_transition_alert_instruction":"Turn left onto Doctor Jack Road.","length":1.674,"instruction":"Turn left onto Doctor Jack Road.","end_shape_index":980,"type":15,"time":355,"verbal_post_transition_instruction":"Continue for 1.7 miles.","street_names":["Doctor Jack Road"],"begin_shape_index":907},{"travel_type":"road","travel_mode":"bicycle","begin_shape_index":980,"time":0,"type":4,"end_shape_index":980,"instruction":"You have arrived at your destination.","length":0.000,"verbal_transition_alert_instruction":"You will arrive at your destination.","verbal_pre_transition_instruction":"You have arrived at your destination."}]}],"status_message":"Found route between points","status":0}})";
   NavigatorTest nav;
   nav.SetRoute(route_json_str);
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 0" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.299178000f, 40.042571000f, 1491514643, 0.000000f));
+  nav.SnapToRoute(GetFixLocation(-76.122698000f, 39.651388000f, 1483287460, 0.000000f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.299059000f, 40.042596000f, 1491514645, 5.258196f));
+  nav.SnapToRoute(GetFixLocation(-76.122551000f, 39.651695000f, 1483287463, 12.141196f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 2" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298894000f, 40.042610000f, 1491514647, 7.073902f));
+  nav.SnapToRoute(GetFixLocation(-76.122494000f, 39.651803000f, 1483287464, 12.977207f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 3" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298694000f, 40.042623000f, 1491514649, 8.552905f));
+  nav.SnapToRoute(GetFixLocation(-76.122437000f, 39.651916000f, 1483287465, 13.494481f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 4" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298583000f, 40.042634000f, 1491514650, 9.538613f));
+  nav.SnapToRoute(GetFixLocation(-76.122378000f, 39.652032000f, 1483287466, 13.867895f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 5" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298477000f, 40.042643000f, 1491514651, 9.088962f));
+  nav.SnapToRoute(GetFixLocation(-76.122316000f, 39.652149000f, 1483287467, 14.066711f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 6" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298364000f, 40.042654000f, 1491514652, 9.707669f));
+  nav.SnapToRoute(GetFixLocation(-76.122252000f, 39.652270000f, 1483287468, 14.543750f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 7" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298253000f, 40.042667000f, 1491514653, 9.569737f));
+  nav.SnapToRoute(GetFixLocation(-76.122186000f, 39.652394000f, 1483287469, 14.917728f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 8" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298087000f, 40.042683000f, 1491514655, 7.129296f));
+  nav.SnapToRoute(GetFixLocation(-76.122119000f, 39.652520000f, 1483287470, 15.156238f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 9" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297964000f, 40.042699000f, 1491514658, 3.544197f));
+  nav.SnapToRoute(GetFixLocation(-76.121980000f, 39.652776000f, 1483287472, 15.443875f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 10" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297846000f, 40.042709000f, 1491514662, 2.529415f));
+  nav.SnapToRoute(GetFixLocation(-76.121904000f, 39.652904000f, 1483287473, 15.667175f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 11" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297791000f, 40.042622000f, 1491514664, 5.379716f));
+  nav.SnapToRoute(GetFixLocation(-76.121828000f, 39.653033000f, 1483287474, 15.768480f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 12" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297765000f, 40.042504000f, 1491514666, 6.660636f));
+  nav.SnapToRoute(GetFixLocation(-76.121673000f, 39.653291000f, 1483287476, 15.822013f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 13" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297745000f, 40.042370000f, 1491514668, 7.506938f));
+  nav.SnapToRoute(GetFixLocation(-76.121600000f, 39.653420000f, 1483287477, 15.664002f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 14" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297732000f, 40.042263000f, 1491514670, 5.981299f));
+  nav.SnapToRoute(GetFixLocation(-76.121531000f, 39.653546000f, 1483287478, 15.221976f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 15" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297753000f, 40.042184000f, 1491514679, 0.997166f));
+  nav.SnapToRoute(GetFixLocation(-76.121466000f, 39.653669000f, 1483287479, 14.782230f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 16" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297711000f, 40.042097000f, 1491514708, 0.356037f));
+  nav.SnapToRoute(GetFixLocation(-76.121355000f, 39.653919000f, 1483287481, 14.705501f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 17" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297586000f, 40.042073000f, 1491514710, 5.491398f));
+  nav.SnapToRoute(GetFixLocation(-76.121306000f, 39.654043000f, 1483287482, 14.428324f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 18" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297412000f, 40.042094000f, 1491514712, 7.505977f));
+  nav.SnapToRoute(GetFixLocation(-76.121256000f, 39.654167000f, 1483287483, 14.453501f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 19" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297173000f, 40.042125000f, 1491514714, 10.329289f));
+  nav.SnapToRoute(GetFixLocation(-76.121208000f, 39.654290000f, 1483287484, 14.296960f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 20" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297020000f, 40.042134000f, 1491514715, 13.077559f));
+  nav.SnapToRoute(GetFixLocation(-76.121161000f, 39.654414000f, 1483287485, 14.379360f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 21" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.296861000f, 40.042147000f, 1491514716, 13.627518f));
+  nav.SnapToRoute(GetFixLocation(-76.121079000f, 39.654671000f, 1483287487, 14.729833f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 22" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.296705000f, 40.042156000f, 1491514717, 13.332486f));
+  nav.SnapToRoute(GetFixLocation(-76.121033000f, 39.654801000f, 1483287488, 14.998939f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 23" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.296549000f, 40.042170000f, 1491514718, 13.385821f));
+  nav.SnapToRoute(GetFixLocation(-76.120928000f, 39.655057000f, 1483287490, 14.942445f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 24" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.296378000f, 40.042184000f, 1491514719, 14.656225f));
+  nav.SnapToRoute(GetFixLocation(-76.120825000f, 39.655305000f, 1483287492, 14.492116f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 25" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.296217000f, 40.042191000f, 1491514720, 13.743007f));
+  nav.SnapToRoute(GetFixLocation(-76.120775000f, 39.655422000f, 1483287493, 13.711224f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 26" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.296039000f, 40.042210000f, 1491514721, 15.316425f));
+  nav.SnapToRoute(GetFixLocation(-76.120724000f, 39.655538000f, 1483287494, 13.632759f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 27" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.295863000f, 40.042233000f, 1491514722, 15.216189f));
+  nav.SnapToRoute(GetFixLocation(-76.120619000f, 39.655761000f, 1483287496, 13.202501f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 28" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.295684000f, 40.042251000f, 1491514723, 15.385934f));
+  nav.SnapToRoute(GetFixLocation(-76.120477000f, 39.656073000f, 1483287499, 12.267379f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 29" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.295504000f, 40.042267000f, 1491514724, 15.443172f));
+  nav.SnapToRoute(GetFixLocation(-76.120321000f, 39.656345000f, 1483287502, 11.033092f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 30" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.295326000f, 40.042286000f, 1491514725, 15.316408f));
+  nav.SnapToRoute(GetFixLocation(-76.120069000f, 39.656737000f, 1483287508, 8.114882f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 31" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.295146000f, 40.042306000f, 1491514726, 15.500832f));
+  nav.SnapToRoute(GetFixLocation(-76.120009000f, 39.656837000f, 1483287510, 6.131113f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 32" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294973000f, 40.042321000f, 1491514727, 14.837802f));
+  nav.SnapToRoute(GetFixLocation(-76.119959000f, 39.656933000f, 1483287512, 5.756894f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 33" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294798000f, 40.042337000f, 1491514728, 15.019967f));
+  nav.SnapToRoute(GetFixLocation(-76.119939000f, 39.656979000f, 1483287513, 5.399954f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 34" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294623000f, 40.042356000f, 1491514729, 15.063215f));
+  nav.SnapToRoute(GetFixLocation(-76.119922000f, 39.657023000f, 1483287514, 5.110152f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 35" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294456000f, 40.042374000f, 1491514730, 14.372561f));
+  nav.SnapToRoute(GetFixLocation(-76.119885000f, 39.657110000f, 1483287516, 5.095352f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 36" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294289000f, 40.042393000f, 1491514731, 14.388498f));
+  nav.SnapToRoute(GetFixLocation(-76.119842000f, 39.657238000f, 1483287519, 4.905911f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 37" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294126000f, 40.042406000f, 1491514732, 13.966477f));
+  nav.SnapToRoute(GetFixLocation(-76.119824000f, 39.657323000f, 1483287521, 4.793541f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 38" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293951000f, 40.042411000f, 1491514733, 14.924354f));
+  nav.SnapToRoute(GetFixLocation(-76.119804000f, 39.657409000f, 1483287523, 4.862854f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 39" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293780000f, 40.042426000f, 1491514734, 14.668429f));
+  nav.SnapToRoute(GetFixLocation(-76.119768000f, 39.657587000f, 1483287527, 5.013407f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 40" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293608000f, 40.042438000f, 1491514735, 14.719040f));
+  nav.SnapToRoute(GetFixLocation(-76.119722000f, 39.657810000f, 1483287532, 5.027066f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 41" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293438000f, 40.042454000f, 1491514736, 14.596923f));
+  nav.SnapToRoute(GetFixLocation(-76.119648000f, 39.658216000f, 1483287541, 5.070944f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 42" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293266000f, 40.042476000f, 1491514737, 14.861468f));
+  nav.SnapToRoute(GetFixLocation(-76.119612000f, 39.658399000f, 1483287545, 5.150942f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 43" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293103000f, 40.042497000f, 1491514738, 14.086612f));
+  nav.SnapToRoute(GetFixLocation(-76.119487000f, 39.658978000f, 1483287557, 5.444847f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 44" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292946000f, 40.042521000f, 1491514739, 13.644072f));
+  nav.SnapToRoute(GetFixLocation(-76.119353000f, 39.659537000f, 1483287568, 5.752578f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 45" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292793000f, 40.042541000f, 1491514740, 13.227758f));
+  nav.SnapToRoute(GetFixLocation(-76.119318000f, 39.659632000f, 1483287570, 5.496247f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 46" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292649000f, 40.042560000f, 1491514741, 12.452973f));
+  nav.SnapToRoute(GetFixLocation(-76.119073000f, 39.660169000f, 1483287581, 5.759878f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 47" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292531000f, 40.042571000f, 1491514742, 10.130532f));
+  nav.SnapToRoute(GetFixLocation(-76.118795000f, 39.660697000f, 1483287592, 5.765592f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 48" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292422000f, 40.042589000f, 1491514743, 9.502904f));
+  nav.SnapToRoute(GetFixLocation(-76.118586000f, 39.661118000f, 1483287602, 5.017143f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 49" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292239000f, 40.042607000f, 1491514745, 7.861952f));
+  nav.SnapToRoute(GetFixLocation(-76.118456000f, 39.661369000f, 1483287609, 4.297185f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 50" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292099000f, 40.042627000f, 1491514747, 6.068544f));
+  nav.SnapToRoute(GetFixLocation(-76.118403000f, 39.661470000f, 1483287612, 4.042006f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 51" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291991000f, 40.042648000f, 1491514750, 3.165418f));
+  nav.SnapToRoute(GetFixLocation(-76.118372000f, 39.661533000f, 1483287614, 3.749717f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 52" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291857000f, 40.042671000f, 1491514791, 0.285446f));
+  nav.SnapToRoute(GetFixLocation(-76.118280000f, 39.661708000f, 1483287620, 3.502638f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 53" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291686000f, 40.042684000f, 1491514793, 7.322350f));
+  nav.SnapToRoute(GetFixLocation(-76.118248000f, 39.661765000f, 1483287622, 3.456222f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 54" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291576000f, 40.042691000f, 1491514794, 9.406788f));
+  nav.SnapToRoute(GetFixLocation(-76.118215000f, 39.661820000f, 1483287624, 3.372069f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 55" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291454000f, 40.042697000f, 1491514795, 10.418556f));
+  nav.SnapToRoute(GetFixLocation(-76.118168000f, 39.661898000f, 1483287627, 3.190537f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 56" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291327000f, 40.042710000f, 1491514796, 10.919555f));
+  nav.SnapToRoute(GetFixLocation(-76.118107000f, 39.661995000f, 1483287631, 2.999199f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 57" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291195000f, 40.042724000f, 1491514797, 11.356786f));
+  nav.SnapToRoute(GetFixLocation(-76.118042000f, 39.662087000f, 1483287635, 2.914553f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 58" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291058000f, 40.042741000f, 1491514798, 11.827827f));
+  nav.SnapToRoute(GetFixLocation(-76.117963000f, 39.662203000f, 1483287640, 2.916024f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 59" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290913000f, 40.042767000f, 1491514799, 12.691654f));
+  nav.SnapToRoute(GetFixLocation(-76.117911000f, 39.662273000f, 1483287643, 2.992186f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 60" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290756000f, 40.042788000f, 1491514800, 13.582575f));
+  nav.SnapToRoute(GetFixLocation(-76.117826000f, 39.662381000f, 1483287648, 2.811402f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 61" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290588000f, 40.042811000f, 1491514801, 14.544460f));
+  nav.SnapToRoute(GetFixLocation(-76.117737000f, 39.662513000f, 1483287654, 2.759270f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 62" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290421000f, 40.042830000f, 1491514802, 14.388409f));
+  nav.SnapToRoute(GetFixLocation(-76.117671000f, 39.662625000f, 1483287659, 2.738137f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 63" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290246000f, 40.042848000f, 1491514803, 15.047881f));
+  nav.SnapToRoute(GetFixLocation(-76.117618000f, 39.662712000f, 1483287663, 2.674226f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 64" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290057000f, 40.042860000f, 1491514804, 16.162283f));
+  nav.SnapToRoute(GetFixLocation(-76.117570000f, 39.662797000f, 1483287667, 2.579393f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 65" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.289880000f, 40.042878000f, 1491514805, 15.216819f));
+  nav.SnapToRoute(GetFixLocation(-76.117517000f, 39.662907000f, 1483287672, 2.612064f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 66" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.289702000f, 40.042884000f, 1491514806, 15.184231f));
+  nav.SnapToRoute(GetFixLocation(-76.117440000f, 39.663081000f, 1483287680, 2.557836f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 67" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.289512000f, 40.042896000f, 1491514807, 16.247206f));
+  nav.SnapToRoute(GetFixLocation(-76.117416000f, 39.663146000f, 1483287683, 2.507461f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 68" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.289331000f, 40.042919000f, 1491514808, 15.636240f));
+  nav.SnapToRoute(GetFixLocation(-76.117397000f, 39.663210000f, 1483287686, 2.436044f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 69" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.289159000f, 40.042921000f, 1491514809, 14.659883f));
+  nav.SnapToRoute(GetFixLocation(-76.117346000f, 39.663380000f, 1483287694, 2.427802f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 70" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288984000f, 40.042926000f, 1491514810, 14.924241f));
+  nav.SnapToRoute(GetFixLocation(-76.117316000f, 39.663487000f, 1483287699, 2.437093f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 71" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288808000f, 40.042942000f, 1491514811, 15.104460f));
+  nav.SnapToRoute(GetFixLocation(-76.117298000f, 39.663571000f, 1483287703, 2.369302f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 72" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288646000f, 40.042943000f, 1491514812, 13.806417f));
+  nav.SnapToRoute(GetFixLocation(-76.117275000f, 39.663701000f, 1483287709, 2.434189f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 73" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288501000f, 40.042965000f, 1491514813, 12.597536f));
+  nav.SnapToRoute(GetFixLocation(-76.117248000f, 39.663868000f, 1483287716, 2.676255f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 74" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288365000f, 40.042978000f, 1491514814, 11.680187f));
+  nav.SnapToRoute(GetFixLocation(-76.117238000f, 39.663990000f, 1483287721, 2.721597f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 75" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288248000f, 40.042999000f, 1491514815, 10.241344f));
+  nav.SnapToRoute(GetFixLocation(-76.117225000f, 39.664146000f, 1483287727, 2.900256f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 76" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288090000f, 40.043020000f, 1491514817, 6.833244f));
+  nav.SnapToRoute(GetFixLocation(-76.117218000f, 39.664326000f, 1483287733, 3.341081f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 77" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287974000f, 40.043043000f, 1491514819, 5.105959f));
+  nav.SnapToRoute(GetFixLocation(-76.117210000f, 39.664492000f, 1483287738, 3.698349f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 78" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287802000f, 40.043053000f, 1491514821, 7.350187f));
+  nav.SnapToRoute(GetFixLocation(-76.117151000f, 39.665047000f, 1483287751, 4.768373f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 79" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287688000f, 40.043060000f, 1491514822, 9.746494f));
+  nav.SnapToRoute(GetFixLocation(-76.117067000f, 39.665350000f, 1483287758, 4.927046f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 80" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287579000f, 40.043081000f, 1491514823, 9.578821f));
+  nav.SnapToRoute(GetFixLocation(-76.116995000f, 39.665538000f, 1483287763, 4.363717f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 81" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287436000f, 40.043105000f, 1491514824, 12.476138f));
+  nav.SnapToRoute(GetFixLocation(-76.116932000f, 39.665676000f, 1483287767, 4.070769f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 82" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287302000f, 40.043124000f, 1491514825, 11.613939f));
+  nav.SnapToRoute(GetFixLocation(-76.116848000f, 39.665837000f, 1483287772, 3.862778f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 83" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287129000f, 40.043143000f, 1491514826, 14.894309f));
+  nav.SnapToRoute(GetFixLocation(-76.116781000f, 39.665965000f, 1483287776, 3.840523f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 84" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286972000f, 40.043152000f, 1491514827, 13.417275f));
+  nav.SnapToRoute(GetFixLocation(-76.116666000f, 39.666161000f, 1483287782, 3.990138f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 85" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286855000f, 40.043198000f, 1491514828, 11.208980f));
+  nav.SnapToRoute(GetFixLocation(-76.116363000f, 39.666702000f, 1483287796, 4.684460f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 86" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286715000f, 40.043246000f, 1491514829, 13.072904f));
+  nav.SnapToRoute(GetFixLocation(-76.116239000f, 39.666918000f, 1483287800, 6.572033f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 87" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286576000f, 40.043289000f, 1491514830, 12.776382f));
+  nav.SnapToRoute(GetFixLocation(-76.115938000f, 39.667461000f, 1483287808, 8.214924f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 88" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286465000f, 40.043369000f, 1491514831, 12.992030f));
+  nav.SnapToRoute(GetFixLocation(-76.115895000f, 39.667537000f, 1483287809, 9.227838f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 89" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286376000f, 40.043466000f, 1491514832, 13.195620f));
+  nav.SnapToRoute(GetFixLocation(-76.115810000f, 39.667691000f, 1483287811, 9.313164f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 90" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286264000f, 40.043531000f, 1491514833, 11.977450f));
+  nav.SnapToRoute(GetFixLocation(-76.115649000f, 39.667988000f, 1483287815, 8.956201f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 91" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286173000f, 40.043653000f, 1491514834, 15.639214f));
+  nav.SnapToRoute(GetFixLocation(-76.115349000f, 39.668537000f, 1483287823, 8.287601f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 92" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286049000f, 40.043751000f, 1491514835, 15.188261f));
+  nav.SnapToRoute(GetFixLocation(-76.115065000f, 39.669066000f, 1483287832, 7.079799f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 93" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285940000f, 40.043869000f, 1491514836, 16.088308f));
+  nav.SnapToRoute(GetFixLocation(-76.114968000f, 39.669239000f, 1483287836, 5.243836f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 94" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285846000f, 40.043997000f, 1491514837, 16.346352f));
+  nav.SnapToRoute(GetFixLocation(-76.114887000f, 39.669391000f, 1483287840, 4.572187f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 95" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285738000f, 40.044118000f, 1491514838, 16.313864f));
+  nav.SnapToRoute(GetFixLocation(-76.114851000f, 39.669459000f, 1483287842, 4.087063f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 96" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285623000f, 40.044242000f, 1491514839, 16.928875f));
+  nav.SnapToRoute(GetFixLocation(-76.114813000f, 39.669524000f, 1483287844, 3.967321f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 97" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285512000f, 40.044359000f, 1491514840, 16.097075f));
+  nav.SnapToRoute(GetFixLocation(-76.114759000f, 39.669623000f, 1483287847, 3.984195f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 98" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285382000f, 40.044476000f, 1491514841, 17.098841f));
+  nav.SnapToRoute(GetFixLocation(-76.114706000f, 39.669720000f, 1483287850, 3.904711f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 99" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285242000f, 40.044582000f, 1491514842, 16.780375f));
+  nav.SnapToRoute(GetFixLocation(-76.114638000f, 39.669848000f, 1483287854, 3.848550f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 100" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285086000f, 40.044676000f, 1491514843, 16.918468f));
+  nav.SnapToRoute(GetFixLocation(-76.114573000f, 39.669974000f, 1483287858, 3.772901f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 101" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.284923000f, 40.044777000f, 1491514844, 17.870819f));
+  nav.SnapToRoute(GetFixLocation(-76.114480000f, 39.670153000f, 1483287864, 3.576758f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 102" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.284734000f, 40.044810000f, 1491514845, 16.520142f));
+  nav.SnapToRoute(GetFixLocation(-76.114433000f, 39.670235000f, 1483287867, 3.325704f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 103" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.284350000f, 40.044897000f, 1491514847, 17.063686f));
+  nav.SnapToRoute(GetFixLocation(-76.114391000f, 39.670315000f, 1483287870, 3.201743f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 104" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.284147000f, 40.044918000f, 1491514848, 17.456806f));
+  nav.SnapToRoute(GetFixLocation(-76.114282000f, 39.670520000f, 1483287878, 3.082222f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 105" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283934000f, 40.044943000f, 1491514849, 18.363863f));
+  nav.SnapToRoute(GetFixLocation(-76.114171000f, 39.670690000f, 1483287884, 3.529994f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 106" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283712000f, 40.044963000f, 1491514850, 19.049284f));
+  nav.SnapToRoute(GetFixLocation(-76.114049000f, 39.670825000f, 1483287889, 3.661273f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 107" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283499000f, 40.044990000f, 1491514851, 18.398907f));
+  nav.SnapToRoute(GetFixLocation(-76.113827000f, 39.670993000f, 1483287896, 3.810817f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 108" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283268000f, 40.045018000f, 1491514852, 19.930927f));
+  nav.SnapToRoute(GetFixLocation(-76.113523000f, 39.671117000f, 1483287903, 4.211384f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 109" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283036000f, 40.045057000f, 1491514853, 20.241957f));
+  nav.SnapToRoute(GetFixLocation(-76.113424000f, 39.671141000f, 1483287905, 4.446795f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 110" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.282822000f, 40.045099000f, 1491514854, 18.826725f));
+  nav.SnapToRoute(GetFixLocation(-76.112902000f, 39.671214000f, 1483287915, 4.545975f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 111" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.282598000f, 40.045158000f, 1491514855, 20.187403f));
+  nav.SnapToRoute(GetFixLocation(-76.112347000f, 39.671277000f, 1483287925, 4.806943f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 112" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.282369000f, 40.045234000f, 1491514856, 21.270151f));
+  nav.SnapToRoute(GetFixLocation(-76.112226000f, 39.671288000f, 1483287927, 5.219961f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 113" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.282152000f, 40.045319000f, 1491514857, 20.772739f));
+  nav.SnapToRoute(GetFixLocation(-76.111490000f, 39.671365000f, 1483287938, 5.785802f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 114" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281939000f, 40.045421000f, 1491514858, 21.410484f));
+  nav.SnapToRoute(GetFixLocation(-76.110723000f, 39.671444000f, 1483287946, 8.288239f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 115" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281736000f, 40.045521000f, 1491514859, 20.571596f));
+  nav.SnapToRoute(GetFixLocation(-76.110483000f, 39.671465000f, 1483287948, 10.348373f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 116" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281549000f, 40.045647000f, 1491514860, 21.229433f));
+  nav.SnapToRoute(GetFixLocation(-76.110090000f, 39.671499000f, 1483287951, 11.295355f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 117" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281353000f, 40.045776000f, 1491514861, 22.027269f));
+  nav.SnapToRoute(GetFixLocation(-76.109806000f, 39.671521000f, 1483287953, 12.228663f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 118" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281157000f, 40.045908000f, 1491514862, 22.246403f));
+  nav.SnapToRoute(GetFixLocation(-76.109510000f, 39.671544000f, 1483287955, 12.745757f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 119" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280967000f, 40.046052000f, 1491514863, 22.784306f));
+  nav.SnapToRoute(GetFixLocation(-76.109201000f, 39.671570000f, 1483287957, 13.317112f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 120" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280779000f, 40.046201000f, 1491514864, 23.060520f));
+  nav.SnapToRoute(GetFixLocation(-76.109041000f, 39.671583000f, 1483287958, 13.785677f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 121" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280608000f, 40.046352000f, 1491514865, 22.246376f));
+  nav.SnapToRoute(GetFixLocation(-76.108876000f, 39.671596000f, 1483287959, 14.211801f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 122" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280442000f, 40.046510000f, 1491514866, 22.571390f));
+  nav.SnapToRoute(GetFixLocation(-76.108707000f, 39.671611000f, 1483287960, 14.576619f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 123" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280284000f, 40.046666000f, 1491514867, 21.974108f));
+  nav.SnapToRoute(GetFixLocation(-76.108537000f, 39.671625000f, 1483287961, 14.649479f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 124" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280121000f, 40.046830000f, 1491514868, 22.939913f));
+  nav.SnapToRoute(GetFixLocation(-76.108364000f, 39.671640000f, 1483287962, 14.917146f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 125" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279967000f, 40.047005000f, 1491514869, 23.488937f));
+  nav.SnapToRoute(GetFixLocation(-76.108190000f, 39.671655000f, 1483287963, 15.002292f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 126" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279818000f, 40.047176000f, 1491514870, 22.881805f));
+  nav.SnapToRoute(GetFixLocation(-76.108016000f, 39.671671000f, 1483287964, 15.015086f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 127" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279684000f, 40.047379000f, 1491514871, 25.319109f));
+  nav.SnapToRoute(GetFixLocation(-76.107663000f, 39.671699000f, 1483287966, 15.203367f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 128" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279545000f, 40.047561000f, 1491514872, 23.468689f));
+  nav.SnapToRoute(GetFixLocation(-76.107485000f, 39.671714000f, 1483287967, 15.342934f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 129" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279448000f, 40.047772000f, 1491514873, 24.900434f));
+  nav.SnapToRoute(GetFixLocation(-76.107304000f, 39.671729000f, 1483287968, 15.598481f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 130" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279364000f, 40.047973000f, 1491514874, 23.492323f));
+  nav.SnapToRoute(GetFixLocation(-76.107121000f, 39.671743000f, 1483287969, 15.757474f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 131" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279257000f, 40.048185000f, 1491514875, 25.299932f));
+  nav.SnapToRoute(GetFixLocation(-76.106936000f, 39.671758000f, 1483287970, 15.939284f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 132" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279152000f, 40.048408000f, 1491514876, 26.387552f));
+  nav.SnapToRoute(GetFixLocation(-76.106751000f, 39.671774000f, 1483287971, 15.951327f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 133" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279050000f, 40.048612000f, 1491514877, 24.315765f));
+  nav.SnapToRoute(GetFixLocation(-76.106564000f, 39.671789000f, 1483287972, 16.109713f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 134" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278939000f, 40.048810000f, 1491514878, 23.985138f));
+  nav.SnapToRoute(GetFixLocation(-76.106190000f, 39.671819000f, 1483287974, 16.109707f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 135" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278842000f, 40.049029000f, 1491514879, 25.742140f));
+  nav.SnapToRoute(GetFixLocation(-76.105820000f, 39.671849000f, 1483287976, 15.939265f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 136" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278746000f, 40.049237000f, 1491514880, 24.557087f));
+  nav.SnapToRoute(GetFixLocation(-76.105637000f, 39.671865000f, 1483287977, 15.781021f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 137" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278649000f, 40.049445000f, 1491514881, 24.585596f));
+  nav.SnapToRoute(GetFixLocation(-76.105457000f, 39.671882000f, 1483287978, 15.538799f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 138" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278556000f, 40.049647000f, 1491514882, 23.842150f));
+  nav.SnapToRoute(GetFixLocation(-76.105101000f, 39.671912000f, 1483287980, 15.342892f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 139" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278461000f, 40.049854000f, 1491514883, 24.423752f));
+  nav.SnapToRoute(GetFixLocation(-76.104926000f, 39.671927000f, 1483287981, 15.087388f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 140" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278363000f, 40.050048000f, 1491514884, 23.154350f));
+  nav.SnapToRoute(GetFixLocation(-76.104753000f, 39.671940000f, 1483287982, 14.893803f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 141" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278253000f, 40.050246000f, 1491514885, 23.951584f));
+  nav.SnapToRoute(GetFixLocation(-76.104580000f, 39.671953000f, 1483287983, 14.893800f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 142" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278154000f, 40.050434000f, 1491514886, 22.564377f));
+  nav.SnapToRoute(GetFixLocation(-76.104251000f, 39.671976000f, 1483287985, 14.153026f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 143" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278057000f, 40.050623000f, 1491514887, 22.604780f));
+  nav.SnapToRoute(GetFixLocation(-76.103522000f, 39.672034000f, 1483287990, 12.559273f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 144" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277957000f, 40.050803000f, 1491514888, 21.774139f));
+  nav.SnapToRoute(GetFixLocation(-76.102727000f, 39.672095000f, 1483287996, 11.409377f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 145" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277864000f, 40.050989000f, 1491514889, 22.170156f));
+  nav.SnapToRoute(GetFixLocation(-76.101924000f, 39.672158000f, 1483288002, 11.526758f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 146" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277778000f, 40.051166000f, 1491514890, 21.022196f));
+  nav.SnapToRoute(GetFixLocation(-76.101381000f, 39.672206000f, 1483288006, 11.708015f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 147" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277687000f, 40.051341000f, 1491514891, 20.967461f));
+  nav.SnapToRoute(GetFixLocation(-76.101110000f, 39.672229000f, 1483288008, 11.680498f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 148" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277582000f, 40.051505000f, 1491514892, 20.330971f));
+  nav.SnapToRoute(GetFixLocation(-76.100708000f, 39.672261000f, 1483288011, 11.542839f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 149" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277460000f, 40.051675000f, 1491514893, 21.591703f));
+  nav.SnapToRoute(GetFixLocation(-76.100192000f, 39.672303000f, 1483288015, 11.114809f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 150" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277314000f, 40.051832000f, 1491514894, 21.452850f));
+  nav.SnapToRoute(GetFixLocation(-76.099478000f, 39.672361000f, 1483288021, 10.252962f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 151" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277144000f, 40.051970000f, 1491514895, 21.114767f));
+  nav.SnapToRoute(GetFixLocation(-76.098838000f, 39.672379000f, 1483288028, 7.839143f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 152" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276956000f, 40.052098000f, 1491514896, 21.439653f));
+  nav.SnapToRoute(GetFixLocation(-76.098721000f, 39.672358000f, 1483288030, 5.146960f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 153" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276752000f, 40.052212000f, 1491514897, 21.522396f));
+  nav.SnapToRoute(GetFixLocation(-76.098625000f, 39.672335000f, 1483288032, 4.307438f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 154" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276535000f, 40.052313000f, 1491514898, 21.640593f));
+  nav.SnapToRoute(GetFixLocation(-76.098546000f, 39.672313000f, 1483288034, 3.599203f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 155" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276301000f, 40.052391000f, 1491514899, 21.747755f));
+  nav.SnapToRoute(GetFixLocation(-76.098467000f, 39.672291000f, 1483288036, 3.599204f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 156" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276057000f, 40.052447000f, 1491514900, 21.705734f));
+  nav.SnapToRoute(GetFixLocation(-76.098392000f, 39.672269000f, 1483288038, 3.438555f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 157" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.275807000f, 40.052497000f, 1491514901, 22.017670f));
+  nav.SnapToRoute(GetFixLocation(-76.098327000f, 39.672248000f, 1483288040, 3.020077f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 158" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.275552000f, 40.052546000f, 1491514902, 22.402761f));
+  nav.SnapToRoute(GetFixLocation(-76.098246000f, 39.672222000f, 1483288043, 2.506564f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 159" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.275288000f, 40.052594000f, 1491514903, 23.121330f));
+  nav.SnapToRoute(GetFixLocation(-76.098162000f, 39.672202000f, 1483288046, 2.511302f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 160" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.275028000f, 40.052644000f, 1491514904, 22.843063f));
+  nav.SnapToRoute(GetFixLocation(-76.098062000f, 39.672189000f, 1483288049, 2.896572f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 161" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.274764000f, 40.052703000f, 1491514905, 23.434586f));
+  nav.SnapToRoute(GetFixLocation(-76.097949000f, 39.672190000f, 1483288052, 3.227632f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 162" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.274500000f, 40.052762000f, 1491514906, 23.434566f));
+  nav.SnapToRoute(GetFixLocation(-76.097840000f, 39.672199000f, 1483288055, 3.131034f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 163" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.274236000f, 40.052836000f, 1491514907, 23.956211f));
+  nav.SnapToRoute(GetFixLocation(-76.097741000f, 39.672211000f, 1483288058, 2.862406f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 164" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.273970000f, 40.052914000f, 1491514908, 24.271992f));
+  nav.SnapToRoute(GetFixLocation(-76.097630000f, 39.672226000f, 1483288061, 3.218784f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 165" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.273707000f, 40.052996000f, 1491514909, 24.197865f));
+  nav.SnapToRoute(GetFixLocation(-76.097501000f, 39.672243000f, 1483288065, 2.803505f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 166" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.273444000f, 40.053084000f, 1491514910, 24.457621f));
+  nav.SnapToRoute(GetFixLocation(-76.097387000f, 39.672258000f, 1483288069, 2.477406f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 167" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.273178000f, 40.053171000f, 1491514911, 24.648081f));
+  nav.SnapToRoute(GetFixLocation(-76.097293000f, 39.672273000f, 1483288072, 2.741841f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 168" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.272908000f, 40.053264000f, 1491514912, 25.228491f));
+  nav.SnapToRoute(GetFixLocation(-76.097157000f, 39.672297000f, 1483288076, 2.988827f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 169" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.272639000f, 40.053354000f, 1491514913, 25.015167f));
+  nav.SnapToRoute(GetFixLocation(-76.097045000f, 39.672313000f, 1483288080, 2.440110f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 170" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.272368000f, 40.053446000f, 1491514914, 25.260826f));
+  nav.SnapToRoute(GetFixLocation(-76.096925000f, 39.672332000f, 1483288084, 2.624327f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 171" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.272097000f, 40.053539000f, 1491514915, 25.306133f));
+  nav.SnapToRoute(GetFixLocation(-76.096800000f, 39.672355000f, 1483288088, 2.753053f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 172" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.271823000f, 40.053631000f, 1491514916, 25.494654f));
+  nav.SnapToRoute(GetFixLocation(-76.096568000f, 39.672393000f, 1483288095, 2.903380f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 173" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.271551000f, 40.053723000f, 1491514917, 25.338655f));
+  nav.SnapToRoute(GetFixLocation(-76.096368000f, 39.672424000f, 1483288100, 3.496138f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 174" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.271274000f, 40.053815000f, 1491514918, 25.728895f));
+  nav.SnapToRoute(GetFixLocation(-76.096029000f, 39.672468000f, 1483288107, 4.208105f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 175" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270999000f, 40.053911000f, 1491514919, 25.754179f));
+  nav.SnapToRoute(GetFixLocation(-76.095275000f, 39.672555000f, 1483288119, 5.443922f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 176" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270719000f, 40.054001000f, 1491514920, 25.876524f));
+  nav.SnapToRoute(GetFixLocation(-76.094529000f, 39.672633000f, 1483288129, 6.450670f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 177" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270448000f, 40.054095000f, 1491514921, 25.351706f));
+  nav.SnapToRoute(GetFixLocation(-76.093835000f, 39.672706000f, 1483288138, 6.668529f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 178" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270175000f, 40.054191000f, 1491514922, 25.599136f));
+  nav.SnapToRoute(GetFixLocation(-76.093281000f, 39.672766000f, 1483288145, 6.847997f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 179" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269896000f, 40.054282000f, 1491514923, 25.841328f));
+  nav.SnapToRoute(GetFixLocation(-76.092706000f, 39.672828000f, 1483288152, 7.106966f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 180" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269629000f, 40.054373000f, 1491514924, 24.903870f));
+  nav.SnapToRoute(GetFixLocation(-76.091954000f, 39.672910000f, 1483288161, 7.230762f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 181" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269366000f, 40.054463000f, 1491514925, 24.547230f));
+  nav.SnapToRoute(GetFixLocation(-76.091172000f, 39.672999000f, 1483288170, 7.525823f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 182" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269101000f, 40.054547000f, 1491514926, 24.439615f));
+  nav.SnapToRoute(GetFixLocation(-76.090406000f, 39.673081000f, 1483288178, 8.283077f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 183" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268835000f, 40.054635000f, 1491514927, 24.691587f));
+  nav.SnapToRoute(GetFixLocation(-76.089696000f, 39.673159000f, 1483288185, 8.778731f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 184" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268596000f, 40.054723000f, 1491514928, 22.598209f));
+  nav.SnapToRoute(GetFixLocation(-76.089288000f, 39.673202000f, 1483288189, 8.821157f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 185" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268350000f, 40.054801000f, 1491514929, 22.688232f));
+  nav.SnapToRoute(GetFixLocation(-76.088516000f, 39.673272000f, 1483288196, 9.514885f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 186" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268124000f, 40.054884000f, 1491514930, 21.358690f));
+  nav.SnapToRoute(GetFixLocation(-76.088275000f, 39.673291000f, 1483288198, 10.378738f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 187" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267899000f, 40.054968000f, 1491514931, 21.330444f));
+  nav.SnapToRoute(GetFixLocation(-76.087902000f, 39.673312000f, 1483288201, 10.681626f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 188" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267670000f, 40.055051000f, 1491514932, 21.589396f));
+  nav.SnapToRoute(GetFixLocation(-76.087524000f, 39.673329000f, 1483288204, 10.814380f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 189" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267451000f, 40.055128000f, 1491514933, 20.534824f));
+  nav.SnapToRoute(GetFixLocation(-76.087152000f, 39.673354000f, 1483288207, 10.665019f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 190" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267247000f, 40.055203000f, 1491514934, 19.283287f));
+  nav.SnapToRoute(GetFixLocation(-76.086795000f, 39.673394000f, 1483288210, 10.303648f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 191" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267136000f, 40.055286000f, 1491514935, 13.221999f));
+  nav.SnapToRoute(GetFixLocation(-76.086033000f, 39.673473000f, 1483288218, 8.234924f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 192" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266956000f, 40.055339000f, 1491514936, 16.432842f));
+  nav.SnapToRoute(GetFixLocation(-76.085886000f, 39.673486000f, 1483288220, 6.339064f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 193" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266798000f, 40.055396000f, 1491514937, 14.883010f));
+  nav.SnapToRoute(GetFixLocation(-76.085685000f, 39.673503000f, 1483288223, 5.775251f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 194" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266636000f, 40.055449000f, 1491514938, 15.011468f));
+  nav.SnapToRoute(GetFixLocation(-76.085556000f, 39.673513000f, 1483288225, 5.554449f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 195" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266511000f, 40.055493000f, 1491514939, 11.723071f));
+  nav.SnapToRoute(GetFixLocation(-76.085425000f, 39.673524000f, 1483288227, 5.645471f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 196" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266411000f, 40.055524000f, 1491514940, 9.192926f));
+  nav.SnapToRoute(GetFixLocation(-76.085220000f, 39.673541000f, 1483288230, 5.888821f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 197" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266327000f, 40.055576000f, 1491514941, 9.205181f));
+  nav.SnapToRoute(GetFixLocation(-76.084628000f, 39.673594000f, 1483288238, 6.383212f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 198" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266240000f, 40.055697000f, 1491514943, 7.687381f));
+  nav.SnapToRoute(GetFixLocation(-76.083924000f, 39.673648000f, 1483288247, 6.735427f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 199" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266305000f, 40.055777000f, 1491514944, 10.487267f));
+  nav.SnapToRoute(GetFixLocation(-76.083315000f, 39.673699000f, 1483288256, 5.832019f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 200" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266341000f, 40.055863000f, 1491514945, 10.052884f));
+  nav.SnapToRoute(GetFixLocation(-76.083067000f, 39.673718000f, 1483288260, 5.338522f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 201" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266389000f, 40.055956000f, 1491514946, 11.131297f));
+  nav.SnapToRoute(GetFixLocation(-76.082631000f, 39.673747000f, 1483288267, 5.356639f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 202" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266429000f, 40.056054000f, 1491514947, 11.429307f));
+  nav.SnapToRoute(GetFixLocation(-76.081908000f, 39.673800000f, 1483288277, 6.222819f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 203" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266473000f, 40.056166000f, 1491514948, 13.019253f));
+  nav.SnapToRoute(GetFixLocation(-76.081209000f, 39.673845000f, 1483288285, 7.512575f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 204" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266576000f, 40.056293000f, 1491514949, 16.640072f));
+  nav.SnapToRoute(GetFixLocation(-76.080601000f, 39.673885000f, 1483288291, 8.714061f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 205" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266634000f, 40.056405000f, 1491514950, 13.411489f));
+  nav.SnapToRoute(GetFixLocation(-76.080195000f, 39.673914000f, 1483288295, 8.734046f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 206" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266729000f, 40.056529000f, 1491514951, 16.001892f));
+  nav.SnapToRoute(GetFixLocation(-76.079470000f, 39.673967000f, 1483288303, 7.799830f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 207" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266861000f, 40.056641000f, 1491514952, 16.791124f));
+  nav.SnapToRoute(GetFixLocation(-76.078762000f, 39.674017000f, 1483288312, 6.768585f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 208" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.266994000f, 40.056749000f, 1491514953, 16.521511f));
+  nav.SnapToRoute(GetFixLocation(-76.078688000f, 39.674023000f, 1483288313, 6.375507f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 209" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267169000f, 40.056834000f, 1491514954, 17.659702f));
+  nav.SnapToRoute(GetFixLocation(-76.078194000f, 39.674058000f, 1483288320, 6.072220f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 210" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267326000f, 40.056893000f, 1491514955, 14.902488f));
+  nav.SnapToRoute(GetFixLocation(-76.077497000f, 39.674113000f, 1483288330, 6.003291f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 211" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267500000f, 40.056948000f, 1491514956, 16.040077f));
+  nav.SnapToRoute(GetFixLocation(-76.077056000f, 39.674153000f, 1483288336, 6.341150f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 212" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267724000f, 40.056898000f, 1491514957, 19.880859f));
+  nav.SnapToRoute(GetFixLocation(-76.076302000f, 39.674220000f, 1483288346, 6.503273f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 213" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.267932000f, 40.056896000f, 1491514958, 17.723951f));
+  nav.SnapToRoute(GetFixLocation(-76.075592000f, 39.674283000f, 1483288356, 6.123651f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 214" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268100000f, 40.056887000f, 1491514959, 14.349388f));
+  nav.SnapToRoute(GetFixLocation(-76.074881000f, 39.674344000f, 1483288367, 5.572410f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 215" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268308000f, 40.056743000f, 1491514960, 23.896667f));
+  nav.SnapToRoute(GetFixLocation(-76.074152000f, 39.674378000f, 1483288378, 5.688727f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 216" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268488000f, 40.056648000f, 1491514961, 18.629482f));
+  nav.SnapToRoute(GetFixLocation(-76.073396000f, 39.674429000f, 1483288385, 9.289015f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 217" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268664000f, 40.056556000f, 1491514962, 18.159523f));
+  nav.SnapToRoute(GetFixLocation(-76.073294000f, 39.674439000f, 1483288386, 8.810062f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 218" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.268854000f, 40.056468000f, 1491514963, 18.922113f));
+  nav.SnapToRoute(GetFixLocation(-76.073191000f, 39.674447000f, 1483288387, 8.869950f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 219" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269069000f, 40.056407000f, 1491514964, 19.537155f));
+  nav.SnapToRoute(GetFixLocation(-76.072983000f, 39.674460000f, 1483288389, 8.940140f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 220" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269275000f, 40.056360000f, 1491514965, 18.315468f));
+  nav.SnapToRoute(GetFixLocation(-76.072559000f, 39.674489000f, 1483288393, 9.117957f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 221" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269487000f, 40.056336000f, 1491514966, 18.260023f));
+  nav.SnapToRoute(GetFixLocation(-76.071819000f, 39.674552000f, 1483288401, 7.973808f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 222" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269701000f, 40.056338000f, 1491514967, 18.235289f));
+  nav.SnapToRoute(GetFixLocation(-76.071358000f, 39.674598000f, 1483288407, 6.638226f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 223" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.269927000f, 40.056362000f, 1491514968, 19.440842f));
+  nav.SnapToRoute(GetFixLocation(-76.070604000f, 39.674665000f, 1483288416, 7.225812f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 224" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270148000f, 40.056408000f, 1491514969, 19.514193f));
+  nav.SnapToRoute(GetFixLocation(-76.069829000f, 39.674740000f, 1483288424, 8.365655f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 225" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270359000f, 40.056477000f, 1491514970, 19.550377f));
+  nav.SnapToRoute(GetFixLocation(-76.069728000f, 39.674751000f, 1483288425, 8.739937f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 226" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270569000f, 40.056569000f, 1491514971, 20.616686f));
+  nav.SnapToRoute(GetFixLocation(-76.069008000f, 39.674825000f, 1483288433, 7.779686f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 227" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270773000f, 40.056677000f, 1491514972, 21.134516f));
+  nav.SnapToRoute(GetFixLocation(-76.068506000f, 39.674880000f, 1483288441, 5.430641f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 228" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.270987000f, 40.056789000f, 1491514973, 22.088865f));
+  nav.SnapToRoute(GetFixLocation(-76.068347000f, 39.674895000f, 1483288444, 4.575041f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 229" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.271201000f, 40.056906000f, 1491514974, 22.407715f));
+  nav.SnapToRoute(GetFixLocation(-76.068196000f, 39.674910000f, 1483288447, 4.348345f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 230" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.271426000f, 40.057030000f, 1491514975, 23.623451f));
+  nav.SnapToRoute(GetFixLocation(-76.068047000f, 39.674922000f, 1483288450, 4.278687f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 231" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.271656000f, 40.057151000f, 1491514976, 23.779697f));
+  nav.SnapToRoute(GetFixLocation(-76.067854000f, 39.674941000f, 1483288454, 4.167752f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 232" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.271886000f, 40.057276000f, 1491514977, 24.034691f));
+  nav.SnapToRoute(GetFixLocation(-76.067576000f, 39.674972000f, 1483288460, 4.011299f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 233" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.272120000f, 40.057406000f, 1491514978, 24.636129f));
+  nav.SnapToRoute(GetFixLocation(-76.067350000f, 39.674995000f, 1483288465, 3.906452f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 234" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.272362000f, 40.057538000f, 1491514979, 25.319471f));
+  nav.SnapToRoute(GetFixLocation(-76.067096000f, 39.675017000f, 1483288470, 4.380026f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 235" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.272611000f, 40.057672000f, 1491514980, 25.934881f));
+  nav.SnapToRoute(GetFixLocation(-76.066387000f, 39.675085000f, 1483288483, 4.709002f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 236" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.272861000f, 40.057806000f, 1491514981, 26.004593f));
+  nav.SnapToRoute(GetFixLocation(-76.065629000f, 39.675166000f, 1483288496, 5.043725f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 237" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.273115000f, 40.057945000f, 1491514982, 26.604277f));
+  nav.SnapToRoute(GetFixLocation(-76.065104000f, 39.675222000f, 1483288502, 7.568647f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 238" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.273369000f, 40.058079000f, 1491514983, 26.284416f));
+  nav.SnapToRoute(GetFixLocation(-76.064705000f, 39.675255000f, 1483288506, 8.595771f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 239" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.273632000f, 40.058213000f, 1491514984, 26.919275f));
+  nav.SnapToRoute(GetFixLocation(-76.064275000f, 39.675297000f, 1483288510, 9.284452f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 240" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.273896000f, 40.058352000f, 1491514985, 27.301764f));
+  nav.SnapToRoute(GetFixLocation(-76.063592000f, 39.675366000f, 1483288516, 9.836871f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 241" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.274165000f, 40.058491000f, 1491514986, 27.653765f));
+  nav.SnapToRoute(GetFixLocation(-76.063240000f, 39.675407000f, 1483288519, 10.167550f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 242" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.274434000f, 40.058639000f, 1491514987, 28.226532f));
+  nav.SnapToRoute(GetFixLocation(-76.062891000f, 39.675448000f, 1483288522, 10.082838f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 243" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.274697000f, 40.058791000f, 1491514988, 28.079052f));
+  nav.SnapToRoute(GetFixLocation(-76.062663000f, 39.675476000f, 1483288524, 9.891027f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 244" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.274959000f, 40.058944000f, 1491514989, 28.078449f));
+  nav.SnapToRoute(GetFixLocation(-76.062345000f, 39.675496000f, 1483288527, 9.112307f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 245" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.275216000f, 40.059099000f, 1491514990, 27.878172f));
+  nav.SnapToRoute(GetFixLocation(-76.061748000f, 39.675537000f, 1483288533, 8.558985f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 246" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.275468000f, 40.059258000f, 1491514991, 27.825880f));
+  nav.SnapToRoute(GetFixLocation(-76.060965000f, 39.675608000f, 1483288541, 8.443875f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 247" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.275712000f, 40.059420000f, 1491514992, 27.521011f));
+  nav.SnapToRoute(GetFixLocation(-76.060271000f, 39.675716000f, 1483288548, 8.666389f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 248" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.275956000f, 40.059579000f, 1491514993, 27.303307f));
+  nav.SnapToRoute(GetFixLocation(-76.060087000f, 39.675770000f, 1483288550, 8.436082f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 249" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276201000f, 40.059741000f, 1491514994, 27.585354f));
+  nav.SnapToRoute(GetFixLocation(-76.059489000f, 39.676093000f, 1483288558, 7.824223f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 250" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276446000f, 40.059911000f, 1491514995, 28.175573f));
+  nav.SnapToRoute(GetFixLocation(-76.059359000f, 39.676182000f, 1483288560, 7.453484f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 251" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276696000f, 40.060079000f, 1491514996, 28.345196f));
+  nav.SnapToRoute(GetFixLocation(-76.058704000f, 39.676487000f, 1483288569, 7.287872f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 252" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.276944000f, 40.060247000f, 1491514997, 28.217331f));
+  nav.SnapToRoute(GetFixLocation(-76.057956000f, 39.676597000f, 1483288577, 8.155837f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 253" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277192000f, 40.060417000f, 1491514998, 28.365341f));
+  nav.SnapToRoute(GetFixLocation(-76.057257000f, 39.676669000f, 1483288584, 8.631854f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 254" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277437000f, 40.060586000f, 1491514999, 28.100771f));
+  nav.SnapToRoute(GetFixLocation(-76.056727000f, 39.676716000f, 1483288589, 9.141961f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 255" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277689000f, 40.060746000f, 1491515000, 27.896461f));
+  nav.SnapToRoute(GetFixLocation(-76.055924000f, 39.676782000f, 1483288596, 9.884376f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 256" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.277945000f, 40.060914000f, 1491515001, 28.731121f));
+  nav.SnapToRoute(GetFixLocation(-76.055551000f, 39.676816000f, 1483288599, 10.727074f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 257" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278195000f, 40.061076000f, 1491515002, 27.908791f));
+  nav.SnapToRoute(GetFixLocation(-76.054918000f, 39.676883000f, 1483288604, 10.948911f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 258" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278441000f, 40.061242000f, 1491515003, 27.941996f));
+  nav.SnapToRoute(GetFixLocation(-76.054674000f, 39.676910000f, 1483288606, 10.560175f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 259" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278685000f, 40.061411000f, 1491515004, 28.037354f));
+  nav.SnapToRoute(GetFixLocation(-76.053978000f, 39.676976000f, 1483288612, 10.013773f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 260" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.278930000f, 40.061573000f, 1491515005, 27.584930f));
+  nav.SnapToRoute(GetFixLocation(-76.053243000f, 39.677046000f, 1483288619, 9.064770f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 261" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279178000f, 40.061739000f, 1491515006, 28.069920f));
+  nav.SnapToRoute(GetFixLocation(-76.052464000f, 39.677127000f, 1483288626, 9.621311f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 262" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279426000f, 40.061905000f, 1491515007, 28.069881f));
+  nav.SnapToRoute(GetFixLocation(-76.051730000f, 39.677184000f, 1483288632, 10.534432f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 263" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279672000f, 40.062074000f, 1491515008, 28.163778f));
+  nav.SnapToRoute(GetFixLocation(-76.050929000f, 39.677255000f, 1483288639, 9.868750f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 264" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.279922000f, 40.062244000f, 1491515009, 28.492075f));
+  nav.SnapToRoute(GetFixLocation(-76.050211000f, 39.677333000f, 1483288646, 8.875156f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 265" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280171000f, 40.062412000f, 1491515010, 28.280682f));
+  nav.SnapToRoute(GetFixLocation(-76.049945000f, 39.677370000f, 1483288649, 7.719785f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 266" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280418000f, 40.062583000f, 1491515011, 28.375992f));
+  nav.SnapToRoute(GetFixLocation(-76.049463000f, 39.677446000f, 1483288655, 7.025687f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 267" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280660000f, 40.062746000f, 1491515012, 27.465178f));
+  nav.SnapToRoute(GetFixLocation(-76.048961000f, 39.677529000f, 1483288662, 6.284449f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 268" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.280897000f, 40.062911000f, 1491515013, 27.296133f));
+  nav.SnapToRoute(GetFixLocation(-76.048577000f, 39.677605000f, 1483288668, 5.661724f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 269" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281131000f, 40.063069000f, 1491515014, 26.585752f));
+  nav.SnapToRoute(GetFixLocation(-76.048160000f, 39.677675000f, 1483288675, 5.223883f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 270" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281366000f, 40.063227000f, 1491515015, 26.649664f));
+  nav.SnapToRoute(GetFixLocation(-76.048107000f, 39.677696000f, 1483288676, 5.107290f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 271" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281601000f, 40.063388000f, 1491515016, 26.871210f));
+  nav.SnapToRoute(GetFixLocation(-76.047914000f, 39.677875000f, 1483288681, 5.178723f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 272" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.281840000f, 40.063543000f, 1491515017, 26.689449f));
+  nav.SnapToRoute(GetFixLocation(-76.047883000f, 39.677916000f, 1483288682, 5.280644f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 273" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.282075000f, 40.063705000f, 1491515018, 26.945517f));
+  nav.SnapToRoute(GetFixLocation(-76.047532000f, 39.678391000f, 1483288692, 6.083008f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 274" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.282315000f, 40.063867000f, 1491515019, 27.263483f));
+  nav.SnapToRoute(GetFixLocation(-76.047164000f, 39.678876000f, 1483288701, 6.946863f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 275" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.282555000f, 40.064032000f, 1491515020, 27.485489f));
+  nav.SnapToRoute(GetFixLocation(-76.046860000f, 39.679406000f, 1483288710, 7.165826f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 276" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.282796000f, 40.064198000f, 1491515021, 27.623234f));
+  nav.SnapToRoute(GetFixLocation(-76.046596000f, 39.679940000f, 1483288719, 7.066909f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 277" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283038000f, 40.064365000f, 1491515022, 27.761002f));
+  nav.SnapToRoute(GetFixLocation(-76.046337000f, 39.680474000f, 1483288728, 7.050116f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 278" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283286000f, 40.064528000f, 1491515023, 27.850546f));
+  nav.SnapToRoute(GetFixLocation(-76.046057000f, 39.681024000f, 1483288738, 6.575739f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 279" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283531000f, 40.064699000f, 1491515024, 28.249378f));
+  nav.SnapToRoute(GetFixLocation(-76.045944000f, 39.681235000f, 1483288742, 6.351315f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 280" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.283779000f, 40.064871000f, 1491515025, 28.513338f));
+  nav.SnapToRoute(GetFixLocation(-76.045675000f, 39.681768000f, 1483288752, 6.365177f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 281" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.284026000f, 40.065045000f, 1491515026, 28.600536f));
+  nav.SnapToRoute(GetFixLocation(-76.045485000f, 39.682258000f, 1483288760, 7.115438f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 282" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.284276000f, 40.065214000f, 1491515027, 28.417562f));
+  nav.SnapToRoute(GetFixLocation(-76.045529000f, 39.682525000f, 1483288764, 7.490096f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 283" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.284529000f, 40.065387000f, 1491515028, 28.904329f));
+  nav.SnapToRoute(GetFixLocation(-76.045555000f, 39.682592000f, 1483288765, 7.783914f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 284" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.284783000f, 40.065562000f, 1491515029, 29.116362f));
+  nav.SnapToRoute(GetFixLocation(-76.045809000f, 39.683116000f, 1483288773, 7.782256f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 285" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285037000f, 40.065736000f, 1491515030, 29.041958f));
+  nav.SnapToRoute(GetFixLocation(-76.046077000f, 39.683647000f, 1483288784, 5.764818f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 286" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285290000f, 40.065907000f, 1491515031, 28.756346f));
+  nav.SnapToRoute(GetFixLocation(-76.046133000f, 39.683767000f, 1483288788, 3.548425f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 287" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285546000f, 40.066074000f, 1491515032, 28.657528f));
+  nav.SnapToRoute(GetFixLocation(-76.046190000f, 39.683888000f, 1483288792, 3.581871f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 288" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.285807000f, 40.066233000f, 1491515033, 28.419971f));
+  nav.SnapToRoute(GetFixLocation(-76.046220000f, 39.683947000f, 1483288794, 3.526398f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 289" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286075000f, 40.066392000f, 1491515034, 28.888893f));
+  nav.SnapToRoute(GetFixLocation(-76.046280000f, 39.684069000f, 1483288798, 3.630289f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 290" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286344000f, 40.066543000f, 1491515035, 28.420609f));
+  nav.SnapToRoute(GetFixLocation(-76.046354000f, 39.684231000f, 1483288803, 3.823117f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 291" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286621000f, 40.066683000f, 1491515036, 28.280092f));
+  nav.SnapToRoute(GetFixLocation(-76.046420000f, 39.684365000f, 1483288807, 3.988111f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 292" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.286896000f, 40.066819000f, 1491515037, 27.893871f));
+  nav.SnapToRoute(GetFixLocation(-76.046535000f, 39.684621000f, 1483288814, 4.307524f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 293" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287174000f, 40.066950000f, 1491515038, 27.813002f));
+  nav.SnapToRoute(GetFixLocation(-76.046769000f, 39.685154000f, 1483288827, 4.817555f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 294" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287455000f, 40.067074000f, 1491515039, 27.633535f));
+  nav.SnapToRoute(GetFixLocation(-76.046891000f, 39.685421000f, 1483288833, 5.251052f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 295" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.287743000f, 40.067185000f, 1491515040, 27.471073f));
+  nav.SnapToRoute(GetFixLocation(-76.047102000f, 39.685904000f, 1483288844, 5.156763f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 296" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288034000f, 40.067288000f, 1491515041, 27.313904f));
+  nav.SnapToRoute(GetFixLocation(-76.047179000f, 39.686075000f, 1483288848, 5.036534f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 297" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288330000f, 40.067381000f, 1491515042, 27.259130f));
+  nav.SnapToRoute(GetFixLocation(-76.047335000f, 39.686451000f, 1483288857, 4.881978f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 298" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288634000f, 40.067468000f, 1491515043, 27.649801f));
+  nav.SnapToRoute(GetFixLocation(-76.047344000f, 39.686999000f, 1483288868, 5.546177f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 299" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.288936000f, 40.067554000f, 1491515044, 27.451225f));
+  nav.SnapToRoute(GetFixLocation(-76.047139000f, 39.687516000f, 1483288877, 6.685762f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 300" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.289253000f, 40.067641000f, 1491515045, 28.689688f));
+  nav.SnapToRoute(GetFixLocation(-76.046929000f, 39.687912000f, 1483288884, 6.801698f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 301" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.289566000f, 40.067721000f, 1491515046, 28.112652f));
+  nav.SnapToRoute(GetFixLocation(-76.046633000f, 39.688460000f, 1483288894, 6.606306f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 302" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.289879000f, 40.067789000f, 1491515047, 27.718431f));
+  nav.SnapToRoute(GetFixLocation(-76.046341000f, 39.688998000f, 1483288905, 5.900330f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 303" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290193000f, 40.067848000f, 1491515048, 27.544445f));
+  nav.SnapToRoute(GetFixLocation(-76.046119000f, 39.689413000f, 1483288914, 5.550961f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 304" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290512000f, 40.067900000f, 1491515049, 27.785547f));
+  nav.SnapToRoute(GetFixLocation(-76.045881000f, 39.689847000f, 1483288924, 5.243821f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 305" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.290822000f, 40.067949000f, 1491515050, 26.966576f));
+  nav.SnapToRoute(GetFixLocation(-76.045691000f, 39.690195000f, 1483288933, 4.668812f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 306" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291129000f, 40.067986000f, 1491515051, 26.475897f));
+  nav.SnapToRoute(GetFixLocation(-76.045649000f, 39.690264000f, 1483288935, 4.240944f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 307" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291437000f, 40.068019000f, 1491515052, 26.494642f));
+  nav.SnapToRoute(GetFixLocation(-76.045384000f, 39.690315000f, 1483288940, 4.679879f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 308" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.291748000f, 40.068048000f, 1491515053, 26.690247f));
+  nav.SnapToRoute(GetFixLocation(-76.044659000f, 39.690212000f, 1483288950, 6.315397f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 309" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292062000f, 40.068066000f, 1491515054, 26.824799f));
+  nav.SnapToRoute(GetFixLocation(-76.043961000f, 39.690111000f, 1483288959, 6.759951f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 310" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292372000f, 40.068079000f, 1491515055, 26.448708f));
+  nav.SnapToRoute(GetFixLocation(-76.043805000f, 39.690092000f, 1483288961, 6.764767f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 311" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.292685000f, 40.068089000f, 1491515056, 26.687881f));
+  nav.SnapToRoute(GetFixLocation(-76.043113000f, 39.689995000f, 1483288970, 6.694803f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 312" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293002000f, 40.068092000f, 1491515057, 27.007479f));
+  nav.SnapToRoute(GetFixLocation(-76.042426000f, 39.689859000f, 1483288979, 6.751748f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 313" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293325000f, 40.068083000f, 1491515058, 27.534792f));
+  nav.SnapToRoute(GetFixLocation(-76.041766000f, 39.689634000f, 1483288988, 6.870730f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 314" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293646000f, 40.068075000f, 1491515059, 27.360678f));
+  nav.SnapToRoute(GetFixLocation(-76.041625000f, 39.689571000f, 1483288990, 6.983383f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 315" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.293971000f, 40.068067000f, 1491515060, 27.701265f));
+  nav.SnapToRoute(GetFixLocation(-76.041006000f, 39.689227000f, 1483288999, 7.267441f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 316" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294301000f, 40.068060000f, 1491515061, 28.123701f));
+  nav.SnapToRoute(GetFixLocation(-76.040419000f, 39.688855000f, 1483289008, 7.237884f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 317" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294626000f, 40.068056000f, 1491515062, 27.690533f));
+  nav.SnapToRoute(GetFixLocation(-76.039840000f, 39.688493000f, 1483289017, 7.100654f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 318" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.294966000f, 40.068057000f, 1491515063, 28.965027f));
+  nav.SnapToRoute(GetFixLocation(-76.039293000f, 39.688146000f, 1483289026, 6.747460f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 319" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.295303000f, 40.068050000f, 1491515064, 28.719814f));
+  nav.SnapToRoute(GetFixLocation(-76.039124000f, 39.688027000f, 1483289029, 6.541093f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 320" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.295643000f, 40.068042000f, 1491515065, 28.978504f));
+  nav.SnapToRoute(GetFixLocation(-76.038838000f, 39.687985000f, 1483289033, 6.235511f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 321" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.295984000f, 40.068031000f, 1491515066, 29.075808f));
+  nav.SnapToRoute(GetFixLocation(-76.038694000f, 39.688002000f, 1483289035, 6.239971f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 322" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.296327000f, 40.068025000f, 1491515067, 29.228029f));
+  nav.SnapToRoute(GetFixLocation(-76.038549000f, 39.688022000f, 1483289037, 6.309619f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 323" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.296673000f, 40.068022000f, 1491515068, 29.477861f));
+  nav.SnapToRoute(GetFixLocation(-76.037915000f, 39.688100000f, 1483289046, 6.111186f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 324" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297025000f, 40.068016000f, 1491515069, 29.994553f));
+  nav.SnapToRoute(GetFixLocation(-76.037528000f, 39.688146000f, 1483289052, 5.590846f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 325" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297372000f, 40.068009000f, 1491515070, 29.571434f));
+  nav.SnapToRoute(GetFixLocation(-76.036832000f, 39.688260000f, 1483289062, 6.095761f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 326" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.297720000f, 40.068006000f, 1491515071, 29.648239f));
+  nav.SnapToRoute(GetFixLocation(-76.036131000f, 39.688304000f, 1483289070, 7.531210f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 327" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298071000f, 40.068002000f, 1491515072, 29.905247f));
+  nav.SnapToRoute(GetFixLocation(-76.035755000f, 39.688290000f, 1483289074, 8.061808f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 328" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298425000f, 40.068009000f, 1491515073, 30.167568f));
+  nav.SnapToRoute(GetFixLocation(-76.035277000f, 39.688261000f, 1483289079, 8.214864f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 329" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.298779000f, 40.068020000f, 1491515074, 30.182350f));
+  nav.SnapToRoute(GetFixLocation(-76.035083000f, 39.688248000f, 1483289081, 8.340828f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 330" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.299134000f, 40.068033000f, 1491515075, 30.277288f));
+  nav.SnapToRoute(GetFixLocation(-76.034318000f, 39.688197000f, 1483289089, 8.222281f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 331" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.299493000f, 40.068053000f, 1491515076, 30.664370f));
+  nav.SnapToRoute(GetFixLocation(-76.033759000f, 39.688162000f, 1483289095, 8.007387f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 332" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.299851000f, 40.068079000f, 1491515077, 30.635267f));
+  nav.SnapToRoute(GetFixLocation(-76.033115000f, 39.688122000f, 1483289102, 7.906707f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 333" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.300208000f, 40.068109000f, 1491515078, 30.595842f));
+  nav.SnapToRoute(GetFixLocation(-76.032441000f, 39.688074000f, 1483289109, 8.283460f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 334" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.300563000f, 40.068144000f, 1491515079, 30.492582f));
+  nav.SnapToRoute(GetFixLocation(-76.032136000f, 39.688059000f, 1483289112, 8.726938f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 335" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.300920000f, 40.068186000f, 1491515080, 30.770285f));
+  nav.SnapToRoute(GetFixLocation(-76.031825000f, 39.688066000f, 1483289115, 8.884297f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 336" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.301276000f, 40.068231000f, 1491515081, 30.738722f));
+  nav.SnapToRoute(GetFixLocation(-76.031496000f, 39.688091000f, 1483289118, 9.440171f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 337" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.301627000f, 40.068277000f, 1491515082, 30.337114f));
+  nav.SnapToRoute(GetFixLocation(-76.031156000f, 39.688123000f, 1483289121, 9.780922f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 338" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.301981000f, 40.068324000f, 1491515083, 30.607861f));
+  nav.SnapToRoute(GetFixLocation(-76.030806000f, 39.688160000f, 1483289124, 10.087982f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 339" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.302334000f, 40.068371000f, 1491515084, 30.523907f));
+  nav.SnapToRoute(GetFixLocation(-76.030436000f, 39.688193000f, 1483289127, 10.635931f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 340" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.302686000f, 40.068416000f, 1491515085, 30.402485f));
+  nav.SnapToRoute(GetFixLocation(-76.030181000f, 39.688219000f, 1483289129, 11.017590f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 341" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.303033000f, 40.068464000f, 1491515086, 30.040020f));
+  nav.SnapToRoute(GetFixLocation(-76.029537000f, 39.688285000f, 1483289134, 11.130907f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 342" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.303376000f, 40.068513000f, 1491515087, 29.724960f));
+  nav.SnapToRoute(GetFixLocation(-76.029278000f, 39.688309000f, 1483289136, 11.173587f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 343" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.303709000f, 40.068558000f, 1491515088, 28.807171f));
+  nav.SnapToRoute(GetFixLocation(-76.029017000f, 39.688333000f, 1483289138, 11.258636f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 344" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.304044000f, 40.068600000f, 1491515089, 28.919086f));
+  nav.SnapToRoute(GetFixLocation(-76.028491000f, 39.688378000f, 1483289142, 11.334166f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 345" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.304369000f, 40.068642000f, 1491515090, 28.078714f));
+  nav.SnapToRoute(GetFixLocation(-76.027977000f, 39.688427000f, 1483289146, 11.091912f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 346" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.304693000f, 40.068687000f, 1491515091, 28.052406f));
+  nav.SnapToRoute(GetFixLocation(-76.027726000f, 39.688450000f, 1483289148, 10.826722f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 347" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.305019000f, 40.068730000f, 1491515092, 28.181377f));
+  nav.SnapToRoute(GetFixLocation(-76.027237000f, 39.688495000f, 1483289152, 10.546975f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 348" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.305347000f, 40.068779000f, 1491515093, 28.469667f));
+  nav.SnapToRoute(GetFixLocation(-76.026492000f, 39.688563000f, 1483289158, 10.711100f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 349" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.305675000f, 40.068823000f, 1491515094, 28.368267f));
+  nav.SnapToRoute(GetFixLocation(-76.026366000f, 39.688575000f, 1483289159, 10.875931f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 350" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.306009000f, 40.068869000f, 1491515095, 28.910448f));
+  nav.SnapToRoute(GetFixLocation(-76.025602000f, 39.688647000f, 1483289165, 10.989286f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 351" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.306340000f, 40.068916000f, 1491515096, 28.679037f));
+  nav.SnapToRoute(GetFixLocation(-76.025085000f, 39.688698000f, 1483289169, 11.162573f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 352" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.306671000f, 40.068963000f, 1491515097, 28.679018f));
+  nav.SnapToRoute(GetFixLocation(-76.024297000f, 39.688762000f, 1483289175, 11.312915f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 353" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.307003000f, 40.069007000f, 1491515098, 28.703894f));
+  nav.SnapToRoute(GetFixLocation(-76.023897000f, 39.688791000f, 1483289178, 11.472325f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 354" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.307330000f, 40.069050000f, 1491515099, 28.265203f));
+  nav.SnapToRoute(GetFixLocation(-76.023521000f, 39.688827000f, 1483289181, 10.819220f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 355" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.307659000f, 40.069097000f, 1491515100, 28.511459f));
+  nav.SnapToRoute(GetFixLocation(-76.023289000f, 39.688862000f, 1483289183, 10.126066f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 356" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.307988000f, 40.069146000f, 1491515101, 28.553135f));
+  nav.SnapToRoute(GetFixLocation(-76.023178000f, 39.688887000f, 1483289184, 9.907487f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 357" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.308322000f, 40.069194000f, 1491515102, 28.950579f));
+  nav.SnapToRoute(GetFixLocation(-76.022783000f, 39.689043000f, 1483289188, 9.508231f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 358" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.308654000f, 40.069240000f, 1491515103, 28.742626f));
+  nav.SnapToRoute(GetFixLocation(-76.022211000f, 39.689405000f, 1483289196, 7.930164f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 359" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.308985000f, 40.069287000f, 1491515104, 28.678885f));
+  nav.SnapToRoute(GetFixLocation(-76.022088000f, 39.689483000f, 1483289198, 6.826603f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 360" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.309322000f, 40.069333000f, 1491515105, 29.161819f));
+  nav.SnapToRoute(GetFixLocation(-76.021786000f, 39.689617000f, 1483289203, 5.972491f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 361" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.309660000f, 40.069376000f, 1491515106, 29.189047f));
+  nav.SnapToRoute(GetFixLocation(-76.021539000f, 39.689683000f, 1483289207, 5.599456f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 362" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.309997000f, 40.069426000f, 1491515107, 29.243256f));
+  nav.SnapToRoute(GetFixLocation(-76.021285000f, 39.689741000f, 1483289211, 5.673971f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 363" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.310339000f, 40.069476000f, 1491515108, 29.661503f));
+  nav.SnapToRoute(GetFixLocation(-76.020982000f, 39.689806000f, 1483289216, 5.389050f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 364" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.310685000f, 40.069522000f, 1491515109, 29.916830f));
+  nav.SnapToRoute(GetFixLocation(-76.020524000f, 39.689908000f, 1483289224, 5.105392f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 365" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.311029000f, 40.069572000f, 1491515110, 29.828831f));
+  nav.SnapToRoute(GetFixLocation(-76.020133000f, 39.689998000f, 1483289231, 4.994289f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 366" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.311376000f, 40.069622000f, 1491515111, 30.079926f));
+  nav.SnapToRoute(GetFixLocation(-76.019676000f, 39.690110000f, 1483289239, 5.135595f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 367" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.311723000f, 40.069673000f, 1491515112, 30.100702f));
+  nav.SnapToRoute(GetFixLocation(-76.018935000f, 39.690310000f, 1483289249, 6.726635f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 368" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.312078000f, 40.069719000f, 1491515113, 30.672409f));
+  nav.SnapToRoute(GetFixLocation(-76.018537000f, 39.690422000f, 1483289253, 9.075334f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 369" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.312428000f, 40.069767000f, 1491515114, 30.290987f));
+  nav.SnapToRoute(GetFixLocation(-76.018213000f, 39.690512000f, 1483289256, 9.835700f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 370" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.312782000f, 40.069816000f, 1491515115, 30.646053f));
+  nav.SnapToRoute(GetFixLocation(-76.017989000f, 39.690575000f, 1483289258, 10.214755f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 371" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.313140000f, 40.069863000f, 1491515116, 30.942982f));
+  nav.SnapToRoute(GetFixLocation(-76.017644000f, 39.690676000f, 1483289261, 10.539816f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 372" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.313495000f, 40.069913000f, 1491515117, 30.749798f));
+  nav.SnapToRoute(GetFixLocation(-76.017424000f, 39.690761000f, 1483289263, 10.543715f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 373" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.313850000f, 40.069965000f, 1491515118, 30.790854f));
+  nav.SnapToRoute(GetFixLocation(-76.017323000f, 39.690815000f, 1483289264, 10.535057f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 374" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.314208000f, 40.070014000f, 1491515119, 30.981339f));
+  nav.SnapToRoute(GetFixLocation(-76.017066000f, 39.691017000f, 1483289267, 10.489639f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 375" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.314565000f, 40.070065000f, 1491515120, 30.937544f));
+  nav.SnapToRoute(GetFixLocation(-76.016929000f, 39.691173000f, 1483289269, 10.479661f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 376" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.314921000f, 40.070116000f, 1491515121, 30.853783f));
+  nav.SnapToRoute(GetFixLocation(-76.016751000f, 39.691409000f, 1483289272, 10.125172f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 377" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.315278000f, 40.070165000f, 1491515122, 30.897417f));
+  nav.SnapToRoute(GetFixLocation(-76.016532000f, 39.691715000f, 1483289276, 9.721938f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 378" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.315626000f, 40.070215000f, 1491515123, 30.163393f));
+  nav.SnapToRoute(GetFixLocation(-76.016223000f, 39.692250000f, 1483289283, 9.310406f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 379" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.315977000f, 40.070266000f, 1491515124, 30.435152f));
+  nav.SnapToRoute(GetFixLocation(-76.016202000f, 39.692335000f, 1483289284, 9.631625f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 380" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.316321000f, 40.070313000f, 1491515125, 29.768009f));
+  nav.SnapToRoute(GetFixLocation(-76.016164000f, 39.692657000f, 1483289288, 8.998091f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 381" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.316669000f, 40.070360000f, 1491515126, 30.103497f));
+  nav.SnapToRoute(GetFixLocation(-76.016175000f, 39.692894000f, 1483289291, 8.799847f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 382" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.317019000f, 40.070404000f, 1491515127, 30.215343f));
+  nav.SnapToRoute(GetFixLocation(-76.016209000f, 39.693464000f, 1483289299, 7.939864f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 383" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.317366000f, 40.070449000f, 1491515128, 29.981567f));
+  nav.SnapToRoute(GetFixLocation(-76.016221000f, 39.693697000f, 1483289303, 6.489450f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 384" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.317711000f, 40.070497000f, 1491515129, 29.871508f));
+  nav.SnapToRoute(GetFixLocation(-76.016238000f, 39.693898000f, 1483289307, 5.605638f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 385" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.318056000f, 40.070542000f, 1491515130, 29.813562f));
+  nav.SnapToRoute(GetFixLocation(-76.016240000f, 39.693951000f, 1483289308, 5.902420f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 386" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.318404000f, 40.070584000f, 1491515131, 30.011667f));
+  nav.SnapToRoute(GetFixLocation(-76.016241000f, 39.694111000f, 1483289311, 5.937108f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 387" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.318750000f, 40.070625000f, 1491515132, 29.826130f));
+  nav.SnapToRoute(GetFixLocation(-76.016241000f, 39.694682000f, 1483289320, 7.062603f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 388" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.319099000f, 40.070666000f, 1491515133, 30.078690f));
+  nav.SnapToRoute(GetFixLocation(-76.016201000f, 39.695060000f, 1483289325, 8.443605f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 389" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.319452000f, 40.070702000f, 1491515134, 30.336990f));
+  nav.SnapToRoute(GetFixLocation(-76.015950000f, 39.695524000f, 1483289331, 9.324667f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 390" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.319809000f, 40.070736000f, 1491515135, 30.646479f));
+  nav.SnapToRoute(GetFixLocation(-76.015745000f, 39.695727000f, 1483289334, 9.539324f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 391" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.320161000f, 40.070766000f, 1491515136, 30.171309f));
+  nav.SnapToRoute(GetFixLocation(-76.015129000f, 39.696088000f, 1483289341, 9.474862f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 392" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.320514000f, 40.070795000f, 1491515137, 30.243876f));
+  nav.SnapToRoute(GetFixLocation(-76.015034000f, 39.696124000f, 1483289342, 9.070444f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 393" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.320867000f, 40.070827000f, 1491515138, 30.281330f));
+  nav.SnapToRoute(GetFixLocation(-76.014663000f, 39.696262000f, 1483289346, 8.824006f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 394" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.321215000f, 40.070856000f, 1491515139, 29.820381f));
+  nav.SnapToRoute(GetFixLocation(-76.014047000f, 39.696621000f, 1483289354, 8.273631f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 395" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.321564000f, 40.070886000f, 1491515140, 29.917278f));
+  nav.SnapToRoute(GetFixLocation(-76.013664000f, 39.697114000f, 1483289364, 6.393783f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 396" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.321914000f, 40.070913000f, 1491515141, 29.966585f));
+  nav.SnapToRoute(GetFixLocation(-76.013606000f, 39.697204000f, 1483289366, 5.591400f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 397" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.322263000f, 40.070943000f, 1491515142, 29.917253f));
+  nav.SnapToRoute(GetFixLocation(-76.013527000f, 39.697330000f, 1483289369, 5.191040f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 398" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.322611000f, 40.070977000f, 1491515143, 29.885708f));
+  nav.SnapToRoute(GetFixLocation(-76.013451000f, 39.697450000f, 1483289372, 4.953337f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 399" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.322960000f, 40.071020000f, 1491515144, 30.113125f));
+  nav.SnapToRoute(GetFixLocation(-76.013335000f, 39.697636000f, 1483289377, 4.593177f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 400" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.323305000f, 40.071072000f, 1491515145, 29.954121f));
+  nav.SnapToRoute(GetFixLocation(-76.013267000f, 39.697735000f, 1483289380, 4.155013f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 401" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.323654000f, 40.071136000f, 1491515146, 30.571922f));
+  nav.SnapToRoute(GetFixLocation(-76.013161000f, 39.697899000f, 1483289385, 4.077872f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 402" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.324002000f, 40.071208000f, 1491515147, 30.709366f));
+  nav.SnapToRoute(GetFixLocation(-76.013033000f, 39.698104000f, 1483289391, 4.219569f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 403" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.324343000f, 40.071287000f, 1491515148, 30.350655f));
+  nav.SnapToRoute(GetFixLocation(-76.012774000f, 39.698502000f, 1483289402, 4.504417f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 404" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.324674000f, 40.071368000f, 1491515149, 29.603384f));
+  nav.SnapToRoute(GetFixLocation(-76.012501000f, 39.699032000f, 1483289416, 4.533137f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 405" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.325019000f, 40.071442000f, 1491515150, 30.521975f));
+  nav.SnapToRoute(GetFixLocation(-76.012487000f, 39.699071000f, 1483289417, 4.504013f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 406" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.325375000f, 40.071526000f, 1491515151, 31.735229f));
+  nav.SnapToRoute(GetFixLocation(-76.012353000f, 39.699517000f, 1483289428, 4.632527f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 407" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.325726000f, 40.071609000f, 1491515152, 31.295378f));
+  nav.SnapToRoute(GetFixLocation(-76.012225000f, 39.699999000f, 1483289439, 4.978596f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 408" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.326074000f, 40.071689000f, 1491515153, 30.953539f));
+  nav.SnapToRoute(GetFixLocation(-76.012091000f, 39.700530000f, 1483289450, 5.474048f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 409" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.326424000f, 40.071768000f, 1491515154, 31.085037f));
+  nav.SnapToRoute(GetFixLocation(-76.011981000f, 39.700977000f, 1483289459, 5.627095f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 410" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.326771000f, 40.071850000f, 1491515155, 30.936857f));
+  nav.SnapToRoute(GetFixLocation(-76.011834000f, 39.701545000f, 1483289470, 5.860978f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 411" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.327106000f, 40.071931000f, 1491515156, 29.927895f));
+  nav.SnapToRoute(GetFixLocation(-76.011682000f, 39.702113000f, 1483289481, 5.868703f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 412" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.327433000f, 40.072019000f, 1491515157, 29.528048f));
+  nav.SnapToRoute(GetFixLocation(-76.011532000f, 39.702674000f, 1483289492, 5.796177f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 413" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.327751000f, 40.072116000f, 1491515158, 29.161821f));
+  nav.SnapToRoute(GetFixLocation(-76.011423000f, 39.703091000f, 1483289501, 5.261069f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 414" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.328073000f, 40.072214000f, 1491515159, 29.519535f));
+  nav.SnapToRoute(GetFixLocation(-76.011351000f, 39.703352000f, 1483289508, 4.243080f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 415" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.328400000f, 40.072314000f, 1491515160, 29.997591f));
+  nav.SnapToRoute(GetFixLocation(-76.011288000f, 39.703651000f, 1483289517, 3.746558f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 416" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.328725000f, 40.072420000f, 1491515161, 30.094969f));
+  nav.SnapToRoute(GetFixLocation(-76.011213000f, 39.703818000f, 1483289524, 2.809824f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 417" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.329050000f, 40.072531000f, 1491515162, 30.317488f));
+  nav.SnapToRoute(GetFixLocation(-76.011137000f, 39.703963000f, 1483289529, 3.480857f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 418" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.329373000f, 40.072649000f, 1491515163, 30.489466f));
+  nav.SnapToRoute(GetFixLocation(-76.011180000f, 39.704534000f, 1483289544, 4.244668f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 419" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.329689000f, 40.072770000f, 1491515164, 30.100363f));
+  nav.SnapToRoute(GetFixLocation(-76.011201000f, 39.704693000f, 1483289548, 4.447735f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 420" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.330005000f, 40.072894000f, 1491515165, 30.251238f));
+  nav.SnapToRoute(GetFixLocation(-76.011273000f, 39.705258000f, 1483289561, 4.861312f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 421" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.330312000f, 40.073018000f, 1491515166, 29.571070f));
+  nav.SnapToRoute(GetFixLocation(-76.011332000f, 39.705855000f, 1483289572, 6.059050f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 422" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.330623000f, 40.073146000f, 1491515167, 30.081133f));
+  nav.SnapToRoute(GetFixLocation(-76.011388000f, 39.706397000f, 1483289581, 6.725053f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 423" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.330933000f, 40.073280000f, 1491515168, 30.328960f));
+  nav.SnapToRoute(GetFixLocation(-76.011394000f, 39.706458000f, 1483289582, 6.809903f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 424" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.331241000f, 40.073417000f, 1491515169, 30.347141f));
+  nav.SnapToRoute(GetFixLocation(-76.011460000f, 39.707023000f, 1483289591, 7.016553f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 425" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.331546000f, 40.073559000f, 1491515170, 30.411983f));
+  nav.SnapToRoute(GetFixLocation(-76.011508000f, 39.707605000f, 1483289601, 6.491822f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 426" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.331848000f, 40.073702000f, 1491515171, 30.252340f));
+  nav.SnapToRoute(GetFixLocation(-76.011534000f, 39.707847000f, 1483289606, 5.406236f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 427" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.332158000f, 40.073847000f, 1491515172, 30.949402f));
+  nav.SnapToRoute(GetFixLocation(-76.011563000f, 39.708116000f, 1483289612, 5.007959f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 428" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.332470000f, 40.073990000f, 1491515173, 30.979856f));
+  nav.SnapToRoute(GetFixLocation(-76.011584000f, 39.708304000f, 1483289616, 5.251298f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 429" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.332785000f, 40.074137000f, 1491515174, 31.428841f));
+  nav.SnapToRoute(GetFixLocation(-76.011648000f, 39.708855000f, 1483289627, 5.598311f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 430" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.333101000f, 40.074280000f, 1491515175, 31.272558f));
+  nav.SnapToRoute(GetFixLocation(-76.011697000f, 39.709259000f, 1483289635, 5.646052f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 431" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.333418000f, 40.074424000f, 1491515176, 31.402538f));
+  nav.SnapToRoute(GetFixLocation(-76.011748000f, 39.709661000f, 1483289644, 4.995895f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 432" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.333736000f, 40.074570000f, 1491515177, 31.589735f));
+  nav.SnapToRoute(GetFixLocation(-76.011773000f, 39.709921000f, 1483289650, 4.837024f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 433" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.334055000f, 40.074719000f, 1491515178, 31.835470f));
+  nav.SnapToRoute(GetFixLocation(-76.011827000f, 39.710486000f, 1483289663, 4.851176f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 434" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.334372000f, 40.074864000f, 1491515179, 31.459360f));
+  nav.SnapToRoute(GetFixLocation(-76.011878000f, 39.711054000f, 1483289674, 5.761830f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 435" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.334687000f, 40.075013000f, 1491515180, 31.545042f));
+  nav.SnapToRoute(GetFixLocation(-76.011940000f, 39.711640000f, 1483289683, 7.272103f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 436" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.334998000f, 40.075156000f, 1491515181, 30.906420f));
+  nav.SnapToRoute(GetFixLocation(-76.011958000f, 39.711782000f, 1483289685, 7.941172f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 437" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.335305000f, 40.075297000f, 1491515182, 30.499649f));
+  nav.SnapToRoute(GetFixLocation(-76.011987000f, 39.712002000f, 1483289688, 8.205293f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 438" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.335611000f, 40.075438000f, 1491515183, 30.426600f));
+  nav.SnapToRoute(GetFixLocation(-76.012006000f, 39.712155000f, 1483289690, 8.554710f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 439" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.335908000f, 40.075578000f, 1491515184, 29.713894f));
+  nav.SnapToRoute(GetFixLocation(-76.012030000f, 39.712315000f, 1483289692, 8.964651f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 440" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.336206000f, 40.075717000f, 1491515185, 29.728313f));
+  nav.SnapToRoute(GetFixLocation(-76.012065000f, 39.712569000f, 1483289695, 9.477853f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 441" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.336504000f, 40.075853000f, 1491515186, 29.555822f));
+  nav.SnapToRoute(GetFixLocation(-76.012108000f, 39.712919000f, 1483289699, 9.783859f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 442" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.336807000f, 40.075989000f, 1491515187, 29.922359f));
+  nav.SnapToRoute(GetFixLocation(-76.012134000f, 39.713292000f, 1483289703, 10.395454f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 443" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.337106000f, 40.076127000f, 1491515188, 29.743301f));
+  nav.SnapToRoute(GetFixLocation(-76.012140000f, 39.713391000f, 1483289704, 11.032600f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 444" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.337405000f, 40.076266000f, 1491515189, 29.800905f));
+  nav.SnapToRoute(GetFixLocation(-76.012147000f, 39.713492000f, 1483289705, 11.259236f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 445" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.337705000f, 40.076404000f, 1491515190, 29.816185f));
+  nav.SnapToRoute(GetFixLocation(-76.012168000f, 39.713785000f, 1483289708, 10.888716f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 446" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.338009000f, 40.076543000f, 1491515191, 30.165617f));
+  nav.SnapToRoute(GetFixLocation(-76.012187000f, 39.713970000f, 1483289710, 10.329138f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 447" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.338313000f, 40.076682000f, 1491515192, 30.165571f));
+  nav.SnapToRoute(GetFixLocation(-76.012209000f, 39.714142000f, 1483289712, 9.619704f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 448" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.338621000f, 40.076822000f, 1491515193, 30.515209f));
+  nav.SnapToRoute(GetFixLocation(-76.012284000f, 39.714682000f, 1483289719, 8.636375f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 449" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.338926000f, 40.076965000f, 1491515194, 30.468885f));
+  nav.SnapToRoute(GetFixLocation(-76.012357000f, 39.715254000f, 1483289728, 7.108983f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 450" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.339236000f, 40.077109000f, 1491515195, 30.890409f));
+  nav.SnapToRoute(GetFixLocation(-76.012374000f, 39.715369000f, 1483289730, 6.442121f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 451" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.339546000f, 40.077253000f, 1491515196, 30.890362f));
+  nav.SnapToRoute(GetFixLocation(-76.012393000f, 39.715525000f, 1483289733, 5.813962f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 452" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.339859000f, 40.077397000f, 1491515197, 31.109034f));
+  nav.SnapToRoute(GetFixLocation(-76.012435000f, 39.715809000f, 1483289739, 5.303107f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 453" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.340174000f, 40.077541000f, 1491515198, 31.255108f));
+  nav.SnapToRoute(GetFixLocation(-76.012461000f, 39.716031000f, 1483289744, 4.962602f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 454" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.340489000f, 40.077686000f, 1491515199, 31.312300f));
+  nav.SnapToRoute(GetFixLocation(-76.012476000f, 39.716165000f, 1483289747, 4.990670f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 455" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.340806000f, 40.077836000f, 1491515200, 31.747536f));
+  nav.SnapToRoute(GetFixLocation(-76.012502000f, 39.716375000f, 1483289752, 4.696574f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 456" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.341126000f, 40.077980000f, 1491515201, 31.621326f));
+  nav.SnapToRoute(GetFixLocation(-76.012522000f, 39.716532000f, 1483289756, 4.390217f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 457" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.341450000f, 40.078128000f, 1491515202, 32.141384f));
+  nav.SnapToRoute(GetFixLocation(-76.012550000f, 39.716714000f, 1483289761, 4.080304f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 458" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.341772000f, 40.078277000f, 1491515203, 32.052643f));
+  nav.SnapToRoute(GetFixLocation(-76.012573000f, 39.716887000f, 1483289766, 3.871743f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 459" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.342099000f, 40.078428000f, 1491515204, 32.532246f));
+  nav.SnapToRoute(GetFixLocation(-76.012586000f, 39.716980000f, 1483289769, 3.470796f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 460" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.342423000f, 40.078573000f, 1491515205, 31.971333f));
+  nav.SnapToRoute(GetFixLocation(-76.012593000f, 39.717068000f, 1483289772, 3.271479f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 461" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.342749000f, 40.078724000f, 1491515206, 32.459248f));
+  nav.SnapToRoute(GetFixLocation(-76.012613000f, 39.717185000f, 1483289776, 3.284122f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 462" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.343076000f, 40.078876000f, 1491515207, 32.589748f));
+  nav.SnapToRoute(GetFixLocation(-76.012618000f, 39.717270000f, 1483289779, 3.157279f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 463" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.343407000f, 40.079030000f, 1491515208, 32.996479f));
+  nav.SnapToRoute(GetFixLocation(-76.012622000f, 39.717391000f, 1483289783, 3.368503f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 464" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.343747000f, 40.079179000f, 1491515209, 33.373695f));
+  nav.SnapToRoute(GetFixLocation(-76.012670000f, 39.717743000f, 1483289794, 3.581766f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 465" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.344080000f, 40.079325000f, 1491515210, 32.690281f));
+  nav.SnapToRoute(GetFixLocation(-76.012697000f, 39.717973000f, 1483289801, 3.672522f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 466" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.344419000f, 40.079464000f, 1491515211, 32.759445f));
+  nav.SnapToRoute(GetFixLocation(-76.012717000f, 39.718140000f, 1483289806, 3.733814f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 467" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.344759000f, 40.079599000f, 1491515212, 32.627018f));
+  nav.SnapToRoute(GetFixLocation(-76.012744000f, 39.718484000f, 1483289816, 3.836363f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 468" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.345101000f, 40.079731000f, 1491515213, 32.626507f));
+  nav.SnapToRoute(GetFixLocation(-76.012794000f, 39.718998000f, 1483289829, 4.413705f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 469" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.345444000f, 40.079852000f, 1491515214, 32.170925f));
+  nav.SnapToRoute(GetFixLocation(-76.012849000f, 39.719552000f, 1483289841, 5.154212f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 470" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.345788000f, 40.079970000f, 1491515215, 32.110191f));
+  nav.SnapToRoute(GetFixLocation(-76.012908000f, 39.720113000f, 1483289852, 5.695839f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 471" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.346129000f, 40.080084000f, 1491515216, 31.696259f));
+  nav.SnapToRoute(GetFixLocation(-76.012972000f, 39.720655000f, 1483289862, 6.058351f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 472" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.346476000f, 40.080192000f, 1491515217, 31.907555f));
+  nav.SnapToRoute(GetFixLocation(-76.013046000f, 39.721253000f, 1483289872, 6.686992f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 473" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.346824000f, 40.080294000f, 1491515218, 31.741415f));
+  nav.SnapToRoute(GetFixLocation(-76.013079000f, 39.721516000f, 1483289876, 7.353264f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 474" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.347174000f, 40.080390000f, 1491515219, 31.668926f));
+  nav.SnapToRoute(GetFixLocation(-76.013124000f, 39.721856000f, 1483289881, 7.608848f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 475" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.347528000f, 40.080484000f, 1491515220, 31.916124f));
+  nav.SnapToRoute(GetFixLocation(-76.013167000f, 39.722165000f, 1483289885, 8.648549f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 476" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.347888000f, 40.080573000f, 1491515221, 32.223862f));
+  nav.SnapToRoute(GetFixLocation(-76.013200000f, 39.722413000f, 1483289888, 9.250483f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 477" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.348251000f, 40.080659000f, 1491515222, 32.366722f));
+  nav.SnapToRoute(GetFixLocation(-76.013219000f, 39.722580000f, 1483289890, 9.330699f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 478" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.348616000f, 40.080739000f, 1491515223, 32.339184f));
+  nav.SnapToRoute(GetFixLocation(-76.013239000f, 39.722743000f, 1483289892, 9.112851f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 479" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.348991000f, 40.080813000f, 1491515224, 32.985683f));
+  nav.SnapToRoute(GetFixLocation(-76.013258000f, 39.722901000f, 1483289894, 8.831776f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 480" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.349367000f, 40.080885000f, 1491515225, 33.013378f));
+  nav.SnapToRoute(GetFixLocation(-76.013294000f, 39.723199000f, 1483289898, 8.329025f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 481" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.349742000f, 40.080950000f, 1491515226, 32.749790f));
+  nav.SnapToRoute(GetFixLocation(-76.013343000f, 39.723660000f, 1483289904, 8.581582f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 482" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.350121000f, 40.081012000f, 1491515227, 33.010689f));
+  nav.SnapToRoute(GetFixLocation(-76.013412000f, 39.724242000f, 1483289911, 9.293819f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 483" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.350497000f, 40.081068000f, 1491515228, 32.626652f));
+  nav.SnapToRoute(GetFixLocation(-76.013439000f, 39.724489000f, 1483289914, 9.197640f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 484" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.350870000f, 40.081129000f, 1491515229, 32.487610f));
+  nav.SnapToRoute(GetFixLocation(-76.013486000f, 39.724884000f, 1483289919, 8.830990f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 485" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.351242000f, 40.081185000f, 1491515230, 32.292244f));
+  nav.SnapToRoute(GetFixLocation(-76.013555000f, 39.725483000f, 1483289927, 8.367695f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 486" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.351614000f, 40.081245000f, 1491515231, 32.381123f));
+  nav.SnapToRoute(GetFixLocation(-76.013615000f, 39.726032000f, 1483289935, 7.666240f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 487" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.351989000f, 40.081305000f, 1491515232, 32.631168f));
+  nav.SnapToRoute(GetFixLocation(-76.013629000f, 39.726162000f, 1483289937, 7.260544f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 488" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.352361000f, 40.081361000f, 1491515233, 32.292164f));
+  nav.SnapToRoute(GetFixLocation(-76.013695000f, 39.726709000f, 1483289946, 6.794821f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 489" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.352734000f, 40.081420000f, 1491515234, 32.441669f));
+  nav.SnapToRoute(GetFixLocation(-76.013729000f, 39.727011000f, 1483289952, 5.624046f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 490" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.353109000f, 40.081473000f, 1491515235, 32.480545f));
+  nav.SnapToRoute(GetFixLocation(-76.013759000f, 39.727271000f, 1483289958, 4.842802f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 491" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.353485000f, 40.081533000f, 1491515236, 32.714436f));
+  nav.SnapToRoute(GetFixLocation(-76.013775000f, 39.727417000f, 1483289962, 4.077568f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 492" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.353856000f, 40.081594000f, 1491515237, 32.320831f));
+  nav.SnapToRoute(GetFixLocation(-76.013786000f, 39.727518000f, 1483289965, 3.760881f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 493" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.354229000f, 40.081651000f, 1491515238, 32.397224f));
+  nav.SnapToRoute(GetFixLocation(-76.013805000f, 39.727650000f, 1483289969, 3.695984f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 494" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.354599000f, 40.081708000f, 1491515239, 32.146667f));
+  nav.SnapToRoute(GetFixLocation(-76.013825000f, 39.727785000f, 1483289973, 3.781341f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 495" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.354969000f, 40.081762000f, 1491515240, 32.082394f));
+  nav.SnapToRoute(GetFixLocation(-76.013849000f, 39.728010000f, 1483289979, 4.188504f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 496" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.355340000f, 40.081822000f, 1491515241, 32.297523f));
+  nav.SnapToRoute(GetFixLocation(-76.013909000f, 39.728563000f, 1483289992, 4.751818f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 497" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.355713000f, 40.081881000f, 1491515242, 32.441460f));
+  nav.SnapToRoute(GetFixLocation(-76.013913000f, 39.728606000f, 1483289993, 4.798973f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 498" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.356089000f, 40.081936000f, 1491515243, 32.605164f));
+  nav.SnapToRoute(GetFixLocation(-76.013950000f, 39.729010000f, 1483290003, 4.508450f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 499" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.356466000f, 40.081993000f, 1491515244, 32.731232f));
+  nav.SnapToRoute(GetFixLocation(-76.013973000f, 39.729212000f, 1483290008, 4.514517f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 500" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.356850000f, 40.082052000f, 1491515245, 33.359425f));
+  nav.SnapToRoute(GetFixLocation(-76.014031000f, 39.729792000f, 1483290022, 4.625426f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 501" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.357232000f, 40.082114000f, 1491515246, 33.260094f));
+  nav.SnapToRoute(GetFixLocation(-76.014085000f, 39.730269000f, 1483290033, 4.845479f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 502" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.357621000f, 40.082174000f, 1491515247, 33.798824f));
+  nav.SnapToRoute(GetFixLocation(-76.014137000f, 39.730820000f, 1483290046, 4.730645f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 503" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.358011000f, 40.082234000f, 1491515248, 33.882294f));
+  nav.SnapToRoute(GetFixLocation(-76.014212000f, 39.731416000f, 1483290057, 6.059671f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 504" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.358398000f, 40.082294000f, 1491515249, 33.631798f));
+  nav.SnapToRoute(GetFixLocation(-76.014262000f, 39.731870000f, 1483290064, 7.245714f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 505" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.358781000f, 40.082359000f, 1491515250, 33.414028f));
+  nav.SnapToRoute(GetFixLocation(-76.014283000f, 39.732058000f, 1483290067, 7.001714f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 506" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.359166000f, 40.082415000f, 1491515251, 33.378784f));
+  nav.SnapToRoute(GetFixLocation(-76.014311000f, 39.732305000f, 1483290071, 6.900051f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 507" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.359551000f, 40.082476000f, 1491515252, 33.487171f));
+  nav.SnapToRoute(GetFixLocation(-76.014345000f, 39.732610000f, 1483290076, 6.815396f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 508" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.359934000f, 40.082537000f, 1491515253, 33.320354f));
+  nav.SnapToRoute(GetFixLocation(-76.014384000f, 39.733174000f, 1483290085, 6.985878f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 509" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.360320000f, 40.082596000f, 1491515254, 33.526196f));
+  nav.SnapToRoute(GetFixLocation(-76.014499000f, 39.733723000f, 1483290094, 6.878030f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 510" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.360705000f, 40.082657000f, 1491515255, 33.487087f));
+  nav.SnapToRoute(GetFixLocation(-76.014705000f, 39.734060000f, 1483290101, 5.921848f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 511" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.361091000f, 40.082718000f, 1491515256, 33.570465f));
+  nav.SnapToRoute(GetFixLocation(-76.014689000f, 39.734370000f, 1483290106, 6.907243f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 512" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.361474000f, 40.082776000f, 1491515257, 33.253792f));
+  nav.SnapToRoute(GetFixLocation(-76.014545000f, 39.734837000f, 1483290112, 8.904630f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 513" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.361857000f, 40.082835000f, 1491515258, 33.275555f));
+  nav.SnapToRoute(GetFixLocation(-76.014559000f, 39.735233000f, 1483290116, 11.024702f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 514" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.362238000f, 40.082894000f, 1491515259, 33.108551f));
+  nav.SnapToRoute(GetFixLocation(-76.014596000f, 39.735426000f, 1483290118, 10.858442f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 515" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.362617000f, 40.082955000f, 1491515260, 32.986694f));
+  nav.SnapToRoute(GetFixLocation(-76.014615000f, 39.735524000f, 1483290119, 11.029893f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 516" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.363000000f, 40.083018000f, 1491515261, 33.366215f));
+  nav.SnapToRoute(GetFixLocation(-76.014629000f, 39.735621000f, 1483290120, 10.864296f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 517" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.363380000f, 40.083078000f, 1491515262, 33.047310f));
+  nav.SnapToRoute(GetFixLocation(-76.014642000f, 39.735714000f, 1483290121, 10.412354f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 518" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.363764000f, 40.083137000f, 1491515263, 33.358913f));
+  nav.SnapToRoute(GetFixLocation(-76.014651000f, 39.735811000f, 1483290122, 10.825441f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 519" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.364148000f, 40.083198000f, 1491515264, 33.403435f));
+  nav.SnapToRoute(GetFixLocation(-76.014635000f, 39.736075000f, 1483290125, 9.806748f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 520" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.364531000f, 40.083256000f, 1491515265, 33.253563f));
+  nav.SnapToRoute(GetFixLocation(-76.014523000f, 39.736621000f, 1483290133, 7.691498f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 521" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.364918000f, 40.083314000f, 1491515266, 33.587807f));
+  nav.SnapToRoute(GetFixLocation(-76.014465000f, 39.736869000f, 1483290138, 5.610029f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 522" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.365300000f, 40.083374000f, 1491515267, 33.214016f));
+  nav.SnapToRoute(GetFixLocation(-76.014446000f, 39.736958000f, 1483290140, 5.020026f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 523" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.365685000f, 40.083434000f, 1491515268, 33.464325f));
+  nav.SnapToRoute(GetFixLocation(-76.014424000f, 39.737040000f, 1483290142, 4.660223f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 524" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.366070000f, 40.083494000f, 1491515269, 33.464294f));
+  nav.SnapToRoute(GetFixLocation(-76.014390000f, 39.737158000f, 1483290145, 4.484760f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 525" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.366456000f, 40.083556000f, 1491515270, 33.592762f));
+  nav.SnapToRoute(GetFixLocation(-76.014337000f, 39.737309000f, 1483290149, 4.352690f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 526" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.366843000f, 40.083613000f, 1491515271, 33.566441f));
+  nav.SnapToRoute(GetFixLocation(-76.014242000f, 39.737573000f, 1483290156, 4.356109f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 527" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.367229000f, 40.083677000f, 1491515272, 33.639153f));
+  nav.SnapToRoute(GetFixLocation(-76.014150000f, 39.737832000f, 1483290163, 4.269713f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 528" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.367615000f, 40.083744000f, 1491515273, 33.711433f));
+  nav.SnapToRoute(GetFixLocation(-76.014034000f, 39.738141000f, 1483290171, 4.475288f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 529" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.368004000f, 40.083814000f, 1491515274, 34.035530f));
+  nav.SnapToRoute(GetFixLocation(-76.013960000f, 39.738333000f, 1483290176, 4.458457f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 530" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.368386000f, 40.083894000f, 1491515275, 33.732075f));
+  nav.SnapToRoute(GetFixLocation(-76.013888000f, 39.738539000f, 1483290181, 4.749124f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 531" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.368769000f, 40.083980000f, 1491515276, 33.996204f));
+  nav.SnapToRoute(GetFixLocation(-76.013701000f, 39.739079000f, 1483290193, 5.183944f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 532" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.369148000f, 40.084071000f, 1491515277, 33.831875f));
+  nav.SnapToRoute(GetFixLocation(-76.013629000f, 39.739585000f, 1483290204, 5.151258f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 533" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.369520000f, 40.084167000f, 1491515278, 33.437183f));
+  nav.SnapToRoute(GetFixLocation(-76.013966000f, 39.740064000f, 1483290216, 5.052086f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 534" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.369886000f, 40.084265000f, 1491515279, 33.026199f));
+  nav.SnapToRoute(GetFixLocation(-76.014373000f, 39.740528000f, 1483290227, 5.663935f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 535" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.370250000f, 40.084365000f, 1491515280, 32.939995f));
+  nav.SnapToRoute(GetFixLocation(-76.014769000f, 39.740989000f, 1483290237, 6.150264f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 536" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.370604000f, 40.084474000f, 1491515281, 32.500252f));
+  nav.SnapToRoute(GetFixLocation(-76.015144000f, 39.741409000f, 1483290246, 6.301397f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 537" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.370951000f, 40.084584000f, 1491515282, 31.990347f));
+  nav.SnapToRoute(GetFixLocation(-76.015258000f, 39.741542000f, 1483290249, 5.910666f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 538" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.371291000f, 40.084696000f, 1491515283, 31.527725f));
+  nav.SnapToRoute(GetFixLocation(-76.015239000f, 39.741943000f, 1483290257, 5.583591f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 539" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.371625000f, 40.084814000f, 1491515284, 31.333063f));
+  nav.SnapToRoute(GetFixLocation(-76.015067000f, 39.742215000f, 1483290263, 5.611419f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 540" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.371956000f, 40.084936000f, 1491515285, 31.291899f));
+  nav.SnapToRoute(GetFixLocation(-76.014909000f, 39.742472000f, 1483290269, 5.274116f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 541" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.372286000f, 40.085064000f, 1491515286, 31.511478f));
+  nav.SnapToRoute(GetFixLocation(-76.014771000f, 39.742698000f, 1483290275, 4.632210f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 542" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.372620000f, 40.085196000f, 1491515287, 32.017559f));
+  nav.SnapToRoute(GetFixLocation(-76.014675000f, 39.742856000f, 1483290280, 3.882666f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 543" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.372951000f, 40.085336000f, 1491515288, 32.212025f));
+  nav.SnapToRoute(GetFixLocation(-76.014574000f, 39.743015000f, 1483290285, 3.939655f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 544" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.373276000f, 40.085477000f, 1491515289, 31.820477f));
+  nav.SnapToRoute(GetFixLocation(-76.014494000f, 39.743143000f, 1483290289, 3.952225f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 545" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.373595000f, 40.085623000f, 1491515290, 31.659023f));
+  nav.SnapToRoute(GetFixLocation(-76.014369000f, 39.743343000f, 1483290295, 4.116899f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 546" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.373913000f, 40.085771000f, 1491515291, 31.701048f));
+  nav.SnapToRoute(GetFixLocation(-76.014267000f, 39.743511000f, 1483290300, 4.127847f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 547" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.374233000f, 40.085919000f, 1491515292, 31.846647f));
+  nav.SnapToRoute(GetFixLocation(-76.014078000f, 39.743820000f, 1483290309, 4.223557f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 548" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.374556000f, 40.086071000f, 1491515293, 32.296570f));
+  nav.SnapToRoute(GetFixLocation(-76.013950000f, 39.744023000f, 1483290315, 4.185622f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 549" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.374880000f, 40.086222000f, 1491515294, 32.311039f));
+  nav.SnapToRoute(GetFixLocation(-76.013803000f, 39.744260000f, 1483290322, 4.175643f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 550" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.375200000f, 40.086369000f, 1491515295, 31.789045f));
+  nav.SnapToRoute(GetFixLocation(-76.013676000f, 39.744461000f, 1483290328, 4.146006f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 551" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.375523000f, 40.086518000f, 1491515296, 32.122707f));
+  nav.SnapToRoute(GetFixLocation(-76.013571000f, 39.744642000f, 1483290334, 3.677060f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 552" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.375842000f, 40.086667000f, 1491515297, 31.831400f));
+  nav.SnapToRoute(GetFixLocation(-76.013485000f, 39.744773000f, 1483290339, 3.267076f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 553" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.376156000f, 40.086814000f, 1491515298, 31.351900f));
+  nav.SnapToRoute(GetFixLocation(-76.013439000f, 39.744849000f, 1483290342, 3.110533f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 554" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.376474000f, 40.086962000f, 1491515299, 31.700644f));
+  nav.SnapToRoute(GetFixLocation(-76.013389000f, 39.744923000f, 1483290345, 3.094338f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 555" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.376785000f, 40.087108000f, 1491515300, 31.075785f));
+  nav.SnapToRoute(GetFixLocation(-76.013324000f, 39.745023000f, 1483290349, 3.111205f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 556" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.377101000f, 40.087257000f, 1491515301, 31.613409f));
+  nav.SnapToRoute(GetFixLocation(-76.013242000f, 39.745153000f, 1483290354, 3.216748f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 557" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.377412000f, 40.087403000f, 1491515302, 31.075687f));
+  nav.SnapToRoute(GetFixLocation(-76.013166000f, 39.745269000f, 1483290358, 3.614753f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 558" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.377716000f, 40.087548000f, 1491515303, 30.510059f));
+  nav.SnapToRoute(GetFixLocation(-76.013023000f, 39.745469000f, 1483290364, 4.234426f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 559" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.378021000f, 40.087695000f, 1491515304, 30.700409f));
+  nav.SnapToRoute(GetFixLocation(-76.012665000f, 39.745931000f, 1483290377, 4.605079f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 560" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.378327000f, 40.087837000f, 1491515305, 30.480116f));
+  nav.SnapToRoute(GetFixLocation(-76.012442000f, 39.746213000f, 1483290386, 4.082147f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 561" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.378632000f, 40.087980000f, 1491515306, 30.465302f));
+  nav.SnapToRoute(GetFixLocation(-76.012337000f, 39.746362000f, 1483290391, 3.772977f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 562" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.378938000f, 40.088125000f, 1491515307, 30.654547f));
+  nav.SnapToRoute(GetFixLocation(-76.012242000f, 39.746489000f, 1483290396, 3.261824f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 563" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.379244000f, 40.088272000f, 1491515308, 30.772314f));
+  nav.SnapToRoute(GetFixLocation(-76.012087000f, 39.746587000f, 1483290401, 3.435214f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 564" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.379553000f, 40.088419000f, 1491515309, 30.988939f));
+  nav.SnapToRoute(GetFixLocation(-76.011491000f, 39.746306000f, 1483290410, 6.648833f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 565" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.379868000f, 40.088564000f, 1491515310, 31.308626f));
+  nav.SnapToRoute(GetFixLocation(-76.011238000f, 39.746185000f, 1483290413, 8.500708f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 566" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.380180000f, 40.088712000f, 1491515311, 31.264622f));
+  nav.SnapToRoute(GetFixLocation(-76.010871000f, 39.746012000f, 1483290417, 9.211439f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 567" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.380497000f, 40.088862000f, 1491515312, 31.743816f));
+  nav.SnapToRoute(GetFixLocation(-76.010472000f, 39.745823000f, 1483290421, 10.027976f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 568" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.380810000f, 40.089013000f, 1491515313, 31.513792f));
+  nav.SnapToRoute(GetFixLocation(-76.009943000f, 39.745574000f, 1483290426, 10.617817f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 569" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.381134000f, 40.089166000f, 1491515314, 32.426407f));
+  nav.SnapToRoute(GetFixLocation(-76.009731000f, 39.745473000f, 1483290428, 10.673277f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 570" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.381453000f, 40.089314000f, 1491515315, 31.772633f));
+  nav.SnapToRoute(GetFixLocation(-76.009519000f, 39.745375000f, 1483290430, 10.586291f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 571" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.381776000f, 40.089465000f, 1491515316, 32.237217f));
+  nav.SnapToRoute(GetFixLocation(-76.009202000f, 39.745228000f, 1483290433, 10.561863f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 572" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.382105000f, 40.089617000f, 1491515317, 32.731678f));
+  nav.SnapToRoute(GetFixLocation(-76.008590000f, 39.744937000f, 1483290439, 10.265032f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 573" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.382436000f, 40.089768000f, 1491515318, 32.820393f));
+  nav.SnapToRoute(GetFixLocation(-76.007896000f, 39.744606000f, 1483290446, 9.985984f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 574" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.382769000f, 40.089920000f, 1491515319, 33.023643f));
+  nav.SnapToRoute(GetFixLocation(-76.007256000f, 39.744293000f, 1483290453, 9.274608f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 575" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.383098000f, 40.090076000f, 1491515320, 32.963905f));
+  nav.SnapToRoute(GetFixLocation(-76.006616000f, 39.743990000f, 1483290460, 9.190269f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 576" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.383431000f, 40.090233000f, 1491515321, 33.312153f));
+  nav.SnapToRoute(GetFixLocation(-76.005946000f, 39.743672000f, 1483290468, 8.424276f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 577" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.383766000f, 40.090390000f, 1491515322, 33.457218f));
+  nav.SnapToRoute(GetFixLocation(-76.005294000f, 39.743357000f, 1483290476, 8.238757f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 578" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.384101000f, 40.090546000f, 1491515323, 33.399147f));
+  nav.SnapToRoute(GetFixLocation(-76.004954000f, 39.743193000f, 1483290480, 8.588686f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 579" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.384437000f, 40.090704000f, 1491515324, 33.587914f));
+  nav.SnapToRoute(GetFixLocation(-76.004331000f, 39.742905000f, 1483290487, 8.888792f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 580" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.384772000f, 40.090861000f, 1491515325, 33.457050f));
+  nav.SnapToRoute(GetFixLocation(-76.004151000f, 39.742820000f, 1483290489, 9.040415f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 581" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.385110000f, 40.091017000f, 1491515326, 33.617474f));
+  nav.SnapToRoute(GetFixLocation(-76.003513000f, 39.742525000f, 1483290496, 9.103384f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 582" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.385443000f, 40.091175000f, 1491515327, 33.370358f));
+  nav.SnapToRoute(GetFixLocation(-76.002865000f, 39.742233000f, 1483290503, 9.184207f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 583" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.385775000f, 40.091331000f, 1491515328, 33.180897f));
+  nav.SnapToRoute(GetFixLocation(-76.002370000f, 39.742026000f, 1483290508, 9.646223f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 584" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.386109000f, 40.091487000f, 1491515329, 33.326092f));
+  nav.SnapToRoute(GetFixLocation(-76.001729000f, 39.741744000f, 1483290514, 10.535571f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 585" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.386439000f, 40.091642000f, 1491515330, 32.977394f));
+  nav.SnapToRoute(GetFixLocation(-76.001515000f, 39.741650000f, 1483290516, 10.547977f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 586" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.386774000f, 40.091801000f, 1491515331, 33.573551f));
+  nav.SnapToRoute(GetFixLocation(-76.001300000f, 39.741558000f, 1483290518, 10.530594f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 587" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.387113000f, 40.091958000f, 1491515332, 33.747597f));
+  nav.SnapToRoute(GetFixLocation(-76.000660000f, 39.741283000f, 1483290524, 10.459280f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 588" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.387450000f, 40.092117000f, 1491515333, 33.718288f));
+  nav.SnapToRoute(GetFixLocation(-75.999990000f, 39.740962000f, 1483290530, 11.262023f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 589" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.387787000f, 40.092277000f, 1491515334, 33.776798f));
+  nav.SnapToRoute(GetFixLocation(-75.999554000f, 39.740680000f, 1483290534, 12.191996f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 590" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.388125000f, 40.092435000f, 1491515335, 33.732510f));
+  nav.SnapToRoute(GetFixLocation(-75.999337000f, 39.740534000f, 1483290536, 12.340751f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 591" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.388460000f, 40.092592000f, 1491515336, 33.456429f));
+  nav.SnapToRoute(GetFixLocation(-75.999122000f, 39.740390000f, 1483290538, 12.203072f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 592" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.388798000f, 40.092748000f, 1491515337, 33.616848f));
+  nav.SnapToRoute(GetFixLocation(-75.998908000f, 39.740248000f, 1483290540, 12.097827f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 593" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.389136000f, 40.092908000f, 1491515338, 33.848961f));
+  nav.SnapToRoute(GetFixLocation(-75.998590000f, 39.740035000f, 1483290543, 12.033169f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 594" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.389476000f, 40.093065000f, 1491515339, 33.820072f));
+  nav.SnapToRoute(GetFixLocation(-75.997965000f, 39.739609000f, 1483290549, 11.915312f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 595" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.389818000f, 40.093226000f, 1491515340, 34.197193f));
+  nav.SnapToRoute(GetFixLocation(-75.997539000f, 39.739328000f, 1483290553, 12.011016f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 596" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.390160000f, 40.093386000f, 1491515341, 34.138924f));
+  nav.SnapToRoute(GetFixLocation(-75.997120000f, 39.739053000f, 1483290557, 11.788663f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 597" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.390502000f, 40.093544000f, 1491515342, 34.023239f));
+  nav.SnapToRoute(GetFixLocation(-75.996916000f, 39.738923000f, 1483290559, 11.339821f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 598" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.390843000f, 40.093705000f, 1491515343, 34.124519f));
+  nav.SnapToRoute(GetFixLocation(-75.996717000f, 39.738793000f, 1483290561, 11.175893f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 599" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.391184000f, 40.093869000f, 1491515344, 34.301037f));
+  nav.SnapToRoute(GetFixLocation(-75.996158000f, 39.738428000f, 1483290567, 10.462439f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 600" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.391527000f, 40.094028000f, 1491515345, 34.153545f));
+  nav.SnapToRoute(GetFixLocation(-75.995548000f, 39.738032000f, 1483290574, 9.762368f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 601" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.391871000f, 40.094185000f, 1491515346, 34.111740f));
+  nav.SnapToRoute(GetFixLocation(-75.994961000f, 39.737649000f, 1483290581, 9.414149f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 602" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.392209000f, 40.094344000f, 1491515347, 33.790001f));
+  nav.SnapToRoute(GetFixLocation(-75.994417000f, 39.737286000f, 1483290587, 10.275982f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 603" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.392546000f, 40.094504000f, 1491515348, 33.776001f));
+  nav.SnapToRoute(GetFixLocation(-75.994322000f, 39.737222000f, 1483290588, 10.811646f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 604" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.392886000f, 40.094663000f, 1491515349, 33.935081f));
+  nav.SnapToRoute(GetFixLocation(-75.994134000f, 39.737092000f, 1483290590, 10.821527f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 605" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.393227000f, 40.094822000f, 1491515350, 34.007710f));
+  nav.SnapToRoute(GetFixLocation(-75.993761000f, 39.736826000f, 1483290594, 10.886738f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 606" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.393567000f, 40.094977000f, 1491515351, 33.704861f));
+  nav.SnapToRoute(GetFixLocation(-75.993489000f, 39.736628000f, 1483290597, 10.687323f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 607" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.393905000f, 40.095132000f, 1491515352, 33.558613f));
+  nav.SnapToRoute(GetFixLocation(-75.992924000f, 39.736206000f, 1483290604, 9.632126f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 608" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.394247000f, 40.095281000f, 1491515353, 33.515640f));
+  nav.SnapToRoute(GetFixLocation(-75.992456000f, 39.735890000f, 1483290611, 7.616378f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 609" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.394593000f, 40.095421000f, 1491515354, 33.331959f));
+  nav.SnapToRoute(GetFixLocation(-75.992395000f, 39.735853000f, 1483290612, 6.650770f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 610" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.394941000f, 40.095553000f, 1491515355, 33.077427f));
+  nav.SnapToRoute(GetFixLocation(-75.992214000f, 39.735758000f, 1483290615, 6.253143f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 611" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.395292000f, 40.095685000f, 1491515356, 33.306446f));
+  nav.SnapToRoute(GetFixLocation(-75.992047000f, 39.735681000f, 1483290618, 5.556259f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 612" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.395650000f, 40.095812000f, 1491515357, 33.604427f));
+  nav.SnapToRoute(GetFixLocation(-75.991943000f, 39.735633000f, 1483290620, 5.191653f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 613" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.396008000f, 40.095929000f, 1491515358, 33.151436f));
+  nav.SnapToRoute(GetFixLocation(-75.991796000f, 39.735569000f, 1483290623, 4.820247f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 614" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.396371000f, 40.096045000f, 1491515359, 33.500278f));
+  nav.SnapToRoute(GetFixLocation(-75.991655000f, 39.735511000f, 1483290626, 4.562884f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 615" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.396732000f, 40.096155000f, 1491515360, 33.090210f));
+  nav.SnapToRoute(GetFixLocation(-75.991432000f, 39.735422000f, 1483290631, 4.301550f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 616" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.397092000f, 40.096258000f, 1491515361, 32.730019f));
+  nav.SnapToRoute(GetFixLocation(-75.991262000f, 39.735354000f, 1483290635, 4.100970f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 617" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.397447000f, 40.096355000f, 1491515362, 32.100735f));
+  nav.SnapToRoute(GetFixLocation(-75.991134000f, 39.735303000f, 1483290638, 4.113636f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 618" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.397800000f, 40.096444000f, 1491515363, 31.650391f));
+  nav.SnapToRoute(GetFixLocation(-75.991000000f, 39.735249000f, 1483290641, 4.316915f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 619" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.398151000f, 40.096523000f, 1491515364, 31.156322f));
+  nav.SnapToRoute(GetFixLocation(-75.990448000f, 39.735033000f, 1483290652, 4.820006f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 620" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.398497000f, 40.096597000f, 1491515365, 30.593521f));
+  nav.SnapToRoute(GetFixLocation(-75.990399000f, 39.735012000f, 1483290653, 4.802105f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 621" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.398840000f, 40.096667000f, 1491515366, 30.229710f));
+  nav.SnapToRoute(GetFixLocation(-75.990099000f, 39.734892000f, 1483290659, 4.824695f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 622" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.399180000f, 40.096729000f, 1491515367, 29.763899f));
+  nav.SnapToRoute(GetFixLocation(-75.989853000f, 39.734802000f, 1483290664, 4.664157f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 623" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.399524000f, 40.096792000f, 1491515368, 30.121037f));
+  nav.SnapToRoute(GetFixLocation(-75.989473000f, 39.734687000f, 1483290672, 4.369826f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 624" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.399872000f, 40.096850000f, 1491515369, 30.329025f));
+  nav.SnapToRoute(GetFixLocation(-75.989429000f, 39.734667000f, 1483290673, 4.375455f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 625" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.400214000f, 40.096906000f, 1491515370, 29.782587f));
+  nav.SnapToRoute(GetFixLocation(-75.989354000f, 39.734516000f, 1483290677, 4.498424f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 626" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.400552000f, 40.096955000f, 1491515371, 29.294531f));
+  nav.SnapToRoute(GetFixLocation(-75.989324000f, 39.734339000f, 1483290680, 6.623405f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 627" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.400888000f, 40.097000000f, 1491515372, 29.047104f));
+  nav.SnapToRoute(GetFixLocation(-75.989295000f, 39.734269000f, 1483290681, 8.178276f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 628" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.401226000f, 40.097048000f, 1491515373, 29.273970f));
+  nav.SnapToRoute(GetFixLocation(-75.989034000f, 39.733793000f, 1483290687, 9.584369f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 629" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.401565000f, 40.097097000f, 1491515374, 29.378141f));
+  nav.SnapToRoute(GetFixLocation(-75.989007000f, 39.733704000f, 1483290688, 10.173486f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 630" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.401907000f, 40.097146000f, 1491515375, 29.629179f));
+  nav.SnapToRoute(GetFixLocation(-75.988982000f, 39.733521000f, 1483290690, 10.241790f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 631" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.402243000f, 40.097198000f, 1491515376, 29.191502f));
+  nav.SnapToRoute(GetFixLocation(-75.988967000f, 39.733336000f, 1483290692, 10.317051f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 632" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.402560000f, 40.097242000f, 1491515377, 27.434641f));
+  nav.SnapToRoute(GetFixLocation(-75.988947000f, 39.733061000f, 1483290695, 10.220234f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 633" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.402853000f, 40.097283000f, 1491515378, 25.364164f));
+  nav.SnapToRoute(GetFixLocation(-75.988914000f, 39.732516000f, 1483290701, 10.122477f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 634" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.403134000f, 40.097319000f, 1491515379, 24.261551f));
+  nav.SnapToRoute(GetFixLocation(-75.988900000f, 39.732332000f, 1483290703, 10.258911f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 635" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.403408000f, 40.097360000f, 1491515380, 23.774403f));
+  nav.SnapToRoute(GetFixLocation(-75.988852000f, 39.731781000f, 1483290709, 10.245756f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 636" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.403680000f, 40.097397000f, 1491515381, 23.525242f));
+  nav.SnapToRoute(GetFixLocation(-75.988822000f, 39.731505000f, 1483290712, 10.277112f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 637" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.403951000f, 40.097438000f, 1491515382, 23.523718f));
+  nav.SnapToRoute(GetFixLocation(-75.988813000f, 39.731222000f, 1483290715, 10.504279f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 638" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.404228000f, 40.097482000f, 1491515383, 24.090797f));
+  nav.SnapToRoute(GetFixLocation(-75.989103000f, 39.730793000f, 1483290720, 10.764806f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 639" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.404505000f, 40.097524000f, 1491515384, 24.046503f));
+  nav.SnapToRoute(GetFixLocation(-75.989205000f, 39.730731000f, 1483290721, 11.130515f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 640" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.404785000f, 40.097565000f, 1491515385, 24.275951f));
+  nav.SnapToRoute(GetFixLocation(-75.989412000f, 39.730613000f, 1483290723, 11.029484f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 641" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.405078000f, 40.097606000f, 1491515386, 25.364048f));
+  nav.SnapToRoute(GetFixLocation(-75.989618000f, 39.730498000f, 1483290725, 10.896215f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 642" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.405375000f, 40.097649000f, 1491515387, 25.739634f));
+  nav.SnapToRoute(GetFixLocation(-75.989818000f, 39.730384000f, 1483290727, 10.656208f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 643" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.405681000f, 40.097696000f, 1491515388, 26.577074f));
+  nav.SnapToRoute(GetFixLocation(-75.990429000f, 39.730082000f, 1483290733, 10.363402f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 644" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.405994000f, 40.097744000f, 1491515389, 27.183382f));
+  nav.SnapToRoute(GetFixLocation(-75.991163000f, 39.729850000f, 1483290740, 9.705617f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 645" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.406313000f, 40.097790000f, 1491515390, 27.642391f));
+  nav.SnapToRoute(GetFixLocation(-75.991848000f, 39.729661000f, 1483290747, 8.900606f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 646" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.406633000f, 40.097835000f, 1491515391, 27.705715f));
+  nav.SnapToRoute(GetFixLocation(-75.992534000f, 39.729469000f, 1483290755, 7.812300f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 647" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.406956000f, 40.097880000f, 1491515392, 27.956985f));
+  nav.SnapToRoute(GetFixLocation(-75.992980000f, 39.729341000f, 1483290761, 6.792544f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 648" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.407284000f, 40.097925000f, 1491515393, 28.375946f));
+  nav.SnapToRoute(GetFixLocation(-75.993457000f, 39.729203000f, 1483290768, 6.233027f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 649" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.407611000f, 40.097971000f, 1491515394, 28.312037f));
+  nav.SnapToRoute(GetFixLocation(-75.993786000f, 39.729111000f, 1483290773, 5.994155f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 650" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.407940000f, 40.098020000f, 1491515395, 28.541470f));
+  nav.SnapToRoute(GetFixLocation(-75.994459000f, 39.728919000f, 1483290783, 6.145415f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 651" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.408269000f, 40.098074000f, 1491515396, 28.653030f));
+  nav.SnapToRoute(GetFixLocation(-75.995113000f, 39.728703000f, 1483290793, 6.093581f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 652" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.408606000f, 40.098129000f, 1491515397, 29.342447f));
+  nav.SnapToRoute(GetFixLocation(-75.995639000f, 39.728331000f, 1483290801, 7.647319f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 653" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.408938000f, 40.098188000f, 1491515398, 29.023678f));
+  nav.SnapToRoute(GetFixLocation(-75.996230000f, 39.727942000f, 1483290808, 9.514043f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 654" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.409269000f, 40.098257000f, 1491515399, 29.213469f));
+  nav.SnapToRoute(GetFixLocation(-75.996447000f, 39.727837000f, 1483290810, 10.974714f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 655" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.409596000f, 40.098328000f, 1491515400, 28.944952f));
+  nav.SnapToRoute(GetFixLocation(-75.996554000f, 39.727778000f, 1483290811, 11.271926f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 656" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.409922000f, 40.098403000f, 1491515401, 28.988113f));
+  nav.SnapToRoute(GetFixLocation(-75.996646000f, 39.727704000f, 1483290812, 11.397319f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 657" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.410243000f, 40.098481000f, 1491515402, 28.679958f));
+  nav.SnapToRoute(GetFixLocation(-75.996746000f, 39.727506000f, 1483290814, 11.822819f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 658" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.410565000f, 40.098560000f, 1491515403, 28.794899f));
+  nav.SnapToRoute(GetFixLocation(-75.996755000f, 39.727285000f, 1483290816, 12.306836f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 659" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.410886000f, 40.098642000f, 1491515404, 28.817831f));
+  nav.SnapToRoute(GetFixLocation(-75.996744000f, 39.727174000f, 1483290817, 12.392301f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 660" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.411203000f, 40.098731000f, 1491515405, 28.754034f));
+  nav.SnapToRoute(GetFixLocation(-75.996728000f, 39.727063000f, 1483290818, 12.432163f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 661" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.411518000f, 40.098827000f, 1491515406, 28.873430f));
+  nav.SnapToRoute(GetFixLocation(-75.996709000f, 39.726951000f, 1483290819, 12.573455f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 662" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.411835000f, 40.098926000f, 1491515407, 29.156258f));
+  nav.SnapToRoute(GetFixLocation(-75.996691000f, 39.726839000f, 1483290820, 12.562665f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 663" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.412151000f, 40.099032000f, 1491515408, 29.381592f));
+  nav.SnapToRoute(GetFixLocation(-75.996667000f, 39.726612000f, 1483290822, 12.676464f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 664" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.412468000f, 40.099141000f, 1491515409, 29.594904f));
+  nav.SnapToRoute(GetFixLocation(-75.996652000f, 39.726383000f, 1483290824, 12.762246f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 665" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.412784000f, 40.099254000f, 1491515410, 29.703035f));
+  nav.SnapToRoute(GetFixLocation(-75.996642000f, 39.726268000f, 1483290825, 12.830339f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 666" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.413104000f, 40.099371000f, 1491515411, 30.201233f));
+  nav.SnapToRoute(GetFixLocation(-75.996616000f, 39.726029000f, 1483290827, 13.349160f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 667" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.413426000f, 40.099493000f, 1491515412, 30.597881f));
+  nav.SnapToRoute(GetFixLocation(-75.996593000f, 39.725794000f, 1483290829, 13.117045f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 668" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.413745000f, 40.099621000f, 1491515413, 30.673645f));
+  nav.SnapToRoute(GetFixLocation(-75.996566000f, 39.725565000f, 1483290831, 12.798381f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 669" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.414067000f, 40.099752000f, 1491515414, 31.055456f));
+  nav.SnapToRoute(GetFixLocation(-75.996537000f, 39.725343000f, 1483290833, 12.418672f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 670" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.414390000f, 40.099885000f, 1491515415, 31.235527f));
+  nav.SnapToRoute(GetFixLocation(-75.996487000f, 39.724914000f, 1483290837, 11.986887f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 671" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.414717000f, 40.100016000f, 1491515416, 31.431892f));
+  nav.SnapToRoute(GetFixLocation(-75.996409000f, 39.724304000f, 1483290843, 11.372082f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 672" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.415045000f, 40.100151000f, 1491515417, 31.715851f));
+  nav.SnapToRoute(GetFixLocation(-75.996352000f, 39.723722000f, 1483290849, 10.828583f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 673" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.415373000f, 40.100283000f, 1491515418, 31.558929f));
+  nav.SnapToRoute(GetFixLocation(-75.996342000f, 39.723627000f, 1483290850, 10.609955f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 674" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.415702000f, 40.100411000f, 1491515419, 31.429907f));
+  nav.SnapToRoute(GetFixLocation(-75.996286000f, 39.723071000f, 1483290856, 10.346513f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 675" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.416032000f, 40.100541000f, 1491515420, 31.607094f));
+  nav.SnapToRoute(GetFixLocation(-75.996227000f, 39.722523000f, 1483290863, 8.744555f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 676" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.416359000f, 40.100672000f, 1491515421, 31.431656f));
+  nav.SnapToRoute(GetFixLocation(-75.996207000f, 39.722388000f, 1483290865, 7.562690f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 677" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.416685000f, 40.100803000f, 1491515422, 31.356201f));
+  nav.SnapToRoute(GetFixLocation(-75.996186000f, 39.722179000f, 1483290868, 7.778383f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 678" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.417011000f, 40.100934000f, 1491515423, 31.356155f));
+  nav.SnapToRoute(GetFixLocation(-75.996123000f, 39.721578000f, 1483290875, 9.588589f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 679" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.417336000f, 40.101062000f, 1491515424, 31.126465f));
+  nav.SnapToRoute(GetFixLocation(-75.996058000f, 39.721036000f, 1483290881, 10.098551f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 680" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.417663000f, 40.101196000f, 1491515425, 31.587793f));
+  nav.SnapToRoute(GetFixLocation(-75.996011000f, 39.720625000f, 1483290886, 9.185791f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 681" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.417989000f, 40.101333000f, 1491515426, 31.672161f));
+  nav.SnapToRoute(GetFixLocation(-75.995953000f, 39.720097000f, 1483290894, 7.373265f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 682" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.418314000f, 40.101465000f, 1491515427, 31.332659f));
+  nav.SnapToRoute(GetFixLocation(-75.995943000f, 39.719941000f, 1483290897, 5.795646f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 683" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.418637000f, 40.101601000f, 1491515428, 31.394592f));
+  nav.SnapToRoute(GetFixLocation(-75.995942000f, 39.719891000f, 1483290898, 5.566633f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 684" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.418960000f, 40.101736000f, 1491515429, 31.341013f));
+  nav.SnapToRoute(GetFixLocation(-75.995946000f, 39.719792000f, 1483290900, 5.512975f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 685" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.419281000f, 40.101870000f, 1491515430, 31.138149f));
+  nav.SnapToRoute(GetFixLocation(-75.995951000f, 39.719638000f, 1483290903, 5.716182f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 686" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.419604000f, 40.102006000f, 1491515431, 31.394447f));
+  nav.SnapToRoute(GetFixLocation(-75.995952000f, 39.719491000f, 1483290906, 5.454730f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 687" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.419923000f, 40.102142000f, 1491515432, 31.096460f));
+  nav.SnapToRoute(GetFixLocation(-75.995940000f, 39.719308000f, 1483290910, 5.099341f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 688" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.420239000f, 40.102272000f, 1491515433, 30.551559f));
+  nav.SnapToRoute(GetFixLocation(-75.995920000f, 39.719121000f, 1483290914, 5.221766f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 689" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.420558000f, 40.102402000f, 1491515434, 30.776720f));
+  nav.SnapToRoute(GetFixLocation(-75.995885000f, 39.718784000f, 1483290921, 5.376312f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 690" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.420883000f, 40.102531000f, 1491515435, 31.177052f));
+  nav.SnapToRoute(GetFixLocation(-75.995851000f, 39.718437000f, 1483290928, 5.533916f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 691" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.421202000f, 40.102659000f, 1491515436, 30.672571f));
+  nav.SnapToRoute(GetFixLocation(-75.995811000f, 39.717898000f, 1483290939, 5.463535f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 692" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.421521000f, 40.102786000f, 1491515437, 30.620972f));
+  nav.SnapToRoute(GetFixLocation(-75.995808000f, 39.717850000f, 1483290940, 5.349507f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 693" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.421842000f, 40.102916000f, 1491515438, 30.926935f));
+  nav.SnapToRoute(GetFixLocation(-75.995788000f, 39.717614000f, 1483290945, 5.265431f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 694" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.422166000f, 40.103046000f, 1491515439, 31.152868f));
+  nav.SnapToRoute(GetFixLocation(-75.995756000f, 39.717032000f, 1483290956, 5.895078f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 695" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.422496000f, 40.103178000f, 1491515440, 31.708685f));
+  nav.SnapToRoute(GetFixLocation(-75.995717000f, 39.716457000f, 1483290965, 7.121751f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 696" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.422821000f, 40.103309000f, 1491515441, 31.279943f));
+  nav.SnapToRoute(GetFixLocation(-75.995675000f, 39.715958000f, 1483290972, 7.952104f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 697" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.423149000f, 40.103445000f, 1491515442, 31.767559f));
+  nav.SnapToRoute(GetFixLocation(-75.995648000f, 39.715659000f, 1483290976, 8.341182f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 698" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.423475000f, 40.103580000f, 1491515443, 31.564753f));
+  nav.SnapToRoute(GetFixLocation(-75.995619000f, 39.715342000f, 1483290980, 8.843886f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 699" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.423799000f, 40.103711000f, 1491515444, 31.204498f));
+  nav.SnapToRoute(GetFixLocation(-75.995579000f, 39.714911000f, 1483290985, 9.620162f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 700" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.424122000f, 40.103842000f, 1491515445, 31.129200f));
+  nav.SnapToRoute(GetFixLocation(-75.995547000f, 39.714420000f, 1483290990, 10.945303f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 701" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.424451000f, 40.103971000f, 1491515446, 31.479225f));
+  nav.SnapToRoute(GetFixLocation(-75.995521000f, 39.714019000f, 1483290994, 11.173651f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 702" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.424780000f, 40.104099000f, 1491515447, 31.428553f));
+  nav.SnapToRoute(GetFixLocation(-75.995507000f, 39.713811000f, 1483290996, 11.592734f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 703" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.425104000f, 40.104228000f, 1491515448, 31.100889f));
+  nav.SnapToRoute(GetFixLocation(-75.995501000f, 39.713708000f, 1483290997, 11.477413f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 704" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.425428000f, 40.104357000f, 1491515449, 31.100842f));
+  nav.SnapToRoute(GetFixLocation(-75.995493000f, 39.713402000f, 1483291000, 11.356884f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 705" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.425750000f, 40.104490000f, 1491515450, 31.158943f));
+  nav.SnapToRoute(GetFixLocation(-75.995479000f, 39.712899000f, 1483291005, 11.201307f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 706" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.426075000f, 40.104619000f, 1491515451, 31.176298f));
+  nav.SnapToRoute(GetFixLocation(-75.995443000f, 39.712326000f, 1483291011, 10.643420f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 707" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.426403000f, 40.104747000f, 1491515452, 31.352448f));
+  nav.SnapToRoute(GetFixLocation(-75.995423000f, 39.712145000f, 1483291013, 10.110744f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 708" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.426727000f, 40.104878000f, 1491515453, 31.204081f));
+  nav.SnapToRoute(GetFixLocation(-75.995373000f, 39.711563000f, 1483291020, 9.275611f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 709" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.427050000f, 40.105008000f, 1491515454, 31.076790f));
+  nav.SnapToRoute(GetFixLocation(-75.995358000f, 39.711226000f, 1483291025, 7.507331f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 710" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.427379000f, 40.105144000f, 1491515455, 31.841825f));
+  nav.SnapToRoute(GetFixLocation(-75.995350000f, 39.711051000f, 1483291028, 6.497651f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 711" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.427711000f, 40.105277000f, 1491515456, 31.910408f));
+  nav.SnapToRoute(GetFixLocation(-75.995339000f, 39.710882000f, 1483291031, 6.278854f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 712" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.428045000f, 40.105412000f, 1491515457, 32.164726f));
+  nav.SnapToRoute(GetFixLocation(-75.995332000f, 39.710765000f, 1483291033, 6.519084f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 713" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.428382000f, 40.105545000f, 1491515458, 32.288036f));
+  nav.SnapToRoute(GetFixLocation(-75.995297000f, 39.710159000f, 1483291042, 7.502907f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 714" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.428717000f, 40.105678000f, 1491515459, 32.136753f));
+  nav.SnapToRoute(GetFixLocation(-75.995266000f, 39.709566000f, 1483291049, 9.437974f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 715" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.429050000f, 40.105817000f, 1491515460, 32.300251f));
+  nav.SnapToRoute(GetFixLocation(-75.995249000f, 39.709309000f, 1483291052, 9.548709f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 716" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.429382000f, 40.105955000f, 1491515461, 32.172184f));
+  nav.SnapToRoute(GetFixLocation(-75.995222000f, 39.708978000f, 1483291056, 9.229807f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 717" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.429716000f, 40.106090000f, 1491515462, 32.164474f));
+  nav.SnapToRoute(GetFixLocation(-75.995162000f, 39.708431000f, 1483291063, 8.729739f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 718" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.430056000f, 40.106227000f, 1491515463, 32.720142f));
+  nav.SnapToRoute(GetFixLocation(-75.995129000f, 39.707824000f, 1483291071, 8.453751f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 719" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.430397000f, 40.106363000f, 1491515464, 32.743824f));
+  nav.SnapToRoute(GetFixLocation(-75.995170000f, 39.707217000f, 1483291077, 11.277017f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 720" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.430734000f, 40.106501000f, 1491515465, 32.546665f));
+  nav.SnapToRoute(GetFixLocation(-75.995182000f, 39.707108000f, 1483291078, 12.177267f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 721" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.431072000f, 40.106636000f, 1491515466, 32.465771f));
+  nav.SnapToRoute(GetFixLocation(-75.995214000f, 39.706888000f, 1483291080, 12.321571f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 722" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.431407000f, 40.106771000f, 1491515467, 32.239525f));
+  nav.SnapToRoute(GetFixLocation(-75.995249000f, 39.706674000f, 1483291082, 12.005102f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 723" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.431743000f, 40.106906000f, 1491515468, 32.314823f));
+  nav.SnapToRoute(GetFixLocation(-75.995266000f, 39.706570000f, 1483291083, 11.668411f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 724" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.432083000f, 40.107042000f, 1491515469, 32.668098f));
+  nav.SnapToRoute(GetFixLocation(-75.995307000f, 39.706375000f, 1483291085, 10.994726f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 725" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.432420000f, 40.107179000f, 1491515470, 32.494019f));
+  nav.SnapToRoute(GetFixLocation(-75.995335000f, 39.706180000f, 1483291087, 10.919674f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 726" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.432757000f, 40.107314000f, 1491515471, 32.390072f));
+  nav.SnapToRoute(GetFixLocation(-75.995364000f, 39.705802000f, 1483291091, 10.538000f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 727" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.433096000f, 40.107447000f, 1491515472, 32.438744f));
+  nav.SnapToRoute(GetFixLocation(-75.995395000f, 39.705394000f, 1483291096, 9.099176f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 728" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.433436000f, 40.107588000f, 1491515473, 32.929531f));
+  nav.SnapToRoute(GetFixLocation(-75.995429000f, 39.705108000f, 1483291100, 7.992564f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 729" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.433773000f, 40.107723000f, 1491515474, 32.389919f));
+  nav.SnapToRoute(GetFixLocation(-75.995443000f, 39.704967000f, 1483291102, 7.870888f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 730" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.434115000f, 40.107859000f, 1491515475, 32.818775f));
+  nav.SnapToRoute(GetFixLocation(-75.995454000f, 39.704830000f, 1483291104, 7.639920f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 731" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.434457000f, 40.107997000f, 1491515476, 32.922020f));
+  nav.SnapToRoute(GetFixLocation(-75.995510000f, 39.704288000f, 1483291112, 7.565685f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 732" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.434800000f, 40.108138000f, 1491515477, 33.154087f));
+  nav.SnapToRoute(GetFixLocation(-75.995520000f, 39.704164000f, 1483291114, 6.915080f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 733" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.435145000f, 40.108276000f, 1491515478, 33.148037f));
+  nav.SnapToRoute(GetFixLocation(-75.995546000f, 39.703739000f, 1483291125, 4.305742f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 734" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.435487000f, 40.108417000f, 1491515479, 33.079014f));
+  nav.SnapToRoute(GetFixLocation(-75.995484000f, 39.703590000f, 1483291130, 3.483166f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 735" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.435829000f, 40.108552000f, 1491515480, 32.767307f));
+  nav.SnapToRoute(GetFixLocation(-75.995463000f, 39.703551000f, 1483291131, 4.699257f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 736" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.436168000f, 40.108689000f, 1491515481, 32.643913f));
+  nav.SnapToRoute(GetFixLocation(-75.995430000f, 39.703244000f, 1483291137, 5.715292f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 737" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.436506000f, 40.108825000f, 1491515482, 32.516632f));
+  nav.SnapToRoute(GetFixLocation(-75.995396000f, 39.702682000f, 1483291147, 6.262928f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 738" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.436844000f, 40.108960000f, 1491515483, 32.464901f));
+  nav.SnapToRoute(GetFixLocation(-75.995341000f, 39.702092000f, 1483291156, 7.316356f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 739" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.437187000f, 40.109095000f, 1491515484, 32.842781f));
+  nav.SnapToRoute(GetFixLocation(-75.995302000f, 39.701592000f, 1483291163, 7.965697f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 740" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.437531000f, 40.109227000f, 1491515485, 32.767345f));
+  nav.SnapToRoute(GetFixLocation(-75.995257000f, 39.701052000f, 1483291171, 7.529494f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 741" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.437877000f, 40.109356000f, 1491515486, 32.771873f));
+  nav.SnapToRoute(GetFixLocation(-75.995239000f, 39.700878000f, 1483291174, 6.476949f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 742" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.438225000f, 40.109488000f, 1491515487, 33.071987f));
+  nav.SnapToRoute(GetFixLocation(-75.995211000f, 39.700670000f, 1483291178, 5.819578f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 743" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.438572000f, 40.109629000f, 1491515488, 33.453884f));
+  nav.SnapToRoute(GetFixLocation(-75.995193000f, 39.700529000f, 1483291181, 5.257193f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 744" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.438920000f, 40.109771000f, 1491515489, 33.581295f));
+  nav.SnapToRoute(GetFixLocation(-75.995175000f, 39.700400000f, 1483291184, 4.814244f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 745" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.439267000f, 40.109913000f, 1491515490, 33.506149f));
+  nav.SnapToRoute(GetFixLocation(-75.995159000f, 39.700270000f, 1483291187, 4.845424f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 746" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.439611000f, 40.110055000f, 1491515491, 33.281109f));
+  nav.SnapToRoute(GetFixLocation(-75.995093000f, 39.699711000f, 1483291197, 6.248383f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 747" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.439954000f, 40.110200000f, 1491515492, 33.366428f));
+  nav.SnapToRoute(GetFixLocation(-75.995030000f, 39.699089000f, 1483291204, 9.921523f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 748" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.440289000f, 40.110344000f, 1491515493, 32.717243f));
+  nav.SnapToRoute(GetFixLocation(-75.995021000f, 39.698987000f, 1483291205, 11.380724f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 749" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.440620000f, 40.110487000f, 1491515494, 32.365849f));
+  nav.SnapToRoute(GetFixLocation(-75.995002000f, 39.698780000f, 1483291207, 11.550263f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 750" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.440947000f, 40.110633000f, 1491515495, 32.236797f));
+  nav.SnapToRoute(GetFixLocation(-75.994986000f, 39.698569000f, 1483291209, 11.764178f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 751" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.441274000f, 40.110780000f, 1491515496, 32.293011f));
+  nav.SnapToRoute(GetFixLocation(-75.994974000f, 39.698360000f, 1483291211, 11.644233f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 752" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.441598000f, 40.110931000f, 1491515497, 32.302483f));
+  nav.SnapToRoute(GetFixLocation(-75.994963000f, 39.698153000f, 1483291213, 11.531194f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 753" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.441921000f, 40.111079000f, 1491515498, 32.056854f));
+  nav.SnapToRoute(GetFixLocation(-75.994953000f, 39.697948000f, 1483291215, 11.418282f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 754" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.442238000f, 40.111231000f, 1491515499, 31.853973f));
+  nav.SnapToRoute(GetFixLocation(-75.994927000f, 39.697650000f, 1483291218, 11.082624f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 755" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.442551000f, 40.111386000f, 1491515500, 31.746178f));
+  nav.SnapToRoute(GetFixLocation(-75.994869000f, 39.697102000f, 1483291224, 10.200838f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 756" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.442864000f, 40.111541000f, 1491515501, 31.746128f));
+  nav.SnapToRoute(GetFixLocation(-75.994795000f, 39.696502000f, 1483291232, 8.386471f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 757" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.443175000f, 40.111695000f, 1491515502, 31.542646f));
+  nav.SnapToRoute(GetFixLocation(-75.994769000f, 39.696276000f, 1483291236, 6.314145f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 758" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.443486000f, 40.111850000f, 1491515503, 31.603235f));
+  nav.SnapToRoute(GetFixLocation(-75.994752000f, 39.696132000f, 1483291239, 5.365335f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 759" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.443799000f, 40.112007000f, 1491515504, 31.867531f));
+  nav.SnapToRoute(GetFixLocation(-75.994745000f, 39.696045000f, 1483291241, 4.851669f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 760" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.444109000f, 40.112161000f, 1491515505, 31.471064f));
+  nav.SnapToRoute(GetFixLocation(-75.994738000f, 39.695963000f, 1483291243, 4.573934f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 761" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.444418000f, 40.112315000f, 1491515506, 31.399652f));
+  nav.SnapToRoute(GetFixLocation(-75.994738000f, 39.695851000f, 1483291246, 4.155928f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 762" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.444729000f, 40.112471000f, 1491515507, 31.663948f));
+  nav.SnapToRoute(GetFixLocation(-75.994702000f, 39.695677000f, 1483291250, 4.903375f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 763" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.445039000f, 40.112629000f, 1491515508, 31.715668f));
+  nav.SnapToRoute(GetFixLocation(-75.994672000f, 39.695362000f, 1483291256, 5.859944f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 764" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.445346000f, 40.112782000f, 1491515509, 31.196072f));
+  nav.SnapToRoute(GetFixLocation(-75.994596000f, 39.694822000f, 1483291266, 6.046398f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 765" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.445657000f, 40.112936000f, 1491515510, 31.542240f));
+  nav.SnapToRoute(GetFixLocation(-75.994562000f, 39.694551000f, 1483291272, 5.051305f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 766" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.445961000f, 40.113087000f, 1491515511, 30.860477f));
+  nav.SnapToRoute(GetFixLocation(-75.994552000f, 39.694510000f, 1483291273, 4.643780f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 767" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.446270000f, 40.113239000f, 1491515512, 31.278355f));
+  nav.SnapToRoute(GetFixLocation(-75.994598000f, 39.694243000f, 1483291281, 3.747792f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 768" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.446585000f, 40.113393000f, 1491515513, 31.828478f));
+  nav.SnapToRoute(GetFixLocation(-75.995288000f, 39.693985000f, 1483291292, 5.973788f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 769" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.446895000f, 40.113551000f, 1491515514, 31.715370f));
+  nav.SnapToRoute(GetFixLocation(-75.995730000f, 39.693841000f, 1483291298, 6.852334f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 770" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.447205000f, 40.113706000f, 1491515515, 31.531340f));
+  nav.SnapToRoute(GetFixLocation(-75.996401000f, 39.693616000f, 1483291307, 6.966246f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 771" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.447516000f, 40.113864000f, 1491515516, 31.786146f));
+  nav.SnapToRoute(GetFixLocation(-75.997105000f, 39.693385000f, 1483291316, 7.284065f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 772" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.447828000f, 40.114020000f, 1491515517, 31.734665f));
+  nav.SnapToRoute(GetFixLocation(-75.997187000f, 39.693360000f, 1483291317, 7.555149f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 773" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.448141000f, 40.114176000f, 1491515518, 31.805904f));
+  nav.SnapToRoute(GetFixLocation(-75.997842000f, 39.693156000f, 1483291325, 7.565913f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 774" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.448456000f, 40.114337000f, 1491515519, 32.254559f));
+  nav.SnapToRoute(GetFixLocation(-75.998079000f, 39.693076000f, 1483291328, 7.389441f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 775" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.448773000f, 40.114496000f, 1491515520, 32.273567f));
+  nav.SnapToRoute(GetFixLocation(-75.998148000f, 39.693038000f, 1483291329, 7.268202f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 776" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.449091000f, 40.114658000f, 1491515521, 32.528687f));
+  nav.SnapToRoute(GetFixLocation(-75.998249000f, 39.692730000f, 1483291334, 7.072214f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 777" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.449415000f, 40.114819000f, 1491515522, 32.894173f));
+  nav.SnapToRoute(GetFixLocation(-75.998228000f, 39.692121000f, 1483291343, 7.535270f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 778" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.449739000f, 40.114976000f, 1491515523, 32.653645f));
+  nav.SnapToRoute(GetFixLocation(-75.998218000f, 39.691597000f, 1483291350, 8.333958f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 779" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.450060000f, 40.115130000f, 1491515524, 32.259441f));
+  nav.SnapToRoute(GetFixLocation(-75.998204000f, 39.691056000f, 1483291357, 8.605112f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 780" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.450385000f, 40.115286000f, 1491515525, 32.666164f));
+  nav.SnapToRoute(GetFixLocation(-75.998176000f, 39.690425000f, 1483291364, 10.040505f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 781" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.450702000f, 40.115443000f, 1491515526, 32.151688f));
+  nav.SnapToRoute(GetFixLocation(-75.998172000f, 39.690324000f, 1483291365, 11.248488f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 782" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.451021000f, 40.115603000f, 1491515527, 32.476624f));
+  nav.SnapToRoute(GetFixLocation(-75.998158000f, 39.690025000f, 1483291368, 11.102042f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 783" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.451345000f, 40.115763000f, 1491515528, 32.833332f));
+  nav.SnapToRoute(GetFixLocation(-75.998155000f, 39.689826000f, 1483291370, 11.077035f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 784" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.451669000f, 40.115926000f, 1491515529, 33.015633f));
+  nav.SnapToRoute(GetFixLocation(-75.998158000f, 39.689726000f, 1483291371, 11.134915f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 785" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.451983000f, 40.116087000f, 1491515530, 32.183243f));
+  nav.SnapToRoute(GetFixLocation(-75.998163000f, 39.689624000f, 1483291372, 11.362663f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 786" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.452302000f, 40.116249000f, 1491515531, 32.599045f));
+  nav.SnapToRoute(GetFixLocation(-75.998177000f, 39.689418000f, 1483291374, 11.481577f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 787" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.452618000f, 40.116412000f, 1491515532, 32.448662f));
+  nav.SnapToRoute(GetFixLocation(-75.998226000f, 39.688992000f, 1483291378, 11.901876f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 788" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.452937000f, 40.116570000f, 1491515533, 32.354733f));
+  nav.SnapToRoute(GetFixLocation(-75.998264000f, 39.688665000f, 1483291381, 12.182243f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 789" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.453257000f, 40.116730000f, 1491515534, 32.547466f));
+  nav.SnapToRoute(GetFixLocation(-75.998286000f, 39.688449000f, 1483291383, 12.059376f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 790" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.453578000f, 40.116888000f, 1491515535, 32.497665f));
+  nav.SnapToRoute(GetFixLocation(-75.998315000f, 39.688121000f, 1483291386, 12.199069f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 791" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.453899000f, 40.117047000f, 1491515536, 32.557995f));
+  nav.SnapToRoute(GetFixLocation(-75.998326000f, 39.687904000f, 1483291388, 12.087351f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 792" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.454222000f, 40.117205000f, 1491515537, 32.640854f));
+  nav.SnapToRoute(GetFixLocation(-75.998328000f, 39.687582000f, 1483291391, 11.948428f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 793" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.454542000f, 40.117364000f, 1491515538, 32.486469f));
+  nav.SnapToRoute(GetFixLocation(-75.998300000f, 39.686985000f, 1483291397, 11.083501f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 794" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.454860000f, 40.117527000f, 1491515539, 32.589584f));
+  nav.SnapToRoute(GetFixLocation(-75.998297000f, 39.686530000f, 1483291402, 10.130204f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 795" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.455183000f, 40.117689000f, 1491515540, 32.882767f));
+  nav.SnapToRoute(GetFixLocation(-75.998297000f, 39.686045000f, 1483291408, 8.998325f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 796" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.455504000f, 40.117851000f, 1491515541, 32.740479f));
+  nav.SnapToRoute(GetFixLocation(-75.998286000f, 39.685844000f, 1483291411, 7.465017f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 797" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.455824000f, 40.118013000f, 1491515542, 32.669407f));
+  nav.SnapToRoute(GetFixLocation(-75.998255000f, 39.685665000f, 1483291414, 6.700793f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 798" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.456145000f, 40.118174000f, 1491515543, 32.679184f));
+  nav.SnapToRoute(GetFixLocation(-75.998239000f, 39.685608000f, 1483291415, 6.491567f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 799" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.456466000f, 40.118335000f, 1491515544, 32.679131f));
+  nav.SnapToRoute(GetFixLocation(-75.998215000f, 39.685552000f, 1483291416, 6.564189f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 800" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.456786000f, 40.118491000f, 1491515545, 32.305347f));
+  nav.SnapToRoute(GetFixLocation(-75.998097000f, 39.685398000f, 1483291419, 6.633884f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 801" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.457107000f, 40.118648000f, 1491515546, 32.436954f));
+  nav.SnapToRoute(GetFixLocation(-75.998049000f, 39.685351000f, 1483291420, 6.654531f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 802" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.457429000f, 40.118809000f, 1491515547, 32.750187f));
+  nav.SnapToRoute(GetFixLocation(-75.997894000f, 39.685211000f, 1483291423, 6.824800f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 803" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.457752000f, 40.118972000f, 1491515548, 32.943516f));
+  nav.SnapToRoute(GetFixLocation(-75.997420000f, 39.684810000f, 1483291432, 6.705019f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 804" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.458069000f, 40.119135000f, 1491515549, 32.518375f));
+  nav.SnapToRoute(GetFixLocation(-75.997066000f, 39.684502000f, 1483291439, 6.539139f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 805" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.458389000f, 40.119293000f, 1491515550, 32.425304f));
+  nav.SnapToRoute(GetFixLocation(-75.996603000f, 39.684040000f, 1483291449, 6.494833f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 806" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.458708000f, 40.119451000f, 1491515551, 32.353767f));
+  nav.SnapToRoute(GetFixLocation(-75.996188000f, 39.683570000f, 1483291457, 7.907074f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 807" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.459028000f, 40.119608000f, 1491515552, 32.364948f));
+  nav.SnapToRoute(GetFixLocation(-75.995857000f, 39.683187000f, 1483291462, 10.240853f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 808" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.459346000f, 40.119765000f, 1491515553, 32.221733f));
+  nav.SnapToRoute(GetFixLocation(-75.995721000f, 39.683026000f, 1483291464, 10.688344f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 809" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.459666000f, 40.119924000f, 1491515554, 32.485611f));
+  nav.SnapToRoute(GetFixLocation(-75.995528000f, 39.682788000f, 1483291467, 10.410037f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 810" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.459985000f, 40.120083000f, 1491515555, 32.414207f));
+  nav.SnapToRoute(GetFixLocation(-75.995396000f, 39.682637000f, 1483291469, 10.129577f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 811" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.460304000f, 40.120242000f, 1491515556, 32.414154f));
+  nav.SnapToRoute(GetFixLocation(-75.994907000f, 39.682254000f, 1483291475, 9.962158f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 812" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.460627000f, 40.120401000f, 1491515557, 32.699886f));
+  nav.SnapToRoute(GetFixLocation(-75.994719000f, 39.682158000f, 1483291477, 9.664555f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 813" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.460946000f, 40.120561000f, 1491515558, 32.474968f));
+  nav.SnapToRoute(GetFixLocation(-75.994120000f, 39.681860000f, 1483291484, 8.729401f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 814" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.461265000f, 40.120721000f, 1491515559, 32.474915f));
+  nav.SnapToRoute(GetFixLocation(-75.993685000f, 39.681636000f, 1483291490, 7.473341f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 815" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.461580000f, 40.120880000f, 1491515560, 32.129227f));
+  nav.SnapToRoute(GetFixLocation(-75.993424000f, 39.681487000f, 1483291494, 6.960168f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 816" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.461895000f, 40.121037000f, 1491515561, 32.007065f));
+  nav.SnapToRoute(GetFixLocation(-75.993189000f, 39.681332000f, 1483291498, 6.628797f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 817" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.462208000f, 40.121190000f, 1491515562, 31.622486f));
+  nav.SnapToRoute(GetFixLocation(-75.992579000f, 39.680939000f, 1483291507, 7.572752f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 818" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.462517000f, 40.121346000f, 1491515563, 31.518843f));
+  nav.SnapToRoute(GetFixLocation(-75.991995000f, 39.680575000f, 1483291514, 9.197605f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 819" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.462821000f, 40.121499000f, 1491515564, 30.979633f));
+  nav.SnapToRoute(GetFixLocation(-75.991741000f, 39.680419000f, 1483291517, 9.280296f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 820" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.463125000f, 40.121648000f, 1491515565, 30.737032f));
+  nav.SnapToRoute(GetFixLocation(-75.991175000f, 39.680076000f, 1483291524, 8.817094f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 821" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.463427000f, 40.121799000f, 1491515566, 30.715067f));
+  nav.SnapToRoute(GetFixLocation(-75.990562000f, 39.679703000f, 1483291532, 8.368707f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 822" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.463720000f, 40.121947000f, 1491515567, 29.891378f));
+  nav.SnapToRoute(GetFixLocation(-75.989970000f, 39.679342000f, 1483291539, 9.244296f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 823" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.464018000f, 40.122096000f, 1491515568, 30.308151f));
+  nav.SnapToRoute(GetFixLocation(-75.989609000f, 39.679120000f, 1483291543, 9.897318f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 824" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.464313000f, 40.122242000f, 1491515569, 29.911934f));
+  nav.SnapToRoute(GetFixLocation(-75.989334000f, 39.678951000f, 1483291546, 10.050064f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 825" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.464605000f, 40.122392000f, 1491515570, 29.943834f));
+  nav.SnapToRoute(GetFixLocation(-75.988719000f, 39.678560000f, 1483291553, 9.763310f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 826" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.464902000f, 40.122541000f, 1491515571, 30.236803f));
+  nav.SnapToRoute(GetFixLocation(-75.988132000f, 39.678193000f, 1483291561, 8.099321f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 827" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.465193000f, 40.122688000f, 1491515572, 29.687746f));
+  nav.SnapToRoute(GetFixLocation(-75.987576000f, 39.677859000f, 1483291569, 7.553562f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 828" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.465484000f, 40.122836000f, 1491515573, 29.749205f));
+  nav.SnapToRoute(GetFixLocation(-75.987027000f, 39.677489000f, 1483291576, 8.931612f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 829" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.465776000f, 40.122982000f, 1491515574, 29.697649f));
+  nav.SnapToRoute(GetFixLocation(-75.986734000f, 39.677204000f, 1483291580, 10.114116f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 830" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.466070000f, 40.123126000f, 1491515575, 29.719561f));
+  nav.SnapToRoute(GetFixLocation(-75.986595000f, 39.677066000f, 1483291582, 9.718826f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 831" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.466362000f, 40.123271000f, 1491515576, 29.636784f));
+  nav.SnapToRoute(GetFixLocation(-75.986119000f, 39.676595000f, 1483291590, 8.303132f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 832" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.466650000f, 40.123418000f, 1491515577, 29.474791f));
+  nav.SnapToRoute(GetFixLocation(-75.986073000f, 39.676531000f, 1483291591, 8.141916f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 833" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.466931000f, 40.123560000f, 1491515578, 28.670454f));
+  nav.SnapToRoute(GetFixLocation(-75.986169000f, 39.676178000f, 1483291596, 8.029473f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 834" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.467217000f, 40.123699000f, 1491515579, 28.845924f));
+  nav.SnapToRoute(GetFixLocation(-75.986586000f, 39.675661000f, 1483291604, 8.467544f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 835" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.467502000f, 40.123832000f, 1491515580, 28.420485f));
+  nav.SnapToRoute(GetFixLocation(-75.986909000f, 39.675514000f, 1483291608, 8.037627f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 836" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.467787000f, 40.123973000f, 1491515581, 28.894375f));
+  nav.SnapToRoute(GetFixLocation(-75.987600000f, 39.675340000f, 1483291616, 7.786578f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 837" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.468071000f, 40.124113000f, 1491515582, 28.762434f));
+  nav.SnapToRoute(GetFixLocation(-75.988342000f, 39.675160000f, 1483291624, 8.332180f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 838" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.468352000f, 40.124257000f, 1491515583, 28.793602f));
+  nav.SnapToRoute(GetFixLocation(-75.988540000f, 39.675113000f, 1483291626, 8.876557f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 839" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.468636000f, 40.124399000f, 1491515584, 28.883593f));
+  nav.SnapToRoute(GetFixLocation(-75.989029000f, 39.674984000f, 1483291631, 8.858043f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 840" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.468922000f, 40.124545000f, 1491515585, 29.271057f));
+  nav.SnapToRoute(GetFixLocation(-75.989520000f, 39.674705000f, 1483291637, 8.715271f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 841" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.469209000f, 40.124691000f, 1491515586, 29.341845f));
+  nav.SnapToRoute(GetFixLocation(-75.990126000f, 39.674311000f, 1483291645, 8.495993f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 842" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.469498000f, 40.124831000f, 1491515587, 29.120838f));
+  nav.SnapToRoute(GetFixLocation(-75.990698000f, 39.673998000f, 1483291653, 7.516630f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 843" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.469792000f, 40.124975000f, 1491515588, 29.718987f));
+  nav.SnapToRoute(GetFixLocation(-75.991307000f, 39.673718000f, 1483291660, 8.682961f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 844" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.470091000f, 40.125118000f, 1491515589, 30.019016f));
+  nav.SnapToRoute(GetFixLocation(-75.991974000f, 39.673404000f, 1483291668, 8.373985f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 845" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.470392000f, 40.125263000f, 1491515590, 30.281525f));
+  nav.SnapToRoute(GetFixLocation(-75.992613000f, 39.673168000f, 1483291676, 7.590967f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 846" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.470689000f, 40.125408000f, 1491515591, 29.993956f));
+  nav.SnapToRoute(GetFixLocation(-75.992877000f, 39.673096000f, 1483291680, 5.999546f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 847" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.470991000f, 40.125552000f, 1491515592, 30.294434f));
+  nav.SnapToRoute(GetFixLocation(-75.993045000f, 39.673051000f, 1483291683, 5.080469f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 848" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.471286000f, 40.125700000f, 1491515593, 30.032419f));
+  nav.SnapToRoute(GetFixLocation(-75.993146000f, 39.673025000f, 1483291685, 4.562559f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 849" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.471591000f, 40.125849000f, 1491515594, 30.807381f));
+  nav.SnapToRoute(GetFixLocation(-75.993282000f, 39.672987000f, 1483291688, 4.132296f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 850" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.471896000f, 40.125996000f, 1491515595, 30.688038f));
+  nav.SnapToRoute(GetFixLocation(-75.993444000f, 39.672944000f, 1483291692, 3.670694f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 851" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.472203000f, 40.126145000f, 1491515596, 30.950878f));
+  nav.SnapToRoute(GetFixLocation(-75.993521000f, 39.672923000f, 1483291694, 3.499744f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 852" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.472512000f, 40.126296000f, 1491515597, 31.214018f));
+  nav.SnapToRoute(GetFixLocation(-75.993670000f, 39.672882000f, 1483291698, 3.389511f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 853" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.472820000f, 40.126450000f, 1491515598, 31.323799f));
+  nav.SnapToRoute(GetFixLocation(-75.993778000f, 39.672845000f, 1483291701, 3.376331f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 854" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.473128000f, 40.126603000f, 1491515599, 31.262964f));
+  nav.SnapToRoute(GetFixLocation(-75.993967000f, 39.672773000f, 1483291706, 3.613796f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 855" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.473437000f, 40.126758000f, 1491515600, 31.455896f));
+  nav.SnapToRoute(GetFixLocation(-75.994233000f, 39.672662000f, 1483291712, 4.320953f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 856" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.473752000f, 40.126918000f, 1491515601, 32.188702f));
+  nav.SnapToRoute(GetFixLocation(-75.994885000f, 39.672407000f, 1483291725, 4.820287f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 857" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.474065000f, 40.127079000f, 1491515602, 32.108994f));
+  nav.SnapToRoute(GetFixLocation(-75.995042000f, 39.672363000f, 1483291728, 4.772087f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 858" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.474386000f, 40.127238000f, 1491515603, 32.554554f));
+  nav.SnapToRoute(GetFixLocation(-75.995685000f, 39.672170000f, 1483291740, 4.927952f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 859" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.474705000f, 40.127400000f, 1491515604, 32.595333f));
+  nav.SnapToRoute(GetFixLocation(-75.996122000f, 39.672039000f, 1483291748, 5.022914f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 860" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.475029000f, 40.127561000f, 1491515605, 32.889839f));
+  nav.SnapToRoute(GetFixLocation(-75.996447000f, 39.671941000f, 1483291754, 4.984653f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 861" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.475353000f, 40.127720000f, 1491515606, 32.768997f));
+  nav.SnapToRoute(GetFixLocation(-75.996764000f, 39.671847000f, 1483291760, 4.851293f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 862" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.475675000f, 40.127880000f, 1491515607, 32.686333f));
+  nav.SnapToRoute(GetFixLocation(-75.997452000f, 39.671649000f, 1483291772, 5.244711f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 863" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.475995000f, 40.128043000f, 1491515608, 32.727642f));
+  nav.SnapToRoute(GetFixLocation(-75.998159000f, 39.671385000f, 1483291781, 7.481239f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 864" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.476315000f, 40.128205000f, 1491515609, 32.666000f));
+  nav.SnapToRoute(GetFixLocation(-75.998505000f, 39.671241000f, 1483291785, 8.425784f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 865" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.476640000f, 40.128362000f, 1491515610, 32.720982f));
+  nav.SnapToRoute(GetFixLocation(-75.998672000f, 39.671173000f, 1483291787, 8.094118f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 866" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.476962000f, 40.128518000f, 1491515611, 32.445629f));
+  nav.SnapToRoute(GetFixLocation(-75.999301000f, 39.670925000f, 1483291795, 7.569397f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 867" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.477289000f, 40.128667000f, 1491515612, 32.400108f));
+  nav.SnapToRoute(GetFixLocation(-75.999781000f, 39.670722000f, 1483291803, 5.866024f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 868" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.477619000f, 40.128812000f, 1491515613, 32.395515f));
+  nav.SnapToRoute(GetFixLocation(-76.000026000f, 39.670618000f, 1483291808, 4.794733f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 869" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.477954000f, 40.128954000f, 1491515614, 32.601910f));
+  nav.SnapToRoute(GetFixLocation(-76.000176000f, 39.670554000f, 1483291811, 4.898452f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 870" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.478295000f, 40.129094000f, 1491515615, 32.943520f));
+  nav.SnapToRoute(GetFixLocation(-76.000334000f, 39.670488000f, 1483291814, 5.134486f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 871" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.478633000f, 40.129227000f, 1491515616, 32.354816f));
+  nav.SnapToRoute(GetFixLocation(-76.000532000f, 39.670409000f, 1483291818, 4.777400f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 872" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.478975000f, 40.129356000f, 1491515617, 32.458416f));
+  nav.SnapToRoute(GetFixLocation(-76.000756000f, 39.670321000f, 1483291822, 5.387254f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 873" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.479324000f, 40.129477000f, 1491515618, 32.615986f));
+  nav.SnapToRoute(GetFixLocation(-76.001273000f, 39.670104000f, 1483291831, 5.606427f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 874" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.479669000f, 40.129587000f, 1491515619, 31.815109f));
+  nav.SnapToRoute(GetFixLocation(-76.001806000f, 39.669883000f, 1483291841, 5.187548f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 875" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.480016000f, 40.129695000f, 1491515620, 31.887640f));
+  nav.SnapToRoute(GetFixLocation(-76.002476000f, 39.669610000f, 1483291851, 6.495756f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 876" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.480365000f, 40.129799000f, 1491515621, 31.880943f));
+  nav.SnapToRoute(GetFixLocation(-76.003125000f, 39.669345000f, 1483291860, 6.994531f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 877" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.480720000f, 40.129901000f, 1491515622, 32.278259f));
+  nav.SnapToRoute(GetFixLocation(-76.003789000f, 39.669082000f, 1483291869, 7.109675f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 878" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.481074000f, 40.129996000f, 1491515623, 31.932095f));
+  nav.SnapToRoute(GetFixLocation(-76.004459000f, 39.668811000f, 1483291880, 5.895844f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 879" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.481429000f, 40.130087000f, 1491515624, 31.868052f));
+  nav.SnapToRoute(GetFixLocation(-76.004793000f, 39.668671000f, 1483291887, 4.655423f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 880" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.481787000f, 40.130175000f, 1491515625, 32.006424f));
+  nav.SnapToRoute(GetFixLocation(-76.004929000f, 39.668609000f, 1483291890, 4.514678f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 881" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.482144000f, 40.130256000f, 1491515626, 31.694944f));
+  nav.SnapToRoute(GetFixLocation(-76.005067000f, 39.668551000f, 1483291893, 4.490936f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 882" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.482502000f, 40.130331000f, 1491515627, 31.593481f));
+  nav.SnapToRoute(GetFixLocation(-76.005291000f, 39.668461000f, 1483291898, 4.330318f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 883" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.482866000f, 40.130401000f, 1491515628, 31.945948f));
+  nav.SnapToRoute(GetFixLocation(-76.005578000f, 39.668342000f, 1483291904, 4.655575f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 884" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.483236000f, 40.130465000f, 1491515629, 32.287483f));
+  nav.SnapToRoute(GetFixLocation(-76.006231000f, 39.668075000f, 1483291914, 6.335882f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 885" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.483605000f, 40.130523000f, 1491515630, 32.063305f));
+  nav.SnapToRoute(GetFixLocation(-76.006795000f, 39.667844000f, 1483291921, 7.820564f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 886" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.483977000f, 40.130579000f, 1491515631, 32.269680f));
+  nav.SnapToRoute(GetFixLocation(-76.007155000f, 39.667700000f, 1483291925, 8.691109f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 887" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.484352000f, 40.130629000f, 1491515632, 32.398815f));
+  nav.SnapToRoute(GetFixLocation(-76.007508000f, 39.667556000f, 1483291929, 8.558339f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 888" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.484723000f, 40.130672000f, 1491515633, 31.937412f));
+  nav.SnapToRoute(GetFixLocation(-76.008166000f, 39.667287000f, 1483291937, 7.980275f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 889" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.485097000f, 40.130710000f, 1491515634, 32.111820f));
+  nav.SnapToRoute(GetFixLocation(-76.008837000f, 39.667015000f, 1483291946, 7.220363f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 890" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.485479000f, 40.130749000f, 1491515635, 32.801434f));
+  nav.SnapToRoute(GetFixLocation(-76.009430000f, 39.666724000f, 1483291954, 7.532705f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 891" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.485860000f, 40.130778000f, 1491515636, 32.588024f));
+  nav.SnapToRoute(GetFixLocation(-76.010014000f, 39.666417000f, 1483291963, 6.733253f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 892" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.486241000f, 40.130804000f, 1491515637, 32.556625f));
+  nav.SnapToRoute(GetFixLocation(-76.010376000f, 39.666229000f, 1483291969, 6.236612f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 893" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.486625000f, 40.130820000f, 1491515638, 32.731537f));
+  nav.SnapToRoute(GetFixLocation(-76.010966000f, 39.665930000f, 1483291978, 6.725623f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 894" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.487011000f, 40.130830000f, 1491515639, 32.872112f));
+  nav.SnapToRoute(GetFixLocation(-76.011550000f, 39.665625000f, 1483291986, 7.559309f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 895" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.487396000f, 40.130836000f, 1491515640, 32.774952f));
+  nav.SnapToRoute(GetFixLocation(-76.012134000f, 39.665332000f, 1483291994, 7.466862f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 896" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.487780000f, 40.130838000f, 1491515641, 32.683788f));
+  nav.SnapToRoute(GetFixLocation(-76.012733000f, 39.665022000f, 1483292004, 6.185156f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 897" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.488169000f, 40.130833000f, 1491515642, 33.113270f));
+  nav.SnapToRoute(GetFixLocation(-76.012958000f, 39.664909000f, 1483292009, 4.604279f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 898" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.488552000f, 40.130824000f, 1491515643, 32.613316f));
+  nav.SnapToRoute(GetFixLocation(-76.013105000f, 39.664836000f, 1483292012, 4.996858f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 899" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.488939000f, 40.130813000f, 1491515644, 32.961128f));
+  nav.SnapToRoute(GetFixLocation(-76.013353000f, 39.664708000f, 1483292017, 5.117309f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 900" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.489324000f, 40.130799000f, 1491515645, 32.805199f));
+  nav.SnapToRoute(GetFixLocation(-76.013800000f, 39.664484000f, 1483292026, 5.078447f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 901" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.489704000f, 40.130773000f, 1491515646, 32.471851f));
+  nav.SnapToRoute(GetFixLocation(-76.014246000f, 39.664256000f, 1483292035, 5.097685f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 902" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.490081000f, 40.130740000f, 1491515647, 32.296883f));
+  nav.SnapToRoute(GetFixLocation(-76.014481000f, 39.664146000f, 1483292044, 2.618741f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 903" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.490458000f, 40.130698000f, 1491515648, 32.426140f));
+  nav.SnapToRoute(GetFixLocation(-76.014763000f, 39.663991000f, 1483292063, 1.562809f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 904" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.490834000f, 40.130657000f, 1491515649, 32.326031f));
+  nav.SnapToRoute(GetFixLocation(-76.014947000f, 39.663909000f, 1483292069, 3.036553f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 905" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.491206000f, 40.130611000f, 1491515650, 32.073196f));
+  nav.SnapToRoute(GetFixLocation(-76.015286000f, 39.663841000f, 1483292076, 4.288614f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 906" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.491578000f, 40.130564000f, 1491515651, 32.091179f));
+  nav.SnapToRoute(GetFixLocation(-76.015602000f, 39.663787000f, 1483292081, 5.547702f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 907" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.491946000f, 40.130521000f, 1491515652, 31.685032f));
+  nav.SnapToRoute(GetFixLocation(-76.015936000f, 39.663722000f, 1483292086, 5.904459f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 908" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.492315000f, 40.130473000f, 1491515653, 31.857807f));
+  nav.SnapToRoute(GetFixLocation(-76.016458000f, 39.663616000f, 1483292094, 5.782819f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 909" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.492680000f, 40.130424000f, 1491515654, 31.541313f));
+  nav.SnapToRoute(GetFixLocation(-76.016884000f, 39.663527000f, 1483292101, 5.403760f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 910" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.493044000f, 40.130377000f, 1491515655, 31.419668f));
+  nav.SnapToRoute(GetFixLocation(-76.017532000f, 39.663392000f, 1483292112, 5.229785f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 911" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.493414000f, 40.130328000f, 1491515656, 31.960594f));
+  nav.SnapToRoute(GetFixLocation(-76.018248000f, 39.663216000f, 1483292122, 6.440952f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 912" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.493787000f, 40.130284000f, 1491515657, 32.122669f));
+  nav.SnapToRoute(GetFixLocation(-76.018875000f, 39.662938000f, 1483292131, 6.889515f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 913" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.494161000f, 40.130238000f, 1491515658, 32.241421f));
+  nav.SnapToRoute(GetFixLocation(-76.019319000f, 39.662741000f, 1483292137, 7.319354f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 914" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.494535000f, 40.130189000f, 1491515659, 32.296165f));
+  nav.SnapToRoute(GetFixLocation(-76.019988000f, 39.662481000f, 1483292146, 7.135779f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 915" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.494911000f, 40.130142000f, 1491515660, 32.427315f));
+  nav.SnapToRoute(GetFixLocation(-76.020701000f, 39.662297000f, 1483292156, 6.444293f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 916" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.495288000f, 40.130093000f, 1491515661, 32.547909f));
+  nav.SnapToRoute(GetFixLocation(-76.021390000f, 39.662154000f, 1483292166, 6.115280f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 917" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.495661000f, 40.130048000f, 1491515662, 32.139938f));
+  nav.SnapToRoute(GetFixLocation(-76.022122000f, 39.662002000f, 1483292175, 7.219069f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 918" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.496034000f, 40.130001000f, 1491515663, 32.175415f));
+  nav.SnapToRoute(GetFixLocation(-76.022574000f, 39.661893000f, 1483292180, 8.118155f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 919" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.496407000f, 40.129955000f, 1491515664, 32.157520f));
+  nav.SnapToRoute(GetFixLocation(-76.022668000f, 39.661871000f, 1483292181, 8.419518f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 920" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.496786000f, 40.129911000f, 1491515665, 32.627640f));
+  nav.SnapToRoute(GetFixLocation(-76.023134000f, 39.661751000f, 1483292186, 8.421916f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 921" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.497163000f, 40.129861000f, 1491515666, 32.566856f));
+  nav.SnapToRoute(GetFixLocation(-76.023514000f, 39.661655000f, 1483292190, 8.568354f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 922" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.497540000f, 40.129813000f, 1491515667, 32.529568f));
+  nav.SnapToRoute(GetFixLocation(-76.024081000f, 39.661515000f, 1483292196, 8.504707f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 923" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.497915000f, 40.129766000f, 1491515668, 32.343494f));
+  nav.SnapToRoute(GetFixLocation(-76.024728000f, 39.661364000f, 1483292203, 8.276849f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 924" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.498293000f, 40.129719000f, 1491515669, 32.595520f));
+  nav.SnapToRoute(GetFixLocation(-76.025472000f, 39.661178000f, 1483292211, 8.379560f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 925" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.498670000f, 40.129672000f, 1491515670, 32.511536f));
+  nav.SnapToRoute(GetFixLocation(-76.025990000f, 39.661005000f, 1483292217, 8.064783f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 926" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.499045000f, 40.129624000f, 1491515671, 32.361755f));
+  nav.SnapToRoute(GetFixLocation(-76.026551000f, 39.660675000f, 1483292224, 8.643549f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 927" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.499425000f, 40.129576000f, 1491515672, 32.781578f));
+  nav.SnapToRoute(GetFixLocation(-76.027031000f, 39.660257000f, 1483292230, 10.351173f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 928" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.499805000f, 40.129527000f, 1491515673, 32.799931f));
+  nav.SnapToRoute(GetFixLocation(-76.027185000f, 39.660101000f, 1483292232, 10.905830f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 929" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.500182000f, 40.129479000f, 1491515674, 32.529724f));
+  nav.SnapToRoute(GetFixLocation(-76.027332000f, 39.659943000f, 1483292234, 10.817314f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 930" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.500559000f, 40.129430000f, 1491515675, 32.548218f));
+  nav.SnapToRoute(GetFixLocation(-76.027469000f, 39.659786000f, 1483292236, 10.527304f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 931" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.500934000f, 40.129381000f, 1491515676, 32.380432f));
+  nav.SnapToRoute(GetFixLocation(-76.027710000f, 39.659460000f, 1483292240, 10.438939f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 932" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.501308000f, 40.129332000f, 1491515677, 32.296562f));
+  nav.SnapToRoute(GetFixLocation(-76.028071000f, 39.658964000f, 1483292246, 10.548530f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 933" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.501683000f, 40.129286000f, 1491515678, 32.325897f));
+  nav.SnapToRoute(GetFixLocation(-76.028198000f, 39.658798000f, 1483292248, 10.723042f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 934" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.502062000f, 40.129240000f, 1491515679, 32.662121f));
+  nav.SnapToRoute(GetFixLocation(-76.028472000f, 39.658469000f, 1483292252, 10.876369f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 935" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.502439000f, 40.129192000f, 1491515680, 32.529858f));
+  nav.SnapToRoute(GetFixLocation(-76.028799000f, 39.658161000f, 1483292256, 11.070548f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 936" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.502816000f, 40.129144000f, 1491515681, 32.529881f));
+  nav.SnapToRoute(GetFixLocation(-76.028985000f, 39.658017000f, 1483292258, 11.303295f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 937" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.503191000f, 40.129100000f, 1491515682, 32.291462f));
+  nav.SnapToRoute(GetFixLocation(-76.029268000f, 39.657802000f, 1483292261, 11.358078f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 938" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.503567000f, 40.129055000f, 1491515683, 32.392643f));
+  nav.SnapToRoute(GetFixLocation(-76.029554000f, 39.657585000f, 1483292264, 11.471226f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 939" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.503941000f, 40.129004000f, 1491515684, 32.335060f));
+  nav.SnapToRoute(GetFixLocation(-76.029742000f, 39.657442000f, 1483292266, 11.324747f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 940" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.504320000f, 40.128956000f, 1491515685, 32.697895f));
+  nav.SnapToRoute(GetFixLocation(-76.029922000f, 39.657301000f, 1483292268, 11.003849f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 941" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.504697000f, 40.128906000f, 1491515686, 32.567303f));
+  nav.SnapToRoute(GetFixLocation(-76.030098000f, 39.657163000f, 1483292270, 10.764624f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 942" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.505076000f, 40.128857000f, 1491515687, 32.716320f));
+  nav.SnapToRoute(GetFixLocation(-76.030588000f, 39.656771000f, 1483292276, 10.093625f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 943" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.505450000f, 40.128807000f, 1491515688, 32.315792f));
+  nav.SnapToRoute(GetFixLocation(-76.031107000f, 39.656323000f, 1483292283, 9.546439f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 944" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.505831000f, 40.128758000f, 1491515689, 32.884224f));
+  nav.SnapToRoute(GetFixLocation(-76.031631000f, 39.655863000f, 1483292290, 9.729972f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 945" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.506213000f, 40.128709000f, 1491515690, 32.968185f));
+  nav.SnapToRoute(GetFixLocation(-76.031855000f, 39.655663000f, 1483292293, 9.799280f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 946" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.506591000f, 40.128665000f, 1491515691, 32.544079f));
+  nav.SnapToRoute(GetFixLocation(-76.032372000f, 39.655209000f, 1483292300, 9.601765f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 947" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.506968000f, 40.128615000f, 1491515692, 32.567436f));
+  nav.SnapToRoute(GetFixLocation(-76.032866000f, 39.654786000f, 1483292307, 9.046165f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 948" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.507347000f, 40.128568000f, 1491515693, 32.680073f));
+  nav.SnapToRoute(GetFixLocation(-76.033336000f, 39.654378000f, 1483292314, 8.672538f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 949" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.507724000f, 40.128521000f, 1491515694, 32.512070f));
+  nav.SnapToRoute(GetFixLocation(-76.033844000f, 39.653934000f, 1483292322, 8.233440f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 950" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.508103000f, 40.128473000f, 1491515695, 32.698124f));
+  nav.SnapToRoute(GetFixLocation(-76.034317000f, 39.653523000f, 1483292330, 7.641070f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 951" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.508479000f, 40.128424000f, 1491515696, 32.464779f));
+  nav.SnapToRoute(GetFixLocation(-76.034856000f, 39.653120000f, 1483292338, 8.049318f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 952" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.508859000f, 40.128373000f, 1491515697, 32.838230f));
+  nav.SnapToRoute(GetFixLocation(-76.035271000f, 39.652815000f, 1483292344, 8.195349f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 953" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.509251000f, 40.128345000f, 1491515698, 33.510418f));
+  nav.SnapToRoute(GetFixLocation(-76.035773000f, 39.652437000f, 1483292351, 8.597349f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 954" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.509627000f, 40.128292000f, 1491515699, 32.542614f));
+  nav.SnapToRoute(GetFixLocation(-76.035934000f, 39.652319000f, 1483292353, 9.525751f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 955" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.510000000f, 40.128239000f, 1491515700, 32.291557f));
+  nav.SnapToRoute(GetFixLocation(-76.036256000f, 39.652077000f, 1483292357, 9.641652f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 956" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.510373000f, 40.128188000f, 1491515701, 32.251644f));
+  nav.SnapToRoute(GetFixLocation(-76.036492000f, 39.651899000f, 1483292360, 9.438520f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 957" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.510752000f, 40.128139000f, 1491515702, 32.716656f));
+  nav.SnapToRoute(GetFixLocation(-76.036647000f, 39.651785000f, 1483292362, 9.186061f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 958" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.511130000f, 40.128094000f, 1491515703, 32.561287f));
+  nav.SnapToRoute(GetFixLocation(-76.036955000f, 39.651559000f, 1483292366, 9.116644f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 959" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.511505000f, 40.128048000f, 1491515704, 32.326469f));
+  nav.SnapToRoute(GetFixLocation(-76.037354000f, 39.651258000f, 1483292371, 9.575464f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 960" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.511881000f, 40.128013000f, 1491515705, 32.239750f));
+  nav.SnapToRoute(GetFixLocation(-76.037594000f, 39.651073000f, 1483292374, 9.702554f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 961" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.512261000f, 40.127988000f, 1491515706, 32.463440f));
+  nav.SnapToRoute(GetFixLocation(-76.037816000f, 39.650897000f, 1483292377, 9.103757f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 962" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.512645000f, 40.127969000f, 1491515707, 32.752769f));
+  nav.SnapToRoute(GetFixLocation(-76.037964000f, 39.650793000f, 1483292379, 8.586967f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 963" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.513027000f, 40.127954000f, 1491515708, 32.557030f));
+  nav.SnapToRoute(GetFixLocation(-76.038342000f, 39.650862000f, 1483292383, 8.324127f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 964" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.513409000f, 40.127938000f, 1491515709, 32.562935f));
+  nav.SnapToRoute(GetFixLocation(-76.038427000f, 39.650925000f, 1483292384, 10.112388f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 965" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.513789000f, 40.127933000f, 1491515710, 32.348751f));
+  nav.SnapToRoute(GetFixLocation(-76.038597000f, 39.651053000f, 1483292386, 10.189898f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 966" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.514172000f, 40.127933000f, 1491515711, 32.599312f));
+  nav.SnapToRoute(GetFixLocation(-76.038763000f, 39.651179000f, 1483292388, 9.989581f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 967" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.514553000f, 40.127938000f, 1491515712, 32.433853f));
+  nav.SnapToRoute(GetFixLocation(-76.038839000f, 39.651242000f, 1483292389, 9.571589f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 968" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.514933000f, 40.127948000f, 1491515713, 32.363110f));
+  nav.SnapToRoute(GetFixLocation(-76.038911000f, 39.651305000f, 1483292390, 9.341645f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 969" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.515314000f, 40.127963000f, 1491515714, 32.472031f));
+  nav.SnapToRoute(GetFixLocation(-76.039050000f, 39.651431000f, 1483292392, 9.201497f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 970" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.515691000f, 40.127985000f, 1491515715, 32.181919f));
+  nav.SnapToRoute(GetFixLocation(-76.039331000f, 39.651780000f, 1483292397, 9.142022f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 971" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.516072000f, 40.128013000f, 1491515716, 32.578499f));
+  nav.SnapToRoute(GetFixLocation(-76.039507000f, 39.652046000f, 1483292401, 8.307979f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 972" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.516449000f, 40.128047000f, 1491515717, 32.311012f));
+  nav.SnapToRoute(GetFixLocation(-76.039697000f, 39.652333000f, 1483292406, 7.171911f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 973" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.516826000f, 40.128084000f, 1491515718, 32.351814f));
+  nav.SnapToRoute(GetFixLocation(-76.039795000f, 39.652477000f, 1483292409, 6.032423f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 974" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.517207000f, 40.128126000f, 1491515719, 32.764301f));
+  nav.SnapToRoute(GetFixLocation(-76.039880000f, 39.652604000f, 1483292412, 5.301414f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 975" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.517586000f, 40.128176000f, 1491515720, 32.735405f));
+  nav.SnapToRoute(GetFixLocation(-76.039972000f, 39.652728000f, 1483292415, 5.299005f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 976" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.517962000f, 40.128230000f, 1491515721, 32.563034f));
+  nav.SnapToRoute(GetFixLocation(-76.040091000f, 39.652844000f, 1483292418, 5.485043f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 977" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.518334000f, 40.128290000f, 1491515722, 32.359692f));
+  nav.SnapToRoute(GetFixLocation(-76.040265000f, 39.652992000f, 1483292422, 5.555605f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 978" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.518707000f, 40.128355000f, 1491515723, 32.562096f));
+  nav.SnapToRoute(GetFixLocation(-76.040561000f, 39.653160000f, 1483292428, 5.252931f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 979" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.519079000f, 40.128422000f, 1491515724, 32.529408f));
+  nav.SnapToRoute(GetFixLocation(-76.040848000f, 39.653268000f, 1483292434, 4.563139f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 980" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.519447000f, 40.128495000f, 1491515725, 32.359322f));
+  nav.SnapToRoute(GetFixLocation(-76.040944000f, 39.653301000f, 1483292436, 4.505357f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 981" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.519816000f, 40.128568000f, 1491515726, 32.441685f));
+  nav.SnapToRoute(GetFixLocation(-76.041089000f, 39.653354000f, 1483292439, 4.585637f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 982" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.520183000f, 40.128640000f, 1491515727, 32.249031f));
+  nav.SnapToRoute(GetFixLocation(-76.041240000f, 39.653404000f, 1483292442, 4.695969f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 983" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.520551000f, 40.128714000f, 1491515728, 32.387360f));
+  nav.SnapToRoute(GetFixLocation(-76.041693000f, 39.653561000f, 1483292451, 4.730839f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 984" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.520920000f, 40.128785000f, 1491515729, 32.386536f));
+  nav.SnapToRoute(GetFixLocation(-76.041886000f, 39.653627000f, 1483292455, 4.524914f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 985" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.521291000f, 40.128860000f, 1491515730, 32.662582f));
+  nav.SnapToRoute(GetFixLocation(-76.042087000f, 39.653695000f, 1483292459, 4.704197f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 986" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.521662000f, 40.128935000f, 1491515731, 32.662548f));
+  nav.SnapToRoute(GetFixLocation(-76.042387000f, 39.653799000f, 1483292465, 4.699696f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 987" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.522031000f, 40.129008000f, 1491515732, 32.441486f));
+  nav.SnapToRoute(GetFixLocation(-76.042655000f, 39.653890000f, 1483292470, 5.020789f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 988" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.522400000f, 40.129083000f, 1491515733, 32.497936f));
+  nav.SnapToRoute(GetFixLocation(-76.043092000f, 39.654041000f, 1483292478, 5.131590f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 989" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.522767000f, 40.129159000f, 1491515734, 32.362343f));
+  nav.SnapToRoute(GetFixLocation(-76.043763000f, 39.654279000f, 1483292491, 4.870628f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 990" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.523134000f, 40.129235000f, 1491515735, 32.362309f));
+  nav.SnapToRoute(GetFixLocation(-76.043857000f, 39.654314000f, 1483292493, 4.474512f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 991" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.523506000f, 40.129309000f, 1491515736, 32.716469f));
+  nav.SnapToRoute(GetFixLocation(-76.044160000f, 39.654429000f, 1483292500, 4.136117f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 992" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.523877000f, 40.129382000f, 1491515737, 32.606148f));
+  nav.SnapToRoute(GetFixLocation(-76.044318000f, 39.654486000f, 1483292504, 3.738597f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 993" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.524245000f, 40.129456000f, 1491515738, 32.387028f));
+  nav.SnapToRoute(GetFixLocation(-76.044445000f, 39.654529000f, 1483292507, 3.963551f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 994" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.524612000f, 40.129529000f, 1491515739, 32.276482f));
+  nav.SnapToRoute(GetFixLocation(-76.044627000f, 39.654596000f, 1483292511, 4.322457f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 995" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.524981000f, 40.129602000f, 1491515740, 32.441219f));
+  nav.SnapToRoute(GetFixLocation(-76.045185000f, 39.654810000f, 1483292523, 4.452372f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 996" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.525350000f, 40.129674000f, 1491515741, 32.413483f));
+  nav.SnapToRoute(GetFixLocation(-76.045447000f, 39.654912000f, 1483292529, 4.193721f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 997" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.525720000f, 40.129748000f, 1491515742, 32.551556f));
+  nav.SnapToRoute(GetFixLocation(-76.045630000f, 39.654980000f, 1483292533, 4.353801f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 998" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.526091000f, 40.129824000f, 1491515743, 32.690781f));
+  nav.SnapToRoute(GetFixLocation(-76.045901000f, 39.655086000f, 1483292538, 5.210320f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 999" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.526462000f, 40.129900000f, 1491515744, 32.690746f));
+  nav.SnapToRoute(GetFixLocation(-76.046074000f, 39.655155000f, 1483292541, 5.566133f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1000" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.526833000f, 40.129976000f, 1491515745, 32.690712f));
+  nav.SnapToRoute(GetFixLocation(-76.046257000f, 39.655198000f, 1483292544, 5.466055f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1001" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.527205000f, 40.130053000f, 1491515746, 32.801811f));
+  nav.SnapToRoute(GetFixLocation(-76.046456000f, 39.655168000f, 1483292547, 5.793045f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1002" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.527573000f, 40.130132000f, 1491515747, 32.532753f));
+  nav.SnapToRoute(GetFixLocation(-76.046643000f, 39.655053000f, 1483292550, 6.837341f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1003" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.527939000f, 40.130214000f, 1491515748, 32.461185f));
+  nav.SnapToRoute(GetFixLocation(-76.047237000f, 39.654673000f, 1483292559, 7.354449f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1004" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.528304000f, 40.130295000f, 1491515749, 32.348274f));
+  nav.SnapToRoute(GetFixLocation(-76.047803000f, 39.654320000f, 1483292569, 6.242850f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1005" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.528676000f, 40.130373000f, 1491515750, 32.830933f));
+  nav.SnapToRoute(GetFixLocation(-76.047900000f, 39.654259000f, 1483292571, 5.367134f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1006" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.529043000f, 40.130449000f, 1491515751, 32.361771f));
+  nav.SnapToRoute(GetFixLocation(-76.047995000f, 39.654201000f, 1483292573, 5.195671f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1007" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.529415000f, 40.130523000f, 1491515752, 32.715919f));
+  nav.SnapToRoute(GetFixLocation(-76.048257000f, 39.654036000f, 1483292579, 4.835056f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1008" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.529784000f, 40.130598000f, 1491515753, 32.497261f));
+  nav.SnapToRoute(GetFixLocation(-76.048468000f, 39.653903000f, 1483292585, 3.895277f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1009" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.530153000f, 40.130674000f, 1491515754, 32.526005f));
+  nav.SnapToRoute(GetFixLocation(-76.048555000f, 39.653850000f, 1483292588, 3.169436f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1010" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.530525000f, 40.130747000f, 1491515755, 32.687965f));
+  nav.SnapToRoute(GetFixLocation(-76.048639000f, 39.653800000f, 1483292591, 3.033344f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1011" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.530895000f, 40.130820000f, 1491515756, 32.523083f));
+  nav.SnapToRoute(GetFixLocation(-76.048722000f, 39.653749000f, 1483292594, 3.033801f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1012" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.531264000f, 40.130895000f, 1491515757, 32.497128f));
+  nav.SnapToRoute(GetFixLocation(-76.048809000f, 39.653697000f, 1483292597, 3.146550f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1013" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.531634000f, 40.130969000f, 1491515758, 32.551006f));
+  nav.SnapToRoute(GetFixLocation(-76.048903000f, 39.653638000f, 1483292600, 3.464785f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1014" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.532004000f, 40.131046000f, 1491515759, 32.637089f));
+  nav.SnapToRoute(GetFixLocation(-76.049009000f, 39.653575000f, 1483292603, 3.825639f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1015" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.532371000f, 40.131121000f, 1491515760, 32.332546f));
+  nav.SnapToRoute(GetFixLocation(-76.049213000f, 39.653454000f, 1483292608, 4.414198f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1016" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.532739000f, 40.131193000f, 1491515761, 32.330341f));
+  nav.SnapToRoute(GetFixLocation(-76.049768000f, 39.653118000f, 1483292620, 5.042646f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1017" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.533109000f, 40.131268000f, 1491515762, 32.579224f));
+  nav.SnapToRoute(GetFixLocation(-76.050085000f, 39.652926000f, 1483292627, 4.938372f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1018" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.533480000f, 40.131343000f, 1491515763, 32.661465f));
+  nav.SnapToRoute(GetFixLocation(-76.050343000f, 39.652781000f, 1483292633, 4.562858f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1019" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.533851000f, 40.131416000f, 1491515764, 32.605232f));
+  nav.SnapToRoute(GetFixLocation(-76.050455000f, 39.652736000f, 1483292636, 3.609245f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1020" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.534220000f, 40.131489000f, 1491515765, 32.440376f));
+  nav.SnapToRoute(GetFixLocation(-76.050548000f, 39.652737000f, 1483292640, 1.992900f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1021" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.534591000f, 40.131563000f, 1491515766, 32.633091f));
+  nav.SnapToRoute(GetFixLocation(-76.050603000f, 39.652747000f, 1483292643, 1.614529f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1022" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.534958000f, 40.131640000f, 1491515767, 32.390522f));
+  nav.SnapToRoute(GetFixLocation(-76.050630000f, 39.652737000f, 1483292644, 2.567939f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1023" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.535331000f, 40.131714000f, 1491515768, 32.797760f));
+  nav.SnapToRoute(GetFixLocation(-76.050706000f, 39.652656000f, 1483292647, 3.707854f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1024" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.535701000f, 40.131788000f, 1491515769, 32.550640f));
+  nav.SnapToRoute(GetFixLocation(-76.051175000f, 39.652232000f, 1483292657, 6.199676f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1025" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.536072000f, 40.131863000f, 1491515770, 32.661232f));
+  nav.SnapToRoute(GetFixLocation(-76.051435000f, 39.652016000f, 1483292661, 8.195842f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1026" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.536441000f, 40.131941000f, 1491515771, 32.584061f));
+  nav.SnapToRoute(GetFixLocation(-76.051648000f, 39.651842000f, 1483292664, 8.872314f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1027" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.536804000f, 40.132025000f, 1491515772, 32.279232f));
+  nav.SnapToRoute(GetFixLocation(-76.051939000f, 39.651606000f, 1483292668, 9.056271f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1028" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.537171000f, 40.132110000f, 1491515773, 32.637287f));
+  nav.SnapToRoute(GetFixLocation(-76.052164000f, 39.651427000f, 1483292671, 9.243307f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1029" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.537534000f, 40.132204000f, 1491515774, 32.619038f));
+  nav.SnapToRoute(GetFixLocation(-76.052388000f, 39.651244000f, 1483292674, 9.330927f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1030" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.537895000f, 40.132301000f, 1491515775, 32.567020f));
+  nav.SnapToRoute(GetFixLocation(-76.052689000f, 39.651000000f, 1483292678, 9.365302f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1031" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.538257000f, 40.132401000f, 1491515776, 32.759258f));
+  nav.SnapToRoute(GetFixLocation(-76.053216000f, 39.650574000f, 1483292685, 9.355910f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1032" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.538614000f, 40.132511000f, 1491515777, 32.758938f));
+  nav.SnapToRoute(GetFixLocation(-76.053442000f, 39.650392000f, 1483292688, 9.343408f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1033" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.538964000f, 40.132628000f, 1491515778, 32.511333f));
+  nav.SnapToRoute(GetFixLocation(-76.053943000f, 39.649986000f, 1483292695, 8.906084f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1034" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.539310000f, 40.132748000f, 1491515779, 32.336174f));
+  nav.SnapToRoute(GetFixLocation(-76.054492000f, 39.649542000f, 1483292703, 8.530410f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1035" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.539661000f, 40.132871000f, 1491515780, 32.861877f));
+  nav.SnapToRoute(GetFixLocation(-76.054895000f, 39.649218000f, 1483292709, 8.323343f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1036" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.540008000f, 40.133002000f, 1491515781, 32.937153f));
+  nav.SnapToRoute(GetFixLocation(-76.055399000f, 39.648810000f, 1483292717, 7.835202f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1037" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.540349000f, 40.133137000f, 1491515782, 32.682354f));
+  nav.SnapToRoute(GetFixLocation(-76.055933000f, 39.648374000f, 1483292726, 7.412562f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1038" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.540688000f, 40.133273000f, 1491515783, 32.582813f));
+  nav.SnapToRoute(GetFixLocation(-76.056106000f, 39.648236000f, 1483292729, 7.117078f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1039" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.541023000f, 40.133419000f, 1491515784, 32.818493f));
+  nav.SnapToRoute(GetFixLocation(-76.056612000f, 39.647830000f, 1483292738, 6.959942f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1040" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.541353000f, 40.133567000f, 1491515785, 32.561508f));
+  nav.SnapToRoute(GetFixLocation(-76.056723000f, 39.647740000f, 1483292740, 6.908262f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1041" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.541683000f, 40.133718000f, 1491515786, 32.731697f));
+  nav.SnapToRoute(GetFixLocation(-76.057213000f, 39.647343000f, 1483292748, 7.620996f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1042" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.542000000f, 40.133871000f, 1491515787, 31.905645f));
+  nav.SnapToRoute(GetFixLocation(-76.057699000f, 39.646951000f, 1483292755, 8.618376f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1043" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.542312000f, 40.134026000f, 1491515788, 31.667332f));
+  nav.SnapToRoute(GetFixLocation(-76.058141000f, 39.646588000f, 1483292761, 9.231954f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1044" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.542614000f, 40.134186000f, 1491515789, 31.270750f));
+  nav.SnapToRoute(GetFixLocation(-76.058509000f, 39.646278000f, 1483292766, 9.350629f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1045" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.542912000f, 40.134347000f, 1491515790, 31.055605f));
+  nav.SnapToRoute(GetFixLocation(-76.058942000f, 39.645905000f, 1483292772, 9.282027f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1046" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.543204000f, 40.134517000f, 1491515791, 31.236549f));
+  nav.SnapToRoute(GetFixLocation(-76.059434000f, 39.645484000f, 1483292779, 9.006684f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1047" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.543497000f, 40.134684000f, 1491515792, 31.103504f));
+  nav.SnapToRoute(GetFixLocation(-76.059903000f, 39.645078000f, 1483292786, 8.641141f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1048" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.543788000f, 40.134857000f, 1491515793, 31.372671f));
+  nav.SnapToRoute(GetFixLocation(-76.060421000f, 39.644639000f, 1483292794, 8.253517f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1049" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.544079000f, 40.135032000f, 1491515794, 31.509779f));
+  nav.SnapToRoute(GetFixLocation(-76.060937000f, 39.644199000f, 1483292802, 8.249468f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1050" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.544364000f, 40.135213000f, 1491515795, 31.532524f));
+  nav.SnapToRoute(GetFixLocation(-76.061446000f, 39.643762000f, 1483292810, 8.168288f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1051" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.544644000f, 40.135396000f, 1491515796, 31.350542f));
+  nav.SnapToRoute(GetFixLocation(-76.061950000f, 39.643333000f, 1483292818, 8.049743f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1052" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.544915000f, 40.135587000f, 1491515797, 31.368965f));
+  nav.SnapToRoute(GetFixLocation(-76.062458000f, 39.642932000f, 1483292826, 7.795101f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1053" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.545186000f, 40.135782000f, 1491515798, 31.672421f));
+  nav.SnapToRoute(GetFixLocation(-76.062703000f, 39.642753000f, 1483292830, 7.237543f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1054" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.545451000f, 40.135980000f, 1491515799, 31.534994f));
+  nav.SnapToRoute(GetFixLocation(-76.063050000f, 39.642503000f, 1483292836, 6.789011f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1055" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.545716000f, 40.136181000f, 1491515800, 31.769264f));
+  nav.SnapToRoute(GetFixLocation(-76.063497000f, 39.642196000f, 1483292844, 6.417919f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1056" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.545982000f, 40.136378000f, 1491515801, 31.518265f));
+  nav.SnapToRoute(GetFixLocation(-76.063834000f, 39.641982000f, 1483292850, 6.240594f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1057" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.546250000f, 40.136578000f, 1491515802, 31.873066f));
+  nav.SnapToRoute(GetFixLocation(-76.064411000f, 39.641633000f, 1483292859, 6.988327f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1058" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.546513000f, 40.136776000f, 1491515803, 31.413301f));
+  nav.SnapToRoute(GetFixLocation(-76.064842000f, 39.641388000f, 1483292865, 7.653689f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1059" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.546771000f, 40.136972000f, 1491515804, 30.954165f));
+  nav.SnapToRoute(GetFixLocation(-76.065475000f, 39.641050000f, 1483292874, 7.336773f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1060" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.547028000f, 40.137165000f, 1491515805, 30.658865f));
+  nav.SnapToRoute(GetFixLocation(-76.066093000f, 39.640739000f, 1483292883, 7.031743f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1061" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.547285000f, 40.137356000f, 1491515806, 30.503218f));
+  nav.SnapToRoute(GetFixLocation(-76.066660000f, 39.640445000f, 1483292892, 6.510722f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1062" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.547538000f, 40.137543000f, 1491515807, 29.948820f));
+  nav.SnapToRoute(GetFixLocation(-76.066969000f, 39.640264000f, 1483292898, 5.546804f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1063" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.547788000f, 40.137730000f, 1491515808, 29.765755f));
+  nav.SnapToRoute(GetFixLocation(-76.067179000f, 39.640148000f, 1483292902, 5.538589f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1064" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.548043000f, 40.137917000f, 1491515809, 30.071335f));
+  nav.SnapToRoute(GetFixLocation(-76.067436000f, 39.639999000f, 1483292907, 5.515352f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1065" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.548296000f, 40.138105000f, 1491515810, 30.026175f));
+  nav.SnapToRoute(GetFixLocation(-76.067741000f, 39.639816000f, 1483292913, 5.524179f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1066" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.548548000f, 40.138295000f, 1491515811, 30.121080f));
+  nav.SnapToRoute(GetFixLocation(-76.068339000f, 39.639458000f, 1483292924, 5.902867f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1067" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.548800000f, 40.138482000f, 1491515812, 29.887482f));
+  nav.SnapToRoute(GetFixLocation(-76.068550000f, 39.639333000f, 1483292928, 5.705235f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1068" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.549056000f, 40.138674000f, 1491515813, 30.519804f));
+  nav.SnapToRoute(GetFixLocation(-76.068883000f, 39.639136000f, 1483292935, 5.142484f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1069" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.549309000f, 40.138864000f, 1491515814, 30.181604f));
+  nav.SnapToRoute(GetFixLocation(-76.069147000f, 39.638982000f, 1483292941, 4.731885f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1070" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.549564000f, 40.139053000f, 1491515815, 30.225622f));
+  nav.SnapToRoute(GetFixLocation(-76.069321000f, 39.638874000f, 1483292945, 4.789518f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1071" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.549819000f, 40.139244000f, 1491515816, 30.380974f));
+  nav.SnapToRoute(GetFixLocation(-76.069527000f, 39.638745000f, 1483292950, 4.552225f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1072" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.550079000f, 40.139435000f, 1491515817, 30.686312f));
+  nav.SnapToRoute(GetFixLocation(-76.069707000f, 39.638640000f, 1483292954, 4.839445f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1073" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.550339000f, 40.139627000f, 1491515818, 30.763502f));
+  nav.SnapToRoute(GetFixLocation(-76.069954000f, 39.638490000f, 1483292960, 4.494336f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1074" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.550601000f, 40.139820000f, 1491515819, 30.963238f));
+  nav.SnapToRoute(GetFixLocation(-76.070144000f, 39.638373000f, 1483292965, 4.170988f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1075" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.550863000f, 40.140012000f, 1491515820, 30.886053f));
+  nav.SnapToRoute(GetFixLocation(-76.070407000f, 39.638222000f, 1483292972, 4.017478f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1076" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.551125000f, 40.140211000f, 1491515821, 31.430279f));
+  nav.SnapToRoute(GetFixLocation(-76.070693000f, 39.638047000f, 1483292979, 4.473548f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1077" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.551387000f, 40.140410000f, 1491515822, 31.430233f));
+  nav.SnapToRoute(GetFixLocation(-76.071097000f, 39.637797000f, 1483292988, 4.936601f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1078" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.551654000f, 40.140610000f, 1491515823, 31.811258f));
+  nav.SnapToRoute(GetFixLocation(-76.071266000f, 39.637729000f, 1483292991, 5.448708f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1079" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.551921000f, 40.140813000f, 1491515824, 32.045826f));
+  nav.SnapToRoute(GetFixLocation(-76.071800000f, 39.637766000f, 1483292999, 5.745350f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1080" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.552189000f, 40.141017000f, 1491515825, 32.184624f));
+  nav.SnapToRoute(GetFixLocation(-76.072161000f, 39.637872000f, 1483293006, 4.731495f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1081" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.552458000f, 40.141222000f, 1491515826, 32.323429f));
+  nav.SnapToRoute(GetFixLocation(-76.072405000f, 39.637913000f, 1483293013, 3.058477f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1082" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.552726000f, 40.141427000f, 1491515827, 32.263168f));
+  nav.SnapToRoute(GetFixLocation(-76.072459000f, 39.637900000f, 1483293014, 4.850142f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1083" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.552993000f, 40.141631000f, 1491515828, 32.124229f));
+  nav.SnapToRoute(GetFixLocation(-76.072620000f, 39.637724000f, 1483293018, 5.991394f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1084" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.553262000f, 40.141835000f, 1491515829, 32.244785f));
+  nav.SnapToRoute(GetFixLocation(-76.072926000f, 39.637221000f, 1483293027, 6.870434f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1085" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.553534000f, 40.142037000f, 1491515830, 32.270947f));
+  nav.SnapToRoute(GetFixLocation(-76.073128000f, 39.636952000f, 1483293032, 6.918307f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1086" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.553806000f, 40.142240000f, 1491515831, 32.348564f));
+  nav.SnapToRoute(GetFixLocation(-76.073210000f, 39.636847000f, 1483293034, 6.819789f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1087" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.554074000f, 40.142444000f, 1491515832, 32.184284f));
+  nav.SnapToRoute(GetFixLocation(-76.073383000f, 39.636645000f, 1483293038, 6.734238f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1088" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.554347000f, 40.142648000f, 1491515833, 32.487125f));
+  nav.SnapToRoute(GetFixLocation(-76.073612000f, 39.636408000f, 1483293043, 6.577085f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1089" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.554620000f, 40.142854000f, 1491515834, 32.643093f));
+  nav.SnapToRoute(GetFixLocation(-76.073856000f, 39.636171000f, 1483293050, 4.809848f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1090" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.554890000f, 40.143058000f, 1491515835, 32.304962f));
+  nav.SnapToRoute(GetFixLocation(-76.074400000f, 39.635727000f, 1483293059, 7.550542f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1091" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.555159000f, 40.143262000f, 1491515836, 32.244446f));
+  nav.SnapToRoute(GetFixLocation(-76.074474000f, 39.635670000f, 1483293060, 8.972585f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1092" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.555426000f, 40.143460000f, 1491515837, 31.655153f));
+  nav.SnapToRoute(GetFixLocation(-76.074700000f, 39.635498000f, 1483293063, 9.079815f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1093" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.555696000f, 40.143656000f, 1491515838, 31.685118f));
+  nav.SnapToRoute(GetFixLocation(-76.074990000f, 39.635280000f, 1483293067, 8.685522f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1094" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.555964000f, 40.143850000f, 1491515839, 31.408377f));
+  nav.SnapToRoute(GetFixLocation(-76.075338000f, 39.635021000f, 1483293072, 8.297786f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1095" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.556235000f, 40.144044000f, 1491515840, 31.594181f));
+  nav.SnapToRoute(GetFixLocation(-76.075878000f, 39.634610000f, 1483293081, 7.231983f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1096" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.556500000f, 40.144241000f, 1491515841, 31.455322f));
+  nav.SnapToRoute(GetFixLocation(-76.076089000f, 39.634444000f, 1483293085, 6.464763f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1097" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.556768000f, 40.144439000f, 1491515842, 31.716051f));
+  nav.SnapToRoute(GetFixLocation(-76.076195000f, 39.634363000f, 1483293087, 6.400890f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1098" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.557036000f, 40.144637000f, 1491515843, 31.716003f));
+  nav.SnapToRoute(GetFixLocation(-76.076589000f, 39.634069000f, 1483293094, 6.718942f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1099" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.557303000f, 40.144834000f, 1491515844, 31.577414f));
+  nav.SnapToRoute(GetFixLocation(-76.077153000f, 39.633651000f, 1483293102, 8.388179f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1100" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.557573000f, 40.145034000f, 1491515845, 31.993034f));
+  nav.SnapToRoute(GetFixLocation(-76.077525000f, 39.633376000f, 1483293107, 8.841396f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1101" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.557842000f, 40.145236000f, 1491515846, 32.087559f));
+  nav.SnapToRoute(GetFixLocation(-76.078082000f, 39.632965000f, 1483293115, 8.266649f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1102" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.558112000f, 40.145440000f, 1491515847, 32.304386f));
+  nav.SnapToRoute(GetFixLocation(-76.078625000f, 39.632562000f, 1483293124, 7.183433f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1103" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.558385000f, 40.145641000f, 1491515848, 32.253830f));
+  nav.SnapToRoute(GetFixLocation(-76.078885000f, 39.632367000f, 1483293129, 6.222784f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1104" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.558657000f, 40.145844000f, 1491515849, 32.347687f));
+  nav.SnapToRoute(GetFixLocation(-76.079174000f, 39.632155000f, 1483293137, 4.277195f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1105" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.558927000f, 40.146042000f, 1491515850, 31.838255f));
+  nav.SnapToRoute(GetFixLocation(-76.079270000f, 39.632083000f, 1483293142, 2.297649f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1106" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.559193000f, 40.146239000f, 1491515851, 31.515905f));
+  nav.SnapToRoute(GetFixLocation(-76.079388000f, 39.631970000f, 1483293150, 2.017805f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1107" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.559455000f, 40.146435000f, 1491515852, 31.194340f));
+  nav.SnapToRoute(GetFixLocation(-76.079530000f, 39.631880000f, 1483293153, 5.255535f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1108" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.559715000f, 40.146627000f, 1491515853, 30.761864f));
+  nav.SnapToRoute(GetFixLocation(-76.079913000f, 39.631600000f, 1483293159, 7.545679f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1109" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.559975000f, 40.146821000f, 1491515854, 30.916922f));
+  nav.SnapToRoute(GetFixLocation(-76.080138000f, 39.631435000f, 1483293162, 8.878712f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1110" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.560232000f, 40.147010000f, 1491515855, 30.346209f));
+  nav.SnapToRoute(GetFixLocation(-76.080284000f, 39.631323000f, 1483293164, 8.833544f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1111" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.560489000f, 40.147198000f, 1491515856, 30.269091f));
+  nav.SnapToRoute(GetFixLocation(-76.080505000f, 39.631159000f, 1483293167, 8.770510f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1112" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.560748000f, 40.147382000f, 1491515857, 30.087343f));
+  nav.SnapToRoute(GetFixLocation(-76.080780000f, 39.630955000f, 1483293171, 8.183762f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1113" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.561002000f, 40.147572000f, 1491515858, 30.240393f));
+  nav.SnapToRoute(GetFixLocation(-76.081220000f, 39.630621000f, 1483293178, 7.566656f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1114" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.561260000f, 40.147762000f, 1491515859, 30.484541f));
+  nav.SnapToRoute(GetFixLocation(-76.081567000f, 39.630371000f, 1483293184, 6.789646f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1115" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.561515000f, 40.147952000f, 1491515860, 30.301180f));
+  nav.SnapToRoute(GetFixLocation(-76.081890000f, 39.630129000f, 1483293190, 6.439048f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1116" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.561774000f, 40.148145000f, 1491515861, 30.777971f));
+  nav.SnapToRoute(GetFixLocation(-76.082157000f, 39.629930000f, 1483293195, 6.371051f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1117" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.562033000f, 40.148331000f, 1491515862, 30.239126f));
+  nav.SnapToRoute(GetFixLocation(-76.082648000f, 39.629574000f, 1483293204, 6.423945f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1118" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.562291000f, 40.148523000f, 1491515863, 30.639254f));
+  nav.SnapToRoute(GetFixLocation(-76.083181000f, 39.629172000f, 1483293214, 6.395999f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1119" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.562550000f, 40.148714000f, 1491515864, 30.622839f));
+  nav.SnapToRoute(GetFixLocation(-76.083232000f, 39.629133000f, 1483293215, 6.161802f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1120" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.562810000f, 40.148907000f, 1491515865, 30.838779f));
+  nav.SnapToRoute(GetFixLocation(-76.083712000f, 39.628781000f, 1483293224, 6.313873f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1121" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.563068000f, 40.149100000f, 1491515866, 30.716879f));
+  nav.SnapToRoute(GetFixLocation(-76.084255000f, 39.628370000f, 1483293234, 6.527401f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1122" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.563324000f, 40.149292000f, 1491515867, 30.517374f));
+  nav.SnapToRoute(GetFixLocation(-76.084481000f, 39.628204000f, 1483293238, 6.693913f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1123" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.563580000f, 40.149489000f, 1491515868, 30.909706f));
+  nav.SnapToRoute(GetFixLocation(-76.084995000f, 39.627826000f, 1483293247, 6.770258f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1124" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.563836000f, 40.149682000f, 1491515869, 30.595352f));
+  nav.SnapToRoute(GetFixLocation(-76.085526000f, 39.627432000f, 1483293256, 7.024147f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1125" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.564090000f, 40.149873000f, 1491515870, 30.317833f));
+  nav.SnapToRoute(GetFixLocation(-76.085825000f, 39.627205000f, 1483293261, 7.199322f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1126" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.564343000f, 40.150062000f, 1491515871, 30.101160f));
+  nav.SnapToRoute(GetFixLocation(-76.086364000f, 39.626805000f, 1483293270, 7.130555f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1127" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.564591000f, 40.150251000f, 1491515872, 29.798342f));
+  nav.SnapToRoute(GetFixLocation(-76.086903000f, 39.626414000f, 1483293279, 7.053793f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1128" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.564838000f, 40.150444000f, 1491515873, 30.054783f));
+  nav.SnapToRoute(GetFixLocation(-76.087418000f, 39.626028000f, 1483293288, 6.845882f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1129" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.565086000f, 40.150639000f, 1491515874, 30.273542f));
+  nav.SnapToRoute(GetFixLocation(-76.087692000f, 39.625816000f, 1483293293, 6.659941f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1130" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.565333000f, 40.150833000f, 1491515875, 30.134377f));
+  nav.SnapToRoute(GetFixLocation(-76.088212000f, 39.625411000f, 1483293303, 6.340720f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1131" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.565581000f, 40.151027000f, 1491515876, 30.193737f));
+  nav.SnapToRoute(GetFixLocation(-76.088358000f, 39.625297000f, 1483293306, 5.941890f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1132" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.565828000f, 40.151223000f, 1491515877, 30.294245f));
+  nav.SnapToRoute(GetFixLocation(-76.088651000f, 39.625489000f, 1483293312, 5.497349f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1133" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.566080000f, 40.151417000f, 1491515878, 30.432484f));
+  nav.SnapToRoute(GetFixLocation(-76.088930000f, 39.626000000f, 1483293321, 6.856620f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1134" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.566332000f, 40.151610000f, 1491515879, 30.353546f));
+  nav.SnapToRoute(GetFixLocation(-76.089195000f, 39.626550000f, 1483293330, 7.256197f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1135" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.566583000f, 40.151807000f, 1491515880, 30.610867f));
+  nav.SnapToRoute(GetFixLocation(-76.089261000f, 39.626849000f, 1483293334, 8.440536f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1136" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.566835000f, 40.152001000f, 1491515881, 30.432354f));
+  nav.SnapToRoute(GetFixLocation(-76.089312000f, 39.627294000f, 1483293339, 9.945958f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1137" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.567090000f, 40.152194000f, 1491515882, 30.534262f));
+  nav.SnapToRoute(GetFixLocation(-76.089336000f, 39.627484000f, 1483293341, 10.625283f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1138" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.567344000f, 40.152389000f, 1491515883, 30.631189f));
+  nav.SnapToRoute(GetFixLocation(-76.089355000f, 39.627675000f, 1483293343, 10.662169f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1139" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.567601000f, 40.152584000f, 1491515884, 30.811769f));
+  nav.SnapToRoute(GetFixLocation(-76.089395000f, 39.627965000f, 1483293346, 10.821437f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1140" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.567860000f, 40.152777000f, 1491515885, 30.776896f));
+  nav.SnapToRoute(GetFixLocation(-76.089430000f, 39.628154000f, 1483293348, 10.626156f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1141" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.568115000f, 40.152967000f, 1491515886, 30.300032f));
+  nav.SnapToRoute(GetFixLocation(-76.089488000f, 39.628337000f, 1483293350, 10.484817f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1142" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.568370000f, 40.153164000f, 1491515887, 30.848976f));
+  nav.SnapToRoute(GetFixLocation(-76.089533000f, 39.628436000f, 1483293351, 11.676475f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1143" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.568623000f, 40.153361000f, 1491515888, 30.729488f));
+  nav.SnapToRoute(GetFixLocation(-76.089582000f, 39.628527000f, 1483293352, 10.966681f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1144" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.568878000f, 40.153558000f, 1491515889, 30.848886f));
+  nav.SnapToRoute(GetFixLocation(-76.089690000f, 39.628695000f, 1483293354, 10.434248f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1145" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.569133000f, 40.153752000f, 1491515890, 30.612339f));
+  nav.SnapToRoute(GetFixLocation(-76.089894000f, 39.628940000f, 1483293357, 10.799933f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1146" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.569390000f, 40.153948000f, 1491515891, 30.889986f));
+  nav.SnapToRoute(GetFixLocation(-76.090207000f, 39.629251000f, 1483293361, 10.950813f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1147" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.569644000f, 40.154149000f, 1491515892, 31.107700f));
+  nav.SnapToRoute(GetFixLocation(-76.090450000f, 39.629497000f, 1483293364, 11.469636f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1148" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.569899000f, 40.154348000f, 1491515893, 31.007376f));
+  nav.SnapToRoute(GetFixLocation(-76.090694000f, 39.629746000f, 1483293367, 11.575605f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1149" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.570154000f, 40.154546000f, 1491515894, 30.927900f));
+  nav.SnapToRoute(GetFixLocation(-76.090846000f, 39.629907000f, 1483293369, 11.079759f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1150" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.570410000f, 40.154745000f, 1491515895, 31.066879f));
+  nav.SnapToRoute(GetFixLocation(-76.090971000f, 39.630078000f, 1483293371, 10.922562f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1151" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.570668000f, 40.154943000f, 1491515896, 31.107397f));
+  nav.SnapToRoute(GetFixLocation(-76.091173000f, 39.630674000f, 1483293378, 9.795647f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1152" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.570926000f, 40.155137000f, 1491515897, 30.793453f));
+  nav.SnapToRoute(GetFixLocation(-76.091308000f, 39.631270000f, 1483293386, 8.418551f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1153" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.571184000f, 40.155336000f, 1491515898, 31.186283f));
+  nav.SnapToRoute(GetFixLocation(-76.091375000f, 39.631590000f, 1483293392, 6.013733f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1154" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.571437000f, 40.155538000f, 1491515899, 31.128666f));
+  nav.SnapToRoute(GetFixLocation(-76.091398000f, 39.631718000f, 1483293395, 4.794897f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1155" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.571700000f, 40.155738000f, 1491515900, 31.565487f));
+  nav.SnapToRoute(GetFixLocation(-76.091406000f, 39.631760000f, 1483293396, 4.725459f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1156" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.571959000f, 40.155941000f, 1491515901, 31.563341f));
+  nav.SnapToRoute(GetFixLocation(-76.091430000f, 39.631886000f, 1483293399, 4.725458f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1157" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.572223000f, 40.156147000f, 1491515902, 32.099468f));
+  nav.SnapToRoute(GetFixLocation(-76.091444000f, 39.631970000f, 1483293401, 4.713778f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1158" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.572493000f, 40.156352000f, 1491515903, 32.380119f));
+  nav.SnapToRoute(GetFixLocation(-76.091457000f, 39.632090000f, 1483293404, 4.468251f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1159" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.572761000f, 40.156553000f, 1491515904, 31.946136f));
+  nav.SnapToRoute(GetFixLocation(-76.091485000f, 39.632340000f, 1483293410, 4.655535f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1160" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.573023000f, 40.156753000f, 1491515905, 31.504995f));
+  nav.SnapToRoute(GetFixLocation(-76.091459000f, 39.632824000f, 1483293422, 4.493727f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1161" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.573285000f, 40.156955000f, 1491515906, 31.662676f));
+  nav.SnapToRoute(GetFixLocation(-76.091494000f, 39.633036000f, 1483293428, 3.964955f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1162" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.573547000f, 40.157157000f, 1491515907, 31.662630f));
+  nav.SnapToRoute(GetFixLocation(-76.091531000f, 39.633063000f, 1483293429, 4.369892f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1163" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.573805000f, 40.157358000f, 1491515908, 31.344364f));
+  nav.SnapToRoute(GetFixLocation(-76.091825000f, 39.633109000f, 1483293433, 6.430038f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1164" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.574072000f, 40.157557000f, 1491515909, 31.729389f));
+  nav.SnapToRoute(GetFixLocation(-76.092628000f, 39.633133000f, 1483293440, 9.842101f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1165" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.574338000f, 40.157759000f, 1491515910, 31.902988f));
+  nav.SnapToRoute(GetFixLocation(-76.092758000f, 39.633137000f, 1483293441, 11.154063f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1166" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.574601000f, 40.157964000f, 1491515911, 31.959991f));
+  nav.SnapToRoute(GetFixLocation(-76.093017000f, 39.633146000f, 1483293443, 11.113601f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1167" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.574864000f, 40.158163000f, 1491515912, 31.486502f));
+  nav.SnapToRoute(GetFixLocation(-76.093267000f, 39.633157000f, 1483293445, 10.733984f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1168" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.575122000f, 40.158363000f, 1491515913, 31.264769f));
+  nav.SnapToRoute(GetFixLocation(-76.093517000f, 39.633166000f, 1483293447, 10.728209f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1169" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.575383000f, 40.158562000f, 1491515914, 31.365719f));
+  nav.SnapToRoute(GetFixLocation(-76.093767000f, 39.633173000f, 1483293449, 10.723586f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1170" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.575639000f, 40.158761000f, 1491515915, 31.065975f));
+  nav.SnapToRoute(GetFixLocation(-76.094259000f, 39.633193000f, 1483293453, 10.559719f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1171" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.575894000f, 40.158957000f, 1491515916, 30.768635f));
+  nav.SnapToRoute(GetFixLocation(-76.094950000f, 39.633224000f, 1483293459, 9.890206f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1172" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.576148000f, 40.159156000f, 1491515917, 30.946835f));
+  nav.SnapToRoute(GetFixLocation(-76.095525000f, 39.633245000f, 1483293464, 9.870256f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1173" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.576396000f, 40.159352000f, 1491515918, 30.351580f));
+  nav.SnapToRoute(GetFixLocation(-76.095867000f, 39.633252000f, 1483293467, 9.776894f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1174" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.576644000f, 40.159545000f, 1491515919, 30.112362f));
+  nav.SnapToRoute(GetFixLocation(-76.095980000f, 39.633253000f, 1483293468, 9.688350f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1175" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.576895000f, 40.159736000f, 1491515920, 30.134199f));
+  nav.SnapToRoute(GetFixLocation(-76.096432000f, 39.633254000f, 1483293472, 9.687750f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1176" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.577144000f, 40.159929000f, 1491515921, 30.171949f));
+  nav.SnapToRoute(GetFixLocation(-76.096990000f, 39.633270000f, 1483293477, 9.574313f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1177" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.577393000f, 40.160122000f, 1491515922, 30.171907f));
+  nav.SnapToRoute(GetFixLocation(-76.097776000f, 39.633318000f, 1483293484, 9.656684f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1178" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.577642000f, 40.160318000f, 1491515923, 30.410572f));
+  nav.SnapToRoute(GetFixLocation(-76.097884000f, 39.633329000f, 1483293485, 9.339661f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1179" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.577889000f, 40.160511000f, 1491515924, 30.052605f));
+  nav.SnapToRoute(GetFixLocation(-76.098311000f, 39.633391000f, 1483293489, 9.313106f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1180" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.578137000f, 40.160703000f, 1491515925, 30.032785f));
+  nav.SnapToRoute(GetFixLocation(-76.099006000f, 39.633596000f, 1483293496, 9.114877f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1181" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.578386000f, 40.160892000f, 1491515926, 29.856302f));
+  nav.SnapToRoute(GetFixLocation(-76.099636000f, 39.633854000f, 1483293503, 8.738871f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1182" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.578637000f, 40.161080000f, 1491515927, 29.899199f));
+  nav.SnapToRoute(GetFixLocation(-76.099726000f, 39.633887000f, 1483293504, 8.545676f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1183" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.578888000f, 40.161274000f, 1491515928, 30.370415f));
+  nav.SnapToRoute(GetFixLocation(-76.100460000f, 39.634104000f, 1483293512, 8.425484f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1184" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.579140000f, 40.161469000f, 1491515929, 30.509350f));
+  nav.SnapToRoute(GetFixLocation(-76.101129000f, 39.634283000f, 1483293519, 8.673820f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1185" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.579393000f, 40.161664000f, 1491515930, 30.569147f));
+  nav.SnapToRoute(GetFixLocation(-76.101866000f, 39.634490000f, 1483293527, 8.406776f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1186" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.579643000f, 40.161859000f, 1491515931, 30.389944f));
+  nav.SnapToRoute(GetFixLocation(-76.102544000f, 39.634674000f, 1483293535, 7.703567f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1187" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.579891000f, 40.162051000f, 1491515932, 30.032492f));
+  nav.SnapToRoute(GetFixLocation(-76.103204000f, 39.634863000f, 1483293544, 6.707432f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1188" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.580135000f, 40.162242000f, 1491515933, 29.714621f));
+  nav.SnapToRoute(GetFixLocation(-76.103629000f, 39.634989000f, 1483293551, 5.577395f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1189" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.580380000f, 40.162432000f, 1491515934, 29.694679f));
+  nav.SnapToRoute(GetFixLocation(-76.104367000f, 39.635214000f, 1483293560, 7.560658f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1190" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.580624000f, 40.162625000f, 1491515935, 29.874252f));
+  nav.SnapToRoute(GetFixLocation(-76.105084000f, 39.635419000f, 1483293566, 10.927903f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1191" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.580870000f, 40.162816000f, 1491515936, 29.833605f));
+  nav.SnapToRoute(GetFixLocation(-76.105213000f, 39.635454000f, 1483293567, 11.725327f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1192" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.581111000f, 40.163009000f, 1491515937, 29.697405f));
+  nav.SnapToRoute(GetFixLocation(-76.105485000f, 39.635526000f, 1483293569, 12.328676f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1193" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.581357000f, 40.163198000f, 1491515938, 29.675261f));
+  nav.SnapToRoute(GetFixLocation(-76.105769000f, 39.635600000f, 1483293571, 12.851440f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1194" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.581597000f, 40.163386000f, 1491515939, 29.237703f));
+  nav.SnapToRoute(GetFixLocation(-76.106051000f, 39.635673000f, 1483293573, 12.752407f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1195" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.581838000f, 40.163573000f, 1491515940, 29.217718f));
+  nav.SnapToRoute(GetFixLocation(-76.106331000f, 39.635747000f, 1483293575, 12.689121f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1196" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.582080000f, 40.163758000f, 1491515941, 29.119556f));
+  nav.SnapToRoute(GetFixLocation(-76.106470000f, 39.635783000f, 1483293576, 12.572130f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1197" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.582325000f, 40.163942000f, 1491515942, 29.222370f));
+  nav.SnapToRoute(GetFixLocation(-76.106608000f, 39.635819000f, 1483293577, 12.490897f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1198" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.582569000f, 40.164131000f, 1491515943, 29.555317f));
+  nav.SnapToRoute(GetFixLocation(-76.106746000f, 39.635855000f, 1483293578, 12.490891f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1199" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.582819000f, 40.164321000f, 1491515944, 29.994354f));
+  nav.SnapToRoute(GetFixLocation(-76.106883000f, 39.635891000f, 1483293579, 12.409719f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1200" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.583067000f, 40.164514000f, 1491515945, 30.111280f));
+  nav.SnapToRoute(GetFixLocation(-76.107148000f, 39.635963000f, 1483293581, 12.045245f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1201" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.583312000f, 40.164703000f, 1491515946, 29.615002f));
+  nav.SnapToRoute(GetFixLocation(-76.107665000f, 39.636103000f, 1483293585, 11.745454f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1202" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.583554000f, 40.164890000f, 1491515947, 29.277195f));
+  nav.SnapToRoute(GetFixLocation(-76.108184000f, 39.636249000f, 1483293589, 11.842127f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1203" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.583792000f, 40.165071000f, 1491515948, 28.563887f));
+  nav.SnapToRoute(GetFixLocation(-76.108544000f, 39.636350000f, 1483293592, 10.948784f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1204" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.584028000f, 40.165248000f, 1491515949, 28.129835f));
+  nav.SnapToRoute(GetFixLocation(-76.108771000f, 39.636414000f, 1483293594, 10.361708f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1205" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.584266000f, 40.165432000f, 1491515950, 28.800356f));
+  nav.SnapToRoute(GetFixLocation(-76.109477000f, 39.636624000f, 1483293601, 9.268809f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1206" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.584497000f, 40.165612000f, 1491515951, 28.065237f));
+  nav.SnapToRoute(GetFixLocation(-76.109726000f, 39.636699000f, 1483293604, 7.640285f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1207" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.584730000f, 40.165794000f, 1491515952, 28.343306f));
+  nav.SnapToRoute(GetFixLocation(-76.109930000f, 39.636764000f, 1483293607, 6.308740f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1208" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.584962000f, 40.165979000f, 1491515953, 28.524015f));
+  nav.SnapToRoute(GetFixLocation(-76.110064000f, 39.636806000f, 1483293609, 6.201251f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1209" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.585196000f, 40.166165000f, 1491515954, 28.722103f));
+  nav.SnapToRoute(GetFixLocation(-76.110203000f, 39.636849000f, 1483293611, 6.420804f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1210" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.585435000f, 40.166347000f, 1491515955, 28.702444f));
+  nav.SnapToRoute(GetFixLocation(-76.110348000f, 39.636891000f, 1483293613, 6.640339f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1211" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.585672000f, 40.166528000f, 1491515956, 28.503345f));
+  nav.SnapToRoute(GetFixLocation(-76.111031000f, 39.637080000f, 1483293621, 7.777134f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1212" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.585906000f, 40.166707000f, 1491515957, 28.165426f));
+  nav.SnapToRoute(GetFixLocation(-76.111673000f, 39.637309000f, 1483293627, 10.108985f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1213" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.586142000f, 40.166892000f, 1491515958, 28.760311f));
+  nav.SnapToRoute(GetFixLocation(-76.111776000f, 39.637359000f, 1483293628, 10.437752f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1214" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.586384000f, 40.167079000f, 1491515959, 29.276728f));
+  nav.SnapToRoute(GetFixLocation(-76.111969000f, 39.637467000f, 1483293630, 10.226028f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1215" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.586626000f, 40.167266000f, 1491515960, 29.276688f));
+  nav.SnapToRoute(GetFixLocation(-76.112154000f, 39.637577000f, 1483293632, 10.018297f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1216" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.586868000f, 40.167449000f, 1491515961, 28.961733f));
+  nav.SnapToRoute(GetFixLocation(-76.112745000f, 39.637909000f, 1483293639, 8.958828f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1217" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.587104000f, 40.167632000f, 1491515962, 28.601156f));
+  nav.SnapToRoute(GetFixLocation(-76.113263000f, 39.638138000f, 1483293647, 6.400379f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1218" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.587337000f, 40.167810000f, 1491515963, 28.026327f));
+  nav.SnapToRoute(GetFixLocation(-76.113409000f, 39.638193000f, 1483293650, 4.644417f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1219" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.587566000f, 40.167988000f, 1491515964, 27.786697f));
+  nav.SnapToRoute(GetFixLocation(-76.113495000f, 39.638220000f, 1483293652, 3.980778f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1220" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.587797000f, 40.168169000f, 1491515965, 28.144306f));
+  nav.SnapToRoute(GetFixLocation(-76.113626000f, 39.638252000f, 1483293655, 3.927171f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1221" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.588029000f, 40.168346000f, 1491515966, 27.887362f));
+  nav.SnapToRoute(GetFixLocation(-76.113870000f, 39.638295000f, 1483293659, 5.364449f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1222" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.588260000f, 40.168524000f, 1491515967, 27.906124f));
+  nav.SnapToRoute(GetFixLocation(-76.114565000f, 39.638385000f, 1483293668, 6.712869f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1223" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.588494000f, 40.168700000f, 1491515968, 27.929741f));
+  nav.SnapToRoute(GetFixLocation(-76.114720000f, 39.638408000f, 1483293670, 6.765945f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1224" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.588727000f, 40.168878000f, 1491515969, 28.026108f));
+  nav.SnapToRoute(GetFixLocation(-76.115442000f, 39.638525000f, 1483293679, 7.027703f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1225" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.588957000f, 40.169054000f, 1491515970, 27.688200f));
+  nav.SnapToRoute(GetFixLocation(-76.116127000f, 39.638670000f, 1483293687, 7.612487f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1226" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.589186000f, 40.169229000f, 1491515971, 27.549292f));
+  nav.SnapToRoute(GetFixLocation(-76.116548000f, 39.638784000f, 1483293691, 9.564113f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1227" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.589414000f, 40.169405000f, 1491515972, 27.568176f));
+  nav.SnapToRoute(GetFixLocation(-76.116860000f, 39.638882000f, 1483293694, 9.628504f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1228" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.589642000f, 40.169580000f, 1491515973, 27.489140f));
+  nav.SnapToRoute(GetFixLocation(-76.117060000f, 39.638947000f, 1483293696, 9.304661f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1229" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.589871000f, 40.169756000f, 1491515974, 27.628016f));
+  nav.SnapToRoute(GetFixLocation(-76.117257000f, 39.639011000f, 1483293698, 9.164543f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1230" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.590095000f, 40.169928000f, 1491515975, 27.012342f));
+  nav.SnapToRoute(GetFixLocation(-76.117820000f, 39.639197000f, 1483293704, 8.752829f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1231" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.590319000f, 40.170101000f, 1491515976, 27.091328f));
+  nav.SnapToRoute(GetFixLocation(-76.118508000f, 39.639428000f, 1483293712, 8.042566f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1232" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.590542000f, 40.170271000f, 1491515977, 26.794634f));
+  nav.SnapToRoute(GetFixLocation(-76.119209000f, 39.639650000f, 1483293721, 7.219532f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1233" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.590764000f, 40.170442000f, 1491515978, 26.813364f));
+  nav.SnapToRoute(GetFixLocation(-76.119288000f, 39.639675000f, 1483293722, 7.321725f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1234" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.590984000f, 40.170612000f, 1491515979, 26.614521f));
+  nav.SnapToRoute(GetFixLocation(-76.119928000f, 39.639902000f, 1483293730, 7.550379f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1235" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.591203000f, 40.170783000f, 1491515980, 26.634193f));
+  nav.SnapToRoute(GetFixLocation(-76.120380000f, 39.640095000f, 1483293735, 8.860983f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1236" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.591422000f, 40.170952000f, 1491515981, 26.475496f));
+  nav.SnapToRoute(GetFixLocation(-76.120670000f, 39.640220000f, 1483293738, 9.496398f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1237" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.591638000f, 40.171117000f, 1491515982, 25.979841f));
+  nav.SnapToRoute(GetFixLocation(-76.120765000f, 39.640261000f, 1483293739, 9.335472f));
 #ifdef LOGGING_LEVEL_TRACE
   std::cout << "  //----------------------------------------------------------------" << std::endl;
   std::cout << "  // trace point = 1238" << std::endl;
 #endif
-  nav.SnapToRoute(GetFixLocation(-76.591855000f, 40.171286000f, 1491515983, 26.356009f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1239" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.592072000f, 40.171450000f, 1491515984, 25.961601f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1240" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.592286000f, 40.171614000f, 1491515985, 25.780764f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1241" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.592503000f, 40.171781000f, 1491515986, 26.197456f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1242" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.592719000f, 40.171944000f, 1491515987, 25.822756f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1243" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.592932000f, 40.172111000f, 1491515988, 25.958790f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1244" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.593148000f, 40.172275000f, 1491515989, 25.901035f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1245" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.593363000f, 40.172441000f, 1491515990, 25.998507f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1246" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.593578000f, 40.172607000f, 1491515991, 25.998476f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1247" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.593796000f, 40.172777000f, 1491515992, 26.494762f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1248" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.594015000f, 40.172948000f, 1491515993, 26.633778f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1249" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.594235000f, 40.173117000f, 1491515994, 26.534994f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1250" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.594458000f, 40.173288000f, 1491515995, 26.872776f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1251" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.594680000f, 40.173464000f, 1491515996, 27.210751f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1252" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.594902000f, 40.173641000f, 1491515997, 27.290977f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1253" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.595125000f, 40.173820000f, 1491515998, 27.510693f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1254" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.595348000f, 40.173998000f, 1491515999, 27.430136f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1255" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.595571000f, 40.174178000f, 1491516000, 27.591360f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1256" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.595797000f, 40.174355000f, 1491516001, 27.527344f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1257" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.596030000f, 40.174537000f, 1491516002, 28.341520f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1258" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.596252000f, 40.174709000f, 1491516003, 26.891674f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1259" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.596472000f, 40.174876000f, 1491516004, 26.377270f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1260" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.596690000f, 40.175047000f, 1491516005, 26.573956f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1261" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.596907000f, 40.175212000f, 1491516006, 26.039278f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1262" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.597116000f, 40.175384000f, 1491516007, 26.126991f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1263" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.597324000f, 40.175546000f, 1491516008, 25.262856f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1264" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.597527000f, 40.175713000f, 1491516009, 25.371801f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1265" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.597719000f, 40.175878000f, 1491516010, 24.577728f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1266" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.597907000f, 40.176045000f, 1491516011, 24.521326f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1267" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.598095000f, 40.176212000f, 1491516012, 24.521299f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1268" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.598278000f, 40.176382000f, 1491516013, 24.503092f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1269" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.598460000f, 40.176546000f, 1491516014, 23.935875f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1270" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.598633000f, 40.176714000f, 1491516015, 23.796387f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1271" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.598801000f, 40.176875000f, 1491516016, 22.921467f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1272" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.598961000f, 40.177034000f, 1491516017, 22.326647f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1273" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599112000f, 40.177199000f, 1491516018, 22.412495f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1274" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599259000f, 40.177365000f, 1491516019, 22.311380f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1275" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599394000f, 40.177528000f, 1491516020, 21.472908f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1276" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599521000f, 40.177684000f, 1491516021, 20.451187f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1277" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599636000f, 40.177832000f, 1491516022, 19.159996f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1278" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599736000f, 40.177964000f, 1491516023, 16.978191f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1279" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599826000f, 40.178085000f, 1491516024, 15.492808f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1280" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599904000f, 40.178196000f, 1491516025, 14.024754f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1281" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.599978000f, 40.178295000f, 1491516026, 12.691234f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1282" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600053000f, 40.178391000f, 1491516027, 12.445715f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1283" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600114000f, 40.178479000f, 1491516028, 11.085182f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1284" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600178000f, 40.178562000f, 1491516029, 10.723746f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1285" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600240000f, 40.178647000f, 1491516030, 10.832333f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1286" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600304000f, 40.178730000f, 1491516031, 10.723739f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1287" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600355000f, 40.178810000f, 1491516032, 9.905766f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1288" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600438000f, 40.178944000f, 1491516034, 8.251440f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1289" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600480000f, 40.179055000f, 1491516036, 6.431225f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1290" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600481000f, 40.179153000f, 1491516038, 5.454821f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1291" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600465000f, 40.179287000f, 1491516040, 7.489377f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1292" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600450000f, 40.179370000f, 1491516041, 9.327179f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1293" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600429000f, 40.179461000f, 1491516042, 10.286324f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1294" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600405000f, 40.179562000f, 1491516043, 11.427059f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1295" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600379000f, 40.179676000f, 1491516044, 12.881644f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1296" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600350000f, 40.179804000f, 1491516045, 14.460792f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1297" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600315000f, 40.179937000f, 1491516046, 15.101781f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1298" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600278000f, 40.180089000f, 1491516047, 17.210701f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1299" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600249000f, 40.180252000f, 1491516048, 18.311943f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1300" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600223000f, 40.180421000f, 1491516049, 18.942507f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1301" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600187000f, 40.180606000f, 1491516050, 20.820465f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1302" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600174000f, 40.180794000f, 1491516051, 20.957251f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1303" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600166000f, 40.180974000f, 1491516052, 20.049057f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1304" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600162000f, 40.181159000f, 1491516053, 20.596916f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1305" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600165000f, 40.181340000f, 1491516054, 20.150444f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1306" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600163000f, 40.181525000f, 1491516055, 20.594809f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1307" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600170000f, 40.181709000f, 1491516056, 20.491436f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1308" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600171000f, 40.181890000f, 1491516057, 20.149008f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1309" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600189000f, 40.182069000f, 1491516058, 19.984907f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1310" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600210000f, 40.182242000f, 1491516059, 19.340912f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1311" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600238000f, 40.182425000f, 1491516060, 20.510178f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1312" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600268000f, 40.182603000f, 1491516061, 19.978458f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1313" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600304000f, 40.182783000f, 1491516062, 20.270069f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1314" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600361000f, 40.182952000f, 1491516063, 19.427523f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1315" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600411000f, 40.183128000f, 1491516064, 20.048388f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1316" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600466000f, 40.183303000f, 1491516065, 20.034605f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1317" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600520000f, 40.183484000f, 1491516066, 20.665583f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1318" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600581000f, 40.183664000f, 1491516067, 20.698191f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1319" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600652000f, 40.183850000f, 1491516068, 21.567919f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1320" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600727000f, 40.184032000f, 1491516069, 21.240475f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1321" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600812000f, 40.184196000f, 1491516070, 19.635487f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1322" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600898000f, 40.184371000f, 1491516071, 20.808620f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1323" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.600988000f, 40.184544000f, 1491516072, 20.723545f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1324" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601084000f, 40.184717000f, 1491516073, 20.917376f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1325" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601182000f, 40.184878000f, 1491516074, 19.765507f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1326" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601287000f, 40.185041000f, 1491516075, 20.223312f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1327" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601384000f, 40.185207000f, 1491516076, 20.236731f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1328" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601478000f, 40.185370000f, 1491516077, 19.828005f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1329" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601579000f, 40.185532000f, 1491516078, 19.974842f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1330" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601676000f, 40.185695000f, 1491516079, 19.932219f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1331" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601773000f, 40.185855000f, 1491516080, 19.628681f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1332" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601869000f, 40.186011000f, 1491516081, 19.189201f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1333" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.601964000f, 40.186169000f, 1491516082, 19.355257f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1334" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602058000f, 40.186324000f, 1491516083, 19.016378f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1335" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602150000f, 40.186478000f, 1491516084, 18.844173f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1336" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602239000f, 40.186630000f, 1491516085, 18.536222f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1337" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602332000f, 40.186784000f, 1491516086, 18.879625f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1338" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602427000f, 40.186937000f, 1491516087, 18.850859f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1339" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602523000f, 40.187090000f, 1491516088, 18.887453f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1340" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602619000f, 40.187244000f, 1491516089, 18.987890f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1341" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602715000f, 40.187403000f, 1491516090, 19.491875f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1342" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602813000f, 40.187565000f, 1491516091, 19.866364f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1343" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.602913000f, 40.187731000f, 1491516092, 20.341934f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1344" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603014000f, 40.187901000f, 1491516093, 20.782261f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1345" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603120000f, 40.188071000f, 1491516094, 20.961561f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1346" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603226000f, 40.188239000f, 1491516095, 20.760771f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1347" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603334000f, 40.188405000f, 1491516096, 20.635565f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1348" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603433000f, 40.188568000f, 1491516097, 20.003059f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1349" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603528000f, 40.188733000f, 1491516098, 20.065876f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1350" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603624000f, 40.188895000f, 1491516099, 19.795549f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1351" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603716000f, 40.189052000f, 1491516100, 19.148367f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1352" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603807000f, 40.189204000f, 1491516101, 18.606197f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1353" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603900000f, 40.189351000f, 1491516102, 18.174858f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1354" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.603987000f, 40.189497000f, 1491516103, 17.857330f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1355" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604073000f, 40.189640000f, 1491516104, 17.518250f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1356" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604166000f, 40.189785000f, 1491516105, 17.974642f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1357" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604253000f, 40.189930000f, 1491516106, 17.756054f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1358" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604337000f, 40.190075000f, 1491516107, 17.651276f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1359" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604426000f, 40.190222000f, 1491516108, 18.029404f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1360" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604520000f, 40.190372000f, 1491516109, 18.512623f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1361" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604614000f, 40.190529000f, 1491516110, 19.218412f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1362" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604706000f, 40.190689000f, 1491516111, 19.453581f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1363" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604806000f, 40.190852000f, 1491516112, 20.038879f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1364" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.604902000f, 40.191018000f, 1491516113, 20.201929f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1365" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605004000f, 40.191188000f, 1491516114, 20.817377f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1366" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605112000f, 40.191360000f, 1491516115, 21.235588f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1367" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605214000f, 40.191531000f, 1491516116, 20.918606f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1368" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605320000f, 40.191703000f, 1491516117, 21.162573f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1369" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605428000f, 40.191881000f, 1491516118, 21.839693f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1370" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605536000f, 40.192060000f, 1491516119, 21.940731f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1371" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605647000f, 40.192244000f, 1491516120, 22.552994f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1372" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605761000f, 40.192429000f, 1491516121, 22.761604f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1373" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605877000f, 40.192622000f, 1491516122, 23.640850f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1374" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.605996000f, 40.192818000f, 1491516123, 24.050957f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1375" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.606118000f, 40.193017000f, 1491516124, 24.461405f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1376" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.606236000f, 40.193216000f, 1491516125, 24.319090f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1377" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.606352000f, 40.193413000f, 1491516126, 24.046186f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1378" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.606469000f, 40.193607000f, 1491516127, 23.777456f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1379" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.606588000f, 40.193803000f, 1491516128, 24.050896f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1380" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.606706000f, 40.193999000f, 1491516129, 24.015230f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1381" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.606823000f, 40.194193000f, 1491516130, 23.777420f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1382" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.606937000f, 40.194383000f, 1491516131, 23.266291f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1383" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607046000f, 40.194570000f, 1491516132, 22.786890f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1384" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607149000f, 40.194755000f, 1491516133, 22.379122f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1385" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607252000f, 40.194935000f, 1491516134, 21.867996f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1386" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607362000f, 40.195111000f, 1491516135, 21.710436f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1387" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607468000f, 40.195285000f, 1491516136, 21.364016f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1388" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607573000f, 40.195462000f, 1491516137, 21.632013f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1389" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607679000f, 40.195637000f, 1491516138, 21.464975f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1390" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607790000f, 40.195814000f, 1491516139, 21.847506f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1391" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.607901000f, 40.195994000f, 1491516140, 22.149151f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1392" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608011000f, 40.196172000f, 1491516141, 21.911501f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1393" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608115000f, 40.196347000f, 1491516142, 21.394083f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1394" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608220000f, 40.196522000f, 1491516143, 21.429359f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1395" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608326000f, 40.196703000f, 1491516144, 22.072878f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1396" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608435000f, 40.196882000f, 1491516145, 21.976183f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1397" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608543000f, 40.197065000f, 1491516146, 22.345625f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1398" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608652000f, 40.197251000f, 1491516147, 22.685091f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1399" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608764000f, 40.197434000f, 1491516148, 22.487514f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1400" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608877000f, 40.197616000f, 1491516149, 22.423012f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1401" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.608987000f, 40.197793000f, 1491516150, 21.810789f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1402" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609097000f, 40.197967000f, 1491516151, 21.509562f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1403" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609208000f, 40.198148000f, 1491516152, 22.249781f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1404" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609319000f, 40.198328000f, 1491516153, 22.149014f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1405" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609424000f, 40.198509000f, 1491516154, 22.038198f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1406" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609528000f, 40.198698000f, 1491516155, 22.822165f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1407" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609629000f, 40.198887000f, 1491516156, 22.724537f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1408" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609745000f, 40.199066000f, 1491516157, 22.233614f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1409" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609856000f, 40.199252000f, 1491516158, 22.754984f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1410" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.609969000f, 40.199437000f, 1491516159, 22.725100f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1411" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610082000f, 40.199624000f, 1491516160, 22.927042f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1412" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610188000f, 40.199815000f, 1491516161, 23.093351f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1413" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610297000f, 40.200005000f, 1491516162, 23.092075f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1414" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610406000f, 40.200195000f, 1491516163, 23.092066f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1415" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610507000f, 40.200386000f, 1491516164, 22.930748f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1416" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610604000f, 40.200580000f, 1491516165, 23.117224f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1417" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610695000f, 40.200777000f, 1491516166, 23.254827f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1418" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610774000f, 40.200971000f, 1491516167, 22.616442f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1419" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610857000f, 40.201165000f, 1491516168, 22.719763f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1420" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.610936000f, 40.201367000f, 1491516169, 23.468294f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1421" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611014000f, 40.201573000f, 1491516170, 23.871519f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1422" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611091000f, 40.201784000f, 1491516171, 24.383724f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1423" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611167000f, 40.201995000f, 1491516172, 24.361029f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1424" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611241000f, 40.202201000f, 1491516173, 23.779264f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1425" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611311000f, 40.202412000f, 1491516174, 24.230700f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1426" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611386000f, 40.202619000f, 1491516175, 23.909161f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1427" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611456000f, 40.202817000f, 1491516176, 22.830635f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1428" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611522000f, 40.203010000f, 1491516177, 22.205379f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1429" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611591000f, 40.203198000f, 1491516178, 21.734753f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1430" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611654000f, 40.203382000f, 1491516179, 21.171558f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1431" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611712000f, 40.203558000f, 1491516180, 20.203278f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1432" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611773000f, 40.203735000f, 1491516181, 20.374672f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1433" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611833000f, 40.203903000f, 1491516182, 19.384922f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1434" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611891000f, 40.204074000f, 1491516183, 19.663975f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1435" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.611950000f, 40.204241000f, 1491516184, 19.255219f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1436" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612003000f, 40.204403000f, 1491516185, 18.588194f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1437" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612060000f, 40.204562000f, 1491516186, 18.351234f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1438" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612113000f, 40.204716000f, 1491516187, 17.725512f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1439" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612168000f, 40.204876000f, 1491516188, 18.414709f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1440" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612231000f, 40.205036000f, 1491516189, 18.599056f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1441" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612286000f, 40.205209000f, 1491516190, 19.817831f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1442" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612343000f, 40.205382000f, 1491516191, 19.858635f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1443" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612404000f, 40.205554000f, 1491516192, 19.836878f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1444" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612461000f, 40.205728000f, 1491516193, 19.966602f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1445" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612523000f, 40.205906000f, 1491516194, 20.503994f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1446" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612586000f, 40.206087000f, 1491516195, 20.848581f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1447" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612644000f, 40.206268000f, 1491516196, 20.743439f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1448" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612705000f, 40.206447000f, 1491516197, 20.590004f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1449" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612768000f, 40.206624000f, 1491516198, 20.418558f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1450" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612832000f, 40.206803000f, 1491516199, 20.655712f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1451" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612897000f, 40.206980000f, 1491516200, 20.463810f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1452" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.612960000f, 40.207162000f, 1491516201, 20.956161f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1453" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613025000f, 40.207344000f, 1491516202, 21.000259f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1454" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613088000f, 40.207525000f, 1491516203, 20.848553f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1455" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613149000f, 40.207706000f, 1491516204, 20.805515f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1456" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613217000f, 40.207889000f, 1491516205, 21.175867f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1457" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613284000f, 40.208071000f, 1491516206, 21.045626f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1458" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613348000f, 40.208252000f, 1491516207, 20.870539f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1459" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613411000f, 40.208434000f, 1491516208, 20.956137f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1460" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613478000f, 40.208617000f, 1491516209, 21.152800f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1461" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613545000f, 40.208803000f, 1491516210, 21.474606f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1462" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613614000f, 40.208987000f, 1491516211, 21.306202f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1463" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613668000f, 40.209184000f, 1491516212, 22.405296f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1464" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613725000f, 40.209371000f, 1491516213, 21.373312f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1465" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613785000f, 40.209566000f, 1491516214, 22.298546f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1466" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613846000f, 40.209752000f, 1491516215, 21.344959f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1467" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613911000f, 40.209937000f, 1491516216, 21.322575f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1468" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.613977000f, 40.210118000f, 1491516217, 20.915468f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1469" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614041000f, 40.210299000f, 1491516218, 20.870497f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1470" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614103000f, 40.210482000f, 1491516219, 21.042282f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1471" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614169000f, 40.210661000f, 1491516220, 20.701065f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1472" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614238000f, 40.210839000f, 1491516221, 20.664871f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1473" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614307000f, 40.211011000f, 1491516222, 20.025320f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1474" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614379000f, 40.211187000f, 1491516223, 20.526081f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1475" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614448000f, 40.211361000f, 1491516224, 20.238291f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1476" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614524000f, 40.211536000f, 1491516225, 20.524334f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1477" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614608000f, 40.211703000f, 1491516226, 19.914665f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1478" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614690000f, 40.211866000f, 1491516227, 19.438026f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1479" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614778000f, 40.212027000f, 1491516228, 19.421068f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1480" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614872000f, 40.212184000f, 1491516229, 19.217350f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1481" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.614964000f, 40.212344000f, 1491516230, 19.452576f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1482" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.615060000f, 40.212507000f, 1491516231, 19.895847f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1483" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.615162000f, 40.212670000f, 1491516232, 20.110437f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1484" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.615269000f, 40.212834000f, 1491516233, 20.396894f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1485" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.615381000f, 40.212999000f, 1491516234, 20.688717f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1486" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.615497000f, 40.213164000f, 1491516235, 20.847378f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1487" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.615621000f, 40.213328000f, 1491516236, 21.081047f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1488" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.615749000f, 40.213489000f, 1491516237, 20.966927f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1489" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.615881000f, 40.213642000f, 1491516238, 20.396034f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1490" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.616011000f, 40.213794000f, 1491516239, 20.209686f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1491" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.616139000f, 40.213944000f, 1491516240, 19.930311f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1492" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.616268000f, 40.214090000f, 1491516241, 19.606167f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1493" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.616395000f, 40.214241000f, 1491516242, 19.977577f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1494" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.616529000f, 40.214385000f, 1491516243, 19.665094f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1495" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.616663000f, 40.214537000f, 1491516244, 20.397541f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1496" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.616798000f, 40.214692000f, 1491516245, 20.722355f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1497" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.616934000f, 40.214851000f, 1491516246, 21.140909f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1498" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.617073000f, 40.215008000f, 1491516247, 21.096617f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1499" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.617212000f, 40.215165000f, 1491516248, 21.096601f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1500" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.617350000f, 40.215328000f, 1491516249, 21.606874f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1501" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.617482000f, 40.215490000f, 1491516250, 21.239651f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1502" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.617612000f, 40.215655000f, 1491516251, 21.435772f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1503" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.617741000f, 40.215825000f, 1491516252, 21.871828f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1504" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.617858000f, 40.215995000f, 1491516253, 21.378618f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1505" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.617975000f, 40.216162000f, 1491516254, 21.083559f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1506" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618076000f, 40.216336000f, 1491516255, 21.187071f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1507" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618176000f, 40.216513000f, 1491516256, 21.458984f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1508" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618271000f, 40.216691000f, 1491516257, 21.397236f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1509" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618356000f, 40.216872000f, 1491516258, 21.405169f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1510" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618436000f, 40.217056000f, 1491516259, 21.582146f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1511" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618511000f, 40.217242000f, 1491516260, 21.664694f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1512" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618578000f, 40.217432000f, 1491516261, 21.904064f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1513" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618637000f, 40.217627000f, 1491516262, 22.279119f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1514" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618696000f, 40.217821000f, 1491516263, 22.170668f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1515" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618749000f, 40.218014000f, 1491516264, 21.951927f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1516" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618793000f, 40.218215000f, 1491516265, 22.685654f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1517" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618837000f, 40.218410000f, 1491516266, 22.027149f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1518" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618871000f, 40.218609000f, 1491516267, 22.340305f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1519" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618897000f, 40.218808000f, 1491516268, 22.262548f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1520" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618907000f, 40.219013000f, 1491516269, 22.836321f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1521" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618913000f, 40.219219000f, 1491516270, 22.937487f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1522" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618907000f, 40.219435000f, 1491516271, 24.050419f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1523" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618886000f, 40.219644000f, 1491516272, 23.334148f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1524" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618864000f, 40.219862000f, 1491516273, 24.339592f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1525" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618833000f, 40.220065000f, 1491516274, 22.750965f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1526" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618795000f, 40.220274000f, 1491516275, 23.488914f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1527" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618753000f, 40.220483000f, 1491516276, 23.538076f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1528" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618716000f, 40.220695000f, 1491516277, 23.808365f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1529" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618683000f, 40.220910000f, 1491516278, 24.097498f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1530" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618653000f, 40.221114000f, 1491516279, 22.851892f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1531" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618624000f, 40.221322000f, 1491516280, 23.285292f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1532" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618604000f, 40.221522000f, 1491516281, 22.328705f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1533" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618593000f, 40.221721000f, 1491516282, 22.172300f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1534" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618591000f, 40.221911000f, 1491516283, 21.151386f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1535" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618601000f, 40.222098000f, 1491516284, 20.834091f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1536" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618618000f, 40.222281000f, 1491516285, 20.422647f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1537" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618637000f, 40.222459000f, 1491516286, 19.880571f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1538" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618670000f, 40.222633000f, 1491516287, 19.571627f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1539" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618707000f, 40.222799000f, 1491516288, 18.744734f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1540" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618749000f, 40.222951000f, 1491516289, 17.293043f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1541" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618789000f, 40.223085000f, 1491516290, 15.299357f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1542" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618829000f, 40.223211000f, 1491516291, 14.432424f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1543" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618868000f, 40.223334000f, 1491516292, 14.087840f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1544" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618907000f, 40.223445000f, 1491516293, 12.793373f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1545" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618949000f, 40.223548000f, 1491516294, 12.008777f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1546" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.618988000f, 40.223646000f, 1491516295, 11.401806f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1547" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619019000f, 40.223730000f, 1491516296, 9.714972f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1548" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619061000f, 40.223865000f, 1491516298, 7.723152f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1549" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619100000f, 40.223948000f, 1491516301, 3.272049f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1550" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619141000f, 40.224042000f, 1491516321, 0.551452f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1551" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619182000f, 40.224142000f, 1491516323, 5.832326f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1552" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619233000f, 40.224282000f, 1491516325, 8.088167f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1553" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619265000f, 40.224366000f, 1491516326, 9.738360f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1554" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619297000f, 40.224450000f, 1491516327, 9.738359f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1555" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619331000f, 40.224542000f, 1491516328, 10.641296f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1556" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619374000f, 40.224637000f, 1491516329, 11.189074f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1557" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619415000f, 40.224739000f, 1491516330, 11.877302f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1558" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619461000f, 40.224849000f, 1491516331, 12.854166f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1559" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619505000f, 40.224965000f, 1491516332, 13.443690f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1560" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619551000f, 40.225082000f, 1491516333, 13.598545f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1561" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619599000f, 40.225204000f, 1491516334, 14.180513f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1562" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619649000f, 40.225331000f, 1491516335, 14.762482f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1563" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619711000f, 40.225461000f, 1491516336, 15.401103f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1564" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619766000f, 40.225597000f, 1491516337, 15.844721f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1565" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619822000f, 40.225734000f, 1491516338, 15.976232f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1566" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619875000f, 40.225871000f, 1491516339, 15.902128f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1567" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619930000f, 40.226008000f, 1491516340, 15.951111f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1568" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.619984000f, 40.226152000f, 1491516341, 16.674099f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1569" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620042000f, 40.226304000f, 1491516342, 17.624020f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1570" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620104000f, 40.226459000f, 1491516343, 18.041241f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1571" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620169000f, 40.226619000f, 1491516344, 18.648214f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1572" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620233000f, 40.226783000f, 1491516345, 19.049513f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1573" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620303000f, 40.226953000f, 1491516346, 19.837469f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1574" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620368000f, 40.227125000f, 1491516347, 19.928003f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1575" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620439000f, 40.227299000f, 1491516348, 20.287800f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1576" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620506000f, 40.227478000f, 1491516349, 20.723879f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1577" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620576000f, 40.227658000f, 1491516350, 20.902071f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1578" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620643000f, 40.227839000f, 1491516351, 20.938030f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1579" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620712000f, 40.228022000f, 1491516352, 21.198751f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1580" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620779000f, 40.228203000f, 1491516353, 20.938021f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1581" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620844000f, 40.228380000f, 1491516354, 20.463339f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1582" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620914000f, 40.228559000f, 1491516355, 20.795357f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1583" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.620979000f, 40.228747000f, 1491516356, 21.644905f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1584" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621048000f, 40.228934000f, 1491516357, 21.626982f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1585" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621116000f, 40.229121000f, 1491516358, 21.604088f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1586" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621192000f, 40.229312000f, 1491516359, 22.221479f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1587" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621267000f, 40.229510000f, 1491516360, 22.944427f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1588" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621342000f, 40.229714000f, 1491516361, 23.586777f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1589" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621419000f, 40.229912000f, 1491516362, 22.992216f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1590" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621500000f, 40.230110000f, 1491516363, 23.091269f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1591" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621577000f, 40.230309000f, 1491516364, 23.098944f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1592" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621649000f, 40.230504000f, 1491516365, 22.553272f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1593" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621718000f, 40.230689000f, 1491516366, 21.412727f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1594" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621790000f, 40.230869000f, 1491516367, 20.951002f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1595" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621857000f, 40.231043000f, 1491516368, 20.189201f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1596" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621924000f, 40.231215000f, 1491516369, 19.975695f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1597" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.621985000f, 40.231381000f, 1491516370, 19.192451f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1598" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622043000f, 40.231531000f, 1491516371, 17.410271f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1599" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622098000f, 40.231666000f, 1491516372, 15.738266f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1600" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622146000f, 40.231789000f, 1491516373, 14.287048f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1601" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622187000f, 40.231905000f, 1491516374, 13.374909f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1602" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622229000f, 40.232016000f, 1491516375, 12.861675f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1603" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622274000f, 40.232130000f, 1491516376, 13.254144f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1604" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622318000f, 40.232246000f, 1491516377, 13.443579f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1605" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622365000f, 40.232374000f, 1491516378, 14.798153f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1606" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622412000f, 40.232509000f, 1491516379, 15.549888f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1607" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622470000f, 40.232651000f, 1491516380, 16.558046f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1608" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622525000f, 40.232801000f, 1491516381, 17.339787f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1609" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622585000f, 40.232957000f, 1491516382, 18.098970f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1610" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622645000f, 40.233117000f, 1491516383, 18.526632f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1611" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622708000f, 40.233277000f, 1491516384, 18.598413f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1612" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622774000f, 40.233444000f, 1491516385, 19.418064f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1613" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622842000f, 40.233614000f, 1491516386, 19.786989f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1614" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622906000f, 40.233785000f, 1491516387, 19.797403f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1615" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.622972000f, 40.233954000f, 1491516388, 19.631306f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1616" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623037000f, 40.234121000f, 1491516389, 19.393671f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1617" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623102000f, 40.234294000f, 1491516390, 20.034822f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1618" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623163000f, 40.234466000f, 1491516391, 19.836300f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1619" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623230000f, 40.234638000f, 1491516392, 19.975613f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1620" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623300000f, 40.234812000f, 1491516393, 20.262487f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1621" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623367000f, 40.234988000f, 1491516394, 20.402805f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1622" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623432000f, 40.235169000f, 1491516395, 20.892284f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1623" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623501000f, 40.235350000f, 1491516396, 20.984715f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1624" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623570000f, 40.235533000f, 1491516397, 21.198572f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1625" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623644000f, 40.235717000f, 1491516398, 21.426401f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1626" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623720000f, 40.235905000f, 1491516399, 21.901970f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1627" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623791000f, 40.236093000f, 1491516400, 21.780453f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1628" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623858000f, 40.236282000f, 1491516401, 21.796179f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1629" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.623933000f, 40.236474000f, 1491516402, 22.303387f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1630" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624008000f, 40.236666000f, 1491516403, 22.303381f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1631" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624080000f, 40.236860000f, 1491516404, 22.445992f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1632" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624150000f, 40.237052000f, 1491516405, 22.185688f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1633" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624219000f, 40.237247000f, 1491516406, 22.485283f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1634" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624289000f, 40.237438000f, 1491516407, 22.078457f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1635" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624356000f, 40.237635000f, 1491516408, 22.656979f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1636" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624425000f, 40.237832000f, 1491516409, 22.700279f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1637" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624496000f, 40.238031000f, 1491516410, 22.959507f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1638" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624569000f, 40.238230000f, 1491516411, 23.004747f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1639" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624643000f, 40.238430000f, 1491516412, 23.134911f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1640" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624717000f, 40.238634000f, 1491516413, 23.563730f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1641" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624792000f, 40.238837000f, 1491516414, 23.479385f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1642" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624868000f, 40.239040000f, 1491516415, 23.502588f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1643" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.624949000f, 40.239242000f, 1491516416, 23.516401f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1644" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625026000f, 40.239450000f, 1491516417, 24.061205f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1645" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625105000f, 40.239657000f, 1491516418, 24.001074f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1646" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625186000f, 40.239861000f, 1491516419, 23.729361f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1647" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625257000f, 40.240070000f, 1491516420, 24.035313f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1648" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625323000f, 40.240292000f, 1491516421, 25.341316f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1649" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625384000f, 40.240516000f, 1491516422, 25.468622f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1650" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625440000f, 40.240744000f, 1491516423, 25.823074f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1651" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625483000f, 40.240972000f, 1491516424, 25.642506f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1652" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625512000f, 40.241190000f, 1491516425, 24.392443f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1653" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625535000f, 40.241410000f, 1491516426, 24.568148f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1654" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625544000f, 40.241632000f, 1491516427, 24.724756f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1655" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625552000f, 40.241854000f, 1491516428, 24.722275f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1656" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625556000f, 40.242084000f, 1491516429, 25.605740f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1657" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625558000f, 40.242314000f, 1491516430, 25.604048f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1658" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625565000f, 40.242551000f, 1491516431, 26.389423f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1659" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625571000f, 40.242781000f, 1491516432, 25.608559f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1660" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625576000f, 40.243015000f, 1491516433, 26.052225f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1661" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625583000f, 40.243245000f, 1491516434, 25.610392f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1662" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625594000f, 40.243477000f, 1491516435, 25.843031f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1663" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625597000f, 40.243707000f, 1491516436, 25.604752f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1664" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625605000f, 40.243929000f, 1491516437, 24.722275f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1665" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625614000f, 40.244150000f, 1491516438, 24.613491f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1666" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625625000f, 40.244376000f, 1491516439, 25.175562f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1667" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625630000f, 40.244604000f, 1491516440, 25.384399f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1668" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625639000f, 40.244832000f, 1491516441, 25.392363f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1669" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625644000f, 40.245064000f, 1491516442, 25.829617f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1670" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625651000f, 40.245291000f, 1491516443, 25.276524f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1671" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625657000f, 40.245521000f, 1491516444, 25.608559f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1672" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625667000f, 40.245744000f, 1491516445, 24.838783f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1673" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625673000f, 40.245965000f, 1491516446, 24.606890f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1674" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625678000f, 40.246186000f, 1491516447, 24.605276f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1675" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625683000f, 40.246404000f, 1491516448, 24.271368f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1676" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625687000f, 40.246616000f, 1491516449, 23.602179f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1677" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625696000f, 40.246826000f, 1491516450, 23.389597f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1678" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625705000f, 40.247033000f, 1491516451, 23.055820f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1679" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625706000f, 40.247241000f, 1491516452, 23.154610f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1680" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625716000f, 40.247448000f, 1491516453, 23.058794f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1681" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625722000f, 40.247655000f, 1491516454, 23.048773f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1682" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625738000f, 40.247866000f, 1491516455, 23.527719f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1683" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625745000f, 40.248070000f, 1491516456, 22.716963f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1684" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625761000f, 40.248280000f, 1491516457, 23.416588f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1685" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625789000f, 40.248494000f, 1491516458, 23.940866f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1686" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625831000f, 40.248706000f, 1491516459, 23.868004f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1687" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625890000f, 40.248923000f, 1491516460, 24.670980f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1688" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.625958000f, 40.249140000f, 1491516461, 24.837639f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1689" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626036000f, 40.249351000f, 1491516462, 24.405426f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1690" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626125000f, 40.249561000f, 1491516463, 24.569662f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1691" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626231000f, 40.249773000f, 1491516464, 25.259789f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1692" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626344000f, 40.249978000f, 1491516465, 24.757833f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1693" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626464000f, 40.250187000f, 1491516466, 25.401665f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1694" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626585000f, 40.250390000f, 1491516467, 24.826406f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1695" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626705000f, 40.250591000f, 1491516468, 24.588564f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1696" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626827000f, 40.250797000f, 1491516469, 25.165619f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1697" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.626946000f, 40.250999000f, 1491516470, 24.654919f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1698" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627061000f, 40.251200000f, 1491516471, 24.415445f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1699" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627178000f, 40.251397000f, 1491516472, 24.077679f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1700" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627293000f, 40.251596000f, 1491516473, 24.211552f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1701" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627408000f, 40.251798000f, 1491516474, 24.517467f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1702" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627526000f, 40.251995000f, 1491516475, 24.112843f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1703" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627641000f, 40.252189000f, 1491516476, 23.703316f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1704" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627760000f, 40.252381000f, 1491516477, 23.643946f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1705" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627876000f, 40.252567000f, 1491516478, 22.931238f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1706" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.627990000f, 40.252753000f, 1491516479, 22.858715f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1707" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.628107000f, 40.252936000f, 1491516480, 22.667255f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1708" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.628225000f, 40.253111000f, 1491516481, 21.909117f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1709" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.628344000f, 40.253287000f, 1491516482, 22.046976f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1710" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.628474000f, 40.253458000f, 1491516483, 22.007689f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1711" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.628618000f, 40.253628000f, 1491516484, 22.534416f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1712" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.628768000f, 40.253790000f, 1491516485, 22.082081f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1713" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.628928000f, 40.253948000f, 1491516486, 22.229057f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1714" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.629098000f, 40.254106000f, 1491516487, 22.758490f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1715" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.629274000f, 40.254258000f, 1491516488, 22.580584f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1716" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.629459000f, 40.254406000f, 1491516489, 22.769754f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1717" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.629653000f, 40.254545000f, 1491516490, 22.606894f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1718" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.629856000f, 40.254677000f, 1491516491, 22.657265f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1719" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.630068000f, 40.254807000f, 1491516492, 23.104435f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1720" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.630278000f, 40.254930000f, 1491516493, 22.489458f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1721" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.630494000f, 40.255045000f, 1491516494, 22.374725f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1722" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.630709000f, 40.255154000f, 1491516495, 21.928556f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1723" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.630926000f, 40.255254000f, 1491516496, 21.535717f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1724" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.631134000f, 40.255347000f, 1491516497, 20.480173f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1725" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.631339000f, 40.255438000f, 1491516498, 20.147800f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1726" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.631535000f, 40.255528000f, 1491516499, 19.433020f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1727" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.631728000f, 40.255614000f, 1491516500, 18.986700f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1728" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.631914000f, 40.255695000f, 1491516501, 18.193375f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1729" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.632092000f, 40.255773000f, 1491516502, 17.437607f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1730" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.632267000f, 40.255851000f, 1491516503, 17.217037f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1731" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.632446000f, 40.255934000f, 1491516504, 17.793854f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1732" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.632611000f, 40.256018000f, 1491516505, 16.850260f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1733" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.632780000f, 40.256092000f, 1491516506, 16.552757f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1734" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.632945000f, 40.256165000f, 1491516507, 16.202757f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1735" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.633112000f, 40.256231000f, 1491516508, 15.976976f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1736" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.633289000f, 40.256297000f, 1491516509, 16.735918f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1737" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.633466000f, 40.256365000f, 1491516510, 16.834833f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1738" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.633636000f, 40.256442000f, 1491516511, 16.794401f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1739" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.633801000f, 40.256524000f, 1491516512, 16.727646f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1740" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.633964000f, 40.256614000f, 1491516513, 17.091827f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1741" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.634118000f, 40.256718000f, 1491516514, 17.469860f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1742" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.634271000f, 40.256828000f, 1491516515, 17.857523f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1743" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.634410000f, 40.256949000f, 1491516516, 17.912981f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1744" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.634541000f, 40.257080000f, 1491516517, 18.344297f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1745" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.634669000f, 40.257214000f, 1491516518, 18.459597f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1746" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.634793000f, 40.257351000f, 1491516519, 18.535267f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1747" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.634916000f, 40.257480000f, 1491516520, 17.759584f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1748" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.635036000f, 40.257598000f, 1491516521, 16.627449f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1749" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.635164000f, 40.257708000f, 1491516522, 16.376423f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1750" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.635301000f, 40.257810000f, 1491516523, 16.259842f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1751" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.635442000f, 40.257910000f, 1491516524, 16.352400f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1752" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.635574000f, 40.258007000f, 1491516525, 15.567428f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1753" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.635710000f, 40.258105000f, 1491516526, 15.890168f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1754" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.635846000f, 40.258205000f, 1491516527, 16.043825f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1755" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.635988000f, 40.258308000f, 1491516528, 16.642969f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1756" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.636130000f, 40.258412000f, 1491516529, 16.719843f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1757" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.636276000f, 40.258517000f, 1491516530, 17.042782f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1758" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.636426000f, 40.258624000f, 1491516531, 17.442904f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1759" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.636576000f, 40.258731000f, 1491516532, 17.442888f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1760" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.636726000f, 40.258835000f, 1491516533, 17.216553f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1761" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.636874000f, 40.258940000f, 1491516534, 17.166769f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1762" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.637012000f, 40.259041000f, 1491516535, 16.243355f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1763" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.637151000f, 40.259135000f, 1491516536, 15.777518f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1764" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.637292000f, 40.259232000f, 1491516537, 16.126738f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1765" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.637431000f, 40.259329000f, 1491516538, 16.000935f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1766" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.637568000f, 40.259424000f, 1491516539, 15.725374f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1767" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.637688000f, 40.259511000f, 1491516540, 14.061109f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1768" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.637805000f, 40.259596000f, 1491516541, 13.722997f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1769" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.637915000f, 40.259680000f, 1491516542, 13.219644f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1770" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.638028000f, 40.259761000f, 1491516543, 13.170140f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1771" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.638142000f, 40.259836000f, 1491516544, 12.786384f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1772" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.638260000f, 40.259921000f, 1491516545, 13.784614f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1773" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.638389000f, 40.260014000f, 1491516546, 15.075439f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1774" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.638529000f, 40.260110000f, 1491516547, 15.989010f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1775" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.638674000f, 40.260217000f, 1491516548, 17.134846f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1776" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.638830000f, 40.260326000f, 1491516549, 17.968014f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1777" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.638985000f, 40.260439000f, 1491516550, 18.210127f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1778" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.639141000f, 40.260551000f, 1491516551, 18.195171f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1779" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.639295000f, 40.260664000f, 1491516552, 18.148766f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1780" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.639451000f, 40.260784000f, 1491516553, 18.816553f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1781" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.639598000f, 40.260902000f, 1491516554, 18.124142f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1782" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.639731000f, 40.261024000f, 1491516555, 17.666136f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1783" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.639862000f, 40.261151000f, 1491516556, 17.991936f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1784" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.639992000f, 40.261284000f, 1491516557, 18.470446f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1785" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.640125000f, 40.261422000f, 1491516558, 19.069391f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1786" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.640262000f, 40.261562000f, 1491516559, 19.450569f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1787" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.640394000f, 40.261708000f, 1491516560, 19.745457f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1788" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.640533000f, 40.261852000f, 1491516561, 19.909399f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1789" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.640675000f, 40.261996000f, 1491516562, 20.061573f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1790" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.640814000f, 40.262135000f, 1491516563, 19.464024f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1791" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.640946000f, 40.262279000f, 1491516564, 19.562553f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1792" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.641082000f, 40.262421000f, 1491516565, 19.579079f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1793" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.641221000f, 40.262566000f, 1491516566, 19.999062f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1794" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.641358000f, 40.262713000f, 1491516567, 20.080229f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1795" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.641493000f, 40.262860000f, 1491516568, 19.982231f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1796" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.641626000f, 40.263005000f, 1491516569, 19.702394f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1797" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.641760000f, 40.263147000f, 1491516570, 19.479242f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1798" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.641893000f, 40.263287000f, 1491516571, 19.249016f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1799" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.642021000f, 40.263427000f, 1491516572, 19.002829f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1800" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.642151000f, 40.263565000f, 1491516573, 18.919312f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1801" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.642280000f, 40.263702000f, 1491516574, 18.779329f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1802" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.642408000f, 40.263836000f, 1491516575, 18.458969f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1803" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.642538000f, 40.263972000f, 1491516576, 18.738945f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1804" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.642671000f, 40.264103000f, 1491516577, 18.447151f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1805" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.642802000f, 40.264236000f, 1491516578, 18.521069f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1806" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.642921000f, 40.264365000f, 1491516579, 17.561203f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1807" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.643046000f, 40.264494000f, 1491516580, 17.859426f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1808" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.643167000f, 40.264616000f, 1491516581, 17.031904f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1809" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.643282000f, 40.264736000f, 1491516582, 16.549032f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1810" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.643397000f, 40.264853000f, 1491516583, 16.280645f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1811" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.643509000f, 40.264964000f, 1491516584, 15.594648f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1812" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.643637000f, 40.265077000f, 1491516585, 16.626837f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1813" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.643774000f, 40.265189000f, 1491516586, 17.054968f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1814" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.643931000f, 40.265290000f, 1491516587, 17.443151f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1815" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.644090000f, 40.265393000f, 1491516588, 17.716631f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1816" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.644252000f, 40.265493000f, 1491516589, 17.699720f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1817" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.644422000f, 40.265588000f, 1491516590, 17.898640f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1818" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.644584000f, 40.265680000f, 1491516591, 17.153568f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1819" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.644746000f, 40.265771000f, 1491516592, 17.087324f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1820" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.644907000f, 40.265861000f, 1491516593, 16.952953f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1821" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.645070000f, 40.265952000f, 1491516594, 17.155775f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1822" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.645238000f, 40.266046000f, 1491516595, 17.695730f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1823" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.645415000f, 40.266139000f, 1491516596, 18.254431f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1824" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.645589000f, 40.266242000f, 1491516597, 18.705997f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1825" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.645768000f, 40.266342000f, 1491516598, 18.844143f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1826" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.645943000f, 40.266443000f, 1491516599, 18.638004f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1827" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.646123000f, 40.266543000f, 1491516600, 18.912710f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1828" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.646287000f, 40.266637000f, 1491516601, 17.422791f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1829" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.646445000f, 40.266722000f, 1491516602, 16.421024f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1830" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.646586000f, 40.266798000f, 1491516603, 14.663536f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1831" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.646721000f, 40.266865000f, 1491516604, 13.679266f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1832" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.646848000f, 40.266933000f, 1491516605, 13.178476f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1833" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.646963000f, 40.267007000f, 1491516606, 12.778010f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1834" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.647093000f, 40.267080000f, 1491516607, 13.710248f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1835" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.647227000f, 40.267154000f, 1491516608, 14.050313f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1836" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.647374000f, 40.267241000f, 1491516609, 15.802020f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1837" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.647525000f, 40.267332000f, 1491516610, 16.344013f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1838" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.647684000f, 40.267427000f, 1491516611, 17.153399f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1839" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.647847000f, 40.267524000f, 1491516612, 17.558186f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1840" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.648015000f, 40.267621000f, 1491516613, 17.894972f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1841" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.648172000f, 40.267714000f, 1491516614, 16.882484f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1842" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.648333000f, 40.267805000f, 1491516615, 17.018661f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1843" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.648495000f, 40.267892000f, 1491516616, 16.826813f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1844" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.648654000f, 40.267980000f, 1491516617, 16.684181f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1845" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.648814000f, 40.268069000f, 1491516618, 16.818333f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1846" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.648967000f, 40.268150000f, 1491516619, 15.817556f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1847" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.649111000f, 40.268226000f, 1491516620, 14.872185f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1848" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.649247000f, 40.268300000f, 1491516621, 14.188125f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1849" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.649381000f, 40.268372000f, 1491516622, 13.920781f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1850" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.649517000f, 40.268443000f, 1491516623, 13.996849f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1851" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.649654000f, 40.268517000f, 1491516624, 14.257337f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1852" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.649800000f, 40.268593000f, 1491516625, 15.012154f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1853" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.649933000f, 40.268671000f, 1491516626, 14.248281f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1854" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.650065000f, 40.268749000f, 1491516627, 14.181021f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1855" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.650199000f, 40.268826000f, 1491516628, 14.248456f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1856" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.650334000f, 40.268900000f, 1491516629, 14.118971f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1857" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.650466000f, 40.268979000f, 1491516630, 14.249423f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1858" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.650604000f, 40.269059000f, 1491516631, 14.720860f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1859" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.650742000f, 40.269137000f, 1491516632, 14.587238f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1860" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.650883000f, 40.269215000f, 1491516633, 14.792762f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1861" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.651026000f, 40.269294000f, 1491516634, 14.995628f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1862" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.651170000f, 40.269375000f, 1491516635, 15.195543f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1863" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.651312000f, 40.269456000f, 1491516636, 15.059133f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1864" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.651456000f, 40.269539000f, 1491516637, 15.328679f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1865" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.651607000f, 40.269623000f, 1491516638, 15.872473f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1866" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.651757000f, 40.269709000f, 1491516639, 15.936647f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1867" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.651902000f, 40.269785000f, 1491516640, 14.941886f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1868" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.652059000f, 40.269875000f, 1491516641, 16.679440f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1869" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.652212000f, 40.269962000f, 1491516642, 16.207319f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1870" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.652364000f, 40.270048000f, 1491516643, 16.072727f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1871" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.652516000f, 40.270132000f, 1491516644, 15.941107f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1872" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.652667000f, 40.270216000f, 1491516645, 15.872382f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1873" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.652814000f, 40.270300000f, 1491516646, 15.599122f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1874" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.652957000f, 40.270378000f, 1491516647, 14.930458f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1875" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.653099000f, 40.270460000f, 1491516648, 15.125907f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1876" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.653244000f, 40.270544000f, 1491516649, 15.463452f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1877" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.653396000f, 40.270634000f, 1491516650, 16.341778f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1878" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.653541000f, 40.270724000f, 1491516651, 15.876235f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1879" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.653694000f, 40.270802000f, 1491516652, 15.629167f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1880" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.653843000f, 40.270882000f, 1491516653, 15.474869f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1881" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.653992000f, 40.270965000f, 1491516654, 15.669425f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1882" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654141000f, 40.271044000f, 1491516655, 15.411050f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1883" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654286000f, 40.271123000f, 1491516656, 15.133283f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1884" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654426000f, 40.271203000f, 1491516657, 14.856179f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1885" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654560000f, 40.271279000f, 1491516658, 14.181436f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1886" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654692000f, 40.271355000f, 1491516659, 14.045459f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1887" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654820000f, 40.271432000f, 1491516660, 13.844419f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1888" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654932000f, 40.271514000f, 1491516661, 13.183979f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1889" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655035000f, 40.271600000f, 1491516662, 12.968629f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1890" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655123000f, 40.271675000f, 1491516663, 11.205832f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1891" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655229000f, 40.271785000f, 1491516665, 7.599346f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1892" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655293000f, 40.271860000f, 1491516667, 4.981308f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1893" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655327000f, 40.271941000f, 1491516671, 2.367006f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1894" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655366000f, 40.272028000f, 1491516673, 5.117805f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1895" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655420000f, 40.272150000f, 1491516675, 7.167266f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1896" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655458000f, 40.272230000f, 1491516676, 9.472375f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1897" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655495000f, 40.272308000f, 1491516677, 9.234118f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1898" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655530000f, 40.272392000f, 1491516678, 9.811991f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1899" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655562000f, 40.272471000f, 1491516679, 9.204654f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1900" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655638000f, 40.272614000f, 1491516681, 8.588826f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1901" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655693000f, 40.272722000f, 1491516683, 6.449078f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1902" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655739000f, 40.272800000f, 1491516685, 4.760712f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1903" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655779000f, 40.272876000f, 1491516695, 0.911693f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1904" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655829000f, 40.272965000f, 1491516713, 0.598846f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1905" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655910000f, 40.273066000f, 1491516715, 6.590532f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1906" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656056000f, 40.273165000f, 1491516717, 8.294908f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1907" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656142000f, 40.273220000f, 1491516718, 9.530920f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1908" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656242000f, 40.273274000f, 1491516719, 10.405387f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1909" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656349000f, 40.273343000f, 1491516720, 11.899070f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1910" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656463000f, 40.273416000f, 1491516721, 12.640645f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1911" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656589000f, 40.273491000f, 1491516722, 13.573100f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1912" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656722000f, 40.273571000f, 1491516723, 14.384398f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1913" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656863000f, 40.273659000f, 1491516724, 15.471837f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1914" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657007000f, 40.273741000f, 1491516725, 15.261230f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1915" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657153000f, 40.273826000f, 1491516726, 15.597982f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1916" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657298000f, 40.273913000f, 1491516727, 15.667174f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1917" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657431000f, 40.274011000f, 1491516728, 15.703928f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1918" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657563000f, 40.274094000f, 1491516729, 14.527803f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1919" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657694000f, 40.274181000f, 1491516730, 14.750803f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1920" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657833000f, 40.274273000f, 1491516731, 15.628751f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1921" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657964000f, 40.274360000f, 1491516732, 14.750781f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1922" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658111000f, 40.274449000f, 1491516733, 15.938400f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1923" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658248000f, 40.274531000f, 1491516734, 14.788942f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1924" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658382000f, 40.274616000f, 1491516735, 14.800553f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1925" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658514000f, 40.274708000f, 1491516736, 15.184606f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1926" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658656000f, 40.274801000f, 1491516737, 15.894309f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1927" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658800000f, 40.274892000f, 1491516738, 15.880631f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1928" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658948000f, 40.274978000f, 1491516739, 15.800388f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1929" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659091000f, 40.275068000f, 1491516740, 15.744221f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1930" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659223000f, 40.275148000f, 1491516741, 14.317593f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1931" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659367000f, 40.275244000f, 1491516742, 16.241289f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1932" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659520000f, 40.275342000f, 1491516743, 16.966679f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1933" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659681000f, 40.275437000f, 1491516744, 17.286190f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1934" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659841000f, 40.275534000f, 1491516745, 17.356697f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1935" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660004000f, 40.275641000f, 1491516746, 18.262630f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1936" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660157000f, 40.275744000f, 1491516747, 17.329748f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1937" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660309000f, 40.275839000f, 1491516748, 16.688040f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1938" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660466000f, 40.275951000f, 1491516749, 18.254917f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1939" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660614000f, 40.276038000f, 1491516750, 15.867929f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1940" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660760000f, 40.276129000f, 1491516751, 16.011639f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1941" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660907000f, 40.276223000f, 1491516752, 16.289970f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1942" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661046000f, 40.276296000f, 1491516753, 14.331799f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1943" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661185000f, 40.276381000f, 1491516754, 15.129291f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1944" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661324000f, 40.276464000f, 1491516755, 14.991042f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1945" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661462000f, 40.276546000f, 1491516756, 14.855582f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1946" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661606000f, 40.276633000f, 1491516757, 15.600116f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1947" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661742000f, 40.276735000f, 1491516758, 16.196838f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1948" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661886000f, 40.276837000f, 1491516759, 16.688145f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1949" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662036000f, 40.276925000f, 1491516760, 16.070299f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1950" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662191000f, 40.277027000f, 1491516761, 17.384377f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1951" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662344000f, 40.277117000f, 1491516762, 16.407976f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1952" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662498000f, 40.277213000f, 1491516763, 16.889791f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1953" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662641000f, 40.277302000f, 1491516764, 15.673307f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1954" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662780000f, 40.277388000f, 1491516765, 15.199023f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1955" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662921000f, 40.277470000f, 1491516766, 15.057281f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1956" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663053000f, 40.277523000f, 1491516767, 12.668260f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1957" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663193000f, 40.277593000f, 1491516768, 14.215881f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1958" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663323000f, 40.277677000f, 1491516769, 14.468370f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1959" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663447000f, 40.277752000f, 1491516770, 13.439056f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1960" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663565000f, 40.277821000f, 1491516771, 12.626496f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1961" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663673000f, 40.277886000f, 1491516772, 11.682695f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1962" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663763000f, 40.277939000f, 1491516773, 9.655675f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1963" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663830000f, 40.278008000f, 1491516774, 9.559090f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1964" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663908000f, 40.278064000f, 1491516775, 9.096334f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1965" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663984000f, 40.278122000f, 1491516776, 9.129463f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1966" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.664137000f, 40.278214000f, 1491516778, 8.272346f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1967" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.664230000f, 40.278304000f, 1491516780, 6.378821f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1968" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.664185000f, 40.278431000f, 1491516782, 7.322509f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1969" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.664131000f, 40.278502000f, 1491516783, 9.137839f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1970" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.664077000f, 40.278587000f, 1491516784, 10.514954f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1971" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.664012000f, 40.278681000f, 1491516785, 11.830848f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1972" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663934000f, 40.278778000f, 1491516786, 12.667975f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1973" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663840000f, 40.278887000f, 1491516787, 14.524440f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1974" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663748000f, 40.278998000f, 1491516788, 14.619459f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1975" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663652000f, 40.279107000f, 1491516789, 14.618470f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1976" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663561000f, 40.279217000f, 1491516790, 14.479976f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1977" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663465000f, 40.279328000f, 1491516791, 14.803774f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1978" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663365000f, 40.279445000f, 1491516792, 15.548579f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1979" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663261000f, 40.279559000f, 1491516793, 15.461426f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1980" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663160000f, 40.279684000f, 1491516794, 16.346207f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1981" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.663057000f, 40.279806000f, 1491516795, 16.154203f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1982" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662946000f, 40.279937000f, 1491516796, 17.364391f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1983" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662836000f, 40.280063000f, 1491516797, 16.852421f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1984" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662723000f, 40.280185000f, 1491516798, 16.629368f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1985" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662606000f, 40.280312000f, 1491516799, 17.280012f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1986" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662494000f, 40.280440000f, 1491516800, 17.131855f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1987" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662379000f, 40.280564000f, 1491516801, 16.909182f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1988" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662263000f, 40.280688000f, 1491516802, 16.958364f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1989" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662145000f, 40.280806000f, 1491516803, 16.521736f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1990" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.662019000f, 40.280920000f, 1491516804, 16.599566f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1991" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661883000f, 40.281025000f, 1491516805, 16.432167f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1992" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661743000f, 40.281123000f, 1491516806, 16.135944f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1993" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661600000f, 40.281218000f, 1491516807, 16.103300f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1994" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661456000f, 40.281305000f, 1491516808, 15.599453f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1995" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661304000f, 40.281385000f, 1491516809, 15.682290f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1996" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.661147000f, 40.281457000f, 1491516810, 15.556594f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1997" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660980000f, 40.281529000f, 1491516811, 16.290300f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1998" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660811000f, 40.281594000f, 1491516812, 16.072832f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 1999" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660641000f, 40.281661000f, 1491516813, 16.249672f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2000" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660466000f, 40.281729000f, 1491516814, 16.678276f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2001" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660289000f, 40.281795000f, 1491516815, 16.730825f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2002" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.660117000f, 40.281862000f, 1491516816, 16.400717f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2003" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659931000f, 40.281940000f, 1491516817, 18.024820f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2004" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659760000f, 40.282002000f, 1491516818, 16.078436f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2005" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659605000f, 40.282069000f, 1491516819, 15.129169f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2006" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659438000f, 40.282129000f, 1491516820, 15.676138f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2007" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659268000f, 40.282190000f, 1491516821, 15.954043f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2008" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.659095000f, 40.282250000f, 1491516822, 16.138544f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2009" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658919000f, 40.282315000f, 1491516823, 16.605659f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2010" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658744000f, 40.282379000f, 1491516824, 16.480825f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2011" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658561000f, 40.282442000f, 1491516825, 17.049864f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2012" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658383000f, 40.282512000f, 1491516826, 17.006386f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2013" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658200000f, 40.282572000f, 1491516827, 16.915207f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2014" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.658026000f, 40.282637000f, 1491516828, 16.452892f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2015" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657850000f, 40.282706000f, 1491516829, 16.804390f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2016" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657663000f, 40.282772000f, 1491516830, 17.497557f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2017" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657487000f, 40.282838000f, 1491516831, 16.654364f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2018" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657308000f, 40.282909000f, 1491516832, 17.132902f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2019" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.657139000f, 40.282974000f, 1491516833, 16.072571f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2020" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656972000f, 40.283029000f, 1491516834, 15.447023f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2021" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656820000f, 40.283087000f, 1491516835, 14.432726f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2022" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656665000f, 40.283143000f, 1491516836, 14.564333f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2023" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656517000f, 40.283202000f, 1491516837, 14.180938f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2024" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656376000f, 40.283263000f, 1491516838, 13.765312f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2025" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656237000f, 40.283315000f, 1491516839, 13.146955f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2026" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.656093000f, 40.283370000f, 1491516840, 13.675685f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2027" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655942000f, 40.283425000f, 1491516841, 14.209712f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2028" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655802000f, 40.283475000f, 1491516842, 13.127292f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2029" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655664000f, 40.283535000f, 1491516843, 13.488780f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2030" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655528000f, 40.283583000f, 1491516844, 12.725368f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2031" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655390000f, 40.283630000f, 1491516845, 12.833919f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2032" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655252000f, 40.283678000f, 1491516846, 12.879694f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2033" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655128000f, 40.283720000f, 1491516847, 11.521415f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2034" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.655012000f, 40.283766000f, 1491516848, 11.102201f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2035" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654848000f, 40.283830000f, 1491516850, 7.821712f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2036" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654727000f, 40.283878000f, 1491516852, 5.790807f));
-#ifdef LOGGING_LEVEL_TRACE
-  std::cout << "  //----------------------------------------------------------------" << std::endl;
-  std::cout << "  // trace point = 2037" << std::endl;
-#endif
-  nav.SnapToRoute(GetFixLocation(-76.654622000f, 40.283924000f, 1491516854, 5.141192f));
+  nav.SnapToRoute(GetFixLocation(-76.120947000f, 39.640341000f, 1483293741, 8.982200f));
 }
 
 }
