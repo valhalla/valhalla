@@ -412,7 +412,7 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
   std::cout << "  maneuver_index = " << nav_status.maneuver_index() << ";" << std::setprecision(9) << std::endl
             << "  instruction_index = maneuver_index;" << std::endl
             << "  TryRouteOnLocationChanged(nav," << std:: endl
-            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << fix_location.time() << ", " << fix_location.speed()  << "),"  << std::endl
+            << "      GetFixLocation(" << fix_location.lon() << "f, " << fix_location.lat() << "f, " << fix_location.time() << ", " << fix_location.speed()  << "f),"  << std::endl
             << "      GetNavigationStatus(NavigationStatus_RouteState_kTracking," << std::endl
             << "          " << nav_status.lon() << "f, " << nav_status.lat() << "f, leg_index, " << nav_status.remaining_leg_length() << "f, " << nav_status.remaining_leg_time() << "," << std::endl
             << "          maneuver_index, " << nav_status.remaining_maneuver_length() << "f, " << nav_status.remaining_maneuver_time() << "));" << std::endl;
