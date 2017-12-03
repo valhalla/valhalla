@@ -95,7 +95,7 @@ constexpr float kSurfaceFactor[] = {
     0.0f,   // kPavedSmooth
     0.0f,   // kPaved
     0.0f,   // kPaveRough
-    0.0f,   // kCompacted
+    0.1f,   // kCompacted
     0.2f,   // kDirt
     0.5f,   // kGravel
     1.0f    // kPath
@@ -280,6 +280,7 @@ class AutoCost : public DynamicCost {
   float highway_factor_;            // Factor applied when road is a motorway or trunk
   float use_tolls_;                 // Preference to use tolls. Is a value from 0 to 1
   float toll_factor_;               // Factor applied when road has a toll
+  float surface_factor_;            // How much the surface factors are applied.
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -294,17 +295,24 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
                              1.4f, 1.6f, 1.9f, 2.2f,
                              2.5f, 2.8f, 3.1f, 3.5f } {
 
+  surface_factor_ = 0.5f;
   // Get the vehicle type - enter as string and convert to enum
   std::string type = pt.get<std::string>("type", "car");
   if (type == "motorcycle") {
     type_ = VehicleType::kMotorcycle;
+    surface_factor_ = 1.0f;
   } else if (type == "bus") {
     type_ = VehicleType::kBus;
   } else if (type == "tractor_trailer") {
     type_ = VehicleType::kTractorTrailer;
+  } else if (type == "four_wheel_drive") {
+    type_ = VehicleType::kFourWheelDrive;
+    surface_factor_ = 0.0f;
   } else {
     type_ = VehicleType::kCar;
   }
+
+
 
   maneuver_penalty_ = kManeuverPenaltyRange(
     pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty)
@@ -455,7 +463,7 @@ Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
         ferry_factor_ : density_factor_[edge->density()];
 
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll())
   {
     factor += toll_factor_;
