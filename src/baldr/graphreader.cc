@@ -274,7 +274,7 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& 
     return {};
 
   // Get the opposing edge
-  id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
+  id.set_id(tile->node(id)->edge_index() + directededge->opp_index());
   return id;
 }
 
