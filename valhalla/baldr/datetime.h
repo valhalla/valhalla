@@ -5,6 +5,8 @@
 #include <string>
 #include <memory>
 #include <vector>
+
+#include <valhalla/baldr/graphconstants.h>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/local_time/tz_database.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
@@ -191,6 +193,30 @@ namespace DateTime {
    * @return true or false
    */
   bool is_iso_local(const std::string& date_time);
+
+  /**
+   * get the dow mask from user inputed string.  try to handle most inputs
+   * @param   dow entered by a user
+   * @return dow mask
+   */
+  uint8_t get_dow_mask(const std::string& dow);
+
+  /**
+   * get the dow from user inputed string.  try to handle most inputs
+   * @param   dow entered by a user
+   * @return DOW
+   */
+  DOW get_dow(const std::string& dow);
+
+  /**
+   * get the month from user inputed string.  try to handle most inputs
+   * @param   month entered by a user
+   * @return MONTH
+   */
+  MONTH get_month(const std::string& month);
+
+  std::vector<uint64_t> get_time_range(const std::string& condition);
+
 }
 }
 }
