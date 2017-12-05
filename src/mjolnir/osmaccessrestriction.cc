@@ -22,14 +22,24 @@ AccessType OSMAccessRestriction::type() const {
   return static_cast<AccessType>(attributes_.type_);
 }
 
-// Set the hour off
+// Set the value
 void OSMAccessRestriction::set_value(uint32_t value) {
   attributes_.value_ = value;
 }
 
-// Get the hour off
+// Get the value
 uint32_t OSMAccessRestriction::value() const {
   return attributes_.value_;
+}
+
+// Set the modes for the restriction
+void OSMAccessRestriction::set_modes(uint32_t modes) {
+  attributes_.modes_ = modes;
+}
+
+// Get the modes for the restriction
+uint32_t OSMAccessRestriction::modes() const {
+  return attributes_.modes_;
 }
 
 }
