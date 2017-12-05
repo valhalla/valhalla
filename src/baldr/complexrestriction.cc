@@ -8,11 +8,11 @@ namespace baldr {
 
 ComplexRestriction::ComplexRestriction(char* ptr) {
 
-  from_id_ = *(reinterpret_cast<GraphId*>(ptr));
-  ptr += sizeof(GraphId);
+  from_id_ = *(reinterpret_cast<FromGraphId*>(ptr));
+  ptr += sizeof(FromGraphId);
 
-  to_id_ = *(reinterpret_cast<GraphId*>(ptr));
-  ptr += sizeof(GraphId);
+  to_id_ = *(reinterpret_cast<ToGraphId*>(ptr));
+  ptr += sizeof(ToGraphId);
 
   restriction_ = reinterpret_cast<PackedRestriction*>(ptr);
   ptr += sizeof(PackedRestriction);
@@ -28,12 +28,22 @@ ComplexRestriction::~ComplexRestriction() {
 }
 
 // restriction is from this id
-GraphId ComplexRestriction::from_id() const {
+GraphId ComplexRestriction::from_graphid() const {
+  return GraphId(from_id_.tileid, from_id_.level, from_id_.id);
+}
+
+// restriction is to this id
+GraphId ComplexRestriction::to_graphid() const {
+  return GraphId(to_id_.tileid, to_id_.level, to_id_.id);
+}
+
+// restriction is from this id
+FromGraphId ComplexRestriction::from_id() const {
   return from_id_;
 }
 
 // restriction is to this id
-GraphId ComplexRestriction::to_id() const {
+ToGraphId ComplexRestriction::to_id() const {
   return to_id_;
 }
 
@@ -78,8 +88,8 @@ const std::vector<GraphId> ComplexRestriction::GetVias() const {
 
 // Get the size of the complex restriction
 std::size_t ComplexRestriction::BaseSizeOf() const {
-  std::size_t size = sizeof(GraphId);
-  size += sizeof(GraphId);
+  std::size_t size = sizeof(FromGraphId);
+  size += sizeof(ToGraphId);
   size += sizeof(baldr::ComplexRestriction::PackedRestriction);
   size += (restriction_->via_count_ * sizeof(GraphId));
   return size;

@@ -24,11 +24,25 @@ class ComplexRestrictionBuilder {
    * @param  from_id  from id.
    *
    */
-  void set_from_id(const GraphId from_id);
+  void set_from_id(const FromGraphId from_id);
 
   /**
    * Set the to edge id.
    * @param  to_id  to id.
+   *
+   */
+  void set_to_id(const ToGraphId to_id);
+
+  /**
+   * Set the from edge graph id.
+   * @param  from_id  from graph id.
+   *
+   */
+  void set_from_id(const GraphId from_id);
+
+  /**
+   * Set the to edge graph id.
+   * @param  to_id  to graph id.
    *
    */
   void set_to_id(const GraphId to_id);
@@ -59,28 +73,28 @@ class ComplexRestrictionBuilder {
    * @param  day  begin dow.
    *
    */
-//  void set_begin_day(const DOW day);
+  void set_begin_day(const DOW day);
 
   /**
    * set the end dow for this restriction
    * @param  day  end dow.
    *
    */
-//  void set_end_day(const DOW day);
+  void set_end_day(const DOW day);
 
   /**
    * set the begin time for this restriction
    * @param  begin_time  when does it start - sec from midnight.
    *
    */
-//  void set_begin_time(const uint64_t begin_time);
+  void set_begin_time(const uint64_t begin_time);
 
   /**
    * set the elapsed time for this restriction
    * @param  elapsed_time  elapsed time in secs.
    *
    */
-//  void set_elapsed_time(const uint64_t elapsed_time);
+  void set_elapsed_time(const uint64_t elapsed_time);
 
   /**
    * Get the size of this complex restriction (without padding).
@@ -105,10 +119,10 @@ class ComplexRestrictionBuilder {
 
  protected:
   //from edgeid
-  GraphId from_id_;
+  FromGraphId from_id_;
 
   // to edgeid
-  GraphId to_id_;
+  ToGraphId to_id_;
 
   // packed restriction data.
   ComplexRestriction::PackedRestriction restriction_;

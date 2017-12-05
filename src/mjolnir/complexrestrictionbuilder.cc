@@ -11,13 +11,27 @@ namespace valhalla {
 namespace mjolnir {
 
 // Set the from edge id.
-void ComplexRestrictionBuilder::set_from_id(const GraphId from_id) {
+void ComplexRestrictionBuilder::set_from_id(const FromGraphId from_id) {
   from_id_ = from_id;
 }
 
 // Set the to edge id.
-void ComplexRestrictionBuilder::set_to_id(const GraphId to_id) {
+void ComplexRestrictionBuilder::set_to_id(const ToGraphId to_id) {
   to_id_ = to_id;
+}
+
+// Set the from edge graph id.
+void ComplexRestrictionBuilder::set_from_id(const GraphId from_id) {
+  from_id_.level = from_id.level();
+  from_id_.tileid = from_id.tileid();
+  from_id_.id = from_id.id();
+}
+
+// Set the to edge graph id.
+void ComplexRestrictionBuilder::set_to_id(const GraphId to_id) {
+  to_id_.level = to_id.level();
+  to_id_.tileid = to_id.tileid();
+  to_id_.id = to_id.id();
 }
 
 // set the restriction type.
@@ -65,8 +79,8 @@ void ComplexRestrictionBuilder::set_via_list(
 
 // Get the size of the complex restriction
 std::size_t ComplexRestrictionBuilder::BaseSizeOf() const {
-  std::size_t size = sizeof(GraphId);
-  size += sizeof(GraphId);
+  std::size_t size = sizeof(FromGraphId);
+  size += sizeof(ToGraphId);
   size += sizeof(baldr::ComplexRestriction::PackedRestriction);
   size += (via_list_.size() * sizeof(GraphId));
   return size;
@@ -103,8 +117,8 @@ std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb)
   restriction.elapsed_time_ = crb.restriction_.elapsed_time_; */
 
   // Write out the bytes
-  os.write(reinterpret_cast<const char*>(&crb.from_id_), sizeof(GraphId));
-  os.write(reinterpret_cast<const char*>(&crb.to_id_), sizeof(GraphId));
+  os.write(reinterpret_cast<const char*>(&crb.from_id_), sizeof(FromGraphId));
+  os.write(reinterpret_cast<const char*>(&crb.to_id_), sizeof(ToGraphId));
   os.write(reinterpret_cast<const char*>(&restriction),
            sizeof(baldr::ComplexRestriction::PackedRestriction));
   os.write(reinterpret_cast<const char*>(&crb.via_list_[0]),

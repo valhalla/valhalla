@@ -19,6 +19,45 @@ namespace baldr {
 
 constexpr size_t kMaxViasPerRestriction = 31;
 
+struct FromGraphId {
+  uint64_t level  : 3;   // Hierarchy level
+  uint64_t tileid : 22;  // Tile Id within the hierarchy level
+  uint64_t id     : 21;  // Id of the element within the tile
+  uint64_t dow    : 7;   // day of week for this restriction
+  uint64_t hrs    : 5;   // hours
+  uint64_t mins   : 6;   // minutes
+
+  // Operator not equal
+  bool operator !=(const FromGraphId& from) const {
+    return (level != from.level ||
+            tileid != from.tileid ||
+            id != from.id ||
+            dow != from.dow ||
+            hrs != from.hrs ||
+            hrs != from.hrs);
+  }
+
+};
+
+struct ToGraphId {
+  uint64_t level  : 3;   // Hierarchy level
+  uint64_t tileid : 22;  // Tile Id within the hierarchy level
+  uint64_t id     : 21;  // Id of the element within the tile
+  uint64_t day    : 5;   // begin day
+  uint64_t month  : 4;   // begin month
+  uint64_t year   : 8;   // minutes
+  uint64_t spare  : 1;
+
+  // Operator not equal
+  bool operator !=(const ToGraphId& from) const {
+    return (level != from.level ||
+            tileid != from.tileid ||
+            id != from.id ||
+            day != from.day ||
+            month != from.month ||
+            year != from.year);
+  }
+};
 
 /**
  * Information held for each complex access restriction.
@@ -39,16 +78,28 @@ class ComplexRestriction {
   virtual ~ComplexRestriction();
 
   /**
+   * Get the restriction's from graph id
+   * @return  Returns the from graph id
+   */
+  GraphId from_graphid() const;
+
+  /**
+   * Get the restriction's to graph id
+   * @return  Returns the to graph id
+   */
+  GraphId to_graphid() const;
+
+  /**
    * Get the restriction's from id
    * @return  Returns the from id
    */
-  GraphId from_id() const;
+  FromGraphId from_id() const;
 
   /**
    * Get the restriction's to id
    * @return  Returns the to id
    */
-  GraphId to_id() const;
+  ToGraphId to_id() const;
 
   /**
    * Get the number of vias.
@@ -98,13 +149,16 @@ class ComplexRestriction {
     uint64_t type_          :  4; // Restriction type
     uint64_t modes_         : 12; // Mode(s) this access restriction applies to
     uint64_t via_count_     :  5; // size of via list.
-    uint64_t spare_         : 43; // For time/date information.
+    uint64_t has_dt_        :  1; // bit indicating if we have dt time information
+    uint64_t end_time       : 11; // end time of restriction
+    uint64_t end_days       : 16; // end date.  Days from begin date.  max 65535 days
+    uint64_t spare_         : 15; //
   };
 
  protected:
 
-  GraphId from_id_;              // from edge id
-  GraphId to_id_;                // to edge id
+  FromGraphId from_id_;           // from edge id
+  ToGraphId to_id_;               // to edge id
 
   // Where we keep most of the static data
   PackedRestriction* restriction_;
