@@ -28,66 +28,6 @@ struct OSMRestriction {
   baldr::RestrictionType type() const;
 
   /**
-   * Set the day on
-   */
-  void set_day_on(baldr::DOW dow);
-
-  /**
-   * Get the day on
-   */
-  baldr::DOW day_on() const;
-
-  /**
-   * Set the day off
-   */
-  void set_day_off(baldr::DOW dow);
-
-  /**
-   * Get the day off
-   */
-  baldr::DOW day_off() const;
-
-  /**
-   * Set the hour on
-   */
-  void set_hour_on(uint32_t hour_on);
-
-  /**
-   * Get the hour on
-   */
-  uint32_t hour_on() const;
-
-  /**
-   * Set the minute on
-   */
-  void set_minute_on(uint32_t minute_on);
-
-  /**
-   * Get the minute on
-   */
-  uint32_t minute_on() const;
-
-  /**
-   * Set the hour off
-   */
-  void set_hour_off(uint32_t hour_off);
-
-  /**
-   * Get the hour off
-   */
-  uint32_t hour_off() const;
-
-  /**
-   * Set the minute off
-   */
-  void set_minute_off(uint32_t minute_off);
-
-  /**
-   * Get the minute off
-   */
-  uint32_t minute_off() const;
-
-  /**
    * Set the via OSM node id
    */
   void set_via(uint64_t via);
@@ -148,6 +88,16 @@ struct OSMRestriction {
   uint64_t to() const;
 
   /**
+   * Set the time domain
+   */
+  void set_time_domain(uint64_t via);
+
+  /**
+   * Get the time domain.
+   */
+  uint64_t time_domain() const;
+
+  /**
    * overloaded < operator - used to sort
    */
   bool operator < (const OSMRestriction& o)const{
@@ -155,17 +105,7 @@ struct OSMRestriction {
       if (to() == o.to()) {
         if (std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0) {
           if (modes() == o.modes()) {
-            if (day_on() == o.day_on()){
-              if (day_off() == o.day_off()){
-                if (hour_on() == o.hour_on()){
-                  if (hour_off() == o.hour_off()){
-                    if (minute_on() == o.minute_on()){
-                      return (minute_off() < o.minute_off());
-                    } else return minute_on() < o.minute_on();
-                  } else return hour_off() < o.hour_off();
-                } else return hour_on() < o.hour_on();
-              } else return day_off() < o.day_off();
-            } else return day_on() < o.day_on();
+            return (time_domain() < o.time_domain());
           } else return modes() < o.modes();
         } else return vias() < o.vias();
       } else return to() < o.to();
@@ -178,10 +118,8 @@ struct OSMRestriction {
   bool operator == (const OSMRestriction& o) const {
     return (from() == o.from() && to() == o.to() &&
         std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0 &&
-        modes() == o.modes() && day_on() == o.day_on() &&
-        day_off() == o.day_off() &&
-        hour_on() == o.hour_on() && hour_off() == o.hour_off() &&
-        minute_on() == o.minute_on());
+        modes() == o.modes() &&
+        time_domain() == o.time_domain());
   }
 
   // from is a way - uses OSM way Id.
@@ -202,20 +140,16 @@ struct OSMRestriction {
   // to is a way - uses OSM way Id.
   uint64_t to_;
 
+  // timed restriction information
+  uint64_t time_domain_;
+
   // Type and time information of the restriction.
   struct Attributes {
-    uint32_t type_        : 4;
-    uint32_t day_on_      : 3;
-    uint32_t day_off_     : 3;
-    uint32_t hour_on_     : 5;
-    uint32_t minute_on_   : 6;
-    uint32_t hour_off_    : 5;
-    uint32_t minute_off_  : 6;
+    uint32_t type_        :  4;
+    uint32_t modes_       : 12;
+    uint32_t spare_       : 16;
   };
   Attributes attributes_;
-
-  // access modes -- who does this restriction apply to?  cars, bus, etc.
-  uint32_t modes_;
 
 };
 
