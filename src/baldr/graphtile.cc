@@ -443,7 +443,7 @@ std::vector<ComplexRestriction> GraphTile::GetRestrictions(const bool forward,
 
       ComplexRestriction cr(complex_restriction_forward_ + offset);
       offset += cr.SizeOf();
-      if (cr.to_id() == id && (cr.modes() & modes))
+      if (cr.to_graphid() == id && (cr.modes() & modes))
         cr_vector.push_back(cr);
     }
   } else {
@@ -451,7 +451,7 @@ std::vector<ComplexRestriction> GraphTile::GetRestrictions(const bool forward,
 
       ComplexRestriction cr(complex_restriction_reverse_ + offset);
       offset += cr.SizeOf();
-      if (cr.from_id() == id && (cr.modes() & modes))
+      if (cr.from_graphid() == id && (cr.modes() & modes))
         cr_vector.push_back(cr);
     }
   }

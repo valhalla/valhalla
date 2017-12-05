@@ -273,8 +273,8 @@ class DynamicCost {
         }
 
         // Check against the start/end of the complex restriction
-        if (match && (( forward && next_pred->edgeid() == cr.from_id()) ||
-                      (!forward && next_pred->edgeid() == cr.to_id()))) {
+        if (match && (( forward && next_pred->edgeid() == cr.from_graphid()) ||
+                      (!forward && next_pred->edgeid() == cr.to_graphid()))) {
           return true;
         }
       }
