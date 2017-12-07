@@ -162,7 +162,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/sign.h \
 	valhalla/baldr/signinfo.h \
 	valhalla/baldr/tilehierarchy.h \
-        valhalla/baldr/timedomain.h \
+	valhalla/baldr/timedomain.h \
 	valhalla/baldr/turn.h \
 	valhalla/baldr/streetname.h \
 	valhalla/baldr/streetnames.h \
