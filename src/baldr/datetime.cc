@@ -2,7 +2,6 @@
 #include <sstream>
 #include <bitset>
 #include <fstream>
-#include <regex>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
@@ -13,6 +12,7 @@
 #include "baldr/datetime.h"
 #include "baldr/timedomain.h"
 #include "baldr/graphconstants.h"
+#include "baldr/reutil.h"
 
 #include "date_time_zonespec.h"
 
@@ -821,15 +821,15 @@ std::vector<std::string> GetTokens(const std::string& tag_value,
   return tokens;
 }
 
-bool RegexFound(const std::string& source, const std::regex& regex) {
-  auto begin = std::sregex_iterator(source.begin(), source.end(), regex);
-  auto end = std::sregex_iterator();
+bool RegexFound(const std::string& source, const re::regex& regex) {
+  auto begin = re::sregex_iterator(source.begin(), source.end(), regex);
+  auto end = re::sregex_iterator();
   return std::distance(begin, end);
 }
 
-std::string FormatCondition(const std::string& source, const std::regex& regex,
+std::string FormatCondition(const std::string& source, const re::regex& regex,
                             const std::string& pattern) {
-  return std::regex_replace(source, regex, pattern);
+  return re::regex_replace(source, regex, pattern);
 }
 
 std::vector<uint64_t> get_time_range(const std::string& str) {
@@ -850,67 +850,67 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     return time_domains;
 
   //Dec Su[-1]-Mar 3
-  std::regex regex = std::regex("(?:(January|February|March|April|May|June|July|"
+  re::regex regex = re::regex("(?:(January|February|March|April|May|June|July|"
       "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
       "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
       "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\])-"
       "(?:(January|February|March|April|May|June|July|August|September|October|November"
-      "|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)) (\\d{1,2}))",std::regex_constants::icase);
+      "|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)) (\\d{1,2}))",re::regex_constants::icase);
 
   if (RegexFound(condition,regex)) {
     condition = FormatCondition(condition, regex, "$1#$2#$3-$4#$5");
     //fifth is the equivalent of last week in month (-1)
-    condition = FormatCondition(condition, std::regex("\\[-1\\]"), "[5]");
+    condition = FormatCondition(condition, re::regex("\\[-1\\]"), "[5]");
   } else {
 
     //Mar 3-Dec Su[-1]
-    std::regex regex = std::regex("(?:(January|February|March|April|May|June|July|August|"
+    re::regex regex = re::regex("(?:(January|February|March|April|May|June|July|August|"
         "September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|"
         "Nov|Dec)) (\\d{1,2})-(?:(January|February|March|April|May|June|July|"
         "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
         "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
         "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\]))"
-        ,std::regex_constants::icase);
+        ,re::regex_constants::icase);
 
     if (RegexFound(condition,regex)) {
       condition = FormatCondition(condition, regex, "$1#$2-$3#$4#$5");
       //fifth is the equivalent of last week in month (-1)
-      condition = FormatCondition(condition, std::regex("\\[-1\\]"), "[5]");
+      condition = FormatCondition(condition, re::regex("\\[-1\\]"), "[5]");
     } else {
 
       //Dec Su[-1]
-      regex = std::regex("(?:(January|February|March|April|May|June|July|"
+      regex = re::regex("(?:(January|February|March|April|May|June|July|"
           "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
           "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-          "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\]))",std::regex_constants::icase);
+          "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\]))",re::regex_constants::icase);
 
       if (RegexFound(condition,regex)) {
         condition = FormatCondition(condition, regex, "$1#$2#$3");
         //fifth is the equivalent of last week in month (-1)
-        condition = FormatCondition( condition, std::regex("\\[-1\\]"), "[5]");
+        condition = FormatCondition( condition, re::regex("\\[-1\\]"), "[5]");
       } else {
 
-        regex = std::regex("(?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-            "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\]))",std::regex_constants::icase);
+        regex = re::regex("(?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
+            "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\]))",re::regex_constants::icase);
 
         if (RegexFound(condition,regex)) {
           condition = FormatCondition(condition, regex, "$1#$2");
           //fifth is the equivalent of last week in month (-1)
-          condition = FormatCondition( condition, std::regex("\\[-1\\]"), "[5]");
+          condition = FormatCondition( condition, re::regex("\\[-1\\]"), "[5]");
         } else {
 
           //Feb 16-Oct 15 09:00-18:30
-          regex = std::regex("(?:(January|February|March|April|May|June|July|"
+          regex = re::regex("(?:(January|February|March|April|May|June|July|"
               "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-              "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})",std::regex_constants::icase);
+              "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})",re::regex_constants::icase);
 
           if (RegexFound(condition,regex)) {
             condition = FormatCondition(condition, regex, "$1#$2");
           } else {
             //Feb 2-14
-            regex = std::regex("(?:(January|February|March|April|May|June|July|"
+            regex = re::regex("(?:(January|February|March|April|May|June|July|"
                 "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})-(\\d{1,2})",std::regex_constants::icase);
+                "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})-(\\d{1,2})",re::regex_constants::icase);
 
             if (RegexFound(condition,regex)) {
               condition = FormatCondition(condition, regex, "$1#$2-$1#$3");
