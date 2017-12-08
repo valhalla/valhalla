@@ -76,7 +76,7 @@ namespace valhalla {
       pimpl->cleanup();
     }
 
-    std::string actor_t::route(ACTION_TYPE action, const std::string& request_str, const std::function<void ()>& interrupt) {
+    std::string actor_t::route(const std::string& request_str, const std::function<void ()>& interrupt) {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
@@ -90,7 +90,7 @@ namespace valhalla {
       //get some directions back from them
       auto directions = pimpl->odin_worker.narrate(request_pt, legs);
       //serialize them out to json string
-      auto json = tyr::serializeDirections(action, request_pt, directions);
+      auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
       std::stringstream ss;
       ss << *json;
       //if they want you do to do the cleanup automatically
@@ -114,16 +114,16 @@ namespace valhalla {
       return ss.str();
     }
 
-    std::string actor_t::matrix(ACTION_TYPE action, const std::string& request_str, const std::function<void ()>& interrupt) {
+    std::string actor_t::matrix(const std::string& request_str, const std::function<void ()>& interrupt) {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
       //check the request and locate the locations in the graph
-      pimpl->loki_worker.matrix(action, request);
+      pimpl->loki_worker.matrix(SOURCES_TO_TARGETS, request);
       auto request_pt = to_ptree(request);
       //compute the matrix
-      auto json = pimpl->thor_worker.matrix(action, request_pt);
+      auto json = pimpl->thor_worker.matrix(SOURCES_TO_TARGETS, request_pt);
       std::stringstream ss;
       ss << *json;
       //if they want you do to do the cleanup automatically
