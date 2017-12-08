@@ -479,7 +479,7 @@ void get_stop_patterns(Transit& tile, std::unordered_map<std::string, size_t>& s
       auto lat = geom.second.back().second.get_value<float>();
       trip_shape.emplace_back(PointLL(lon,lat));
     }
-    if (trip_shape.size()) {
+    if (trip_shape.size() > 1) {
       // encode the points to reduce size
       shape->set_encoded_shape(encode7(trip_shape));
 
