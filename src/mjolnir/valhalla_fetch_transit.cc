@@ -332,13 +332,15 @@ void get_stop_patterns(Transit_Fetch& tile, std::unordered_map<std::string, size
       auto lat = geom.second.back().second.get_value<float>();
       trip_shape.emplace_back(PointLL(lon,lat));
     }
-    // encode the points to reduce size
-    shape->set_encoded_shape(encode7(trip_shape));
+    if (trip_shape.size()) {
+      // encode the points to reduce size
+      shape->set_encoded_shape(encode7(trip_shape));
 
-    // shapes.size()+1 because we can't have a shape id of 0.
-    // 0 means shape id is not set in the transit builder.
-    shape->set_shape_id(shapes.size()+1);
-    shapes.emplace(shape_id, shape->shape_id());
+      // shapes.size()+1 because we can't have a shape id of 0.
+      // 0 means shape id is not set in the transit builder.
+      shape->set_shape_id(shapes.size()+1);
+      shapes.emplace(shape_id, shape->shape_id());
+    }
   }
 }
 
