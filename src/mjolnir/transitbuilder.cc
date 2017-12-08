@@ -442,8 +442,8 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
             // use the new wayid
 
             wayid = edgeinfo.wayid();
-            startnode.Set(newtile->header()->graphid().tileid(),
-                          newtile->header()->graphid().level(), i);
+            startnode = { newtile->header()->graphid().tileid(),
+                          newtile->header()->graphid().level(), i };
             endnode = directededge->endnode();
             mindist = std::get<1>(this_closest);
             closest = this_closest;
@@ -493,8 +493,8 @@ void AddOSMConnection(const GraphId& transit_stop_node,
         names = edgeinfo.GetNames();
 
         if (std::get<1>(this_closest) < mindist) {
-          startnode.Set(tile->header()->graphid().tileid(),
-                        tile->header()->graphid().level(), i);
+          startnode = { tile->header()->graphid().tileid(),
+                        tile->header()->graphid().level(), i };
           endnode = directededge->endnode();
           mindist = std::get<1>(this_closest);
           closest = this_closest;
@@ -693,8 +693,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
       if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".gph") {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
-        auto local_graph_id = graph_id;
-        local_graph_id.fields.level -= 1;
+        GraphId local_graph_id(graph_id.tileid(), graph_id.level() -1, graph_id.id());
         if(GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);

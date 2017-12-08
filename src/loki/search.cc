@@ -325,7 +325,7 @@ struct bin_handler_t {
 
         //get some info about this edge and the opposing
         GraphId id = tile->id();
-        id.fields.id = node->edge_index() + (edge - start_edge);
+        id.set_id(node->edge_index() + (edge - start_edge));
         auto info = tile->edgeinfo(edge->edgeinfo_offset());
 
         //do we want this edge

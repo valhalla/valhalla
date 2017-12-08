@@ -28,7 +28,7 @@ GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const uint8_t
   if(tl != levels_.end()) {
     auto tile_id = tl->second.tiles.TileId(pointll);
     if (tile_id >= 0) {
-      id.Set(tile_id, level, 0);
+      id = { static_cast<uint32_t>(tile_id), level, 0 };
     }
   }
   return id;

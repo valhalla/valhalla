@@ -205,11 +205,11 @@ struct sort_by_tile {
   sort_by_tile() {}
 
   inline bool operator()(vb::GraphId a, vb::GraphId b) const {
-    return ((a.fields.level < b.fields.level) ||
-            ((a.fields.level == b.fields.level) &&
-             ((a.fields.tileid < b.fields.tileid) ||
-              ((a.fields.tileid == b.fields.tileid) &&
-               (a.fields.id < b.fields.id)))));
+    return ((a.level() < b.level()) ||
+            ((a.level() == b.level()) &&
+             ((a.tileid() < b.tileid()) ||
+              ((a.tileid() == b.tileid()) &&
+               (a.id() < b.id())))));
   }
 };
 
