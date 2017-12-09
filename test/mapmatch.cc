@@ -137,7 +137,7 @@ namespace {
       auto test_case = make_test_case(start, end);
       std::cout << test_case << std::endl;
       boost::property_tree::ptree route;
-      try { route = json_to_pt(actor.route(tyr::ROUTE, test_case)); }
+      try { route = json_to_pt(actor.route(test_case)); }
       catch (...) { std::cout << "route failed" << std::endl; continue; }
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
@@ -236,7 +236,7 @@ namespace {
   void test32bit() {
     tyr::actor_t actor(conf, true);
     std::string test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5.110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
-    actor.route(tyr::ROUTE, test_case);
+    actor.route(test_case);
   }
 
   void test_topk_validate() {
