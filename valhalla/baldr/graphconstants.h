@@ -340,6 +340,16 @@ inline std::string to_string(CycleLane c) {
   return i->second;
 }
 
+enum class SacScale : uint8_t {
+  kNone = 0,
+  kHiking = 1,
+  kMountainHiking = 2,
+  kDemandingMountainHiking = 3,
+  kAlpineHiking = 4,
+  kDemandingAlpineHiking = 5,
+  kDifficultAlpineHiking = 6
+};
+
 // Generalized representation of surface types. Lower values indicate smoother
 // surfaces. Vehicle or bicycle type can use this to avoid or disallow edges
 // that are "too rough" or inappropriate for the vehicle to travel on.

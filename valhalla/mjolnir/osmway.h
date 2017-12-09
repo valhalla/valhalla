@@ -630,6 +630,18 @@ struct OSMWay {
   baldr::Surface surface() const;
 
   /**
+   * Sets the sac scale.
+   * @param  sac_scale
+   */
+  void set_sac_scale(const baldr::SacScale sac_scale);
+
+  /**
+   * Gets the sac scale.
+   * @return  Returns sac_scale
+   */
+  baldr::SacScale sac_scale() const;
+
+  /**
    * Sets the right cycle lane.
    * @param  cyclelane
    */
@@ -1098,7 +1110,7 @@ struct OSMWay {
       uint32_t truck_route            :1;
       uint32_t sidewalk_right         :1;
       uint32_t sidewalk_left          :1;
-      uint32_t spare                  :3;
+      uint32_t sac_scale              :3;
     } fields;
     uint32_t v;
   };
