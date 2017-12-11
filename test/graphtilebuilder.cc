@@ -207,7 +207,7 @@ struct fake_tile : public GraphTile {
     auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
     auto id = GraphId(tiles.TileId(s.front()), l, 0);
     auto o_id = GraphId(tiles.TileId(s.front()), l, tiles.TileId(s.back()));
-    o_id.fields.id = o_id == id;
+    o_id.set_id(o_id == id);
     header_ = new GraphTileHeader();
     header_->set_graphid(id);
     header_->set_directededgecount(1 + (id.tileid() == o_id.tileid()) * 1);

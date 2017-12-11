@@ -75,9 +75,9 @@ namespace valhalla {
      public:
       actor_t(const boost::property_tree::ptree& config, bool auto_cleanup = false);
       void cleanup();
-      std::string route(ACTION_TYPE action, const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
+      std::string route(const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
       std::string locate(const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
-      std::string matrix(ACTION_TYPE action, const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
+      std::string matrix(const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
       std::string optimized_route(const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
       std::string isochrone(const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});
       std::string trace_route(const std::string& request_str, const std::function<void ()>& interrupt = []()->void{});

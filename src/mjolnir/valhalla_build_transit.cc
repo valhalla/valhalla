@@ -325,8 +325,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
       else if (traversability == "exit")
         node->set_traversability(static_cast<uint32_t>(Traversability::kBackward));
 
-      GraphId egress_id = tile_id;
-      egress_id.fields.id = nodes.size();
+      GraphId egress_id(tile_id.tileid(), tile_id.level(), nodes.size());
       node->set_graphid(egress_id);
 
       // we want to set the previous id to the first egress in the
@@ -354,8 +353,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
     node->set_type(static_cast<uint32_t>(NodeType::kTransitStation));
     set_no_null(std::string, station_pt.second, "name", "null", node->set_name);
     node->set_wheelchair_boarding(station_pt.second.get<bool>("wheelchair_boarding", true));
-    GraphId station_id = tile_id;
-    station_id.fields.id = nodes.size();
+    GraphId station_id(tile_id.tileid(), tile_id.level(), nodes.size());
     node->set_graphid(station_id);
 
     auto tz = station_pt.second.get<std::string>("timezone", "null");
@@ -382,8 +380,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
       node->set_type(static_cast<uint32_t>(NodeType::kMultiUseTransitPlatform));
       set_no_null(std::string, platforms_pt.second, "name", "null", node->set_name);
       node->set_wheelchair_boarding(platforms_pt.second.get<bool>("wheelchair_boarding", true));
-      GraphId platform_id = tile_id;
-      platform_id.fields.id = nodes.size();
+      GraphId platform_id(tile_id.tileid(), tile_id.level(), nodes.size());
       node->set_graphid(platform_id);
 
       auto tz = platforms_pt.second.get<std::string>("timezone", "null");
@@ -479,13 +476,15 @@ void get_stop_patterns(Transit& tile, std::unordered_map<std::string, size_t>& s
       auto lat = geom.second.back().second.get_value<float>();
       trip_shape.emplace_back(PointLL(lon,lat));
     }
-    // encode the points to reduce size
-    shape->set_encoded_shape(encode7(trip_shape));
+    if (trip_shape.size() > 1) {
+      // encode the points to reduce size
+      shape->set_encoded_shape(encode7(trip_shape));
 
-    // shapes.size()+1 because we can't have a shape id of 0.
-    // 0 means shape id is not set in the transit builder.
-    shape->set_shape_id(shapes.size()+1);
-    shapes.emplace(shape_id, shape->shape_id());
+      // shapes.size()+1 because we can't have a shape id of 0.
+      // 0 means shape id is not set in the transit builder.
+      shape->set_shape_id(shapes.size()+1);
+      shapes.emplace(shape_id, shape->shape_id());
+    }
   }
 }
 

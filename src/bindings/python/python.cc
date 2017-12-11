@@ -10,6 +10,7 @@
 
 #include "midgard/logging.h"
 #include "meili/traffic_segment_matcher.h"
+#include "tyr/actor.h"
 
 namespace {
 
@@ -46,6 +47,16 @@ namespace {
   void py_configure(const std::string& config_file) {
     configure(config_file);
   }
+
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(route_overloads, route, 1, 1);
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(locate_overloads, locate, 1, 1);
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(optimized_route_overloads, optimized_route, 1, 1);
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(matrix_overloads, matrix, 1, 1);
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(isochrone_overloads, isochrone, 1, 1);
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_route_overloads, trace_route, 1, 1);
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_attributes_overloads, trace_attributes, 1, 1);
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(height_overloads, height, 1, 1);
+  BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(transit_available_overloads, transit_available, 1, 1);
 }
 
 BOOST_PYTHON_MODULE(valhalla) {
@@ -59,4 +70,20 @@ BOOST_PYTHON_MODULE(valhalla) {
         ("SegmentMatcher", boost::python::no_init)
       .def("__init__", boost::python::make_constructor(+[](){ return boost::make_shared<valhalla::meili::TrafficSegmentMatcher>(configure()); }))
       .def("Match", &valhalla::meili::TrafficSegmentMatcher::match);
+
+  boost::python::class_<valhalla::tyr::actor_t, boost::noncopyable,
+                       boost::shared_ptr<valhalla::tyr::actor_t> >
+        ("Actor", boost::python::no_init)
+      .def("__init__", boost::python::make_constructor(+[](){ return boost::make_shared<valhalla::tyr::actor_t>(configure(), true); }))
+      .def("Route", &valhalla::tyr::actor_t::route, route_overloads())
+      .def("Locate", &valhalla::tyr::actor_t::route, locate_overloads())
+      .def("OptimizedRoute", &valhalla::tyr::actor_t::route, optimized_route_overloads())
+      .def("Matrix", &valhalla::tyr::actor_t::route, matrix_overloads())
+      .def("Isochrone", &valhalla::tyr::actor_t::route, isochrone_overloads())
+      .def("TraceRoute", &valhalla::tyr::actor_t::route, trace_route_overloads())
+      .def("TraceAttributes", &valhalla::tyr::actor_t::route, trace_attributes_overloads())
+      .def("Height", &valhalla::tyr::actor_t::route, height_overloads())
+      .def("TransitAvailable", &valhalla::tyr::actor_t::route, transit_available_overloads())
+
+  ;
 }

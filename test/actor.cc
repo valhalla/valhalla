@@ -56,10 +56,10 @@ namespace {
     auto conf = make_conf();
     tyr::actor_t actor(conf);
 
-    actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+    actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
       {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
     actor.cleanup();
-    auto route_json = actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+    auto route_json = actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
           {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
     actor.cleanup();
     auto route = json_to_pt(route_json);
@@ -93,7 +93,7 @@ namespace {
     struct test_exception_t {};
 
     try {
-      actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+      actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
         {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})", []()->void{throw test_exception_t{};});
       throw std::logic_error("this should have thrown already");
     } catch (const test_exception_t& e) { }

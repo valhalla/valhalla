@@ -77,17 +77,17 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
       //remember if this was a new tile
       if(node_index == 0 || node.graph_id != (--tiles.end())->first) {
         tiles.insert({node.graph_id, node_index});
-        node.graph_id.fields.id = 0;
+        node.graph_id.set_id(0);
         run_index = node_index;
         ++node_count;
       }//but is it a new node
       else if(last_node.node.osmid != node.node.osmid) {
-        node.graph_id.fields.id = last_node.graph_id.fields.id + 1;
+        node.graph_id.set_id(last_node.graph_id.id() + 1);
         run_index = node_index;
         ++node_count;
       }//not new keep the same graphid
       else
-        node.graph_id.fields.id = last_node.graph_id.fields.id;
+        node.graph_id.set_id(last_node.graph_id.id());
 
       //if this node marks the start of an edge, go tell the edge where the first node in the series is
       if(node.is_start()) {

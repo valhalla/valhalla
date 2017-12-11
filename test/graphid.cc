@@ -8,6 +8,32 @@ using namespace valhalla::baldr;
 
 namespace {
 
+void TestValues() {
+  GraphId target(123, 2, 8);
+  if (target.tileid() != 123)
+    throw runtime_error("Tile Id does not match value set");
+  if (target.level() != 2)
+    throw runtime_error("Level does not match value set");
+  if (target.id() != 8) {
+    printf("id = %d\n", target.id());
+    throw runtime_error("Id does not match value set");
+  }
+
+  GraphId target2(5689, 1, 1234567);
+  if (target2.tileid() != 5689)
+    throw runtime_error("Target 2: Tile Id does not match value set");
+  if (target2.level() != 1)
+    throw runtime_error("Target 2: Level does not match value set");
+  if (target2.id() != 1234567) {
+    printf("id = %d\n", target.id());
+    throw runtime_error("Target 2:  Id does not match value set");
+  }
+
+  target.set_id(5678);
+  if (target.id() != 5678 || target.tileid() != 123 || target.level() != 2)
+    throw runtime_error("Values do not match after set_id");
+}
+
 void TestCtorDefault() {
   GraphId target;
   if (target.Is_Valid())
@@ -67,19 +93,6 @@ void TestGet_id() {
   TryGet_id(GraphId(5, 1, 50), 50);
 }
 
-void TrySetUintUintUint(const unsigned int tileid, const unsigned int level,
-                        const unsigned int id, const GraphId& expected) {
-  GraphId result;
-  result.Set(tileid, level, id);
-  if (!(expected == result))
-    throw runtime_error("SetUintUintUint test failed");
-}
-
-void TestSetUintUintUint() {
-  TrySetUintUintUint(10, 2, 1, GraphId(10, 2, 1));
-  TrySetUintUintUint(5, 1, 50, GraphId(5, 1, 50));
-}
-
 void TestIsValid() {
   GraphId id(1,2,3);
   if(!id.Is_Valid())
@@ -136,6 +149,9 @@ void TestOpEqualTo() {
 int main() {
   test::suite suite("graphid");
 
+  // Make sure set and get produce correct values
+  suite.test(TEST_CASE(TestValues));
+
   // Ctor default
   suite.test(TEST_CASE(TestCtorDefault));
 
@@ -153,9 +169,6 @@ int main() {
 
   // Get id
   suite.test(TEST_CASE(TestGet_id));
-
-  // Set uint, uint, uint
-  suite.test(TEST_CASE(TestSetUintUintUint));
 
   // Is Valid
   suite.test(TEST_CASE(TestIsValid));
