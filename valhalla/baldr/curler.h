@@ -84,4 +84,4 @@ namespace baldr {
 }
 }
 
-#endif //VALHALLA_BALDR_GEOJSON_H_
+#endif //VALHALLA_BALDR_CURLER_H_
