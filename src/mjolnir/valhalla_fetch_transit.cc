@@ -52,20 +52,18 @@ struct logged_error_t: public std::runtime_error {
   }
 };
 
-struct curler_t {
-  curler_t():connection(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);}),
-    generator(std::chrono::system_clock::now().time_since_epoch().count()),
-    distribution(static_cast<size_t>(300), static_cast<size_t>(700)) {
+//TODO: use curler_t and expand its interface to be more flexible
+struct pt_curler_t {
+  pt_curler_t():connection(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);}) {
     if(connection.get() == nullptr)
       throw logged_error_t("Failed to created CURL connection");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ERRORBUFFER, error), "Failed to set error buffer");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FOLLOWLOCATION, 1L), "Failed to set redirect option ");
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &result), "Failed to set write data ");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEFUNCTION, write_callback), "Failed to set writer ");
   }
   //for now we only need to handle json
   //with templates we could return a string or whatever
-  ptree operator()(const std::string& url, const std::string& retry_if_no = "", bool gzip = true, boost::optional<size_t> timeout = boost::none) {
+  ptree operator()(const std::string& url, const std::string& retry_if_no = "", bool gzip = true) {
     //content encoding header
     if(gzip) {
       char encoding[] = "gzip"; //TODO: allow "identity" and "deflate"
@@ -76,6 +74,8 @@ struct curler_t {
     //dont stop until we have something useful!
     ptree pt;
     size_t tries = 0;
+    std::stringstream result;
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &result), "Failed to set write data ");
     while(++tries) {
       result.str("");
       long http_code = 0;
@@ -95,15 +95,12 @@ struct curler_t {
           log_extra = "Unusable response ";
         }
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(timeout ? *timeout : distribution(generator)));
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
       //dont log rate limit stuff its too frequent
       if(http_code != 429 || (tries % 10) == 0)
         LOG_WARN(log_extra + "retrying " + url);
     };
     return pt;
-  }
-  std::string last() const {
-    return result.str();
   }
 protected:
   void assert_curl(CURLcode code, const std::string& msg){
@@ -117,9 +114,6 @@ protected:
   }
   std::shared_ptr<CURL> connection;
   char error[CURL_ERROR_SIZE];
-  std::stringstream result;
-  std::default_random_engine generator;
-  std::uniform_int_distribution<size_t> distribution;
 };
 
 std::string url(const std::string& path, const ptree& pt) {
@@ -144,7 +138,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
 
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().rbegin()->second;
-  curler_t curler;
+  pt_curler_t curler;
   auto request = url("/api/v1/feeds.geojson?per_page=false", pt);
   request += active_feed_version_import_level;
   auto feeds = curler(request, "features");
@@ -543,7 +537,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
                  std::promise<std::list<GraphId> >& promise) {
   const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   std::list<GraphId> dangling;
-  curler_t curler;
+  pt_curler_t curler;
   auto now = time(nullptr);
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon; //TODO: use timezone code?
 

@@ -8,6 +8,7 @@ import pprint
 config = {
   'mjolnir': {
     'max_cache_size': 1000000000,
+    'tile_url': 'http://localhost:8001/tiles',
     'tile_dir': '/data/valhalla',
     'tile_extract': '/data/valhalla/tiles.tar',
     'admin': '/data/valhalla/admin.sqlite',
@@ -217,6 +218,7 @@ config = {
 help_text = {
   'mjolnir': {
     'max_cache_size': 'Number of bytes per thread used to store tile data in memory',
+    'tile_url': 'Location to read tiles from if they are not found in the tile_dir',
     'tile_dir': 'Location to read/write tiles to/from',
     'tile_extract': 'Location to read tiles from tar',
     'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',

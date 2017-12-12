@@ -171,7 +171,8 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_dir_(pt.get<std::string>("tile_dir")),
+    : tile_url_(pt.get<std::string>("tile_url", "")),
+      tile_dir_(pt.get<std::string>("tile_dir")),
       tile_extract_(get_extract_instance(pt)),
       cache_(TileCacheFactory::createTileCache(pt)) {
   // Reserve cache (based on whether using individual tile files or shared,
@@ -247,8 +248,15 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   else {
     // This reads the tile from disk
     GraphTile tile(tile_dir_, base);
-    if (!tile.header())
-      return nullptr;
+    if (!tile.header()) {
+      if(tile_url_.empty() || _404s.find(base) != _404s.end())
+        return nullptr;
+      tile = GraphTile(tile_url_, base, curler);
+      if(!tile.header()) {
+        _404s.insert(base);
+        return nullptr;
+      }
+    }
 
     // Keep a copy in the cache and return it
     size_t size = tile.header()->end_offset();

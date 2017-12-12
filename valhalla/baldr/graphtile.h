@@ -19,6 +19,7 @@
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/curler.h>
 
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
@@ -58,6 +59,13 @@ class GraphTile {
    * @param  size     Size in bytes of the tile data.
    */
   GraphTile(const GraphId& graphid, char* ptr, size_t size);
+
+  /**
+   * Constructor given the graph Id, in memory tile data
+   * @param  graphid  Tile Id.
+   * @param  tile     Vector of char data with tile's data..
+   */
+  GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler);
 
   /**
    * Destructor

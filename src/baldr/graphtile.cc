@@ -122,6 +122,24 @@ GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size)
   Initialize(graphid, ptr, size);
 }
 
+GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler) {
+  // Don't bother with invalid ids
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level())
+    return;
+
+  // Get the response returned from curl
+  std::string uri = tile_url + "/" + FileSuffix(graphid.Tile_Base());
+  long http_code;
+  auto tile_data = curler(uri, http_code);
+
+  // If its good try to use it
+  if(http_code == 200) {
+    graphtile_ = std::make_shared<std::vector<char> >(std::move(tile_data));
+    Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
+    //TODO: optionally write the tile to disk?
+  }
+}
+
 GraphTile::~GraphTile() {
 }
 
