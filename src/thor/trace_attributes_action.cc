@@ -497,9 +497,9 @@ json::MapPtr thor_worker_t::trace_attributes(
           throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
         break;
-      //If we think that we have the exact shape but there ends up being no Valhalla route match, then
+      // If we think that we have the exact shape but there ends up being no Valhalla route match,
       // then we want to fallback to try and use meili map matching to match to local route network.
-      //No shortcuts are used and detailed information at every intersection becomes available.
+      // No shortcuts are used and detailed information at every intersection becomes available.
       case WALK_OR_SNAP:
         trip_path = route_match(controller);
         if (trip_path.node().size() == 0) {
