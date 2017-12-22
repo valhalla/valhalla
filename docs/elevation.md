@@ -20,9 +20,9 @@ The following bash should be enough to make some get some elevation data and sta
 
 ```bash
 # grab data for the whole world (its about 1.6TB) or a smaller bounding box
-valhalla_build_elevation -180 180 -90 90 elevation_tiles $(nproc)
+valhalla_build_elevation -180 180 -90 90 ./elevation_tiles $(nproc)
 #configure the server
-valhalla_build_config --additional-data-elevation elevation_tiles > config.json
+valhalla_build_config --additional-data-elevation ./elevation_tiles > config.json
 #start up the server with the config and number of threads
 valhalla_elevation_service config.json 1
 #curl it directly if you like:
