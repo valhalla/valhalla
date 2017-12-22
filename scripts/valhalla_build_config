@@ -8,7 +8,7 @@ import pprint
 config = {
   'mjolnir': {
     'max_cache_size': 1000000000,
-    'tile_url': 'http://localhost:8001/tiles',
+    'tile_url': None,
     'tile_dir': '/data/valhalla',
     'tile_extract': '/data/valhalla/tiles.tar',
     'admin': '/data/valhalla/admin.sqlite',
@@ -465,6 +465,8 @@ if __name__ == '__main__':
     for k in keys[:-1]:
       v = v[k]
     v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
+    if v[keys[-1]] is None:
+      del v[keys[-1]]
 
   #show the config
   print(json.dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))
