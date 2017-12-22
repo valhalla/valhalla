@@ -124,7 +124,7 @@ For more information on binaries, see [Command Line Tools](#command-line-tools) 
 Running
 -------
 
-The following bash should be enough to make some routing data and start a server using it:
+The following bash should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](https://github.com/valhalla/tree/master/elevation_readme.md)).
 
 ```bash
 #download some data and make tiles out of it
