@@ -10,8 +10,6 @@
          ░                                                                    
 
 
-Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
-
 Elevation Lookup Service
 ---------
 This document describes how to run an elevation lookup service using Valhalla. Documentation for this service can be found here: [elevation-api-docdocs](https://github.com/valhalla/valhalla-docs/tree/master/elevation/elevation-service.md). The easiest way to start an elevation service is to install Valhalla from PPA, download elevation data, and start the service. If you prefer to buld Valhalla from source please refer to the Valhalla README.
@@ -27,17 +25,18 @@ sudo apt-get update
 sudo apt-get install -y valhalla-bin
 ```
 
-Downloading Elevation Data
---------------------------
-
 Running
 -------
 
-The following bash should be enough to make some routing data and start a server using it:
+The following bash should be enough to make some get some elevation data and start a server using it:
 
 ```bash
-#start up the server
-valhalla_route_service valhalla.json 1
+# grab data for the whole world (its about 1.6TB) or a smaller bounding box
+valhalla_build_elevation -180 180 -90 90 elevation_tiles $(nproc)
+#configure the server
+valhalla_build_config --additional-data-elevation elevation_tiles > config.json
+#start up the server with the config and number of threads
+valhalla_elevation_service config.json 1
 #curl it directly if you like:
 curl http://localhost:8002/height --data '{"range":true,"shape":[{"lat":40.712431,"lon":-76.504916},{"lat":40.712275,"lon":-76.605259},{"lat":40.712122,"lon":-76.805694},{"lat":40.722431,"lon":-76.884916},{"lat":40.812275,"lon":-76.905259},{"lat":40.912122,"lon":-76.965694}]' | jq '.'
 
