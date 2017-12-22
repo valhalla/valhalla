@@ -21,6 +21,8 @@ namespace {
     return std::shared_ptr<CURL>(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);});
   }
 
+  char ALL_ENCODINGS[] = "";
+
 }
 
 namespace valhalla {
@@ -45,12 +47,10 @@ namespace baldr {
     }
 
     //TODO: retries?
-    std::vector<char> operator()(const std::string& url, long& http_code, bool gzip = false) {
-      //content encoding header
-      if(gzip) {
-        char encoding[] = "gzip"; //TODO: allow "identity" and "deflate"
-        assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ACCEPT_ENCODING, encoding), "Failed to set gzip content header ");
-      }
+    std::vector<char> operator()(const std::string& url, long& http_code, bool allow_compression = true) {
+      //sending content encoding as "" makes curl automatically handle identity, gzip or deflate
+      //sending nullptr tells curl to only accept identity (no decoding needed)
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ACCEPT_ENCODING, allow_compression ? ALL_ENCODINGS : nullptr), "Failed to set content encoding header ");
       //set the url
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
       //set the location of the result

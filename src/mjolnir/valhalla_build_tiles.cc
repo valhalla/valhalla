@@ -90,6 +90,7 @@ int main(int argc, char** argv) {
 
   //build some tiles
   pt.get_child("mjolnir").erase("tile_extract");
+  pt.get_child("mjolnir").erase("tile_url");
   build_tile_set(pt, input_files);
 
   return EXIT_SUCCESS;
