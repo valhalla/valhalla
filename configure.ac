@@ -48,7 +48,7 @@ AX_BOOST_IOSTREAMS
 AC_SUBST(BOOST_CPPFLAGS, "$BOOST_CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS")
 AC_SUBST(RAPIDJSON_CPPFLAGS, "$RAPIDJSON_CPPFLAGS -DRAPIDJSON_HAS_STDSTRING")
 
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0])
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libcurl >= 7.35.0])
 
 # if we wanted services
 AC_ARG_ENABLE([services],
@@ -96,8 +96,6 @@ AM_CONDITIONAL([DATA_TOOLS], [test x$data_tools = xtrue])
 
 # then we require lots more stuff
 AM_COND_IF([DATA_TOOLS], [
-
-    PKG_CHECK_MODULES([DATA_DEPS], [libcurl >= 7.35.0])
 
     # check for lua libraries and headers
     AX_PROG_LUA([5.2],[],[
