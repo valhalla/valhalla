@@ -12,7 +12,6 @@
 #include "baldr/json.h"
 #include "midgard/logging.h"
 
-#include "proto/directions_options.pb.h"
 #include "proto/trippath.pb.h"
 #include "odin/worker.h"
 #include "odin/util.h"
@@ -33,19 +32,24 @@ namespace valhalla {
 
     void odin_worker_t::cleanup(){}
 
-    std::list<TripDirections> odin_worker_t::narrate(boost::property_tree::ptree& request, std::list<TripPath>& legs) const {
-      // Grab language from options and set
-      auto language = request.get_optional<std::string>("directions_options.language");
-      // If language is not found then set to the default language (en-US)
-      if (!language || (odin::get_locales().find(*language) == odin::get_locales().end()))
-        request.put<std::string>("directions_options.language", odin::DirectionsOptions::default_instance().language());
-
+    DirectionsOptions odin_worker_t::parse_options(boost::property_tree::ptree& request) const {
       //see if we can get some options
-      valhalla::odin::DirectionsOptions directions_options;
+      DirectionsOptions directions_options;
       auto options = request.get_child_optional("directions_options");
       if(options)
-        directions_options = valhalla::odin::GetDirectionsOptions(*options);
+        directions_options = odin::GetDirectionsOptions(*options);
 
+      // Grab language from options and set
+      request.put<std::string>("directions_options.language", directions_options.language());
+
+      // Grab the output format and set
+      request.put<std::string>("directions_options.format",
+          DirectionsOptions::Format_Name(directions_options.format()));
+
+      return directions_options;
+    }
+
+    std::list<TripDirections> odin_worker_t::narrate(const DirectionsOptions& directions_options, std::list<TripPath>& legs) const {
       //get some annotated directions
       std::list<TripDirections> narrated;
       try{
@@ -95,7 +99,13 @@ namespace valhalla {
         }
 
         //narrate them and serialize them along
-        auto narrated = narrate(request, legs);
+        auto directions_options = parse_options(request);
+
+        //gpx output
+        if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
+          return to_response_xml(pathToGPX(legs), info);
+
+        auto narrated = narrate(directions_options, legs);
         ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
         return to_response(tyr::serializeDirections(action, request, narrated), jsonp, info);
       }

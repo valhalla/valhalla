@@ -75,7 +75,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
 }
 
 DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
-  valhalla::odin::DirectionsOptions directions_options;
+  DirectionsOptions directions_options;
 
   // TODO: validate values coming soon...
 
@@ -90,13 +90,19 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
   }
 
   auto lang_ptr = pt.get_optional<std::string>("language");
-  if (lang_ptr) {
+  if (lang_ptr && odin::get_locales().find(*lang_ptr) != odin::get_locales().end()) {
     directions_options.set_language(*lang_ptr);
   }
 
   auto narr_ptr = pt.get_optional<bool>("narrative");
   if (narr_ptr) {
     directions_options.set_narrative(*narr_ptr);
+  }
+
+  auto form_ptr = pt.get_optional<std::string>("format");
+  DirectionsOptions::Format format;
+  if (form_ptr && DirectionsOptions::Format_Parse(*form_ptr, &format)) {
+    directions_options.set_format(format);
   }
 
   return directions_options;

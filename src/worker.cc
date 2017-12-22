@@ -244,6 +244,7 @@ namespace valhalla {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+  const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
 
   worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
     //get the http status
@@ -305,6 +306,15 @@ namespace valhalla {
     result.messages.emplace_back(response.to_string());
     return result;
   }
+
+  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info) {
+    worker_t::result_t result{false};
+    http_response_t response(200, "OK", xml, headers_t{CORS, XML_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+    return result;
+  }
+
 
 #endif
 

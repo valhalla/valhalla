@@ -1646,5 +1646,46 @@ namespace valhalla {
       }
     }
 
+    std::string pathToGPX(const std::list<odin::TripPath>& legs) {
+      //start the gpx, we'll use 6 digits of precision
+      std::stringstream gpx;
+      gpx << std::setprecision(6) << std::fixed;
+      gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
+
+      //for each leg
+      for(const auto& leg : legs) {
+        //decode the shape for this leg
+        auto wpts = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+
+        //throw the shape points in as way points
+        //TODO: add time to each, need transition time at nodes
+        for(const auto& wpt : wpts)
+          gpx << R"(<wpt lon=")" << wpt.first << R"(" lat=")" << wpt.second << R"("></wpt>)";
+
+        //throw the intersections in as route points
+        //TODO: add time to each, need transition time at nodes
+        gpx << "<rte>";
+        uint64_t last_id = -1;
+        for(const auto& node : leg.node()) {
+          //if this isnt the last node we want the begin shape index of the edge
+          size_t shape_idx = wpts.size() - 1;
+          if(node.has_edge()) {
+            last_id = node.edge().way_id();
+            shape_idx = node.edge().begin_shape_index();
+          }
+
+          //output this intersection (note that begin and end points may not be intersections)
+          const auto& rtept = wpts[shape_idx];
+          gpx << R"(<rtept lon=")" << rtept.first << R"(" lat=")" << rtept.second << R"(">)"
+              << "<name>" << last_id << "</name></rtept>";
+        }
+        gpx << "</rte>";
+      }
+
+      //give it back as a string
+      gpx << "</gpx>";
+      return gpx.str();
+    }
+
   }
 }
