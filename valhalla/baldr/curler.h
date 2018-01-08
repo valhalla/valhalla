@@ -7,7 +7,7 @@
 #include <memory>
 #include <functional>
 #include <stdexcept>
-#include <midgard/logging.h>
+#include <valhalla/midgard/logging.h>
 
 namespace {
 
