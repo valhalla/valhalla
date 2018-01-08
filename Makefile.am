@@ -143,6 +143,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/admininfo.h \
 	valhalla/baldr/complexrestriction.h \
 	valhalla/baldr/connectivity_map.h \
+	valhalla/baldr/curler.h \
 	valhalla/baldr/datetime.h \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/double_bucket_queue.h \
