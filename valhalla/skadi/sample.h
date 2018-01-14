@@ -49,7 +49,19 @@ namespace valhalla {
 
      protected:
 
-      std::vector<midgard::mem_map<int16_t> > cache;
+      /**
+       * @param  index  the index of the data tile being requested
+       * @return the array of data or nullptr if there was none
+       */
+      const int16_t* source(uint16_t index) const;
+
+      //using memory maps
+      std::vector<midgard::mem_map<int16_t> > mapped_cache;
+
+      //TODO: make an LRU
+      std::unordered_map<int16_t, std::pair<std::string, uint64_t> > zipped;
+      using unzipped_t = std::pair<int16_t, std::vector<int16_t> >;
+      mutable unzipped_t unzipped;
     };
 
   }
