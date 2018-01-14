@@ -114,8 +114,8 @@ struct testable_sample_t : public skadi::sample {
   }
 };
 
-void _edges(const std::string& location) {
-  testable_sample_t s(location);
+void edges() {
+  testable_sample_t s("/dev/null");
 
   //check 4 pixels
   auto n = .5f/3600;
@@ -133,8 +133,6 @@ void _edges(const std::string& location) {
   if(v != s.get_no_data_value())
     throw std::runtime_error("Wrong value at location");
 }
-void edges() { _edges("test/data/sample"); };
-void edgesgz() { _edges("test/data/samplegz"); };
 
 }
 
@@ -150,8 +148,6 @@ int main() {
   suite.test(TEST_CASE(edges));
 
   suite.test(TEST_CASE(getgz));
-
-  suite.test(TEST_CASE(edgesgz));
 
   return suite.tear_down();
 }
