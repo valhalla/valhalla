@@ -9,6 +9,7 @@
 #include <boost/regex.hpp>
 #include <sys/stat.h>
 #include <zlib.h>
+#include <lz4.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
@@ -57,11 +58,11 @@ namespace {
     return name;
   }
 
-  uint16_t is_hgt(const std::string& name, bool& gzip) {
+  uint16_t is_hgt(const std::string& name, bool& zipped_extension) {
     boost::smatch m;
-    boost::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz)?$");
+    boost::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz|\\.lz4)?$");
     if(boost::regex_search(name, m, e)) {
-      gzip = m[5] == ".gz";
+      zipped_extension = m[5].length();
       auto lon = std::stoul(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
       auto lat = std::stoul(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
       if(lon >= 0 && lon < 360 && lat >=0 && lat < 180)
@@ -107,6 +108,23 @@ namespace {
     inflateEnd(&stream);
   }
 
+  void lunzip(const std::pair<std::string, uint64_t>& file, std::vector<int16_t>& tile) {
+    //slurp in the file
+    int fd = open(file.first.c_str(), O_RDONLY);
+    if(fd == -1)
+      throw std::runtime_error("Could not open: " + file.first);
+    posix_fadvise(fd, 0, 0, 1);  // FDADVICE_SEQUENTIAL
+    std::vector<char> in(file.second);
+    if(read(fd, &in[0], file.second) != file.second)
+      throw std::runtime_error("Could not open: " + file.first);
+
+    auto decompressed_size = LZ4_decompress_safe(
+      in.data(), static_cast<char*>(static_cast<void*>(tile.data())), file.second, HGT_BYTES);
+
+    if(decompressed_size != HGT_BYTES)
+      throw std::runtime_error("Corrupt elevation data: " + file.first);
+  }
+
 }
 
 namespace valhalla {
@@ -118,11 +136,11 @@ namespace skadi {
     auto files = get_files(data_source);
     for(const auto& f : files) {
       //make sure its a valid index
-      bool gzip;
-      auto index = is_hgt(f, gzip);
+      bool zipped_extension;
+      auto index = is_hgt(f, zipped_extension);
       if(index < mapped_cache.size()) {
         auto size = file_size(f);
-        if(gzip)
+        if(zipped_extension)
           zipped[index] = std::make_pair(f, size);
         else if(size == HGT_PIXELS * sizeof(int16_t))
           mapped_cache[index].map(f, HGT_PIXELS * sizeof(int16_t));
@@ -151,8 +169,12 @@ namespace skadi {
       if(found == zipped.cend())
         return nullptr;
 
-      //get it off disk
-      gunzip(found->second, unzipped.second);
+      //get it off disk gz
+      if(found->second.first.back() == 'z')
+        gunzip(found->second, unzipped.second);
+      //get it off disk lz4
+      else
+        lunzip(found->second, unzipped.second);
       unzipped.first = index;
       s = unzipped.second.data();
 

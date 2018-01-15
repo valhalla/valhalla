@@ -11,6 +11,7 @@ using namespace valhalla;
 #include <list>
 #include <fstream>
 #include <zlib.h>
+#include <lz4.h>
 
 namespace {
 
@@ -50,6 +51,20 @@ std::vector<Byte> gzip(std::vector<int16_t>& in) {
   return out;
 }
 
+std::vector<char> lzip(const std::vector<int16_t>& in) {
+  auto in_size = static_cast<unsigned int>(in.size() * sizeof(int16_t));
+  size_t max_compressed_size = LZ4_compressBound(in_size);
+  std::vector<char> out(max_compressed_size);
+
+  auto compressed_size = LZ4_compress_default(
+    static_cast<const char*>(static_cast<const void*>(in.data())), out.data(), in_size, max_compressed_size);
+  if(compressed_size <= 0)
+    throw std::runtime_error("Couldn't compress the file");
+  out.resize(compressed_size);
+
+  return out;
+}
+
 void create_tile() {
   //its annoying to have to get actual data but its also very boring to test with fake data
   //so we get some real data build the tests and then create the data on the fly
@@ -64,9 +79,14 @@ void create_tile() {
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())), sizeof(int16_t) * tile.size());
 
   //write it again but this time gzipped
-  auto zipped = gzip(tile);
+  auto gzipped = gzip(tile);
   std::ofstream gzfile("test/data/samplegz/N40W077.hgt.gz", std::ios::binary | std::ios::trunc);
-  gzfile.write(static_cast<const char*>(static_cast<void*>(zipped.data())), zipped.size());
+  gzfile.write(static_cast<const char*>(static_cast<void*>(gzipped.data())), gzipped.size());
+
+  //write it again but this time lzipped
+  auto lzipped = lzip(tile);
+  std::ofstream lzfile("test/data/samplelz/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
+  lzfile.write(lzipped.data(), lzipped.size());
 }
 
 void _get(const std::string& location) {
@@ -99,6 +119,7 @@ void _get(const std::string& location) {
 }
 void get() { _get("test/data/sample"); };
 void getgz() { _get("test/data/samplegz"); };
+void getlz() { _get("test/data/samplelz"); };
 
 struct testable_sample_t : public skadi::sample {
   testable_sample_t(const std::string& dir):sample(dir){
@@ -148,6 +169,8 @@ int main() {
   suite.test(TEST_CASE(edges));
 
   suite.test(TEST_CASE(getgz));
+
+  suite.test(TEST_CASE(getlz));
 
   return suite.tear_down();
 }
