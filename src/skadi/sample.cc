@@ -91,6 +91,7 @@ namespace {
     std::vector<Byte> in(file.second);
     if(read(fd, &in[0], file.second) != file.second)
       throw std::runtime_error("Could not open: " + file.first);
+    close(fd);
 
     //make a zstream with in and out
     z_stream stream = {
@@ -117,12 +118,13 @@ namespace {
     std::vector<char> in(file.second);
     if(read(fd, &in[0], file.second) != file.second)
       throw std::runtime_error("Could not open: " + file.first);
+    close(fd);
 
     auto decompressed_size = LZ4_decompress_safe(
       in.data(), static_cast<char*>(static_cast<void*>(tile.data())), file.second, HGT_BYTES);
 
     if(decompressed_size != HGT_BYTES)
-      throw std::runtime_error("Corrupt elevation data: " + file.first);
+      throw std::runtime_error("Corrupt elevation data: " + file.first + std::to_string(decompressed_size));
   }
 
 }
@@ -142,7 +144,7 @@ namespace skadi {
         auto size = file_size(f);
         if(zipped_extension)
           zipped[index] = std::make_pair(f, size);
-        else if(size == HGT_PIXELS * sizeof(int16_t))
+        else if(size == HGT_BYTES)
           mapped_cache[index].map(f, HGT_PIXELS * sizeof(int16_t));
         else
           LOG_WARN("Corrupt elevation data: " + f);
