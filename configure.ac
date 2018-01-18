@@ -48,7 +48,12 @@ AX_BOOST_IOSTREAMS
 AC_SUBST(BOOST_CPPFLAGS, "$BOOST_CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS")
 AC_SUBST(RAPIDJSON_CPPFLAGS, "$RAPIDJSON_CPPFLAGS -DRAPIDJSON_HAS_STDSTRING")
 
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libcurl >= 7.35.0 zlib >= 1.2.8 liblz4 >= 114])
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libcurl >= 7.35.0 zlib >= 1.2.8])
+
+#liblz4 only started using pkg-config since xenial
+#so we use m4 to find it and cant validate the version..
+SVN_LZ4
+AS_IF([test "x$lz4_found" = "x"], [AC_MSG_ERROR(['liblz4-dev' version >= 114 is required.  Please install liblz4-dev.])])
 
 # if we wanted services
 AC_ARG_ENABLE([services],
