@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <zlib.h>
 #include <lz4.h>
+#include <lz4hc.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
@@ -47,22 +48,13 @@ namespace {
     return files;
   }
 
-  std::string hgt_name(int lon, int lat) {
-    std::string name(lat < 0 ? "S" : "N");
-    name.append(std::to_string(std::abs(lat)));
-    name.insert(1, 3 - name.size(), '0');
-    name.push_back(lon < 0 ? 'W' : 'E');
-    name.append(std::to_string(std::abs(lon)));
-    name.append(".hgt");
-    name.insert(4, 11 - name.size(), '0');
-    return name;
-  }
-
-  uint16_t is_hgt(const std::string& name, bool& zipped_extension) {
+  template<typename fmt_t>
+  uint16_t is_hgt(const std::string& name, fmt_t& fmt) {
     boost::smatch m;
     boost::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz|\\.lz4)?$");
     if(boost::regex_search(name, m, e)) {
-      zipped_extension = m[5].length();
+      //enum class format_t{ UNKNOWN = 0, GZIP = 1, LZ4 = 2, RAW = 3 };
+      fmt = static_cast<fmt_t>(m[5].length() ? (m[5] == ".lz4" ? 2 : (m[5] == ".gz" ? 1 : 0)) : 3);
       auto lon = std::stoul(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
       auto lat = std::stoul(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
       if(lon >= 0 && lon < 360 && lat >=0 && lat < 180)
@@ -82,49 +74,27 @@ namespace {
     return rc == 0 ? s.st_size : -1;
   }
 
-  void gunzip(const std::pair<std::string, uint64_t>& file, std::vector<int16_t>& tile) {
-    //slurp in the file
-    int fd = open(file.first.c_str(), O_RDONLY);
-    if(fd == -1)
-      throw std::runtime_error("Could not open: " + file.first);
-    posix_fadvise(fd, 0, 0, 1);  // FDADVICE_SEQUENTIAL
-    std::vector<Byte> in(file.second);
-    if(read(fd, &in[0], file.second) != file.second)
-      throw std::runtime_error("Could not open: " + file.first);
-    close(fd);
-
+  void gunzip(const valhalla::midgard::mem_map<char>& in, int16_t* tile) {
     //make a zstream with in and out
     z_stream stream = {
-      &in[0], static_cast<unsigned int>(file.second), static_cast<unsigned int>(file.second), //the input stream
-      static_cast<Byte*>(static_cast<void*>(tile.data())), HGT_BYTES, HGT_BYTES //the output stream
+      static_cast<Byte*>(static_cast<void*>(in.get())),
+        static_cast<unsigned int>(in.size()), static_cast<unsigned int>(in.size()), //the input stream
+      static_cast<Byte*>(static_cast<void*>(tile)), HGT_BYTES, HGT_BYTES //the output stream
     };
 
     //decompress the file
-    int err = inflateInit2(&stream, 16 + MAX_WBITS);
-    if(err == Z_OK) {
-      err = inflate(&stream, Z_FINISH);
-      if(err != Z_STREAM_END || stream.total_out != HGT_PIXELS * sizeof(int16_t))
-        throw std::runtime_error("Corrupt elevation data: " + file.first);
-    }
+    if(inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK)
+      throw std::runtime_error("gzip decompression init failed");
+    auto e = inflate(&stream, Z_FINISH);
+    if(e != Z_STREAM_END || stream.total_out != HGT_BYTES)
+      throw std::runtime_error("Corrupt gzip elevation data");
     inflateEnd(&stream);
   }
 
-  void lunzip(const std::pair<std::string, uint64_t>& file, std::vector<int16_t>& tile) {
-    //slurp in the file
-    int fd = open(file.first.c_str(), O_RDONLY);
-    if(fd == -1)
-      throw std::runtime_error("Could not open: " + file.first);
-    posix_fadvise(fd, 0, 0, 1);  // FDADVICE_SEQUENTIAL
-    std::vector<char> in(file.second);
-    if(read(fd, &in[0], file.second) != file.second)
-      throw std::runtime_error("Could not open: " + file.first);
-    close(fd);
-
-    auto decompressed_size = LZ4_decompress_safe(
-      in.data(), static_cast<char*>(static_cast<void*>(tile.data())), file.second, HGT_BYTES);
-
-    if(decompressed_size != HGT_BYTES)
-      throw std::runtime_error("Corrupt elevation data: " + file.first + std::to_string(decompressed_size));
+  void lunzip(const valhalla::midgard::mem_map<char>& in, int16_t* tile) {
+    auto compressed_size = LZ4_decompress_fast(in.get(), static_cast<char*>(static_cast<void*>(tile)), HGT_BYTES);
+    if(compressed_size != in.size())
+      throw std::runtime_error("Corrupt lz4 elevation data");
   }
 
 }
@@ -138,15 +108,13 @@ namespace skadi {
     auto files = get_files(data_source);
     for(const auto& f : files) {
       //make sure its a valid index
-      bool zipped_extension;
-      auto index = is_hgt(f, zipped_extension);
-      if(index < mapped_cache.size()) {
+      format_t format;
+      auto index = is_hgt(f, format);
+      if(index < mapped_cache.size() && format > mapped_cache[index].first) {
         auto size = file_size(f);
-        if(zipped_extension)
-          zipped[index] = std::make_pair(f, size);
-        else if(size == HGT_BYTES)
-          mapped_cache[index].map(f, HGT_PIXELS * sizeof(int16_t));
-        else
+        mapped_cache[index].first = format;
+        mapped_cache[index].second.map(f, size);
+        if(format == format_t::RAW && size != HGT_BYTES)
           LOG_WARN("Corrupt elevation data: " + f);
       }
     }
@@ -156,34 +124,31 @@ namespace skadi {
     //bail if its out of bounds
     if(index >= TILE_COUNT)
       return nullptr;
+    //we have it raw or dont have it
+    const auto& mapped = mapped_cache[index];
+    if(mapped.first == format_t::RAW || mapped.second.get() == nullptr)
+      return static_cast<const int16_t*>(static_cast<const void*>(mapped.second.get()));
+    //if we have it already give it back
+    if(unzipped.first == index)
+      return unzipped.second.data();
 
-    //try the memmap cache
-    const auto* s = mapped_cache[index].get();
-
-    //if it failed try gzipped sources
-    if(s == nullptr) {
-      //we have it cached
-      if(unzipped.first == index)
-        return unzipped.second.data();
-
-      //we cant get it from disk
-      auto found = zipped.find(index);
-      if(found == zipped.cend())
-        return nullptr;
-
-      //get it off disk gz
-      if(found->second.first.back() == 'z')
-        gunzip(found->second, unzipped.second);
-      //get it off disk lz4
+    //we have to unzip it
+    try {
+      if(mapped.first == format_t::LZ4HC)
+        lunzip(mapped.second, unzipped.second.data());
       else
-        lunzip(found->second, unzipped.second);
-      unzipped.first = index;
-      s = unzipped.second.data();
-
-      //TODO: LRU stuff
+        gunzip(mapped.second, unzipped.second.data());
+    }//failed to unzip
+    catch(...) {
+      LOG_WARN("Corrupt compressed elevation data");
+      unzipped.first = -1;
+      return nullptr;
     }
 
-    return s;
+    //update the simple cache
+    //TODO: LRU
+    unzipped.first = index;
+    return unzipped.second.data();
   }
 
   template <class coord_t>

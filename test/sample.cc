@@ -12,6 +12,7 @@ using namespace valhalla;
 #include <fstream>
 #include <zlib.h>
 #include <lz4.h>
+#include <lz4hc.h>
 
 namespace {
 
@@ -52,12 +53,12 @@ std::vector<Byte> gzip(std::vector<int16_t>& in) {
 }
 
 std::vector<char> lzip(const std::vector<int16_t>& in) {
-  auto in_size = static_cast<unsigned int>(in.size() * sizeof(int16_t));
-  size_t max_compressed_size = LZ4_compressBound(in_size);
+  int in_size = static_cast<int>(in.size() * sizeof(int16_t));
+  int max_compressed_size = LZ4_compressBound(in_size);
   std::vector<char> out(max_compressed_size);
 
-  auto compressed_size = LZ4_compress_default(
-    static_cast<const char*>(static_cast<const void*>(in.data())), out.data(), in_size, max_compressed_size);
+  auto compressed_size = LZ4_compress_HC(
+      static_cast<const char*>(static_cast<const void*>(in.data())), out.data(), in_size, max_compressed_size, 9);
   if(compressed_size <= 0)
     throw std::runtime_error("Couldn't compress the file");
   out.resize(compressed_size);
@@ -93,11 +94,11 @@ void _get(const std::string& location) {
   //check a single point
   skadi::sample s(location);
   if(std::fabs(490 - s.get(std::make_pair(-76.503915, 40.678783))) > 1.0)
-    throw std::runtime_error("Wrong value at location");
+    throw std::runtime_error("Wrong value at location: " + std::to_string(s.get(std::make_pair(-76.503915, 40.678783))));
 
   //check a point near the edge of a tile
   if(std::fabs(134 - s.get(std::make_pair(-76.9, 40.0))) > 1.0)
-    throw std::runtime_error("Wrong value at edge of tile");
+    throw std::runtime_error("Wrong value at edge of tile: " + std::to_string(s.get(std::make_pair(-76.9, 40.0))));
 
   //check a bunch
   std::list<std::pair<double, double> > postings =  {
@@ -131,7 +132,8 @@ struct testable_sample_t : public skadi::sample {
       for(size_t i = 0; i < 3601 * 4; ++i)
         s.push_back(((-32768 & 0xFF) << 8) | ((-32768 >> 8) & 0xFF));
     }
-    mapped_cache.front().map("test/data/blah.hgt", 3601*6);
+    mapped_cache.front().first = format_t::RAW;
+    mapped_cache.front().second.map("test/data/blah.hgt", 3601*6);
   }
 };
 
