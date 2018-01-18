@@ -112,10 +112,12 @@ namespace skadi {
       auto index = is_hgt(f, format);
       if(index < mapped_cache.size() && format > mapped_cache[index].first) {
         auto size = file_size(f);
-        mapped_cache[index].first = format;
-        mapped_cache[index].second.map(f, size);
-        if(format == format_t::RAW && size != HGT_BYTES)
+        if(format == format_t::RAW && size != HGT_BYTES) {
           LOG_WARN("Corrupt elevation data: " + f);
+          continue;
+        }
+        mapped_cache[index].first = format;
+        mapped_cache[index].second.map(f, size, POSIX_FADV_SEQUENTIAL);
       }
     }
   }
