@@ -33,7 +33,7 @@ else
 fi
 if [[ -z $7 ]] || [[ $7 != "false" ]]; then
 	decomp=true
-        export decomp
+	export decomp
 else
 	unset decomp
 fi
@@ -49,9 +49,9 @@ expected=$((($max_x - $min_x + 1)*($max_y - $min_y + 1)))
 echo "extracting $expected elevation tiles"
 ext=$( [[ ${decomp} ]] && echo "" || echo ".gz" )
 for x in $(seq ${min_x} 1 ${max_x}); do
-        for y in $(seq ${min_y} 1 ${max_y}); do
+	for y in $(seq ${min_y} 1 ${max_y}); do
 		file=$(python -c "print '%s%02d%s%03d.hgt' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x}))")
-                dir=$(echo ${file} | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
+		dir=$(echo ${file} | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
 		#if we dont already have it or its the wrong size
 		if [ ! -e ${dest}/${dir}/${file} ] || [ $(stat -c %s ${dest}/${dir}/${file}) -ne $((3601*3601*2)) ]; then
 			echo "http://s3.amazonaws.com/elevation-tiles-prod/skadi/${dir}/${file}.gz ${dest}/${dir}/${file}${ext}"
