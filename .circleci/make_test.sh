@@ -25,5 +25,5 @@ mkdir -p ${HOME}/.ccache && echo "max_size = 4.0G" > ${HOME}/.ccache/ccache.conf
 ./configure CC="ccache gcc" CXX="ccache g++" #--enable-coverage
 ccache -z
 ccache -s
-make test -j$(nproc) || true
+make test -j1 || true
 ccache -s
