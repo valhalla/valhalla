@@ -15,9 +15,7 @@
 #include "midgard/encoded.h"
 #include "baldr/rapidjson_utils.h"
 
-#include "skadi/worker.h"
-#include "skadi/sample.h"
-#include "tyr/actor.h"
+#include "loki/worker.h"
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -73,20 +71,9 @@ namespace {
 }
 
 namespace valhalla {
-  namespace skadi {
+  namespace loki {
 
-    skadi_worker_t::skadi_worker_t (const boost::property_tree::ptree& config):
-      sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
-      max_shape(config.get<size_t>("service_limits.skadi.max_shape")), min_resample(config.get<float>("service_limits.skadi.min_resample")),
-      long_request(config.get<float>("skadi.logging.long_request")), healthcheck(false), action_str("'height'"){
-    }
-
-    skadi_worker_t::~skadi_worker_t(){}
-
-
-    void skadi_worker_t::init_request(rapidjson::Document& request) {
-      //flag healthcheck requests; do not send to logstash
-      healthcheck = GetFromRapidJson(request,"/healthcheck", false);
+    void loki_worker_t::init_height(rapidjson::Document& request) {
       //get some parameters
       range = GetFromRapidJson(request, "/range", false);
       auto input_shape = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/shape");
@@ -132,15 +119,10 @@ namespace valhalla {
       }
 
       //there are limits though
-      if(shape.size() > max_shape) {
+      if(shape.size() > max_elevation_shape) {
         throw valhalla_exception_t{314, " (" + std::to_string(shape.size()) +
-            (resampled ? " after resampling" : "") + "). The limit is " + std::to_string(max_shape)};
+            (resampled ? " after resampling" : "") + "). The limit is " + std::to_string(max_elevation_shape)};
       }
-    }
-
-    void skadi_worker_t::cleanup() {
-      shape.clear();
-      encoded_polyline.reset();
     }
 
     /* example height with range response:
@@ -149,7 +131,8 @@ namespace valhalla {
       "range_height": [ [0,303], [8467,275], [25380,198] ]
     }
     */
-    json::MapPtr skadi_worker_t::height(rapidjson::Document& request) {
+    json::MapPtr loki_worker_t::height(rapidjson::Document& request) {
+      init_height(request);
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
       if (!healthcheck)
@@ -181,80 +164,5 @@ namespace valhalla {
 
       return json;
     }
-
-#ifdef HAVE_HTTP
-    worker_t::result_t skadi_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
-      auto& info = *static_cast<http_request_info_t*>(request_info);
-      LOG_INFO("Got Skadi Request " + std::to_string(info.id));
-      boost::optional<std::string> jsonp;
-      //request should look like:
-      //  http://host:port/height?json={shape:[{lat: ,lon: }],range=false} OR http://host:port/height?json={encoded_polyline:"SOMESTUFF",range:true}
-      try{
-        //request parsing
-        auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
-        auto action = PATH_TO_ACTION.find(request.path);
-        if(action == PATH_TO_ACTION.cend())
-          return jsonify_error(valhalla_exception_t{304, action_str}, info, jsonp);
-
-        // Set the interrupt function
-        service_worker_t::set_interrupt(interrupt_function);
-
-        //parse the query's json
-        auto request_rj = from_request(request);
-        jsonp = GetOptionalFromRapidJson<std::string>(request_rj, "/jsonp");
-        init_request(request_rj);
-        worker_t::result_t result;
-        switch (action->second) {
-          case HEIGHT:
-            result = to_response(height(request_rj), jsonp, info);
-            break;
-          default:
-            return jsonify_error({305}, info, jsonp);
-        }
-        //get processing time for skadi
-        auto e = std::chrono::system_clock::now();
-        std::chrono::duration<float, std::milli> elapsed_time = e - s;
-        //log request if greater than X (ms)
-        auto do_not_track = request.headers.find("DNT");
-        bool allow_tracking = do_not_track == request.headers.cend() || do_not_track->second != "1";
-        if (!healthcheck && allow_tracking && (elapsed_time.count() / shape.size()) > long_request) {
-          LOG_WARN("skadi::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-          LOG_WARN("skadi::request exceeded threshold::"+ rapidjson::to_string(request_rj));
-          midgard::logging::Log("valhalla_skadi_long_request", " [ANALYTICS] ");
-        }
-
-        return result;
-      }
-      catch(const valhalla_exception_t& e) {
-        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(e, info, jsonp);
-      }
-      catch(const std::exception& e) {
-        valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({399, std::string(e.what())}, info, jsonp);
-      }
-    }
-
-    void run_service(const boost::property_tree::ptree& config) {
-      //gets requests from the http server
-      auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
-      //or returns just location information back to the server
-      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
-      auto interrupt_endpoint = config.get<std::string>("httpd.service.interrupt");
-
-      //listen for requests
-      zmq::context_t context;
-      skadi_worker_t skadi_worker(config);
-      prime_server::worker_t worker(context, upstream_endpoint, "ipc://TODO", loopback_endpoint, interrupt_endpoint,
-        std::bind(&skadi_worker_t::work, std::ref(skadi_worker), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-        std::bind(&skadi_worker_t::cleanup, std::ref(skadi_worker)));
-      worker.work();
-
-      //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
-    }
-#endif
-
   }
 }

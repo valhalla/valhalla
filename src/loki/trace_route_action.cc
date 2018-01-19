@@ -104,7 +104,7 @@ namespace valhalla {
         max_factor = 5.0f;
 
       // Validate shape count and distance (for now, just send max_factor for distance)
-      check_shape(shape, max_shape);
+      check_shape(shape, max_trace_shape);
       check_distance(shape, max_distance.find("trace")->second, max_factor);
 
       // Validate best paths and best paths shape for `map_snap` requests

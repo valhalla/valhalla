@@ -213,7 +213,6 @@ nobase_include_HEADERS = \
 	valhalla/meili/map_matcher.h \
 	valhalla/meili/map_matcher_factory.h \
 	valhalla/meili/traffic_segment_matcher.h \
-	valhalla/skadi/worker.h \
 	valhalla/skadi/sample.h \
 	valhalla/skadi/util.h \
 	valhalla/loki/worker.h \
@@ -331,7 +330,6 @@ libvalhalla_la_SOURCES = \
 	src/meili/match_route.cc \
 	src/meili/traffic_segment_matcher.cc \
 	src/skadi/sample.cc \
-	src/skadi/worker.cc \
 	src/skadi/util.cc \
 	src/loki/search.cc \
 	src/loki/worker.cc \
@@ -340,6 +338,7 @@ libvalhalla_la_SOURCES = \
 	src/loki/matrix_action.cc \
 	src/loki/isochrone_action.cc \
 	src/loki/trace_route_action.cc \
+	src/loki/height_action.cc \
 	src/loki/transit_available_action.cc \
 	src/loki/node_search.cc \
 	src/proto/tripcommon.pb.cc \
@@ -513,15 +512,10 @@ valhalla_pack_elevation_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS
 
 if SERVICES
 bin_PROGRAMS += \
-	valhalla_route_service \
-	valhalla_skadi_worker \
+	valhalla_service \
 	valhalla_loki_worker \
 	valhalla_odin_worker \
-	valhalla_thor_worker \
-	valhalla_elevation_service 
-valhalla_skadi_worker_SOURCES = src/valhalla_skadi_worker.cc
-valhalla_skadi_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_skadi_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+	valhalla_thor_worker
 valhalla_loki_worker_SOURCES = src/valhalla_loki_worker.cc
 valhalla_loki_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_loki_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
@@ -531,12 +525,9 @@ valhalla_odin_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $
 valhalla_thor_worker_SOURCES = src/valhalla_thor_worker.cc
 valhalla_thor_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_thor_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-valhalla_elevation_service_SOURCES = src/valhalla_elevation_service.cc
-valhalla_elevation_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_elevation_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
-valhalla_route_service_SOURCES = src/valhalla_route_service.cc
-valhalla_route_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_route_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_service_SOURCES = src/valhalla_service.cc
+valhalla_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 if DATA_TOOLS

@@ -13,6 +13,7 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/skadi/sample.h>
 #include <valhalla/tyr/actor.h>
 
 namespace valhalla {
@@ -35,6 +36,7 @@ namespace valhalla {
       void matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void isochrones(rapidjson::Document& request);
       void trace(tyr::ACTION_TYPE action, rapidjson::Document& request);
+      baldr::json::MapPtr height(rapidjson::Document& request);
       baldr::json::ArrayPtr transit_available(rapidjson::Document& request);
 
      protected:
@@ -50,6 +52,7 @@ namespace valhalla {
       void init_matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
       void init_isochrones(rapidjson::Document& request);
       void init_trace(rapidjson::Document& request);
+      void init_height(rapidjson::Document& request);
       void init_transit_available(rapidjson::Document& request);
 
       boost::property_tree::ptree config;
@@ -79,11 +82,16 @@ namespace valhalla {
       size_t max_transit_walking_dis;
       size_t max_contours;
       size_t max_time;
-      size_t max_shape;
+      size_t max_trace_shape;
       float max_gps_accuracy;
       float max_search_radius;
       unsigned int max_best_paths;
       size_t max_best_paths_shape;
+      boost::optional<std::string> encoded_polyline;
+      bool range;
+      skadi::sample sample;
+      size_t max_elevation_shape;
+      float min_resample;
       bool healthcheck;
     };
   }

@@ -42,18 +42,6 @@ config = {
       'proxy': 'ipc:///tmp/loki'
     }
   },
-  'skadi': {
-    'actions':['height'],
-    'logging': {
-      'type': 'std_out',
-      'color': True,
-      'file_name': 'path_to_some_file.log',
-      'long_request': 5.0
-    },
-    'service': {
-      'proxy': 'ipc:///tmp/skadi'
-    }
-  },
   'thor': {
     'logging': {
       'type': 'std_out',
@@ -242,18 +230,6 @@ help_text = {
       'radius': 'Default radius to apply to incoming locations should one not be supplied',
       'minimum_reachability': 'Default minimum reachability to apply to incoming locations should one not be supplied',
     },
-    'logging': {
-      'type': 'Type of logger either std_out or file',
-      'color': 'User colored log level in std_out logger',
-      'file_name': 'Output log file for the file logger',
-      'long_request': 'Value used in processing to determine whether it took too long'
-    },
-    'service': {
-      'proxy': 'IPC linux domain socket file location'
-    }
-  },
-  'skadi': {
-    'actions': 'Comma separated list of allowable actions for the service, one or more of: height',
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',

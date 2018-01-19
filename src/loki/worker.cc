@@ -119,7 +119,10 @@ namespace valhalla {
         long_request(config.get<float>("loki.logging.long_request")),
         max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
         max_time(config.get<size_t>("service_limits.isochrone.max_time")),
-        max_shape(config.get<size_t>("service_limits.trace.max_shape")),
+        max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
+        sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
+        max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
+        min_resample(config.get<float>("service_limits.skadi.min_resample")),
         healthcheck(false) {
 
       // Keep a string noting which actions we support, throw if one isnt supported
@@ -194,6 +197,7 @@ namespace valhalla {
       sources.clear();
       targets.clear();
       shape.clear();
+      encoded_polyline.reset();
       if(reader.OverCommitted())
         reader.Clear();
     }
@@ -256,6 +260,9 @@ namespace valhalla {
             trace(action->second, request_rj);
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
+          case HEIGHT:
+            result = to_response(height(request_rj), jsonp, info);
+            break;
           case TRANSIT_AVAILABLE:
             result = to_response(transit_available(request_rj), jsonp, info);
             break;
@@ -267,7 +274,7 @@ namespace valhalla {
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
-        auto work_units = locations.size() ? locations.size() : 1;
+        auto work_units = locations.size() ? locations.size() : shape.size() * 20;
         if (!healthcheck && !info.spare && elapsed_time.count() / work_units > long_request) {
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
           LOG_WARN("loki::request exceeded threshold::"+ rapidjson::to_string(request_rj));

@@ -145,7 +145,7 @@ firefox demos/routing/index-internal.html &
 #NOTE: set the environment pulldown to 'localhost' to point it at your own server
 
 #start up the server
-valhalla_route_service valhalla.json 1
+valhalla_service valhalla.json 1
 #curl it directly if you like:
 curl http://localhost:8002/route --data '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' | jq '.'
 

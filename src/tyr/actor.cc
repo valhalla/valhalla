@@ -3,7 +3,6 @@
 #include "loki/worker.h"
 #include "thor/worker.h"
 #include "odin/worker.h"
-#include "skadi/worker.h"
 #include "tyr/serializers.h"
 #include "baldr/rapidjson_utils.h"
 
@@ -49,24 +48,21 @@ namespace valhalla {
 
     struct actor_t::pimpl_t {
       pimpl_t(const boost::property_tree::ptree& config):
-        loki_worker(config), thor_worker(config), odin_worker(config), skadi_worker(config) {
+        loki_worker(config), thor_worker(config), odin_worker(config) {
       }
       void set_interrupts(const std::function<void ()>& interrupt_function) {
         loki_worker.set_interrupt(interrupt_function);
         thor_worker.set_interrupt(interrupt_function);
         odin_worker.set_interrupt(interrupt_function);
-        skadi_worker.set_interrupt(interrupt_function);
       }
       void cleanup() {
         loki_worker.cleanup();
         thor_worker.cleanup();
         odin_worker.cleanup();
-        skadi_worker.cleanup();
       }
       loki::loki_worker_t loki_worker;
       thor::thor_worker_t thor_worker;
       odin::odin_worker_t odin_worker;
-      skadi::skadi_worker_t skadi_worker;
     };
 
     actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup): pimpl(new pimpl_t(config)), auto_cleanup(auto_cleanup) {
@@ -233,7 +229,7 @@ namespace valhalla {
       //parse the request
       auto request_rj = to_document(request_str);
       //get the height at each point
-      auto json = pimpl->skadi_worker.height(request_rj);
+      auto json = pimpl->loki_worker.height(request_rj);
       std::stringstream ss;
       ss << *json;
       //if they want you do to do the cleanup automatically
