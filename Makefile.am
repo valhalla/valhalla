@@ -7,9 +7,6 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
-DEPS_CFLAGS += $(SVN_LZ4_INCLUDES)
-DEPS_LIBS += $(SVN_LZ4_LIBS)
-
 # things for versioning
 pkgconfig_DATA = libvalhalla.pc
 
