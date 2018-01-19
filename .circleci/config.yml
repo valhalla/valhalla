@@ -8,7 +8,7 @@ jobs:
           LD_LIBRARY_PATH: /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
     steps:
       - checkout
-      - run: sudo apt-get -y install git && git submodule sync && git submodule update --init
+      - run: apt-get -y install git && git submodule sync && git submodule update --init
       - run: bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
       - restore_cache:
           keys:
