@@ -507,7 +507,7 @@ valhalla_export_edges_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ 
 
 if SERVICES
 bin_PROGRAMS += \
-	valhalla_route_service \
+	valhalla_service \
 	valhalla_loki_worker \
 	valhalla_odin_worker \
 	valhalla_thor_worker
@@ -520,9 +520,9 @@ valhalla_odin_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $
 valhalla_thor_worker_SOURCES = src/valhalla_thor_worker.cc
 valhalla_thor_worker_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_thor_worker_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
-valhalla_route_service_SOURCES = src/valhalla_route_service.cc
-valhalla_route_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
-valhalla_route_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+valhalla_service_SOURCES = src/valhalla_service.cc
+valhalla_service_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_service_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 endif
 
 if DATA_TOOLS
