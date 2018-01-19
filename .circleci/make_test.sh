@@ -19,11 +19,15 @@ for f in locales/*.json; do
 done
 scripts/valhalla_build_config
 
+# machine info
+cat /proc/cpuinfo
+free -m
+
 # setup some caching and do the build
 mkdir -p ${HOME}/.ccache && echo "max_size = 4.0G" > ${HOME}/.ccache/ccache.conf
 ./autogen.sh
 ./configure CC="ccache gcc" CXX="ccache g++" --enable-coverage
 ccache -z
 ccache -s
-make test -j$(nproc) || true
+make test -j$((($(nproc)+1)/2)) || true
 ccache -s
