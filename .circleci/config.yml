@@ -18,7 +18,7 @@ jobs:
       - run: .circleci/make_test.sh
       - run: mkdir test/logs && cp test/*.log test/logs
       - store_artifacts:
-        path: test/logs
+          path: test/logs
       - save_cache:
           key: ccache
           paths:
