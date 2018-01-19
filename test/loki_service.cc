@@ -133,6 +133,7 @@ namespace {
       "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } }, 
       "service_limits": {
+        "skadi": { "max_shape": 100, "min_resample": "10"},
         "auto": { "max_distance": 5000000.0, "max_locations": 20,
                   "max_matrix_distance": 400000.0, "max_matrix_locations": 50 },
         "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
