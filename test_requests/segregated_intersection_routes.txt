@@ -1,0 +1,6 @@
+-j '{"locations":[{"lat":40.785789,"lon":-81.379280,"street":"Hawk Place Southeast"},{"lat":40.785599,"lon":-81.378456,"street":"Hawk Place Southeast"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.040802,"lon":-75.514839,"street":"Mountain Laurel Lane"},{"lat":40.040367,"lon":-75.514984,"street":"Mountain Laurel Lane"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.048180,"lon":-75.520485,"street":""},{"lat":40.048065,"lon":-75.520546,"street":""}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.954731,"lon":-75.181084,"street":"Schuykill Avenue"},{"lat":39.956139,"lon":-75.180565,"street":"Schuykill Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":38.908611,"lon":-77.044441,"street":"New Hampshire Avenue Northwest"},{"lat":38.909660,"lon":-77.041901,"street":"P Street Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":34.067818,"lon":-117.601967,"street":"I 10"},{"lat":34.069798,"lon":-117.593292,"street":"Archibald Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'

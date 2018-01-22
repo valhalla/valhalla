@@ -1,0 +1,2 @@
+-j '{"locations":[{"lat":38.928505,"lon":-77.018120,"street":"Michigan Avenue Northwest"},{"lat":38.929298,"lon":-77.019577,"street":"Warder Street Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":38.909698,"lon":-77.031151,"street":"P Street Northwest"},{"lat":38.910095,"lon":-77.028206,"street":"Rhode Island Avenue Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}'
