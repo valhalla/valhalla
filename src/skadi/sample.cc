@@ -117,7 +117,7 @@ namespace skadi {
           continue;
         }
         mapped_cache[index].first = format;
-        mapped_cache[index].second.map(f, size, POSIX_FADV_SEQUENTIAL);
+        mapped_cache[index].second.map(f, size, POSIX_MADV_SEQUENTIAL);
       }
     }
   }
