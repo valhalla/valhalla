@@ -25,7 +25,9 @@ std::vector<char> read_file(const std::string& file_name, long size) {
   int fd = open(file_name.c_str(), O_RDONLY);
   if(fd == -1)
     throw std::runtime_error("Could not open: " + file_name);
+#ifndef __APPLE__
   posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+#endif
   std::vector<char> in(size);
   if(read(fd, in.data(), size) != size)
     throw std::runtime_error("Could not open: " + file_name);
