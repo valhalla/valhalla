@@ -146,11 +146,14 @@ std::vector<char> lunzip(const std::vector<char>& in, algorithm_t algorithm) {
 int main(int argc, char** argv){
   if(argc < 2)
     return 0;
+  //TODO: add arguments to this
+
   std::string file_name(argv[1]);
   auto tile = read_file(file_name, file_size(file_name));
   //test the file for proper lz4hc encoding
   if(file_name.find(".lz4") == file_name.size() - 4) {
-    lunzip(tile, algorithm_t::HIGH);
+    tile = lunzip(tile, algorithm_t::HIGH);
+    write_file(file_name.substr(0, file_name.size() - 4), tile);
   }//compress an existing file
   else {
     //gunzip it
