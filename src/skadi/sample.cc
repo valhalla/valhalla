@@ -42,10 +42,33 @@ namespace {
           files.push_back(i->path().string());
     }//couldn't get data
     catch(...) {
-      LOG_WARN(root_dir + " has no elevation tiles");
+      LOG_WARN(root_dir + " currently has no elevation tiles");
       files.clear();
     }
     return files;
+  }
+
+  std::string name_hgt(int16_t index) {
+    auto x = (index % 360) - 180;
+    auto y = (index / 360) - 90;
+
+    std::string name(y < 0 ? "/S" : "/N");
+    y = std::abs(y);
+    if(y < 10)
+      name.push_back('0');
+    name.append(std::to_string(y));
+    name.append(name);
+
+    name.append(x < 0 ? "W" : "E");
+    x = std::abs(x);
+    if(x < 100)
+      name.push_back('0');
+    if(x < 10)
+      name.push_back('0');
+    name.append(std::to_string(x));
+    name.append(".hgt");
+
+    return name;
   }
 
   template<typename fmt_t>
@@ -103,7 +126,11 @@ namespace valhalla {
 namespace skadi {
 
   sample::sample(const std::string& data_source):
-      mapped_cache(TILE_COUNT), unzipped(-1, std::vector<int16_t>(HGT_PIXELS)) {
+      mapped_cache(TILE_COUNT), unzipped_cache(-1, std::vector<int16_t>(HGT_PIXELS)), data_source(data_source) {
+    //messy but needed
+    while(this->data_source.size() && this->data_source.back() == '/')
+      this->data_source.pop_back();
+
     //check the directory for files that look like what we need
     auto files = get_files(data_source);
     for(const auto& f : files) {
@@ -126,31 +153,43 @@ namespace skadi {
     //bail if its out of bounds
     if(index >= TILE_COUNT)
       return nullptr;
-    //we have it raw or dont have it
-    const auto& mapped = mapped_cache[index];
-    if(mapped.first == format_t::RAW || mapped.second.get() == nullptr)
+
+    //if we dont have anything maybe its lazy loaded
+    auto& mapped = mapped_cache[index];
+    if(mapped.second.get() == nullptr) {
+      auto f = data_source + name_hgt(index);
+      auto size = file_size(f);
+      if(size != HGT_BYTES)
+        return nullptr;
+      mapped.first = format_t::RAW;
+      mapped.second.map(f, size, POSIX_MADV_SEQUENTIAL);
+    }
+
+    //we have it raw or we dont
+    if(mapped.first == format_t::RAW)
       return static_cast<const int16_t*>(static_cast<const void*>(mapped.second.get()));
-    //if we have it already give it back
-    if(unzipped.first == index)
-      return unzipped.second.data();
+
+    //if we have it already unzipped
+    if(unzipped_cache.first == index)
+      return unzipped_cache.second.data();
 
     //we have to unzip it
     try {
       if(mapped.first == format_t::LZ4HC)
-        lunzip(mapped.second, unzipped.second.data());
+        lunzip(mapped.second, unzipped_cache.second.data());
       else
-        gunzip(mapped.second, unzipped.second.data());
+        gunzip(mapped.second, unzipped_cache.second.data());
     }//failed to unzip
     catch(...) {
       LOG_WARN("Corrupt compressed elevation data");
-      unzipped.first = -1;
+      unzipped_cache.first = -1;
       return nullptr;
     }
 
     //update the simple cache
     //TODO: LRU
-    unzipped.first = index;
-    return unzipped.second.data();
+    unzipped_cache.first = index;
+    return unzipped_cache.second.data();
   }
 
   template <class coord_t>

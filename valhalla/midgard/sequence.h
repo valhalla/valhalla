@@ -111,6 +111,10 @@ class mem_map {
     return count;
   }
 
+  const std::string& name() const {
+    return file_name;
+  }
+
  protected:
 
   void* ptr;
