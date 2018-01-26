@@ -42,7 +42,7 @@ namespace {
           files.push_back(i->path().string());
     }//couldn't get data
     catch(...) {
-      LOG_WARN(root_dir + " has no elevation tiles");
+      LOG_WARN(root_dir + " currently has no elevation tiles");
       files.clear();
     }
     return files;
