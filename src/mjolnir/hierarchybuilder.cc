@@ -8,6 +8,7 @@
 #include <map>
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/pointll.h"
 #include "midgard/logging.h"
@@ -585,7 +586,12 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
   RemoveUnusedLocalTiles(reader.tile_dir());
 
   // Update the end nodes to all transit connections in the transit hierarchy
-  UpdateTransitConnections(reader);
+  auto hierarchy_properties = pt.get_child("mjolnir");
+  auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
+  if (transit_dir && boost::filesystem::exists(*transit_dir) && boost::filesystem::is_directory(*transit_dir)) {
+    UpdateTransitConnections(reader);
+  }
+
   LOG_INFO("Done HierarchyBuilder");
 }
 
