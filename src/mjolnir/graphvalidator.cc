@@ -18,6 +18,7 @@
 #include <mutex>
 #include <numeric>
 #include <tuple>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -578,6 +579,7 @@ namespace valhalla {
 namespace mjolnir {
 
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
+    LOG_INFO("Validating, finishing and binning tiles...");
     auto hierarchy_properties = pt.get_child("mjolnir");
     std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");
 
@@ -594,8 +596,11 @@ namespace mjolnir {
         }
       }
 
-      //transit level
-      if (level == TileHierarchy::levels().rbegin()->second.level) {
+      // Check if transit level exists - add transit tiles to queue if so
+      auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
+      if (transit_dir && boost::filesystem::exists(*transit_dir) && 
+          boost::filesystem::is_directory(*transit_dir) && 
+          level == TileHierarchy::levels().rbegin()->second.level) {
         level += 1;
         for (uint32_t id = 0; id < tiles.TileCount(); id++) {
           // If tile exists add it to the queue
@@ -613,8 +618,6 @@ namespace mjolnir {
 
     // An mutex we can use to do the synchronization
     std::mutex lock;
-
-    LOG_INFO("Validating, finishing and binning tiles...");
 
     // Setup threads
     std::vector<std::shared_ptr<std::thread> > threads(

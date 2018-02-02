@@ -1259,6 +1259,8 @@ namespace mjolnir {
 // Enhance the local level of the graph
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const std::string& access_file) {
+  LOG_INFO("Enhancing local graph...");
+
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(
     std::max(static_cast<unsigned int>(1),
@@ -1287,7 +1289,6 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   std::mutex lock;
 
   // Start the threads
-  LOG_INFO("Enhancing local graph...");
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(enhance,
