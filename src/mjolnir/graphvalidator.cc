@@ -583,33 +583,12 @@ namespace mjolnir {
     auto hierarchy_properties = pt.get_child("mjolnir");
     std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");
 
-    // Create a randomized queue of tiles to work from
+    // Create a randomized queue of tiles (at all levels) to work from
     std::deque<GraphId> tilequeue;
-    for (auto tier : TileHierarchy::levels()) {
-      auto level = tier.second.level;
-      auto tiles = tier.second.tiles;
-      for (uint32_t id = 0; id < tiles.TileCount(); id++) {
-        // If tile exists add it to the queue
-        GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
-          tilequeue.emplace_back(std::move(tile_id));
-        }
-      }
-
-      // Check if transit level exists - add transit tiles to queue if so
-      auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-      if (transit_dir && boost::filesystem::exists(*transit_dir) && 
-          boost::filesystem::is_directory(*transit_dir) && 
-          level == TileHierarchy::levels().rbegin()->second.level) {
-        level += 1;
-        for (uint32_t id = 0; id < tiles.TileCount(); id++) {
-          // If tile exists add it to the queue
-          GraphId tile_id(id, level, 0);
-          if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
-            tilequeue.emplace_back(std::move(tile_id));
-          }
-        }
-      }
+    GraphReader reader(pt.get_child("mjolnir"));
+    auto tileset = reader.GetTileSet();
+    for (const auto& id : tileset) {
+      tilequeue.emplace_back(id);
     }
     std::random_shuffle(tilequeue.begin(), tilequeue.end());
 
