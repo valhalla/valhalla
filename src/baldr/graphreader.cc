@@ -497,5 +497,25 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   return tiles;
 }
 
+// Get the set of tiles for a specified level
+std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
+  std::unordered_set<GraphId> tiles;
+  // TODO _ support mmap
+
+  //crack open this level of tiles directory
+  boost::filesystem::path root_dir(tile_dir_ + '/' + std::to_string(level) + '/');
+  if (boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+    // iterate over all the files in the directory and turn into GraphIds
+    for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+      if (!boost::filesystem::is_directory(i->path())) {
+        //add it if it can be parsed as a valid tile file name
+        try { tiles.emplace(GraphTile::GetTileId(i->path().string())); }
+        catch (...) { }
+      }
+    }
+  }
+  return tiles;
+}
+
 }
 }

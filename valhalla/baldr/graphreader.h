@@ -519,6 +519,13 @@ class GraphReader {
   std::unordered_set<GraphId> GetTileSet() const;
 
   /**
+   * Gets back a set of available tiles on the specified level
+   * @param  level  Level to get tile set.
+   * @return  returns the list of available tiles on this level
+   */
+  std::unordered_set<GraphId> GetTileSet(const uint8_t level) const;
+
+  /**
    * Returns the tile directory.
    * @return  Returns the tile directory.
    */
