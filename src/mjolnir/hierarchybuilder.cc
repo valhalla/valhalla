@@ -474,12 +474,10 @@ void UpdateTransitConnections(GraphReader& reader) {
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
 
   auto tile_level = TileHierarchy::levels().rbegin();
-  auto& base_level = tile_level->second;
-  uint8_t transit_level = base_level.level + 1;
-  uint32_t ntiles = base_level.tiles.TileCount();
-  for (uint32_t basetileid = 0; basetileid < ntiles; basetileid++) {
-    // Get the graph tile. Skip if no tile exists (common case)
-    GraphId tile_id(basetileid, transit_level, 0);
+  uint8_t transit_level = tile_level->second.level + 1;
+  auto transit_tiles = reader.GetTileSet(transit_level);
+  for (const auto& tile_id : transit_tiles) {
+    // Skip if no nodes exist in the tile
     const GraphTile* tile = reader.GetGraphTile(tile_id);
     if (tile == nullptr || tile->header()->nodecount() == 0) {
       continue;
