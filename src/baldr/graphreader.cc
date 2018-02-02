@@ -503,7 +503,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
   std::unordered_set<GraphId> tiles;
   if(tile_extract_->tiles.size()) {
     for(const auto& t : tile_extract_->tiles)
-      if(t.first.level() == level)
+      if(static_cast<GraphId>(t.first).level() == level)
         tiles.emplace(t.first);
   }//or individually on disk
   else {
