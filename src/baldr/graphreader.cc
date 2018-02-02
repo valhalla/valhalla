@@ -499,8 +499,6 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
 
 // Get the set of tiles for a specified level
 std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
-  std::unordered_set<GraphId> tiles;
-  
   //either mmap'd tiles
   std::unordered_set<GraphId> tiles;
   if(tile_extract_->tiles.size()) {
