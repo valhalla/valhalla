@@ -32,39 +32,33 @@ namespace {
 
   namespace osrm_serializers {
     /*
-    OSRM output looks like this:
+    OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
     {
-        "hint_data": {
-            "locations": [
-                "_____38_SADaFQQAKwEAABEAAAAAAAAAdgAAAFfLwga4tW0C4P6W-wAARAA",
-                "fzhIAP____8wFAQA1AAAAC8BAAAAAAAAAAAAAP____9Uu20CGAiX-wAAAAA"
-            ],
-            "checksum": 2875622111
-        },
-        "route_name": [ "West 26th Street", "Madison Avenue" ],
-        "via_indices": [ 0, 9 ],
-        "found_alternative": false,
-        "route_summary": {
-            "end_point": "West 29th Street",
-            "start_point": "West 26th Street",
-            "total_time": 145,
-            "total_distance": 878
-        },
-        "via_points": [ [ 40.744377, -73.990433 ], [40.745811, -73.988075 ] ],
-        "route_instructions": [
-            [ "10", "West 26th Street", 216, 0, 52, "215m", "SE", 118 ],
-            [ "1", "East 26th Street", 153, 2, 29, "153m", "SE", 120 ],
-            [ "7", "Madison Avenue", 237, 3, 25, "236m", "NE", 29 ],
-            [ "7", "East 29th Street", 155, 6, 29, "154m", "NW", 299 ],
-            [ "1", "West 29th Street", 118, 7, 21, "117m", "NW", 299 ],
-            [ "15", "", 0, 8, 0, "0m", "N", 0 ]
-        ],
-        "route_geometry": "ozyulA~p_clCfc@ywApTar@li@ybBqe@c[ue@e[ue@i[ci@dcB}^rkA",
-        "status_message": "Found route between points",
-        "status": 0
+        "code":"Ok"
+        "waypoints": [{ }, { }...],
+        "routes": [
+            {
+                "geometry":"....."
+                "distance":xxx.y
+                "duration":yyy.z
+                "legs":[
+                    {
+                        "steps":[
+                            "intersections":[
+                            ]
+                            "geometry":" "
+                            "maneuver":{
+                            }
+                        ]
+                    }
+                ]
+            },
+            ...
+        ]
     }
     */
 
+/**********OLD OSRM CODE - delete
     json::ArrayPtr route_name(const std::list<valhalla::odin::TripDirections>& legs){
       auto route_name = json::array({});
       //first one
@@ -112,20 +106,6 @@ namespace {
       return route_summary;
     }
 
-    json::ArrayPtr via_points(const std::list<valhalla::odin::TripDirections>& legs){
-      //first one
-      auto via_points = json::array({
-        json::array({json::fp_t{legs.front().location(0).ll().lat(),6}, json::fp_t{legs.front().location(0).ll().lng(),6}})
-      });
-      //the rest
-      for(const auto& leg : legs) {
-        for(int i = 1; i < leg.location_size(); ++i) {
-          const auto& location = leg.location(i);
-          via_points->emplace_back(json::array({json::fp_t{location.ll().lat(),6}, json::fp_t{location.ll().lng(),6}}));
-        }
-      }
-      return via_points;
-    }
 
     const std::unordered_map<int, std::string> maneuver_type = {
         { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kNone),             "0" },//NoTurn = 0,
@@ -203,9 +183,11 @@ namespace {
       }
       return route_instructions;
     }
+**/
 
-    std::string shape(const std::list<valhalla::odin::TripDirections>& legs) {
-      if(legs.size() == 1)
+    // Generate full shape of the route. TODO - different encodings, generalization
+    std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs) {
+      if (legs.size() == 1)
         return legs.front().shape();
 
       //TODO: there is a tricky way to do this... since the end of each leg is the same as the beginning
@@ -221,27 +203,111 @@ namespace {
       return midgard::encode(decoded);
     }
 
-    json::MapPtr serialize(const valhalla::odin::DirectionsOptions& directions_options,
-      const std::list<valhalla::odin::TripDirections>& legs) {
-      auto json = json::map
-      ({
-        {"hint_data", json::map
-          ({
-            {"locations", json::array({ string(""), string("") })}, //TODO: are these internal ids?
-            {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
-          })
-        },
-        {"route_name", route_name(legs)}, //TODO: list of all of the streets or just the via points?
-        {"via_indices", via_indices(legs)}, //maneuver index
-        {"found_alternative", static_cast<bool>(false)}, //no alt route support
-        {"route_summary", route_summary(legs)}, //start/end name, total time/distance
-        {"via_points", via_points(legs)}, //array of lat,lng pairs
-        {"route_instructions", route_instructions(legs)}, //array of maneuvers
-        {"route_geometry", shape(legs)}, //polyline encoded shape
-        {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
-        {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
-      });
+    // Serialize locations (called waypoints in OSRM). Waypoints are described here:
+    //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
+    json::ArrayPtr waypoints(const std::list<valhalla::odin::TripDirections>& legs){
+      auto waypoints = json::array({});
 
+      int index = 0;
+      for (auto leg = legs.begin(); leg != legs.end(); ++leg) {
+        for (auto location = leg->location().begin() + index; location != leg->location().end(); ++location) {
+          index = 1;
+
+          // Create a waypoint to add to the array
+          auto waypoint = json::map({});
+
+          // Output location as a lon,lat array
+          auto loc = json::array({});
+          loc->emplace_back(json::fp_t{location->ll().lng(), 6});
+          loc->emplace_back(json::fp_t{location->ll().lat(), 6});
+          waypoint->emplace("location", loc);
+
+          // Add street name
+          if (!location->street().empty())
+            waypoint->emplace("street", location->street());
+
+          // Add distance in meters from the input location to the nearest point
+          float distance = 1.0f; // TODO
+          waypoint->emplace("distance", json::fp_t{distance, 1});
+
+          // Add hint. Goal is for the hint returned from a locate request to be able
+          // to quickly find the edge and point along the edge in a route request.
+          waypoint->emplace("hint", "TODO");
+
+          // Add the waypoint to the JSON array
+          waypoints->emplace_back(waypoint);
+        }
+      }
+      return waypoints;
+    }
+
+    json::ArrayPtr  intersections(const valhalla::odin::TripDirections& leg) {
+      auto intersections = json::array({});
+
+      return intersections;
+    }
+
+    // Serialize each leg
+    // TODO - add TripPath
+    json::ArrayPtr  serialize_legs(const std::list<valhalla::odin::TripDirections>& legs) {
+      auto output_legs = json::array({});
+
+      // Iterate through the legs in TripDirections
+      for (const auto& leg : legs) {
+        auto output_leg = json::map({});
+
+        // TODO - add annotation (node Ids, etc.)
+
+        // Iterate through maneuvers - convert to OSRM step
+        for (const auto& maneuver : leg.maneuver()) {
+          // TODO - iterate through TripPath from prior maneuver end to
+          // end of this maneuver - insert OSRM specific steps such as
+          // name change
+
+          // Add intersections
+          output_leg->emplace("intersections", intersections(leg));
+        }
+      }
+      return output_legs;
+    }
+
+    // Serialize route response in OSRM compatible format.
+    // TODO - need to plug in TripPath proto here as well.
+    // TODO - alternate routes
+    json::MapPtr serialize(const valhalla::odin::DirectionsOptions& directions_options,
+                           const std::list<valhalla::odin::TripDirections>& legs) {
+      auto json = json::map({});
+
+      json->emplace("code", "Ok");        // TODO - other codes?
+      json->emplace("waypoints", waypoints(legs));
+
+      // Add each route (currently Valhalla only has 1 route)
+      auto routes = json::array({});
+
+      // For each route...
+      for (int i = 0; i < 1; ++i) {
+        // Create a route to add to the array
+        auto route = json::map({});
+
+        // Get full shape for the route. TODO - encoding options and generalization
+        // (maybe pass these through Directions options). NOTE - full_shape returns
+        // a string, what if GeoJSON is specified?
+        route->emplace("geometry", full_shape(legs));
+
+        // Other route summary information
+        float distance = 10.0f; // TODO - get from route summary, convert to meters
+        route->emplace("distance", json::fp_t{distance, 1});
+        float duration = 10.0f; // TODO - get from route summary (seconds)
+        route->emplace("distance", json::fp_t{duration, 1});
+        float weight = 100.0f;
+        route->emplace("weight", json::fp_t{weight, 1});
+        route->emplace("weight_name", "Valhalla default");
+
+        // Serialize route legs
+        route->emplace("legs", serialize_legs(legs));
+
+        routes->emplace_back(route);
+      }
       return json;
     }
   }
