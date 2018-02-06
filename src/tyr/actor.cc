@@ -3,6 +3,7 @@
 #include "loki/worker.h"
 #include "thor/worker.h"
 #include "odin/worker.h"
+#include "odin/util.h"
 #include "tyr/serializers.h"
 #include "baldr/rapidjson_utils.h"
 
@@ -77,27 +78,21 @@ namespace valhalla {
       pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
+      auto options = odin::GetDirectionsOptions(request);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.route(request);
       //route between the locations in the graph to find the best path
       auto date_time_type = GetOptionalFromRapidJson<int>(request, "/date_time.type");
       auto request_pt = to_ptree(request);
       auto legs = pimpl->thor_worker.route(request_pt, date_time_type);
-      //parse the options for directions
-      auto directions_options = pimpl->odin_worker.parse_options(request_pt);
-      //gpx output
-      if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
-        return pathToGPX(legs);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(directions_options, legs);
+      auto directions = pimpl->odin_worker.narrate(options, legs);
       //serialize them out to json string
-      auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
-      std::stringstream ss;
-      ss << *json;
+      auto bytes = tyr::serializeDirections(request_pt, legs, directions);
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return bytes;
     }
 
     std::string actor_t::locate(const std::string& request_str, const std::function<void ()>& interrupt) {
@@ -138,26 +133,20 @@ namespace valhalla {
       pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
+      auto options = odin::GetDirectionsOptions(request);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.matrix(OPTIMIZED_ROUTE, request);
       auto request_pt = to_ptree(request);
       //compute compute all pairs and then the shortest path through them all
       auto legs = pimpl->thor_worker.optimized_route(request_pt);
-      //parse the options for directions
-      auto directions_options = pimpl->odin_worker.parse_options(request_pt);
-      //gpx output
-      if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
-        return pathToGPX(legs);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(directions_options, legs);
+      auto directions = pimpl->odin_worker.narrate(options, legs);
       //serialize them out to json string
-      auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
-      std::stringstream ss;
-      ss << *json;
+      auto bytes = tyr::serializeDirections(request_pt, legs, directions);
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return bytes;
     }
 
     std::string actor_t::isochrone(const std::string& request_str, const std::function<void ()>& interrupt) {
@@ -183,26 +172,20 @@ namespace valhalla {
       pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
+      auto options = odin::GetDirectionsOptions(request);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.trace(TRACE_ROUTE, request);
       //route between the locations in the graph to find the best path
       auto request_pt = to_ptree(request);
       std::list<TripPath> legs{pimpl->thor_worker.trace_route(request_pt)};
-      //parse the options for directions
-      auto directions_options = pimpl->odin_worker.parse_options(request_pt);
-      //gpx output
-      if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
-        return pathToGPX(legs);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(directions_options, legs);
+      auto directions = pimpl->odin_worker.narrate(options, legs);
       //serialize them out to json string
-      auto json = tyr::serializeDirections(ROUTE, request_pt, directions);
-      std::stringstream ss;
-      ss << *json;
+      auto bytes = tyr::serializeDirections(request_pt, legs, directions);
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return bytes;
     }
 
     std::string actor_t::trace_attributes(const std::string& request_str, const std::function<void ()>& interrupt) {

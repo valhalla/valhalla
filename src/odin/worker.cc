@@ -32,23 +32,6 @@ namespace valhalla {
 
     void odin_worker_t::cleanup(){}
 
-    DirectionsOptions odin_worker_t::parse_options(boost::property_tree::ptree& request) const {
-      //see if we can get some options
-      DirectionsOptions directions_options;
-      auto options = request.get_child_optional("directions_options");
-      if(options)
-        directions_options = odin::GetDirectionsOptions(*options);
-
-      // Grab language from options and set
-      request.put<std::string>("directions_options.language", directions_options.language());
-
-      // Grab the output format and set
-      request.put<std::string>("directions_options.format",
-          DirectionsOptions::Format_Name(directions_options.format()));
-
-      return directions_options;
-    }
-
     std::list<TripDirections> odin_worker_t::narrate(const DirectionsOptions& directions_options, std::list<TripPath>& legs) const {
       //get some annotated directions
       std::list<TripDirections> narrated;
@@ -99,15 +82,14 @@ namespace valhalla {
         }
 
         //narrate them and serialize them along
-        auto directions_options = parse_options(request);
-
-        //gpx output
-        if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
-          return to_response_xml(pathToGPX(legs), info);
-
+        auto directions_options = GetDirectionsOptions(request);
         auto narrated = narrate(directions_options, legs);
-        ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
-        return to_response(tyr::serializeDirections(action, request, narrated), jsonp, info);
+        //xml
+        if(directions_options.format() == DirectionsOptions::gpx)
+          return to_response_xml(tyr::serializeDirections(request, legs, narrated), info);
+        //json
+        return to_response_json(tyr::serializeDirections(request, legs, narrated), info,
+          directions_options.has_jsonp() ? &directions_options.jsonp() : nullptr);
       }
       catch(const std::exception& e) {
         return jsonify_error({299, std::string(e.what())}, info, jsonp);

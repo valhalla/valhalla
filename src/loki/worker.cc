@@ -16,6 +16,7 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "tyr/actor.h"
+#include "odin/util.h"
 
 #include "loki/worker.h"
 #include "loki/search.h"

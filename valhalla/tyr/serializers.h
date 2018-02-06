@@ -15,7 +15,9 @@
 namespace valhalla {
   namespace tyr {
 
-    baldr::json::MapPtr serializeDirections(ACTION_TYPE action, const boost::property_tree::ptree& request, const std::list<odin::TripDirections>& directions_legs);
+    std::string serializeDirections(const boost::property_tree::ptree& request,
+        const std::list<odin::TripPath>& path_legs,
+        const std::list<odin::TripDirections>& directions_legs);
 
     /**
      * Transfers the JSON route information returned from a route request into
@@ -24,14 +26,7 @@ namespace valhalla {
      * @param proto_route  The protobuf object that will hold the information
      *                     from the JSON string
      */
-    void jsonToProtoRoute (const std::string& json_route, Route& proto_route);
-
-    /**
-     * Returns GPX formatted route responses given the legs of the route
-     * @param  legs  The legs of the route
-     * @return the gpx string
-     */
-    std::string pathToGPX(const std::list<odin::TripPath>& legs);
+    void jsonToProtoRoute(const std::string& json_route, Route& proto_route);
   }
 }
 

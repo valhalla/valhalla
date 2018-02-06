@@ -221,7 +221,7 @@ namespace {
       return midgard::encode(decoded);
     }
 
-    json::MapPtr serialize(const valhalla::odin::DirectionsOptions& directions_options,
+    std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
       const std::list<valhalla::odin::TripDirections>& legs) {
       auto json = json::map
       ({
@@ -242,7 +242,9 @@ namespace {
         {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
       });
 
-      return json;
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
     }
   }
 
@@ -761,10 +763,8 @@ namespace {
       return legs;
     }
 
-    json::MapPtr serialize(const boost::optional<std::string>& id,
-                   const valhalla::odin::DirectionsOptions& directions_options,
+    std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
                    const std::list<valhalla::odin::TripDirections>& directions_legs) {
-
       //build up the json object
       auto json = json::map
       ({
@@ -780,10 +780,12 @@ namespace {
           })
         }
       });
-      if (id)
-        json->emplace("id", *id);
+      if (directions_options.has_id())
+        json->emplace("id", directions_options.id());
 
-      return json;
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
     }
   }
 
@@ -1517,14 +1519,62 @@ namespace {
       proto_leg->set_shape(shape_iter->value.GetString());
     }
   }
+
+
+  /**
+   * Returns GPX formatted route responses given the legs of the route
+   * @param  legs  The legs of the route
+   * @return the gpx string
+   */
+  std::string pathToGPX(const std::list<odin::TripPath>& legs) {
+    //start the gpx, we'll use 6 digits of precision
+    std::stringstream gpx;
+    gpx << std::setprecision(6) << std::fixed;
+    gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
+
+    //for each leg
+    for(const auto& leg : legs) {
+      //decode the shape for this leg
+      auto wpts = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+
+      //throw the shape points in as way points
+      //TODO: add time to each, need transition time at nodes
+      for(const auto& wpt : wpts)
+        gpx << R"(<wpt lon=")" << wpt.first << R"(" lat=")" << wpt.second << R"("></wpt>)";
+
+      //throw the intersections in as route points
+      //TODO: add time to each, need transition time at nodes
+      gpx << "<rte>";
+      uint64_t last_id = -1;
+      for(const auto& node : leg.node()) {
+        //if this isnt the last node we want the begin shape index of the edge
+        size_t shape_idx = wpts.size() - 1;
+        if(node.has_edge()) {
+          last_id = node.edge().way_id();
+          shape_idx = node.edge().begin_shape_index();
+        }
+
+        //output this intersection (note that begin and end points may not be intersections)
+        const auto& rtept = wpts[shape_idx];
+        gpx << R"(<rtept lon=")" << rtept.first << R"(" lat=")" << rtept.second << R"(">)"
+            << "<name>" << last_id << "</name></rtept>";
+      }
+      gpx << "</rte>";
+    }
+
+    //give it back as a string
+    gpx << "</gpx>";
+    return gpx.str();
+  }
 }
 
 
 namespace valhalla {
   namespace tyr {
 
-    json::MapPtr serializeDirections(ACTION_TYPE action, const boost::property_tree::ptree& request,
-        const std::list<TripDirections>& legs) {
+    std::string serializeDirections(const boost::property_tree::ptree& request,
+        const std::list<odin::TripPath>& path_legs,
+        const std::list<TripDirections>& directions_legs) {
       //see if we can get some options
       valhalla::odin::DirectionsOptions directions_options;
       auto options = request.get_child_optional("directions_options");
@@ -1532,10 +1582,16 @@ namespace valhalla {
         directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
       //serialize them
-      if(false)
-        return osrm_serializers::serialize(directions_options, legs);
-      else
-        return valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs);
+      switch(directions_options.format()) {
+        /*case DirectionsOptions_Format_osrm:
+          return osrm_serializers::serialize(directions_options, path_legs, directions_legs);*/
+        case DirectionsOptions_Format_gpx:
+          return pathToGPX(path_legs);
+        case DirectionsOptions_Format_json:
+          return valhalla_serializers::serialize(directions_options, directions_legs);
+        default:
+          throw;
+      }
     }
 
     void jsonToProtoRoute (const std::string& json_route, Route& proto_route) {
@@ -1644,47 +1700,6 @@ namespace valhalla {
         }
         proto_trip->set_id(id_iter->value.GetString());
       }
-    }
-
-    std::string pathToGPX(const std::list<odin::TripPath>& legs) {
-      //start the gpx, we'll use 6 digits of precision
-      std::stringstream gpx;
-      gpx << std::setprecision(6) << std::fixed;
-      gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
-
-      //for each leg
-      for(const auto& leg : legs) {
-        //decode the shape for this leg
-        auto wpts = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
-
-        //throw the shape points in as way points
-        //TODO: add time to each, need transition time at nodes
-        for(const auto& wpt : wpts)
-          gpx << R"(<wpt lon=")" << wpt.first << R"(" lat=")" << wpt.second << R"("></wpt>)";
-
-        //throw the intersections in as route points
-        //TODO: add time to each, need transition time at nodes
-        gpx << "<rte>";
-        uint64_t last_id = -1;
-        for(const auto& node : leg.node()) {
-          //if this isnt the last node we want the begin shape index of the edge
-          size_t shape_idx = wpts.size() - 1;
-          if(node.has_edge()) {
-            last_id = node.edge().way_id();
-            shape_idx = node.edge().begin_shape_index();
-          }
-
-          //output this intersection (note that begin and end points may not be intersections)
-          const auto& rtept = wpts[shape_idx];
-          gpx << R"(<rtept lon=")" << rtept.first << R"(" lat=")" << rtept.second << R"(">)"
-              << "<name>" << last_id << "</name></rtept>";
-        }
-        gpx << "</rte>";
-      }
-
-      //give it back as a string
-      gpx << "</gpx>";
-      return gpx.str();
     }
 
   }

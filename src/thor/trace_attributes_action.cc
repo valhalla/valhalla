@@ -384,7 +384,6 @@ namespace {
   }
 
   json::MapPtr serialize(const AttributesController& controller,
-      const boost::optional<std::string>& id,
       const DirectionsOptions& directions_options,
       std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripPath>>& map_match_results) {
 
@@ -392,8 +391,8 @@ namespace {
     auto json = json::map({});
 
     // Add result id, if supplied
-    if (id)
-      json->emplace("id", *id);
+    if (directions_options.has_id())
+      json->emplace("id", directions_options.id());
 
     // Add units, if specified
     if (directions_options.has_units()) {
@@ -516,18 +515,14 @@ json::MapPtr thor_worker_t::trace_attributes(
       }
     }
 
-  auto id = request.get_optional<std::string>("id");
   // Get the directions_options if they are in the request
-  DirectionsOptions directions_options;
-  auto options = request.get_child_optional("directions_options");
-  if(options)
-    directions_options = valhalla::odin::GetDirectionsOptions(*options);
+  DirectionsOptions directions_options = valhalla::odin::GetDirectionsOptions(request);
 
   //serialize output to Thor
   json::MapPtr json;
   if (!map_match_results.empty()
       && (std::get<kTripPathIndex>(map_match_results.at(0)).node().size() > 0))
-    json = serialize(controller, id, directions_options, map_match_results);
+    json = serialize(controller, directions_options, map_match_results);
   else
     throw valhalla_exception_t { 442 };
 

@@ -24,8 +24,6 @@ namespace valhalla {
 
       std::list<TripDirections> narrate(const DirectionsOptions& directions_options,
           std::list<TripPath>& legs) const;
-
-      DirectionsOptions parse_options(boost::property_tree::ptree& request) const;
     };
   }
 }

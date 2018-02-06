@@ -6,10 +6,7 @@
 #include <boost/date_time/local_time/local_time.hpp>
 
 #include "midgard/logging.h"
-
-#include "proto/directions_options.pb.h"
 #include "odin/util.h"
-#include "odin/narrative_dictionary.h"
 #include "locales.h"
 
 namespace {
@@ -77,8 +74,6 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
 DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
   DirectionsOptions directions_options;
 
-  // TODO: validate values coming soon...
-
   auto units_ptr = pt.get_optional<std::string>("units");
   if (units_ptr) {
     std::string units = *units_ptr;
@@ -106,6 +101,52 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
   }
 
   return directions_options;
+}
+
+DirectionsOptions GetDirectionsOptions(rapidjson::Document& doc) {
+  DirectionsOptions options;
+
+  //TODO: stop doing this after a sufficient amount of time has passed
+  //move anything nested in deprecated directions_options up to the top level
+  auto* deprecated = rapidjson::Pointer{"/directions_options"}.Get(doc);
+  auto& allocator = doc.GetAllocator();
+  if(deprecated) {
+    for(const auto& key : {"units", "narrative", "format", "language"}) {
+      auto member = deprecated->FindMember(key);
+      if(member != deprecated->MemberEnd())
+        doc.AddMember(member->name, member->value, allocator);
+    }
+    //delete directions_options if it existed
+    doc.RemoveMember("/directions_options");
+  }
+
+  auto units = GetOptionalFromRapidJson<std::string>(doc, "/units");
+  if(units) {
+    if((*units == "miles") || (*units == "mi"))
+      options.set_units(DirectionsOptions_Units_kMiles);
+    else
+      options.set_units(DirectionsOptions_Units_kKilometers);
+  }
+
+  auto language = GetOptionalFromRapidJson<std::string>(doc, "/language");
+  if(language && odin::get_locales().find(*language) != odin::get_locales().end())
+    options.set_language(*language);
+
+  auto narrative = GetOptionalFromRapidJson<bool>(doc, "/narrative");
+  if(narrative)
+    options.set_narrative(*narrative);
+
+  auto fmt = GetOptionalFromRapidJson<std::string>(doc, "/format");
+  DirectionsOptions::Format format;
+  if (fmt && DirectionsOptions::Format_Parse(*fmt, &format))
+    options.set_format(format);
+
+  //force these into the output so its obvious what we did to the user
+  doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
+  doc.AddMember({"format", allocator},
+    {DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
+
+  return options;
 }
 
 //Get the time from the inputed date.

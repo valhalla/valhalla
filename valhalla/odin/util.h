@@ -11,6 +11,7 @@
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/narrative_dictionary.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 
 namespace valhalla {
 namespace odin {
@@ -27,6 +28,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
                          uint32_t turn_degree_threshold = 30);
 
 DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt);
+DirectionsOptions GetDirectionsOptions(rapidjson::Document& doc);
 
 /**
  * Get the time from the inputed date.
