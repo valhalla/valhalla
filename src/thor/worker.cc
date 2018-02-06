@@ -180,7 +180,6 @@ namespace valhalla {
             denominator = correlated_s.size() * correlated_t.size();
             break;
           case ROUTE:
-          case VIAROUTE:
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
             for (const auto& trippath : route(request, date_time_type))

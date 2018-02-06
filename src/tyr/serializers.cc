@@ -1532,7 +1532,7 @@ namespace valhalla {
         directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
       //serialize them
-      if(action == VIAROUTE)
+      if(false)
         return osrm_serializers::serialize(directions_options, legs);
       else
         return valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs);

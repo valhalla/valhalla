@@ -236,7 +236,6 @@ namespace valhalla {
         //do request specific processing
         switch (action->second) {
           case ROUTE:
-          case VIAROUTE:
             route(request_rj);
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;

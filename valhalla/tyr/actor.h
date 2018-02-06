@@ -7,7 +7,7 @@
 
 namespace valhalla {
   namespace tyr {
-    enum ACTION_TYPE {ROUTE = 0, VIAROUTE = 1, LOCATE = 2, ONE_TO_MANY = 3, MANY_TO_ONE = 4, MANY_TO_MANY = 5,
+    enum ACTION_TYPE {STATUS = 0, ROUTE = 1, LOCATE = 2, ONE_TO_MANY = 3, MANY_TO_ONE = 4, MANY_TO_MANY = 5,
       SOURCES_TO_TARGETS = 6, OPTIMIZED_ROUTE = 7, ISOCHRONE = 8, TRACE_ROUTE = 9, TRACE_ATTRIBUTES = 10, HEIGHT = 11,
       TRANSIT_AVAILABLE = 12};
   }
@@ -27,7 +27,6 @@ namespace valhalla {
 
     const std::unordered_map<std::string, ACTION_TYPE> PATH_TO_ACTION{
       {"/route", ROUTE},
-      {"/viaroute", VIAROUTE},
       {"/locate", LOCATE},
       {"/one_to_many", ONE_TO_MANY},
       {"/many_to_one", MANY_TO_ONE},
@@ -41,7 +40,6 @@ namespace valhalla {
       {"/transit_available", TRANSIT_AVAILABLE},
 
       {"route", ROUTE},
-      {"viaroute", VIAROUTE},
       {"locate", LOCATE},
       {"one_to_many", ONE_TO_MANY},
       {"many_to_one", MANY_TO_ONE},
@@ -57,7 +55,6 @@ namespace valhalla {
 
     const std::unordered_map<ACTION_TYPE, std::string> ACTION_TO_STRING {
       {ROUTE, "route"},
-      {VIAROUTE, "viaroute"},
       {LOCATE, "locate"},
       {ONE_TO_MANY, "one_to_many"},
       {MANY_TO_ONE, "many_to_one"},
