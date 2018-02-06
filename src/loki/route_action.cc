@@ -35,7 +35,6 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-
     void loki_worker_t::init_route(rapidjson::Document& request) {
       locations = parse_locations(request, "locations");
       //need to check location size here instead of in parse_locations because of locate action needing a different size

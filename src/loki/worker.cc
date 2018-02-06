@@ -16,6 +16,7 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "tyr/actor.h"
+#include "odin/util.h"
 
 #include "loki/worker.h"
 #include "loki/search.h"
@@ -220,10 +221,10 @@ namespace valhalla {
 
         //parse the query's json
         auto request_rj = from_request(request);
-        jsonp = GetOptionalFromRapidJson<std::string>(request_rj, "/jsonp");
+        auto options = odin::GetDirectionsOptions(request_rj);
         //let further processes more easily know what kind of request it was
         rapidjson::SetValueByPointer(request_rj, "/action", action->second);
-        //flag healthcheck requests; do not send to logstash
+        //flag healthcheck requests
         healthcheck = GetOptionalFromRapidJson<bool>(request_rj, "/healthcheck").get_value_or(false);
         //let further processes know about tracking
         auto do_not_track = request.headers.find("DNT");
