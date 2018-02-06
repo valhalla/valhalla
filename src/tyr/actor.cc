@@ -100,6 +100,7 @@ namespace valhalla {
       pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
+      auto options = odin::GetDirectionsOptions(request);
       //check the request and locate the locations in the graph
       auto json = pimpl->loki_worker.locate(request);
       std::stringstream ss;
@@ -115,6 +116,7 @@ namespace valhalla {
       pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
+      auto options = odin::GetDirectionsOptions(request);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.matrix(SOURCES_TO_TARGETS, request);
       auto request_pt = to_ptree(request);
@@ -154,6 +156,7 @@ namespace valhalla {
       pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
+      auto options = odin::GetDirectionsOptions(request);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.isochrones(request);
       auto request_pt = to_ptree(request);
@@ -193,6 +196,7 @@ namespace valhalla {
       pimpl->set_interrupts(interrupt);
       //parse the request
       auto request = to_document(request_str);
+      auto options = odin::GetDirectionsOptions(request);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.trace(TRACE_ATTRIBUTES, request);
       //get the path and turn it into attribution along it
@@ -210,9 +214,10 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request_rj = to_document(request_str);
+      auto request = to_document(request_str);
+      auto options = odin::GetDirectionsOptions(request);
       //get the height at each point
-      auto json = pimpl->loki_worker.height(request_rj);
+      auto json = pimpl->loki_worker.height(request);
       std::stringstream ss;
       ss << *json;
       //if they want you do to do the cleanup automatically
