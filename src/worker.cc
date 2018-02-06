@@ -202,7 +202,7 @@ namespace valhalla {
     if (d.HasParseError())
       throw valhalla_exception_t{100};
 
-    //throw the query params into the ptree
+    //throw the query params into the rapidjson doc
     for(const auto& kv : request.query) {
       //skip json or empty entries
       if(kv.first == "json" || kv.first.empty() || kv.second.empty() || kv.second.front().empty())
@@ -220,22 +220,6 @@ namespace valhalla {
         array.PushBack({value, allocator}, allocator);
       }
       d.AddMember({kv.first, allocator}, array, allocator);
-    }
-
-    //if its osrm compatible lets make the location object conform to our standard input
-    if(request.path == "/viaroute") {
-      auto& array = rapidjson::Pointer("/locations").Set(d, rapidjson::Value{rapidjson::kArrayType});
-      auto loc = GetOptionalFromRapidJson<rapidjson::Value::Array>(d, "/loc");
-      if (! loc)
-        throw valhalla_exception_t{110};
-      for(const auto& location : *loc) {
-        baldr::Location l = baldr::Location::FromCsv(location.GetString());
-        rapidjson::Value ele{rapidjson::kObjectType};
-        ele.AddMember("lon", l.latlng_.first, allocator)
-            .AddMember("lat", l.latlng_.second, allocator);
-        array.PushBack(ele, allocator);
-      }
-      d.RemoveMember("loc");
     }
 
     return d;
@@ -297,6 +281,22 @@ namespace valhalla {
     if(jsonp)
       stream << *jsonp << '(';
     stream << *map;
+    if(jsonp)
+      stream << ')';
+
+    worker_t::result_t result{false};
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+    return result;
+  }
+
+  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const std::string* jsonp) {
+    std::ostringstream stream;
+    //jsonp callback if need be
+    if(jsonp)
+      stream << *jsonp << '(';
+    stream << json;
     if(jsonp)
       stream << ')';
 
