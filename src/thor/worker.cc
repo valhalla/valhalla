@@ -33,33 +33,33 @@ namespace {
 
   constexpr double kMilePerMeter = 0.000621371;
 
-  std::vector<baldr::PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<baldr::Location>& locations) {
+  std::vector<baldr::PathLocation> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
     //we require correlated locations
     std::vector<baldr::PathLocation> correlated;
     correlated.reserve(locations.size());
     size_t i = 0;
     do {
-     auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-     if(!path_location)
-       break;
-     try {
-       correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+      auto path_location = rapidjson::get_child_optional(request, ("/correlated_" + std::to_string(i)).c_str());
+      if(!path_location)
+        break;
 
-       auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
+      try {
+        correlated.emplace_back(PathLocation::FromRapidJson(locations, *path_location));
+        auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
           [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
             return i.score < j.score;
           });
 
-       for(auto& e : correlated.back().edges) {
-         e.score -= minScoreEdge.score;
-         if (e.score > kMaxScore) {
-           e.score = kMaxScore;
-         }
-       }
-     }
-     catch (...) {
-       throw valhalla_exception_t{420};
-     }
+        for(auto& e : correlated.back().edges) {
+          e.score -= minScoreEdge.score;
+          if (e.score > kMaxScore) {
+            e.score = kMaxScore;
+          }
+        }
+      }
+      catch (...) {
+        throw valhalla_exception_t{420};
+      }
     }while(++i);
     return correlated;
   }
@@ -123,34 +123,31 @@ namespace valhalla {
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
+      const std::string* jsonp = nullptr;
 
       try{
-        //get some info about what we need to do
-        boost::property_tree::ptree request;
+        //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-        std::stringstream stream(request_str);
-        boost::optional<std::string> jsonp;
-        try {
-          boost::property_tree::read_json(stream, request);
-          jsonp = request.get_optional<std::string>("jsonp");
-        }
-        catch(const std::exception& e) {
-          valhalla::midgard::logging::Log("500::" + std::string(e.what()), " [ANALYTICS] ");
-          return jsonify_error({499, std::string(e.what())}, info);
-        }
-        catch(...) {
+        rapidjson::Document request;
+        auto& allocator = request.GetAllocator();
+        request.Parse(request_str.c_str());
+        if (request.HasParseError()) {
           valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
           return jsonify_error({401}, info);
         }
 
+        //parse it to pbf object
+        auto options = from_json(request);
+        jsonp = options.has_jsonp() ? &options.jsonp() : nullptr;
+
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
 
-        //flag healthcheck requests; do not send to logstash
-        healthcheck = request.get<bool>("healthcheck", false);
+        //flag healthcheck requests
+        healthcheck = rapidjson::get_optional<bool>(request, "/healthcheck").get_value_or(false);
         // Initialize request - get the PathALgorithm to use
-        ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
-        boost::optional<int> date_time_type = request.get_optional<int>("date_time.type");
+        ACTION_TYPE action = static_cast<ACTION_TYPE>(rapidjson::get<int>(request, "/action", -1));
+        boost::optional<int> date_time_type = rapidjson::get_optional<int>(request, "/date_time/type");
 
         worker_t::result_t result{true};
         double denominator = 0;
@@ -202,10 +199,8 @@ namespace valhalla {
 
         double elapsed_time = std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
         if (!healthcheck && !info.spare && elapsed_time / denominator > long_request) {
-          std::stringstream ss;
-          boost::property_tree::json_parser::write_json(ss, request, false);
           LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request elapsed time (ms)::"+ std::to_string(elapsed_time));
-          LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request exceeded threshold::"+ ss.str());
+          LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request exceeded threshold::"+ request_str);
           midgard::logging::Log("valhalla_thor_long_request_"+ACTION_TO_STRING.find(action)->second, " [ANALYTICS] ");
         }
 
@@ -244,16 +239,17 @@ namespace valhalla {
 
     // Get the costing options if in the config or get the empty default.
     // Creates the cost in the cost factory
-    valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const boost::property_tree::ptree& request,
+    valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const rapidjson::Document& request,
                                           const std::string& costing) {
-      std::string method_options = "costing_options." + costing;
-      auto costing_options = request.get_child(method_options, {});
-      return factory.Create(costing, costing_options);
+      auto costing_options = rapidjson::get_child_optional(request, ("/costing_options/" + costing).c_str());
+      if(costing_options)
+        return factory.Create(costing, *costing_options);
+      return factory.Create(costing, boost::property_tree::ptree{});
     }
 
-    std::string thor_worker_t::parse_costing(const boost::property_tree::ptree& request) {
+    std::string thor_worker_t::parse_costing(const rapidjson::Document& request) {
       // Parse out the type of route - this provides the costing method to use
-      auto costing = request.get<std::string>("costing");
+      auto costing = rapidjson::get<std::string>(request,  "/costing");
 
       // Set travel mode and construct costing
       if (costing == "multimodal" || costing == "transit") {
@@ -273,39 +269,39 @@ namespace valhalla {
       return costing;
     }
 
-    void thor_worker_t::parse_locations(const boost::property_tree::ptree& request) {
+    void thor_worker_t::parse_locations(const rapidjson::Document& request) {
       //we require locations
-      auto request_locations = request.get_child_optional("locations");
-      auto request_sources = request.get_child_optional("sources");
-      auto request_targets = request.get_child_optional("targets");
+      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, "/locations");
+      auto request_sources = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, "/sources");
+      auto request_targets = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, "/targets");
       if(request_locations) {
         for(const auto& location : *request_locations) {
-          try{ locations.push_back(baldr::Location::FromPtree(location.second)); }
+          try{ locations.push_back(baldr::Location::FromRapidJson(location)); }
           catch (...) { throw valhalla_exception_t{421}; }
         }
         correlated = store_correlated_locations(request, locations);
       }//if we have a sources and targets request here we will divy up the correlated amongst them
       else if(request_sources && request_targets) {
         for(const auto& s : *request_sources) {
-          try{ locations.push_back(baldr::Location::FromPtree(s.second)); }
+          try{ locations.push_back(baldr::Location::FromRapidJson(s)); }
           catch (...) { throw valhalla_exception_t{422}; }
         }
         for(const auto& t : *request_targets) {
-          try{ locations.push_back(baldr::Location::FromPtree(t.second)); }
+          try{ locations.push_back(baldr::Location::FromRapidJson(t)); }
           catch (...) { throw valhalla_exception_t{423}; }
         }
         correlated = store_correlated_locations(request, locations);
 
-        correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->size());
-        correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->size(), correlated.end());
+        correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->Size());
+        correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->Size(), correlated.end());
       }
 
       //type - 0: current, 1: depart, 2: arrive
-      if (request.find("date_time.type") == request.not_found())
+      if (!request.HasMember("/date_time/type"))
         return;
 
-      int date_time_type = request.get<float>("date_time.type");
-      auto date_time_value = request.get_optional<std::string>("date_time.value");
+      int date_time_type = rapidjson::get<float>(request, "/date_time/type");
+      auto date_time_value = rapidjson::get_optional<std::string>(request, "/date_time/value");
 
       if (date_time_type == 0) //current.
         locations.front().date_time_ = "current";
@@ -315,7 +311,7 @@ namespace valhalla {
         locations.back().date_time_ = date_time_value;
     }
 
-    void thor_worker_t::parse_measurements(const boost::property_tree::ptree& request) {
+    void thor_worker_t::parse_measurements(const rapidjson::Document& request) {
       // Create a matcher
       try {
         matcher.reset(matcher_factory.Create(trace_config));
@@ -324,15 +320,14 @@ namespace valhalla {
       }
 
       //we require locations
-      auto request_shape = request.get_child("shape");
+      auto request_shape = rapidjson::get<rapidjson::Value::ConstArray>(request, "/shape");
       try{
         for(const auto& pt : request_shape) {
-          const auto& loc = pt.second;
-          float lat = loc.get<float>("lat");
-          float lon = midgard::circular_range_clamp<float>(loc.get<float>("lon"), -180, 180);
-          double time = loc.get<long>("time", -1.0);
-          float accuracy = loc.get<float>("accuracy", matcher->config().get<float>("gps_accuracy"));
-          float radius = loc.get<float>("radius", matcher->config().get<float>("search_radius"));
+          float lat = rapidjson::get<float>(pt, "lat");
+          float lon = midgard::circular_range_clamp<float>(rapidjson::get<float>(pt, "lon"), -180, 180);
+          double time = rapidjson::get<double>(pt, "time", -1.0);
+          float accuracy = rapidjson::get<float>(pt, "accuracy", matcher->config().get<float>("gps_accuracy"));
+          float radius = rapidjson::get<float>(pt, "radius", matcher->config().get<float>("search_radius"));
           trace.emplace_back(meili::Measurement{{lon, lat}, accuracy, radius, time});
         }
       }
@@ -341,27 +336,25 @@ namespace valhalla {
       }
     }
 
-    void thor_worker_t::parse_trace_config(const boost::property_tree::ptree& request) {
-      auto costing = request.get<std::string>("costing");
+    void thor_worker_t::parse_trace_config(const rapidjson::Document& request) {
+      auto costing = rapidjson::get<std::string>(request, "/costing");
       trace_config.put<std::string>("mode", costing);
 
       if (trace_customizable.empty()) {
         return;
       }
 
-      auto trace_options = request.get_child_optional("trace_options");
+      auto trace_options = rapidjson::get_optional<rapidjson::Value::ConstObject>(request, "/trace_options");
       if (!trace_options) {
         return;
       }
 
       for (const auto& pair : *trace_options) {
-        const auto& name = pair.first;
-        const auto& values = pair.second.data();
-        if (trace_customizable.find(name) != trace_customizable.end()
-            && !values.empty() ){
+        std::string name = pair.name.GetString();
+        if (trace_customizable.find(name) != trace_customizable.end()){
           try {
             // Possibly throw std::invalid_argument or std::out_of_range
-            trace_config.put<float>(name, std::stof(values));
+            trace_config.put<float>(name, pair.value.GetFloat());
           } catch (const std::invalid_argument& ex) {
             throw std::invalid_argument("Invalid argument: unable to parse " + name + " to float");
           } catch (const std::out_of_range& ex) {

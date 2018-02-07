@@ -383,8 +383,7 @@ namespace {
     }
   }
 
-  json::MapPtr serialize(const AttributesController& controller,
-      const DirectionsOptions& directions_options,
+  json::MapPtr serialize(const AttributesController& controller, const DirectionsOptions& directions_options,
       std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripPath>>& map_match_results) {
 
     // Create json map to return
@@ -427,19 +426,17 @@ namespace {
 namespace valhalla {
 namespace thor {
 
-void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request, AttributesController& controller) {
-  std::string filter_action = request.get("filters.action", "");
+void thor_worker_t::filter_attributes(const rapidjson::Document& request, AttributesController& controller) {
+  auto filter_action = rapidjson::get<std::string>(request, "/filters/action", "");
 
-  if (filter_action.size() && filter_action == "include") {
+  if (filter_action == "include") {
     controller.disable_all();
-    for (const auto& kv : request.get_child("filters.attributes"))
-      controller.attributes.at(kv.second.get_value<std::string>()) = true;
-
-  } else if (filter_action.size() && filter_action == "exclude") {
+    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request, "/filters/attributes"))
+      controller.attributes.at(v.GetString()) = true;
+  } else if (filter_action == "exclude") {
     controller.enable_all();
-    for (const auto& kv : request.get_child("filters.attributes"))
-      controller.attributes.at(kv.second.get_value<std::string>()) = false;
-
+    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request, "/filters/attributes"))
+      controller.attributes.at(v.GetString()) = false;
   } else {
     controller.enable_all();
   }
@@ -451,14 +448,15 @@ void thor_worker_t::filter_attributes(const boost::property_tree::ptree& request
  * portion of the route. This includes details for each section of road along the
  * path as well as any intersections along the path.
  */
-json::MapPtr thor_worker_t::trace_attributes(
-    const boost::property_tree::ptree &request) {
+json::MapPtr thor_worker_t::trace_attributes(rapidjson::Document& request) {
 
   // Parse request
   parse_locations(request);
   parse_costing(request);
   parse_trace_config(request);
   parse_measurements(request);
+  DirectionsOptions directions_options = from_json(request);
+
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
    * prior route run against the Valhalla road network.  Knowing that the input is from
@@ -469,7 +467,7 @@ json::MapPtr thor_worker_t::trace_attributes(
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
-  auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
+  auto shape_match = STRING_TO_MATCH.find(rapidjson::get<std::string>(request, "/shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
     throw valhalla_exception_t{445};
   else {
@@ -490,7 +488,7 @@ json::MapPtr thor_worker_t::trace_attributes(
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          uint32_t best_paths = request.get<uint32_t>("best_paths", 1);
+          uint32_t best_paths = rapidjson::get<uint32_t>(request, "/best_paths", 1);
           map_match_results = map_match(controller, true, best_paths);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
@@ -514,9 +512,6 @@ json::MapPtr thor_worker_t::trace_attributes(
         break;
       }
     }
-
-  // Get the directions_options if they are in the request
-  DirectionsOptions directions_options = valhalla::odin::GetDirectionsOptions(request);
 
   //serialize output to Thor
   json::MapPtr json;

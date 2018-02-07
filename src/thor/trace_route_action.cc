@@ -44,7 +44,7 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &request) {
+odin::TripPath thor_worker_t::trace_route(const rapidjson::Document& request) {
 
   // Parse request
   parse_locations(request);
@@ -61,7 +61,7 @@ odin::TripPath thor_worker_t::trace_route(const boost::property_tree::ptree &req
   odin::TripPath trip_path;
   AttributesController controller;
 
-  auto shape_match = STRING_TO_MATCH.find(request.get<std::string>("shape_match", "walk_or_snap"));
+  auto shape_match = STRING_TO_MATCH.find(rapidjson::get<std::string>(request, "/shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
     throw valhalla_exception_t{445};
   else {

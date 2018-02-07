@@ -51,19 +51,19 @@ namespace valhalla {
     worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Odin Request " + std::to_string(info.id));
-      boost::optional<std::string> jsonp;
+      const std::string* jsonp = nullptr;
       try{
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-        std::stringstream stream(request_str);
-        boost::property_tree::ptree request;
-        try{
-          boost::property_tree::read_json(stream, request);
-          jsonp = request.get_optional<std::string>("jsonp");
-        }
-        catch(...) {
+        rapidjson::Document request;
+        auto& allocator = request.GetAllocator();
+        request.Parse(request_str.c_str());
+        if (request.HasParseError())
           return jsonify_error({200}, info, jsonp);
-        }
+
+        //parse it to pbf object
+        auto options = from_json(request);
+        jsonp = options.has_jsonp() ? &options.jsonp() : nullptr;
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
@@ -82,14 +82,12 @@ namespace valhalla {
         }
 
         //narrate them and serialize them along
-        auto directions_options = GetDirectionsOptions(request);
-        auto narrated = narrate(directions_options, legs);
+        auto narrated = narrate(options, legs);
         //xml
-        if(directions_options.format() == DirectionsOptions::gpx)
-          return to_response_xml(tyr::serializeDirections(request, legs, narrated), info);
+        if(options.format() == DirectionsOptions::gpx)
+          return to_response_xml(tyr::serializeDirections(options, legs, narrated), info);
         //json
-        return to_response_json(tyr::serializeDirections(request, legs, narrated), info,
-          directions_options.has_jsonp() ? &directions_options.jsonp() : nullptr);
+        return to_response_json(tyr::serializeDirections(options, legs, narrated), info, jsonp);
       }
       catch(const std::exception& e) {
         return jsonify_error({299, std::string(e.what())}, info, jsonp);

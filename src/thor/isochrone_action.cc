@@ -10,7 +10,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
   namespace thor {
 
-    json::MapPtr thor_worker_t::isochrones(const boost::property_tree::ptree &request) {
+    json::MapPtr thor_worker_t::isochrones(const rapidjson::Document& request) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
 
@@ -19,16 +19,16 @@ namespace valhalla {
 
       std::vector<float> contours;
       std::unordered_map<float, std::string> colors;
-      for(const auto& contour : request.get_child("contours")) {
-        contours.push_back(contour.second.get<float>("time"));
-        colors[contours.back()] = contour.second.get<std::string>("color", "");
+      for(const auto& contour : rapidjson::get<rapidjson::Value::ConstArray>(request, "/contours")) {
+        contours.push_back(rapidjson::get<float>(contour, "/time"));
+        colors[contours.back()] = rapidjson::get<std::string>(contour, "/color", "");
       }
-      auto polygons = request.get<bool>("polygons", false);
-      auto denoise = std::max(std::min(request.get<float>("denoise", 1.f), 1.f), 0.f);
+      auto polygons = rapidjson::get<bool>(request, "/polygons", false);
+      auto denoise = std::max(std::min(rapidjson::get<float>(request, "/denoise", 1.f), 1.f), 0.f);
 
       // Get the generalization factor (in meters). If none is provided then
       // an optimal factor is computed (based on the isotile grid size).
-      auto generalize = request.get<float>("generalize", kOptimalGeneralization);
+      auto generalize = rapidjson::get<float>(request, "/generalize", kOptimalGeneralization);
 
       //get the raster
       //Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
@@ -42,11 +42,11 @@ namespace valhalla {
       //turn it into geojson
       auto isolines = grid->GenerateContours(contours, polygons, denoise, generalize);
 
-      auto showLocations = request.get<bool>("show_locations", false);
+      auto showLocations = rapidjson::get<bool>(request, "/show_locations", false);
       auto geojson = (showLocations) ? baldr::json::to_geojson<PointLL>(isolines, polygons, colors, correlated)
                                      : baldr::json::to_geojson<PointLL>(isolines, polygons, colors);
 
-      auto id = request.get_optional<std::string>("id");
+      auto id = rapidjson::get_optional<std::string>(request, "id");
       if(id)
         geojson->emplace("id", *id);
 

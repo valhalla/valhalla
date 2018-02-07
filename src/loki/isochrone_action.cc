@@ -39,7 +39,7 @@ namespace valhalla {
         l.heading_.reset();
 
       //make sure the isoline definitions are valid
-      auto contours = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, "/contours");
+      auto contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, "/contours");
       if(! contours)
         throw valhalla_exception_t{113};
       //check that the number of contours is ok
@@ -47,7 +47,7 @@ namespace valhalla {
         throw valhalla_exception_t{152, std::to_string(max_contours)};
       size_t prev = 0;
       for(const auto& contour : *contours) {
-        const int c = GetOptionalFromRapidJson<int>(contour, "/time").get_value_or(-1);
+        const int c = rapidjson::get_optional<int>(contour, "/time").get_value_or(-1);
         if(c < prev || c == -1)
           throw valhalla_exception_t{111};
         if(c > max_time)
@@ -68,8 +68,8 @@ namespace valhalla {
       if (!healthcheck)
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
-      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing").get_value_or("");
-      auto date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type");
+      auto costing = rapidjson::get_optional<std::string>(request, "/costing").get_value_or("");
+      auto date_type = rapidjson::get_optional<int>(request, "/date_time/type");
 
       auto& allocator = request.GetAllocator();
       //default to current date_time for mm or transit.
@@ -79,7 +79,7 @@ namespace valhalla {
       }
 
       //check the date stuff
-      auto date_time_value = GetOptionalFromRapidJson<std::string>(request, "/date_time/value");
+      auto date_time_value = rapidjson::get_optional<std::string>(request, "/date_time/value");
       if (date_type) {
         //not yet on this
         if(! date_type || *date_type == 2) {
