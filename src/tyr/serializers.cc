@@ -71,42 +71,6 @@ namespace {
       }
       return route_name;
     }
-
-    json::ArrayPtr via_indices(const std::list<valhalla::odin::TripDirections>& legs){
-      //first one
-      auto via_indices = json::array({static_cast<uint64_t>(0)});
-      //the rest
-      for(const auto& leg : legs)
-        via_indices->push_back(static_cast<uint64_t>(leg.maneuver_size() - 1) + boost::get<uint64_t>(via_indices->back()));
-      return via_indices;
-    }
-
-    json::MapPtr route_summary(const std::list<valhalla::odin::TripDirections>& legs){
-      auto route_summary = json::map({});
-
-      if(legs.front().maneuver(0).street_name_size() > 0)
-        route_summary->emplace("start_point", legs.front().maneuver(0).street_name(0));
-      else
-        route_summary->emplace("start_point", string(""));
-
-      if(legs.back().maneuver(legs.back().maneuver_size() - 1).street_name_size() > 0)
-        route_summary->emplace("end_point", legs.back().maneuver(legs.back().maneuver_size() - 1).street_name(0));
-      else
-        route_summary->emplace("end_point", string(""));
-
-      uint32_t seconds = 0;
-      float kilometers = 0.f;
-      for(const auto& leg : legs) {
-        kilometers += leg.summary().length();
-        seconds += leg.summary().time();
-      }
-
-      route_summary->emplace("total_time", static_cast<uint64_t>(seconds));
-      route_summary->emplace("total_distance", static_cast<uint64_t>((kilometers * 1000.f) + .5f));
-      return route_summary;
-    }
-
-
     const std::unordered_map<int, std::string> maneuver_type = {
         { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kNone),             "0" },//NoTurn = 0,
         { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),         "1" },//GoStraight,
@@ -185,6 +149,28 @@ namespace {
     }
 **/
 
+  json::MapPtr route_summary(json::MapPtr route,
+      const std::list<valhalla::odin::TripDirections>& legs) {
+    // Compute total distance and duration
+    float duration = 0.0f;
+    float distance = 0.0f;
+    for(const auto& leg : legs) {
+      distance += leg.summary().length();
+      duration += leg.summary().time();
+    }
+
+    // Convert distance to meters
+    distance *= 0.001f;
+    route->emplace("distance", json::fp_t{distance, 1});
+    route->emplace("distance", json::fp_t{duration, 1});
+
+    // TODO - support returning weight based on costing method
+    // as well as returning the costing method
+    float weight = duration;
+    route->emplace("weight", json::fp_t{weight, 1});
+    route->emplace("weight_name", "Valhalla default");
+  }
+
     // Generate full shape of the route. TODO - different encodings, generalization
     std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs) {
       if (legs.size() == 1)
@@ -216,18 +202,23 @@ namespace {
           // Create a waypoint to add to the array
           auto waypoint = json::map({});
 
-          // Output location as a lon,lat array
+          // Output location as a lon,lat array. Note this is the projected
+          // lon,lat on the nearest road.
+          PointLL input_ll(location->ll().lng(), location->ll().lat());
+          PointLL proj_ll(location->projected_ll().lng(), location->projected_ll().lat());
           auto loc = json::array({});
-          loc->emplace_back(json::fp_t{location->ll().lng(), 6});
-          loc->emplace_back(json::fp_t{location->ll().lat(), 6});
+          loc->emplace_back(json::fp_t{proj_ll.lng(), 6});
+          loc->emplace_back(json::fp_t{proj_ll.lat(), 6});
           waypoint->emplace("location", loc);
 
           // Add street name
-          if (!location->street().empty())
+          if (!location->street().empty()) {
             waypoint->emplace("street", location->street());
+          }
 
-          // Add distance in meters from the input location to the nearest point
-          float distance = 1.0f; // TODO
+          // Add distance in meters from the input location to the nearest
+          // point on the road used in the route
+          float distance = input_ll.Distance(proj_ll);
           waypoint->emplace("distance", json::fp_t{distance, 1});
 
           // Add hint. Goal is for the hint returned from a locate request to be able
@@ -241,18 +232,101 @@ namespace {
       return waypoints;
     }
 
-    json::ArrayPtr  intersections(const valhalla::odin::TripDirections& leg) {
+    // Simple structure for storing intersection data
+    struct IntersectionEdges {
+      uint32_t bearing;
+      bool routeable;
+      bool in_edge;
+      bool out_edge;
+
+      IntersectionEdges(const uint32_t brg, const bool rte, const bool edge_in, const bool edge_out) :
+        bearing(brg),
+        routeable(rte),
+        in_edge(edge_in),
+        out_edge(edge_out) {
+      }
+
+      bool operator < (const IntersectionEdges& other) const {
+        return bearing < other.bearing;
+      }
+    };
+
+    json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
+            std::list<odin::TripPath>::const_iterator path_leg) {
       auto intersections = json::array({});
 
+      // Iterate through the nodes/intersections of the path for this maneuver
+      for (uint32_t i = maneuver.begin_path_index(); i <= maneuver.end_path_index(); i++) {
+        auto intersection = json::map({});
+
+        // Get the node from the path leg
+        auto node = path_leg->node(i);
+
+        // Add the node location (lon, lat)
+        auto loc = json::array({});
+        loc->emplace_back(json::fp_t{node.ll().lng(), 6});
+        loc->emplace_back(json::fp_t{node.ll().lat(), 6});
+        intersection->emplace("location", loc);
+
+        // Get bearings and access to outgoing edges. Sort by increasing bearing.
+        // Make sure Uturns are no entry (unless at dead-end?)
+        // TODO - round off?
+        // TODO - what about U-turn (edge can be both in and out)?
+        std::vector<IntersectionEdges> edges;
+        edges.emplace_back(node.edge().begin_heading(), true, false, true);
+        for (uint32_t n = 0; n < node.intersecting_edge().size(); n++) {
+          auto intersecting_edge = node.intersecting_edge(n);
+
+          // TODO - how to get info on whether routing is allowed on this edge
+          // (based on mode?). Also need to exclude Uturns
+          bool edge_in = false; // TODO
+          bool routeable = (intersecting_edge.driveability() == odin::TripPath_Traversability::TripPath_Traversability_kForward);
+          uint32_t bearing = static_cast<uint32_t>(intersecting_edge.begin_heading());
+          edges.emplace_back(bearing, routeable, edge_in, false);
+        }
+
+        // Sort edges by increasing bearing and update the in/out edge indexes
+        std::sort(edges.begin(), edges.end());
+        uint32_t incoming_index, outgoing_index;
+        for (uint32_t n = 0; n < edges.size(); ++n) {
+          if (edges[n].in_edge) {
+            incoming_index = n;
+          }
+          if (edges[n].out_edge) {
+            outgoing_index = n;
+          }
+        }
+
+        // Create bearing and entry output
+        auto bearings = json::array({});
+        auto entries = json::array({});
+        for (const auto& edge : edges) {
+          bearings->emplace_back(static_cast<uint64_t>(edge.bearing));
+          entries->emplace_back(edge.routeable);
+        }
+        intersection->emplace("entry", entries);
+        intersection->emplace("bearings", bearings);
+
+        // Add the index of the input edge and output edge
+        intersection->emplace("in", static_cast<uint64_t>(incoming_index));
+        intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
+
+        // Add the intersection to the JSON array
+        intersections->emplace_back(intersection);
+      }
       return intersections;
     }
 
     // Serialize each leg
     // TODO - add TripPath
-    json::ArrayPtr  serialize_legs(const std::list<valhalla::odin::TripDirections>& legs) {
+    json::ArrayPtr  serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
+                 const std::list<odin::TripPath>& path_legs) {
       auto output_legs = json::array({});
 
-      // Iterate through the legs in TripDirections
+      // TODO: verify that path_legs is same size as legs
+
+      // Iterate through the legs in TripDirections and TripPath
+      auto path_leg = path_legs.begin();
       for (const auto& leg : legs) {
         auto output_leg = json::map({});
 
@@ -265,8 +339,9 @@ namespace {
           // name change
 
           // Add intersections
-          output_leg->emplace("intersections", intersections(leg));
+          output_leg->emplace("intersections", intersections(maneuver, path_leg));
         }
+        path_leg++;
       }
       return output_legs;
     }
@@ -295,16 +370,11 @@ namespace {
         route->emplace("geometry", full_shape(legs));
 
         // Other route summary information
-        float distance = 10.0f; // TODO - get from route summary, convert to meters
-        route->emplace("distance", json::fp_t{distance, 1});
-        float duration = 10.0f; // TODO - get from route summary (seconds)
-        route->emplace("distance", json::fp_t{duration, 1});
-        float weight = 100.0f;
-        route->emplace("weight", json::fp_t{weight, 1});
-        route->emplace("weight_name", "Valhalla default");
+        route_summary(route, legs);
 
         // Serialize route legs
-        route->emplace("legs", serialize_legs(legs));
+        std::list<odin::TripPath> path_legs;
+        route->emplace("legs", serialize_legs(legs, path_legs));
 
         routes->emplace_back(route);
       }
