@@ -140,6 +140,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     auto* trip_maneuver = trip_directions.add_maneuver();
     trip_maneuver->set_type(maneuver.type());
     trip_maneuver->set_text_instruction(maneuver.instruction());
+    trip_maneuver->set_begin_path_index(maneuver.begin_node_index());
+    trip_maneuver->set_end_path_index(maneuver.end_node_index());
 
     // Set street names
     for (const auto& street_name : maneuver.street_names()) {
