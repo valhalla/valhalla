@@ -75,10 +75,10 @@ namespace valhalla {
 
     void loki_worker_t::init_height(rapidjson::Document& request) {
       //get some parameters
-      range = GetFromRapidJson(request, "/range", false);
-      auto input_shape = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/shape");
-      encoded_polyline = GetOptionalFromRapidJson<std::string>(request, "/encoded_polyline");
-      auto resample_distance = GetOptionalFromRapidJson<double>(request, "/resample_distance");
+      range = rapidjson::get(request, "/range", false);
+      auto input_shape = rapidjson::get_optional<rapidjson::Value::Array>(request, "/shape");
+      encoded_polyline = rapidjson::get_optional<std::string>(request, "/encoded_polyline");
+      auto resample_distance = rapidjson::get_optional<double>(request, "/resample_distance");
 
       //we require shape or encoded polyline but we dont know which at first
       try {
@@ -137,7 +137,7 @@ namespace valhalla {
       std::vector<double> heights = sample.get_all(shape);
       if (!healthcheck)
         valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
-      boost::optional<std::string> id = GetOptionalFromRapidJson<std::string>(request, "/id");
+      boost::optional<std::string> id = rapidjson::get_optional<std::string>(request, "/id");
       auto json = json::map({});
 
       //get the distances between the postings

@@ -1572,15 +1572,9 @@ namespace {
 namespace valhalla {
   namespace tyr {
 
-    std::string serializeDirections(const boost::property_tree::ptree& request,
-        const std::list<odin::TripPath>& path_legs,
+    std::string serializeDirections(const DirectionsOptions& directions_options,
+        const std::list<TripPath>& path_legs,
         const std::list<TripDirections>& directions_legs) {
-      //see if we can get some options
-      valhalla::odin::DirectionsOptions directions_options;
-      auto options = request.get_child_optional("directions_options");
-      if(options)
-        directions_options = valhalla::odin::GetDirectionsOptions(*options);
-
       //serialize them
       switch(directions_options.format()) {
         /*case DirectionsOptions_Format_osrm:

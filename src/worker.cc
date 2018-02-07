@@ -3,6 +3,7 @@
 
 #include "worker.h"
 #include "baldr/location.h"
+#include "odin/util.h"
 
 namespace {
   // Credits: http://werkzeug.pocoo.org/
@@ -180,6 +181,54 @@ namespace {
 
 namespace valhalla {
 
+  odin::DirectionsOptions from_json(rapidjson::Document& doc) {
+    odin::DirectionsOptions options;
+
+    //TODO: stop doing this after a sufficient amount of time has passed
+    //move anything nested in deprecated directions_options up to the top level
+    auto deprecated = get_child_optional(doc, "/directions_options");
+    auto& allocator = doc.GetAllocator();
+    if(deprecated) {
+      for(const auto& key : {"/units", "/narrative", "/format", "/language"}) {
+        auto child = rapidjson::get_child_optional(*deprecated, key);
+        if(child)
+          doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
+      }
+      //delete directions_options if it existed
+      doc.RemoveMember("directions_options");
+    }
+
+    std::cout << to_string(doc) << std::endl;
+
+    auto units = rapidjson::get_optional<std::string>(doc, "/units");
+    if(units) {
+      if((*units == "miles") || (*units == "mi"))
+        options.set_units(odin::DirectionsOptions::kMiles);
+      else
+        options.set_units(odin::DirectionsOptions::kKilometers);
+    }
+
+    auto language = rapidjson::get_optional<std::string>(doc, "/language");
+    if(language && odin::get_locales().find(*language) != odin::get_locales().end())
+      options.set_language(*language);
+
+    auto narrative = rapidjson::get_optional<bool>(doc, "/narrative");
+    if(narrative)
+      options.set_narrative(*narrative);
+
+    auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
+    odin::DirectionsOptions::Format format;
+    if (fmt && odin::DirectionsOptions::Format_Parse(*fmt, &format))
+      options.set_format(format);
+
+    //force these into the output so its obvious what we did to the user
+    doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
+    doc.AddMember({"format", allocator},
+      {odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
+
+    return options;
+  }
+
 #ifdef HAVE_HTTP
   rapidjson::Document from_request(const http_request_t& request) {
     //block all but get and post
@@ -222,6 +271,7 @@ namespace valhalla {
       d.AddMember({kv.first, allocator}, array, allocator);
     }
 
+
     return d;
   }
 
@@ -230,11 +280,10 @@ namespace valhalla {
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
   const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
 
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     //get the http status
     auto status = ERROR_TO_STATUS.find(exception.code)->second;
     auto body = HTTP_STATUS_CODES.find(status)->second;
-
 
     //build up the json map
     auto json_error = baldr::json::map({});
@@ -245,69 +294,69 @@ namespace valhalla {
 
     //serialize it
     std::stringstream ss;
-    if(jsonp)
-      ss << *jsonp << '(';
+    if(options.has_jsonp())
+      ss << options.jsonp() << '(';
     ss << *json_error;
-    if(jsonp)
+    if(options.has_jsonp())
       ss << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(status, body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(status, body, ss.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
 
     return result;
   }
 
-  worker_t::result_t to_response(baldr::json::ArrayPtr array, const boost::optional<std::string>& jsonp, http_request_info_t& request_info) {
+  worker_t::result_t to_response(baldr::json::ArrayPtr array, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(jsonp)
-      stream << *jsonp << '(';
+    if(options.has_jsonp())
+      stream << options.jsonp() << '(';
     stream << *array;
-    if(jsonp)
+    if(options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response(baldr::json::MapPtr map, const boost::optional<std::string>& jsonp, http_request_info_t& request_info) {
+  worker_t::result_t to_response(baldr::json::MapPtr map, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(jsonp)
-      stream << *jsonp << '(';
+    if(options.has_jsonp())
+      stream << options.jsonp() << '(';
     stream << *map;
-    if(jsonp)
+    if(options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const std::string* jsonp) {
+  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(jsonp)
-      stream << *jsonp << '(';
+    if(options.has_jsonp())
+      stream << options.jsonp() << '(';
     stream << json;
-    if(jsonp)
+    if(options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info) {
+  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     worker_t::result_t result{false};
     http_response_t response(200, "OK", xml, headers_t{CORS, XML_MIME});
     response.from_info(request_info);

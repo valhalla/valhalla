@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <valhalla/worker.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/route.pb.h>
@@ -15,7 +16,7 @@
 namespace valhalla {
   namespace tyr {
 
-    std::string serializeDirections(const boost::property_tree::ptree& request,
+    std::string serializeDirections(const odin::DirectionsOptions& directions_options,
         const std::list<odin::TripPath>& path_legs,
         const std::list<odin::TripDirections>& directions_legs);
 
