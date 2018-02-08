@@ -317,6 +317,28 @@ namespace {
       return intersections;
     }
 
+    json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
+                std::list<odin::TripPath>::const_iterator path_leg) {
+      auto osrm_man = json::map({});
+
+      // TODO -
+      uint32_t in_brg = 0;
+      uint32_t out_brg = 0;
+      osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
+      osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
+      osrm_man->emplace("type", "turn");
+      osrm_man->emplace("modifier", "right");
+
+      // Location
+      PointLL man_ll;
+      auto loc = json::array({});
+      loc->emplace_back(json::fp_t{man_ll.lng(), 6});
+      loc->emplace_back(json::fp_t{man_ll.lat(), 6});
+      osrm_man->emplace("location", loc);
+
+      return osrm_man;
+    }
+
     // Serialize each leg
     // TODO - add TripPath
     json::ArrayPtr  serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
@@ -332,15 +354,39 @@ namespace {
 
         // TODO - add annotation (node Ids, etc.)
 
-        // Iterate through maneuvers - convert to OSRM step
+        // Iterate through maneuvers - convert to OSRM steps
+        auto steps = json::array({});
         for (const auto& maneuver : leg.maneuver()) {
+          auto step = json::map({});
+
           // TODO - iterate through TripPath from prior maneuver end to
           // end of this maneuver - insert OSRM specific steps such as
           // name change
 
+          // Add geometry for this maneuver
+
+          // Add mode, driving side, weight, distance, duration, name
+          float duration = 10.0f;
+          float distance = 10.0f;
+          step->emplace("mode", "driving"); // TODO - other modes
+          step->emplace("driving_side", "right");
+          step->emplace("duration", json::fp_t{duration, 1});
+          step->emplace("weight", json::fp_t{duration, 1});
+          step->emplace("distance", json::fp_t{distance, 1});
+          step->emplace("name", "Add name here");
+
+          // Add OSRM maneuver
+          step->emplace("maneuver", osrm_maneuver(maneuver, path_leg));
+
           // Add intersections
-          output_leg->emplace("intersections", intersections(maneuver, path_leg));
+          step->emplace("intersections", intersections(maneuver, path_leg));
+
+          // Add step
+          steps->emplace_back(step);
         }
+
+        // Add steps to the leg
+        output_leg->emplace("steps", steps);
         path_leg++;
       }
       return output_legs;
