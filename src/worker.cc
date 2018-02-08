@@ -188,15 +188,13 @@ namespace valhalla {
     //move anything nested in deprecated directions_options up to the top level
     auto* deprecated = rapidjson::Pointer{"/directions_options"}.Get(doc);
     auto& allocator = doc.GetAllocator();
-    if(deprecated) {
-      for(const auto& key : {"units", "narrative", "format", "language"}) {
-        auto member = deprecated->FindMember(key);
-        if(member != deprecated->MemberEnd())
-          doc.AddMember(member->name, member->value, allocator);
-      }
-      //delete directions_options if it existed
-      doc.RemoveMember("/directions_options");
+    for(const auto& key : {"units", "narrative", "format", "language"}) {
+      auto child = rapidjson::get_child_optional(doc, (std::string("/directions_options/") + key).c_str());
+      if(child && child->IsObject())
+        doc.PushBack(*child, allocator);
     }
+    //delete directions_options if it existed
+    doc.RemoveMember("/directions_options");
 
     auto units = rapidjson::get_optional<std::string>(doc, "/units");
     if(units) {

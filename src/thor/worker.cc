@@ -323,11 +323,11 @@ namespace valhalla {
       auto request_shape = rapidjson::get<rapidjson::Value::ConstArray>(request, "/shape");
       try{
         for(const auto& pt : request_shape) {
-          float lat = rapidjson::get<float>(pt, "lat");
-          float lon = midgard::circular_range_clamp<float>(rapidjson::get<float>(pt, "lon"), -180, 180);
-          double time = rapidjson::get<double>(pt, "time", -1.0);
-          float accuracy = rapidjson::get<float>(pt, "accuracy", matcher->config().get<float>("gps_accuracy"));
-          float radius = rapidjson::get<float>(pt, "radius", matcher->config().get<float>("search_radius"));
+          float lat = rapidjson::get<float>(pt, "/lat");
+          float lon = midgard::circular_range_clamp<float>(rapidjson::get<float>(pt, "/lon"), -180, 180);
+          double time = rapidjson::get<double>(pt, "/time", -1.0);
+          float accuracy = rapidjson::get<float>(pt, "/accuracy", matcher->config().get<float>("gps_accuracy"));
+          float radius = rapidjson::get<float>(pt, "/radius", matcher->config().get<float>("search_radius"));
           trace.emplace_back(meili::Measurement{{lon, lat}, accuracy, radius, time});
         }
       }

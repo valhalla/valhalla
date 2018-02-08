@@ -46,7 +46,7 @@ namespace valhalla {
       auto geojson = (showLocations) ? baldr::json::to_geojson<PointLL>(isolines, polygons, colors, correlated)
                                      : baldr::json::to_geojson<PointLL>(isolines, polygons, colors);
 
-      auto id = rapidjson::get_optional<std::string>(request, "id");
+      auto id = rapidjson::get_optional<std::string>(request, "/id");
       if(id)
         geojson->emplace("id", *id);
 
