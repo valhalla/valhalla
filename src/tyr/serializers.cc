@@ -268,6 +268,7 @@ namespace {
 
         // Get the node from the path leg
         auto node = path_leg->node(i);
+        auto prior_node = (i > 0) ? path_leg->node(i - 1) : path_leg->node(0);
 
         // Add the node location (lon, lat)
         auto loc = json::array({});
@@ -276,21 +277,25 @@ namespace {
         intersection->emplace("location", loc);
 
         // Get bearings and access to outgoing edges. Sort by increasing bearing.
-        // Make sure Uturns are no entry (unless at dead-end?)
+        // Note that intersecting edges do not include the inbound edge or the
+        // outbound edge.
         // TODO - round off?
-        // TODO - what about U-turn (edge can be both in and out)?
         std::vector<IntersectionEdges> edges;
         edges.emplace_back(node.edge().begin_heading(), true, false, true);
         for (uint32_t n = 0; n < node.intersecting_edge().size(); n++) {
           auto intersecting_edge = node.intersecting_edge(n);
 
           // TODO - how to get info on whether routing is allowed on this edge
-          // (based on mode?). Also need to exclude Uturns
-          bool edge_in = false; // TODO
+          // (based on mode?).
           bool routeable = (intersecting_edge.driveability() == odin::TripPath_Traversability::TripPath_Traversability_kForward);
           uint32_t bearing = static_cast<uint32_t>(intersecting_edge.begin_heading());
-          edges.emplace_back(bearing, routeable, edge_in, false);
+          edges.emplace_back(bearing, routeable, false, false);
         }
+
+        // Incoming edge. Set routeable to false.
+        // TODO - what if a true U-turn - need to set it to routeable.
+        uint32_t prior_heading = prior_node.edge().end_heading();
+        edges.emplace_back(((prior_heading + 180) % 360), false, true, false);
 
         // Sort edges by increasing bearing and update the in/out edge indexes
         std::sort(edges.begin(), edges.end());
@@ -390,6 +395,7 @@ namespace {
     }
 
     // Method to get the geometry string for a maneuver.
+    // TODO - encoding options
     std::string maneuver_geometry(const uint32_t begin_idx, const uint32_t end_idx,
                   const std::vector<std::pair<float, float>>& shape) {
       std::vector<std::pair<float, float>> maneuver_shape(shape.begin() + begin_idx,
@@ -444,11 +450,10 @@ namespace {
           auto step = json::map({});
 
           // TODO - iterate through TripPath from prior maneuver end to
-          // end of this maneuver - insert OSRM specific steps such as
+          // end of this maneuver - perhaps insert OSRM specific steps such as
           // name change
 
           // Add geometry for this maneuver
-          PointLL ll(shape[maneuver.begin_shape_index()]);
           step->emplace("geometry", maneuver_geometry(maneuver.begin_shape_index(),
                     maneuver.end_shape_index(), shape));
 
@@ -464,7 +469,8 @@ namespace {
           step->emplace("name", street_names(maneuver));
 
           // Add OSRM maneuver
-          step->emplace("maneuver", osrm_maneuver(maneuver, path_leg, ll));
+          step->emplace("maneuver", osrm_maneuver(maneuver, path_leg,
+              shape[maneuver.begin_shape_index()]));
 
           // Add intersections
           step->emplace("intersections", intersections(maneuver, path_leg));
