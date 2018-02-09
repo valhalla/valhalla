@@ -15,6 +15,7 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/skadi/sample.h>
 #include <valhalla/tyr/actor.h>
+#include <valhalla/proto/directions_options.pb.h>
 
 namespace valhalla {
   namespace loki {
@@ -93,6 +94,7 @@ namespace valhalla {
       size_t max_elevation_shape;
       float min_resample;
       bool healthcheck;
+      odin::DirectionsOptions options;
     };
   }
 }

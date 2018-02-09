@@ -11,6 +11,7 @@
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/narrative_dictionary.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 
 namespace valhalla {
 namespace odin {

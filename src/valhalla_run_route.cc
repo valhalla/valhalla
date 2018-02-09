@@ -535,10 +535,9 @@ int main(int argc, char *argv[]) {
     // Grab the directions options, if they exist
     auto directions_options_ptree_ptr = json_ptree.get_child_optional(
         "directions_options");
-    if (directions_options_ptree_ptr) {
-      directions_options = valhalla::odin::GetDirectionsOptions(
-          *directions_options_ptree_ptr);
-    }
+    directions_options = valhalla::odin::GetDirectionsOptions(
+        directions_options_ptree_ptr ?  *directions_options_ptree_ptr :
+        json_ptree);
 
     // Grab the date_time, if is exists
     auto date_time_ptr = json_ptree.get_child_optional("date_time");

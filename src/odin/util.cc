@@ -6,10 +6,7 @@
 #include <boost/date_time/local_time/local_time.hpp>
 
 #include "midgard/logging.h"
-
-#include "proto/directions_options.pb.h"
 #include "odin/util.h"
-#include "odin/narrative_dictionary.h"
 #include "locales.h"
 
 namespace {
@@ -76,8 +73,6 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
 
 DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
   DirectionsOptions directions_options;
-
-  // TODO: validate values coming soon...
 
   auto units_ptr = pt.get_optional<std::string>("units");
   if (units_ptr) {

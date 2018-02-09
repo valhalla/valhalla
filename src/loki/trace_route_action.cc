@@ -115,9 +115,9 @@ namespace valhalla {
       }
 
       // Validate optional trace options
-      auto input_gps_accuracy = GetOptionalFromRapidJson<float>(request, "/trace_options/gps_accuracy");
-      auto input_search_radius = GetOptionalFromRapidJson<float>(request, "/trace_options/search_radius");
-      auto input_turn_penalty_factor = GetOptionalFromRapidJson<float>(request, "/trace_options/turn_penalty_factor");
+      auto input_gps_accuracy = rapidjson::get_optional<float>(request, "/trace_options/gps_accuracy");
+      auto input_search_radius = rapidjson::get_optional<float>(request, "/trace_options/search_radius");
+      auto input_turn_penalty_factor = rapidjson::get_optional<float>(request, "/trace_options/turn_penalty_factor");
       if (input_gps_accuracy)
         check_gps_accuracy(*input_gps_accuracy, max_gps_accuracy);
       if (input_search_radius)
@@ -139,8 +139,8 @@ namespace valhalla {
     void loki_worker_t::parse_trace(rapidjson::Document& request) {
       auto& allocator = request.GetAllocator();
       //we require uncompressed shape or encoded polyline
-      auto input_shape = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/shape");
-      auto encoded_polyline = GetOptionalFromRapidJson<std::string>(request, "/encoded_polyline");
+      auto input_shape = rapidjson::get_optional<rapidjson::Value::Array>(request, "/shape");
+      auto encoded_polyline = rapidjson::get_optional<std::string>(request, "/encoded_polyline");
       //we require shape or encoded polyline but we dont know which at first
       try {
         //uncompressed shape

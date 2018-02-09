@@ -490,6 +490,26 @@ void AddTransitNodes(TripPath_Node* trip_node, const NodeInfo* node,
   }
 }
 
+// Convenience method to get names of a street
+std::string StreetNames(GraphReader& reader, const GraphId& edgeid) {
+  std::string street;
+  auto tile = reader.GetGraphTile(edgeid);
+  auto* directededge = tile->directededge(edgeid);
+  auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+  std::vector<std::string> names = edgeinfo.GetNames();
+  for (const auto& name : names) {
+    if (street.size() > 0) {
+      street += ';';
+    }
+    street += name;
+
+    // TODO: OSRM only seems to want the first name - break
+    // here for now
+    break;
+  }
+  return street;
+}
+
 // Default constructor
 TripPathBuilder::TripPathBuilder() {
 }
@@ -524,6 +544,7 @@ TripPath TripPathBuilder::Build(
   odin::Location* tp_orig = AddLocation(trip_path, origin,
                                odin::Location_Type_kBreak);
   for (const auto& through : through_loc) {
+    // TODO - is there any way to set the through location street name?
     odin::Location* tp_through = AddLocation(trip_path, through,
                                     odin::Location_Type_kThrough);
   }
@@ -555,19 +576,22 @@ TripPath TripPathBuilder::Build(
   float start_pct;
   PathLocation::SideOfStreet start_sos = PathLocation::SideOfStreet::NONE;
   PointLL start_vrt;
+  std::string origin_street;
   for(const auto& e : origin.edges) {
     if (e.id == path.front().edgeid) {
       start_pct = e.dist;
       start_sos = e.sos;
       start_vrt = e.projected;
+      origin_street = StreetNames(graphreader, e.id);
       break;
     }
   }
 
-  // Set the origin projected location
+  // Set the origin projected location and street name
   odin::LatLng* proj_ll = tp_orig->mutable_projected_ll();
   proj_ll->set_lat(start_vrt.lat());
   proj_ll->set_lng(start_vrt.lng());
+  tp_orig->set_street(origin_street);
 
   // Set the origin side of street, if one exists
   if (start_sos != PathLocation::SideOfStreet::NONE)
@@ -577,19 +601,22 @@ TripPath TripPathBuilder::Build(
   float end_pct;
   PathLocation::SideOfStreet end_sos = PathLocation::SideOfStreet::NONE;
   PointLL end_vrt;
+  std::string dest_street;
   for(const auto&e : dest.edges) {
     if (e.id == path.back().edgeid) {
       end_pct = e.dist;
       end_sos = e.sos;
       end_vrt = e.projected;
+      dest_street = StreetNames(graphreader, e.id);
       break;
     }
   }
 
-  // Set the destination projected location
+  // Set the destination projected location and street name
   proj_ll = tp_dest->mutable_projected_ll();
   proj_ll->set_lat(end_vrt.lat());
   proj_ll->set_lng(end_vrt.lng());
+  tp_dest->set_street(dest_street);
 
   // Set the destination side of street, if one exists
   if (end_sos != PathLocation::SideOfStreet::NONE)

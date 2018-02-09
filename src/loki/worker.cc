@@ -16,6 +16,7 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "tyr/actor.h"
+#include "odin/util.h"
 
 #include "loki/worker.h"
 #include "loki/search.h"
@@ -32,7 +33,7 @@ namespace valhalla {
     std::vector<baldr::Location> loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
       unsigned location_parse_error_code, boost::optional<valhalla_exception_t> required_exception) {
       std::vector<baldr::Location> parsed;
-      auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
+      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
       if (request_locations) {
         for(const auto& location : *request_locations) {
           try { parsed.push_back(baldr::Location::FromRapidJson(location, default_reachability, default_radius)); }
@@ -52,7 +53,7 @@ namespace valhalla {
 
     void loki_worker_t::parse_costing(rapidjson::Document& request) {
       //using the costing we can determine what type of edge filtering to use
-      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing");
+      auto costing = rapidjson::get_optional<std::string>(request, "/costing");
       if (!costing)
         throw valhalla_exception_t{124};
       else if (!healthcheck)
@@ -208,7 +209,7 @@ namespace valhalla {
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
-      boost::optional<std::string> jsonp;
+      const std::string* jsonp = nullptr;
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
@@ -220,11 +221,12 @@ namespace valhalla {
 
         //parse the query's json
         auto request_rj = from_request(request);
-        jsonp = GetOptionalFromRapidJson<std::string>(request_rj, "/jsonp");
+        auto options = from_json(request_rj);
+        jsonp = options.has_jsonp() ? &options.jsonp() : nullptr;
         //let further processes more easily know what kind of request it was
         rapidjson::SetValueByPointer(request_rj, "/action", action->second);
-        //flag healthcheck requests; do not send to logstash
-        healthcheck = GetOptionalFromRapidJson<bool>(request_rj, "/healthcheck").get_value_or(false);
+        //flag healthcheck requests
+        healthcheck = rapidjson::get_optional<bool>(request_rj, "/healthcheck").get_value_or(false);
         //let further processes know about tracking
         auto do_not_track = request.headers.find("DNT");
         info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
@@ -236,7 +238,6 @@ namespace valhalla {
         //do request specific processing
         switch (action->second) {
           case ROUTE:
-          case VIAROUTE:
             route(request_rj);
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;

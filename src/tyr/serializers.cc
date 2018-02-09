@@ -8,11 +8,13 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include "midgard/util.h"
 #include "midgard/pointll.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
 #include "baldr/json.h"
+#include "baldr/turn.h"
 #include "baldr/rapidjson_utils.h"
 #include "exception.h"
 #include "odin/util.h"
@@ -149,7 +151,8 @@ namespace {
     }
 **/
 
-  json::MapPtr route_summary(json::MapPtr route,
+  // Add OSRM route summary information: distance, duration
+  void route_summary(json::MapPtr& route,
       const std::list<valhalla::odin::TripDirections>& legs) {
     // Compute total distance and duration
     float duration = 0.0f;
@@ -159,42 +162,45 @@ namespace {
       duration += leg.summary().time();
     }
 
-    // Convert distance to meters
-    distance *= 0.001f;
+    // Convert distance to meters. Output distance and duration.
+    distance *= 1000.0f;
     route->emplace("distance", json::fp_t{distance, 1});
-    route->emplace("distance", json::fp_t{duration, 1});
+    route->emplace("duration", json::fp_t{duration, 1});
 
     // TODO - support returning weight based on costing method
     // as well as returning the costing method
     float weight = duration;
     route->emplace("weight", json::fp_t{weight, 1});
-    route->emplace("weight_name", "Valhalla default");
+    route->emplace("weight_name", std::string("Valhalla default"));
   }
 
-    // Generate full shape of the route. TODO - different encodings, generalization
-    std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs) {
-      if (legs.size() == 1)
-        return legs.front().shape();
+  // Generate full shape of the route. TODO - different encodings, generalization
+  std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
+      const valhalla::odin::DirectionsOptions& directions_options) {
 
-      //TODO: there is a tricky way to do this... since the end of each leg is the same as the beginning
-      //we essentially could just peel off the first encoded shape point of all the legs (but the first)
-      //this way we wouldn't really have to do any decoding (would be far faster). it might even be the case
-      //that the string length of the first number is a fixed length (which would be great!) have to have a look
-      //should make this a function in midgard probably so the logic is all in the same place
-      std::vector<std::pair<float, float> > decoded;
-      for(const auto& leg : legs) {
-        auto decoded_leg = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
-        decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(), decoded_leg.end());
-      }
-      return midgard::encode(decoded);
+    // TODO - support 5 digit encoding, support generalization
+
+    if (legs.size() == 1)
+      return legs.front().shape();
+
+    //TODO: there is a tricky way to do this... since the end of each leg is the same as the beginning
+    //we essentially could just peel off the first encoded shape point of all the legs (but the first)
+    //this way we wouldn't really have to do any decoding (would be far faster). it might even be the case
+    //that the string length of the first number is a fixed length (which would be great!) have to have a look
+    //should make this a function in midgard probably so the logic is all in the same place
+    std::vector<std::pair<float, float> > decoded;
+    for(const auto& leg : legs) {
+      auto decoded_leg = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+      decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(), decoded_leg.end());
     }
+    return midgard::encode(decoded);
+  }
 
     // Serialize locations (called waypoints in OSRM). Waypoints are described here:
     //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
     json::ArrayPtr waypoints(const std::list<valhalla::odin::TripDirections>& legs){
-      auto waypoints = json::array({});
-
       int index = 0;
+      auto waypoints = json::array({});
       for (auto leg = legs.begin(); leg != legs.end(); ++leg) {
         for (auto location = leg->location().begin() + index; location != leg->location().end(); ++location) {
           index = 1;
@@ -223,7 +229,8 @@ namespace {
 
           // Add hint. Goal is for the hint returned from a locate request to be able
           // to quickly find the edge and point along the edge in a route request.
-          waypoint->emplace("hint", "TODO");
+          // Defer this - not currently used in OSRM.
+          waypoint->emplace("hint", std::string("TODO"));
 
           // Add the waypoint to the JSON array
           waypoints->emplace_back(waypoint);
@@ -251,11 +258,11 @@ namespace {
       }
     };
 
+    // Add intersections along a step/maneuver.
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
             std::list<odin::TripPath>::const_iterator path_leg) {
-      auto intersections = json::array({});
-
       // Iterate through the nodes/intersections of the path for this maneuver
+      auto intersections = json::array({});
       for (uint32_t i = maneuver.begin_path_index(); i <= maneuver.end_path_index(); i++) {
         auto intersection = json::map({});
 
@@ -317,30 +324,102 @@ namespace {
       return intersections;
     }
 
+    // Get the turn modifier based on incoming edge bearing and outgoing edge
+    // bearing.
+    // TODO - resolve differences between OSRM turn modifiers and Valhalla turn degrees.
+    std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
+      auto turn_degree = GetTurnDegree(in_brg, out_brg);
+      auto turn_type = Turn::GetType(turn_degree);
+      switch (turn_type) {
+        case baldr::Turn::Type::kStraight:
+          return "straight";
+        case baldr::Turn::Type::kSlightRight:
+          return "slight right";
+        case baldr::Turn::Type::kRight:
+          return "right";
+        case baldr::Turn::Type::kSharpRight:
+          return "sharp right";
+        case baldr::Turn::Type::kReverse:
+          return "uturn";
+        case baldr::Turn::Type::kSharpLeft:
+          return "sharp left";
+        case baldr::Turn::Type::kLeft:
+          return "left";
+        case baldr::Turn::Type::kSlightLeft:
+          return "slight left";
+      }
+    }
+
+    // Populate the OSRM maneuver record within a step.
     json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
-                std::list<odin::TripPath>::const_iterator path_leg) {
+                std::list<odin::TripPath>::const_iterator path_leg,
+                const PointLL& man_ll) {
       auto osrm_man = json::map({});
 
-      // TODO -
-      uint32_t in_brg = 0;
-      uint32_t out_brg = 0;
-      osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
-      osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
-      osrm_man->emplace("type", "turn");
-      osrm_man->emplace("modifier", "right");
-
-      // Location
-      PointLL man_ll;
+      // Set the location
       auto loc = json::array({});
       loc->emplace_back(json::fp_t{man_ll.lng(), 6});
       loc->emplace_back(json::fp_t{man_ll.lat(), 6});
       osrm_man->emplace("location", loc);
 
+      // Get incoming and outgoing bearing. For the incoming heading, use the
+      // prior edge from the TripPath
+      uint32_t idx = maneuver.begin_path_index();
+      uint32_t in_brg = (idx > 0) ? path_leg->node(idx-1).edge().end_heading() : 0;
+      uint32_t out_brg = maneuver.begin_heading();
+
+      // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
+      std::string maneuver_type("turn");
+      osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
+      osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
+      osrm_man->emplace("type", maneuver_type);
+      osrm_man->emplace("modifier", turn_modifier(in_brg, out_brg));
       return osrm_man;
     }
 
+    // Convenience method to get the street names for the maneuver
+    std::string street_names(const odin::TripDirections::Maneuver& maneuver) {
+      std::string street;
+      for (const auto& name : maneuver.street_name()) {
+        if (street.size() > 0) {
+          street += ';';
+        }
+        street += name;
+      }
+      return street;
+    }
+
+    // Method to get the geometry string for a maneuver.
+    std::string maneuver_geometry(const uint32_t begin_idx, const uint32_t end_idx,
+                  const std::vector<std::pair<float, float>>& shape) {
+      std::vector<std::pair<float, float>> maneuver_shape(shape.begin() + begin_idx,
+                  shape.begin() + end_idx);
+      return std::string(midgard::encode(maneuver_shape));
+    }
+
+    // Get the mode
+    std::string get_mode(const valhalla::odin::TripDirections::Maneuver& maneuver,
+        std::list<odin::TripPath>::const_iterator path_leg) {
+      // Return ferry if the edge use is Ferry
+      uint32_t idx = maneuver.begin_path_index();
+      if (path_leg->node(idx).edge().use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
+        return "ferry";
+      }
+
+      // Otherwise return based on the travel mode
+      auto mode = path_leg->node(idx).edge().travel_mode();
+      if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kDrive) {
+        return "driving";
+      } else if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kPedestrian) {
+        return "walk";
+      } else if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kBicycle) {
+        return "cycling";
+      } else {
+        return "transit";
+      }
+    }
+
     // Serialize each leg
-    // TODO - add TripPath
     json::ArrayPtr  serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
                  const std::list<odin::TripPath>& path_legs) {
       auto output_legs = json::array({});
@@ -352,7 +431,12 @@ namespace {
       for (const auto& leg : legs) {
         auto output_leg = json::map({});
 
-        // TODO - add annotation (node Ids, etc.)
+        // TODO (DEFER) - add annotation (node Ids, etc.).
+        // DEFER since OSRM needs node Ids but Valhalla does not store them.
+
+        // Get the full shape for the leg. We want to use this for serializing
+        // encoded shape for each step (maneuver) in OSRM output.
+        auto shape = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
 
         // Iterate through maneuvers - convert to OSRM steps
         auto steps = json::array({});
@@ -364,19 +448,23 @@ namespace {
           // name change
 
           // Add geometry for this maneuver
+          PointLL ll(shape[maneuver.begin_shape_index()]);
+          step->emplace("geometry", maneuver_geometry(maneuver.begin_shape_index(),
+                    maneuver.end_shape_index(), shape));
 
           // Add mode, driving side, weight, distance, duration, name
-          float duration = 10.0f;
-          float distance = 10.0f;
-          step->emplace("mode", "driving"); // TODO - other modes
-          step->emplace("driving_side", "right");
+          float distance = maneuver.length() * 1000.0f;
+          float duration = maneuver.time();
+          std::string drive_side("right");  // TODO - pass this through TPB or TripDirections
+          step->emplace("mode", get_mode(maneuver, path_leg));
+          step->emplace("driving_side", drive_side);
           step->emplace("duration", json::fp_t{duration, 1});
           step->emplace("weight", json::fp_t{duration, 1});
           step->emplace("distance", json::fp_t{distance, 1});
-          step->emplace("name", "Add name here");
+          step->emplace("name", street_names(maneuver));
 
           // Add OSRM maneuver
-          step->emplace("maneuver", osrm_maneuver(maneuver, path_leg));
+          step->emplace("maneuver", osrm_maneuver(maneuver, path_leg, ll));
 
           // Add intersections
           step->emplace("intersections", intersections(maneuver, path_leg));
@@ -387,22 +475,29 @@ namespace {
 
         // Add steps to the leg
         output_leg->emplace("steps", steps);
+        output_legs->emplace_back(output_leg);
         path_leg++;
       }
       return output_legs;
     }
 
     // Serialize route response in OSRM compatible format.
-    // TODO - need to plug in TripPath proto here as well.
-    // TODO - alternate routes
-    json::MapPtr serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                           const std::list<valhalla::odin::TripDirections>& legs) {
+    // Inputs are:
+    //     directions options
+    //     TripPath protocol buffer
+    //     TripDirections protocol buffer
+    std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
+                          const std::list<TripPath>& path_legs,
+                          const std::list<valhalla::odin::TripDirections>& legs) {
       auto json = json::map({});
 
-      json->emplace("code", "Ok");        // TODO - other codes?
+      // If here then the route succeeded. Set status code to OK and serialize
+      // waypoints (locations).
+      json->emplace("code", "Ok");
       json->emplace("waypoints", waypoints(legs));
 
-      // Add each route (currently Valhalla only has 1 route)
+      // Add each route
+      // TODO - alternate routes (currently Valhalla only has 1 route)
       auto routes = json::array({});
 
       // For each route...
@@ -410,21 +505,22 @@ namespace {
         // Create a route to add to the array
         auto route = json::map({});
 
-        // Get full shape for the route. TODO - encoding options and generalization
-        // (maybe pass these through Directions options). NOTE - full_shape returns
-        // a string, what if GeoJSON is specified?
-        route->emplace("geometry", full_shape(legs));
+        // Get full shape for the route.
+        route->emplace("geometry", full_shape(legs, directions_options));
 
         // Other route summary information
         route_summary(route, legs);
 
         // Serialize route legs
-        std::list<odin::TripPath> path_legs;
         route->emplace("legs", serialize_legs(legs, path_legs));
 
         routes->emplace_back(route);
       }
-      return json;
+      json->emplace("routes", routes);
+
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
     }
   }
 
@@ -943,10 +1039,8 @@ namespace {
       return legs;
     }
 
-    json::MapPtr serialize(const boost::optional<std::string>& id,
-                   const valhalla::odin::DirectionsOptions& directions_options,
+    std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
                    const std::list<valhalla::odin::TripDirections>& directions_legs) {
-
       //build up the json object
       auto json = json::map
       ({
@@ -962,10 +1056,12 @@ namespace {
           })
         }
       });
-      if (id)
-        json->emplace("id", *id);
+      if (directions_options.has_id())
+        json->emplace("id", directions_options.id());
 
-      return json;
+      std::stringstream ss;
+      ss << *json;
+      return ss.str();
     }
   }
 
@@ -1699,25 +1795,74 @@ namespace {
       proto_leg->set_shape(shape_iter->value.GetString());
     }
   }
+
+
+  /**
+   * Returns GPX formatted route responses given the legs of the route
+   * @param  legs  The legs of the route
+   * @return the gpx string
+   */
+  std::string pathToGPX(const std::list<odin::TripPath>& legs) {
+    //start the gpx, we'll use 6 digits of precision
+    std::stringstream gpx;
+    gpx << std::setprecision(6) << std::fixed;
+    gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
+
+    //for each leg
+    for(const auto& leg : legs) {
+      //decode the shape for this leg
+      auto wpts = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+
+      //throw the shape points in as way points
+      //TODO: add time to each, need transition time at nodes
+      for(const auto& wpt : wpts)
+        gpx << R"(<wpt lon=")" << wpt.first << R"(" lat=")" << wpt.second << R"("></wpt>)";
+
+      //throw the intersections in as route points
+      //TODO: add time to each, need transition time at nodes
+      gpx << "<rte>";
+      uint64_t last_id = -1;
+      for(const auto& node : leg.node()) {
+        //if this isnt the last node we want the begin shape index of the edge
+        size_t shape_idx = wpts.size() - 1;
+        if(node.has_edge()) {
+          last_id = node.edge().way_id();
+          shape_idx = node.edge().begin_shape_index();
+        }
+
+        //output this intersection (note that begin and end points may not be intersections)
+        const auto& rtept = wpts[shape_idx];
+        gpx << R"(<rtept lon=")" << rtept.first << R"(" lat=")" << rtept.second << R"(">)"
+            << "<name>" << last_id << "</name></rtept>";
+      }
+      gpx << "</rte>";
+    }
+
+    //give it back as a string
+    gpx << "</gpx>";
+    return gpx.str();
+  }
 }
 
 
 namespace valhalla {
   namespace tyr {
 
-    json::MapPtr serializeDirections(ACTION_TYPE action, const boost::property_tree::ptree& request,
-        const std::list<TripDirections>& legs) {
-      //see if we can get some options
-      valhalla::odin::DirectionsOptions directions_options;
-      auto options = request.get_child_optional("directions_options");
-      if(options)
-        directions_options = valhalla::odin::GetDirectionsOptions(*options);
-
+    std::string serializeDirections(const DirectionsOptions& directions_options,
+        const std::list<TripPath>& path_legs,
+        const std::list<TripDirections>& directions_legs) {
       //serialize them
-      if(action == VIAROUTE)
-        return osrm_serializers::serialize(directions_options, legs);
-      else
-        return valhalla_serializers::serialize(request.get_optional<std::string>("id"), directions_options, legs);
+      switch(directions_options.format()) {
+        case DirectionsOptions_Format_osrm:
+          return osrm_serializers::serialize(directions_options, path_legs, directions_legs);
+        case DirectionsOptions_Format_gpx:
+          return pathToGPX(path_legs);
+        case DirectionsOptions_Format_json:
+          printf("JSON\n");
+          return valhalla_serializers::serialize(directions_options, directions_legs);
+        default:
+          throw;
+      }
     }
 
     void jsonToProtoRoute (const std::string& json_route, Route& proto_route) {
@@ -1826,47 +1971,6 @@ namespace valhalla {
         }
         proto_trip->set_id(id_iter->value.GetString());
       }
-    }
-
-    std::string pathToGPX(const std::list<odin::TripPath>& legs) {
-      //start the gpx, we'll use 6 digits of precision
-      std::stringstream gpx;
-      gpx << std::setprecision(6) << std::fixed;
-      gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
-
-      //for each leg
-      for(const auto& leg : legs) {
-        //decode the shape for this leg
-        auto wpts = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
-
-        //throw the shape points in as way points
-        //TODO: add time to each, need transition time at nodes
-        for(const auto& wpt : wpts)
-          gpx << R"(<wpt lon=")" << wpt.first << R"(" lat=")" << wpt.second << R"("></wpt>)";
-
-        //throw the intersections in as route points
-        //TODO: add time to each, need transition time at nodes
-        gpx << "<rte>";
-        uint64_t last_id = -1;
-        for(const auto& node : leg.node()) {
-          //if this isnt the last node we want the begin shape index of the edge
-          size_t shape_idx = wpts.size() - 1;
-          if(node.has_edge()) {
-            last_id = node.edge().way_id();
-            shape_idx = node.edge().begin_shape_index();
-          }
-
-          //output this intersection (note that begin and end points may not be intersections)
-          const auto& rtept = wpts[shape_idx];
-          gpx << R"(<rtept lon=")" << rtept.first << R"(" lat=")" << rtept.second << R"(">)"
-              << "<name>" << last_id << "</name></rtept>";
-        }
-        gpx << "</rte>";
-      }
-
-      //give it back as a string
-      gpx << "</gpx>";
-      return gpx.str();
     }
 
   }

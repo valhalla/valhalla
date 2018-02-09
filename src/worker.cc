@@ -3,6 +3,7 @@
 
 #include "worker.h"
 #include "baldr/location.h"
+#include "odin/util.h"
 
 namespace {
   // Credits: http://werkzeug.pocoo.org/
@@ -180,6 +181,50 @@ namespace {
 
 namespace valhalla {
 
+  odin::DirectionsOptions from_json(rapidjson::Document& doc) {
+    odin::DirectionsOptions options;
+
+    //TODO: stop doing this after a sufficient amount of time has passed
+    //move anything nested in deprecated directions_options up to the top level
+    auto* deprecated = rapidjson::Pointer{"/directions_options"}.Get(doc);
+    auto& allocator = doc.GetAllocator();
+    for(const auto& key : {"units", "narrative", "format", "language"}) {
+      auto child = rapidjson::get_child_optional(doc, (std::string("/directions_options/") + key).c_str());
+      if(child && child->IsObject())
+        doc.PushBack(*child, allocator);
+    }
+    //delete directions_options if it existed
+    doc.RemoveMember("/directions_options");
+
+    auto units = rapidjson::get_optional<std::string>(doc, "/units");
+    if(units) {
+      if((*units == "miles") || (*units == "mi"))
+        options.set_units(odin::DirectionsOptions::kMiles);
+      else
+        options.set_units(odin::DirectionsOptions::kKilometers);
+    }
+
+    auto language = rapidjson::get_optional<std::string>(doc, "/language");
+    if(language && odin::get_locales().find(*language) != odin::get_locales().end())
+      options.set_language(*language);
+
+    auto narrative = rapidjson::get_optional<bool>(doc, "/narrative");
+    if(narrative)
+      options.set_narrative(*narrative);
+
+    auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
+    odin::DirectionsOptions::Format format;
+    if (fmt && odin::DirectionsOptions::Format_Parse(*fmt, &format))
+      options.set_format(format);
+
+    //force these into the output so its obvious what we did to the user
+    doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
+    doc.AddMember({"format", allocator},
+      {odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
+
+    return options;
+  }
+
 #ifdef HAVE_HTTP
   rapidjson::Document from_request(const http_request_t& request) {
     //block all but get and post
@@ -202,7 +247,7 @@ namespace valhalla {
     if (d.HasParseError())
       throw valhalla_exception_t{100};
 
-    //throw the query params into the ptree
+    //throw the query params into the rapidjson doc
     for(const auto& kv : request.query) {
       //skip json or empty entries
       if(kv.first == "json" || kv.first.empty() || kv.second.empty() || kv.second.front().empty())
@@ -222,21 +267,6 @@ namespace valhalla {
       d.AddMember({kv.first, allocator}, array, allocator);
     }
 
-    //if its osrm compatible lets make the location object conform to our standard input
-    if(request.path == "/viaroute") {
-      auto& array = rapidjson::Pointer("/locations").Set(d, rapidjson::Value{rapidjson::kArrayType});
-      auto loc = GetOptionalFromRapidJson<rapidjson::Value::Array>(d, "/loc");
-      if (! loc)
-        throw valhalla_exception_t{110};
-      for(const auto& location : *loc) {
-        baldr::Location l = baldr::Location::FromCsv(location.GetString());
-        rapidjson::Value ele{rapidjson::kObjectType};
-        ele.AddMember("lon", l.latlng_.first, allocator)
-            .AddMember("lat", l.latlng_.second, allocator);
-        array.PushBack(ele, allocator);
-      }
-      d.RemoveMember("loc");
-    }
 
     return d;
   }
@@ -246,11 +276,10 @@ namespace valhalla {
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
   const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
 
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const boost::optional<std::string>& jsonp) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const std::string* jsonp) {
     //get the http status
     auto status = ERROR_TO_STATUS.find(exception.code)->second;
     auto body = HTTP_STATUS_CODES.find(status)->second;
-
 
     //build up the json map
     auto json_error = baldr::json::map({});
@@ -275,7 +304,7 @@ namespace valhalla {
     return result;
   }
 
-  worker_t::result_t to_response(baldr::json::ArrayPtr array, const boost::optional<std::string>& jsonp, http_request_info_t& request_info) {
+  worker_t::result_t to_response(baldr::json::ArrayPtr array, const std::string* jsonp, http_request_info_t& request_info) {
     std::ostringstream stream;
     //jsonp callback if need be
     if(jsonp)
@@ -291,12 +320,28 @@ namespace valhalla {
     return result;
   }
 
-  worker_t::result_t to_response(baldr::json::MapPtr map, const boost::optional<std::string>& jsonp, http_request_info_t& request_info) {
+  worker_t::result_t to_response(baldr::json::MapPtr map, const std::string* jsonp, http_request_info_t& request_info) {
     std::ostringstream stream;
     //jsonp callback if need be
     if(jsonp)
       stream << *jsonp << '(';
     stream << *map;
+    if(jsonp)
+      stream << ')';
+
+    worker_t::result_t result{false};
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+    return result;
+  }
+
+  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const std::string* jsonp) {
+    std::ostringstream stream;
+    //jsonp callback if need be
+    if(jsonp)
+      stream << *jsonp << '(';
+    stream << json;
     if(jsonp)
       stream << ')';
 
