@@ -22,10 +22,10 @@ namespace valhalla {
 #endif
       virtual void cleanup() override;
 
-      std::list<TripDirections> narrate(const DirectionsOptions& directions_options,
-          std::list<TripPath>& legs) const;
+      std::list<TripDirections> narrate(std::list<TripPath>& legs) const;
 
-      DirectionsOptions parse_options(boost::property_tree::ptree& request) const;
+     private:
+      DirectionsOptions options;
     };
   }
 }

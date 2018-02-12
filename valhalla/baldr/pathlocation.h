@@ -77,7 +77,7 @@ struct PathLocation : public Location {
    * Serializes one of these objects from a ptree and a list of locations
    * @return PathLocation
    */
-  static PathLocation FromPtree(const std::vector<Location>& locations, const boost::property_tree::ptree& path_location);
+  static PathLocation FromRapidJson(const std::vector<Location>& locations, const rapidjson::Value& path_location);
 };
 
 }

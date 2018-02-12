@@ -28,13 +28,14 @@ inline std::string to_string(const T& document_or_value) {
   return std::string(buffer.GetString(), buffer.GetSize());
 }
 
-}
-
-namespace valhalla{
+/* NOTE: all of these helper functions use the dom traversal style syntax for accessing nested keys
+ * what this means is that every path you provide has to begin with '/' and allows for multiple to get at children
+ * these functions don't currently check for '/' because rapidjson will throw when its not found
+ */
 
 //if you dont want an arithmetic type dont try any lexical casting
 template<typename T, typename V>
-inline typename std::enable_if<!std::is_arithmetic<T>::value, boost::optional<T> >::type GetOptionalFromRapidJson(V&& v, const char* source){
+inline typename std::enable_if<!std::is_arithmetic<T>::value, boost::optional<T> >::type get_optional(V&& v, const char* source){
   //if we dont have this key bail
   auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
   if(!ptr)
@@ -48,7 +49,7 @@ inline typename std::enable_if<!std::is_arithmetic<T>::value, boost::optional<T>
 
 //if you do want an arithmetic type dont try lexical casting as a last resort
 template<typename T, typename V>
-inline typename std::enable_if<std::is_arithmetic<T>::value, boost::optional<T> >::type GetOptionalFromRapidJson(V&& v, const char* source){
+inline typename std::enable_if<std::is_arithmetic<T>::value, boost::optional<T> >::type get_optional(V&& v, const char* source){
   //if we dont have this key bail
   auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
   if(!ptr)
@@ -79,12 +80,56 @@ inline typename std::enable_if<std::is_arithmetic<T>::value, boost::optional<T> 
 }
 
 template<typename T, typename V>
-inline T GetFromRapidJson(V&& v, const char* source, const T& t){
-  auto value = GetOptionalFromRapidJson<T>(v, source);
-  if(value)
-    return *value;
-  return t;
+inline T get(V&& v, const char* source, const T& t){
+  auto value = get_optional<T>(v, source);
+  if(!value)
+    return t;
+  return *value;
 }
+
+template<typename T, typename V>
+inline T get(V&& v, const char* source){
+  auto value = get_optional<T>(v, source);
+  if(!value)
+    throw std::runtime_error(std::string("No member: ") + source);
+  return *value;
+}
+
+template<typename V>
+inline const rapidjson::Value& get_child(const V& v, const char* source) {
+  const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
+  if(!ptr)
+    throw std::runtime_error(std::string("No child: ") + source);
+  return *ptr;
+}
+
+template<typename V>
+inline rapidjson::Value& get_child(V&& v, const char* source) {
+  rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
+  if(!ptr)
+    throw std::runtime_error(std::string("No child: ") + source);
+  return *ptr;
+}
+
+template<typename V>
+inline boost::optional<const rapidjson::Value&> get_child_optional(const V& v, const char* source) {
+  boost::optional<const rapidjson::Value&> c;
+  const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
+  if(ptr)
+    c.reset(*ptr);
+  return c;
+}
+
+template<typename V>
+inline boost::optional<rapidjson::Value&> get_child_optional(V&& v, const char* source) {
+  boost::optional<rapidjson::Value&> c;
+  rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
+  if(ptr)
+    c.reset(*ptr);
+  return c;
+}
+
+
 
 }
 
