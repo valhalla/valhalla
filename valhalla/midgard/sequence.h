@@ -44,7 +44,7 @@ class mem_map {
   mem_map(): ptr(nullptr), count(0), file_name("") { }
 
   //construct with file
-  mem_map(const std::string& file_name, size_t size, int advice = POSIX_FADV_NORMAL): ptr(nullptr), count(0), file_name("") {
+  mem_map(const std::string& file_name, size_t size, int advice = POSIX_MADV_NORMAL): ptr(nullptr), count(0), file_name("") {
     map(file_name, size, advice);
   }
 
@@ -54,7 +54,7 @@ class mem_map {
   }
 
   //reset to another file or another size
-  void map(const std::string& new_file_name, size_t new_count, int advice = POSIX_FADV_NORMAL) {
+  void map(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
     //just in case there was already something
     unmap();
 
@@ -63,11 +63,11 @@ class mem_map {
       auto fd = open(new_file_name.c_str(), O_RDWR, 0);
       if(fd == -1)
         throw std::runtime_error(new_file_name + "(open): " + strerror(errno));
-      posix_fadvise(fd, 0, 0, advice);
       ptr = mmap(nullptr, new_count * sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
       if(ptr == MAP_FAILED)
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
       auto cl = close(fd);
+      posix_madvise(ptr, new_count * sizeof(T), advice);
       if(cl == -1)
         throw std::runtime_error(new_file_name + "(close): " + strerror(errno));
       count = new_count;
@@ -109,6 +109,10 @@ class mem_map {
 
   size_t size() const {
     return count;
+  }
+
+  const std::string& name() const {
+    return file_name;
   }
 
  protected:

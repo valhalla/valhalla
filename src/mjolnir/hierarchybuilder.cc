@@ -8,6 +8,7 @@
 #include <map>
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/pointll.h"
 #include "midgard/logging.h"
@@ -384,15 +385,18 @@ bool CreateNodeAssociations(GraphReader& reader) {
   tile_level++;
   auto& highway_level = tile_level->second;
 
+  // Get the set of tiles on the local level
+  auto local_tiles = reader.GetTileSet(base_level.level);
+
   // Iterate through all tiles in the local level
   bool has_elevation = false;
   uint32_t ntiles = base_level.tiles.TileCount();
   uint32_t bl = static_cast<uint32_t>(base_level.level);
   uint32_t al = static_cast<uint32_t>(arterial_level.level);
   uint32_t hl = static_cast<uint32_t>(highway_level.level);
-  for (uint32_t basetileid = 0; basetileid < ntiles; basetileid++) {
-    // Get the graph tile. Skip if no tile exists (common case)
-    const GraphTile* tile = reader.GetGraphTile(GraphId(basetileid, bl, 0));
+  for (const auto& base_tile_id : local_tiles) {
+    // Get the graph tile. Skip if no tile exists or no nodes exist in the tile.
+    const GraphTile* tile = reader.GetGraphTile(base_tile_id);
     if (tile == nullptr || tile->header()->nodecount() == 0) {
       continue;
     }
@@ -406,8 +410,8 @@ bool CreateNodeAssociations(GraphReader& reader) {
     // best road class <= the new level classification cutoff
     bool levels[3];
     uint32_t nodecount = tile->header()->nodecount();
-    GraphId basenode(basetileid, bl, 0);
-    GraphId edgeid(basetileid, bl, 0);
+    GraphId basenode = base_tile_id;
+    GraphId edgeid = base_tile_id;
     const NodeInfo* nodeinfo = tile->node(basenode);
     for (uint32_t i = 0; i < nodecount; i++, nodeinfo++, ++basenode) {
       // Iterate through the edges to see which levels this node exists.
@@ -439,8 +443,7 @@ bool CreateNodeAssociations(GraphReader& reader) {
       }
       if (levels[2]) {
         // New node is on the local level. Associate back to base/local node
-        GraphId new_tile(basetileid, bl, 0);
-        local_node = get_new_node(new_tile);
+        local_node = get_new_node(base_tile_id);
         new_to_old.push_back(std::make_pair(local_node, basenode));
       }
 
@@ -471,12 +474,10 @@ void UpdateTransitConnections(GraphReader& reader) {
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
 
   auto tile_level = TileHierarchy::levels().rbegin();
-  auto& base_level = tile_level->second;
-  uint8_t transit_level = base_level.level + 1;
-  uint32_t ntiles = base_level.tiles.TileCount();
-  for (uint32_t basetileid = 0; basetileid < ntiles; basetileid++) {
-    // Get the graph tile. Skip if no tile exists (common case)
-    GraphId tile_id(basetileid, transit_level, 0);
+  uint8_t transit_level = tile_level->second.level + 1;
+  auto transit_tiles = reader.GetTileSet(transit_level);
+  for (const auto& tile_id : transit_tiles) {
+    // Skip if no nodes exist in the tile
     const GraphTile* tile = reader.GetGraphTile(tile_id);
     if (tile == nullptr || tile->header()->nodecount() == 0) {
       continue;
@@ -585,7 +586,12 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
   RemoveUnusedLocalTiles(reader.tile_dir());
 
   // Update the end nodes to all transit connections in the transit hierarchy
-  UpdateTransitConnections(reader);
+  auto hierarchy_properties = pt.get_child("mjolnir");
+  auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
+  if (transit_dir && boost::filesystem::exists(*transit_dir) && boost::filesystem::is_directory(*transit_dir)) {
+    UpdateTransitConnections(reader);
+  }
+
   LOG_INFO("Done HierarchyBuilder");
 }
 

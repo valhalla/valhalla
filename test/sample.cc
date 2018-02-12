@@ -76,17 +76,17 @@ void create_tile() {
   std::vector<int16_t> tile(3601 * 3601, 0);
   for (const auto& p : pixels)
     tile[p.first] = p.second;
-  std::ofstream file("test/data/sample/N40W077.hgt", std::ios::binary | std::ios::trunc);
+  std::ofstream file("test/data/sample/N40/N40W077.hgt", std::ios::binary | std::ios::trunc);
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())), sizeof(int16_t) * tile.size());
 
   //write it again but this time gzipped
   auto gzipped = gzip(tile);
-  std::ofstream gzfile("test/data/samplegz/N40W077.hgt.gz", std::ios::binary | std::ios::trunc);
+  std::ofstream gzfile("test/data/samplegz/N40/N40W077.hgt.gz", std::ios::binary | std::ios::trunc);
   gzfile.write(static_cast<const char*>(static_cast<void*>(gzipped.data())), gzipped.size());
 
   //write it again but this time lzipped
   auto lzipped = lzip(tile);
-  std::ofstream lzfile("test/data/samplelz/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
+  std::ofstream lzfile("test/data/samplelz/N40/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
   lzfile.write(lzipped.data(), lzipped.size());
 }
 
@@ -157,6 +157,29 @@ void edges() {
     throw std::runtime_error("Wrong value at location");
 }
 
+void lazy_load() {
+  //make sure there is no data there
+  {
+    std::ofstream file("test/data/sample/N00/N00E000.hgt", std::ios::binary | std::ios::trunc);
+  }
+  skadi::sample s("test/data/sample");
+  if(s.get(std::make_pair(0.503915, 0.678783)) != s.get_no_data_value())
+    throw std::logic_error("Asked for point with no data should be no data value");
+
+  //put data there
+  {
+    std::vector<int16_t> tile(3601 * 3601, 0);
+    for (const auto& p : pixels)
+      tile[p.first] = p.second;
+    std::ofstream file("test/data/sample/N00/N00E000.hgt", std::ios::binary | std::ios::trunc);
+    file.write(static_cast<const char*>(static_cast<void*>(tile.data())), sizeof(int16_t) * tile.size());
+  }
+
+  //make sure there is now data there
+  if(std::fabs(490 - s.get(std::make_pair(1 - 0.503915, 0.678783))) > 1.0)
+    throw std::runtime_error("Wrong value at location: " + std::to_string(s.get(std::make_pair(1 - 0.503915, 0.678783))));
+}
+
 }
 
 int main() {
@@ -173,6 +196,8 @@ int main() {
   suite.test(TEST_CASE(getgz));
 
   suite.test(TEST_CASE(getlz));
+
+  suite.test(TEST_CASE(lazy_load));
 
   return suite.tear_down();
 }

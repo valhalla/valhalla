@@ -1259,6 +1259,8 @@ namespace mjolnir {
 // Enhance the local level of the graph
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const std::string& access_file) {
+  LOG_INFO("Enhancing local graph...");
+
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(
     std::max(static_cast<unsigned int>(1),
@@ -1270,15 +1272,11 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tempqueue;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
-  GraphReader reader(hierarchy_properties);
   auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
-  for (uint32_t id = 0; id < tiles.TileCount(); id++) {
-    // If tile exists add it to the queue
-    GraphId tile_id(id, local_level, 0);
-    if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
-      tempqueue.push_back(tile_id);
-    }
+  GraphReader reader(hierarchy_properties);
+  auto local_tiles = reader.GetTileSet(local_level);
+  for (const auto& tile_id : local_tiles) {
+    tempqueue.emplace_back(tile_id);
   }
   std::random_shuffle(tempqueue.begin(), tempqueue.end());
   std::queue<GraphId> tilequeue(tempqueue);
@@ -1287,7 +1285,6 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   std::mutex lock;
 
   // Start the threads
-  LOG_INFO("Enhancing local graph...");
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(enhance,

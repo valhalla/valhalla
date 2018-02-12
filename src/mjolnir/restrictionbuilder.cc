@@ -542,17 +542,12 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
   GraphReader reader(hierarchy_properties);
   auto level = TileHierarchy::levels().rbegin();
   for ( ; level != TileHierarchy::levels().rend(); ++level) {
-
-    auto tile_level = level->second;
     // Create a randomized queue of tiles to work from
+    auto tile_level = level->second;
     std::deque<GraphId> tempqueue;
-
-    for (uint32_t id = 0; id < tile_level.tiles.TileCount(); id++) {
-      // If tile exists add it to the queue
-      GraphId tile_id(id, tile_level.level, 0);
-      if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
-        tempqueue.push_back(tile_id);
-      }
+    auto level_tiles = reader.GetTileSet(tile_level.level);
+    for (const auto& tile_id : level_tiles) {
+      tempqueue.emplace_back(tile_id);
     }
     std::random_shuffle(tempqueue.begin(), tempqueue.end());
     std::queue<GraphId> tilequeue(tempqueue);

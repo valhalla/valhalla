@@ -538,31 +538,55 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
 
       else if (tag.first == "max_speed") {
-        max_speed = std::stof(tag.second);
-        has_max_speed = true;
-        w.set_tagged_speed(true);
+        try {
+          max_speed = std::stof(tag.second);
+          has_max_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "average_speed") {
-        average_speed = std::stof(tag.second);
-        has_average_speed = true;
-        w.set_tagged_speed(true);
+        try {
+          average_speed = std::stof(tag.second);
+          has_average_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "advisory_speed") {
-        advisory_speed = std::stof(tag.second);
-        has_advisory_speed = true;
-        w.set_tagged_speed(true);
+        try {
+          advisory_speed = std::stof(tag.second);
+          has_advisory_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "forward_speed") {
-        w.set_forward_speed(std::stof(tag.second));
-        w.set_forward_tagged_speed(true);
+        try {
+          w.set_forward_speed(std::stof(tag.second));
+          w.set_forward_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "backward_speed") {
-        w.set_backward_speed(std::stof(tag.second));
-        w.set_backward_tagged_speed(true);
+        try {
+          w.set_backward_speed(std::stof(tag.second));
+          w.set_backward_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
 
       else if (tag.first == "maxspeed:hgv") {
-        w.set_truck_speed(std::stof(tag.second));
+        try {
+          w.set_truck_speed(std::stof(tag.second));
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "truck_route") {
         w.set_truck_route(tag.second == "true" ? true : false);
@@ -574,39 +598,65 @@ struct graph_callback : public OSMPBF::Callback {
         osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxheight") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxHeight);
-        restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        try {
+          OSMAccessRestriction restriction;
+          restriction.set_type(AccessType::kMaxHeight);
+          restriction.set_value(std::stof(tag.second)*100);
+          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "maxwidth") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxWidth);
-        restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        try {
+          OSMAccessRestriction restriction;
+          restriction.set_type(AccessType::kMaxWidth);
+          restriction.set_value(std::stof(tag.second)*100);
+          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "maxlength") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxLength);
-        restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        try {
+          OSMAccessRestriction restriction;
+          restriction.set_type(AccessType::kMaxLength);
+          restriction.set_value(std::stof(tag.second)*100);
+          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "maxweight") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxWeight);
-        restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        try {
+          OSMAccessRestriction restriction;
+          restriction.set_type(AccessType::kMaxWeight);
+          restriction.set_value(std::stof(tag.second)*100);
+          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "maxaxleload") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxAxleLoad);
-        restriction.set_value(std::stof(tag.second)*100);
-        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        try {
+          OSMAccessRestriction restriction;
+          restriction.set_type(AccessType::kMaxAxleLoad);
+          restriction.set_value(std::stof(tag.second)*100);
+          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+        }
+        catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
 
       else if (tag.first == "default_speed") {
-        default_speed = std::stof(tag.second);
-        has_default_speed = true;
+        try {
+          default_speed = std::stof(tag.second);
+          has_default_speed = true;
+        }
+        catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
 
       else if (tag.first == "ref" && !tag.second.empty())
