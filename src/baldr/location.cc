@@ -124,40 +124,40 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 }
 
 Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int default_reachability, unsigned long default_radius){
-  auto lat = GetOptionalFromRapidJson<float>(d, "/lat");
+  auto lat = rapidjson::get_optional<float>(d, "/lat");
   if (! lat) throw std::runtime_error{"lat is missing"};
 
   if (*lat < -90.0f || *lat > 90.0f)
     throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
 
-  auto lon = GetOptionalFromRapidJson<float>(d, "/lon");
+  auto lon = rapidjson::get_optional<float>(d, "/lon");
   if (! lon) throw std::runtime_error{"lon is missing"};
 
   lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
 
   StopType stop_type{StopType::BREAK};
-  auto stop_type_json = GetOptionalFromRapidJson<std::string>(d, "/type");
+  auto stop_type_json = rapidjson::get_optional<std::string>(d, "/type");
   if (stop_type_json && *stop_type_json == std::string("through")){
     stop_type = StopType::THROUGH;
   }
 
   Location location{{*lon,*lat}, stop_type};
 
-  location.name_ = GetFromRapidJson<std::string>(d, "/name", "");
-  location.street_ = GetFromRapidJson<std::string>(d, "/street", "");
-  location.city_ = GetFromRapidJson<std::string>(d, "/city", "");
-  location.state_ = GetFromRapidJson<std::string>(d, "/state", "");
-  location.zip_ = GetFromRapidJson<std::string>(d, "/postal_code", "");
-  location.country_ = GetFromRapidJson<std::string>(d, "/country", "");
+  location.name_ = rapidjson::get<std::string>(d, "/name", "");
+  location.street_ = rapidjson::get<std::string>(d, "/street", "");
+  location.city_ = rapidjson::get<std::string>(d, "/city", "");
+  location.state_ = rapidjson::get<std::string>(d, "/state", "");
+  location.zip_ = rapidjson::get<std::string>(d, "/postal_code", "");
+  location.country_ = rapidjson::get<std::string>(d, "/country", "");
 
-  location.date_time_ = GetOptionalFromRapidJson<std::string>(d, "/date_time");
-  location.heading_ = GetOptionalFromRapidJson<int>(d, "/heading");
-  location.heading_tolerance_ = GetOptionalFromRapidJson<int>(d, "/heading_tolerance");
-  location.node_snap_tolerance_ = GetOptionalFromRapidJson<float>(d, "/node_snap_tolerance");
-  location.way_id_ = GetOptionalFromRapidJson<uint64_t>(d, "/way_id");
+  location.date_time_ = rapidjson::get_optional<std::string>(d, "/date_time");
+  location.heading_ = rapidjson::get_optional<int>(d, "/heading");
+  location.heading_tolerance_ = rapidjson::get_optional<int>(d, "/heading_tolerance");
+  location.node_snap_tolerance_ = rapidjson::get_optional<float>(d, "/node_snap_tolerance");
+  location.way_id_ = rapidjson::get_optional<uint64_t>(d, "/way_id");
 
-  location.minimum_reachability_ = GetFromRapidJson<unsigned int>(d, "/minimum_reachability", default_reachability);
-  location.radius_ = GetFromRapidJson<unsigned int>(d, "/radius", default_radius);
+  location.minimum_reachability_ = rapidjson::get<unsigned int>(d, "/minimum_reachability", default_reachability);
+  location.radius_ = rapidjson::get<unsigned int>(d, "/radius", default_radius);
 
   return location;
 }

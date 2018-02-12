@@ -134,30 +134,29 @@ namespace {
       throw valhalla::valhalla_exception_t{100};
     return d;
   }
-  std::vector<PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<Location>& locations) {
+  std::vector<PathLocation> store_correlated_locations(const rapidjson::Document& request, const std::vector<Location>& locations) {
     //we require correlated locations
     std::vector<PathLocation> correlated;
     correlated.reserve(locations.size());
     size_t i = 0;
     do {
-     auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-     if(!path_location)
-       break;
-     try {
-       correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+      auto path_location = rapidjson::get_child_optional(request, ("/correlated_" + std::to_string(i)).c_str());
+      if(!path_location)
+        break;
+      try {
+        correlated.emplace_back(PathLocation::FromRapidJson(locations, *path_location));
+        auto minScoreEdge = *std::min_element(correlated.back().edges.begin(),
+            correlated.back().edges.end(),
+            [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
+              return i.score < j.score;
+            });
 
-       auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
-          [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
-            return i.score < j.score;
-          });
-
-       for(auto& e : correlated.back().edges) {
-         e.score -= minScoreEdge.score;
-       }
-     }
-     catch (...) {
-       throw valhalla::valhalla_exception_t{420};
-     }
+        for (auto& e : correlated.back().edges) {
+          e.score -= minScoreEdge.score;
+        }
+      } catch (...) {
+        throw valhalla::valhalla_exception_t { 420 };
+      }
     }while(++i);
     return correlated;
   }
@@ -261,7 +260,7 @@ void test_matrix() {
     try{ locations.push_back(Location::FromPtree(t.second)); }
     catch (...) { throw valhalla::valhalla_exception_t{423}; }
   }
-  std::vector<PathLocation> correlated = store_correlated_locations (request_pt, locations);
+  std::vector<PathLocation> correlated = store_correlated_locations (request_doc, locations);
 
   std::vector<PathLocation> correlated_s (correlated.begin(), correlated.begin() + request_sources->size());
   std::vector<PathLocation> correlated_t (correlated.begin() + request_sources->size(), correlated.end());

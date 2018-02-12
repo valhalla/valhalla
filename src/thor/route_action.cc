@@ -19,7 +19,7 @@ using namespace valhalla::thor;
 namespace valhalla {
   namespace thor {
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::route(const boost::property_tree::ptree& request, const boost::optional<int> &date_time_type){
+  std::list<valhalla::odin::TripPath> thor_worker_t::route(const rapidjson::Document& request, const boost::optional<int> &date_time_type){
     parse_locations(request);
     auto costing = parse_costing(request);
 
