@@ -9,6 +9,7 @@
 #include <mutex>
 #include <vector>
 #include <list>
+#include <set>
 #include <queue>
 #include <unordered_set>
 #include <unordered_map>
@@ -310,11 +311,25 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
                             NodeInfo& startnodeinfo,
                             DirectedEdge& directededge,
                             const uint32_t idx) {
-  // Internal intersection edges must be short and cannot be a roundabout
+  // Internal intersection edges must be short and cannot be a roundabout.
+  // Also they must be a road use (not footway, cycleway, etc.).
+  // TODO - consider whether alleys, cul-de-sacs, and other road uses
+  // are candidates to be marked as internal intersection edges.
   if (directededge.length() > kMaxInternalLength ||
-      directededge.roundabout()) {
+      directededge.roundabout() || directededge.use() > Use::kCycleway) {
     return false;
   }
+
+  // Lambda to check if the turn set includes a right turn type
+  const auto has_turn_right = [](std::set<Turn::Type>& turn_types) {
+    return turn_types.find(Turn::Type::kRight) != turn_types.end() ||
+           turn_types.find(Turn::Type::kSharpRight) != turn_types.end();
+  };
+  // Lambda to check if the turn set includes a left turn type
+  const auto has_turn_left = [](std::set<Turn::Type>& turn_types) {
+    return turn_types.find(Turn::Type::kLeft) != turn_types.end() ||
+           turn_types.find(Turn::Type::kSharpLeft) != turn_types.end();
+  };
 
   // Must have inbound oneway at start node (exclude edges that are nearly
   // straight turn type onto the directed edge
@@ -323,38 +338,38 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
   const GraphTile* tile = reader.GetGraphTile(startnode);
   lock.unlock();
   uint32_t heading = startnodeinfo.heading(idx);
+  std::set<Turn::Type> incoming_turn_type;
   const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
   for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
-    // Skip the current directed edge
-    // and any inbound edges not oneway
-    // and any link edge
-    // and any link that is not a road
-    if (i == idx
-        || (!((diredge->reverseaccess() & kAutoAccess)
-            && !(diredge->forwardaccess() & kAutoAccess)))
-        || diredge->link()
-        || (diredge->use() != Use::kRoad)) {
+    // Skip the current directed edge and any non-road edges
+    if (i == idx || diredge->use() != Use::kRoad) {
       continue;
     }
 
-    // Exclude edges that are nearly straight to go onto directed edge
+    // Identify headings of driveable incoming edges and the turn degree.
+    // Store the turn type of incoming driveable edges.
     uint32_t from_heading = ((startnodeinfo.heading(i) + 180) % 360);
     uint32_t turndegree = GetTurnDegree(from_heading, heading);
-    if (turndegree < 30 || turndegree > 330) {
+    if ((diredge->reverseaccess() & kAutoAccess)) {
+      incoming_turn_type.insert(Turn::GetType(turndegree));
+    }
+
+    // Skip inbound edges that are not oneway. Skip link edges. Also
+    // skip edges that are nearly straight to go onto directed edge.
+    if (!((diredge->reverseaccess() & kAutoAccess) &&
+         !(diredge->forwardaccess() & kAutoAccess)) || diredge->link() ||
+          (turndegree < 30 || turndegree > 330)) {
       continue;
     }
 
     // If we are here the edge is a candidate oneway inbound
     oneway_inbound = true;
-    break;
   }
   if (!oneway_inbound) {
     return false;
   }
 
-  // Must have outbound oneway at end node (exclude edges that are nearly
-  // straight turn from directed edge
-  bool oneway_outbound = false;
+  // Get the tile at the end node and find inbound heading of directed edge
   if (tile->id() != directededge.endnode().Tile_Base()) {
     lock.lock();
     tile = reader.GetGraphTile(directededge.endnode());
@@ -363,37 +378,56 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
   const NodeInfo* node = tile->node(directededge.endnode());
   diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
-    // Skip opposing directed edge
-    // and any outbound edges not oneway
-    // and any link edge
-    // and any link that is not a road
-    if (i == directededge.opp_local_idx()
-        || (!((diredge->forwardaccess() & kAutoAccess)
-            && !(diredge->reverseaccess() & kAutoAccess)))
-        || diredge->link()
-        || (diredge->use() != Use::kRoad)) {
+    // Find the opposing directed edge and its inbound heading
+    if (i == directededge.opp_local_idx()) {
+      heading = ((node->heading(i) + 180) % 360);
+      break;
+    }
+  }
+
+  // Must have outbound oneway at end node (exclude edges that are ntestinearly
+  // straight turn from directed edge
+  bool oneway_outbound = false;
+  std::set<Turn::Type> outgoing_turn_type;
+  diredge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+    // Skip opposing directed edge and any edge that is not a road
+    if (i == directededge.opp_local_idx() || (diredge->use() != Use::kRoad)) {
       continue;
     }
 
-    // Exclude edges that are nearly straight to go onto directed edge
-    // Unfortunately don't have headings at the end node...
-    auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
-    if (!diredge->forward())
-      std::reverse(shape.begin(), shape.end());
-    uint32_t to_heading = std::round(
-        PointLL::HeadingAlongPolyline(
-            shape,
-            GetOffsetForHeading(diredge->classification(), diredge->use())));
+    // Get the heading of the outbound edge. Store outgoing turn type
+    // for any driveable edges
+    uint32_t to_heading = node->heading(i);
     uint32_t turndegree = GetTurnDegree(heading, to_heading);
-    if (turndegree < 30 || turndegree > 330) {
+    if ((diredge->forwardaccess() & kAutoAccess)) {
+      outgoing_turn_type.insert(Turn::GetType(turndegree));
+    }
+
+    // Skip outbound edges that are not oneway and any link edges. Also
+    // skip edges that are nearly straight onto directed edge.
+    if (!((diredge->forwardaccess() & kAutoAccess) &&
+         !(diredge->reverseaccess() & kAutoAccess)) || diredge->link() ||
+        (turndegree < 30 || turndegree > 330)) {
       continue;
     }
 
     // If we are here the edge is oneway outbound
     oneway_outbound = true;
-    break;
   }
   if (!oneway_outbound) {
+    return false;
+  }
+
+  // A further rejection case is if there are incoming edges that
+  // have "opposite" turn degrees than outgoing edges
+  if ((has_turn_left(incoming_turn_type) && has_turn_right(outgoing_turn_type)) ||
+      (has_turn_right(incoming_turn_type) && has_turn_left(outgoing_turn_type))) {
+// TODO - remove log information.
+//    uint64_t wayid = tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
+//    LOG_INFO("Remove internal candidate: wayid = " + std::to_string(wayid) +
+//        " LL = " + std::to_string(startnodeinfo.latlng().lat()) + "," +
+//                   std::to_string(startnodeinfo.latlng().lng()));
     return false;
   }
 
