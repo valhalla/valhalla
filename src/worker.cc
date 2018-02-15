@@ -198,8 +198,6 @@ namespace valhalla {
       doc.RemoveMember("directions_options");
     }
 
-    std::cout << to_string(doc) << std::endl;
-
     auto units = rapidjson::get_optional<std::string>(doc, "/units");
     if(units) {
       if((*units == "miles") || (*units == "mi"))
