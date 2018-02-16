@@ -16,7 +16,8 @@ using namespace valhalla;
 using namespace prime_server;
 
 namespace {
-  const std::vector<http_request_t> requests {
+
+  const std::vector<http_request_t> valhalla_requests {
     http_request_t(OPTIONS, "/route"),
     http_request_t(HEAD, "/route"),
     http_request_t(PUT, "/route"),
@@ -66,7 +67,7 @@ namespace {
         "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","directions_options":{"units":"miles"}})"),
   };
 
-  const std::vector<std::pair<uint16_t,std::string> > responses {
+  const std::vector<std::pair<uint16_t,std::string> > valhalla_responses {
     {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {405, R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
@@ -111,7 +112,7 @@ namespace {
     {400, R"({"error_code":153,"error":"Too many shape points:(102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"}
   };
 
-  const std::vector<http_request_t> requests_osrm {
+  const std::vector<http_request_t> osrm_requests {
     http_request_t(GET, R"(/route?json={"directions_options":{"format":"osrm"}})"),
     http_request_t(POST, "/route", R"({"directions_options":{"format":"osrm"}})"),
     http_request_t(GET, R"(/many_to_one?json={"directions_options":{"format":"osrm"}})"),
@@ -151,7 +152,7 @@ namespace {
         "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","directions_options":{"units":"miles","format":"osrm"}})")
   };
 
-  const std::vector<std::pair<uint16_t,std::string> > responses_osrm {
+  const std::vector<std::pair<uint16_t,std::string> > osrm_responses {
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -186,8 +187,8 @@ namespace {
     {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"}
   };
 
-
-  void start_service(zmq::context_t& context) {
+  zmq::context_t context;
+  void start_service() {
     //server
     std::thread server(std::bind(&http_server_t::serve,
       http_server_t(context, "ipc:///tmp/test_loki_server", "ipc:///tmp/test_loki_proxy_in", "ipc:///tmp/test_loki_results", "ipc:///tmp/test_loki_interrupt")));
@@ -230,35 +231,32 @@ namespace {
     worker.detach();
   }
 
-  void test_failure_requests() {
-    //start up the service
-    zmq::context_t context;
-    start_service(context);
+  void run_requests(const std::vector<http_request_t>& requests, const std::vector<std::pair<uint16_t,std::string> >& responses) {
 
     //client makes requests and gets back responses in a batch fashion
     auto request = requests.cbegin();
     std::string request_str;
     int success_count = 0;
     http_client_t client(context, "ipc:///tmp/test_loki_server",
-      [&request, &request_str]() {
-        //we dont have any more requests so bail
-        if(request == requests.cend())
-          return std::make_pair<const void*, size_t>(nullptr, 0);
-        //get the string of bytes to send formatted for http protocol
-        request_str = request->to_string();
-        //LOG_INFO("Loki Test Request :: " + request_str + '\n');
-        ++request;
-        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
+      [&requests, &request, &request_str]() {
+	//we dont have any more requests so bail
+	if(request == requests.cend())
+	  return std::make_pair<const void*, size_t>(nullptr, 0);
+	//get the string of bytes to send formatted for http protocol
+	request_str = request->to_string();
+	//LOG_INFO("Loki Test Request :: " + request_str + '\n');
+	++request;
+	return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
       },
-      [&request, &success_count](const void* data, size_t size) {
-        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
-        if(response.code != responses[request - requests.cbegin() - 1].first)
-          throw std::runtime_error("Expected Response Code: " + std::to_string(responses[request - requests.cbegin() - 1].first) +", Actual Response Code: " + std::to_string(response.code));
-        if(response.body != responses[request - requests.cbegin() - 1].second)
-          throw std::runtime_error("Expected Response: " + responses[request - requests.cbegin() - 1].second +", Actual Response: " + response.body);
+      [&requests, &request, &responses, &success_count](const void* data, size_t size) {
+	auto response = http_response_t::from_string(static_cast<const char*>(data), size);
+	if(response.code != responses[request - requests.cbegin() - 1].first)
+	  throw std::runtime_error("Expected Response Code: " + std::to_string(responses[request - requests.cbegin() - 1].first) +", Actual Response Code: " + std::to_string(response.code));
+	if(response.body != responses[request - requests.cbegin() - 1].second)
+	  throw std::runtime_error("Expected Response: " + responses[request - requests.cbegin() - 1].second +", Actual Response: " + response.body);
 
-        ++success_count;
-        return request != requests.cend();
+	++success_count;
+	return request != requests.cend();
       }, 1
     );
     //request and receive
@@ -268,41 +266,13 @@ namespace {
     test::assert_bool(success_count == requests.size(), "Expected passed tests count: " + std::to_string(requests.size()) + " Actual passed tests count: " + std::to_string(success_count));
   }
 
+  void test_failure_requests() {
+    run_requests(valhalla_requests, valhalla_responses);
+  }
+
   void test_osrm_failure_requests() {
-      //start up the service
-      zmq::context_t context;
-      start_service(context);
-
-      //client makes requests and gets back responses in a batch fashion
-      auto request = requests_osrm.cbegin();
-      std::string request_str;
-      int success_count = 0;
-      http_client_t client(context, "ipc:///tmp/test_loki_server",
-        [&request, &request_str]() {
-          //we dont have any more requests so bail
-          if(request == requests_osrm.cend())
-            return std::make_pair<const void*, size_t>(nullptr, 0);
-          //get the string of bytes to send formatted for http protocol
-          request_str = request->to_string();
-          LOG_INFO("Loki Test Request :: " + request_str + '\n');
-          ++request;
-          return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
-        },
-        [&request, &success_count](const void* data, size_t size) {
-          auto response = http_response_t::from_string(static_cast<const char*>(data), size);
-          if(response.body != responses_osrm[request - requests_osrm.cbegin() - 1].second)
-            throw std::runtime_error("Expected OSRM Response: " + responses_osrm[request - requests_osrm.cbegin() - 1].second +", Actual OSRM Response: " + response.body);
-
-          ++success_count;
-          return request != requests_osrm.cend();
-        }, 1
-      );
-      //request and receive
-      client.batch();
-
-      // Make sure that all requests are tested
-      test::assert_bool(success_count == requests_osrm.size(), "Expected passed tests count: " + std::to_string(requests_osrm.size()) + " Actual passed tests count: " + std::to_string(success_count));
-    }
+    run_requests(osrm_requests, osrm_responses);
+  }
 }
 
 int main(void) {
@@ -312,6 +282,7 @@ int main(void) {
   test::suite suite("Loki Service");
 
   //test failures
+  suite.test(TEST_CASE(start_service));
   suite.test(TEST_CASE(test_failure_requests));
   suite.test(TEST_CASE(test_osrm_failure_requests));
 
