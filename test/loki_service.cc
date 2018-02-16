@@ -108,7 +108,82 @@ namespace {
     {400, R"({"error_code":157,"error":"Exceeded max avoid locations:0","status_code":400,"status":"Bad Request"})"},
     {400, R"({"error_code":158,"error":"Input trace option is out of bounds:(0). The best_paths lower limit is 1","status_code":400,"status":"Bad Request"})"},
     {400, R"({"error_code":158,"error":"Input trace option is out of bounds:(5). The best_paths upper limit is 4","status_code":400,"status":"Bad Request"})"},
-    {400, R"({"error_code":153,"error":"Too many shape points:(102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":153,"error":"Too many shape points:(102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"}
+  };
+
+  const std::vector<http_request_t> requests_osrm {
+    http_request_t(GET, R"(/route?json={"directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/route", R"({"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/many_to_one?json={"directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/many_to_many", R"({"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/locate?json={"locations":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/locate", R"({"locations":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":-90}], "costing": "pedestrian","directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":-90}], "costing": "pedestrian","directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/locate?json={"locations":[{"lon":0,"lat":90}], "costing": "yak","directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/locate", R"({"locations":[{"lon":0,"lat":90}], "costing": "yak","directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90}], "costing": "auto","directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/route", R"({"locations":[{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},{"lon":0,"lat":90},
+        {"lon":0,"lat":90},{"lon":0,"lat":90}], "costing": "auto","directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/one_to_many?json={"sources":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/many_to_one?json={"targets":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/many_to_many?json={"locations":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/sources_to_targets?json={"targets":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/sources_to_targets?json={"locations":[{"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":"NONE","lat":90}, {"lon":"NONE","lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":0,"lat":-270}, {"lon":0,"lat":90}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/one_to_many?json={"locations":[{"lon":0,"lat":90}, {"lon":0,"lat":90}], "costing": "NONE","directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/sources_to_targets?json={"sources":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/sources_to_targets?json={"sources":[{"lon":0,"lat":90}],"targets":[{"lon":0}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(GET, R"(/route?json={"locations":[{"lon":0,"lat":0},{"lon":0,"lat":0}],"costing":"pedestrian","avoid_locations":[{"lon":0,"lat":0}],"directions_options":{"format":"osrm"}})"),
+    http_request_t(POST, "/trace_attributes", R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":0,"costing":"pedestrian","directions_options":{"units":"miles", "format":"osrm"}})"),
+    http_request_t(POST, "/trace_attributes", R"({"shape":[{"lat":37.8077440,"lon":-122.4197010},{"lat":37.8077440,"lon":-122.4197560},{"lat":37.8077450,"lon":-122.4198180}],"shape_match":"map_snap","best_paths":5,"costing":"pedestrian","directions_options":{"units":"miles", "format":"osrm"}})"),
+    http_request_t(POST, "/trace_attributes", R"({"encoded_polyline":
+        "mx{ilAdxcupCdJm@v|@rG|n@dEz_AlUng@fMnDlAt}@zTdmAtZvx@`Rr_@~IlUnI`HtDjVnSdOhW|On^|JvXl^dmApGzUjGfYzAtOT~SUdYsFtmAmK~zBkAh`ArAdd@vDng@dEb\\nHvb@bQpp@~IjVbj@ngAjV`q@bL~g@nDjVpVbnBdAfCpeA`yL~CpRnCn]`C~g@l@zUGfx@m@x_AgCxiBe@xl@e@re@yBviCeAvkAe@vaBzArd@jFhb@|ZzgBjEjVzFtZxC`RlEdYz@~I~DxWtTxtA`Gn]fEjV~BzV^dDpBfY\\dZ?fNgDx~BrA~q@xB|^fIp{@lK~|@|T`oBbF|h@re@d_E|EtYvMrdAvCzUxMhaAnStwAnNls@xLjj@tlBr{HxQlt@lEr[jB`\\Gvl@oNjrCaCvm@|@vb@rAl_@~B|]pHvx@j`@lzC|Ez_@~Htn@|DrFzPlhAzFn^zApp@xGziA","shape_match":"map_snap","best_paths":3,"costing":"auto","directions_options":{"units":"miles","format":"osrm"}})")
+  };
+
+  const std::vector<std::pair<uint16_t,std::string> > responses_osrm {
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {400, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {400, R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"}
   };
 
 
@@ -192,6 +267,42 @@ namespace {
     // Make sure that all requests are tested
     test::assert_bool(success_count == requests.size(), "Expected passed tests count: " + std::to_string(requests.size()) + " Actual passed tests count: " + std::to_string(success_count));
   }
+
+  void test_osrm_failure_requests() {
+      //start up the service
+      zmq::context_t context;
+      start_service(context);
+
+      //client makes requests and gets back responses in a batch fashion
+      auto request = requests_osrm.cbegin();
+      std::string request_str;
+      int success_count = 0;
+      http_client_t client(context, "ipc:///tmp/test_loki_server",
+        [&request, &request_str]() {
+          //we dont have any more requests so bail
+          if(request == requests_osrm.cend())
+            return std::make_pair<const void*, size_t>(nullptr, 0);
+          //get the string of bytes to send formatted for http protocol
+          request_str = request->to_string();
+          LOG_INFO("Loki Test Request :: " + request_str + '\n');
+          ++request;
+          return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
+        },
+        [&request, &success_count](const void* data, size_t size) {
+          auto response = http_response_t::from_string(static_cast<const char*>(data), size);
+          if(response.body != responses_osrm[request - requests_osrm.cbegin() - 1].second)
+            throw std::runtime_error("Expected OSRM Response: " + responses_osrm[request - requests_osrm.cbegin() - 1].second +", Actual OSRM Response: " + response.body);
+
+          ++success_count;
+          return request != requests_osrm.cend();
+        }, 1
+      );
+      //request and receive
+      client.batch();
+
+      // Make sure that all requests are tested
+      test::assert_bool(success_count == requests_osrm.size(), "Expected passed tests count: " + std::to_string(requests_osrm.size()) + " Actual passed tests count: " + std::to_string(success_count));
+    }
 }
 
 int main(void) {
@@ -202,6 +313,7 @@ int main(void) {
 
   //test failures
   suite.test(TEST_CASE(test_failure_requests));
+  suite.test(TEST_CASE(test_osrm_failure_requests));
 
   //test successes
   //suite.test(TEST_CASE(test_success_requests));
