@@ -139,50 +139,50 @@ namespace {
     }
 **/
 
-  // Add OSRM route summary information: distance, duration
-  void route_summary(json::MapPtr& route,
-      const std::list<valhalla::odin::TripDirections>& legs) {
-    // Compute total distance and duration
-    float duration = 0.0f;
-    float distance = 0.0f;
-    for(const auto& leg : legs) {
-      distance += leg.summary().length();
-      duration += leg.summary().time();
+    // Add OSRM route summary information: distance, duration
+    void route_summary(json::MapPtr& route,
+        const std::list<valhalla::odin::TripDirections>& legs) {
+      // Compute total distance and duration
+      float duration = 0.0f;
+      float distance = 0.0f;
+      for(const auto& leg : legs) {
+        distance += leg.summary().length();
+        duration += leg.summary().time();
+      }
+
+      // Convert distance to meters. Output distance and duration.
+      distance *= 1000.0f;
+      route->emplace("distance", json::fp_t{distance, 1});
+      route->emplace("duration", json::fp_t{duration, 1});
+
+      // TODO - support returning weight based on costing method
+      // as well as returning the costing method
+      float weight = duration;
+      route->emplace("weight", json::fp_t{weight, 1});
+      route->emplace("weight_name", std::string("Valhalla default"));
     }
 
-    // Convert distance to meters. Output distance and duration.
-    distance *= 1000.0f;
-    route->emplace("distance", json::fp_t{distance, 1});
-    route->emplace("duration", json::fp_t{duration, 1});
+    // Generate full shape of the route. TODO - different encodings, generalization
+    std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
+        const valhalla::odin::DirectionsOptions& directions_options) {
 
-    // TODO - support returning weight based on costing method
-    // as well as returning the costing method
-    float weight = duration;
-    route->emplace("weight", json::fp_t{weight, 1});
-    route->emplace("weight_name", std::string("Valhalla default"));
-  }
+      // TODO - support 5 digit encoding, support generalization
 
-  // Generate full shape of the route. TODO - different encodings, generalization
-  std::string full_shape(const std::list<valhalla::odin::TripDirections>& legs,
-      const valhalla::odin::DirectionsOptions& directions_options) {
+      if (legs.size() == 1)
+        return legs.front().shape();
 
-    // TODO - support 5 digit encoding, support generalization
-
-    if (legs.size() == 1)
-      return legs.front().shape();
-
-    //TODO: there is a tricky way to do this... since the end of each leg is the same as the beginning
-    //we essentially could just peel off the first encoded shape point of all the legs (but the first)
-    //this way we wouldn't really have to do any decoding (would be far faster). it might even be the case
-    //that the string length of the first number is a fixed length (which would be great!) have to have a look
-    //should make this a function in midgard probably so the logic is all in the same place
-    std::vector<std::pair<float, float> > decoded;
-    for(const auto& leg : legs) {
-      auto decoded_leg = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
-      decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(), decoded_leg.end());
+      //TODO: there is a tricky way to do this... since the end of each leg is the same as the beginning
+      //we essentially could just peel off the first encoded shape point of all the legs (but the first)
+      //this way we wouldn't really have to do any decoding (would be far faster). it might even be the case
+      //that the string length of the first number is a fixed length (which would be great!) have to have a look
+      //should make this a function in midgard probably so the logic is all in the same place
+      std::vector<std::pair<float, float> > decoded;
+      for(const auto& leg : legs) {
+        auto decoded_leg = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+        decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(), decoded_leg.end());
+      }
+      return midgard::encode(decoded);
     }
-    return midgard::encode(decoded);
-  }
 
     // Serialize locations (called waypoints in OSRM). Waypoints are described here:
     //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
@@ -248,8 +248,9 @@ namespace {
 
     // Add intersections along a step/maneuver.
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
-            std::list<odin::TripPath>::const_iterator path_leg) {
+            std::list<odin::TripPath>::const_iterator path_leg, uint32_t& count) {
       // Iterate through the nodes/intersections of the path for this maneuver
+      count = 0;
       auto intersections = json::array({});
       for (uint32_t i = maneuver.begin_path_index(); i <= maneuver.end_path_index(); i++) {
         auto intersection = json::map({});
@@ -313,8 +314,23 @@ namespace {
 
         // Add the intersection to the JSON array
         intersections->emplace_back(intersection);
+        count++;
       }
       return intersections;
+    }
+
+    // Add destinations along a step/maneuver.
+    json::ArrayPtr destinations(const valhalla::odin::TripDirections::Maneuver& maneuver,
+          std::list<odin::TripPath>::const_iterator path_leg) {
+      // Iterate through the nodes/intersections of the path for this maneuver
+      auto destinations = json::array({});
+      for (uint32_t i = maneuver.begin_path_index(); i <= maneuver.end_path_index(); i++) {
+        auto destination = json::map({});
+
+        // Add the destination to the JSON array
+        destinations->emplace_back(destination);
+      }
+      return destinations;
     }
 
     // Get the turn modifier based on incoming edge bearing and outgoing edge
@@ -343,10 +359,34 @@ namespace {
       }
     }
 
+    // Ramp cases - off ramp transitions from a motorway. On ramp ends
+    // in a motorway.
+    std::string ramp_type(const odin::TripPath::Edge& prior_edge,
+                  const uint32_t idx,
+                  std::list<odin::TripPath>::const_iterator path_leg) {
+      if (prior_edge.use() == odin::TripPath_Use_kRoadUse) {
+        if (prior_edge.road_class() == odin::TripPath_RoadClass_kMotorway) {
+          return std::string("off ramp");
+        } else  if (prior_edge.road_class() != odin::TripPath_RoadClass_kMotorway) {
+        // Check that next road is a motorway
+          for (uint32_t i = idx + 1; i < path_leg->node().size(); ++i) {
+            if (path_leg->node(i).edge().use() == odin::TripPath_Use_kRoadUse) {
+              if (path_leg->node(i).edge().road_class() == odin::TripPath_RoadClass_kMotorway) {
+                return std::string("on ramp");
+              }
+              break;
+            }
+          }
+        }
+      }
+      return "";
+    }
+
     // Populate the OSRM maneuver record within a step.
     json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
                 std::list<odin::TripPath>::const_iterator path_leg,
-                const PointLL& man_ll, const bool depart, const bool arrive) {
+                const PointLL& man_ll, const bool depart, const bool arrive,
+                const uint32_t count) {
       auto osrm_man = json::map({});
 
       // Set the location
@@ -372,7 +412,49 @@ namespace {
       } else if (arrive) {
         maneuver_type = "arrive";
       } else {
-        maneuver_type = "turn";
+        // Special cases
+
+        // Roundabout?
+        const auto& prior_edge = path_leg->node(idx-1).edge();
+        const auto& current_edge = path_leg->node(idx).edge();
+        bool roundabout = false;
+        bool ramp = current_edge.use() == odin::TripPath_Use_kRampUse;
+        bool fork = false;
+        bool merge = prior_edge.use() == odin::TripPath_Use_kRampUse &&
+              current_edge.use() == odin::TripPath_Use_kRoadUse &&
+             (current_edge.road_class() == odin::TripPath_RoadClass_kMotorway ||
+              current_edge.road_class() == odin::TripPath_RoadClass_kTrunk);
+        if (roundabout) {
+          maneuver_type = "roundabout";
+        } else if (ramp) {
+          maneuver_type = ramp_type(prior_edge, idx, path_leg);
+        } else if (fork) {
+          maneuver_type = "fork";
+        } else if (merge) {
+          maneuver_type = "merge";
+        }
+
+        // Fall through case if maneuver not set by special cases above
+        if (maneuver_type.empty()) {
+          printf("maneuver type is empty!\n");
+          // Check for end of road - the current road name ends and more than 1
+          // intersection has been passed
+          bool road_ends = true;
+          for (const auto intsct_edge : path_leg->node(idx).intersecting_edge()) {
+            if (intsct_edge.prev_name_consistency()) {
+              road_ends = false;
+              break;
+            }
+          }
+          if (!road_ends) {
+            // Check if previous maneuver and current maneuver have same name
+          }
+          if (count > 1 && road_ends) {
+            maneuver_type = "end of road";
+          } else {
+            maneuver_type = "turn";
+          }
+        }
       }
       osrm_man->emplace("type", maneuver_type);
 
@@ -380,6 +462,7 @@ namespace {
     }
 
     // Convenience method to get the street names for the maneuver
+    // TODO - split into name and ref
     std::string street_names(const odin::TripDirections::Maneuver& maneuver) {
       std::string street;
       for (const auto& name : maneuver.street_name()) {
@@ -443,6 +526,7 @@ namespace {
 
         // Iterate through maneuvers - convert to OSRM steps
         uint32_t index = 0;
+        uint32_t count = 0;
         auto steps = json::array({});
         std::unordered_map<std::string, float> maneuvers;
         for (const auto& maneuver : leg.maneuver()) {
@@ -481,10 +565,13 @@ namespace {
           // Add OSRM maneuver
           step->emplace("maneuver", osrm_maneuver(maneuver, path_leg,
               shape[maneuver.begin_shape_index()], (index == 0),
-              (index == leg.maneuver().size() - 1)));
+              (index == leg.maneuver().size() - 1), count));
+
+          // Add destinations (exit signs)
+          step->emplace("destinations", destinations(maneuver, path_leg));
 
           // Add intersections
-          step->emplace("intersections", intersections(maneuver, path_leg));
+          step->emplace("intersections", intersections(maneuver, path_leg, count));
 
           // Add step
           steps->emplace_back(step);
