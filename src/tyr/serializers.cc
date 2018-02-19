@@ -312,6 +312,9 @@ namespace {
         intersection->emplace("in", static_cast<uint64_t>(incoming_index));
         intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
 
+        // TODO - intersections on motorways seem to have classes with one element
+        // "motorway" included
+
         // Add the intersection to the JSON array
         intersections->emplace_back(intersection);
         count++;
@@ -319,18 +322,56 @@ namespace {
       return intersections;
     }
 
-    // Add destinations along a step/maneuver.
-    json::ArrayPtr destinations(const valhalla::odin::TripDirections::Maneuver& maneuver,
+    // Add destinations along a step/maneuver. Constructs a destinations
+    // string.
+    std::string destinations(const valhalla::odin::TripDirections::Maneuver& maneuver,
           std::list<odin::TripPath>::const_iterator path_leg) {
       // Iterate through the nodes/intersections of the path for this maneuver
-      auto destinations = json::array({});
-      for (uint32_t i = maneuver.begin_path_index(); i <= maneuver.end_path_index(); i++) {
-        auto destination = json::map({});
+      std::string dest;
+      const auto sign = maneuver.sign();
 
-        // Add the destination to the JSON array
-        destinations->emplace_back(destination);
+      // TODO - do we want the exit number?
+      uint32_t i = 0;
+/*      for (const auto& number : maneuver.sign().exit_number_elements()) {
+        if (!dest.empty()) {
+          dest += ", ";
+        }
+        dest += number.text();
+      } */
+      i = 0;
+      for (const auto& branch : maneuver.sign().exit_branch_elements()) {
+        if (i == 0 && !dest.empty()) {
+          dest += ": ";
+        }
+        dest += branch.text();
+        if (i < maneuver.sign().exit_branch_elements().size() - 1) {
+          dest += ", ";
+        }
+        i++;
       }
-      return destinations;
+      i = 0;
+      for (const auto& toward : maneuver.sign().exit_toward_elements()) {
+        if (i == 0 && !dest.empty() && dest.back() != ' ') {
+          dest += ": ";
+        }
+        dest += toward.text();
+        if (i < maneuver.sign().exit_toward_elements().size() - 1) {
+          dest += ", ";
+        }
+        i++;
+      }
+      i = 0;
+      for (const auto& name : maneuver.sign().exit_name_elements()) {
+        if (i == 0 && !dest.empty() && dest.back() != ' ') {
+          dest += ": ";
+        }
+        dest += name.text();
+        if (i < maneuver.sign().exit_name_elements().size() - 1) {
+          dest += ", ";
+        }
+        i++;
+      }
+      return dest;
     }
 
     // Get the turn modifier based on incoming edge bearing and outgoing edge
@@ -413,10 +454,10 @@ namespace {
         maneuver_type = "arrive";
       } else {
         // Special cases
-
-        // Roundabout?
         const auto& prior_edge = path_leg->node(idx-1).edge();
         const auto& current_edge = path_leg->node(idx).edge();
+        bool new_name = maneuver.type() == odin::TripDirections_Maneuver_Type_kContinue ||
+                        maneuver.type() == odin::TripDirections_Maneuver_Type_kBecomes;
         bool roundabout = false;
         bool ramp = current_edge.use() == odin::TripPath_Use_kRampUse;
         bool fork = false;
@@ -424,7 +465,9 @@ namespace {
               current_edge.use() == odin::TripPath_Use_kRoadUse &&
              (current_edge.road_class() == odin::TripPath_RoadClass_kMotorway ||
               current_edge.road_class() == odin::TripPath_RoadClass_kTrunk);
-        if (roundabout) {
+        if (new_name) {
+          maneuver_type = "new_name";
+        } else if (roundabout) {
           maneuver_type = "roundabout";
         } else if (ramp) {
           maneuver_type = ramp_type(prior_edge, idx, path_leg);
@@ -436,7 +479,6 @@ namespace {
 
         // Fall through case if maneuver not set by special cases above
         if (maneuver_type.empty()) {
-          printf("maneuver type is empty!\n");
           // Check for end of road - the current road name ends and more than 1
           // intersection has been passed
           bool road_ends = true;
