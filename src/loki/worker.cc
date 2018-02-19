@@ -16,7 +16,6 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "tyr/actor.h"
-#include "odin/util.h"
 
 #include "loki/worker.h"
 #include "loki/search.h"
@@ -201,6 +200,7 @@ namespace valhalla {
       encoded_polyline.reset();
       if(reader.OverCommitted())
         reader.Clear();
+      options = odin::DirectionsOptions::default_instance();
     }
 
 #ifdef HAVE_HTTP
@@ -209,7 +209,6 @@ namespace valhalla {
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
-      const std::string* jsonp = nullptr;
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
@@ -217,12 +216,11 @@ namespace valhalla {
         //is the request path action in the action set?
         auto action = PATH_TO_ACTION.find(request.path);
         if (action == PATH_TO_ACTION.cend() || actions.find(request.path) == actions.cend())
-          return jsonify_error({106, action_str}, info);
+          return jsonify_error({106, action_str}, info, options);
 
         //parse the query's json
         auto request_rj = from_request(request);
-        auto options = from_json(request_rj);
-        jsonp = options.has_jsonp() ? &options.jsonp() : nullptr;
+        options = from_json(request_rj);
         //let further processes more easily know what kind of request it was
         rapidjson::SetValueByPointer(request_rj, "/action", action->second);
         //flag healthcheck requests
@@ -242,7 +240,7 @@ namespace valhalla {
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           case LOCATE:
-            result = to_response(locate(request_rj), jsonp, info);
+            result = to_response(locate(request_rj), info, options);
             break;
           case ONE_TO_MANY:
           case MANY_TO_ONE:
@@ -262,14 +260,14 @@ namespace valhalla {
             result.messages.emplace_back(rapidjson::to_string(request_rj));
             break;
           case HEIGHT:
-            result = to_response(height(request_rj), jsonp, info);
+            result = to_response(height(request_rj), info, options);
             break;
           case TRANSIT_AVAILABLE:
-            result = to_response(transit_available(request_rj), jsonp, info);
+            result = to_response(transit_available(request_rj), info, options);
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
-            return jsonify_error({107}, info);
+            return jsonify_error({107}, info, options);
         }
         //get processing time for loki
         auto e = std::chrono::system_clock::now();
@@ -286,11 +284,11 @@ namespace valhalla {
       }
       catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(e, info, jsonp);
+        return jsonify_error(e, info, options);
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({199, std::string(e.what())}, info, jsonp);
+        return jsonify_error({199, std::string(e.what())}, info, options);
       }
     }
 

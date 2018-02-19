@@ -71,38 +71,6 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
   return (turn_degree_delta <= turn_degree_threshold);
 }
 
-DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
-  DirectionsOptions directions_options;
-
-  auto units_ptr = pt.get_optional<std::string>("units");
-  if (units_ptr) {
-    std::string units = *units_ptr;
-    if ((units == "miles") || (units == "mi")) {
-      directions_options.set_units(DirectionsOptions_Units_kMiles);
-    } else {
-      directions_options.set_units(DirectionsOptions_Units_kKilometers);
-    }
-  }
-
-  auto lang_ptr = pt.get_optional<std::string>("language");
-  if (lang_ptr && odin::get_locales().find(*lang_ptr) != odin::get_locales().end()) {
-    directions_options.set_language(*lang_ptr);
-  }
-
-  auto narr_ptr = pt.get_optional<bool>("narrative");
-  if (narr_ptr) {
-    directions_options.set_narrative(*narr_ptr);
-  }
-
-  auto form_ptr = pt.get_optional<std::string>("format");
-  DirectionsOptions::Format format;
-  if (form_ptr && DirectionsOptions::Format_Parse(*form_ptr, &format)) {
-    directions_options.set_format(format);
-  }
-
-  return directions_options;
-}
-
 //Get the time from the inputed date.
 //date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_time(const std::string& date_time,

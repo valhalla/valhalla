@@ -3,7 +3,6 @@
 #include "loki/worker.h"
 #include "thor/worker.h"
 #include "odin/worker.h"
-#include "odin/util.h"
 #include "tyr/serializers.h"
 #include "baldr/rapidjson_utils.h"
 
@@ -66,7 +65,7 @@ namespace valhalla {
       auto date_time_type = rapidjson::get_optional<int>(request, "/date_time.type");
       auto legs = pimpl->thor_worker.route(request, date_time_type);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(options, legs);
+      auto directions = pimpl->odin_worker.narrate(legs);
       //serialize them out to json string
       auto bytes = tyr::serializeDirections(options, legs, directions);
       //if they want you do to do the cleanup automatically
@@ -120,7 +119,7 @@ namespace valhalla {
       //compute compute all pairs and then the shortest path through them all
       auto legs = pimpl->thor_worker.optimized_route(request);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(options, legs);
+      auto directions = pimpl->odin_worker.narrate(legs);
       //serialize them out to json string
       auto bytes = tyr::serializeDirections(options, legs, directions);
       //if they want you do to do the cleanup automatically
@@ -158,7 +157,7 @@ namespace valhalla {
       //route between the locations in the graph to find the best path
       std::list<TripPath> legs{pimpl->thor_worker.trace_route(request)};
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(options, legs);
+      auto directions = pimpl->odin_worker.narrate(legs);
       //serialize them out to json string
       auto bytes = tyr::serializeDirections(options, legs, directions);
       //if they want you do to do the cleanup automatically

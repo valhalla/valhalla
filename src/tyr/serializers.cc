@@ -61,18 +61,6 @@ namespace {
     */
 
 /**********OLD OSRM CODE - delete
-    json::ArrayPtr route_name(const std::list<valhalla::odin::TripDirections>& legs){
-      auto route_name = json::array({});
-      //first one
-      if(legs.front().maneuver(0).street_name_size() > 0)
-        route_name->push_back(legs.front().maneuver(0).street_name(0));
-      //the rest
-      for(const auto& leg : legs) {
-        if(leg.maneuver(leg.maneuver_size() - 1).street_name_size() > 0)
-          route_name->push_back(leg.maneuver(leg.maneuver_size() - 1).street_name(0));
-      }
-      return route_name;
-    }
     const std::unordered_map<int, std::string> maneuver_type = {
         { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kNone),             "0" },//NoTurn = 0,
         { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),         "1" },//GoStraight,
@@ -358,7 +346,7 @@ namespace {
     // Populate the OSRM maneuver record within a step.
     json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
                 std::list<odin::TripPath>::const_iterator path_leg,
-                const PointLL& man_ll) {
+                const PointLL& man_ll, const bool depart, const bool arrive) {
       auto osrm_man = json::map({});
 
       // Set the location
@@ -368,17 +356,26 @@ namespace {
       osrm_man->emplace("location", loc);
 
       // Get incoming and outgoing bearing. For the incoming heading, use the
-      // prior edge from the TripPath
+      // prior edge from the TripPath. Compute turn modifier. TODO - reconcile
+      // turn degrees between Valhalla and OSRM
       uint32_t idx = maneuver.begin_path_index();
       uint32_t in_brg = (idx > 0) ? path_leg->node(idx-1).edge().end_heading() : 0;
       uint32_t out_brg = maneuver.begin_heading();
-
-      // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
-      std::string maneuver_type("turn");
       osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
       osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
-      osrm_man->emplace("type", maneuver_type);
       osrm_man->emplace("modifier", turn_modifier(in_brg, out_brg));
+
+      // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
+      std::string maneuver_type;
+      if (depart) {
+        maneuver_type = "depart";
+      } else if (arrive) {
+        maneuver_type = "arrive";
+      } else {
+        maneuver_type = "turn";
+      }
+      osrm_man->emplace("type", maneuver_type);
+
       return osrm_man;
     }
 
@@ -445,7 +442,9 @@ namespace {
         auto shape = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
 
         // Iterate through maneuvers - convert to OSRM steps
+        uint32_t index = 0;
         auto steps = json::array({});
+        std::unordered_map<std::string, float> maneuvers;
         for (const auto& maneuver : leg.maneuver()) {
           auto step = json::map({});
 
@@ -468,16 +467,39 @@ namespace {
           step->emplace("distance", json::fp_t{distance, 1});
           step->emplace("name", street_names(maneuver));
 
+          // Record street name and distance.. TODO - need to also worry about order
+          if (maneuver.street_name().size() > 0) {
+            std::string name = maneuver.street_name(0);
+            auto man = maneuvers.find(name);
+            if (man == maneuvers.end()) {
+              maneuvers[name] = distance;
+            } else {
+              man->second += distance;
+            }
+          }
+
           // Add OSRM maneuver
           step->emplace("maneuver", osrm_maneuver(maneuver, path_leg,
-              shape[maneuver.begin_shape_index()]));
+              shape[maneuver.begin_shape_index()], (index == 0),
+              (index == leg.maneuver().size() - 1)));
 
           // Add intersections
           step->emplace("intersections", intersections(maneuver, path_leg));
 
           // Add step
           steps->emplace_back(step);
+          index++;
         }
+
+        // Add distance, duration, weight, and summary
+        // Get a summary based on longest maneuvers.
+        std::string summary = "TODO";  // Form summary from longest maneuvers?
+        float duration = leg.summary().time();
+        float distance = leg.summary().length() * 1000.0f;
+        output_leg->emplace("summary", summary);
+        output_leg->emplace("distance", json::fp_t{distance, 1});
+        output_leg->emplace("duration", json::fp_t{duration, 1});
+        output_leg->emplace("weight", json::fp_t{duration, 1});
 
         // Add steps to the leg
         output_leg->emplace("steps", steps);
@@ -1864,7 +1886,6 @@ namespace valhalla {
         case DirectionsOptions_Format_gpx:
           return pathToGPX(path_legs);
         case DirectionsOptions_Format_json:
-          printf("JSON\n");
           return valhalla_serializers::serialize(directions_options, directions_legs);
         default:
           throw;

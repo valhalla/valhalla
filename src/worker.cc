@@ -177,6 +177,114 @@ namespace {
 
     {599, 400},
   };
+
+  const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES {
+	// loki project 1xx
+	{100,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{101,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{106,R"({"code":"InvalidService","message":"Service name is invalid."})"},
+	{107,R"({"code":"InvalidService","message":"Service name is invalid."})"},
+	{110,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{111,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{112,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{113,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{114,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+
+	{120,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{121,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{122,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{123,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{124,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{125,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{126,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+
+	{130,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{131,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{132,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{133,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+
+	{140,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{141,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{142,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+
+	{150,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{151,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{152,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{153,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{154,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{155,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{156,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{157,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{158,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+
+	{160,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{161,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{162,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{163,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+
+	{170,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{171,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{199,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	// odin project 2xx
+	{200,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{201,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{202,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{210,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{211,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{212,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{213,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{220,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{230,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{231,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{232,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{299,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	// skadi project 3xx
+	{304,R"({"code":"InvalidService","message":"Service name is invalid."})"},
+	{305,R"({"code":"InvalidService","message":"Service name is invalid."})"},
+
+	{310,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{311,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{312,R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+	{313,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{314,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+
+	{399,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	// thor project 4xx
+	{400,R"({"code":"InvalidService","message":"Service name is invalid."})"},
+	{401,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{420,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{421,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{422,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{423,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+	{424,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+
+	{430,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{440,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{441,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{442,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{443,R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
+	{444,R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
+	{445,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{499,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	// tyr project 5xx
+	{500,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{501,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{502,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+
+	{599,R"({"code":"InvalidUrl","message":"URL string is invalid."})"}
+  };
 }
 
 namespace valhalla {
@@ -186,15 +294,17 @@ namespace valhalla {
 
     //TODO: stop doing this after a sufficient amount of time has passed
     //move anything nested in deprecated directions_options up to the top level
-    auto* deprecated = rapidjson::Pointer{"/directions_options"}.Get(doc);
+    auto deprecated = get_child_optional(doc, "/directions_options");
     auto& allocator = doc.GetAllocator();
-    for(const auto& key : {"units", "narrative", "format", "language"}) {
-      auto child = rapidjson::get_child_optional(doc, (std::string("/directions_options/") + key).c_str());
-      if(child && child->IsObject())
-        doc.PushBack(*child, allocator);
+    if(deprecated) {
+      for(const auto& key : {"/units", "/narrative", "/format", "/language"}) {
+        auto child = rapidjson::get_child_optional(*deprecated, key);
+        if(child)
+          doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
+      }
+      //delete directions_options if it existed
+      doc.RemoveMember("directions_options");
     }
-    //delete directions_options if it existed
-    doc.RemoveMember("/directions_options");
 
     auto units = rapidjson::get_optional<std::string>(doc, "/units");
     if(units) {
@@ -276,83 +386,86 @@ namespace valhalla {
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
   const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
 
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const std::string* jsonp) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     //get the http status
     auto status = ERROR_TO_STATUS.find(exception.code)->second;
-    auto body = HTTP_STATUS_CODES.find(status)->second;
+    auto message = HTTP_STATUS_CODES.find(status)->second;
+    std::stringstream body;
 
-    //build up the json map
-    auto json_error = baldr::json::map({});
-    json_error->emplace("status", body);
-    json_error->emplace("status_code", static_cast<uint64_t>(status));
-    json_error->emplace("error", std::string(exception.message));
-    json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-
-    //serialize it
-    std::stringstream ss;
-    if(jsonp)
-      ss << *jsonp << '(';
-    ss << *json_error;
-    if(jsonp)
-      ss << ')';
+    //overwrite with osrm error response
+    if(options.format() == odin::DirectionsOptions::osrm) {
+      auto found = OSRM_ERRORS_CODES.find(exception.code);
+      if(found == OSRM_ERRORS_CODES.cend())
+        found = OSRM_ERRORS_CODES.find(199);
+      body << (options.has_jsonp() ? options.jsonp() + "(" : "") << found->second << (options.has_jsonp() ? ")" : "");
+    }//valhalla error response
+    else {
+      //build up the json map
+      auto json_error = baldr::json::map({});
+      json_error->emplace("status", message);
+      json_error->emplace("status_code", static_cast<uint64_t>(status));
+      json_error->emplace("error", std::string(exception.message));
+      json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
+      body << (options.has_jsonp() ? options.jsonp() + "(" : "") << *json_error << (options.has_jsonp() ? ")" : "");
+    }
 
     worker_t::result_t result{false};
-    http_response_t response(status, body, ss.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(status, message, body.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
 
     return result;
   }
 
-  worker_t::result_t to_response(baldr::json::ArrayPtr array, const std::string* jsonp, http_request_info_t& request_info) {
+  worker_t::result_t to_response(baldr::json::ArrayPtr array, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(jsonp)
-      stream << *jsonp << '(';
+    if(options.has_jsonp())
+      stream << options.jsonp() << '(';
     stream << *array;
-    if(jsonp)
+    if(options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response(baldr::json::MapPtr map, const std::string* jsonp, http_request_info_t& request_info) {
+  worker_t::result_t to_response(baldr::json::MapPtr map, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(jsonp)
-      stream << *jsonp << '(';
+    if(options.has_jsonp())
+      stream << options.jsonp() << '(';
     stream << *map;
-    if(jsonp)
+    if(options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const std::string* jsonp) {
+  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(jsonp)
-      stream << *jsonp << '(';
+    if(options.has_jsonp())
+      stream << options.jsonp() << '(';
     stream << json;
-    if(jsonp)
+    if(options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info) {
+  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
     worker_t::result_t result{false};
     http_response_t response(200, "OK", xml, headers_t{CORS, XML_MIME});
     response.from_info(request_info);

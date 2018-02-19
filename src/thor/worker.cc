@@ -129,16 +129,14 @@ namespace valhalla {
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         rapidjson::Document request;
-        auto& allocator = request.GetAllocator();
         request.Parse(request_str.c_str());
         if (request.HasParseError()) {
           valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
-          return jsonify_error({401}, info);
+          return jsonify_error({401}, info, options);
         }
 
         //parse it to pbf object
-        auto options = from_json(request);
-        jsonp = options.has_jsonp() ? &options.jsonp() : nullptr;
+        options = from_json(request);
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
@@ -158,7 +156,7 @@ namespace valhalla {
           case MANY_TO_ONE:
           case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
-            result = to_response(matrix(action, request), jsonp, info);
+            result = to_response(matrix(action, request), info, options);
             denominator = correlated_s.size() * correlated_t.size();
             break;
           case OPTIMIZED_ROUTE:
@@ -173,7 +171,7 @@ namespace valhalla {
             denominator = std::max(correlated_s.size(), correlated_t.size());
             break;
           case ISOCHRONE:
-            result = to_response(isochrones(request), jsonp, info);
+            result = to_response(isochrones(request), info, options);
             denominator = correlated_s.size() * correlated_t.size();
             break;
           case ROUTE:
@@ -190,7 +188,7 @@ namespace valhalla {
             denominator = trace.size() / 1100;
             break;
           case TRACE_ATTRIBUTES:
-            result = to_response(trace_attributes(request), jsonp, info);
+            result = to_response(trace_attributes(request), info, options);
             denominator = trace.size() / 1100;
             break;
           default:
@@ -208,11 +206,11 @@ namespace valhalla {
       }
       catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(e, info);
+        return jsonify_error(e, info, options);
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({499, std::string(e.what())}, info);
+        return jsonify_error({499, std::string(e.what())}, info, options);
       }
     }
 
@@ -399,6 +397,7 @@ namespace valhalla {
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())
         reader.Clear();
+      options = odin::DirectionsOptions::default_instance();
     }
 
   }

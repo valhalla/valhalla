@@ -23,11 +23,11 @@ namespace valhalla {
 
 #ifdef HAVE_HTTP
   rapidjson::Document from_request(const http_request_t& request);
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const std::string* jsonp = nullptr);
-  worker_t::result_t to_response(baldr::json::ArrayPtr array, const std::string* jsonp, http_request_info_t& request_info);
-  worker_t::result_t to_response(baldr::json::MapPtr map, const std::string* jsonp, http_request_info_t& request_info);
-  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const std::string* jsonp);
-  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info);
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const odin::DirectionsOptions& options);
+  worker_t::result_t to_response(baldr::json::ArrayPtr array, http_request_info_t& request_info, const odin::DirectionsOptions& options);
+  worker_t::result_t to_response(baldr::json::MapPtr map, http_request_info_t& request_info, const odin::DirectionsOptions& options);
+  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const odin::DirectionsOptions& options);
+  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info, const odin::DirectionsOptions& options);
 #endif
   odin::DirectionsOptions from_json(rapidjson::Document& doc);
 

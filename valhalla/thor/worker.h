@@ -117,6 +117,7 @@ class thor_worker_t : public service_worker_t{
   valhalla::baldr::GraphReader& reader;
   std::unordered_set<std::string> trace_customizable;
   boost::property_tree::ptree trace_config;
+  odin::DirectionsOptions options;
 
   bool healthcheck;
   std::vector<uint32_t> optimal_order;

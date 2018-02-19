@@ -138,6 +138,11 @@ std::list<Maneuver> ManeuversBuilder::Build() {
           % orig.ll().lat() % orig.ll().lng() % first_name
           % dest.ll().lat() % dest.ll().lng() % last_name
           % units).str());
+  LOG_TRACE(
+      (boost::format("http://localhost:8000/?loc=%1$.6f,%2$.6f&loc=%3$.6f,%4$.6f&hl=en&alt=0")
+          % orig.ll().lat() % orig.ll().lng()
+          % dest.ll().lat() % dest.ll().lng()).str());
+
 #endif
 
   return maneuvers;
