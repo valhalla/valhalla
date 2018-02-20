@@ -7,6 +7,7 @@
 -j '{"locations":[{"lat":37.752811,"lon":-122.464516,"street":"8th Avenue"},{"lat":37.751385,"lon":-122.464386,"street":"8th Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.751930,"lon":-122.463753,"street":"Linares Avenue"},{"lat":37.751656,"lon":-122.464325,"street":"8th Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.752129,"lon":-122.464409,"street":"8th Avenue"},{"lat":37.752296,"lon":-122.464233,"street":"Linares Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.752811,"lon":-122.464516,"street":"8th Avenue"},{"lat":37.751930,"lon":-122.463776,"street":"Linares Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.755394,"lon":-122.439201,"street":"21st Street"},{"lat":37.755924,"lon":-122.440086,"street":"Grand View Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.754837,"lon":-122.440636,"street":"Grand View Avenue"},{"lat":37.755341,"lon":-122.439613,"street":"21st Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":37.797638,"lon":-122.407021,"street":"Grant Avenue"},{"lat":37.797741,"lon":-122.406593,"street":"Columbus Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
