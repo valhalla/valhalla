@@ -784,11 +784,6 @@ TripPath TripPathBuilder::Build(
     const GraphTile* start_tile = graphreader.GetGraphTile(startnode);
     const NodeInfo* node = start_tile->node(startnode);
 
-    // Set the node lat,lon
-    odin::LatLng* node_ll = trip_node->mutable_ll();
-    node_ll->set_lat(node->latlng().lat());
-    node_ll->set_lng(node->latlng().lng());
-
     if (osmchangeset == 0 && controller.attributes.at(kOsmChangeset))
       osmchangeset = start_tile->header()->dataset_id();
 

@@ -248,7 +248,8 @@ namespace {
 
     // Add intersections along a step/maneuver.
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
-            std::list<odin::TripPath>::const_iterator path_leg, uint32_t& count) {
+            std::list<odin::TripPath>::const_iterator path_leg,
+            const std::vector<std::pair<float, float>>& shape, uint32_t& count) {
       // Iterate through the nodes/intersections of the path for this maneuver
       count = 0;
       auto intersections = json::array({});
@@ -261,8 +262,9 @@ namespace {
 
         // Add the node location (lon, lat)
         auto loc = json::array({});
-        loc->emplace_back(json::fp_t{node.ll().lng(), 6});
-        loc->emplace_back(json::fp_t{node.ll().lat(), 6});
+        PointLL ll = shape[node.edge().begin_shape_index()];
+        loc->emplace_back(json::fp_t{ll.lng(), 6});
+        loc->emplace_back(json::fp_t{ll.lat(), 6});
         intersection->emplace("location", loc);
 
         // Get bearings and access to outgoing edges. Sort by increasing bearing.
@@ -613,7 +615,7 @@ namespace {
           step->emplace("destinations", destinations(maneuver, path_leg));
 
           // Add intersections
-          step->emplace("intersections", intersections(maneuver, path_leg, count));
+          step->emplace("intersections", intersections(maneuver, path_leg, shape, count));
 
           // Add step
           steps->emplace_back(step);

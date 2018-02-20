@@ -243,7 +243,6 @@ message TripPath {
     optional TransitStationInfo transit_station_info = 8;
     optional TransitEgressInfo transit_egress_info = 9;
     optional string time_zone = 10;
-    optional LatLng ll = 11;
   }
 
   message Admin {
