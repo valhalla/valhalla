@@ -184,6 +184,19 @@ namespace {
       return midgard::encode(decoded);
     }
 
+    // Convenience method to get the street names for the maneuver
+    // TODO - split into name and ref
+    std::string street_names(const odin::TripDirections::Maneuver& maneuver) {
+      std::string street;
+      for (const auto& name : maneuver.street_name()) {
+        if (street.size() > 0) {
+          street += ';';
+        }
+        street += name;
+      }
+      return street;
+    }
+
     // Serialize locations (called waypoints in OSRM). Waypoints are described here:
     //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
     json::ArrayPtr waypoints(const std::list<valhalla::odin::TripDirections>& legs){
@@ -205,10 +218,11 @@ namespace {
           loc->emplace_back(json::fp_t{proj_ll.lat(), 6});
           waypoint->emplace("location", loc);
 
-          // Add street name
-          if (!location->street().empty()) {
-            waypoint->emplace("street", location->street());
-          }
+          // Add street name. For now is just getting the name from the first
+          // maneuver - this is not really correct.
+          // TODO - get names from the edges in TripPath for the first edge of
+          // the leg?
+          waypoint->emplace("street", street_names(leg->maneuver(0)));
 
           // Add distance in meters from the input location to the nearest
           // point on the road used in the route
@@ -503,19 +517,6 @@ namespace {
       osrm_man->emplace("type", maneuver_type);
 
       return osrm_man;
-    }
-
-    // Convenience method to get the street names for the maneuver
-    // TODO - split into name and ref
-    std::string street_names(const odin::TripDirections::Maneuver& maneuver) {
-      std::string street;
-      for (const auto& name : maneuver.street_name()) {
-        if (street.size() > 0) {
-          street += ';';
-        }
-        street += name;
-      }
-      return street;
     }
 
     // Method to get the geometry string for a maneuver.
