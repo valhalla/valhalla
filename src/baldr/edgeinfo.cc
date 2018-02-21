@@ -42,28 +42,6 @@ EdgeInfo::~EdgeInfo() {
   //by another object
 }
 
-// Gets the OSM way Id.
-uint64_t EdgeInfo::wayid() const {
-  return wayid_;
-}
-
-// Get the number of names.
-uint32_t EdgeInfo::name_count() const {
-  return item_->name_count;
-}
-
-// Get the size of the encoded shape (number of bytes).
-uint32_t EdgeInfo::encoded_shape_size() const {
-  return item_->encoded_shape_size;
-}
-
-uint32_t EdgeInfo::GetNameOffset(uint8_t index) const {
-  if(index < item_->name_count)
-    return name_info_list_[index].name_offset_;
-  else
-    throw std::runtime_error("StreetNameOffset index was out of bounds");
-}
-
 // Get the name info for the specified name index.
 NameInfo EdgeInfo::GetNameInfo(uint8_t index) const {
   if(index < item_->name_count)
@@ -75,14 +53,30 @@ NameInfo EdgeInfo::GetNameInfo(uint8_t index) const {
 // Get a list of names
 std::vector<std::string> EdgeInfo::GetNames() const {
   // Get each name
-  std::vector<std::string> names; names.reserve(name_count());
-  for (uint32_t i = 0; i < name_count(); i++) {
-    uint32_t offset = GetNameOffset(i);
-
-    if (offset < names_list_length_) {
-      names.push_back(names_list_ + offset);
+  std::vector<std::string> names;
+  names.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    if (ni->name_offset_ < names_list_length_) {
+      names.push_back(names_list_ + ni->name_offset_);
     } else {
       throw std::runtime_error("GetNames: offset exceeds size of text list");
+    }
+  }
+  return names;
+}
+
+// Get a list of names and NameInfo for each
+std::vector<std::pair<std::string, NameInfo>> EdgeInfo::GetNamesAndInfo() const {
+  // Get each name
+  std::vector<std::pair<std::string, NameInfo>> names;
+  names.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); ++i, ++ni) {
+    if (ni->name_offset_ < names_list_length_) {
+      names.push_back(std::make_pair(names_list_ + ni->name_offset_, *ni));
+    } else {
+      throw std::runtime_error("GetNamesAndInfo: offset exceeds size of text list");
     }
   }
   return names;

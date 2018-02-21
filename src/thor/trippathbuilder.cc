@@ -1229,9 +1229,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
-    std::vector<std::string> names = edgeinfo.GetNames();
-    for (const auto& name : names) {
-      trip_edge->add_name(name);
+    auto names_and_info = edgeinfo.GetNamesAndInfo();
+    for (const auto& ni : names_and_info) {
+      trip_edge->add_name(ni.first);
+      trip_edge->add_name_is_ref(ni.second.is_ref_);
     }
   }
 
