@@ -338,23 +338,28 @@ namespace {
       return intersections;
     }
 
+    // Add exits (exit numbers) along a step/maneuver.
+    std::string exits(const valhalla::odin::TripDirections::Maneuver& maneuver) {
+      // Iterate through the signs for this maneuver
+      uint32_t i = 0;
+      std::string exits;
+      const auto sign = maneuver.sign();
+      for (const auto& number : maneuver.sign().exit_number_elements()) {
+        if (!exits.empty()) {
+          exits += "; ";
+        }
+        exits += number.text();
+      }
+      return exits;
+    }
+
     // Add destinations along a step/maneuver. Constructs a destinations
     // string.
-    std::string destinations(const valhalla::odin::TripDirections::Maneuver& maneuver,
-          std::list<odin::TripPath>::const_iterator path_leg) {
-      // Iterate through the nodes/intersections of the path for this maneuver
+    std::string destinations(const valhalla::odin::TripDirections::Maneuver& maneuver) {
+      // Iterate through the signs for this maneuver
       std::string dest;
       const auto sign = maneuver.sign();
-
-      // TODO - do we want the exit number?
       uint32_t i = 0;
-/*      for (const auto& number : maneuver.sign().exit_number_elements()) {
-        if (!dest.empty()) {
-          dest += ", ";
-        }
-        dest += number.text();
-      } */
-      i = 0;
       for (const auto& branch : maneuver.sign().exit_branch_elements()) {
         if (i == 0 && !dest.empty()) {
           dest += ": ";
@@ -612,8 +617,15 @@ namespace {
               shape[maneuver.begin_shape_index()], (index == 0),
               (index == leg.maneuver().size() - 1), count));
 
-          // Add destinations (exit signs)
-          step->emplace("destinations", destinations(maneuver, path_leg));
+          // Add destinations and exits
+          std::string dest = destinations(maneuver);
+          if (!dest.empty()) {
+            step->emplace("destinations", dest);
+          }
+          std::string ex = exits(maneuver);
+          if (!ex.empty()) {
+            step->emplace("exits", ex);
+          }
 
           // Add intersections
           step->emplace("intersections", intersections(maneuver, path_leg, shape, count));
