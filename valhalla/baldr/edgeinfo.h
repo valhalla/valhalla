@@ -30,15 +30,21 @@ struct NameInfo {
                                       // the name. These can be used for
                                       // additional information like language
                                       // phonetic string, etc.
-  uint32_t spare_             : 4;
+  uint32_t is_ref_            : 1;    // Flag used to indicate if this is a ref
+                                      // vs a name.
+  uint32_t spare_             : 3;
 
   bool operator == (const NameInfo& other) const {
-    return (name_offset_ == other.name_offset_);
+    return (name_offset_ == other.name_offset_) &&
+        (is_ref_ == other.is_ref_);
   }
 
   // operator < for sorting
   bool operator < (const NameInfo& other) const {
-    return (name_offset_ < other.name_offset_);
+    if (name_offset_ == other.name_offset_)
+      return (is_ref_ < other.is_ref_);
+    else
+      return (name_offset_ < other.name_offset_);
   }
 };
 
@@ -104,6 +110,12 @@ class EdgeInfo {
    * @return   Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames() const;
+
+  /**
+   * Convenience method to get the types for the names.
+   * @return   Returns types - If a bit is set, it is a ref.
+   */
+  uint16_t GetTypes() const;
 
   /**
    * Get the shape of the edge.
