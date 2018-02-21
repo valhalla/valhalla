@@ -733,7 +733,7 @@ TripPath TripPathBuilder::Build(
   sif::TravelMode prev_mode = sif::TravelMode::kPedestrian;
   uint64_t osmchangeset = 0;
   size_t edge_index = 0;
-  // : this is temp until we use transit stop type from transitland
+  // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type =
       TransitPlatformInfo_Type_kStop;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr, ++edge_index) {
