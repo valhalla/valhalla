@@ -88,6 +88,17 @@ std::vector<std::string> EdgeInfo::GetNames() const {
   return names;
 }
 
+// Get the types.  Are these names refs or not?
+uint16_t EdgeInfo::GetTypes() const {
+  // Get the types.
+  uint16_t types = 0;
+  for (uint32_t i = 0; i < name_count(); i++) {
+    NameInfo info = GetNameInfo(i);
+    types |= static_cast<uint64_t>(info.is_ref_) << i;
+  }
+  return types;
+}
+
 // Returns shape as a vector of PointLL
 const std::vector<PointLL>& EdgeInfo::shape() const {
   //if we haven't yet decoded the shape, do so
