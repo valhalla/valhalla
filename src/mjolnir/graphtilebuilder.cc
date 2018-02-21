@@ -547,6 +547,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint64_t wayid,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
+                                       const uint16_t types,
                                        bool& added) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
@@ -562,6 +563,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     std::vector<NameInfo> name_info_list;
     name_info_list.reserve(std::min(names.size(), kMaxNamesPerEdge));
     size_t name_count = 0;
+    size_t location = 0;
     for (const auto& name : names) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
@@ -573,9 +575,13 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
         NameInfo ni({AddName(name)});
+        ni.is_ref_= 0;
+        if ((types & (1ULL << location)))
+          ni.is_ref_= 1; // set the ref bit.
         name_info_list.emplace_back(ni);
         ++name_count;
       }
+      location++;
     }
     edgeinfo.set_name_info_list(name_info_list);
 
@@ -600,10 +606,10 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 }
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL> >
   (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,
-   const std::vector<PointLL>&, const std::vector<std::string>&, bool&);
+   const std::vector<PointLL>&, const std::vector<std::string>&, const uint16_t, bool&);
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL> >
   (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,
-   const std::list<PointLL>&, const std::vector<std::string>&, bool&);
+   const std::list<PointLL>&, const std::vector<std::string>&, const uint16_t, bool&);
 
 // AddEdgeInfo - accepts an encoded shape string.
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
@@ -612,6 +618,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                      const uint64_t wayid,
                      const std::string& llstr,
                      const std::vector<std::string>& names,
+                     const uint16_t types,
                      bool& added){
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
@@ -627,6 +634,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     std::vector<NameInfo> name_info_list;
     name_info_list.reserve(std::min(names.size(), kMaxNamesPerEdge));
     size_t name_count = 0;
+    size_t location = 0;
     for (const auto& name : names) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
@@ -638,9 +646,13 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
         NameInfo ni({AddName(name)});
+        ni.is_ref_= 0;
+        if ((types & (1ULL << location)))
+          ni.is_ref_= 1; // set the ref bit.
         name_info_list.emplace_back(ni);
         ++name_count;
       }
+      location++;
     }
     edgeinfo.set_name_info_list(name_info_list);
 
