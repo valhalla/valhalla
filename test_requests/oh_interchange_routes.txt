@@ -14,3 +14,7 @@
 -j '{"locations":[{"lat":40.898140,"lon":-81.426537,"street":"Shuffel Street Northwest"},{"lat":40.903496,"lon":-81.429062,"street":"I 77 North"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.898167,"lon":-81.431274,"street":"Shuffel Street Northwest"},{"lat":40.903496,"lon":-81.429062,"street":"I 77 North"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.899281,"lon":-81.434921,"street":"Shuffel Street Northwest"},{"lat":40.890419,"lon":-81.432106,"street":"I 77 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.100643,"lon":-84.528923,"street":"US 50 East"},{"lat":39.100426,"lon":-84.518410,"street":"West 5th Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.100643,"lon":-84.528923,"street":"US 50 East"},{"lat":39.097397,"lon":-84.515907,"street":"West 2nd Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.100643,"lon":-84.528923,"street":"US 50 East"},{"lat":39.097401,"lon":-84.522385,"street":"I 75 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.100643,"lon":-84.528923,"street":"US 50 East"},{"lat":39.097790,"lon":-84.514938,"street":"I 71 North"}],"costing":"auto","directions_options":{"units":"miles"}}'

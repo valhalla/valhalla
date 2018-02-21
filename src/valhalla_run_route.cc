@@ -11,8 +11,6 @@
 #include <boost/optional.hpp>
 #include <boost/format.hpp>
 
-#include "config.h"
-
 #include "midgard/encoded.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
@@ -33,6 +31,9 @@
 #include "thor/trippathbuilder.h"
 #include "thor/attributes_controller.h"
 #include "thor/route_matcher.h"
+#include "worker.h"
+
+#include "config.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -533,12 +534,9 @@ int main(int argc, char *argv[]) {
     }
 
     // Grab the directions options, if they exist
-    auto directions_options_ptree_ptr = json_ptree.get_child_optional(
-        "directions_options");
-    if (directions_options_ptree_ptr) {
-      directions_options = valhalla::odin::GetDirectionsOptions(
-          *directions_options_ptree_ptr);
-    }
+    rapidjson::Document request_rj;
+    request_rj.Parse(json.c_str());
+    directions_options = valhalla::from_json(request_rj);
 
     // Grab the date_time, if is exists
     auto date_time_ptr = json_ptree.get_child_optional("date_time");

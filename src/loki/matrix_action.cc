@@ -55,7 +55,7 @@ namespace valhalla {
           throw valhalla_exception_t{120};
         //create new sources and targets ptree from locations
         rapidjson::Value sources_child{rapidjson::kArrayType}, targets_child{rapidjson::kArrayType};
-        auto request_locations = GetOptionalFromRapidJson<rapidjson::Value::Array>(request, "/locations");
+        auto request_locations = rapidjson::get_optional<rapidjson::Value::Array>(request, "/locations");
         auto& allocator = request.GetAllocator();
         switch (action) {
           case ONE_TO_MANY:

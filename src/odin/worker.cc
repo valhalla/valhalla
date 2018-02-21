@@ -30,31 +30,14 @@ namespace valhalla {
 
     odin_worker_t::~odin_worker_t(){}
 
-    void odin_worker_t::cleanup(){}
+    void odin_worker_t::cleanup(){ options = DirectionsOptions::default_instance(); }
 
-    DirectionsOptions odin_worker_t::parse_options(boost::property_tree::ptree& request) const {
-      //see if we can get some options
-      DirectionsOptions directions_options;
-      auto options = request.get_child_optional("directions_options");
-      if(options)
-        directions_options = odin::GetDirectionsOptions(*options);
-
-      // Grab language from options and set
-      request.put<std::string>("directions_options.language", directions_options.language());
-
-      // Grab the output format and set
-      request.put<std::string>("directions_options.format",
-          DirectionsOptions::Format_Name(directions_options.format()));
-
-      return directions_options;
-    }
-
-    std::list<TripDirections> odin_worker_t::narrate(const DirectionsOptions& directions_options, std::list<TripPath>& legs) const {
+    std::list<TripDirections> odin_worker_t::narrate(std::list<TripPath>& legs) const {
       //get some annotated directions
       std::list<TripDirections> narrated;
       try{
         for(auto& leg : legs) {
-          narrated.emplace_back(odin::DirectionsBuilder().Build(directions_options, leg));
+          narrated.emplace_back(odin::DirectionsBuilder().Build(options, leg));
           LOG_INFO("maneuver_count::" + std::to_string(narrated.back().maneuver_size()));
         }
       }
@@ -68,19 +51,16 @@ namespace valhalla {
     worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Odin Request " + std::to_string(info.id));
-      boost::optional<std::string> jsonp;
       try{
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-        std::stringstream stream(request_str);
-        boost::property_tree::ptree request;
-        try{
-          boost::property_tree::read_json(stream, request);
-          jsonp = request.get_optional<std::string>("jsonp");
-        }
-        catch(...) {
-          return jsonify_error({200}, info, jsonp);
-        }
+        rapidjson::Document request;
+        request.Parse(request_str.c_str());
+        if (request.HasParseError())
+          return jsonify_error({200}, info, options);
+
+        //parse it to pbf object
+        options = from_json(request);
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
@@ -94,23 +74,18 @@ namespace valhalla {
             legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            return jsonify_error({201}, info, jsonp);
+            return jsonify_error({201}, info, options);
           }
         }
 
         //narrate them and serialize them along
-        auto directions_options = parse_options(request);
-
-        //gpx output
-        if(directions_options.format() == DirectionsOptions::Format::DirectionsOptions_Format_gpx)
-          return to_response_xml(pathToGPX(legs), info);
-
-        auto narrated = narrate(directions_options, legs);
-        ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
-        return to_response(tyr::serializeDirections(action, request, narrated), jsonp, info);
+        auto narrated = narrate(legs);
+        auto response = tyr::serializeDirections(options, legs, narrated);
+        auto* to_response = options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
+        return to_response(response, info, options);
       }
       catch(const std::exception& e) {
-        return jsonify_error({299, std::string(e.what())}, info, jsonp);
+        return jsonify_error({299, std::string(e.what())}, info, options);
       }
     }
 

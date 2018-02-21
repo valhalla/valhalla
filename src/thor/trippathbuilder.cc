@@ -563,6 +563,12 @@ TripPath TripPathBuilder::Build(
       break;
     }
   }
+
+  // Set the origin projected location
+  odin::LatLng* proj_ll = tp_orig->mutable_projected_ll();
+  proj_ll->set_lat(start_vrt.lat());
+  proj_ll->set_lng(start_vrt.lng());
+
   // Set the origin side of street, if one exists
   if (start_sos != PathLocation::SideOfStreet::NONE)
     tp_orig->set_side_of_street(GetTripPathSideOfStreet(start_sos));
@@ -579,6 +585,11 @@ TripPath TripPathBuilder::Build(
       break;
     }
   }
+
+  // Set the destination projected location
+  proj_ll = tp_dest->mutable_projected_ll();
+  proj_ll->set_lat(end_vrt.lat());
+  proj_ll->set_lng(end_vrt.lng());
 
   // Set the destination side of street, if one exists
   if (end_sos != PathLocation::SideOfStreet::NONE)

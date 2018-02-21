@@ -85,7 +85,7 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    json::MapPtr thor_worker_t::matrix(ACTION_TYPE action, const boost::property_tree::ptree &request) {
+    json::MapPtr thor_worker_t::matrix(ACTION_TYPE action, const rapidjson::Document& request) {
       parse_locations(request);
       auto costing = parse_costing(request);
 
@@ -95,7 +95,7 @@ namespace valhalla {
 
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
-      auto units = request.get<std::string>("units", "km");
+      auto units = rapidjson::get<std::string>(request, "/units", "km");
       if (units == "mi")
         distance_scale = kMilePerMeter;
 
@@ -132,7 +132,7 @@ namespace valhalla {
           time_distances = timedistancematrix();
           break;
       }
-      json = serialize(matrix_type, request.get_optional<std::string>("id"), correlated_s, correlated_t,
+      json = serialize(matrix_type, rapidjson::get_optional<std::string>(request, "/id"), correlated_s, correlated_t,
         time_distances, units, distance_scale);
 
       return json;
