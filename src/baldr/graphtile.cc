@@ -492,6 +492,12 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
   return edgeinfo(edgeinfo_offset).GetNames();
 }
 
+// Convenience method to get the types for the names given the offset to the
+// edge info
+uint16_t GraphTile::GetTypes(const uint32_t edgeinfo_offset) const {
+  return edgeinfo(edgeinfo_offset).GetTypes();
+}
+
 // Get the admininfo at the specified index.
 AdminInfo GraphTile::admininfo(const size_t idx) const {
   if (idx < header_->admincount()) {
