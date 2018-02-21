@@ -875,7 +875,11 @@ bool OSMWay::turn_channel() const {
 // Get the names for the edge info based on the road class.
 std::vector<std::string> OSMWay::GetNames(const std::string& ref,
                                           const UniqueNames& ref_offset_map,
-                                          const UniqueNames& name_offset_map) const {
+                                          const UniqueNames& name_offset_map,
+                                          uint16_t& types) const {
+
+  uint16_t location = 0;
+
   std::vector<std::string> names;
   // Process motorway and trunk refs
   if ((ref_index_ != 0 || !ref.empty())
@@ -887,6 +891,11 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
       tokens = GetTagTokens(ref);// use updated refs from relations.
     else
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+
+    for (const auto& t : tokens) {
+      types |= static_cast<uint64_t>(1) << location;
+      location++;
+    }
 
     names.insert(names.end(), tokens.begin(), tokens.end());
   }
@@ -905,6 +914,12 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
       tokens = GetTagTokens(ref);// use updated refs from relations.
     else
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+
+    for (const auto& t : tokens) {
+      types |= static_cast<uint64_t>(1) << location;
+      location++;
+    }
+
     names.insert(names.end(), tokens.begin(), tokens.end());
   }
 
