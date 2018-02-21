@@ -138,12 +138,10 @@ namespace valhalla {
       pimpl->loki_worker.isochrones(request);
       //compute the isochrones
       auto json = pimpl->thor_worker.isochrones(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::trace_route(const std::string& request_str, const std::function<void ()>& interrupt) {

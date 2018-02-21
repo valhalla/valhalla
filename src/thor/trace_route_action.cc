@@ -8,7 +8,6 @@
 
 #include "exception.h"
 #include "midgard/logging.h"
-#include "baldr/geojson.h"
 #include "baldr/pathlocation.h"
 #include "meili/map_matcher.h"
 

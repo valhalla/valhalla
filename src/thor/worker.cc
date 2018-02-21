@@ -12,7 +12,6 @@
 #include "midgard/logging.h"
 #include "midgard/constants.h"
 #include "baldr/json.h"
-#include "baldr/geojson.h"
 #include "exception.h"
 
 #include "thor/worker.h"
@@ -171,7 +170,7 @@ namespace valhalla {
             denominator = std::max(correlated_s.size(), correlated_t.size());
             break;
           case ISOCHRONE:
-            result = to_response(isochrones(request), info, options);
+            result = to_response_json(isochrones(request), info, options);
             denominator = correlated_s.size() * correlated_t.size();
             break;
           case ROUTE:

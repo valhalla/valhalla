@@ -12,11 +12,8 @@
 #include <boost/optional.hpp>
 #include <boost/format.hpp>
 
-#include "config.h"
-
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
-#include "baldr/geojson.h"
 #include "loki/search.h"
 #include "sif/costfactory.h"
 #include "odin/directionsbuilder.h"
@@ -30,6 +27,9 @@
 #include "thor/bidirectional_astar.h"
 #include "thor/trippathbuilder.h"
 #include "thor/isochrone.h"
+#include "tyr/serializers.h"
+
+#include "config.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -347,8 +347,8 @@ int main(int argc, char *argv[]) {
   }
   auto contours = isotile->GenerateContours(contour_times, polygons, denoise,
                            generalize);
-  auto geojson = (show_locations) ? json::to_geojson<PointLL>(contours, polygons, colors, path_location)
-                                 : json::to_geojson<PointLL>(contours, polygons, colors);
+  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(valhalla::odin::DirectionsOptions{}, contours, polygons, colors,
+      show_locations ? path_location : decltype(path_location){});
 
   auto t3 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
@@ -359,10 +359,10 @@ int main(int argc, char *argv[]) {
   std::cout << std::endl;
   if (vm.count("file")) {
     std::ofstream geojsonOut (filename, std::ofstream::out);
-    geojsonOut << *geojson;
+    geojsonOut << geojson;
     geojsonOut.close();
   } else {
-    std::cout << *geojson << std::endl;
+    std::cout << geojson << std::endl;
   }
 
   return EXIT_SUCCESS;

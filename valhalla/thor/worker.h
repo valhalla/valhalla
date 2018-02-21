@@ -64,7 +64,7 @@ class thor_worker_t : public service_worker_t{
              const boost::optional<int> &date_time_type);
   baldr::json::MapPtr matrix(tyr::ACTION_TYPE matrix_type, const rapidjson::Document& request);
   std::list<odin::TripPath> optimized_route(const rapidjson::Document& request);
-  baldr::json::MapPtr isochrones(const rapidjson::Document& request);
+  std::string isochrones(const rapidjson::Document& request);
   odin::TripPath trace_route(const rapidjson::Document& request);
   baldr::json::MapPtr trace_attributes(rapidjson::Document& request);
 

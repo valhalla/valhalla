@@ -1,8 +1,6 @@
 #include "thor/worker.h"
 
-#include "baldr/json.h"
-#include "baldr/geojson.h"
-#include "midgard/logging.h"
+#include "tyr/serializers.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -10,10 +8,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
   namespace thor {
 
-    json::MapPtr thor_worker_t::isochrones(const rapidjson::Document& request) {
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
-
+    std::string thor_worker_t::isochrones(const rapidjson::Document& request) {
       parse_locations(request);
       auto costing = parse_costing(request);
 
@@ -43,14 +38,9 @@ namespace valhalla {
       auto isolines = grid->GenerateContours(contours, polygons, denoise, generalize);
 
       auto showLocations = rapidjson::get<bool>(request, "/show_locations", false);
-      auto geojson = (showLocations) ? baldr::json::to_geojson<PointLL>(isolines, polygons, colors, correlated)
-                                     : baldr::json::to_geojson<PointLL>(isolines, polygons, colors);
+      return tyr::serializeIsochrones<PointLL>(options, isolines, polygons, colors,
+          showLocations ? correlated : decltype(correlated){});
 
-      auto id = rapidjson::get_optional<std::string>(request, "/id");
-      if(id)
-        geojson->emplace("id", *id);
-
-      return geojson;
     }
 
   }
