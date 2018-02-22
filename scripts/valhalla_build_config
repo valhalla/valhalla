@@ -14,7 +14,7 @@ config = {
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
-    'bounding_box': '-175.0855,-85.0097,183.3122,84.9552',
+    'bounding_box': 'Add comma separated bounding box values to only download transit data inside the given bounding box',
     'hierarchy': True,
     'shortcuts': True,
     'logging': {
