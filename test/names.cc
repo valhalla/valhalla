@@ -31,27 +31,28 @@ void NamesTest() {
   w2.set_road_class(RoadClass::kTrunk);
   w3.set_road_class(RoadClass::kPrimary);
 
-  std::vector<std::string> w1_names = w1.GetNames(ref,ref_offset_map,name_offset_map);
+  uint16_t types;
+  std::vector<std::string> w1_names = w1.GetNames(ref,ref_offset_map,name_offset_map, types);
 
   //if road class = kTrunk or kMotorway, then ref comes first.  ref from relation overrides
   //ref from ref_offset_map
   if (w1_names.at(0) != "I 79 North" || w1_names.at(1) != "William Flynn Highway")
     throw std::runtime_error("relation ref failed.");
 
-  std::vector<std::string> w2_names = w2.GetNames("",ref_offset_map,name_offset_map);
+  std::vector<std::string> w2_names = w2.GetNames("",ref_offset_map,name_offset_map, types);
 
   //if road class = kTrunk or kMotorway, then ref comes first.  use ref from ref_offset_map
   if (w2_names.at(0) != "PA 43" || w2_names.at(1) != "Mon/Fayette Expressway")
     throw std::runtime_error("ref_map failed.");
 
-  std::vector<std::string> w3_names = w3.GetNames("",ref_offset_map,name_offset_map);
+  std::vector<std::string> w3_names = w3.GetNames("",ref_offset_map,name_offset_map, types);
 
   //if Road class < kTrunk, then name first then ref using ref from ref_offset_map
   if (w3_names.at(0) != "Lancaster Pike" || w3_names.at(1) != "PA 272")
     throw std::runtime_error("Road class < kTrunk test failed.");
 
   w3_names.clear();
-  w3_names = w3.GetNames("PA 555",ref_offset_map,name_offset_map);
+  w3_names = w3.GetNames("PA 555",ref_offset_map,name_offset_map, types);
 
   //if Road class < kTrunk, then name first then ref using ref from relations
   if (w3_names.at(0) != "Lancaster Pike" || w3_names.at(1) != "PA 555")
@@ -62,7 +63,7 @@ void NamesTest() {
   w3.set_name_en_index(name_offset_map.index("LancP"));
 
   w3_names.clear();
-  w3_names = w3.GetNames("",ref_offset_map,name_offset_map);
+  w3_names = w3.GetNames("",ref_offset_map,name_offset_map, types);
 
   //all other names should be last.
 
