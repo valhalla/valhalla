@@ -74,7 +74,7 @@ namespace {
   const auto conf = json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
-      "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
+      "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
       "service_defaults":{"minimum_reachability": 50,"radius": 0}
     },

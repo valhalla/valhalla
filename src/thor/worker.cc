@@ -151,9 +151,6 @@ namespace valhalla {
         size_t order_index = 0;
         //do request specific processing
         switch (action) {
-          case ONE_TO_MANY:
-          case MANY_TO_ONE:
-          case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
             result = to_response(matrix(action, request), info, options);
             denominator = correlated_s.size() * correlated_t.size();

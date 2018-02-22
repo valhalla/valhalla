@@ -7,9 +7,8 @@
 
 namespace valhalla {
   namespace tyr {
-    enum ACTION_TYPE {ROUTE = 1, LOCATE = 2, ONE_TO_MANY = 3, MANY_TO_ONE = 4, MANY_TO_MANY = 5,
-      SOURCES_TO_TARGETS = 6, OPTIMIZED_ROUTE = 7, ISOCHRONE = 8, TRACE_ROUTE = 9, TRACE_ATTRIBUTES = 10, HEIGHT = 11,
-      TRANSIT_AVAILABLE = 12};
+    enum ACTION_TYPE {ROUTE = 1, LOCATE = 2, SOURCES_TO_TARGETS = 6, OPTIMIZED_ROUTE = 7,
+      ISOCHRONE = 8, TRACE_ROUTE = 9, TRACE_ATTRIBUTES = 10, HEIGHT = 11, TRANSIT_AVAILABLE = 12};
   }
 }
 
@@ -28,9 +27,6 @@ namespace valhalla {
     const std::unordered_map<std::string, ACTION_TYPE> PATH_TO_ACTION{
       {"/route", ROUTE},
       {"/locate", LOCATE},
-      {"/one_to_many", ONE_TO_MANY},
-      {"/many_to_one", MANY_TO_ONE},
-      {"/many_to_many", MANY_TO_MANY},
       {"/sources_to_targets", SOURCES_TO_TARGETS},
       {"/optimized_route", OPTIMIZED_ROUTE},
       {"/isochrone", ISOCHRONE},
@@ -41,9 +37,6 @@ namespace valhalla {
 
       {"route", ROUTE},
       {"locate", LOCATE},
-      {"one_to_many", ONE_TO_MANY},
-      {"many_to_one", MANY_TO_ONE},
-      {"many_to_many", MANY_TO_MANY},
       {"sources_to_targets", SOURCES_TO_TARGETS},
       {"optimized_route", OPTIMIZED_ROUTE},
       {"isochrone", ISOCHRONE},
@@ -56,9 +49,6 @@ namespace valhalla {
     const std::unordered_map<ACTION_TYPE, std::string> ACTION_TO_STRING {
       {ROUTE, "route"},
       {LOCATE, "locate"},
-      {ONE_TO_MANY, "one_to_many"},
-      {MANY_TO_ONE, "many_to_one"},
-      {MANY_TO_MANY, "many_to_many"},
       {SOURCES_TO_TARGETS, "sources_to_targets"},
       {OPTIMIZED_ROUTE, "optimized_route"},
       {ISOCHRONE, "isochrone"},

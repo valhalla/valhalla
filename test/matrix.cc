@@ -164,7 +164,7 @@ namespace {
   const auto config = json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
-      "actions":["one_to_many","many_to_one","many_to_many","sources_to_targets"],
+      "actions":["sources_to_targets"],
       "logging":{"long_request": 100},
       "service_defaults":{"minimum_reachability": 50,"radius": 0}
     },

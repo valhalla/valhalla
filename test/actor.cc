@@ -23,7 +23,7 @@ namespace {
     return json_to_pt(R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "loki":{
-        "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available"],
+        "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available"],
         "logging":{"long_request": 100},
         "service_defaults":{"minimum_reachability": 50,"radius": 0}
       },

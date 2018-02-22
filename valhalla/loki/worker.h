@@ -50,7 +50,7 @@ namespace valhalla {
 
       void init_locate(rapidjson::Document& request);
       void init_route(rapidjson::Document& request);
-      void init_matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
+      void init_matrix(rapidjson::Document& request, bool has_locations);
       void init_isochrones(rapidjson::Document& request);
       void init_trace(rapidjson::Document& request);
       void init_height(rapidjson::Document& request);

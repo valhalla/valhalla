@@ -40,46 +40,25 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_matrix(ACTION_TYPE action, rapidjson::Document& request) {
+    void loki_worker_t::init_matrix(rapidjson::Document& request, bool has_locations) {
       //we require sources and targets
-      try {
+      if(!has_locations) {
         sources = parse_locations(request, "sources", 131, valhalla_exception_t{112});
         targets = parse_locations(request, "targets", 132, valhalla_exception_t{112});
-      }//deprecated using locations
-      catch(const valhalla_exception_t& e) {
-        if(request.HasMember("locations"))
-          locations = parse_locations(request, "locations", 130, valhalla_exception_t{112});
-        else
-          throw e;
+      }//optimized route uses locations but needs to do a matrix
+      else {
+        locations = parse_locations(request, "locations", 130, valhalla_exception_t{112});
         if (locations.size() < 2)
           throw valhalla_exception_t{120};
+
         //create new sources and targets ptree from locations
         rapidjson::Value sources_child{rapidjson::kArrayType}, targets_child{rapidjson::kArrayType};
         auto request_locations = rapidjson::get_optional<rapidjson::Value::Array>(request, "/locations");
         auto& allocator = request.GetAllocator();
-        switch (action) {
-          case ONE_TO_MANY:
-            sources_child.PushBack(rapidjson::Value{*request_locations->Begin(), allocator}, allocator);
-            request.AddMember("sources", sources_child, allocator);
-            request.AddMember("targets", *request_locations, allocator);
-            sources = { locations.front() };
-            targets.swap(locations);
-            break;
-          case MANY_TO_ONE:
-            targets_child.PushBack(rapidjson::Value{*(request_locations->End() - 1), allocator},allocator);
-            request.AddMember("targets", targets_child, allocator);
-            request.AddMember("sources", *request_locations, allocator);
-            targets = { locations.back() };
-            sources.swap(locations);
-            break;
-          case MANY_TO_MANY:
-          case OPTIMIZED_ROUTE:
-            request.AddMember("targets", rapidjson::Value{request["locations"], allocator}, allocator);
-            request.AddMember("sources", *request_locations, allocator);
-            targets = locations;
-            sources.swap(locations);
-            break;
-        }
+        request.AddMember("targets", rapidjson::Value{request["locations"], allocator}, allocator);
+        request.AddMember("sources", *request_locations, allocator);
+        targets = locations;
+        sources.swap(locations);
       }
 
       //sanitize
@@ -96,7 +75,7 @@ namespace valhalla {
     }
 
     void loki_worker_t::matrix(ACTION_TYPE action, rapidjson::Document& request) {
-      init_matrix(action, request);
+      init_matrix(request, action == OPTIMIZED_ROUTE);
       std::string costing = request["costing"].GetString();
       if (costing == "multimodal")
         throw valhalla_exception_t{140, ACTION_TO_STRING.find(action)->second};

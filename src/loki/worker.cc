@@ -242,9 +242,6 @@ namespace valhalla {
           case LOCATE:
             result = to_response(locate(request_rj), info, options);
             break;
-          case ONE_TO_MANY:
-          case MANY_TO_ONE:
-          case MANY_TO_MANY:
           case SOURCES_TO_TARGETS:
           case OPTIMIZED_ROUTE:
             matrix(action->second, request_rj);
