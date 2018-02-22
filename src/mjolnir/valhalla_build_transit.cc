@@ -177,11 +177,7 @@ protected:
 
 std::string url(const std::string& path, const ptree& pt) {
   auto url = pt.get<std::string>("base_url") + path;
-  auto tr_bbox = pt.get_optional<std::string>("mjolnir.bounding_box");
   auto key = pt.get_optional<std::string>("api_key");
-  if(tr_bbox)
-    url += "&bbox=" + *tr_bbox ;
-  return url;  
   if(key)
     url += "&api_key=" + *key;
   return url;
@@ -192,14 +188,19 @@ struct weighted_tile_t { GraphId t; size_t w; bool operator<(const weighted_tile
 std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::string& feed) {
   //now real need to catch exceptions since we can't really proceed without this stuff
   LOG_INFO("Fetching transit feeds");
-
+  
+  auto transit_bounding_box = pt.get_optional<std::string>("mjolnir.transit_bounding_box") ? "&bbox=" +
+      pt.get<std::string>("mjolnir.transit_bounding_box") : "";
+      
   auto import_level = pt.get_optional<std::string>("import_level") ? "&import_level=" +
       pt.get<std::string>("import_level") : "";
 
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().rbegin()->second;
   pt_curler_t curler;
-  auto feeds = curler(url("/api/v1/feeds.geojson?per_page=false", pt), "features");
+  auto request = url("/api/v1/feeds.geojson?per_page=false", pt);
+  request += transit_bounding_box;
+  auto feeds = curler(request, "features");
   for(const auto& feature : feeds.get_child("features")) {
 
     auto onestop_feed = feature.second.get_optional<std::string>("properties.onestop_id");
@@ -2195,7 +2196,7 @@ int main(int argc, char** argv) {
   pt.erase("base_url"); pt.add("base_url", std::string(argv[2]));
   pt.erase("per_page"); pt.add("per_page", argc > 3 ? std::string(argv[3]) : std::to_string(1000));
   if(argc > 4) { pt.get_child("mjolnir").erase("transit_dir"); pt.add("mjolnir.transit_dir", std::string(argv[4])); }
-  if(argc > 5) { pt.get_child("mjolnir").erase("bounding_box"); pt.add("mjolnir.bounding_box", std::string(argv[5])); }
+  if(argc > 5) { pt.get_child("mjolnir").erase("transit_bounding_box"); pt.add("mjolnir.transit_bounding_box", std::string(argv[5])); }
   if(argc > 6) { pt.erase("api_key"); pt.add("api_key", std::string(argv[6])); }
   if(argc > 7) { pt.erase("import_level"); pt.add("import_level", std::string(argv[7])); }
 
