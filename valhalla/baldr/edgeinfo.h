@@ -35,16 +35,12 @@ struct NameInfo {
   uint32_t spare_             : 3;
 
   bool operator == (const NameInfo& other) const {
-    return (name_offset_ == other.name_offset_) && (is_ref_ == other.is_ref_);
+    return (name_offset_ == other.name_offset_);
   }
 
   // operator < for sorting
   bool operator < (const NameInfo& other) const {
     return (name_offset_ < other.name_offset_);
-/*    if (name_offset_ == other.name_offset_)
-      return (is_ref_ < other.is_ref_);
-    else
-      return (name_offset_ < other.name_offset_); */
   }
 };
 
