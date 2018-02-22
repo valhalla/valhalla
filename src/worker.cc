@@ -309,9 +309,9 @@ namespace valhalla {
     auto units = rapidjson::get_optional<std::string>(doc, "/units");
     if(units) {
       if((*units == "miles") || (*units == "mi"))
-        options.set_units(odin::DirectionsOptions::kMiles);
+        options.set_units(odin::DirectionsOptions::miles);
       else
-        options.set_units(odin::DirectionsOptions::kKilometers);
+        options.set_units(odin::DirectionsOptions::kilometers);
     }
 
     auto language = rapidjson::get_optional<std::string>(doc, "/language");

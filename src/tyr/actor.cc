@@ -100,12 +100,10 @@ namespace valhalla {
       pimpl->loki_worker.matrix(SOURCES_TO_TARGETS, request);
       //compute the matrix
       auto json = pimpl->thor_worker.matrix(SOURCES_TO_TARGETS, request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::optimized_route(const std::string& request_str, const std::function<void ()>& interrupt) {

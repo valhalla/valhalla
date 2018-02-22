@@ -152,7 +152,7 @@ namespace valhalla {
         //do request specific processing
         switch (action) {
           case SOURCES_TO_TARGETS:
-            result = to_response(matrix(action, request), info, options);
+            result = to_response_json(matrix(action, request), info, options);
             denominator = correlated_s.size() * correlated_t.size();
             break;
           case OPTIMIZED_ROUTE:

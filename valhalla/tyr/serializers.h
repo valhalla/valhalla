@@ -14,14 +14,28 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/route.pb.h>
+#include <valhalla/thor/costmatrix.h>
 #include <valhalla/tyr/actor.h>
 
 namespace valhalla {
   namespace tyr {
 
+    /**
+     * Turn path and directions into a route that one can follow
+     *
+     * @param
+     */
     std::string serializeDirections(const odin::DirectionsOptions& directions_options,
         const std::list<odin::TripPath>& path_legs,
         const std::list<odin::TripDirections>& directions_legs);
+
+    /**
+     * Turn a time distance matrix into json that one can look up location pair results from
+     *
+     * @param
+     */
+    std::string serializeMatrix(const odin::DirectionsOptions& options, const std::vector<baldr::PathLocation>& sources,
+        const std::vector<baldr::PathLocation>& targets, const std::vector<thor::TimeDistance>& time_distances, double distance_scale);
 
     /**
      * Turn grid data contours into geojson

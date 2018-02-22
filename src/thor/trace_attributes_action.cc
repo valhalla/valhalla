@@ -56,7 +56,7 @@ namespace {
     // Length and speed default to kilometers
     double scale = 1;
     if (directions_options.has_units()
-        && directions_options.units() == DirectionsOptions::kMiles) {
+        && directions_options.units() == DirectionsOptions::miles) {
       scale = kMilePerKm;
     }
 
@@ -105,7 +105,7 @@ namespace {
           // Convert to feet if a valid elevation and units are miles
           float mean = edge.mean_elevation();
           if (mean != kNoElevationData && directions_options.has_units()
-              && directions_options.units() == DirectionsOptions::kMiles) {
+              && directions_options.units() == DirectionsOptions::miles) {
             mean *= kFeetPerMeter;
           }
           edge_map->emplace("mean_elevation", static_cast<int64_t>(mean));
@@ -396,7 +396,7 @@ namespace {
     // Add units, if specified
     if (directions_options.has_units()) {
       json->emplace("units", std::string(
-        (directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers)
+        (directions_options.units() == valhalla::odin::DirectionsOptions::kilometers)
           ? "kilometers" : "miles"));
     }
 

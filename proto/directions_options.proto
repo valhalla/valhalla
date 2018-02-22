@@ -3,8 +3,8 @@ package valhalla.odin;
 message DirectionsOptions {
   
   enum Units {
-    kKilometers = 0;
-    kMiles = 1;
+    kilometers = 0;
+    miles = 1;
   }
   
   enum Format {

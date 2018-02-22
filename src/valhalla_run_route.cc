@@ -288,7 +288,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
                                                     trip_path);
   std::string units = (
       directions_options.units()
-          == DirectionsOptions::Units::DirectionsOptions_Units_kKilometers ?
+          == DirectionsOptions::kilometers ?
           "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin),
@@ -484,7 +484,7 @@ int main(int argc, char *argv[]) {
   // Directions options - set defaults
   DirectionsOptions directions_options;
   directions_options.set_units(
-      DirectionsOptions::Units::DirectionsOptions_Units_kKilometers);
+      DirectionsOptions::kilometers);
   directions_options.set_language("en-US");
   directions_options.set_narrative(true);
 
@@ -769,7 +769,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Set the arc distance. Convert to miles if needed
-  if (directions_options.units() == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+  if (directions_options.units() == DirectionsOptions::miles) {
     d1 *= kMilePerKm;
   }
   data.setArcDist(d1);
