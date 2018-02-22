@@ -879,6 +879,7 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
                                           uint16_t& types) const {
 
   uint16_t location = 0;
+  types = 0;
 
   std::vector<std::string> names;
   // Process motorway and trunk refs
@@ -903,8 +904,10 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   // TODO int_ref
 
   // Process name
-  if (name_index_ != 0)
+  if (name_index_ != 0) {
     names.emplace_back(name_offset_map.name(name_index_));
+    location++;
+  }
 
   // Process non limited access refs
   if (ref_index_ != 0 && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
@@ -925,23 +928,26 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
 
   // Process alt_name
   if (alt_name_index_ != 0 &&
-      alt_name_index_ != name_index_)
+      alt_name_index_ != name_index_) {
     names.emplace_back(name_offset_map.name(alt_name_index_));
-
+    location++;
+  }
   // Process official_name
   if (official_name_index_ != 0 &&
       official_name_index_ != name_index_ &&
-      official_name_index_ != alt_name_index_)
+      official_name_index_ != alt_name_index_) {
     names.emplace_back(name_offset_map.name(official_name_index_));
-
+    location++;
+  }
   // Process name_en_
   // TODO: process country specific names
   if (name_en_index_ != 0 &&
       name_en_index_ != name_index_ &&
       name_en_index_ != alt_name_index_ &&
-      name_en_index_ != official_name_index_)
+      name_en_index_ != official_name_index_) {
     names.emplace_back(name_offset_map.name(name_en_index_));
-
+    location++;
+  }
   return names;
 }
 
