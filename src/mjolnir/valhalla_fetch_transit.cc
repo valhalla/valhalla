@@ -118,6 +118,10 @@ protected:
 
 std::string url(const std::string& path, const ptree& pt) {
   auto url = pt.get<std::string>("base_url") + path;
+  auto tr_bbox = pt.get_optional<std::string>("mjolnir.bounding_box");
+  if(tr_bbox)
+    url += "&bbox=" + *tr_bbox ;
+  return url;
   auto key = pt.get_optional<std::string>("api_key");
   if(key)
     url += "&api_key=" + *key;
@@ -878,8 +882,8 @@ void stitch(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::
 
 int main(int argc, char** argv) {
   if(argc < 2) {
-    std::cerr << "Usage: " << std::string(argv[0]) << " valhalla_config transit_land_url per_page [target_directory] [transit_land_api_key]" << std::endl;
-    std::cerr << "Sample: " << std::string(argv[0]) << " conf/valhalla.json http://transit.land/ 1000 ./transit_tiles transitland-YOUR_KEY_SUFFIX" << std::endl;
+    std::cerr << "Usage: " << std::string(argv[0]) << " valhalla_config transit_land_url per_page [target_directory] [bounding_box] [transit_land_api_key]" << std::endl;
+    std::cerr << "Sample: " << std::string(argv[0]) << " conf/valhalla.json http://transit.land/ 1000 ./transit_tiles -31.56,36.63,-6.18,42.16 transitland-YOUR_KEY_SUFFIX" << std::endl;
     return 1;
   }
 
@@ -889,14 +893,15 @@ int main(int argc, char** argv) {
   pt.erase("base_url"); pt.add("base_url", std::string(argv[2]));
   pt.erase("per_page"); pt.add("per_page", argc > 3 ? std::string(argv[3]) : std::to_string(1000));
   if(argc > 4) { pt.get_child("mjolnir").erase("transit_dir"); pt.add("mjolnir.transit_dir", std::string(argv[4])); }
-  if(argc > 5) { pt.erase("api_key"); pt.add("api_key", std::string(argv[5])); }
-  if(argc > 6) { pt.erase("import_level"); pt.add("import_level", std::string(argv[6])); }
-
+  if(argc > 5) { pt.get_child("mjolnir").erase("bounding_box"); pt.add("mjolnir.bounding_box", std::string(argv[5])); }
+  if(argc > 6) { pt.erase("api_key"); pt.add("api_key", std::string(argv[6])); }
+  if(argc > 7) { pt.erase("import_level"); pt.add("import_level", std::string(argv[7])); }
+  
   //yes we want to curl
   curl_global_init(CURL_GLOBAL_DEFAULT);
 
   std::string feed;
-  if(argc > 7) { feed = std::string(argv[7]); }
+  if(argc > 8) { feed = std::string(argv[8]); }
 
   //go get information about what transit tiles we should be fetching
   auto transit_tiles = which_tiles(pt, feed);
