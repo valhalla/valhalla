@@ -60,19 +60,19 @@ class thor_worker_t : public service_worker_t{
 #endif
   virtual void cleanup() override;
 
-  std::list<odin::TripPath> route(const rapidjson::Document& request,
+  std::list<odin::TripPath> route(const valhalla_request_t& request,
              const boost::optional<int> &date_time_type);
-  std::string matrix(tyr::ACTION_TYPE matrix_type, const rapidjson::Document& request);
-  std::list<odin::TripPath> optimized_route(const rapidjson::Document& request);
-  std::string isochrones(const rapidjson::Document& request);
-  odin::TripPath trace_route(const rapidjson::Document& request);
-  baldr::json::MapPtr trace_attributes(rapidjson::Document& request);
+  std::string matrix(const valhalla_request_t& request);
+  std::list<odin::TripPath> optimized_route(const valhalla_request_t& request);
+  std::string isochrones(const valhalla_request_t& request);
+  odin::TripPath trace_route(const valhalla_request_t& request);
+  baldr::json::MapPtr trace_attributes(const valhalla_request_t& request);
 
  protected:
 
   std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
                 baldr::PathLocation& destination, const std::string& costing);
-  void log_admin(odin::TripPath&);
+  void log_admin(const odin::TripPath&);
   valhalla::sif::cost_ptr_t get_costing(
       const rapidjson::Document& request, const std::string& costing);
   thor::PathAlgorithm* get_path_algorithm(
@@ -89,11 +89,11 @@ class thor_worker_t : public service_worker_t{
       std::vector<baldr::PathLocation>& correlated, const std::string &costing,
       const boost::optional<int> &date_time_type);
 
-  void parse_locations(const rapidjson::Document& request);
-  void parse_measurements(const rapidjson::Document& request);
-  void parse_trace_config(const rapidjson::Document& request);
-  std::string parse_costing(const rapidjson::Document& request);
-  void filter_attributes(const rapidjson::Document& request, AttributesController& controller);
+  void parse_locations(const valhalla_request_t& request);
+  void parse_measurements(const valhalla_request_t& request);
+  void parse_trace_config(const valhalla_request_t& request);
+  std::string parse_costing(const valhalla_request_t& request);
+  void filter_attributes(const valhalla_request_t& request, AttributesController& controller);
 
   valhalla::sif::TravelMode mode;
   std::vector<baldr::Location> locations;
@@ -117,9 +117,7 @@ class thor_worker_t : public service_worker_t{
   valhalla::baldr::GraphReader& reader;
   std::unordered_set<std::string> trace_customizable;
   boost::property_tree::ptree trace_config;
-  odin::DirectionsOptions options;
 
-  bool healthcheck;
   std::vector<uint32_t> optimal_order;
 };
 

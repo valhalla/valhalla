@@ -25,7 +25,7 @@ namespace valhalla {
      *
      * @param
      */
-    std::string serializeDirections(const odin::DirectionsOptions& directions_options,
+    std::string serializeDirections(const valhalla_request_t& request,
         const std::list<odin::TripPath>& path_legs,
         const std::list<odin::TripDirections>& directions_legs);
 
@@ -34,7 +34,7 @@ namespace valhalla {
      *
      * @param
      */
-    std::string serializeMatrix(const odin::DirectionsOptions& options, const std::vector<baldr::PathLocation>& sources,
+    std::string serializeMatrix(const valhalla_request_t& request, const std::vector<baldr::PathLocation>& sources,
         const std::vector<baldr::PathLocation>& targets, const std::vector<thor::TimeDistance>& time_distances, double distance_scale);
 
     /**
@@ -44,7 +44,7 @@ namespace valhalla {
      * @param colors           the #ABC123 hex string color used in geojson fill color
      */
     template <class coord_t>
-    std::string serializeIsochrones(const odin::DirectionsOptions& options, const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
+    std::string serializeIsochrones(const valhalla_request_t& request, const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
         bool polygons = true, const std::unordered_map<float, std::string>& colors = {}, const std::vector<baldr::PathLocation>& locations = {});
 
     /**

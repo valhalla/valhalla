@@ -35,9 +35,8 @@ namespace {
       auto element = json::array({json::fp_t{*range,0}});
       if(height == no_data_value)
         element->push_back(nullptr);
-      else {
+      else
         element->push_back({json::fp_t{height, 0}});
-      }
       array->push_back(element);
       ++range;
     }
@@ -73,12 +72,11 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_height(rapidjson::Document& request) {
+    void loki_worker_t::init_height(valhalla_request_t& request) {
       //get some parameters
-      range = rapidjson::get(request, "/range", false);
-      auto input_shape = rapidjson::get_optional<rapidjson::Value::Array>(request, "/shape");
-      encoded_polyline = rapidjson::get_optional<std::string>(request, "/encoded_polyline");
-      auto resample_distance = rapidjson::get_optional<double>(request, "/resample_distance");
+      range = rapidjson::get(request.document, "/range", false);
+      auto input_shape = rapidjson::get_optional<rapidjson::Value::Array>(request.document, "/shape");
+      auto resample_distance = rapidjson::get_optional<double>(request.document, "/resample_distance");
 
       //we require shape or encoded polyline but we dont know which at first
       try {
@@ -87,8 +85,8 @@ namespace valhalla {
           for (const auto& latlng : *input_shape)
             shape.push_back(baldr::Location::FromRapidJson(latlng).latlng_);
         }//compressed shape
-        else if (encoded_polyline) {
-          shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
+        else if (request.options.has_encoded_polyline()) {
+          shape = midgard::decode<std::vector<midgard::PointLL> >(request.options.encoded_polyline());
         }//no shape
         else
           throw valhalla_exception_t{310};
@@ -112,8 +110,8 @@ namespace valhalla {
           shape = midgard::resample_spherical_polyline(shape, *resample_distance);
           shape.emplace_back(std::move(last));
           //reencode it for display if they sent it encoded
-          if(encoded_polyline)
-            *encoded_polyline = midgard::encode(shape);
+          if(request.options.has_encoded_polyline())
+            request.options.set_encoded_polyline(midgard::encode(shape));
           resampled = true;
         }
       }
@@ -131,13 +129,13 @@ namespace valhalla {
       "range_height": [ [0,303], [8467,275], [25380,198] ]
     }
     */
-    json::MapPtr loki_worker_t::height(rapidjson::Document& request) {
+    json::MapPtr loki_worker_t::height(valhalla_request_t& request) {
       init_height(request);
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
-      if (!healthcheck)
+      if (!request.options.do_not_track())
         valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
-      boost::optional<std::string> id = rapidjson::get_optional<std::string>(request, "/id");
+
       auto json = json::map({});
 
       //get the distances between the postings
@@ -155,12 +153,12 @@ namespace valhalla {
         });
       }
       //send back the shape as well
-      if(encoded_polyline)
-        json->emplace("encoded_polyline", *encoded_polyline);
+      if(request.options.has_encoded_polyline())
+        json->emplace("encoded_polyline", request.options.encoded_polyline());
       else
         json->emplace("shape", serialize_shape(shape));
-      if (id)
-        json->emplace("id", *id);
+      if (request.options.has_id())
+        json->emplace("id", request.options.id());
 
       return json;
     }

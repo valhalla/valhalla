@@ -22,17 +22,16 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    std::string thor_worker_t::matrix(ACTION_TYPE action, const rapidjson::Document& request) {
+    std::string thor_worker_t::matrix(const valhalla_request_t& request) {
       parse_locations(request);
       auto costing = parse_costing(request);
 
-      const auto& matrix_type = ACTION_TO_STRING.find(action)->second;
-      if (!healthcheck)
-        valhalla::midgard::logging::Log("matrix_type::" + matrix_type, " [ANALYTICS] ");
+      if (!request.options.do_not_track())
+        valhalla::midgard::logging::Log("matrix_type::" + odin::DirectionsOptions::Action_Name(request.options.action()), " [ANALYTICS] ");
 
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
-      if (options.units() == odin::DirectionsOptions::miles)
+      if (request.options.units() == odin::DirectionsOptions::miles)
         distance_scale = kMilePerMeter;
 
       json::MapPtr json;
@@ -68,7 +67,7 @@ namespace valhalla {
           time_distances = timedistancematrix();
           break;
       }
-      return tyr::serializeMatrix(options, correlated_s, correlated_t, time_distances, distance_scale);
+      return tyr::serializeMatrix(request, correlated_s, correlated_t, time_distances, distance_scale);
     }
   }
 }

@@ -129,8 +129,6 @@ inline boost::optional<rapidjson::Value&> get_child_optional(V&& v, const char* 
   return c;
 }
 
-
-
 }
 
 #endif /* VALHALLA_BALDR_RAPIDJSON_UTILS_H_ */

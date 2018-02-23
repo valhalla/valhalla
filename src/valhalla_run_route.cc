@@ -483,10 +483,6 @@ int main(int argc, char *argv[]) {
 
   // Directions options - set defaults
   DirectionsOptions directions_options;
-  directions_options.set_units(
-      DirectionsOptions::kilometers);
-  directions_options.set_language("en-US");
-  directions_options.set_narrative(true);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
@@ -534,9 +530,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Grab the directions options, if they exist
-    rapidjson::Document request_rj;
-    request_rj.Parse(json.c_str());
-    directions_options = valhalla::from_json(request_rj);
+    valhalla::valhalla_request_t request(json, valhalla::odin::DirectionsOptions::route);
+    directions_options = request.options;
 
     // Grab the date_time, if is exists
     auto date_time_ptr = json_ptree.get_child_optional("date_time");

@@ -80,12 +80,12 @@ namespace {
 namespace valhalla {
   namespace tyr {
 
-    std::string serializeMatrix(const odin::DirectionsOptions& options, const std::vector<PathLocation>& sources,
+    std::string serializeMatrix(const valhalla_request_t& request, const std::vector<PathLocation>& sources,
         const std::vector<PathLocation>& targets, const std::vector<TimeDistance>& time_distances, double distance_scale) {
 
-      auto json = options.format() == odin::DirectionsOptions::osrm ?
-          serializeOSRM(options, sources, targets, time_distances, distance_scale) :
-          serialize(options, sources, targets, time_distances, distance_scale);
+      auto json = request.options.format() == odin::DirectionsOptions::osrm ?
+          serializeOSRM(request.options, sources, targets, time_distances, distance_scale) :
+          serialize(request.options, sources, targets, time_distances, distance_scale);
 
       std::stringstream ss;
       ss << json;

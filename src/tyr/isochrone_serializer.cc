@@ -20,7 +20,7 @@ namespace tyr {
 
 
 template <class coord_t>
-std::string serializeIsochrones(const odin::DirectionsOptions& options,
+std::string serializeIsochrones(const valhalla_request_t& request,
                   const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
                   bool polygons, const std::unordered_map<float, std::string>& colors,
                   const std::vector<baldr::PathLocation>& locations) {
@@ -105,19 +105,19 @@ std::string serializeIsochrones(const odin::DirectionsOptions& options,
     {"features", features},
   });
 
-  if(options.has_id())
-    feature_collection->emplace("id", options.id());
+  if(request.options.has_id())
+    feature_collection->emplace("id", request.options.id());
 
   std::stringstream ss;
   ss << *feature_collection;
   return ss.str();
 }
 
-template std::string serializeIsochrones<midgard::Point2>(const odin::DirectionsOptions&,
+template std::string serializeIsochrones<midgard::Point2>(const valhalla_request_t&,
                                             const midgard::GriddedData<midgard::Point2>::contours_t&, bool,
                                             const std::unordered_map<float, std::string>&,
                                             const std::vector<baldr::PathLocation>& locations);
-template std::string serializeIsochrones<midgard::PointLL>(const odin::DirectionsOptions&,
+template std::string serializeIsochrones<midgard::PointLL>(const valhalla_request_t&,
                                              const midgard::GriddedData<midgard::PointLL>::contours_t&, bool,
                                              const std::unordered_map<float, std::string>&,
                                              const std::vector<baldr::PathLocation>& locations);

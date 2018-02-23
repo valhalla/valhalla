@@ -125,11 +125,11 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_locate(rapidjson::Document& request) {
+    void loki_worker_t::init_locate(valhalla_request_t& request) {
       locations = parse_locations(request, "locations");
       if(locations.size() < 1)
         throw valhalla_exception_t{120};
-      if(request.HasMember("costing"))
+      if(request.document.HasMember("costing"))
         parse_costing(request);
       else {
         edge_filter = loki::PassThroughEdgeFilter;
@@ -137,13 +137,13 @@ namespace valhalla {
       }
     }
 
-    json::ArrayPtr loki_worker_t::locate(rapidjson::Document& request) {
+    json::ArrayPtr loki_worker_t::locate(valhalla_request_t& request) {
       init_locate(request);
       //correlate the various locations to the underlying graph
       auto json = json::array({});
-      bool verbose = rapidjson::get_optional<bool>(request, "/verbose").get_value_or(false);
+      bool verbose = rapidjson::get_optional<bool>(request.document, "/verbose").get_value_or(false);
       const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
-      auto id = rapidjson::get_optional<std::string>(request, "/id");
+      auto id = rapidjson::get_optional<std::string>(request.document, "/id");
       for(const auto& location : locations) {
         try {
           json->emplace_back(serialize(id, projections.at(location), reader, verbose));

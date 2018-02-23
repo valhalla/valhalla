@@ -345,9 +345,11 @@ int main(int argc, char *argv[]) {
     denoise = std::max(std::min(denoise, 1.f), 0.f);
     LOG_WARN ("denoise parameter was out of range. Being clamped to " + std::to_string(denoise));
   }
-  auto contours = isotile->GenerateContours(contour_times, polygons, denoise,
-                           generalize);
-  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(valhalla::odin::DirectionsOptions{}, contours, polygons, colors,
+  auto contours = isotile->GenerateContours(contour_times, polygons, denoise, generalize);
+
+  //TODO: build real request from options above and call the functions like actor_t does
+  valhalla::valhalla_request_t request;
+  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(request, contours, polygons, colors,
       show_locations ? path_location : decltype(path_location){});
 
   auto t3 = std::chrono::high_resolution_clock::now();

@@ -40,9 +40,9 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_matrix(rapidjson::Document& request, bool has_locations) {
+    void loki_worker_t::init_matrix(valhalla_request_t& request) {
       //we require sources and targets
-      if(!has_locations) {
+      if(request.options.action() == odin::DirectionsOptions::sources_to_targets) {
         sources = parse_locations(request, "sources", 131, valhalla_exception_t{112});
         targets = parse_locations(request, "targets", 132, valhalla_exception_t{112});
       }//optimized route uses locations but needs to do a matrix
@@ -53,10 +53,10 @@ namespace valhalla {
 
         //create new sources and targets ptree from locations
         rapidjson::Value sources_child{rapidjson::kArrayType}, targets_child{rapidjson::kArrayType};
-        auto request_locations = rapidjson::get_optional<rapidjson::Value::Array>(request, "/locations");
-        auto& allocator = request.GetAllocator();
-        request.AddMember("targets", rapidjson::Value{request["locations"], allocator}, allocator);
-        request.AddMember("sources", *request_locations, allocator);
+        auto request_locations = rapidjson::get_optional<rapidjson::Value::Array>(request.document, "/locations");
+        auto& allocator = request.document.GetAllocator();
+        request.document.AddMember("targets", rapidjson::Value{request.document["locations"], allocator}, allocator);
+        request.document.AddMember("sources", *request_locations, allocator);
         targets = locations;
         sources.swap(locations);
       }
@@ -68,17 +68,17 @@ namespace valhalla {
       for(auto& t : targets) t.heading_.reset();
 
       //no locations!
-      request.RemoveMember("locations");
+      request.document.RemoveMember("locations");
 
       //need costing
       parse_costing(request);
     }
 
-    void loki_worker_t::matrix(ACTION_TYPE action, rapidjson::Document& request) {
-      init_matrix(request, action == OPTIMIZED_ROUTE);
-      std::string costing = request["costing"].GetString();
+    void loki_worker_t::matrix(valhalla_request_t& request) {
+      init_matrix(request);
+      std::string costing = request.document["costing"].GetString();
       if (costing == "multimodal")
-        throw valhalla_exception_t{140, ACTION_TO_STRING.find(action)->second};
+        throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
 
       //check that location size does not exceed max.
       auto max = max_matrix_locations.find(costing)->second;
@@ -101,7 +101,7 @@ namespace valhalla {
         for(size_t i = 0; i < sources_targets.size(); ++i) {
           const auto& l = sources_targets[i];
           const auto& projection = searched.at(l);
-          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, projection.ToRapidJson(i, request.GetAllocator()));
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request.document, projection.ToRapidJson(i, request.document.GetAllocator()));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           if (!connectivity_map)
@@ -132,7 +132,7 @@ namespace valhalla {
       }
       if(!connected)
         throw valhalla_exception_t{170};
-      if (!healthcheck)
+      if (!request.options.do_not_track())
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
     }
   }

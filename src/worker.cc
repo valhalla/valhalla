@@ -285,12 +285,18 @@ namespace {
 
 	{599,R"({"code":"InvalidUrl","message":"URL string is invalid."})"}
   };
-}
 
-namespace valhalla {
+  rapidjson::Document from_string(const std::string& json, const std::exception& e) {
+    rapidjson::Document d;
+    auto& allocator = d.GetAllocator();
+    d.Parse(json.c_str());
+    if (d.HasParseError())
+      throw e;
+    return d;
+  }
 
-  odin::DirectionsOptions from_json(rapidjson::Document& doc) {
-    odin::DirectionsOptions options;
+  valhalla::odin::DirectionsOptions from_json(rapidjson::Document& doc) {
+    valhalla::odin::DirectionsOptions options;
 
     //TODO: stop doing this after a sufficient amount of time has passed
     //move anything nested in deprecated directions_options up to the top level
@@ -309,13 +315,13 @@ namespace valhalla {
     auto units = rapidjson::get_optional<std::string>(doc, "/units");
     if(units) {
       if((*units == "miles") || (*units == "mi"))
-        options.set_units(odin::DirectionsOptions::miles);
+        options.set_units(valhalla::odin::DirectionsOptions::miles);
       else
-        options.set_units(odin::DirectionsOptions::kilometers);
+        options.set_units(valhalla::odin::DirectionsOptions::kilometers);
     }
 
     auto language = rapidjson::get_optional<std::string>(doc, "/language");
-    if(language && odin::get_locales().find(*language) != odin::get_locales().end())
+    if(language && valhalla::odin::get_locales().find(*language) != valhalla::odin::get_locales().end())
       options.set_language(*language);
 
     auto narrative = rapidjson::get_optional<bool>(doc, "/narrative");
@@ -323,38 +329,60 @@ namespace valhalla {
       options.set_narrative(*narrative);
 
     auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
-    odin::DirectionsOptions::Format format;
-    if (fmt && odin::DirectionsOptions::Format_Parse(*fmt, &format))
+    valhalla::odin::DirectionsOptions::Format format;
+    if (fmt && valhalla::odin::DirectionsOptions::Format_Parse(*fmt, &format))
       options.set_format(format);
+
+    auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
+    if(encoded_polyline)
+      options.set_encoded_polyline(*encoded_polyline);
+
+    options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
 
     //force these into the output so its obvious what we did to the user
     doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
     doc.AddMember({"format", allocator},
-      {odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
+      {valhalla::odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
 
     return options;
   }
+}
+
+namespace valhalla {
+
+  valhalla_request_t::valhalla_request_t(){
+    document.SetObject();
+  }
+  valhalla_request_t::valhalla_request_t(const std::string& request, odin::DirectionsOptions::Action action) {
+    document = from_string(request, valhalla_exception_t{100});
+    options = from_json(document);
+    options.set_action(action);
+  }
+  valhalla_request_t::valhalla_request_t(const std::string& request, const std::string& serialized_options){
+    document = from_string(request, valhalla_exception_t{100});
+    options.ParseFromString(serialized_options);
+  }
 
 #ifdef HAVE_HTTP
-  rapidjson::Document from_request(const http_request_t& request) {
+  valhalla_request_t::valhalla_request_t(const http_request_t& request) {
+
     //block all but get and post
     if(request.method != method_t::POST && request.method != method_t::GET)
       throw valhalla_exception_t{101};
 
-    rapidjson::Document d;
-    auto& allocator = d.GetAllocator();
+    auto& allocator = document.GetAllocator();
     //parse the input
     const auto& json = request.query.find("json");
     if (json != request.query.end() && json->second.size() && json->second.front().size())
-      d.Parse(json->second.front().c_str());
+      document.Parse(json->second.front().c_str());
     //no json parameter, check the body
     else if(!request.body.empty())
-      d.Parse(request.body.c_str());
+      document.Parse(request.body.c_str());
     //no json at all
     else
-      d.SetObject();
+      document.SetObject();
     //if parsing failed
-    if (d.HasParseError())
+    if (document.HasParseError())
       throw valhalla_exception_t{100};
 
     //throw the query params into the rapidjson doc
@@ -365,7 +393,7 @@ namespace valhalla {
 
       //turn single value entries into single key value
       if(kv.second.size() == 1) {
-        d.AddMember({kv.first, allocator}, {kv.second.front(), allocator}, allocator);
+        document.AddMember({kv.first, allocator}, {kv.second.front(), allocator}, allocator);
         continue;
       }
 
@@ -374,11 +402,18 @@ namespace valhalla {
       for(const auto& value : kv.second) {
         array.PushBack({value, allocator}, allocator);
       }
-      d.AddMember({kv.first, allocator}, array, allocator);
+      document.AddMember({kv.first, allocator}, array, allocator);
     }
 
+    //disable analytics
+    auto do_not_track = request.headers.find("DNT");
+    document.AddMember("healthcheck", do_not_track != request.headers.cend() && do_not_track->second == "1", allocator);
 
-    return d;
+    //parse out the options
+    options = from_json(document);
+    odin::DirectionsOptions::Action action;
+    if(!request.path.empty() && odin::DirectionsOptions::Action_Parse(request.path.substr(1), &action))
+      options.set_action(action);
   }
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -386,18 +421,18 @@ namespace valhalla {
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
   const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
 
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const valhalla_request_t& request) {
     //get the http status
     auto status = ERROR_TO_STATUS.find(exception.code)->second;
     auto message = HTTP_STATUS_CODES.find(status)->second;
     std::stringstream body;
 
     //overwrite with osrm error response
-    if(options.format() == odin::DirectionsOptions::osrm) {
+    if(request.options.format() == odin::DirectionsOptions::osrm) {
       auto found = OSRM_ERRORS_CODES.find(exception.code);
       if(found == OSRM_ERRORS_CODES.cend())
         found = OSRM_ERRORS_CODES.find(199);
-      body << (options.has_jsonp() ? options.jsonp() + "(" : "") << found->second << (options.has_jsonp() ? ")" : "");
+      body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << found->second << (request.options.has_jsonp() ? ")" : "");
     }//valhalla error response
     else {
       //build up the json map
@@ -406,66 +441,66 @@ namespace valhalla {
       json_error->emplace("status_code", static_cast<uint64_t>(status));
       json_error->emplace("error", std::string(exception.message));
       json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-      body << (options.has_jsonp() ? options.jsonp() + "(" : "") << *json_error << (options.has_jsonp() ? ")" : "");
+      body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << *json_error << (request.options.has_jsonp() ? ")" : "");
     }
 
     worker_t::result_t result{false};
-    http_response_t response(status, message, body.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
+    http_response_t response(status, message, body.str(), headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
 
     return result;
   }
 
-  worker_t::result_t to_response(baldr::json::ArrayPtr array, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
+  worker_t::result_t to_response(baldr::json::ArrayPtr array, http_request_info_t& request_info, const valhalla_request_t& request) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(options.has_jsonp())
-      stream << options.jsonp() << '(';
+    if(request.options.has_jsonp())
+      stream << request.options.jsonp() << '(';
     stream << *array;
-    if(options.has_jsonp())
+    if(request.options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response(baldr::json::MapPtr map, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
+  worker_t::result_t to_response(baldr::json::MapPtr map, http_request_info_t& request_info, const valhalla_request_t& request) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(options.has_jsonp())
-      stream << options.jsonp() << '(';
+    if(request.options.has_jsonp())
+      stream << request.options.jsonp() << '(';
     stream << *map;
-    if(options.has_jsonp())
+    if(request.options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
+  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const valhalla_request_t& request) {
     std::ostringstream stream;
     //jsonp callback if need be
-    if(options.has_jsonp())
-      stream << options.jsonp() << '(';
+    if(request.options.has_jsonp())
+      stream << request.options.jsonp() << '(';
     stream << json;
-    if(options.has_jsonp())
+    if(request.options.has_jsonp())
       stream << ')';
 
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", stream.str(), headers_t{CORS, options.has_jsonp() ? JS_MIME : JSON_MIME});
+    http_response_t response(200, "OK", stream.str(), headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
   }
 
-  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info, const odin::DirectionsOptions& options) {
+  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info, const valhalla_request_t& request) {
     worker_t::result_t result{false};
     http_response_t response(200, "OK", xml, headers_t{CORS, XML_MIME});
     response.from_info(request_info);

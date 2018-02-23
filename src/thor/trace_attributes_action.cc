@@ -426,16 +426,16 @@ namespace {
 namespace valhalla {
 namespace thor {
 
-void thor_worker_t::filter_attributes(const rapidjson::Document& request, AttributesController& controller) {
-  auto filter_action = rapidjson::get<std::string>(request, "/filters/action", "");
+void thor_worker_t::filter_attributes(const valhalla_request_t& request, AttributesController& controller) {
+  auto filter_action = rapidjson::get<std::string>(request.document, "/filters/action", "");
 
   if (filter_action == "include") {
     controller.disable_all();
-    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request, "/filters/attributes"))
+    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes"))
       controller.attributes.at(v.GetString()) = true;
   } else if (filter_action == "exclude") {
     controller.enable_all();
-    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request, "/filters/attributes"))
+    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes"))
       controller.attributes.at(v.GetString()) = false;
   } else {
     controller.enable_all();
@@ -448,14 +448,13 @@ void thor_worker_t::filter_attributes(const rapidjson::Document& request, Attrib
  * portion of the route. This includes details for each section of road along the
  * path as well as any intersections along the path.
  */
-json::MapPtr thor_worker_t::trace_attributes(rapidjson::Document& request) {
+json::MapPtr thor_worker_t::trace_attributes(const valhalla_request_t& request) {
 
   // Parse request
   parse_locations(request);
   parse_costing(request);
   parse_trace_config(request);
   parse_measurements(request);
-  DirectionsOptions directions_options = from_json(request);
 
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
@@ -467,7 +466,7 @@ json::MapPtr thor_worker_t::trace_attributes(rapidjson::Document& request) {
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
-  auto shape_match = STRING_TO_MATCH.find(rapidjson::get<std::string>(request, "/shape_match", "walk_or_snap"));
+  auto shape_match = STRING_TO_MATCH.find(rapidjson::get<std::string>(request.document, "/shape_match", "walk_or_snap"));
   if (shape_match == STRING_TO_MATCH.cend())
     throw valhalla_exception_t{445};
   else {
@@ -488,7 +487,7 @@ json::MapPtr thor_worker_t::trace_attributes(rapidjson::Document& request) {
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          uint32_t best_paths = rapidjson::get<uint32_t>(request, "/best_paths", 1);
+          uint32_t best_paths = rapidjson::get<uint32_t>(request.document, "/best_paths", 1);
           map_match_results = map_match(controller, true, best_paths);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
@@ -517,7 +516,7 @@ json::MapPtr thor_worker_t::trace_attributes(rapidjson::Document& request) {
   json::MapPtr json;
   if (!map_match_results.empty()
       && (std::get<kTripPathIndex>(map_match_results.at(0)).node().size() > 0))
-    json = serialize(controller, directions_options, map_match_results);
+    json = serialize(controller, request.options, map_match_results);
   else
     throw valhalla_exception_t { 442 };
 

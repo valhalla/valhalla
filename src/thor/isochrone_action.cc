@@ -8,22 +8,22 @@ using namespace valhalla::midgard;
 namespace valhalla {
   namespace thor {
 
-    std::string thor_worker_t::isochrones(const rapidjson::Document& request) {
+    std::string thor_worker_t::isochrones(const valhalla_request_t& request) {
       parse_locations(request);
       auto costing = parse_costing(request);
 
       std::vector<float> contours;
       std::unordered_map<float, std::string> colors;
-      for(const auto& contour : rapidjson::get<rapidjson::Value::ConstArray>(request, "/contours")) {
+      for(const auto& contour : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/contours")) {
         contours.push_back(rapidjson::get<float>(contour, "/time"));
         colors[contours.back()] = rapidjson::get<std::string>(contour, "/color", "");
       }
-      auto polygons = rapidjson::get<bool>(request, "/polygons", false);
-      auto denoise = std::max(std::min(rapidjson::get<float>(request, "/denoise", 1.f), 1.f), 0.f);
+      auto polygons = rapidjson::get<bool>(request.document, "/polygons", false);
+      auto denoise = std::max(std::min(rapidjson::get<float>(request.document, "/denoise", 1.f), 1.f), 0.f);
 
       // Get the generalization factor (in meters). If none is provided then
       // an optimal factor is computed (based on the isotile grid size).
-      auto generalize = rapidjson::get<float>(request, "/generalize", kOptimalGeneralization);
+      auto generalize = rapidjson::get<float>(request.document, "/generalize", kOptimalGeneralization);
 
       //get the raster
       //Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
@@ -37,8 +37,8 @@ namespace valhalla {
       //turn it into geojson
       auto isolines = grid->GenerateContours(contours, polygons, denoise, generalize);
 
-      auto showLocations = rapidjson::get<bool>(request, "/show_locations", false);
-      return tyr::serializeIsochrones<PointLL>(options, isolines, polygons, colors,
+      auto showLocations = rapidjson::get<bool>(request.document, "/show_locations", false);
+      return tyr::serializeIsochrones<PointLL>(request, isolines, polygons, colors,
           showLocations ? correlated : decltype(correlated){});
 
     }

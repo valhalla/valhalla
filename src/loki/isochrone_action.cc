@@ -30,7 +30,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_isochrones(rapidjson::Document& request) {
+    void loki_worker_t::init_isochrones(valhalla_request_t& request) {
       //strip off unused information
       locations = parse_locations(request, "locations");
       if(locations.size() < 1)
@@ -39,7 +39,7 @@ namespace valhalla {
         l.heading_.reset();
 
       //make sure the isoline definitions are valid
-      auto contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, "/contours");
+      auto contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/contours");
       if(! contours)
         throw valhalla_exception_t{113};
       //check that the number of contours is ok
@@ -56,7 +56,7 @@ namespace valhalla {
       }
       parse_costing(request);
     }
-    void loki_worker_t::isochrones(rapidjson::Document& request) {
+    void loki_worker_t::isochrones(valhalla_request_t& request) {
       init_isochrones(request);
       //check that location size does not exceed max
       if (locations.size() > max_locations.find("isochrone")->second)
@@ -65,21 +65,21 @@ namespace valhalla {
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
       check_distance(locations, max_distance.find("isochrone")->second, max_location_distance);
-      if (!healthcheck)
+      if (!request.options.do_not_track())
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
-      auto costing = rapidjson::get_optional<std::string>(request, "/costing").get_value_or("");
-      auto date_type = rapidjson::get_optional<int>(request, "/date_time/type");
+      auto costing = rapidjson::get_optional<std::string>(request.document, "/costing").get_value_or("");
+      auto date_type = rapidjson::get_optional<int>(request.document, "/date_time/type");
 
-      auto& allocator = request.GetAllocator();
+      auto& allocator = request.document.GetAllocator();
       //default to current date_time for mm or transit.
       if (! date_type && (costing == "multimodal" || costing == "transit")) {
-        rapidjson::SetValueByPointer(request, "/date_time/type", 0);
+        rapidjson::SetValueByPointer(request.document, "/date_time/type", 0);
         date_type = 0;
       }
 
       //check the date stuff
-      auto date_time_value = rapidjson::get_optional<std::string>(request, "/date_time/value");
+      auto date_time_value = rapidjson::get_optional<std::string>(request.document, "/date_time/value");
       if (date_type) {
         //not yet on this
         if(! date_type || *date_type == 2) {
@@ -88,14 +88,14 @@ namespace valhalla {
         //what kind
         switch(*date_type) {
         case 0: //current
-          rapidjson::GetValueByPointer(request, "/locations/0")->AddMember("date_time", "current", allocator);
+          rapidjson::GetValueByPointer(request.document, "/locations/0")->AddMember("date_time", "current", allocator);
           break;
         case 1: //depart
           if(! date_time_value)
             throw valhalla_exception_t{160};
           if (!DateTime::is_iso_local(*date_time_value))
             throw valhalla_exception_t{162};
-          rapidjson::GetValueByPointer(request, "/locations/0")->AddMember("date_time", *date_time_value, allocator);
+          rapidjson::GetValueByPointer(request.document, "/locations/0")->AddMember("date_time", *date_time_value, allocator);
           break;
         default:
           throw valhalla_exception_t{163};
@@ -107,7 +107,7 @@ namespace valhalla {
         //correlate the various locations to the underlying graph
         const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         for(size_t i = 0; i < locations.size(); ++i) {
-          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, projections.at(locations[i]).ToRapidJson(i, allocator));
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request.document, projections.at(locations[i]).ToRapidJson(i, allocator));
         }
       }
       catch(const std::exception&) {

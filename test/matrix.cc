@@ -243,10 +243,10 @@ namespace {
 void test_matrix() {
   loki_worker_t loki_worker (config);
 
-  auto request_doc = to_document(test_request);
-  loki_worker.matrix (SOURCES_TO_TARGETS, request_doc);
+  valhalla::valhalla_request_t request(test_request, valhalla::odin::DirectionsOptions::sources_to_targets);
+  loki_worker.matrix (request);
 
-  auto request_pt = json_to_pt (rapidjson::to_string(request_doc));
+  auto request_pt = json_to_pt (rapidjson::to_string(request.document));
 
   auto request_sources = request_pt.get_child_optional("sources");
   auto request_targets = request_pt.get_child_optional("targets");
@@ -260,7 +260,7 @@ void test_matrix() {
     try{ locations.push_back(Location::FromPtree(t.second)); }
     catch (...) { throw valhalla::valhalla_exception_t{423}; }
   }
-  std::vector<PathLocation> correlated = store_correlated_locations (request_doc, locations);
+  std::vector<PathLocation> correlated = store_correlated_locations (request.document, locations);
 
   std::vector<PathLocation> correlated_s (correlated.begin(), correlated.begin() + request_sources->size());
   std::vector<PathLocation> correlated_t (correlated.begin() + request_sources->size(), correlated.end());

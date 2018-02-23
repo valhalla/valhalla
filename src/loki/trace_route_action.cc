@@ -92,14 +92,14 @@ void check_turn_penalty_factor(const float input_turn_penalty_factor) {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_trace(rapidjson::Document& request) {
+    void loki_worker_t::init_trace(valhalla_request_t& request) {
       parse_costing(request);
       parse_trace(request);
 
       // Determine max factor, defaults to 1. This factor is used to increase
       // the max value when an edge_walk shape match is requested
       float max_factor = 1.0f;
-      std::string shape_match = rapidjson::GetValueByPointerWithDefault(request, "/shape_match", "walk_or_snap").GetString();
+      std::string shape_match = rapidjson::GetValueByPointerWithDefault(request.document, "/shape_match", "walk_or_snap").GetString();
       if (shape_match == "edge_walk")
         max_factor = 5.0f;
 
@@ -109,15 +109,15 @@ namespace valhalla {
 
       // Validate best paths and best paths shape for `map_snap` requests
       if  (shape_match == "map_snap") {
-        unsigned int best_paths = rapidjson::GetValueByPointerWithDefault(request, "/best_paths", 1).GetUint();
+        unsigned int best_paths = rapidjson::GetValueByPointerWithDefault(request.document, "/best_paths", 1).GetUint();
         check_best_paths(best_paths, max_best_paths);
         check_best_paths_shape(best_paths, shape, max_best_paths_shape);
       }
 
       // Validate optional trace options
-      auto input_gps_accuracy = rapidjson::get_optional<float>(request, "/trace_options/gps_accuracy");
-      auto input_search_radius = rapidjson::get_optional<float>(request, "/trace_options/search_radius");
-      auto input_turn_penalty_factor = rapidjson::get_optional<float>(request, "/trace_options/turn_penalty_factor");
+      auto input_gps_accuracy = rapidjson::get_optional<float>(request.document, "/trace_options/gps_accuracy");
+      auto input_search_radius = rapidjson::get_optional<float>(request.document, "/trace_options/search_radius");
+      auto input_turn_penalty_factor = rapidjson::get_optional<float>(request.document, "/trace_options/turn_penalty_factor");
       if (input_gps_accuracy)
         check_gps_accuracy(*input_gps_accuracy, max_gps_accuracy);
       if (input_search_radius)
@@ -129,18 +129,17 @@ namespace valhalla {
       locations_from_shape(request);
     }
 
-    void loki_worker_t::trace(ACTION_TYPE action, rapidjson::Document& request) {
+    void loki_worker_t::trace(valhalla_request_t& request) {
       init_trace(request);
-      std::string costing = request["costing"].GetString();
+      std::string costing = request.document["costing"].GetString();
       if (costing == "multimodal")
-        throw valhalla_exception_t{140, ACTION_TO_STRING.find(action)->second};
+        throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
     }
 
-    void loki_worker_t::parse_trace(rapidjson::Document& request) {
-      auto& allocator = request.GetAllocator();
+    void loki_worker_t::parse_trace(valhalla_request_t& request) {
+      auto& allocator = request.document.GetAllocator();
       //we require uncompressed shape or encoded polyline
-      auto input_shape = rapidjson::get_optional<rapidjson::Value::Array>(request, "/shape");
-      auto encoded_polyline = rapidjson::get_optional<std::string>(request, "/encoded_polyline");
+      auto input_shape = rapidjson::get_optional<rapidjson::Value::Array>(request.document, "/shape");
       //we require shape or encoded polyline but we dont know which at first
       try {
         //uncompressed shape
@@ -148,10 +147,9 @@ namespace valhalla {
           for (const auto& latlng : *input_shape) {
             shape.push_back(Location::FromRapidJson(latlng).latlng_);
           }
-        }//compressed shape
-        //if we receive as encoded then we need to add as shape to request
-        else if (encoded_polyline) {
-          shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
+        }//compressed shape we need to add as shape to request
+        else if (request.options.has_encoded_polyline()) {
+          shape = midgard::decode<std::vector<midgard::PointLL> >(request.options.encoded_polyline());
           rapidjson::Value shape_array{rapidjson::kArrayType};
           for(const auto& pt : shape) {
             rapidjson::Value point_child{rapidjson::kObjectType};
@@ -159,7 +157,7 @@ namespace valhalla {
                 AddMember("lat", static_cast<double>(pt.second), allocator);
             shape_array.PushBack(point_child, allocator);
           }
-          request.AddMember("shape", shape_array, allocator);
+          request.document.AddMember("shape", shape_array, allocator);
         }/* else if (gpx) {
           //TODO:Add support
         } else if (geojson){
@@ -174,7 +172,7 @@ namespace valhalla {
       }
     }
 
-    void loki_worker_t::locations_from_shape(rapidjson::Document& request) {
+    void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
       std::vector<Location> locations{shape.front(), shape.back()};
       locations.front().node_snap_tolerance_ = 0.f;
       locations.front().radius_ = 10;
@@ -182,17 +180,17 @@ namespace valhalla {
       locations.back().radius_ = 10;
 
       // Add first and last locations to request
-      auto& allocator = request.GetAllocator();
+      auto& allocator = request.document.GetAllocator();
       rapidjson::Value locations_child{rapidjson::kArrayType};
       locations_child.PushBack(locations.front().ToRapidJson(allocator), allocator);
       locations_child.PushBack(locations.back().ToRapidJson(allocator), allocator);
-      rapidjson::Pointer("/locations").Set(request, locations_child);
+      rapidjson::Pointer("/locations").Set(request.document, locations_child);
 
       // Add first and last correlated locations to request
       try{
         auto projections = loki::Search(locations, reader, edge_filter, node_filter);
-        rapidjson::Pointer("/correlated_0").Set(request, projections.at(locations.front()).ToRapidJson(0, allocator));
-        rapidjson::Pointer("/correlated_1").Set(request, projections.at(locations.back()).ToRapidJson(1, allocator));
+        rapidjson::Pointer("/correlated_0").Set(request.document, projections.at(locations.front()).ToRapidJson(0, allocator));
+        rapidjson::Pointer("/correlated_1").Set(request.document, projections.at(locations.back()).ToRapidJson(1, allocator));
       }
       catch(const std::exception&) {
         throw valhalla_exception_t{171};

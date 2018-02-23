@@ -28,16 +28,13 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    void loki_worker_t::init_transit_available(rapidjson::Document& request) {
+    void loki_worker_t::init_transit_available(valhalla_request_t& request) {
       locations = parse_locations(request, "locations");
       if(locations.size() < 1)
         throw valhalla_exception_t{120};
-
-      if(request.HasMember("costing"))
-        parse_costing(request);
     }
 
-    json::ArrayPtr loki_worker_t::transit_available(rapidjson::Document& request) {
+    json::ArrayPtr loki_worker_t::transit_available(valhalla_request_t& request) {
       init_transit_available(request);
       auto json = json::array({});
       try{
