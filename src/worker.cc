@@ -342,6 +342,8 @@ namespace {
 
     options.set_range(rapidjson::get(doc, "/range", false));
 
+    options.set_verbose(rapidjson::get(doc, "/verbose",false));
+
     //force these into the output so its obvious what we did to the user
     doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
     doc.AddMember({"format", allocator},

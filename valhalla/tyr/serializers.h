@@ -6,8 +6,11 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
+#include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/worker.h>
 #include <valhalla/proto/directions_options.pb.h>
@@ -57,6 +60,17 @@ namespace valhalla {
      */
     std::string serializeHeight(const valhalla_request_t& request, const std::vector<PointLL>& shape,
         const std::vector<double>& heights, std::vector<float> ranges = {});
+
+    /**
+     * Turn some correlated points on the graph into info about those locations
+     *
+     * @param request      The original request
+     * @param locations    The input locations
+     * @param projections  The correlated locations
+     * @param reader       A graph reader to get at each correlated points info
+     */
+    std::string serializeLocate(const valhalla_request_t& request, const std::vector<baldr::Location>& locations,
+        const std::unordered_map<baldr::Location, baldr::PathLocation>& projections, baldr::GraphReader& reader);
 
     /**
      * Transfers the JSON route information returned from a route request into

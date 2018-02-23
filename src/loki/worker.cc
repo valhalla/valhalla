@@ -228,7 +228,7 @@ namespace valhalla {
             result.messages.emplace_back(request.options.SerializeAsString());
             break;
           case odin::DirectionsOptions::locate:
-            result = to_response(locate(request), info, request);
+            result = to_response_json(locate(request), info, request);
             break;
           case odin::DirectionsOptions::sources_to_targets:
           case odin::DirectionsOptions::optimized_route:

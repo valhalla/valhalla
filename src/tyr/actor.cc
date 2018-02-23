@@ -69,12 +69,10 @@ namespace valhalla {
       valhalla_request_t request(request_str, odin::DirectionsOptions::locate);
       //check the request and locate the locations in the graph
       auto json = pimpl->loki_worker.locate(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::matrix(const std::string& request_str, const std::function<void ()>& interrupt) {

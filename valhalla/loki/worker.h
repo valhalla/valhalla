@@ -32,7 +32,7 @@ namespace valhalla {
 #endif
       virtual void cleanup() override;
 
-      baldr::json::ArrayPtr locate(valhalla_request_t& request);
+      std::string locate(valhalla_request_t& request);
       void route(valhalla_request_t& request);
       void matrix(valhalla_request_t& request);
       void isochrones(valhalla_request_t& request);

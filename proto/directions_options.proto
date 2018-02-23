@@ -35,4 +35,5 @@ message DirectionsOptions {
   optional Action action = 8;                       // Action signifying the request type
   optional bool do_not_track = 9 [default = false]; // Disable analytics for this request
   optional bool range = 10 [default = false];       // Used in /height if the range between points should be serialized
+  optional bool verbose = 11 [default = false];     // Used in /locate request to give back extensive information
 }
