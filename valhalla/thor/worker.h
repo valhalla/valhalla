@@ -34,12 +34,6 @@ namespace thor {
 void run_service(const boost::property_tree::ptree& config);
 #endif
 
-// <Confidence score, raw score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScoreIndex = 0;
-constexpr size_t kRawScoreIndex = 1;
-constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripPathIndex = 3;
-
 class thor_worker_t : public service_worker_t{
  public:
   enum SHAPE_MATCH {
@@ -66,7 +60,7 @@ class thor_worker_t : public service_worker_t{
   std::list<odin::TripPath> optimized_route(const valhalla_request_t& request);
   std::string isochrones(const valhalla_request_t& request);
   odin::TripPath trace_route(const valhalla_request_t& request);
-  baldr::json::MapPtr trace_attributes(const valhalla_request_t& request);
+  std::string trace_attributes(const valhalla_request_t& request);
 
  protected:
 

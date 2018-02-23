@@ -18,6 +18,8 @@
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/route.pb.h>
 #include <valhalla/thor/costmatrix.h>
+#include <valhalla/thor/attributes_controller.h>
+#include <valhalla/thor/match_result.h>
 #include <valhalla/tyr/actor.h>
 
 namespace valhalla {
@@ -81,6 +83,16 @@ namespace valhalla {
      */
     std::string serializeTransitAvailable(const valhalla_request_t& request, const std::vector<baldr::Location>& locations,
         const std::unordered_set<baldr::Location>& found);
+
+    /**
+     * Turn trip paths and the match results of each into attributes based on the filter specified
+     *
+     * @param request     The original request
+     * @param controller  The filter for what attributes should be serialized
+     * @param results     The vector of trip paths and match results for each match found
+     */
+    std::string serializeTraceAttributes(const valhalla_request_t& request, const thor::AttributesController& controller,
+        std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>& results);
 
     /**
      * Transfers the JSON route information returned from a route request into

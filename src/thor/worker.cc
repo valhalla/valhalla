@@ -173,7 +173,7 @@ namespace valhalla {
             denominator = trace.size() / 1100;
             break;
           case odin::DirectionsOptions::trace_attributes:
-            result = to_response(trace_attributes(request), info, request);
+            result = to_response_json(trace_attributes(request), info, request);
             denominator = trace.size() / 1100;
             break;
           default:

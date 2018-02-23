@@ -152,12 +152,10 @@ namespace valhalla {
       pimpl->loki_worker.trace(request);
       //get the path and turn it into attribution along it
       auto json = pimpl->thor_worker.trace_attributes(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::height(const std::string& request_str, const std::function<void ()>& interrupt) {
