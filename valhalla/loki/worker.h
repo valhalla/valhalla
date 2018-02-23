@@ -37,7 +37,7 @@ namespace valhalla {
       void matrix(valhalla_request_t& request);
       void isochrones(valhalla_request_t& request);
       void trace(valhalla_request_t& request);
-      baldr::json::MapPtr height(valhalla_request_t& request);
+      std::string height(valhalla_request_t& request);
       baldr::json::ArrayPtr transit_available(valhalla_request_t& request);
 
      protected:
@@ -87,7 +87,6 @@ namespace valhalla {
       float max_search_radius;
       unsigned int max_best_paths;
       size_t max_best_paths_shape;
-      bool range;
       skadi::sample sample;
       size_t max_elevation_shape;
       float min_resample;

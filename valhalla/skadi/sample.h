@@ -45,7 +45,7 @@ namespace valhalla {
       /**
        * @return the no data value for this data source
        */
-      double get_no_data_value() const;
+      static double get_no_data_value();
 
      protected:
 

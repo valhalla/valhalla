@@ -120,7 +120,7 @@ namespace valhalla {
         max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
         max_time(config.get<size_t>("service_limits.isochrone.max_time")),
         max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
-        sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
+        sample(config.get<std::string>("additional_data.elevation", "test/data/")),
         max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
         min_resample(config.get<float>("service_limits.skadi.min_resample")) {
 
@@ -248,7 +248,7 @@ namespace valhalla {
             result.messages.emplace_back(request.options.SerializeAsString());
             break;
           case odin::DirectionsOptions::height:
-            result = to_response(height(request), info, request);
+            result = to_response_json(height(request), info, request);
             break;
           case odin::DirectionsOptions::transit_available:
             result = to_response(transit_available(request), info, request);

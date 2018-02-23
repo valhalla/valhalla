@@ -169,12 +169,10 @@ namespace valhalla {
       valhalla_request_t request(request_str, odin::DirectionsOptions::height);
       //get the height at each point
       auto json = pimpl->loki_worker.height(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::transit_available(const std::string& request_str, const std::function<void ()>& interrupt) {

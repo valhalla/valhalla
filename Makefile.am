@@ -380,6 +380,7 @@ libvalhalla_la_SOURCES = \
 	src/tyr/serializers.cc \
 	src/tyr/isochrone_serializer.cc \
 	src/tyr/matrix_serializer.cc \
+	src/tyr/height_serializer.cc \
 	src/tyr/navigator.cc \
 	src/tyr/actor.cc
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)

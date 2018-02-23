@@ -48,6 +48,17 @@ namespace valhalla {
         bool polygons = true, const std::unordered_map<float, std::string>& colors = {}, const std::vector<baldr::PathLocation>& locations = {});
 
     /**
+     * Turn heights and ranges into a height response
+     *
+     * @param request  The original request
+     * @param shape    The shape from the request
+     * @param heights  The actual height at each shape point
+     * @param ranges   The distances between each point. If this is empty no ranges are serialized
+     */
+    std::string serializeHeight(const valhalla_request_t& request, const std::vector<PointLL>& shape,
+        const std::vector<double>& heights, std::vector<float> ranges = {});
+
+    /**
      * Transfers the JSON route information returned from a route request into
      * the Route proto object passed in by reference.
      * @param json_route   The route information to be parsed as JSON

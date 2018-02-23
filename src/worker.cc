@@ -337,7 +337,10 @@ namespace {
     if(encoded_polyline)
       options.set_encoded_polyline(*encoded_polyline);
 
+    //TODO: remove this?
     options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
+
+    options.set_range(rapidjson::get(doc, "/range", false));
 
     //force these into the output so its obvious what we did to the user
     doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
@@ -405,15 +408,18 @@ namespace valhalla {
       document.AddMember({kv.first, allocator}, array, allocator);
     }
 
-    //disable analytics
-    auto do_not_track = request.headers.find("DNT");
-    document.AddMember("healthcheck", do_not_track != request.headers.cend() && do_not_track->second == "1", allocator);
-
     //parse out the options
     options = from_json(document);
+
+    //set the action
     odin::DirectionsOptions::Action action;
     if(!request.path.empty() && odin::DirectionsOptions::Action_Parse(request.path.substr(1), &action))
       options.set_action(action);
+
+    //disable analytics
+    auto do_not_track = request.headers.find("DNT");
+    options.set_do_not_track(options.do_not_track() ||
+      (do_not_track != request.headers.cend() && do_not_track->second == "1"));
   }
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
