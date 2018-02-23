@@ -38,7 +38,7 @@ namespace valhalla {
       void isochrones(valhalla_request_t& request);
       void trace(valhalla_request_t& request);
       std::string height(valhalla_request_t& request);
-      baldr::json::ArrayPtr transit_available(valhalla_request_t& request);
+      std::string transit_available(valhalla_request_t& request);
 
      protected:
 

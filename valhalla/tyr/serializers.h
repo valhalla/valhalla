@@ -73,6 +73,16 @@ namespace valhalla {
         const std::unordered_map<baldr::Location, baldr::PathLocation>& projections, baldr::GraphReader& reader);
 
     /**
+     * Turn a list of locations into a list of locations with a bool that says whether transit tiles are near by
+     *
+     * @param request    The original request
+     * @param locations  The input locations
+     * @param found      Which locations had transit
+     */
+    std::string serializeTransitAvailable(const valhalla_request_t& request, const std::vector<baldr::Location>& locations,
+        const std::unordered_set<baldr::Location>& found);
+
+    /**
      * Transfers the JSON route information returned from a route request into
      * the Route proto object passed in by reference.
      * @param json_route   The route information to be parsed as JSON

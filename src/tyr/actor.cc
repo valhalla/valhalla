@@ -180,12 +180,10 @@ namespace valhalla {
       valhalla_request_t request(request_str, odin::DirectionsOptions::transit_available);
       //check the request and locate the locations in the graph
       auto json = pimpl->loki_worker.transit_available(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
    }
 
   }

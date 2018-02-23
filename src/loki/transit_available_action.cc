@@ -1,29 +1,11 @@
-#include "loki/worker.h"
 #include <unordered_set>
-#include <cstdint>
 
-#include "baldr/json.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/connectivity_map.h"
-#include "midgard/logging.h"
+#include "loki/worker.h"
+#include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
-
-namespace {
-
-  json::MapPtr serialize(const PathLocation& location, bool istransit) {
-    //serialze all the edges
-    auto json = json::map
-    ({
-      {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
-      {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
-      {"radius", static_cast<uint64_t>(location.radius_)}
-    });
-    json->emplace("istransit", istransit);
-    return json;
-  }
-}
 
 namespace valhalla {
   namespace loki {
@@ -34,12 +16,11 @@ namespace valhalla {
         throw valhalla_exception_t{120};
     }
 
-    json::ArrayPtr loki_worker_t::transit_available(valhalla_request_t& request) {
+    std::string loki_worker_t::transit_available(valhalla_request_t& request) {
       init_transit_available(request);
-      auto json = json::array({});
+      std::unordered_set<baldr::Location> found;
       try{
         const auto& tiles = TileHierarchy::levels().find(TileHierarchy::levels().rbegin()->first)->second.tiles;
-
         for (const auto& location : locations) {
           // Get a list of tiles required within the radius of the projected point
           const auto& ll = location.latlng_;
@@ -53,17 +34,15 @@ namespace valhalla {
           for (auto id : tilelist) {
             // transit is level hierarchy level 3
             auto color = connectivity_map->get_color(GraphId(id, 3, 0));
-            if (color != 0) {
-              istransit = true;
-              break;
-            }
+            if (color != 0)
+              found.emplace(location);
           }
-          json->emplace_back(serialize(location, istransit));
         }
       } catch (const std::exception&) {
         throw valhalla_exception_t { 170 };
       }
-      return json;
+
+      return tyr::serializeTransitAvailable(request, locations, found);
     }
 
   }

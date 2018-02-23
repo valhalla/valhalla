@@ -251,7 +251,7 @@ namespace valhalla {
             result = to_response_json(height(request), info, request);
             break;
           case odin::DirectionsOptions::transit_available:
-            result = to_response(transit_available(request), info, request);
+            result = to_response_json(transit_available(request), info, request);
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
