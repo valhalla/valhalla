@@ -107,7 +107,7 @@ std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb)
   os.write(reinterpret_cast<const char*>(&crb.to_id_), sizeof(GraphId));
   os.write(reinterpret_cast<const char*>(&restriction),
            sizeof(baldr::ComplexRestriction::PackedRestriction));
-  os.write(reinterpret_cast<const char*>(&crb.via_list_[0]),
+  os.write(reinterpret_cast<const char*>(crb.via_list_.data()),
             (via_count * sizeof(GraphId)));
 
   // Pad to an 8 byte boundary
