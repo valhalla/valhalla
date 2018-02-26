@@ -1,4 +1,6 @@
+#include <iostream>
 #include <sstream>
+#include <unordered_map>
 #include <boost/property_tree/json_parser.hpp>
 
 #include "worker.h"

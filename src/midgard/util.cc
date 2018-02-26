@@ -4,6 +4,7 @@
 #include "valhalla/midgard/point2.h"
 #include "valhalla/midgard/distanceapproximator.h"
 
+#include <cctype>
 #include <cstdint>
 #include <stdlib.h>
 #include <sstream>
