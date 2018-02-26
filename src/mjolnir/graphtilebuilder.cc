@@ -245,39 +245,39 @@ void GraphTileBuilder::StoreTileData() {
   if (file.is_open()) {
     // Write the nodes
     header_builder_.set_nodecount(nodes_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(nodes_builder_.data()),
                nodes_builder_.size() * sizeof(NodeInfo));
 
     // Write the directed edges
     header_builder_.set_directededgecount(directededges_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(directededges_builder_.data()),
                directededges_builder_.size() * sizeof(DirectedEdge));
 
     // Sort and write the access restrictions
     header_builder_.set_access_restriction_count(access_restriction_builder_.size());
     std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(&access_restriction_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(access_restriction_builder_.data()),
                access_restriction_builder_.size() * sizeof(AccessRestriction));
 
     // Sort and write the transit departures
     header_builder_.set_departurecount(departure_builder_.size());
     std::sort(departure_builder_.begin(), departure_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(&departure_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(departure_builder_.data()),
                departure_builder_.size() * sizeof(TransitDeparture));
 
     // Sort write the transit stops
     header_builder_.set_stopcount(stop_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&stop_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(stop_builder_.data()),
                stop_builder_.size() * sizeof(TransitStop));
 
     // Write the transit routes
     header_builder_.set_routecount(route_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&route_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(route_builder_.data()),
                route_builder_.size() * sizeof(TransitRoute));
 
     // Write transit schedules
     header_builder_.set_schedulecount(schedule_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&schedule_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(schedule_builder_.data()),
                schedule_builder_.size() * sizeof(TransitSchedule));
 
     // TODO add transfers later
@@ -285,12 +285,12 @@ void GraphTileBuilder::StoreTileData() {
 
     // Write the signs
     header_builder_.set_signcount(signs_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&signs_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
                signs_builder_.size() * sizeof(Sign));
 
     // Write the admins
     header_builder_.set_admincount(admins_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&admins_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(admins_builder_.data()),
                admins_builder_.size() * sizeof(Admin));
 
     // Edge bins can only be added after you've stored the tile
@@ -348,7 +348,7 @@ void GraphTileBuilder::StoreTileData() {
     // Write lane connections
     header_builder_.set_lane_connectivity_offset(header_builder_.traffic_chunk_offset());
     std::sort(lane_connectivity_builder_.begin(), lane_connectivity_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(&lane_connectivity_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
                lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
     // Write the edge elevation data. Make sure that if it exists it has
@@ -360,7 +360,7 @@ void GraphTileBuilder::StoreTileData() {
         LOG_ERROR("Edge elevation count is not equal to directed edge count!");
       }
       header_builder_.set_has_edge_elevation(true);
-      in_mem.write(reinterpret_cast<const char*>(&edge_elevation_builder_[0]),
+      in_mem.write(reinterpret_cast<const char*>(edge_elevation_builder_.data()),
                          edge_elevation_builder_.size() * sizeof(EdgeElevation));
     }
 
@@ -414,14 +414,14 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     if (nodes.size() != header_->nodecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - node count has changed");
     }
-    file.write(reinterpret_cast<const char*>(&nodes[0]),
+    file.write(reinterpret_cast<const char*>(nodes.data()),
                nodes.size() * sizeof(NodeInfo));
 
     // Write the updated directed edges. Make sure edge count matches.
     if (directededges.size() != header_->directededgecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
     }
-    file.write(reinterpret_cast<const char*>(&directededges[0]),
+    file.write(reinterpret_cast<const char*>(directededges.data()),
                directededges.size() * sizeof(DirectedEdge));
 
     // Write the rest of the tiles
@@ -1032,11 +1032,11 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
                header_->traffic_segmentid_offset() - sizeof(GraphTileHeader));
 
     // Append the traffic segment list
-    file.write(reinterpret_cast<const char*>(&traffic_segment_builder_[0]),
+    file.write(reinterpret_cast<const char*>(traffic_segment_builder_.data()),
                traffic_segment_builder_.size() * sizeof(TrafficAssociation));
 
     // Append the traffic chunks
-    file.write(reinterpret_cast<const char*>(&traffic_chunk_builder_[0]),
+    file.write(reinterpret_cast<const char*>(traffic_chunk_builder_.data()),
                traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
     // Write rest of the stuff after traffic chunks (includes lane connectivity
@@ -1066,7 +1066,7 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
       // Write the updated directed edges
       size_t offset = sizeof(GraphTileHeader) + header_->nodecount() * sizeof(NodeInfo);
       file.seekp(offset, std::ios_base::beg);
-      file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
+      file.write(reinterpret_cast<const char*>(directededges_builder_.data()),
                  directededges_builder_.size() * sizeof(DirectedEdge));
     }
 

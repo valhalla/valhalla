@@ -94,7 +94,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Write out the bytes
   os.write(reinterpret_cast<const char*>(&eib.wayid_), sizeof(uint64_t));
   os.write(reinterpret_cast<const char*>(&item), sizeof(baldr::EdgeInfo::PackedItem));
-  os.write(reinterpret_cast<const char*>(&eib.name_info_list_[0]),
+  os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
             (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;
 
