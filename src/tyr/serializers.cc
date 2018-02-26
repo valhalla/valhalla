@@ -1223,7 +1223,7 @@ namespace {
             {"legs", legs(directions_legs)},
             {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
             {"status", static_cast<uint64_t>(0)}, //0 success
-            {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")},
+            {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
             {"language", directions_options.language()}
           })
         }
@@ -2020,17 +2020,17 @@ namespace {
 namespace valhalla {
   namespace tyr {
 
-    std::string serializeDirections(const DirectionsOptions& directions_options,
+    std::string serializeDirections(const valhalla_request_t& request,
         const std::list<TripPath>& path_legs,
         const std::list<TripDirections>& directions_legs) {
       //serialize them
-      switch(directions_options.format()) {
+      switch(request.options.format()) {
         case DirectionsOptions_Format_osrm:
-          return osrm_serializers::serialize(directions_options, path_legs, directions_legs);
+          return osrm_serializers::serialize(request.options, path_legs, directions_legs);
         case DirectionsOptions_Format_gpx:
           return pathToGPX(path_legs);
         case DirectionsOptions_Format_json:
-          return valhalla_serializers::serialize(directions_options, directions_legs);
+          return valhalla_serializers::serialize(request.options, directions_legs);
         default:
           throw;
       }

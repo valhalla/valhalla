@@ -3116,7 +3116,7 @@ void TestBuildStartInstructions_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3138,7 +3138,7 @@ void TestBuildStartInstructions_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3164,7 +3164,7 @@ void TestBuildStartInstructions_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3189,7 +3189,7 @@ void TestBuildStartInstructions_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3214,7 +3214,7 @@ void TestBuildStartInstructions_5_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3240,7 +3240,7 @@ void TestBuildStartInstructions_6_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3266,7 +3266,7 @@ void TestBuildStartInstructions_8_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3291,7 +3291,7 @@ void TestBuildStartInstructions_9_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3317,7 +3317,7 @@ void TestBuildStartInstructions_9_unnamed_walkway_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3344,7 +3344,7 @@ void TestBuildStartInstructions_10_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3370,7 +3370,7 @@ void TestBuildStartInstructions_16_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3395,7 +3395,7 @@ void TestBuildStartInstructions_17_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3421,7 +3421,7 @@ void TestBuildStartInstructions_17_unnamed_cycleway_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3448,7 +3448,7 @@ void TestBuildStartInstructions_17_unnamed_mountain_bike_trail_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3475,7 +3475,7 @@ void TestBuildStartInstructions_18_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3501,7 +3501,7 @@ void TestBuildStartInstructions_0_kilometers_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kKilometers);
+  directions_options.set_units(DirectionsOptions::kilometers);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3523,7 +3523,7 @@ void TestBuildStartInstructions_1_kilometers_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kKilometers);
+  directions_options.set_units(DirectionsOptions::kilometers);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3546,7 +3546,7 @@ void TestBuildStartInstructions_2_kilometers_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kKilometers);
+  directions_options.set_units(DirectionsOptions::kilometers);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3576,7 +3576,7 @@ void TestBuildDestinationInstructions_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3615,7 +3615,7 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3656,7 +3656,7 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3696,7 +3696,7 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3737,7 +3737,7 @@ void TestBuildBecomesInstructions_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3772,7 +3772,7 @@ void TestBuildContinueInstructions_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3801,7 +3801,7 @@ void TestBuildContinueInstructions_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3831,7 +3831,7 @@ void TestBuildTurnInstructions_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3861,7 +3861,7 @@ void TestBuildTurnInstructions_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -3891,7 +3891,7 @@ void TestBuildTurnInstructions_1_miles_cs_CZ() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("cs-CZ");
 
   // Configure maneuvers
@@ -3921,7 +3921,7 @@ void TestBuildTurnInstructions_1_miles_de_DE() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("de-DE");
 
   // Configure maneuvers
@@ -3951,7 +3951,7 @@ void TestBuildTurnInstructions_1_miles_it_IT() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("it-IT");
 
   // Configure maneuvers
@@ -3981,7 +3981,7 @@ void TestBuildTurnInstructions_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4012,7 +4012,7 @@ void TestBuildTurnInstructions_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4048,7 +4048,7 @@ void TestBuildSharpInstructions_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4078,7 +4078,7 @@ void TestBuildSharpInstructions_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4108,7 +4108,7 @@ void TestBuildSharpInstructions_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4139,7 +4139,7 @@ void TestBuildSharpInstructions_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4177,7 +4177,7 @@ void TestBuildBearInstructions_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4207,7 +4207,7 @@ void TestBuildBearInstructions_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4237,7 +4237,7 @@ void TestBuildBearInstructions_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4268,7 +4268,7 @@ void TestBuildBearInstructions_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4303,7 +4303,7 @@ void TestBuildUturnInstructions_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4331,7 +4331,7 @@ void TestBuildUturnInstructions_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4361,7 +4361,7 @@ void TestBuildUturnInstructions_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4396,7 +4396,7 @@ void TestBuildUturnInstructions_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4426,7 +4426,7 @@ void TestBuildUturnInstructions_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4457,7 +4457,7 @@ void TestBuildUturnInstructions_5_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4494,7 +4494,7 @@ void TestBuildRampStraight_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4525,7 +4525,7 @@ void TestBuildRampStraight_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4555,7 +4555,7 @@ void TestBuildRampStraight_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4585,7 +4585,7 @@ void TestBuildRampStraight_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4617,7 +4617,7 @@ void TestBuildRampStraight_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4647,7 +4647,7 @@ void TestBuildRamp_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4676,7 +4676,7 @@ void TestBuildRamp_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4706,7 +4706,7 @@ void TestBuildRamp_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4735,7 +4735,7 @@ void TestBuildRamp_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4765,7 +4765,7 @@ void TestBuildRamp_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4795,7 +4795,7 @@ void TestBuildRamp_5_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4824,7 +4824,7 @@ void TestBuildRamp_6_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4853,7 +4853,7 @@ void TestBuildRamp_7_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4884,7 +4884,7 @@ void TestBuildRamp_8_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4915,7 +4915,7 @@ void TestBuildRamp_9_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4944,7 +4944,7 @@ void TestBuildExit_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -4973,7 +4973,7 @@ void TestBuildExit_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5002,7 +5002,7 @@ void TestBuildExit_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5032,7 +5032,7 @@ void TestBuildExit_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5061,7 +5061,7 @@ void TestBuildExit_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5090,7 +5090,7 @@ void TestBuildExit_5_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5119,7 +5119,7 @@ void TestBuildExit_6_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5149,7 +5149,7 @@ void TestBuildExit_7_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5180,7 +5180,7 @@ void TestBuildExit_8_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5209,7 +5209,7 @@ void TestBuildExit_10_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5240,7 +5240,7 @@ void TestBuildExit_12_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5271,7 +5271,7 @@ void TestBuildExit_14_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5302,7 +5302,7 @@ void TestBuildKeep_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5331,7 +5331,7 @@ void TestBuildKeep_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5361,7 +5361,7 @@ void TestBuildKeep_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5391,7 +5391,7 @@ void TestBuildKeep_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5421,7 +5421,7 @@ void TestBuildKeep_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5451,7 +5451,7 @@ void TestBuildKeep_5_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5480,7 +5480,7 @@ void TestBuildKeep_6_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5510,7 +5510,7 @@ void TestBuildKeep_7_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5541,7 +5541,7 @@ void TestBuildKeepToStayOn_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5577,7 +5577,7 @@ void TestBuildKeepToStayOn_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5613,7 +5613,7 @@ void TestBuildKeepToStayOn_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5649,7 +5649,7 @@ void TestBuildKeepToStayOn_3_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5686,7 +5686,7 @@ void TestBuildMerge_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5718,7 +5718,7 @@ void TestBuildMerge_1_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5752,7 +5752,7 @@ void TestBuildMerge_1_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5788,7 +5788,7 @@ void TestBuildEnterRoundabout_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5817,7 +5817,7 @@ void TestBuildEnterRoundabout_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   uint32_t roundabout_exit_count = 1;
@@ -5855,7 +5855,7 @@ void TestBuildExitRoundabout_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5884,7 +5884,7 @@ void TestBuildExitRoundabout_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5914,7 +5914,7 @@ void TestBuildExitRoundabout_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5945,7 +5945,7 @@ void TestBuildEnterFerry_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -5974,7 +5974,7 @@ void TestBuildEnterFerry_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6005,7 +6005,7 @@ void TestBuildEnterFerry_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6036,7 +6036,7 @@ void TestBuildExitFerry_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6066,7 +6066,7 @@ void TestBuildExitFerry_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6096,7 +6096,7 @@ void TestBuildExitFerry_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6126,7 +6126,7 @@ void TestBuildExitFerry_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6156,7 +6156,7 @@ void TestBuildExitFerry_5_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6186,7 +6186,7 @@ void TestBuildExitFerry_6_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6216,7 +6216,7 @@ void TestBuildExitFerry_8_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6246,7 +6246,7 @@ void TestBuildExitFerry_9_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6276,7 +6276,7 @@ void TestBuildExitFerry_10_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6306,7 +6306,7 @@ void TestBuildExitFerry_16_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6336,7 +6336,7 @@ void TestBuildExitFerry_17_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6366,7 +6366,7 @@ void TestBuildExitFerry_18_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6396,7 +6396,7 @@ void TestBuildTransitConnectionStart_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6426,7 +6426,7 @@ void TestBuildTransitConnectionStart_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6456,7 +6456,7 @@ void TestBuildTransitConnectionStart_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6486,7 +6486,7 @@ void TestBuildTransitConnectionTransfer_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6516,7 +6516,7 @@ void TestBuildTransitConnectionTransfer_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6546,7 +6546,7 @@ void TestBuildTransitConnectionTransfer_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6576,7 +6576,7 @@ void TestBuildTransitConnectionDestination_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6606,7 +6606,7 @@ void TestBuildTransitConnectionDestination_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6636,7 +6636,7 @@ void TestBuildTransitConnectionDestination_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6666,7 +6666,7 @@ void TestBuildTransit_0_train_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6698,7 +6698,7 @@ void TestBuildTransit_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6732,7 +6732,7 @@ void TestBuildTransit_1_cable_car_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6767,7 +6767,7 @@ void TestBuildTransit_1_stop_count_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6801,7 +6801,7 @@ void TestBuildTransit_1_stop_count_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6835,7 +6835,7 @@ void TestBuildTransit_1_stop_count_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6869,7 +6869,7 @@ void TestBuildTransit_1_stop_count_8_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -6903,7 +6903,7 @@ void TestBuildTransit_1_stop_count_1_miles_cs_CZ() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("cs-CZ");
 
   // Configure maneuvers
@@ -6937,7 +6937,7 @@ void TestBuildTransit_1_stop_count_2_miles_cs_CZ() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("cs-CZ");
 
   // Configure maneuvers
@@ -6971,7 +6971,7 @@ void TestBuildTransit_1_stop_count_4_miles_cs_CZ() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("cs-CZ");
 
   // Configure maneuvers
@@ -7005,7 +7005,7 @@ void TestBuildTransit_1_stop_count_8_miles_cs_CZ() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("cs-CZ");
 
   // Configure maneuvers
@@ -7039,7 +7039,7 @@ void TestBuildTransitTransfer_0_no_name_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7074,7 +7074,7 @@ void TestBuildTransitTransfer_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7107,7 +7107,7 @@ void TestBuildTransitTransfer_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7140,7 +7140,7 @@ void TestBuildTransitRemainOn_0_no_name_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7175,7 +7175,7 @@ void TestBuildTransitRemainOn_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7208,7 +7208,7 @@ void TestBuildTransitRemainOn_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7241,7 +7241,7 @@ void TestBuildPostTransitConnectionDestination_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7271,7 +7271,7 @@ void TestBuildPostTransitConnectionDestination_1_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7301,7 +7301,7 @@ void TestBuildPostTransitConnectionDestination_2_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7331,7 +7331,7 @@ void TestBuildPostTransitConnectionDestination_4_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7361,7 +7361,7 @@ void TestBuildPostTransitConnectionDestination_5_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7391,7 +7391,7 @@ void TestBuildPostTransitConnectionDestination_6_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7421,7 +7421,7 @@ void TestBuildPostTransitConnectionDestination_8_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7451,7 +7451,7 @@ void TestBuildPostTransitConnectionDestination_9_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7481,7 +7481,7 @@ void TestBuildPostTransitConnectionDestination_10_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7511,7 +7511,7 @@ void TestBuildPostTransitConnectionDestination_16_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7541,7 +7541,7 @@ void TestBuildPostTransitConnectionDestination_17_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7571,7 +7571,7 @@ void TestBuildPostTransitConnectionDestination_18_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7599,7 +7599,7 @@ void TestBuildVerbalMultiCue_0_miles_en_US() {
 
   // Configure directions options
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   // Configure maneuvers
@@ -7654,7 +7654,7 @@ void TryFormVerbalPostTransitionInstruction(NarrativeBuilderTest& nbt,
 
 void TestFormVerbalPostTransitionInstruction() {
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kKilometers);
+  directions_options.set_units(DirectionsOptions::kilometers);
   directions_options.set_language("en-US");
 
   const NarrativeDictionary& dictionary = GetNarrativeDictionary(
@@ -7819,7 +7819,7 @@ void TestFormVerbalPostTransitionInstruction() {
 
   /////////////////////////////////////////////////////////////////////////////
 
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
 
   NarrativeBuilderTest nbt_mi(directions_options, dictionary);
 
@@ -8043,7 +8043,7 @@ void TryFormRampStraightInstruction(NarrativeBuilderTest& nbt,
 
 void TestFormRampStraightInstruction() {
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   const NarrativeDictionary& dictionary = GetNarrativeDictionary(
@@ -8132,7 +8132,7 @@ void TryFormRampRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver,
 
 void TestFormRampRightInstruction() {
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   const NarrativeDictionary& dictionary = GetNarrativeDictionary(
@@ -8265,7 +8265,7 @@ void TryFormRampLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver,
 
 void TestFormRampLeftInstruction() {
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   const NarrativeDictionary& dictionary = GetNarrativeDictionary(
@@ -8396,7 +8396,7 @@ void TryFormExitRightInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver,
 
 void TestFormExitRightInstruction() {
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   const NarrativeDictionary& dictionary = GetNarrativeDictionary(
@@ -8526,7 +8526,7 @@ void TryFormExitLeftInstruction(NarrativeBuilderTest& nbt, Maneuver maneuver,
 
 void TestFormExitLeftInstruction() {
   DirectionsOptions directions_options;
-  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_units(DirectionsOptions::miles);
   directions_options.set_language("en-US");
 
   const NarrativeDictionary& dictionary = GetNarrativeDictionary(

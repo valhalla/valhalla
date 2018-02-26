@@ -19,13 +19,13 @@ namespace {
 void no_data() {
   //check the no data value
   skadi::sample s("test/data/this_is_not_a_directory");
-  if(s.get_no_data_value() != -32768)
+  if(skadi::sample::get_no_data_value() != -32768)
     throw std::logic_error("No data value should be -32768");
 
-  if(s.get(std::make_pair(0.0,0.0)) != s.get_no_data_value())
+  if(s.get(std::make_pair(0.0,0.0)) != skadi::sample::get_no_data_value())
     throw std::logic_error("Asked for point with no data should be no data value");
 
-  if(s.get(std::make_pair(200.0, 200.0)) != s.get_no_data_value())
+  if(s.get(std::make_pair(200.0, 200.0)) != skadi::sample::get_no_data_value())
     throw std::logic_error("Asked for point outside of valid range");
 }
 
@@ -111,7 +111,7 @@ void _get(const std::string& location) {
   double riemann_sum = 0;
   auto heights = s.get_all(postings);
   for(const auto height : heights) {
-    if(height == s.get_no_data_value())
+    if(height == skadi::sample::get_no_data_value())
       throw std::runtime_error("Should have heights for all of these points");
     riemann_sum += height;
   }
@@ -153,7 +153,7 @@ void edges() {
 
   //check 0 pixels
   v = s.get(std::make_pair(-180.f + n, -89.f - n * 5));
-  if(v != s.get_no_data_value())
+  if(v != skadi::sample::get_no_data_value())
     throw std::runtime_error("Wrong value at location");
 }
 
@@ -163,7 +163,7 @@ void lazy_load() {
     std::ofstream file("test/data/sample/N00/N00E000.hgt", std::ios::binary | std::ios::trunc);
   }
   skadi::sample s("test/data/sample");
-  if(s.get(std::make_pair(0.503915, 0.678783)) != s.get_no_data_value())
+  if(s.get(std::make_pair(0.503915, 0.678783)) != skadi::sample::get_no_data_value())
     throw std::logic_error("Asked for point with no data should be no data value");
 
   //put data there

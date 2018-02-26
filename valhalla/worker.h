@@ -21,15 +21,26 @@ using namespace prime_server;
 
 namespace valhalla {
 
+  //TODO: this will go away and DirectionsOptions will be the request object
+  struct valhalla_request_t {
+    rapidjson::Document document;
+    odin::DirectionsOptions options;
+
+    valhalla_request_t();
+    valhalla_request_t(const std::string& request, odin::DirectionsOptions::Action action);
+    valhalla_request_t(const std::string& request, const std::string& serialized_options);
 #ifdef HAVE_HTTP
-  rapidjson::Document from_request(const http_request_t& request);
-  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const odin::DirectionsOptions& options);
-  worker_t::result_t to_response(baldr::json::ArrayPtr array, http_request_info_t& request_info, const odin::DirectionsOptions& options);
-  worker_t::result_t to_response(baldr::json::MapPtr map, http_request_info_t& request_info, const odin::DirectionsOptions& options);
-  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const odin::DirectionsOptions& options);
-  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info, const odin::DirectionsOptions& options);
+    valhalla_request_t(const http_request_t& request);
 #endif
-  odin::DirectionsOptions from_json(rapidjson::Document& doc);
+  };
+
+#ifdef HAVE_HTTP
+  worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const valhalla_request_t& options);
+  worker_t::result_t to_response(baldr::json::ArrayPtr array, http_request_info_t& request_info, const valhalla_request_t& options);
+  worker_t::result_t to_response(baldr::json::MapPtr map, http_request_info_t& request_info, const valhalla_request_t& options);
+  worker_t::result_t to_response_json(const std::string& json, http_request_info_t& request_info, const valhalla_request_t& options);
+  worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info, const valhalla_request_t& options);
+#endif
 
   class service_worker_t {
    public:

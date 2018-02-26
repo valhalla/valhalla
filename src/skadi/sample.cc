@@ -265,7 +265,7 @@ namespace skadi {
     return values;
   }
 
-  double sample::get_no_data_value() const {
+  double sample::get_no_data_value() {
     return NO_DATA_VALUE;
   }
 
