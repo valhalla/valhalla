@@ -1,6 +1,6 @@
 AC_INIT([valhalla],
 	[m4_esyscmd([./version.sh])],
-	[https://github.com/valhalla/valahlla/issues],
+	[https://github.com/valhalla/valhalla/issues],
 	[valhalla-[m4_esyscmd([./version.sh])]],
 	[https://github.com/valhalla/valahlla])
 AC_CONFIG_AUX_DIR([.])
