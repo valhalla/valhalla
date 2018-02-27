@@ -382,6 +382,7 @@ libvalhalla_la_SOURCES = \
 	src/tyr/matrix_serializer.cc \
 	src/tyr/height_serializer.cc \
 	src/tyr/locate_serializer.cc \
+	src/tyr/route_serializer.cc \
 	src/tyr/transit_available_serializer.cc \
 	src/tyr/trace_serializer.cc \
 	src/tyr/navigator.cc \
