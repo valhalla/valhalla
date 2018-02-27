@@ -18,7 +18,6 @@
 #include <stdexcept>
 
 #include <sqlite3.h>
-#include <spatialite.h>
 #include <boost/filesystem/operations.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
