@@ -18,6 +18,7 @@
 #include <boost/foreach.hpp>
 
 #include "baldr/datetime.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/graphtile.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
@@ -683,11 +684,11 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   }
 
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
-  transit_dir->push_back('/');
+  transit_dir->push_back(filesystem::path_separator);
   GraphReader reader(hierarchy_properties);
   auto local_level = TileHierarchy::levels().rbegin()->first;
-  if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {
-    boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + "/"), end_file_itr;
+  if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + filesystem::path_separator)) {
+    boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + filesystem::path_separator), end_file_itr;
     for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
       if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".gph") {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
@@ -695,7 +696,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
         if(GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
-          const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") + '/' + GraphTile::FileSuffix(graph_id);
+          const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") + filesystem::path_separator + GraphTile::FileSuffix(graph_id);
           boost::filesystem::path filename = destination_path;
           // Make sure the directory exists on the system and copy to the tile_dir
           if (!boost::filesystem::exists(filename.parent_path()))

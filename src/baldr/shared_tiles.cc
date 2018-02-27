@@ -1,5 +1,6 @@
 #include <cstdint>
 #include "baldr/shared_tiles.h"
+#include "baldr/filesystem_utils.h"
 
 #include <string>
 #include <iostream>
@@ -33,7 +34,7 @@ SharedTiles::SharedTiles(const boost::property_tree::ptree& pt) {
 
   // Open to the end of the file so we can immediately get size;
   size_t filesize = 0;
-  std::string file_location = tile_dir + "/" + shared_tile_file;
+  std::string file_location = tile_dir + filesystem::path_separator + shared_tile_file;
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     filesize = file.tellg();

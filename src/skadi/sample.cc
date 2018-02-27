@@ -6,6 +6,7 @@
 #include <limits>
 #include <list>
 #include <fstream>
+#include <string>
 #include <boost/regex.hpp>
 #include <sys/stat.h>
 #include <zlib.h>
@@ -14,6 +15,8 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+
+#include "baldr/filesystem_utils.h"
 
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -128,7 +131,7 @@ namespace skadi {
   sample::sample(const std::string& data_source):
       mapped_cache(TILE_COUNT), unzipped_cache(-1, std::vector<int16_t>(HGT_PIXELS)), data_source(data_source) {
     //messy but needed
-    while(this->data_source.size() && this->data_source.back() == '/')
+    while(this->data_source.size() && this->data_source.back() == baldr::filesystem::path_separator)
       this->data_source.pop_back();
 
     //check the directory for files that look like what we need

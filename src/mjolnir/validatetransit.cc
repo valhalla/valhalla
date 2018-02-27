@@ -14,6 +14,7 @@
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "baldr/datetime.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
@@ -469,11 +470,11 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
       return false;
     }
     // Also bail if nothing inside
-    transit_dir->push_back('/');
+    transit_dir->push_back(filesystem::path_separator);
     GraphReader reader(hierarchy_properties);
     auto local_level = TileHierarchy::levels().rbegin()->first;
-    if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {
-      boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + "/"), end_file_itr;
+    if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + filesystem::path_separator)) {
+      boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + filesystem::path_separator), end_file_itr;
       for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
         if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".gph") {
           auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());

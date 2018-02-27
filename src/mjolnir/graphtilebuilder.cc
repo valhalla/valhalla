@@ -3,10 +3,12 @@
 #include "midgard/logging.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
 #include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>
+#include <set>
 #include <list>
 #include <algorithm>
 
@@ -231,8 +233,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 // Output the tile to file. Stores as binary data.
 void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + '/'
-      + GraphTile::FileSuffix(header_builder_.graphid());
+  boost::filesystem::path filename(tile_dir_ + filesystem::path_separator
+      + GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -396,7 +398,7 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     const std::vector<DirectedEdge>& directededges) {
 
   // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + '/' +
+  boost::filesystem::path filename = tile_dir_ + filesystem::path_separator +
         GraphTile::FileSuffix(header_->graphid());
 
   // Make sure the directory exists on the system
@@ -574,7 +576,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       // Verify name is not empty
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
-        NameInfo ni({AddName(name)});
+        NameInfo ni{AddName(name)};
         ni.is_ref_= 0;
         if ((types & (1ULL << location)))
           ni.is_ref_= 1; // set the ref bit.
@@ -645,7 +647,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       // Verify name is not empty
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
-        NameInfo ni({AddName(name)});
+        NameInfo ni{AddName(name)};
         ni.is_ref_= 0;
         if ((types & (1ULL << location)))
           ni.is_ref_= 1; // set the ref bit.
@@ -890,7 +892,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
-  boost::filesystem::path filename = tile_dir + '/' + GraphTile::FileSuffix(header.graphid());
+  boost::filesystem::path filename = tile_dir + filesystem::path_separator + GraphTile::FileSuffix(header.graphid());
   if(!boost::filesystem::exists(filename.parent_path()))
     boost::filesystem::create_directories(filename.parent_path());
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -1013,7 +1015,7 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
   header_builder_.set_end_offset(header_builder_.end_offset() + shift);
 
   // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + '/'
+  boost::filesystem::path filename = tile_dir_ + filesystem::path_separator
       + GraphTile::FileSuffix(header_builder_.graphid());
 
   // Make sure the directory exists on the system
