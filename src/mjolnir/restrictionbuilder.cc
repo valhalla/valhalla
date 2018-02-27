@@ -7,6 +7,7 @@
 #include <future>
 #include <thread>
 #include <queue>
+#include <set>
 
 #include <boost/filesystem/operations.hpp>
 

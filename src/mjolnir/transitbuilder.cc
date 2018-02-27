@@ -10,8 +10,6 @@
 #include <unordered_map>
 #include <tuple>
 #include <set>
-#include <sqlite3.h>
-#include <spatialite.h>
 #include <fstream>
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
