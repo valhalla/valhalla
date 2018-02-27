@@ -22,6 +22,7 @@
 #include <google/protobuf/io/coded_stream.h>
 
 #include "midgard/logging.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/tilehierarchy.h"
@@ -720,7 +721,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     Transit tile;
     auto file_name = GraphTile::FileSuffix(current);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
+    boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator + file_name;
 
     //tiles are wrote out with .pbf or .pbf.n ext
     uint32_t ext = 0;
@@ -912,7 +913,7 @@ void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
   auto tile_name = [&pt](const GraphId& id){
     auto file_name = GraphTile::FileSuffix(id);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    return pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
+    return pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator + file_name;
   };
 
   //for each tile
@@ -1785,7 +1786,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::string file_name = GraphTile::FileSuffix(GraphId(end_platform_graphid.tileid(), end_platform_graphid.level(),0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
-        const std::string file = transit_dir + '/' + file_name;
+        const std::string file = transit_dir + filesystem::path_separator + file_name;
         Transit endtransit = read_pbf(file, lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
@@ -1903,7 +1904,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
-    const std::string file = transit_dir + '/' + file_name;
+    const std::string file = transit_dir + filesystem::path_separator + file_name;
 
     // Make sure it exists
     if (!boost::filesystem::exists(file)) {
@@ -2216,7 +2217,7 @@ int main(int argc, char** argv) {
   curl_global_cleanup();
 
   //figure out which transit tiles even exist
-  boost::filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.transit_dir") + '/' +
+  boost::filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator +
                                                                    std::to_string(TileHierarchy::levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
