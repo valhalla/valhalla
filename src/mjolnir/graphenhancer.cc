@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <cinttypes>
 #include <limits>
+#include <stdexcept>
 
 #include <sqlite3.h>
 #include <spatialite.h>
@@ -1038,7 +1039,10 @@ void enhance(const boost::property_tree::ptree& pt,
       // on the node as well.
       uint32_t count = nodeinfo.edge_count();
       uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
-      uint32_t heading[ntrans];
+      if (ntrans == 0)
+        throw std::runtime_error("edge transitions set is empty");
+
+      std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
       for (uint32_t j = 0; j < ntrans; j++) {
         DirectedEdge& directededge =
@@ -1203,7 +1207,7 @@ void enhance(const boost::property_tree::ptree& pt,
         // Set edge transitions and unreachable, not_thru, and internal
         // intersection flags.
         if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, &heading[0],
                                  nodeinfo, stats);
         }
 
