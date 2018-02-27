@@ -2,7 +2,7 @@ AC_INIT([valhalla],
 	[m4_esyscmd([./version.sh])],
 	[https://github.com/valhalla/valhalla/issues],
 	[valhalla-[m4_esyscmd([./version.sh])]],
-	[https://github.com/valhalla/valahlla])
+	[https://github.com/valhalla/valhalla])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 # no static lib by default but you can ask for it
