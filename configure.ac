@@ -118,7 +118,7 @@ AM_COND_IF([DATA_TOOLS], [
     AS_IF([test "x$GEOS_VERSION" = "x"], [AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.])])
 
     # spatialite needed for admin info
-    PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
+    PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], AC_DEFINE(HAVE_SPATIALITE, [1], [Have Spatialite library]), AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
 
 ])
 
