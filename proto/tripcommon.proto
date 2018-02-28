@@ -10,16 +10,29 @@ message BoundingBox {
   optional LatLng max_ll = 2;
 }
 
+enum SideOfStreet {
+  kNone = 0;
+  kLeft = 1;
+  kRight = 2;
+}
+
+message PathEdge {
+  optional uint64 graph_id = 1;
+  optional float dist = 2;
+  optional LatLng projected_ll = 3;
+  optional SideOfStreet side_of_street = 4;
+  optional bool begin_node = 5;
+  optional bool end_node = 6;
+  optional float score = 7;
+  optional int32 minimum_reachability = 8;
+  optional bool used = 9;
+  repeated string names = 10;
+}
+
 message Location {
   enum Type {
     kBreak = 0;
     kThrough = 1;
-  }
-
-  enum SideOfStreet {
-    kNone = 0;
-    kLeft = 1;
-    kRight = 2;
   }
 
   optional LatLng ll = 1;
@@ -35,6 +48,7 @@ message Location {
   optional SideOfStreet side_of_street = 11;
   optional uint32 original_index = 12;
   optional LatLng projected_ll = 13;
+  repeated PathEdge path_edges = 14;
 }
 
   message TransitEgressInfo {
