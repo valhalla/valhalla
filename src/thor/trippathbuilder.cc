@@ -253,11 +253,11 @@ TripPath_Traversability GetTripPathTraversability(const Traversability traversab
 }
 
 // Associate side of street to TripPath proto
-constexpr odin::Location_SideOfStreet kTripPathSideOfStreet[] = {
-    odin::Location_SideOfStreet_kNone,
-    odin::Location_SideOfStreet_kLeft,
-    odin::Location_SideOfStreet_kRight };
-odin::Location_SideOfStreet GetTripPathSideOfStreet(
+constexpr SideOfStreet kTripPathSideOfStreet[] = {
+    SideOfStreet::kNone,
+    SideOfStreet::kLeft,
+    SideOfStreet::kRight };
+odin::SideOfStreet GetTripPathSideOfStreet(
           const PathLocation::SideOfStreet sos) {
   return kTripPathSideOfStreet[static_cast<uint32_t>(sos)];
 }
