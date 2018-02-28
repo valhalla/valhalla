@@ -207,3 +207,5 @@ coverage/
 .cproject
 .project
 .settings
+/.vs*/
+/*build*/
