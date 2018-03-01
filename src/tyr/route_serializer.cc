@@ -176,9 +176,9 @@ namespace {
       //this way we wouldn't really have to do any decoding (would be far faster). it might even be the case
       //that the string length of the first number is a fixed length (which would be great!) have to have a look
       //should make this a function in midgard probably so the logic is all in the same place
-      std::vector<std::pair<float, float> > decoded;
+      std::vector<PointLL> decoded;
       for(const auto& leg : legs) {
-        auto decoded_leg = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+        auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
         decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(), decoded_leg.end());
       }
       return midgard::encode(decoded);
@@ -263,7 +263,7 @@ namespace {
     // Add intersections along a step/maneuver.
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
             std::list<odin::TripPath>::const_iterator path_leg,
-            const std::vector<std::pair<float, float>>& shape, uint32_t& count) {
+            const std::vector<PointLL>& shape, uint32_t& count) {
       // Iterate through the nodes/intersections of the path for this maneuver
       count = 0;
       auto intersections = json::array({});
@@ -530,8 +530,8 @@ namespace {
     // Method to get the geometry string for a maneuver.
     // TODO - encoding options
     std::string maneuver_geometry(const uint32_t begin_idx, const uint32_t end_idx,
-                  const std::vector<std::pair<float, float>>& shape) {
-      std::vector<std::pair<float, float>> maneuver_shape(shape.begin() + begin_idx,
+                  const std::vector<PointLL>& shape) {
+      std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx,
                   shape.begin() + end_idx);
       return std::string(midgard::encode(maneuver_shape));
     }
@@ -630,7 +630,7 @@ namespace {
 
         // Get the full shape for the leg. We want to use this for serializing
         // encoded shape for each step (maneuver) in OSRM output.
-        auto shape = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+        auto shape = midgard::decode<std::vector<PointLL > >(leg.shape());
 
         // Iterate through maneuvers - convert to OSRM steps
         uint32_t index = 0;
@@ -2049,7 +2049,7 @@ namespace {
     //for each leg
     for(const auto& leg : legs) {
       //decode the shape for this leg
-      auto wpts = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+      auto wpts = midgard::decode<std::vector<PointLL>>(leg.shape());
 
       //throw the shape points in as way points
       //TODO: add time to each, need transition time at nodes
