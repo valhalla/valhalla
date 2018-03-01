@@ -501,12 +501,34 @@ class GraphReader {
   /**
    * Get the start node of an edge.
    * @param edgeid Edge Id (Graph Id)
-   * @param tile   Current tile.
    * @return  Returns the start node of the edge.
    */
   GraphId edge_startnode(const GraphId& edgeid) {
     const GraphTile* NO_TILE = nullptr;
     return edge_startnode(edgeid, NO_TILE);
+  }
+
+  /**
+   * Get the edgeinfo of an edge
+   * @param edgeid Edge Id (Graph Id)
+   * @param tile   Current tile.
+   * @returns Returns the edgeinfo for the specified id.
+   */
+  EdgeInfo edgeinfo(const GraphId& edgeid, const GraphTile*& tile) {
+    auto* edge = directededge(edgeid, tile);
+    if(edge == nullptr)
+      throw std::runtime_error("Cannot find edgeinfo for edge: " + std::to_string(edgeid));
+    return tile->edgeinfo(edge->edgeinfo_offset());
+  }
+
+  /**
+   * Get the edgeinfo of an edge
+   * @param edgeid Edge Id (Graph Id)
+   * @returns Returns the edgeinfo for the specified id.
+   */
+  EdgeInfo edgeinfo(const GraphId& edgeid) {
+    const GraphTile* NO_TILE = nullptr;
+    return edgeinfo(edgeid, NO_TILE);
   }
 
   /**

@@ -253,11 +253,11 @@ TripPath_Traversability GetTripPathTraversability(const Traversability traversab
 }
 
 // Associate side of street to TripPath proto
-constexpr SideOfStreet kTripPathSideOfStreet[] = {
-    SideOfStreet::kNone,
-    SideOfStreet::kLeft,
-    SideOfStreet::kRight };
-odin::SideOfStreet GetTripPathSideOfStreet(
+constexpr odin::Location::SideOfStreet kTripPathSideOfStreet[] = {
+    odin::Location::kNone,
+    odin::Location::kLeft,
+    odin::Location::kRight };
+odin::Location::SideOfStreet GetTripPathSideOfStreet(
           const PathLocation::SideOfStreet sos) {
   return kTripPathSideOfStreet[static_cast<uint32_t>(sos)];
 }
@@ -373,7 +373,7 @@ TripPath_Use GetTripPathUse(const Use use) {
  * @return Returns a proto Location object.
  */
 odin::Location* AddLocation(TripPath& trip_path, const PathLocation& loc,
-                            const odin::Location_Type type) {
+                            const odin::Location::Type type) {
   odin::Location* tp_loc = trip_path.add_location();
   odin::LatLng* ll = tp_loc->mutable_ll();
   ll->set_lat(loc.latlng_.lat());
@@ -522,13 +522,13 @@ TripPath TripPathBuilder::Build(
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
   odin::Location* tp_orig = AddLocation(trip_path, origin,
-                               odin::Location_Type_kBreak);
+                               odin::Location::kBreak);
   for (const auto& through : through_loc) {
     odin::Location* tp_through = AddLocation(trip_path, through,
-                                    odin::Location_Type_kThrough);
+                                    odin::Location::kThrough);
   }
   odin::Location* tp_dest = AddLocation(trip_path, dest,
-                                 odin::Location_Type_kBreak);
+                                 odin::Location::kBreak);
 
   uint32_t origin_sec_from_mid = 0;
   if (origin.date_time_)

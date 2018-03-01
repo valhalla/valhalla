@@ -110,7 +110,10 @@ namespace valhalla {
         const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         for(size_t i = 0; i < locations.size(); ++i) {
           const auto& correlated = projections.at(locations[i]);
-          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request.document, correlated.ToRapidJson(i,allocator));
+          //TODO: remove this when using pbf everywhere
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).
+              Set(request.document, correlated.ToRapidJson(i,allocator));
+          toPBF(correlated, request.options.mutable_locations()->Add());
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           if (!connectivity_map)

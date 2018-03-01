@@ -107,7 +107,11 @@ namespace valhalla {
         //correlate the various locations to the underlying graph
         const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         for(size_t i = 0; i < locations.size(); ++i) {
-          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request.document, projections.at(locations[i]).ToRapidJson(i, allocator));
+          const auto& projection = projections.at(locations[i]);
+          //TODO: remove this when using pbf everywhere
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).
+              Set(request.document, projection.ToRapidJson(i,allocator));
+          toPBF(projection, request.options.mutable_locations()->Add());
         }
       }
       catch(const std::exception&) {

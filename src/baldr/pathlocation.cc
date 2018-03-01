@@ -5,7 +5,7 @@ namespace valhalla{
 namespace baldr{
 
   PathLocation::PathEdge::PathEdge(const GraphId& id, const float dist,
-    const midgard::PointLL& projected, const float score, const SideOfStreet sos, const int minimum_reachability):
+    const midgard::PointLL& projected, const float score, const SideOfStreet sos, const unsigned int minimum_reachability):
     id(id), dist(dist), projected(projected), sos(sos), score(score), minimum_reachability(minimum_reachability) {
   }
   bool PathLocation::PathEdge::begin_node() const {
@@ -65,12 +65,12 @@ namespace baldr{
     for(const auto& edge : rapidjson::get<rapidjson::Value::ConstArray>(path_location, "/edges")) {
       p.edges.emplace_back(GraphId(rapidjson::get<uint64_t>(edge, "/id")), rapidjson::get<float>(edge, "/dist"),
         midgard::PointLL(rapidjson::get<double>(edge, "/projected/lon"), rapidjson::get<double>(edge, "/projected/lat")),
-        rapidjson::get<float>(edge, "/score"), static_cast<SideOfStreet>(rapidjson::get<int>(edge, "/sos")), rapidjson::get<int>(edge, "/minimum_reachability"));
+        rapidjson::get<float>(edge, "/score"), static_cast<SideOfStreet>(rapidjson::get<int>(edge, "/sos")), rapidjson::get<unsigned int>(edge, "/minimum_reachability"));
     }
     for (const auto& edge : rapidjson::get<rapidjson::Value::ConstArray>(path_location, "/filtered_edges")) {
       p.filtered_edges.emplace_back(GraphId(rapidjson::get<uint64_t>(edge, "/id")), rapidjson::get<float>(edge, "/dist"),
         midgard::PointLL(rapidjson::get<double>(edge, "/projected/lon"), rapidjson::get<double>(edge, "/projected/lat")),
-        rapidjson::get<float>(edge, "/score"), static_cast<SideOfStreet>(rapidjson::get<int>(edge, "/sos")), rapidjson::get<int>(edge, "/minimum_reachability"));
+        rapidjson::get<float>(edge, "/score"), static_cast<SideOfStreet>(rapidjson::get<int>(edge, "/sos")), rapidjson::get<unsigned int>(edge, "/minimum_reachability"));
     }
     return p;
   }
@@ -93,5 +93,6 @@ namespace baldr{
 
     return e;
   }
+
 }
 }
