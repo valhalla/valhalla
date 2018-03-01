@@ -731,7 +731,8 @@ namespace {
 
       // If here then the route succeeded. Set status code to OK and serialize
       // waypoints (locations).
-      json->emplace("code", "Ok");
+      std::string status("Ok");
+      json->emplace("code", status);
       json->emplace("waypoints", waypoints(legs));
 
       // Add each route
