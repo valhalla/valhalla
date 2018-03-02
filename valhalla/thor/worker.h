@@ -93,8 +93,6 @@ class thor_worker_t : public service_worker_t{
   std::vector<baldr::Location> locations;
   std::vector<meili::Measurement> trace;
   std::vector<baldr::PathLocation> correlated;
-  std::vector<baldr::PathLocation> correlated_s;
-  std::vector<baldr::PathLocation> correlated_t;
   sif::CostFactory<sif::DynamicCost> factory;
   valhalla::sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
   // Path algorithms (TODO - perhaps use a map?))

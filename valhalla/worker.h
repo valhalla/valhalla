@@ -21,6 +21,13 @@ using namespace prime_server;
 
 namespace valhalla {
 
+  namespace pbf_utils {
+    bool equals(const odin::LatLng& a, const odin::LatLng&b) {
+      return a.has_lat() == b.has_lat() && a.has_lng() == b.has_lng() &&
+          (!a.has_lat() || a.lat() == b.lat()) && (!a.has_lng() || a.lng() == b.lng());
+    }
+  }
+
   //TODO: this will go away and DirectionsOptions will be the request object
   struct valhalla_request_t {
     rapidjson::Document document;

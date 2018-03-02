@@ -39,12 +39,12 @@ namespace valhalla {
       std::vector<TimeDistance> time_distances;
       auto costmatrix = [&]() {
         thor::CostMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+        return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, mode_costing,
                                     mode, max_matrix_distance.find(costing)->second);
       };
       auto timedistancematrix = [&]() {
         thor::TimeDistanceMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+        return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, mode_costing,
                                     mode, max_matrix_distance.find(costing)->second);
       };
       switch (source_to_target_algorithm) {
@@ -67,7 +67,7 @@ namespace valhalla {
           time_distances = timedistancematrix();
           break;
       }
-      return tyr::serializeMatrix(request, correlated_s, correlated_t, time_distances, distance_scale);
+      return tyr::serializeMatrix(request, time_distances, distance_scale);
     }
   }
 }
