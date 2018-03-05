@@ -12,69 +12,141 @@ using namespace valhalla::thor;
 
 namespace {
 
-  json::ArrayPtr locations(const std::vector<baldr::PathLocation>& correlated) {
-    auto input_locs = json::array({});
-    for(size_t i = 0; i < correlated.size(); i++) {
-      input_locs->emplace_back(
-        json::map({
-          {"lat", json::fp_t{correlated[i].latlng_.lat(), 6}},
-          {"lon", json::fp_t{correlated[i].latlng_.lng(), 6}}
-        })
-      );
-    }
-    return input_locs;
-  }
+  namespace osrm_serializers {
 
-  json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
-      size_t start_td, const size_t td_count, const size_t source_index, const size_t target_index, double distance_scale) {
-    auto row = json::array({});
-    for(size_t i = start_td; i < start_td + td_count; ++i) {
-      //check to make sure a route was found; if not, return null for distance & time in matrix result
-      if (tds[i].time != kMaxCost) {
-        row->emplace_back(json::map({
-          {"from_index", static_cast<uint64_t>(source_index)},
-          {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-          {"time", static_cast<uint64_t>(tds[i].time)},
-          {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}
-        }));
-      } else {
-        row->emplace_back(json::map({
-          {"from_index", static_cast<uint64_t>(source_index)},
-          {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-          {"time", static_cast<std::nullptr_t>(nullptr)},
-          {"distance", static_cast<std::nullptr_t>(nullptr)}
-        }));
+    json::MapPtr waypoints(const baldr::PathLocation& correlated) {
+      auto waypoint = json::map({});
+      auto loc = json::array({});
+      loc->emplace_back(json::fp_t{correlated.latlng_.lat(), 6});
+      loc->emplace_back(json::fp_t{correlated.latlng_.lng(), 6});
+
+      waypoint->emplace("location", loc);
+      waypoint->emplace("name", std::string(correlated.name_));
+      waypoint->emplace("hint", std::string("shape"));
+      return waypoint;
+    }
+
+    json::ArrayPtr serialize_duration(const std::vector<TimeDistance>& tds, size_t start_td, const size_t td_count) {
+      auto time = json::array({});
+      for(size_t i = start_td; i < start_td + td_count; ++i) {
+       //check to make sure a route was found; if not, return null for time in matrix result
+       if (tds[i].time != kMaxCost) {
+         time->emplace_back(static_cast<uint64_t>(tds[i].time));
+       } else {
+         time->emplace_back(static_cast<std::nullptr_t>(nullptr));
+       }
       }
+      return time;
     }
-    return row;
-  }
 
-  json::MapPtr serialize(const odin::DirectionsOptions& options, const std::vector<PathLocation>& sources,
-      const std::vector<PathLocation>& targets, const std::vector<TimeDistance>& time_distances, double distance_scale) {
-    json::ArrayPtr matrix = json::array({});
-    for(size_t source_index = 0; source_index < sources.size(); ++source_index) {
-        matrix->emplace_back(
-          serialize_row(time_distances, source_index * targets.size(), targets.size(),
-                        source_index, 0, distance_scale));
+    json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
+       size_t start_td, const size_t td_count, const size_t source_index, const size_t target_index, double distance_scale) {
+      auto distance = json::array({});
+      for(size_t i = start_td; i < start_td + td_count; ++i) {
+        //check to make sure a route was found; if not, return null for distance in matrix result
+        if (tds[i].time != kMaxCost) {
+          distance->emplace_back(json::fp_t{tds[i].dist * distance_scale, 3});
+        } else {
+          distance->emplace_back(static_cast<std::nullptr_t>(nullptr));
+        }
+      }
+      return distance;
+     }
+
+    // Serialize route response in OSRM compatible format.
+    json::MapPtr serialize(const odin::DirectionsOptions& options, const std::vector<PathLocation>& sources,
+        const std::vector<PathLocation>& destinations, const std::vector<TimeDistance>& time_distances, double distance_scale) {
+      auto json = json::map({});
+      auto start = json::array({});
+      auto end = json::array({});
+      auto time = json::array({});
+      auto distance = json::array({});
+      // If here then the matrix succeeded. Set status code to OK and serialize
+      // waypoints (locations).
+      json->emplace("code", std::string("Ok"));
+      for(size_t i = 0; i < sources.size(); i++) {
+        start->emplace_back(json::array({waypoints(sources[i])}));
+      }
+      json->emplace("sources", start);
+      for(size_t i = 0; i < destinations.size(); i++) {
+        end->emplace_back(json::array({waypoints(destinations[i])}));
+      }
+      json->emplace("destinations", end);
+      for(size_t source_index = 0; source_index < sources.size(); ++source_index) {
+        time->emplace_back(serialize_duration(time_distances, source_index * destinations.size(), destinations.size()));
+        distance->emplace_back(serialize_distance(time_distances, source_index * destinations.size(), destinations.size(),
+            source_index, 0, distance_scale));
+      }
+      json->emplace("durations", time);
+      json->emplace("distances", distance);
+      return json;
     }
-    auto json = json::map({
-      {"sources_to_targets", matrix},
-      {"units", odin::DirectionsOptions::Units_Name(options.units())},
-    });
-    json->emplace("targets", json::array({locations(targets)}));
-    json->emplace("sources", json::array({locations(sources)}));
-
-    if (options.has_id())
-      json->emplace("id", options.id());
-    return json;
   }
 
-  json::MapPtr serializeOSRM(const odin::DirectionsOptions& options, const std::vector<PathLocation>& sources,
-      const std::vector<PathLocation>& targets, const std::vector<TimeDistance>& time_distances, double distance_scale) {
-    //TODO:
-    return {};
-  }
+  namespace valhalla_serializers {
 
+    /*
+    valhalla output looks like this:
+
+    */
+
+    json::ArrayPtr locations(const std::vector<baldr::PathLocation>& correlated) {
+      auto input_locs = json::array({});
+      for(size_t i = 0; i < correlated.size(); i++) {
+        input_locs->emplace_back(
+          json::map({
+            {"lat", json::fp_t{correlated[i].latlng_.lat(), 6}},
+            {"lon", json::fp_t{correlated[i].latlng_.lng(), 6}}
+          })
+        );
+      }
+      return input_locs;
+    }
+
+    json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
+        size_t start_td, const size_t td_count, const size_t source_index, const size_t target_index, double distance_scale) {
+      auto row = json::array({});
+      for(size_t i = start_td; i < start_td + td_count; ++i) {
+        //check to make sure a route was found; if not, return null for distance & time in matrix result
+        if (tds[i].time != kMaxCost) {
+          row->emplace_back(json::map({
+            {"from_index", static_cast<uint64_t>(source_index)},
+            {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
+            {"time", static_cast<uint64_t>(tds[i].time)},
+            {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}
+          }));
+        } else {
+          row->emplace_back(json::map({
+            {"from_index", static_cast<uint64_t>(source_index)},
+            {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
+            {"time", static_cast<std::nullptr_t>(nullptr)},
+            {"distance", static_cast<std::nullptr_t>(nullptr)}
+          }));
+        }
+      }
+      return row;
+    }
+
+    json::MapPtr serialize(const odin::DirectionsOptions& options, const std::vector<PathLocation>& sources,
+        const std::vector<PathLocation>& targets, const std::vector<TimeDistance>& time_distances, double distance_scale) {
+      json::ArrayPtr matrix = json::array({});
+      for(size_t source_index = 0; source_index < sources.size(); ++source_index) {
+          matrix->emplace_back(
+            serialize_row(time_distances, source_index * targets.size(), targets.size(),
+                          source_index, 0, distance_scale));
+      }
+      auto json = json::map({
+        {"sources_to_targets", matrix},
+        {"units", odin::DirectionsOptions::Units_Name(options.units())},
+      });
+      json->emplace("targets", json::array({locations(targets)}));
+      json->emplace("sources", json::array({locations(sources)}));
+
+      if (options.has_id())
+        json->emplace("id", options.id());
+      return json;
+    }
+  }
 }
 
 namespace valhalla {
@@ -84,11 +156,11 @@ namespace valhalla {
         const std::vector<PathLocation>& targets, const std::vector<TimeDistance>& time_distances, double distance_scale) {
 
       auto json = request.options.format() == odin::DirectionsOptions::osrm ?
-          serializeOSRM(request.options, sources, targets, time_distances, distance_scale) :
-          serialize(request.options, sources, targets, time_distances, distance_scale);
+          osrm_serializers::serialize(request.options, sources, targets, time_distances, distance_scale) :
+          valhalla_serializers::serialize(request.options, sources, targets, time_distances, distance_scale);
 
       std::stringstream ss;
-      ss << json;
+      ss << *json;
       return ss.str();
     }
 
