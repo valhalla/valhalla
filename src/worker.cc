@@ -225,7 +225,7 @@ namespace {
 	{163,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
 	{170,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-	{171,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{171,R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 
 	{199,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
 
