@@ -60,7 +60,7 @@ namespace baldr{
 
 
   PathLocation PathLocation::FromRapidJson(const std::vector<Location>& locations, const rapidjson::Value& path_location){
-    auto index = rapidjson::get<size_t>(path_location, "/location_index");
+    auto index = rapidjson::get<uint64_t>(path_location, "/location_index");
     PathLocation p(locations[index]);
     for(const auto& edge : rapidjson::get<rapidjson::Value::ConstArray>(path_location, "/edges")) {
       p.edges.emplace_back(GraphId(rapidjson::get<uint64_t>(edge, "/id")), rapidjson::get<float>(edge, "/dist"),
