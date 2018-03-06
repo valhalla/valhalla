@@ -627,7 +627,6 @@ namespace {
 
       // Iterate through the legs in TripDirections and TripPath
       auto path_leg = path_legs.begin();
-
       for (const auto& leg : legs) {
         auto output_leg = json::map({});
 
