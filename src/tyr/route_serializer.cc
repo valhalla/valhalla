@@ -546,15 +546,20 @@ namespace {
       }
 
       // Otherwise return based on the travel mode
-      auto mode = path_leg->node(idx).edge().travel_mode();
-      if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kDrive) {
-        return "driving";
-      } else if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kPedestrian) {
-        return "walk";
-      } else if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kBicycle) {
-        return "cycling";
-      } else {
-        return "transit";
+      switch (maneuver.travel_mode()) {
+        case TripDirections_TravelMode_kDrive: {
+          return "driving";
+        }
+        case TripDirections_TravelMode_kPedestrian: {
+          return "walk";
+        }
+        case TripDirections_TravelMode_kBicycle: {
+          return "cycling";
+        }
+        case TripDirections_TravelMode_kTransit: {
+          return "transit";
+       }
+
       }
     }
 
