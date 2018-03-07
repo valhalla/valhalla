@@ -39,38 +39,35 @@ namespace {
     return output;
   }
 
-  std::vector<midgard::PointLL> resample_at_1hz(
-      const boost::property_tree::ptree& edges,
-      const std::vector<midgard::PointLL>& shape) {
+  struct path_segment_t {
+    std::vector<midgard::PointLL> shape;
+    float speed; //in meters/second
+  };
+
+  std::vector<midgard::PointLL> resample_at_1hz(const std::vector<path_segment_t>& segments) {
     std::vector<midgard::PointLL> resampled;
     float time_remainder = 0.0;
-    for(const auto& edge_item: edges) {
-      const auto& edge = edge_item.second;
-      //get the portion of the shape that applies to this edge
-      std::vector<midgard::PointLL> edge_shape(shape.cbegin() + edge.get<size_t>("begin_shape_index"),
-        shape.cbegin() + edge.get<size_t>("end_shape_index") + 1);
+    for(const auto& segment: segments) {
       //get the speed of this edge
-      auto meters = midgard::Polyline2<PointLL>::Length(edge_shape);
-      auto speed = (edge.get<float>("speed") * 1e3) / 3600.f;
+      auto meters = midgard::Polyline2<PointLL>::Length(segment.shape);
       //trim the shape to account of the portion of the previous second that bled onto this edge
-      auto to_trim = speed * time_remainder;
-      auto trimmed = midgard::trim_polyline(edge_shape.cbegin(), edge_shape.cend(), to_trim / meters, 1.f);
+      auto to_trim = segment.speed * time_remainder;
+      auto trimmed = midgard::trim_polyline(segment.shape.cbegin(), segment.shape.cend(), to_trim / meters, 1.f);
       //resample it at 1 second intervals
-      auto second_interval = midgard::resample_spherical_polyline(trimmed, speed, false);
+      auto second_interval = midgard::resample_spherical_polyline(trimmed, segment.speed, false);
       resampled.insert(resampled.end(), second_interval.begin(), second_interval.end());
       //figure out how much of the last second will bleed into the next edge
       double intpart;
-      time_remainder = std::modf((meters - to_trim) / speed, &intpart);
+      time_remainder = std::modf((meters - to_trim) / segment.speed, &intpart);
     }
     return resampled;
   }
 
   std::vector<midgard::PointLL> simulate_gps(
-      const boost::property_tree::ptree& edges,
-      const std::vector<midgard::PointLL>& shape, std::vector<float>& accuracies,
+      const std::vector<path_segment_t>& segments, std::vector<float>& accuracies,
       float smoothing = 30, float accuracy = 5.f, size_t sample_rate = 1) {
     //resample the coords along a given edge at one second intervals
-    auto resampled = resample_at_1hz(edges, shape);
+    auto resampled = resample_at_1hz(segments);
 
     //a way to get noise but only allow for slow change
     std::default_random_engine generator(0);
@@ -239,11 +236,17 @@ namespace {
         throw std::logic_error("Edge walk failed with exact shape");
       }
       std::vector<uint64_t> walked_edges;
-      for(const auto& edge : walked.get_child("edges"))
+      std::vector<path_segment_t> segments;
+      for(const auto& edge : walked.get_child("edges")) {
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
+        auto b = edge.second.get<size_t>("begin_shape_index");
+        auto e = edge.second.get<size_t>("end_shape_index") + 1;
+        segments.emplace_back(path_segment_t{std::vector<midgard::PointLL>(shape.cbegin() + b, shape.cbegin() + e),
+            static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
+      }
       //simulate gps from the route shape
       std::vector<float> accuracies;
-      auto simulation = simulate_gps(walked.get_child("edges"), shape, accuracies, 50, 100.f, 1);
+      auto simulation = simulate_gps(segments, accuracies, 50, 100.f, 1);
       auto locations = to_locations(simulation, accuracies, 1);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
