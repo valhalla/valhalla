@@ -39,79 +39,6 @@ namespace {
     return output;
   }
 
-  struct path_segment_t {
-    std::vector<midgard::PointLL> shape;
-    float speed; //in meters/second
-  };
-
-  std::vector<midgard::PointLL> resample_at_1hz(const std::vector<path_segment_t>& segments) {
-    std::vector<midgard::PointLL> resampled;
-    float time_remainder = 0.0;
-    for(const auto& segment: segments) {
-      //get the speed of this edge
-      auto meters = midgard::Polyline2<PointLL>::Length(segment.shape);
-      //trim the shape to account of the portion of the previous second that bled onto this edge
-      auto to_trim = segment.speed * time_remainder;
-      auto trimmed = midgard::trim_polyline(segment.shape.cbegin(), segment.shape.cend(), to_trim / meters, 1.f);
-      //resample it at 1 second intervals
-      auto second_interval = midgard::resample_spherical_polyline(trimmed, segment.speed, false);
-      resampled.insert(resampled.end(), second_interval.begin(), second_interval.end());
-      //figure out how much of the last second will bleed into the next edge
-      double intpart;
-      time_remainder = std::modf((meters - to_trim) / segment.speed, &intpart);
-    }
-    return resampled;
-  }
-
-  std::vector<midgard::PointLL> simulate_gps(
-      const std::vector<path_segment_t>& segments, std::vector<float>& accuracies,
-      float smoothing = 30, float accuracy = 5.f, size_t sample_rate = 1) {
-    //resample the coords along a given edge at one second intervals
-    auto resampled = resample_at_1hz(segments);
-
-    //a way to get noise but only allow for slow change
-    std::default_random_engine generator(0);
-    std::uniform_real_distribution<float> distribution(-1, 1);
-    ring_queue_t<std::pair<float, float> > noises(smoothing);
-    auto get_noise = [&]() {
-      //we generate a vector whose magnitude is no more than accuracy
-      auto lon_adj = distribution(generator);
-      auto lat_adj = distribution(generator);
-      auto len = std::sqrt((lon_adj * lon_adj) + (lat_adj * lat_adj));
-      lon_adj /= len; lat_adj /= len; //norm
-      auto scale = (distribution(generator) + 1.f) / 2.f;
-      lon_adj *= scale * accuracy;  lat_adj *= scale * accuracy; //random scale <= accuracy
-      noises.emplace_back(std::make_pair(lon_adj, lat_adj));
-      //average over last n to smooth
-      std::pair<float, float> noise{0, 0};
-      std::for_each(noises.begin(), noises.end(),
-        [&noise](const std::pair<float, float>& n) { noise.first += n.first; noise.second += n.second; });
-      noise.first /= noises.size();
-      noise.second /= noises.size();
-      return noise;
-    };
-    //fill up the noise queue so the first points arent unsmoothed
-    while(!noises.full()) get_noise();
-
-    //for each point of the 1hz shape
-    std::vector<midgard::PointLL> simulated;
-    for(size_t i = 0; i < resampled.size(); ++i) {
-      const auto& p = resampled[i];
-      //is this a harmonic of the desired sampling rate
-      if(i % sample_rate == 0) {
-        //meters of noise with extremely low likelihood its larger than accuracy
-        auto noise = get_noise();
-        //use the number of meters per degree in both axis to offset the point by the noise
-        auto metersPerDegreeLon = DistanceApproximator::MetersPerLngDegree(p.second);
-        simulated.emplace_back(midgard::PointLL(p.first + noise.first / metersPerDegreeLon,
-          p.second + noise.second / kMetersPerDegreeLat));
-        //keep the distance to use for accuracy
-        accuracies.emplace_back(simulated.back().Distance(p));
-      }
-    }
-    return simulated;
-  }
-
   float round_up(float val, int multiple) {
     return int((val + multiple - 1) / multiple) * multiple;
   }
@@ -236,12 +163,12 @@ namespace {
         throw std::logic_error("Edge walk failed with exact shape");
       }
       std::vector<uint64_t> walked_edges;
-      std::vector<path_segment_t> segments;
+      std::vector<gps_segment_t> segments;
       for(const auto& edge : walked.get_child("edges")) {
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
         auto b = edge.second.get<size_t>("begin_shape_index");
         auto e = edge.second.get<size_t>("end_shape_index") + 1;
-        segments.emplace_back(path_segment_t{std::vector<midgard::PointLL>(shape.cbegin() + b, shape.cbegin() + e),
+        segments.emplace_back(gps_segment_t{std::vector<PointLL>(shape.cbegin() + b, shape.cbegin() + e),
             static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
       }
       //simulate gps from the route shape
@@ -261,7 +188,7 @@ namespace {
           std::cout << "route had a possible loop" << std::endl;
           continue;
         }
-        auto decoded_match = midgard::decode<std::vector<midgard::PointLL> >(matched.get<std::string>("shape"));
+        auto decoded_match = midgard::decode<std::vector<PointLL> >(matched.get<std::string>("shape"));
         std::string geojson = R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
         geojson += print(shape);
         geojson += R"(]},"type":"Feature","properties":{"stroke":"#00ff00","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
