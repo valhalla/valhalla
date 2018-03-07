@@ -32,9 +32,9 @@ namespace {
 
   constexpr double kMilePerMeter = 0.000621371;
 
-  std::vector<baldr::PathLocation> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
+  std::vector<odin::Location> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
     //we require correlated locations
-    std::vector<baldr::PathLocation> correlated;
+    std::vector<odin::Location> correlated;
     correlated.reserve(locations.size());
     size_t i = 0;
     do {
@@ -140,7 +140,7 @@ namespace valhalla {
         switch (request.options.action()) {
           case odin::DirectionsOptions::sources_to_targets:
             result = to_response_json(matrix(request), info, request);
-            denominator = correlated_s.size() * correlated_t.size();
+            denominator = request.options.sources_size() + request.options.targets_size();
             break;
           case odin::DirectionsOptions::optimized_route:
             // Forward the original request
@@ -151,11 +151,11 @@ namespace valhalla {
               --order_index;
               result.messages.emplace_back(trippath.SerializeAsString());
             }
-            denominator = std::max(correlated_s.size(), correlated_t.size());
+            denominator = std::max(request.options.sources_size(), request.options.targets_size());
             break;
           case odin::DirectionsOptions::isochrone:
             result = to_response_json(isochrones(request), info, request);
-            denominator = correlated_s.size() * correlated_t.size();
+            denominator = request.options.sources_size() * request.options.targets_size();
             break;
           case odin::DirectionsOptions::route:
             // Forward the original request
@@ -274,9 +274,6 @@ namespace valhalla {
           catch (...) { throw valhalla_exception_t{423}; }
         }
         correlated = store_correlated_locations(request.document, locations);
-
-        correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->Size());
-        correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->Size(), correlated.end());
       }
 
       //type - 0: current, 1: depart, 2: arrive
@@ -374,8 +371,6 @@ namespace valhalla {
       locations.clear();
       trace.clear();
       correlated.clear();
-      correlated_s.clear();
-      correlated_t.clear();
       isochrone_gen.Clear();
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())

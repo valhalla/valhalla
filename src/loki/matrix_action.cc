@@ -101,7 +101,12 @@ namespace valhalla {
         for(size_t i = 0; i < sources_targets.size(); ++i) {
           const auto& l = sources_targets[i];
           const auto& projection = searched.at(l);
-          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request.document, projection.ToRapidJson(i, request.document.GetAllocator()));
+          //TODO: remove this when using pbf everywhere
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).
+              Set(request.document, projection.ToRapidJson(i, request.document.GetAllocator()));
+          toPBF(projection, i < sources.size() ?
+              request.options.mutable_sources()->Add() :
+              request.options.mutable_targets()->Add());
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           if (!connectivity_map)

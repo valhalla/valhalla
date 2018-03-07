@@ -22,6 +22,7 @@
 #include <valhalla/thor/match_result.h>
 #include <valhalla/tyr/actor.h>
 
+
 namespace valhalla {
   namespace tyr {
 
@@ -39,8 +40,8 @@ namespace valhalla {
      *
      * @param
      */
-    std::string serializeMatrix(const valhalla_request_t& request, const std::vector<baldr::PathLocation>& sources,
-        const std::vector<baldr::PathLocation>& targets, const std::vector<thor::TimeDistance>& time_distances, double distance_scale);
+    std::string serializeMatrix(const valhalla_request_t& request,
+        const std::vector<thor::TimeDistance>& time_distances, double distance_scale);
 
     /**
      * Turn grid data contours into geojson

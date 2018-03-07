@@ -242,21 +242,21 @@ namespace valhalla {
     }
 
     std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_level,
-      const baldr::PathLocation& location, float radius) const {
+      const odin::Location& location, float radius) const {
 
       std::unordered_set<size_t> result;
       auto level = colors.find(hierarchy_level);
       if(level == colors.cend())
         return result;
       const auto& tiles = TileHierarchy::levels().find(hierarchy_level)->second.tiles;
-      for(const auto& edge : location.edges) {
+      for(const auto& edge : location.path_edges_) {
         // Get a list of tiles required within the radius of the projected point
-        const auto& ll = edge.projected;
+        const auto& ll = edge.ll_;
         DistanceApproximator approximator(ll);
         float latdeg = (radius / kMetersPerDegreeLat);
-        float lngdeg = (radius / DistanceApproximator::MetersPerLngDegree(ll.lat()));
-        AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
-                            Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
+        float lngdeg = (radius / DistanceApproximator::MetersPerLngDegree(ll->lat()));
+        AABB2<PointLL> bbox(Point2(ll->lng() - lngdeg, ll->lat() - latdeg),
+                            Point2(ll->lng() + lngdeg, ll->lat() + latdeg));
         std::vector<int32_t> tilelist = tiles.TileList(bbox);
         for (auto& id : tilelist) {
           auto color = level->second.find(id);
