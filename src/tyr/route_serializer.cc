@@ -263,9 +263,8 @@ namespace {
     // Add intersections along a step/maneuver.
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
             std::list<odin::TripPath>::const_iterator path_leg,
-            const std::vector<PointLL>& shape, uint32_t& count, uint32_t& prev_count) {
+            const std::vector<PointLL>& shape, uint32_t& count) {
       // Iterate through the nodes/intersections of the path for this maneuver
-      prev_count = count;
       count = 0;
       auto intersections = json::array({});
       for (uint32_t i = maneuver.begin_path_index(); i <= maneuver.end_path_index(); i++) {
@@ -472,8 +471,7 @@ namespace {
     json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
                 std::list<odin::TripPath>::const_iterator path_leg,
                 const PointLL& man_ll, const bool depart, const bool arrive,
-                const uint32_t count, const uint32_t prev_count,
-                const bool same_name) {
+                const uint32_t count, const std::string mode, const std::string prev_mode) {
       auto osrm_man = json::map({});
 
       // Set the location
@@ -492,15 +490,14 @@ namespace {
       osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
       osrm_man->emplace("modifier", turn_modifier(in_brg, out_brg));
 
-      std::cout << prev_count << std::endl;
-
-
       // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
       std::string maneuver_type;
       if (depart) {
         maneuver_type = "depart";
       } else if (arrive) {
         maneuver_type = "arrive";
+      } else if (mode != prev_mode) {
+        maneuver_type = "notification";
       } else {
         // Special cases
         const auto& prior_edge = path_leg->node(idx-1).edge();
@@ -526,11 +523,6 @@ namespace {
           maneuver_type = "roundabout";
         }
 
-       // std::cout << " here " << maneuver.type() << " count " << count << std::endl;
-
-        //std::cout << prev_count << std::endl;
-
-
         // Fall through case if maneuver not set by special cases above
         if (maneuver_type.empty()) {
           // Check for end of road if prior edge is not a ramp. Road ends if
@@ -544,29 +536,13 @@ namespace {
                 break;
               }
             }
-            //if (!road_ends) {
-              //if (prev_count < 2)
-                //           maneuver_type = same_name ? "continue" : "turn";            }
           }
           if (count > 1 && road_ends) {
             maneuver_type = "end of road";
-            // Check if previous maneuver and current maneuver have same name
-            //if (prev_count < 2)
-            //maneuver_type = same_name ? "continue" : "turn";
           } else maneuver_type = "turn";
-        } else {
-          for (const auto intsct_edge : path_leg->node(idx).intersecting_edge()) {
-            if (!intsct_edge.prev_name_consistency()) {
-              maneuver_type = "new_name";
-              break;
-            }
-          }
         }
       }
       osrm_man->emplace("type", maneuver_type);
-
-      //std::cout << " here " << maneuver.type() << " count " << count << std::endl;
-
 
       return osrm_man;
     }
@@ -684,9 +660,7 @@ namespace {
         // Iterate through maneuvers - convert to OSRM steps
         uint32_t index = 0;
         uint32_t count = 0;
-        uint32_t prev_count = 0;
-        std::string prev_name;
-        std::string prev_ref;
+        std::string prev_name, prev_ref, mode, prev_mode;
         auto steps = json::array({});
         std::unordered_map<std::string, float> maneuvers;
         for (const auto& maneuver : leg.maneuver()) {
@@ -704,7 +678,12 @@ namespace {
           float distance = maneuver.length() * 1000.0f;
           float duration = maneuver.time();
           std::string drive_side("right");  // TODO - pass this through TPB or TripDirections
-          step->emplace("mode", get_mode(maneuver, path_leg));
+
+          mode = get_mode(maneuver, path_leg);
+          if (prev_mode.empty())
+            prev_mode = mode;
+
+          step->emplace("mode", mode);
           step->emplace("driving_side", drive_side);
           step->emplace("duration", json::fp_t{duration, 1});
           step->emplace("weight", json::fp_t{duration, 1});
@@ -739,19 +718,13 @@ namespace {
             }
           }
 
-          bool same_name =
-              (prev_name == nr.first && prev_ref == nr.second) ? true : false;
-
-          std::cout << prev_name << " " << nr.first << " " << prev_ref << " " << nr.second << std::endl;
-
           prev_name = nr.first;
           prev_ref = nr.second;
 
           // Add OSRM maneuver
           step->emplace("maneuver", osrm_maneuver(maneuver, path_leg,
               shape[maneuver.begin_shape_index()], (index == 0),
-              (index == leg.maneuver().size() - 1), count, prev_count,
-              same_name));
+              (index == leg.maneuver().size() - 1), count, mode, prev_mode));
 
           // Add destinations and exits
           std::string dest = destinations(maneuver);
@@ -764,7 +737,7 @@ namespace {
           }
 
           // Add intersections
-          step->emplace("intersections", intersections(maneuver, path_leg, shape, count, prev_count));
+          step->emplace("intersections", intersections(maneuver, path_leg, shape, count));
 
           // Add step
           steps->emplace_back(step);
