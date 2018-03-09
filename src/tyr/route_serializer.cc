@@ -267,7 +267,7 @@ namespace {
       // Iterate through the nodes/intersections of the path for this maneuver
       count = 0;
       auto intersections = json::array({});
-      for (uint32_t i = maneuver.begin_path_index(); i <= maneuver.end_path_index(); i++) {
+      for (uint32_t i = maneuver.begin_path_index(); i < maneuver.end_path_index(); i++) {
         auto intersection = json::map({});
 
         // Get the node from the path leg
@@ -529,16 +529,19 @@ namespace {
         if (maneuver_type.empty()) {
           // Check for end of road if prior edge is not a ramp. Road ends if
           // the current road name ends and more than 1 intersection has been
-          // passed
-          bool road_ends = (prior_edge.use() == odin::TripPath_Use_kRampUse || false_node ||
-              path_leg->node(idx).intersecting_edge().size() > 1) ? false : true;
+          // passed. Description is: at t-intersections, when you’re turning
+          // onto a new road name, and have passed at least 1 intersection to
+          // get there. TODO - check turn angles?
+          bool road_ends = (prior_edge.use() != odin::TripPath_Use_kRampUse &&
+                    path_leg->node(idx).intersecting_edge().size() == 1);
           if (road_ends) {
-            for (const auto intsct_edge : path_leg->node(idx).intersecting_edge()) {
-              // TODO - do we need to make sure this isn't a driveway or path?
-              if (intsct_edge.prev_name_consistency()) {
-                road_ends = false;
-                break;
-              }
+            // TODO - test the turn angles?
+            // TODO what about a doubly digitized road ending at a T (would be
+            // 2 intersecting edges)? What if there is a driveway or path as
+            // an intersecting edge?
+            const auto& intsct_edge = path_leg->node(idx).intersecting_edge(0);
+            if (intsct_edge.prev_name_consistency()) {
+              road_ends = false;
             }
           }
 
