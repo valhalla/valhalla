@@ -741,6 +741,8 @@ namespace {
 
           // Add step
           steps->emplace_back(step);
+          prev_mode = mode;
+
           index++;
         }
 
