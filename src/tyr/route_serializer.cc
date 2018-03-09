@@ -530,7 +530,8 @@ namespace {
           // Check for end of road if prior edge is not a ramp. Road ends if
           // the current road name ends and more than 1 intersection has been
           // passed
-          bool road_ends = (prior_edge.use() == odin::TripPath_Use_kRampUse || false_node) ? false : true;
+          bool road_ends = (prior_edge.use() == odin::TripPath_Use_kRampUse || false_node ||
+              path_leg->node(idx).intersecting_edge().size() > 1) ? false : true;
           if (road_ends) {
             for (const auto intsct_edge : path_leg->node(idx).intersecting_edge()) {
               // TODO - do we need to make sure this isn't a driveway or path?
