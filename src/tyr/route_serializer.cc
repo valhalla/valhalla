@@ -521,25 +521,37 @@ namespace {
           maneuver_type = "roundabout";
         }
 
+        // Are there any intersecting edges
+        bool false_node = path_leg->node(idx).intersecting_edge().size() == 0;
+
         // Fall through case if maneuver not set by special cases above
+        new_name = false;
         if (maneuver_type.empty()) {
           // Check for end of road if prior edge is not a ramp. Road ends if
           // the current road name ends and more than 1 intersection has been
           // passed
-          bool road_ends = (prior_edge.use() == odin::TripPath_Use_kRampUse) ? false : true;
+          bool road_ends = (prior_edge.use() == odin::TripPath_Use_kRampUse || false_node) ? false : true;
           if (road_ends) {
             for (const auto intsct_edge : path_leg->node(idx).intersecting_edge()) {
+              // TODO - do we need to make sure this isn't a driveway or path?
               if (intsct_edge.prev_name_consistency()) {
                 road_ends = false;
                 break;
               }
             }
-            if (!road_ends) {
-              // Check if previous maneuver and current maneuver have same name
-            }
           }
+
+          // Check if previous maneuver and current maneuver have same name
+          // TODO - more extensive name comparison method?
+          if (prior_edge.name().size() > 0 && prior_edge.name().size() == current_edge.name().size() &&
+              (prior_edge.name(0) != current_edge.name(0))) {
+              new_name = true;
+          }
+
           if (count > 1 && road_ends) {
             maneuver_type = "end of road";
+          } else if (false_node && new_name) {
+            maneuver_type = "new_name";
           } else {
             maneuver_type = "turn";
           }
