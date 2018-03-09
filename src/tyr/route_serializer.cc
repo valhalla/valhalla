@@ -328,8 +328,31 @@ namespace {
         intersection->emplace("in", static_cast<uint64_t>(incoming_index));
         intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
 
-        // TODO - intersections on motorways seem to have classes with one element
-        // "motorway" included
+        // Add classes based on the first edge after the maneuver.
+        std::vector<std::string> classes;
+        if (node.edge().road_class() == odin::TripPath_RoadClass_kMotorway) {
+          classes.push_back("motorway");
+        }
+        if (node.edge().tunnel()) {
+          classes.push_back("tunnel");
+        }
+        if (node.edge().use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
+          classes.push_back("ferry");
+        }
+        if (maneuver.portions_toll() || node.edge().toll()) {
+          classes.push_back("toll");
+        }
+        /** TODO
+        if ( ) {
+          classes.push_back("restricted");
+        } */
+        if (classes.size() > 0) {
+          auto class_list = json::array({});
+          for (const auto& cl : classes) {
+            class_list->emplace_back(cl);
+          }
+          intersection->emplace("classes", class_list);
+        }
 
         // Add the intersection to the JSON array
         intersections->emplace_back(intersection);
