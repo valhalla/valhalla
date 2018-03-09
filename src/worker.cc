@@ -314,6 +314,14 @@ namespace {
       doc.RemoveMember("directions_options");
     }
 
+    auto id = rapidjson::get_optional<std::string>(doc, "/id");
+    if(id)
+      options.set_id(*id);
+
+    auto jsonp = rapidjson::get_optional<std::string>(doc, "/jsonp");
+    if(jsonp)
+      options.set_jsonp(*jsonp);
+
     auto units = rapidjson::get_optional<std::string>(doc, "/units");
     if(units) {
       if((*units == "miles") || (*units == "mi"))

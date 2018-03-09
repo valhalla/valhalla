@@ -145,6 +145,7 @@ namespace valhalla {
           case odin::DirectionsOptions::optimized_route:
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
+            result.messages.emplace_back(std::move(serialized_options));
             for (auto& trippath : optimized_route(request)) {
               for (auto& location : *trippath.mutable_location())
                 location.set_original_index(optimal_order[order_index++]);
