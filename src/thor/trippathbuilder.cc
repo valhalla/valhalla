@@ -630,7 +630,7 @@ TripPath TripPathBuilder::Build(
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
     uint32_t current_time = 0;
-    if (origin.date_time_) {
+    if (origin.has_date_time()) {
       DateTime::seconds_from_midnight(origin.date_time());
       current_time += path.front().elapsed_time;
     }
@@ -673,9 +673,9 @@ TripPath TripPathBuilder::Build(
     uint32_t elapsedtime = node->elapsed_time();
 
     auto* last_tile = graphreader.GetGraphTile(startnode);
-    if (dest.date_time_) { // arrive by
+    if (dest.has_date_time()) { // arrive by
 
-      uint64_t sec = DateTime::seconds_since_epoch(*dest.date_time_,
+      uint64_t sec = DateTime::seconds_since_epoch(dest.date_time(),
                                                    DateTime::get_tz_db().
                                                    from_index(last_tile->node(startnode)->timezone()));
 
@@ -687,11 +687,11 @@ TripPath TripPathBuilder::Build(
                                 origin_date, dest_date);
 
       tp_orig->set_date_time(origin_date);
-      origin.date_time_ = tp_orig->date_time();
+      origin.date_time() == tp_orig->date_time();
       tp_dest->set_date_time(dest_date);
 
-    } else if (origin.date_time_) { // leave at
-      uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
+    } else if (origin.has_date_time()) { // leave at
+      uint64_t sec = DateTime::seconds_since_epoch(origin.date_time(),
                                                    DateTime::get_tz_db().
                                                    from_index(first_node->timezone()));
 
@@ -703,7 +703,7 @@ TripPath TripPathBuilder::Build(
                                 origin_date, dest_date);
 
       tp_dest->set_date_time(dest_date);
-      dest.date_time_ = tp_dest->date_time();
+      dest.date_time() == tp_dest->date_time();
       tp_orig->set_date_time(origin_date);
     }
 
@@ -769,8 +769,8 @@ TripPath TripPathBuilder::Build(
     }
 
     uint32_t current_time;
-    if (origin.date_time_) {
-      current_time = DateTime::seconds_from_midnight(*origin.date_time_);
+    if (origin.has_date_time()) {
+      current_time = DateTime::seconds_from_midnight(origin.date_time());
       current_time += elapsedtime;
     }
 
@@ -880,8 +880,8 @@ TripPath TripPathBuilder::Build(
 
         assumed_schedule = false;
         uint32_t date, day = 0;
-        if (origin.date_time_) {
-          date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+        if (origin.has_date_time()) {
+          date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
 
           if (graphtile->header()->date_created() > date) {
             // Set assumed schedule if requested
@@ -901,7 +901,7 @@ TripPath TripPathBuilder::Build(
 
         if (transit_departure) {
 
-          std::string dt = DateTime::get_duration(*origin.date_time_,
+          std::string dt = DateTime::get_duration(origin.date_time(),
                            (transit_departure->departure_time() - origin_sec_from_mid),
                            DateTime::get_tz_db().from_index(node->timezone()));
 
@@ -916,7 +916,7 @@ TripPath TripPathBuilder::Build(
           //TODO:  set removed tz abbrev on transit_platform_info for departure.
 
           // Copy the arrival time for use at the next transit stop
-          arrival_time = DateTime::get_duration(*origin.date_time_,
+          arrival_time = DateTime::get_duration(origin.date_time(),
                                      (transit_departure->departure_time() +
                                      transit_departure->elapsed_time()) -
                                      origin_sec_from_mid,
@@ -1145,9 +1145,9 @@ TripPath TripPathBuilder::Build(
   }
 
   auto* last_tile = graphreader.GetGraphTile(startnode);
-  if (dest.date_time_) { // arrive by
+  if (dest.has_date_time()) { // arrive by
 
-    uint64_t sec = DateTime::seconds_since_epoch(*dest.date_time_,
+    uint64_t sec = DateTime::seconds_since_epoch(dest.date_time(),
                                                  DateTime::get_tz_db().
                                                  from_index(last_tile->node(startnode)->timezone()));
 
@@ -1159,11 +1159,11 @@ TripPath TripPathBuilder::Build(
                               origin_date, dest_date);
 
     tp_orig->set_date_time(origin_date);
-    origin.date_time_ = tp_orig->date_time();
+    origin.date_time() == tp_orig->date_time();
     tp_dest->set_date_time(dest_date);
 
-  } else if (origin.date_time_) { // leave at
-    uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
+  } else if (origin.has_date_time()) { // leave at
+    uint64_t sec = DateTime::seconds_since_epoch(origin.date_time(),
                                                  DateTime::get_tz_db().
                                                  from_index(first_node->timezone()));
 
@@ -1175,7 +1175,7 @@ TripPath TripPathBuilder::Build(
                               origin_date, dest_date);
 
     tp_dest->set_date_time(dest_date);
-    dest.date_time_ = tp_dest->date_time();
+    dest.date_time() == tp_dest->date_time();
     tp_orig->set_date_time(origin_date);
   }
 
