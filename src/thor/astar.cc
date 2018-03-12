@@ -457,9 +457,9 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
   // Set the origin timezone
   if (nodeinfo != nullptr && origin.has_date_time() &&
-	  *origin.mutable_date_time() == "current") {
+    origin.date_time() == "current") {
     origin.date_time() == DateTime::iso_date_time(
-    		DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+        DateTime::get_tz_db().from_index(nodeinfo->timezone()));
   }
 }
 
