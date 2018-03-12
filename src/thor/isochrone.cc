@@ -971,7 +971,7 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
 
     // Set the origin timezone
     if (nodeinfo != nullptr && origin_locations.at(i).has_date_time() &&
-      *origin_locations.at(i).mutable_date_time() == "current") {
+      origin_locations.at(i).date_time() == "current") {
       origin_locations.at(i).date_time() == DateTime::iso_date_time(
           DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     }
