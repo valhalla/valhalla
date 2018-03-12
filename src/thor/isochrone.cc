@@ -986,7 +986,7 @@ void Isochrone::SetOriginLocationsMM(GraphReader& graphreader,
   for (auto& origin : origin_locations) {
     PointLL ll(origin.ll().lng(), origin.ll().lat());
     // Set time at the origin lat, lon grid to 0
-    isotile_->Set(origin, 0);
+    isotile_->Set(ll, 0);
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;

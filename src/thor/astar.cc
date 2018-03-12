@@ -368,11 +368,11 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
   });
 
   // Check if the origin edge matches a destination edge at the node.
-  auto trivial_at_node = [this, &destination](const PathLocation::PathEdge& edge) {
-    auto p = destinations_.find(edge.id);
+  auto trivial_at_node = [this, &destination](const odin::Location::PathEdge& edge) {
+    auto p = destinations_.find(edge.graph_id());
     if (p != destinations_.end()) {
-      for (const auto& destination_edge : destination.edges) {
-        if (destination_edge.id == edge.id) {
+      for (const auto& destination_edge : destination.path_edges()) {
+        if (destination_edge.graph_id() == edge.graph_id()) {
           return true;
         }
       }
