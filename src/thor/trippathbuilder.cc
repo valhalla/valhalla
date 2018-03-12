@@ -553,7 +553,7 @@ TripPath TripPathBuilder::Build(
 
   // Partial edge at the start and side of street (sos)
   float start_pct;
-  odin::Location::SideOfStreet start_sos = odin::Location::SideOfStreet::NONE;
+  odin::Location::SideOfStreet start_sos = odin::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL start_vrt;
   for(const auto& e : origin.path_edges()) {
     if (e.graph_id() == path.front().edgeid) {
@@ -570,12 +570,12 @@ TripPath TripPathBuilder::Build(
   proj_ll->set_lng(start_vrt.lng());
 
   // Set the origin side of street, if one exists
-  if (start_sos != odin::Location::SideOfStreet::NONE)
+  if (start_sos != odin::Location::SideOfStreet::Location_SideOfStreet_kNone)
     tp_orig->set_side_of_street(GetTripPathSideOfStreet(start_sos));
 
   // Partial edge at the end
   float end_pct;
-  odin::Location::SideOfStreet end_sos = odin::Location::SideOfStreet::NONE;
+  odin::Location::SideOfStreet end_sos = odin::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL end_vrt;
   for(const auto&e : dest.path_edges()) {
     if (e.graph_id() == path.back().edgeid) {
@@ -592,7 +592,7 @@ TripPath TripPathBuilder::Build(
   proj_ll->set_lng(end_vrt.lng());
 
   // Set the destination side of street, if one exists
-  if (end_sos != odin::Location::SideOfStreet::NONE)
+  if (end_sos != odin::Location::SideOfStreet::Location_SideOfStreet_kNone)
     tp_dest->set_side_of_street(GetTripPathSideOfStreet(end_sos));
 
   // Structures to process admins
@@ -619,10 +619,10 @@ TripPath TripPathBuilder::Build(
       start_pct = 1.0f - start_pct;
       end_pct   = 1.0f - end_pct;
       edge = graphreader.GetOpposingEdge(path.front().edgeid, tile);
-      if (end_sos == odin::Location::SideOfStreet::LEFT) {
-        tp_dest->set_side_of_street(GetTripPathSideOfStreet(odin::Location::SideOfStreet::RIGHT));
-      } else if (end_sos == odin::Location::SideOfStreet::RIGHT) {
-        tp_dest->set_side_of_street(GetTripPathSideOfStreet(odin::Location::SideOfStreet::LEFT));
+      if (end_sos == odin::Location::SideOfStreet::Location_SideOfStreet_kLeft) {
+        tp_dest->set_side_of_street(GetTripPathSideOfStreet(odin::Location::SideOfStreet::Location_SideOfStreet_kRight));
+      } else if (end_sos == odin::Location::SideOfStreet::Location_SideOfStreet_kRight) {
+        tp_dest->set_side_of_street(GetTripPathSideOfStreet(odin::Location::SideOfStreet::Location_SideOfStreet_kLeft));
       }
     }
 
@@ -631,7 +631,7 @@ TripPath TripPathBuilder::Build(
 
     uint32_t current_time = 0;
     if (origin.date_time_) {
-      DateTime::seconds_from_midnight(*origin.date_time_);
+      DateTime::seconds_from_midnight(origin.date_time());
       current_time += path.front().elapsed_time;
     }
 
