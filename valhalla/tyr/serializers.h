@@ -51,7 +51,7 @@ namespace valhalla {
      */
     template <class coord_t>
     std::string serializeIsochrones(const valhalla_request_t& request, const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
-        bool polygons = true, const std::unordered_map<float, std::string>& colors = {}, const std::vector<baldr::PathLocation>& locations = {});
+        bool polygons = true, const std::unordered_map<float, std::string>& colors = {}, const std::vector<odin::Location>& locations = {});
 
     /**
      * Turn heights and ranges into a height response

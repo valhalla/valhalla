@@ -44,15 +44,15 @@ namespace {
 
       try {
         correlated.emplace_back(PathLocation::FromRapidJson(locations, *path_location));
-        auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
-          [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
-            return i.score < j.score;
+        auto minScoreEdge = *std::min_element (correlated.back().path_edges().begin(), correlated.back().path_edges().end(),
+          [](odin::Location::PathEdge i, odin::Location::PathEdge j)->bool {
+            return i.score() < j.score();
           });
 
-        for(auto& e : correlated.back().edges) {
-          e.score -= minScoreEdge.score;
-          if (e.score > kMaxScore) {
-            e.score = kMaxScore;
+        for(auto& e : correlated.back().path_edges()) {
+          e.score() -= minScoreEdge.score();
+          if (e.score() > kMaxScore) {
+            e.score() = kMaxScore;
           }
         }
       }

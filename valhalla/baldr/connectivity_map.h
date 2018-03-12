@@ -1,9 +1,7 @@
 #ifndef VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 #define VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 
-#include <boost/property_tree/ptree.hpp>
-#include <valhalla/proto/tripcommon.pb.h>
-#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/pathlocation.h>
 
 #include <vector>
 #include <unordered_map>
@@ -37,7 +35,7 @@ namespace valhalla {
        * @param radius           the radius of the circle
        * @return colors          the colors of the tiles that intersect this circle at this level
        */
-      std::unordered_set<size_t> get_colors(uint32_t hierarchy_level, const odin::Location& location, float radius) const;
+      std::unordered_set<size_t> get_colors(uint32_t hierarchy_level, const baldr::PathLocation& location, float radius) const;
 
       /**
        * Returns the geojson representing the connectivity map
