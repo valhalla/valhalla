@@ -1,24 +1,8 @@
-#include "../../valhalla/thor/bidirectional_astar.h"
-
-#include <boost/optional/optional.hpp>
+#include <map>
 #include <algorithm>
-#include <functional>
-#include <limits>
-#include <string>
-
-#include "../../valhalla/baldr/datetime.h"
-#include "../../valhalla/baldr/directededge.h"
-#include "../../valhalla/baldr/graphconstants.h"
-#include "../../valhalla/baldr/graphid.h"
-#include "../../valhalla/baldr/graphreader.h"
-#include "../../valhalla/baldr/graphtile.h"
-#include "../../valhalla/baldr/nodeinfo.h"
-#include "../../valhalla/midgard/logging.h"
-#include "../../valhalla/midgard/pointll.h"
-#include "../../valhalla/sif/costconstants.h"
-#include "../../valhalla/sif/dynamiccost.h"
-#include "../../valhalla/thor/pathinfo.h"
-#include "../../valhalla/proto/tripcommon.pb.h"
+#include "thor/bidirectional_astar.h"
+#include "baldr/datetime.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
