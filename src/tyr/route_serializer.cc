@@ -574,7 +574,6 @@ namespace {
           } else {
             maneuver_type = "turn";
           }
-          } else maneuver_type = "turn";
         }
       }
       osrm_man->emplace("type", maneuver_type);
