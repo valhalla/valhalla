@@ -778,7 +778,7 @@ namespace {
           }
 
           // Add intersections
-          step->emplace("intersections", intersections(maneuver, path_leg, shape, count, arrive, depart));
+          step->emplace("intersections", intersections(maneuver, path_leg, shape, count, depart, arrive));
 
           // Add step
           steps->emplace_back(step);
