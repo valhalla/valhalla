@@ -101,7 +101,8 @@ namespace valhalla {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
-    correlated.front().type() = correlated.back().type() = Location::StopType::BREAK;
+    correlated.front().set_type(odin::Location::kBreak);
+    correlated.back().set_type(odin::Location::kBreak);
 
     // For each pair of locations
     for(auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
@@ -134,10 +135,10 @@ namespace valhalla {
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
-      if (origin->type() == Location::StopType::BREAK) {
+      if (origin->type() == odin::Location::kBreak) {
         // Move destination back to the last break and collect the throughs
         std::list<odin::Location> throughs;
-        while(destination->type() != Location::StopType::BREAK) {
+        while(destination->type() != odin::Location::kBreak) {
           throughs.push_back(*destination);
           --destination;
         }
@@ -163,7 +164,8 @@ namespace valhalla {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
-    correlated.front().type() = correlated.back().type() = Location::StopType::BREAK;
+    correlated.front().set_type(odin::Location::kBreak);
+    correlated.back().set_type(odin::Location::kBreak);
 
     // For each pair of locations
     for(auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {
@@ -197,10 +199,10 @@ namespace valhalla {
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
-      if (destination->type() == Location::StopType::BREAK) {
+      if (destination->type() == odin::Location::kBreak) {
         // Move origin back to the last break and collect the throughs
         std::list<odin::Location> throughs;
-        while(origin->type() != Location::StopType::BREAK) {
+        while(origin->type() != odin::Location::kBreak) {
           throughs.push_front(*origin);
           --origin;
         }
