@@ -471,7 +471,7 @@ namespace {
     json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
                 std::list<odin::TripPath>::const_iterator path_leg,
                 const PointLL& man_ll, const bool depart, const bool arrive,
-                const uint32_t count) {
+                const uint32_t count, const std::string mode, const std::string prev_mode) {
       auto osrm_man = json::map({});
 
       // Set the location
@@ -496,6 +496,8 @@ namespace {
         maneuver_type = "depart";
       } else if (arrive) {
         maneuver_type = "arrive";
+      } else if (mode != prev_mode) {
+        maneuver_type = "notification";
       } else {
         // Special cases
         const auto& prior_edge = path_leg->node(idx-1).edge();
@@ -692,6 +694,7 @@ namespace {
         // Iterate through maneuvers - convert to OSRM steps
         uint32_t index = 0;
         uint32_t count = 0;
+        std::string prev_name, prev_ref, mode, prev_mode;
         auto steps = json::array({});
         std::unordered_map<std::string, float> maneuvers;
         for (const auto& maneuver : leg.maneuver()) {
@@ -709,7 +712,12 @@ namespace {
           float distance = maneuver.length() * 1000.0f;
           float duration = maneuver.time();
           std::string drive_side("right");  // TODO - pass this through TPB or TripDirections
-          step->emplace("mode", get_mode(maneuver, path_leg));
+
+          mode = get_mode(maneuver, path_leg);
+          if (prev_mode.empty())
+            prev_mode = mode;
+
+          step->emplace("mode", mode);
           step->emplace("driving_side", drive_side);
           step->emplace("duration", json::fp_t{duration, 1});
           step->emplace("weight", json::fp_t{duration, 1});
@@ -719,9 +727,18 @@ namespace {
           auto nr = names_and_refs(maneuver, path_leg);
           if (!nr.first.empty()) {
             step->emplace("name", nr.first);
+            if (index == 0)
+              prev_name = nr.first;
           }
           if (!nr.second.empty()) {
             step->emplace("ref", nr.second);
+            if (index == 0)
+              prev_ref = nr.second;
+          }
+          //if arrive use prev name ref
+          if (index == leg.maneuver().size() - 1) {
+            step->emplace("name", prev_name);
+            step->emplace("ref", prev_ref);
           }
 
           // Record street name and distance.. TODO - need to also worry about order
@@ -735,10 +752,13 @@ namespace {
             }
           }
 
+          prev_name = nr.first;
+          prev_ref = nr.second;
+
           // Add OSRM maneuver
           step->emplace("maneuver", osrm_maneuver(maneuver, path_leg,
               shape[maneuver.begin_shape_index()], (index == 0),
-              (index == leg.maneuver().size() - 1), count));
+              (index == leg.maneuver().size() - 1), count, mode, prev_mode));
 
           // Add destinations and exits
           std::string dest = destinations(maneuver);
@@ -755,6 +775,8 @@ namespace {
 
           // Add step
           steps->emplace_back(step);
+          prev_mode = mode;
+
           index++;
         }
 
