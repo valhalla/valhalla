@@ -49,7 +49,7 @@ namespace {
             return i.score() < j.score();
           });
 
-        for(auto& e : correlated.back().path_edges()) {
+        for(auto& e : *correlated.back().mutable_path_edges()) {
           e.set_score(e.score() - minScoreEdge.score());
           if (e.score() > kMaxScore) {
             e.set_score(kMaxScore);

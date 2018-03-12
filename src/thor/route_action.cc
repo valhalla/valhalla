@@ -76,8 +76,10 @@ namespace valhalla {
         // 2nd pass. Less aggressive hierarchy transitioning, and retry with more candidate edges(filterd by heading in loki).
 
         // add filtered edges to candidate edges for origin and destination
-        origin.path_edges().Add(origin.path_edges().end(), origin.filtered_edges.begin(), origin.filtered_edges.end());
-        destination.path_edges().Add(destination.path_edges().end(), destination.filtered_edges.begin(), destination.filtered_edges.end());
+        //origin.mutable_path_edges()->MergeFrom(origin.filtered_edges());
+        //destination.mutable_path_edges()->MergeFrom(destination.filtered_edges());
+        origin.mutable_path_edges()->Add(origin.path_edges().end(), origin.filtered_edges.begin(), origin.filtered_edges.end());
+        destination.mutable_path_edges()->Add(destination.path_edges().end(), destination.filtered_edges.begin(), destination.filtered_edges.end());
 
         path_algorithm->Clear();
         cost->set_pass(1);
