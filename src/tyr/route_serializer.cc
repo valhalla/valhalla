@@ -176,9 +176,9 @@ namespace {
       //this way we wouldn't really have to do any decoding (would be far faster). it might even be the case
       //that the string length of the first number is a fixed length (which would be great!) have to have a look
       //should make this a function in midgard probably so the logic is all in the same place
-      std::vector<std::pair<float, float> > decoded;
+      std::vector<PointLL> decoded;
       for(const auto& leg : legs) {
-        auto decoded_leg = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+        auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
         decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(), decoded_leg.end());
       }
       return midgard::encode(decoded);
@@ -263,7 +263,7 @@ namespace {
     // Add intersections along a step/maneuver.
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
             std::list<odin::TripPath>::const_iterator path_leg,
-            const std::vector<std::pair<float, float>>& shape, uint32_t& count) {
+            const std::vector<PointLL>& shape, uint32_t& count) {
       // Iterate through the nodes/intersections of the path for this maneuver
       count = 0;
       auto intersections = json::array({});
@@ -328,8 +328,31 @@ namespace {
         intersection->emplace("in", static_cast<uint64_t>(incoming_index));
         intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
 
-        // TODO - intersections on motorways seem to have classes with one element
-        // "motorway" included
+        // Add classes based on the first edge after the maneuver.
+        std::vector<std::string> classes;
+        if (node.edge().road_class() == odin::TripPath_RoadClass_kMotorway) {
+          classes.push_back("motorway");
+        }
+        if (node.edge().tunnel()) {
+          classes.push_back("tunnel");
+        }
+        if (node.edge().use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
+          classes.push_back("ferry");
+        }
+        if (maneuver.portions_toll() || node.edge().toll()) {
+          classes.push_back("toll");
+        }
+        /** TODO
+        if ( ) {
+          classes.push_back("restricted");
+        } */
+        if (classes.size() > 0) {
+          auto class_list = json::array({});
+          for (const auto& cl : classes) {
+            class_list->emplace_back(cl);
+          }
+          intersection->emplace("classes", class_list);
+        }
 
         // Add the intersection to the JSON array
         intersections->emplace_back(intersection);
@@ -530,8 +553,8 @@ namespace {
     // Method to get the geometry string for a maneuver.
     // TODO - encoding options
     std::string maneuver_geometry(const uint32_t begin_idx, const uint32_t end_idx,
-                  const std::vector<std::pair<float, float>>& shape) {
-      std::vector<std::pair<float, float>> maneuver_shape(shape.begin() + begin_idx,
+                  const std::vector<PointLL>& shape) {
+      std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx,
                   shape.begin() + end_idx);
       return std::string(midgard::encode(maneuver_shape));
     }
@@ -546,15 +569,20 @@ namespace {
       }
 
       // Otherwise return based on the travel mode
-      auto mode = path_leg->node(idx).edge().travel_mode();
-      if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kDrive) {
-        return "driving";
-      } else if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kPedestrian) {
-        return "walk";
-      } else if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kBicycle) {
-        return "cycling";
-      } else {
-        return "transit";
+      switch (maneuver.travel_mode()) {
+        case TripDirections_TravelMode_kDrive: {
+          return "driving";
+        }
+        case TripDirections_TravelMode_kPedestrian: {
+          return "walk";
+        }
+        case TripDirections_TravelMode_kBicycle: {
+          return "cycling";
+        }
+        case TripDirections_TravelMode_kTransit: {
+          return "transit";
+       }
+
       }
     }
 
@@ -630,7 +658,7 @@ namespace {
 
         // Get the full shape for the leg. We want to use this for serializing
         // encoded shape for each step (maneuver) in OSRM output.
-        auto shape = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+        auto shape = midgard::decode<std::vector<PointLL > >(leg.shape());
 
         // Iterate through maneuvers - convert to OSRM steps
         uint32_t index = 0;
@@ -731,7 +759,8 @@ namespace {
 
       // If here then the route succeeded. Set status code to OK and serialize
       // waypoints (locations).
-      json->emplace("code", "Ok");
+      std::string status("Ok");
+      json->emplace("code", status);
       json->emplace("waypoints", waypoints(legs));
 
       // Add each route
@@ -2049,7 +2078,7 @@ namespace {
     //for each leg
     for(const auto& leg : legs) {
       //decode the shape for this leg
-      auto wpts = midgard::decode<std::vector<std::pair<float, float> > >(leg.shape());
+      auto wpts = midgard::decode<std::vector<PointLL>>(leg.shape());
 
       //throw the shape points in as way points
       //TODO: add time to each, need transition time at nodes

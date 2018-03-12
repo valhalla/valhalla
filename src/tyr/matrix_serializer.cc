@@ -87,7 +87,7 @@ namespace valhalla {
           serialize(request, time_distances, distance_scale);
 
       std::stringstream ss;
-      ss << json;
+      ss << *json;
       return ss.str();
     }
 
