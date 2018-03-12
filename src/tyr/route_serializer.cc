@@ -531,17 +531,30 @@ namespace {
           // the current road name ends and more than 1 intersection has been
           // passed. Description is: at t-intersections, when you’re turning
           // onto a new road name, and have passed at least 1 intersection to
-          // get there. TODO - check turn angles?
-          bool road_ends = (prior_edge.use() != odin::TripPath_Use_kRampUse &&
+          // get there.
+          bool road_ends = (count > 1 &&
+                    prior_edge.use() != odin::TripPath_Use_kRampUse &&
                     path_leg->node(idx).intersecting_edge().size() == 1);
           if (road_ends) {
-            // TODO - test the turn angles?
             // TODO what about a doubly digitized road ending at a T (would be
             // 2 intersecting edges)? What if there is a driveway or path as
             // an intersecting edge?
             const auto& intsct_edge = path_leg->node(idx).intersecting_edge(0);
             if (intsct_edge.prev_name_consistency()) {
               road_ends = false;
+            } else {
+              // Get turn types to see if this is a turn at a "T"
+              // (opposing right/left turns).
+              uint32_t turn_degree1 = GetTurnDegree(prior_edge.end_heading(),
+                            current_edge.begin_heading());
+              uint32_t turn_degree2 = GetTurnDegree(prior_edge.end_heading(),
+                            intsct_edge.begin_heading());
+              Turn::Type turn_type1 = Turn::GetType(turn_degree1);
+              Turn::Type turn_type2 = Turn::GetType(turn_degree2);
+              if (!(turn_type1 == Turn::Type::kRight && turn_type2 == Turn::Type::kLeft) &&
+                  !(turn_type2 == Turn::Type::kRight && turn_type1 == Turn::Type::kLeft)) {
+                road_ends = false;
+              }
             }
           }
 
