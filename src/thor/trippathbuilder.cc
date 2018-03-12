@@ -559,7 +559,7 @@ TripPath TripPathBuilder::Build(
     if (e.graph_id() == path.front().edgeid) {
       start_pct = e.dist();
       start_sos = e.side_of_street();
-      start_vrt = e.ll();
+      start_vrt = PointLL(e.ll().lng(), e.ll().lat());
       break;
     }
   }
@@ -581,7 +581,7 @@ TripPath TripPathBuilder::Build(
     if (e.graph_id() == path.back().edgeid) {
       end_pct = e.dist();
       end_sos = e.side_of_street();
-      end_vrt = e.ll();
+      end_vrt = PointLL(e.ll().lng(), e.ll().lat());
       break;
     }
   }

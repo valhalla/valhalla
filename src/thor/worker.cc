@@ -50,9 +50,9 @@ namespace {
           });
 
         for(auto& e : correlated.back().path_edges()) {
-          e.score() -= minScoreEdge.score();
+          e.set_score(e.score() - minScoreEdge.score());
           if (e.score() > kMaxScore) {
-            e.score() = kMaxScore;
+            e.set_score(kMaxScore);
           }
         }
       }
