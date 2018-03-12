@@ -367,11 +367,25 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     has_other_edges = has_other_edges || !e.end_node();
   });
 
+  // Check if the origin edge matches a destination edge at the node.
+  auto trivial_at_node = [this, &destination](const PathLocation::PathEdge& edge) {
+    auto p = destinations_.find(edge.id);
+    if (p != destinations_.end()) {
+      for (const auto& destination_edge : destination.edges) {
+        if (destination_edge.id == edge.id) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
   for (const auto& edge : origin.path_edges()) {
-    // If origin is at a node - skip any inbound edge (dist = 1)
-    if (has_other_edges && edge.end_node()) {
+    // If origin is at a node - skip any inbound edge (dist = 1) unless the
+    // destination is also at the same end node (trivial path).
+    if (has_other_edges && edge.end_node() && !trivial_at_node(edge)) {
       continue;
     }
 

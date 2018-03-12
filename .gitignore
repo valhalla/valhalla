@@ -209,3 +209,4 @@ coverage/
 .settings
 /.vs*/
 /*build*/
+/CMakeSettings.json
