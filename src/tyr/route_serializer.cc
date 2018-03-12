@@ -263,7 +263,8 @@ namespace {
     // Add intersections along a step/maneuver.
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
             std::list<odin::TripPath>::const_iterator path_leg,
-            const std::vector<PointLL>& shape, uint32_t& count) {
+            const std::vector<PointLL>& shape, uint32_t& count,
+            const bool depart, const bool arrive) {
       // Iterate through the nodes/intersections of the path for this maneuver
       count = 0;
       auto intersections = json::array({});
@@ -302,31 +303,34 @@ namespace {
         uint32_t prior_heading = prior_node.edge().end_heading();
         edges.emplace_back(((prior_heading + 180) % 360), false, true, false);
 
-        // Sort edges by increasing bearing and update the in/out edge indexes
-        std::sort(edges.begin(), edges.end());
-        uint32_t incoming_index, outgoing_index;
-        for (uint32_t n = 0; n < edges.size(); ++n) {
-          if (edges[n].in_edge) {
-            incoming_index = n;
-          }
-          if (edges[n].out_edge) {
-            outgoing_index = n;
-          }
-        }
-
         // Create bearing and entry output
         auto bearings = json::array({});
         auto entries = json::array({});
-        for (const auto& edge : edges) {
-          bearings->emplace_back(static_cast<uint64_t>(edge.bearing));
-          entries->emplace_back(edge.routeable);
+        // Sort edges by increasing bearing and update the in/out edge indexes
+        std::sort(edges.begin(), edges.end());
+        uint32_t incoming_index, outgoing_index, index = 0;
+        for (uint32_t n = 0; n < edges.size(); ++n) {
+          if (!depart && edges[n].in_edge) {
+            incoming_index = index++;
+            bearings->emplace_back(static_cast<uint64_t>(edges[n].bearing));
+            entries->emplace_back(edges[n].routeable);
+          }
+          if (!arrive && edges[n].out_edge) {
+            outgoing_index = index++;
+            bearings->emplace_back(static_cast<uint64_t>(edges[n].bearing));
+            entries->emplace_back(edges[n].routeable);
+          }
         }
-        intersection->emplace("entry", entries);
-        intersection->emplace("bearings", bearings);
 
         // Add the index of the input edge and output edge
-        intersection->emplace("in", static_cast<uint64_t>(incoming_index));
-        intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
+        if (!depart)
+          intersection->emplace("in", static_cast<uint64_t>(incoming_index));
+
+        if (!arrive)
+          intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
+
+        intersection->emplace("entry", entries);
+        intersection->emplace("bearings", bearings);
 
         // Add classes based on the first edge after the maneuver.
         std::vector<std::string> classes;
@@ -723,20 +727,23 @@ namespace {
           step->emplace("weight", json::fp_t{duration, 1});
           step->emplace("distance", json::fp_t{distance, 1});
 
+          bool arrive = (index == leg.maneuver().size() - 1);
+          bool depart = (index == 0);
           // Add street names and refs
           auto nr = names_and_refs(maneuver, path_leg);
           if (!nr.first.empty()) {
             step->emplace("name", nr.first);
-            if (index == 0)
+            if (depart)
               prev_name = nr.first;
           }
           if (!nr.second.empty()) {
             step->emplace("ref", nr.second);
-            if (index == 0)
+            if (depart)
               prev_ref = nr.second;
           }
+
           //if arrive use prev name ref
-          if (index == leg.maneuver().size() - 1) {
+          if (arrive) {
             step->emplace("name", prev_name);
             step->emplace("ref", prev_ref);
           }
@@ -757,8 +764,8 @@ namespace {
 
           // Add OSRM maneuver
           step->emplace("maneuver", osrm_maneuver(maneuver, path_leg,
-              shape[maneuver.begin_shape_index()], (index == 0),
-              (index == leg.maneuver().size() - 1), count, mode, prev_mode));
+              shape[maneuver.begin_shape_index()], depart,
+              arrive, count, mode, prev_mode));
 
           // Add destinations and exits
           std::string dest = destinations(maneuver);
@@ -771,7 +778,7 @@ namespace {
           }
 
           // Add intersections
-          step->emplace("intersections", intersections(maneuver, path_leg, shape, count));
+          step->emplace("intersections", intersections(maneuver, path_leg, shape, count, arrive, depart));
 
           // Add step
           steps->emplace_back(step);
