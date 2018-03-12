@@ -687,7 +687,7 @@ TripPath TripPathBuilder::Build(
                                 origin_date, dest_date);
 
       tp_orig->set_date_time(origin_date);
-      origin.date_time() == tp_orig->date_time();
+      origin.set_date_time(tp_orig->date_time());
       tp_dest->set_date_time(dest_date);
 
     } else if (origin.has_date_time()) { // leave at
@@ -703,7 +703,7 @@ TripPath TripPathBuilder::Build(
                                 origin_date, dest_date);
 
       tp_dest->set_date_time(dest_date);
-      dest.date_time() == tp_dest->date_time();
+      dest.set_date_time(tp_dest->date_time());
       tp_orig->set_date_time(origin_date);
     }
 
@@ -1159,7 +1159,7 @@ TripPath TripPathBuilder::Build(
                               origin_date, dest_date);
 
     tp_orig->set_date_time(origin_date);
-    origin.date_time() == tp_orig->date_time();
+    origin.set_date_time(tp_orig->date_time());
     tp_dest->set_date_time(dest_date);
 
   } else if (origin.has_date_time()) { // leave at
@@ -1175,7 +1175,7 @@ TripPath TripPathBuilder::Build(
                               origin_date, dest_date);
 
     tp_dest->set_date_time(dest_date);
-    dest.date_time() == tp_dest->date_time();
+    dest.set_date_time(tp_dest->date_time());
     tp_orig->set_date_time(origin_date);
   }
 
