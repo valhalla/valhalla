@@ -101,7 +101,7 @@ namespace valhalla {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
-    correlated.front().stoptype_ = correlated.back().stoptype_ = Location::StopType::BREAK;
+    correlated.front().type() = correlated.back().type() = Location::StopType::BREAK;
 
     // For each pair of locations
     for(auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
@@ -114,8 +114,8 @@ namespace valhalla {
       // only allow the edge that was used previously (avoid u-turns)
       if(!path.empty()) {
         auto erasure_position = std::remove_if(destination->path_edges().begin(), destination->path_edges().end(),
-          [&path](const PathLocation::PathEdge& e){
-            return e.id != path.front().edgeid;
+          [&path](const odin::Location::PathEdge& e){
+            return e.graph_id() != path.front().edgeid;
         });
         destination->path_edges().erase(erasure_position, destination->path_edges().end());
       }
@@ -134,10 +134,10 @@ namespace valhalla {
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
-      if (origin->stoptype_ == Location::StopType::BREAK) {
+      if (origin->type() == Location::StopType::BREAK) {
         // Move destination back to the last break and collect the throughs
-        std::list<PathLocation> throughs;
-        while(destination->stoptype_ != Location::StopType::BREAK) {
+        std::list<odin::Location> throughs;
+        while(destination->type() != Location::StopType::BREAK) {
           throughs.push_back(*destination);
           --destination;
         }
@@ -163,7 +163,7 @@ namespace valhalla {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
-    correlated.front().stoptype_ = correlated.back().stoptype_ = Location::StopType::BREAK;
+    correlated.front().type() = correlated.back().type() = Location::StopType::BREAK;
 
     // For each pair of locations
     for(auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {
@@ -176,8 +176,8 @@ namespace valhalla {
       // only allow the edge that was used previously (avoid u-turns)
       if(!path.empty()) {
         auto erasure_position = std::remove_if(origin->path_edges().begin(), origin->path_edges().end(),
-          [&path](const PathLocation::PathEdge& e){
-            return e.id != path.back().edgeid;
+          [&path](const odin::Location::PathEdge& e){
+            return e.graph_id() != path.back().edgeid;
         });
         origin->path_edges().erase(erasure_position, origin->path_edges().end());
       }
@@ -197,10 +197,10 @@ namespace valhalla {
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
-      if (destination->stoptype_ == Location::StopType::BREAK) {
+      if (destination->type() == Location::StopType::BREAK) {
         // Move origin back to the last break and collect the throughs
-        std::list<PathLocation> throughs;
-        while(origin->stoptype_ != Location::StopType::BREAK) {
+        std::list<odin::Location> throughs;
+        while(origin->type() != Location::StopType::BREAK) {
           throughs.push_front(*origin);
           --origin;
         }
