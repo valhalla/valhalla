@@ -93,15 +93,15 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
   PointLL center_ll(origin_locations.at(0).ll().lng(), origin_locations.at(0).ll().lat());
   AABB2<PointLL> loc_bounds(center_ll.lng(), center_ll.lat(), center_ll.lng(), center_ll.lat());
 
-  for (uint32_t i = 0; i < origin_locations.size(); ++i) {
-    PointLL loc(origin_locations.at(i).ll().lng(), origin_locations.at(i).ll().lat());
+  for (const auto& origin : origin_locations) {
+    PointLL loc(origin.ll().lng(), origin.ll().lat());
     loc_bounds.Expand(loc);
   }
   // Find the location closest to the center.
   PointLL bounds_center = loc_bounds.Center();
   float shortest_dist = center_ll.Distance(bounds_center);
-  for (uint32_t i = 0; i < origin_locations.size(); ++i) {
-    PointLL loc(origin_locations.at(i).ll().lng(), origin_locations.at(i).ll().lat());
+  for (const auto& origin : origin_locations) {
+    PointLL loc(origin.ll().lng(), origin.ll().lat());
     float current_dist = loc.Distance(bounds_center);
     if (current_dist < shortest_dist) {
       shortest_dist = current_dist;
@@ -912,20 +912,20 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
                  std::vector<odin::Location>& origin_locations,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
-  for (uint32_t i = 0; i < origin_locations.size(); ++i) {
-    PointLL origin(origin_locations.at(i).ll().lng(), origin_locations.at(i).ll().lat());
+  for (auto& origin : origin_locations) {
+    PointLL ll(origin.ll().lng(), origin.ll().lat());
     // Set time at the origin lat, lon grid to 0
-    isotile_->Set(origin, 0);
+    isotile_->Set(ll, 0);
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(origin_locations.at(i).path_edges().begin(), origin_locations.at(i).path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
+    std::for_each(origin.path_edges().begin(), origin.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
       has_other_edges = has_other_edges || !e.end_node();
     });
 
     // Iterate through edges and add to adjacency list
     const NodeInfo* nodeinfo = nullptr;
-    for (const auto& edge : (origin_locations.at(i).path_edges())) {
+    for (const auto& edge : (origin.path_edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
         continue;
@@ -970,9 +970,9 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
     }
 
     // Set the origin timezone
-    if (nodeinfo != nullptr && origin_locations.at(i).has_date_time() &&
-      origin_locations.at(i).date_time() == "current") {
-      origin_locations.at(i).date_time() == DateTime::iso_date_time(
+    if (nodeinfo != nullptr && origin.has_date_time() &&
+      origin.date_time() == "current") {
+      origin.date_time() == DateTime::iso_date_time(
           DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     }
   }
@@ -983,20 +983,20 @@ void Isochrone::SetOriginLocationsMM(GraphReader& graphreader,
                  std::vector<odin::Location>& origin_locations,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
-  for (uint32_t i = 0; i < origin_locations.size(); ++i) {
-      PointLL origin(origin_locations.at(i).ll().lng(), origin_locations.at(i).ll().lat());
+  for (auto& origin : origin_locations) {
+    PointLL ll(origin.ll().lng(), origin.ll().lat());
     // Set time at the origin lat, lon grid to 0
     isotile_->Set(origin, 0);
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(origin_locations.at(i).path_edges().begin(), origin_locations.at(i).path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
+    std::for_each(origin.path_edges().begin(), origin.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
       has_other_edges = has_other_edges || !e.end_node();
     });
 
     // Iterate through edges and add to adjacency list
     const NodeInfo* nodeinfo = nullptr;
-    for (const auto& edge : (origin_locations.at(i).path_edges())) {
+    for (const auto& edge : (origin.path_edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
         continue;
@@ -1042,9 +1042,9 @@ void Isochrone::SetOriginLocationsMM(GraphReader& graphreader,
     }
 
     // Set the origin timezone
-    if (nodeinfo != nullptr && origin_locations.at(i).has_date_time() &&
-      origin_locations.at(i).date_time() == "current") {
-      origin_locations.at(i).date_time() == DateTime::iso_date_time(
+    if (nodeinfo != nullptr && origin.has_date_time() &&
+      origin.date_time() == "current") {
+      origin.date_time() == DateTime::iso_date_time(
           DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     }
   }
@@ -1055,20 +1055,20 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
                      std::vector<odin::Location>& dest_locations,
                      const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
-  for (uint32_t i = 0; i < dest_locations.size(); ++i) {
-    PointLL dest(dest_locations.at(i).ll().lng(), dest_locations.at(i).ll().lat());
+  for (auto& dest : dest_locations) {
+    PointLL ll(dest.ll().lng(), dest.ll().lat());
     // Set time at the origin lat, lon grid to 0
-    isotile_->Set(dest, 0);
+    isotile_->Set(ll, 0);
 
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(dest_locations.at(i).path_edges().begin(), dest_locations.at(i).path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
+    std::for_each(dest.path_edges().begin(), dest.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
       has_other_edges = has_other_edges || !e.begin_node();
     });
 
     // Iterate through edges and add to adjacency list
     Cost c;
-    for (const auto& edge : (dest_locations.at(i).path_edges())) {
+    for (const auto& edge : (dest.path_edges())) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
       if (has_other_edges && edge.begin_node()) {
