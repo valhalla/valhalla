@@ -273,7 +273,7 @@ namespace {
 
 	{440,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
 	{441,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-	{442,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{442,R"({"code":"NoRoute","message":"Impossible route between points"})"},
 	{443,R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 	{444,R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 	{445,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
