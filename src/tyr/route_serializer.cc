@@ -328,8 +328,31 @@ namespace {
         intersection->emplace("in", static_cast<uint64_t>(incoming_index));
         intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
 
-        // TODO - intersections on motorways seem to have classes with one element
-        // "motorway" included
+        // Add classes based on the first edge after the maneuver.
+        std::vector<std::string> classes;
+        if (node.edge().road_class() == odin::TripPath_RoadClass_kMotorway) {
+          classes.push_back("motorway");
+        }
+        if (node.edge().tunnel()) {
+          classes.push_back("tunnel");
+        }
+        if (node.edge().use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
+          classes.push_back("ferry");
+        }
+        if (maneuver.portions_toll() || node.edge().toll()) {
+          classes.push_back("toll");
+        }
+        /** TODO
+        if ( ) {
+          classes.push_back("restricted");
+        } */
+        if (classes.size() > 0) {
+          auto class_list = json::array({});
+          for (const auto& cl : classes) {
+            class_list->emplace_back(cl);
+          }
+          intersection->emplace("classes", class_list);
+        }
 
         // Add the intersection to the JSON array
         intersections->emplace_back(intersection);
@@ -448,7 +471,7 @@ namespace {
     json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
                 std::list<odin::TripPath>::const_iterator path_leg,
                 const PointLL& man_ll, const bool depart, const bool arrive,
-                const uint32_t count) {
+                const uint32_t count, const std::string mode, const std::string prev_mode) {
       auto osrm_man = json::map({});
 
       // Set the location
@@ -473,6 +496,8 @@ namespace {
         maneuver_type = "depart";
       } else if (arrive) {
         maneuver_type = "arrive";
+      } else if (mode != prev_mode) {
+        maneuver_type = "notification";
       } else {
         // Special cases
         const auto& prior_edge = path_leg->node(idx-1).edge();
@@ -511,15 +536,10 @@ namespace {
                 break;
               }
             }
-            if (!road_ends) {
-              // Check if previous maneuver and current maneuver have same name
-            }
           }
           if (count > 1 && road_ends) {
             maneuver_type = "end of road";
-          } else {
-            maneuver_type = "turn";
-          }
+          } else maneuver_type = "turn";
         }
       }
       osrm_man->emplace("type", maneuver_type);
@@ -546,15 +566,20 @@ namespace {
       }
 
       // Otherwise return based on the travel mode
-      auto mode = path_leg->node(idx).edge().travel_mode();
-      if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kDrive) {
-        return "driving";
-      } else if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kPedestrian) {
-        return "walk";
-      } else if (mode == odin::TripPath::TravelMode::TripPath_TravelMode_kBicycle) {
-        return "cycling";
-      } else {
-        return "transit";
+      switch (maneuver.travel_mode()) {
+        case TripDirections_TravelMode_kDrive: {
+          return "driving";
+        }
+        case TripDirections_TravelMode_kPedestrian: {
+          return "walk";
+        }
+        case TripDirections_TravelMode_kBicycle: {
+          return "cycling";
+        }
+        case TripDirections_TravelMode_kTransit: {
+          return "transit";
+       }
+
       }
     }
 
@@ -635,6 +660,7 @@ namespace {
         // Iterate through maneuvers - convert to OSRM steps
         uint32_t index = 0;
         uint32_t count = 0;
+        std::string prev_name, prev_ref, mode, prev_mode;
         auto steps = json::array({});
         std::unordered_map<std::string, float> maneuvers;
         for (const auto& maneuver : leg.maneuver()) {
@@ -652,7 +678,12 @@ namespace {
           float distance = maneuver.length() * 1000.0f;
           float duration = maneuver.time();
           std::string drive_side("right");  // TODO - pass this through TPB or TripDirections
-          step->emplace("mode", get_mode(maneuver, path_leg));
+
+          mode = get_mode(maneuver, path_leg);
+          if (prev_mode.empty())
+            prev_mode = mode;
+
+          step->emplace("mode", mode);
           step->emplace("driving_side", drive_side);
           step->emplace("duration", json::fp_t{duration, 1});
           step->emplace("weight", json::fp_t{duration, 1});
@@ -662,9 +693,18 @@ namespace {
           auto nr = names_and_refs(maneuver, path_leg);
           if (!nr.first.empty()) {
             step->emplace("name", nr.first);
+            if (index == 0)
+              prev_name = nr.first;
           }
           if (!nr.second.empty()) {
             step->emplace("ref", nr.second);
+            if (index == 0)
+              prev_ref = nr.second;
+          }
+          //if arrive use prev name ref
+          if (index == leg.maneuver().size() - 1) {
+            step->emplace("name", prev_name);
+            step->emplace("ref", prev_ref);
           }
 
           // Record street name and distance.. TODO - need to also worry about order
@@ -678,10 +718,13 @@ namespace {
             }
           }
 
+          prev_name = nr.first;
+          prev_ref = nr.second;
+
           // Add OSRM maneuver
           step->emplace("maneuver", osrm_maneuver(maneuver, path_leg,
               shape[maneuver.begin_shape_index()], (index == 0),
-              (index == leg.maneuver().size() - 1), count));
+              (index == leg.maneuver().size() - 1), count, mode, prev_mode));
 
           // Add destinations and exits
           std::string dest = destinations(maneuver);
@@ -698,6 +741,8 @@ namespace {
 
           // Add step
           steps->emplace_back(step);
+          prev_mode = mode;
+
           index++;
         }
 
