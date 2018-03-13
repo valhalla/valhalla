@@ -506,8 +506,9 @@ namespace {
       osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
       osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
 
-      std::string modifier = turn_modifier(in_brg, out_brg);
+      std::string modifier;
       if (!depart) {
+        modifier = turn_modifier(in_brg, out_brg);
         osrm_man->emplace("modifier", modifier);
       }
 
