@@ -263,44 +263,61 @@ namespace {
     // Add intersections along a step/maneuver.
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
             std::list<odin::TripPath>::const_iterator path_leg,
-            const std::vector<PointLL>& shape, uint32_t& count) {
+            const std::vector<PointLL>& shape, uint32_t& count,
+            const bool arrive) {
       // Iterate through the nodes/intersections of the path for this maneuver
       count = 0;
       auto intersections = json::array({});
-      for (uint32_t i = maneuver.begin_path_index(); i <= maneuver.end_path_index(); i++) {
+      uint32_t n = arrive ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
+      for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
         auto intersection = json::map({});
 
         // Get the node from the path leg
         auto node = path_leg->node(i);
         auto prior_node = (i > 0) ? path_leg->node(i - 1) : path_leg->node(0);
 
-        // Add the node location (lon, lat)
+        // Add the node location (lon, lat). Use the last shape point for
+        // the arrive step
         auto loc = json::array({});
-        PointLL ll = shape[node.edge().begin_shape_index()];
+        PointLL ll = arrive ? shape[shape.size() - 1] :
+            shape[node.edge().begin_shape_index()];
         loc->emplace_back(json::fp_t{ll.lng(), 6});
         loc->emplace_back(json::fp_t{ll.lat(), 6});
         intersection->emplace("location", loc);
 
-        // Get bearings and access to outgoing edges. Sort by increasing bearing.
-        // Note that intersecting edges do not include the inbound edge or the
-        // outbound edge.
+        // Get bearings and access to outgoing intersecting edges. Do not add
+        // any intersecting edges for the first depart intersection and for
+        // the arrive step.
         // TODO - round off?
         std::vector<IntersectionEdges> edges;
-        edges.emplace_back(node.edge().begin_heading(), true, false, true);
-        for (uint32_t n = 0; n < node.intersecting_edge().size(); n++) {
-          auto intersecting_edge = node.intersecting_edge(n);
+        if (i > 0 && !arrive) {
+          for (uint32_t n = 0; n < node.intersecting_edge().size(); n++) {
+            auto intersecting_edge = node.intersecting_edge(n);
 
-          // TODO - how to get info on whether routing is allowed on this edge
-          // (based on mode?).
-          bool routeable = (intersecting_edge.driveability() == odin::TripPath_Traversability::TripPath_Traversability_kForward);
-          uint32_t bearing = static_cast<uint32_t>(intersecting_edge.begin_heading());
-          edges.emplace_back(bearing, routeable, false, false);
+            // TODO - how to get info on whether routing is allowed on this edge
+            // (based on mode?).
+            bool routeable = (intersecting_edge.driveability() & odin::TripPath_Traversability::TripPath_Traversability_kForward);
+            uint32_t bearing = static_cast<uint32_t>(intersecting_edge.begin_heading());
+            edges.emplace_back(bearing, routeable, false, false);
+          }
         }
 
-        // Incoming edge. Set routeable to false.
+        // Add the edge departing the node
+        if (!arrive)
+          edges.emplace_back(node.edge().begin_heading(), true, false, true);
+
+        // Add the incoming edge except for the first depart intersection.
+        // Set routeable to false except for arrive.
         // TODO - what if a true U-turn - need to set it to routeable.
-        uint32_t prior_heading = prior_node.edge().end_heading();
-        edges.emplace_back(((prior_heading + 180) % 360), false, true, false);
+        if (i > 0) {
+          bool entry = (arrive) ? true : false;
+          uint32_t prior_heading = prior_node.edge().end_heading();
+          edges.emplace_back(((prior_heading + 180) % 360), entry, true, false);
+        }
+
+        // Create bearing and entry output
+        auto bearings = json::array({});
+        auto entries = json::array({});
 
         // Sort edges by increasing bearing and update the in/out edge indexes
         std::sort(edges.begin(), edges.end());
@@ -312,46 +329,46 @@ namespace {
           if (edges[n].out_edge) {
             outgoing_index = n;
           }
+          bearings->emplace_back(static_cast<uint64_t>(edges[n].bearing));
+          entries->emplace_back(edges[n].routeable);
         }
 
-        // Create bearing and entry output
-        auto bearings = json::array({});
-        auto entries = json::array({});
-        for (const auto& edge : edges) {
-          bearings->emplace_back(static_cast<uint64_t>(edge.bearing));
-          entries->emplace_back(edge.routeable);
-        }
+        // Add the index of the input edge and output edge
+        if (i > 0)
+          intersection->emplace("in", static_cast<uint64_t>(incoming_index));
+        if (!arrive)
+          intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
+
         intersection->emplace("entry", entries);
         intersection->emplace("bearings", bearings);
 
-        // Add the index of the input edge and output edge
-        intersection->emplace("in", static_cast<uint64_t>(incoming_index));
-        intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
-
-        // Add classes based on the first edge after the maneuver.
-        std::vector<std::string> classes;
-        if (node.edge().road_class() == odin::TripPath_RoadClass_kMotorway) {
-          classes.push_back("motorway");
-        }
-        if (node.edge().tunnel()) {
-          classes.push_back("tunnel");
-        }
-        if (node.edge().use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
-          classes.push_back("ferry");
-        }
-        if (maneuver.portions_toll() || node.edge().toll()) {
-          classes.push_back("toll");
-        }
-        /** TODO
-        if ( ) {
-          classes.push_back("restricted");
-        } */
-        if (classes.size() > 0) {
-          auto class_list = json::array({});
-          for (const auto& cl : classes) {
-            class_list->emplace_back(cl);
+        // Add classes based on the first edge after the maneuver (not needed
+        // for arrive maneuver).
+        if (!arrive) {
+          std::vector<std::string> classes;
+          if (node.edge().road_class() == odin::TripPath_RoadClass_kMotorway) {
+            classes.push_back("motorway");
           }
-          intersection->emplace("classes", class_list);
+          if (node.edge().tunnel()) {
+            classes.push_back("tunnel");
+          }
+          if (node.edge().use() == odin::TripPath::Use::TripPath_Use_kFerryUse) {
+            classes.push_back("ferry");
+          }
+          if (maneuver.portions_toll() || node.edge().toll()) {
+            classes.push_back("toll");
+          }
+          /** TODO
+          if ( ) {
+            classes.push_back("restricted");
+          } */
+          if (classes.size() > 0) {
+            auto class_list = json::array({});
+            for (const auto& cl : classes) {
+              class_list->emplace_back(cl);
+            }
+            intersection->emplace("classes", class_list);
+          }
         }
 
         // Add the intersection to the JSON array
@@ -523,23 +540,57 @@ namespace {
           maneuver_type = "roundabout";
         }
 
+        // Are there any intersecting edges
+        bool false_node = path_leg->node(idx).intersecting_edge().size() == 0;
+
         // Fall through case if maneuver not set by special cases above
+        new_name = false;
         if (maneuver_type.empty()) {
           // Check for end of road if prior edge is not a ramp. Road ends if
           // the current road name ends and more than 1 intersection has been
-          // passed
-          bool road_ends = (prior_edge.use() == odin::TripPath_Use_kRampUse) ? false : true;
+          // passed. Description is: at t-intersections, when you’re turning
+          // onto a new road name, and have passed at least 1 intersection to
+          // get there.
+          bool road_ends = (count > 1 &&
+                    prior_edge.use() != odin::TripPath_Use_kRampUse &&
+                    path_leg->node(idx).intersecting_edge().size() == 1);
           if (road_ends) {
-            for (const auto intsct_edge : path_leg->node(idx).intersecting_edge()) {
-              if (intsct_edge.prev_name_consistency()) {
+            // TODO what about a doubly digitized road ending at a T (would be
+            // 2 intersecting edges)? What if there is a driveway or path as
+            // an intersecting edge?
+            const auto& intsct_edge = path_leg->node(idx).intersecting_edge(0);
+            if (intsct_edge.prev_name_consistency()) {
+              road_ends = false;
+            } else {
+              // Get turn types to see if this is a turn at a "T"
+              // (opposing right/left turns).
+              uint32_t turn_degree1 = GetTurnDegree(prior_edge.end_heading(),
+                            current_edge.begin_heading());
+              uint32_t turn_degree2 = GetTurnDegree(prior_edge.end_heading(),
+                            intsct_edge.begin_heading());
+              Turn::Type turn_type1 = Turn::GetType(turn_degree1);
+              Turn::Type turn_type2 = Turn::GetType(turn_degree2);
+              if (!(turn_type1 == Turn::Type::kRight && turn_type2 == Turn::Type::kLeft) &&
+                  !(turn_type2 == Turn::Type::kRight && turn_type1 == Turn::Type::kLeft)) {
                 road_ends = false;
-                break;
               }
             }
           }
+
+          // Check if previous maneuver and current maneuver have same name
+          // TODO - more extensive name comparison method?
+          if (prior_edge.name().size() > 0 && prior_edge.name().size() == current_edge.name().size() &&
+              (prior_edge.name(0) != current_edge.name(0))) {
+              new_name = true;
+          }
+
           if (count > 1 && road_ends) {
             maneuver_type = "end of road";
-          } else maneuver_type = "turn";
+          } else if (false_node && new_name) {
+            maneuver_type = "new_name";
+          } else {
+            maneuver_type = "turn";
+          }
         }
       }
       osrm_man->emplace("type", maneuver_type);
@@ -689,20 +740,23 @@ namespace {
           step->emplace("weight", json::fp_t{duration, 1});
           step->emplace("distance", json::fp_t{distance, 1});
 
+          bool arrive = (index == leg.maneuver().size() - 1);
+          bool depart = (index == 0);
           // Add street names and refs
           auto nr = names_and_refs(maneuver, path_leg);
           if (!nr.first.empty()) {
             step->emplace("name", nr.first);
-            if (index == 0)
+            if (depart)
               prev_name = nr.first;
           }
           if (!nr.second.empty()) {
             step->emplace("ref", nr.second);
-            if (index == 0)
+            if (depart)
               prev_ref = nr.second;
           }
+
           //if arrive use prev name ref
-          if (index == leg.maneuver().size() - 1) {
+          if (arrive) {
             step->emplace("name", prev_name);
             step->emplace("ref", prev_ref);
           }
@@ -723,8 +777,8 @@ namespace {
 
           // Add OSRM maneuver
           step->emplace("maneuver", osrm_maneuver(maneuver, path_leg,
-              shape[maneuver.begin_shape_index()], (index == 0),
-              (index == leg.maneuver().size() - 1), count, mode, prev_mode));
+              shape[maneuver.begin_shape_index()], depart,
+              arrive, count, mode, prev_mode));
 
           // Add destinations and exits
           std::string dest = destinations(maneuver);
@@ -737,7 +791,7 @@ namespace {
           }
 
           // Add intersections
-          step->emplace("intersections", intersections(maneuver, path_leg, shape, count));
+          step->emplace("intersections", intersections(maneuver, path_leg, shape, count, arrive));
 
           // Add step
           steps->emplace_back(step);
