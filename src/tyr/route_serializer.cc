@@ -264,7 +264,7 @@ namespace {
     json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& maneuver,
             std::list<odin::TripPath>::const_iterator path_leg,
             const std::vector<PointLL>& shape, uint32_t& count,
-            const bool depart, const bool arrive) {
+            const bool arrive) {
       // Iterate through the nodes/intersections of the path for this maneuver
       count = 0;
       auto intersections = json::array({});
@@ -285,28 +285,31 @@ namespace {
         loc->emplace_back(json::fp_t{ll.lat(), 6});
         intersection->emplace("location", loc);
 
-        // Get bearings and access to outgoing edges. Sort by increasing bearing.
-        // Note that intersecting edges do not include the inbound edge or the
-        // outbound edge.
+        // Get bearings and access to outgoing intersecting edges. Do not add
+        // any intersecting edges for the first depart intersection and for
+        // the arrive step.
         // TODO - round off?
         std::vector<IntersectionEdges> edges;
-        for (uint32_t n = 0; n < node.intersecting_edge().size(); n++) {
-          auto intersecting_edge = node.intersecting_edge(n);
+        if (i > 0 && !arrive) {
+          for (uint32_t n = 0; n < node.intersecting_edge().size(); n++) {
+            auto intersecting_edge = node.intersecting_edge(n);
 
-          // TODO - how to get info on whether routing is allowed on this edge
-          // (based on mode?).
-          bool routeable = (intersecting_edge.driveability() == odin::TripPath_Traversability::TripPath_Traversability_kForward);
-          uint32_t bearing = static_cast<uint32_t>(intersecting_edge.begin_heading());
-          edges.emplace_back(bearing, routeable, false, false);
+            // TODO - how to get info on whether routing is allowed on this edge
+            // (based on mode?).
+            bool routeable = (intersecting_edge.driveability() & odin::TripPath_Traversability::TripPath_Traversability_kForward);
+            uint32_t bearing = static_cast<uint32_t>(intersecting_edge.begin_heading());
+            edges.emplace_back(bearing, routeable, false, false);
+          }
         }
 
         // Add the edge departing the node
         if (!arrive)
           edges.emplace_back(node.edge().begin_heading(), true, false, true);
 
-        // Add the incoming edge. Set routeable to false except for arrive.
+        // Add the incoming edge except for the first depart intersection.
+        // Set routeable to false except for arrive.
         // TODO - what if a true U-turn - need to set it to routeable.
-        if (!depart) {
+        if (i > 0) {
           bool entry = (arrive) ? true : false;
           uint32_t prior_heading = prior_node.edge().end_heading();
           edges.emplace_back(((prior_heading + 180) % 360), entry, true, false);
@@ -315,6 +318,7 @@ namespace {
         // Create bearing and entry output
         auto bearings = json::array({});
         auto entries = json::array({});
+
         // Sort edges by increasing bearing and update the in/out edge indexes
         std::sort(edges.begin(), edges.end());
         uint32_t incoming_index, outgoing_index;
@@ -330,7 +334,7 @@ namespace {
         }
 
         // Add the index of the input edge and output edge
-        if (!depart)
+        if (i > 0)
           intersection->emplace("in", static_cast<uint64_t>(incoming_index));
         if (!arrive)
           intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
@@ -787,7 +791,7 @@ namespace {
           }
 
           // Add intersections
-          step->emplace("intersections", intersections(maneuver, path_leg, shape, count, depart, arrive));
+          step->emplace("intersections", intersections(maneuver, path_leg, shape, count, arrive));
 
           // Add step
           steps->emplace_back(step);
