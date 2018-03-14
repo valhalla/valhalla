@@ -52,7 +52,7 @@ namespace valhalla {
     Optimizer optimizer;
     //returns the optimal order of the path_locations
     optimal_order = optimizer.Solve(correlated.size(), time_costs);
-    std::vector<PathLocation> best_order;
+    std::vector<odin::Location> best_order;
     for (size_t i = 0; i< optimal_order.size(); i++)
       best_order.emplace_back(correlated.Get(optimal_order[i]));
 

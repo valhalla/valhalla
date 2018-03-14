@@ -329,8 +329,8 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
 // Calculate best path using bi-directional A*. No hierarchies or time
 // dependencies are used. Suitable for pedestrian routes (and bicycle?).
-std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
-             PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> BidirectionalAStar::GetBestPath(odin::Location& origin,
+    odin::Location& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const sif::TravelMode mode) {
   // Set the mode and costing
@@ -340,7 +340,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
   access_mode_ = costing_->access_mode();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.edges.front().projected, destination.edges.front().projected);
+  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  Init(origin_new, destination_new);
 
   // Set origin and destination locations - seeds the adj. lists
   // Note: because we can correlate to more than one place for a given
@@ -563,23 +565,23 @@ void BidirectionalAStar::SetReverseConnection(const BDEdgeLabel& pred) {
 
 // Add edges at the origin to the forward adjacency list.
 void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
-                 PathLocation& origin) {
+                 odin::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.edges.cbegin(), origin.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+  std::for_each(origin.path_edges().begin(), origin.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
     has_other_edges = has_other_edges || !e.end_node();
   });
 
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
-  for (const auto& edge : origin.edges) {
+  for (const auto& edge : origin.path_edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
     if (has_other_edges && edge.end_node()) {
       continue;
     }
 
     // Get the directed edge
-    GraphId edgeid = edge.id;
+    GraphId edgeid(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -593,12 +595,12 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.dist);
+    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.dist());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score;
+    cost.cost += edge.score();
     float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng());
     float sortcost = cost.cost + astarheuristic_forward_.Get(dist);
 
@@ -616,25 +618,25 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (nodeinfo != nullptr && origin.date_time_ &&
-      *origin.date_time_ == "current") {
-    origin.date_time_= DateTime::iso_date_time(
-    		DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+  if (nodeinfo != nullptr && origin.has_date_time() &&
+      origin.date_time() == "current") {
+    origin.set_date_time(DateTime::iso_date_time(
+    		DateTime::get_tz_db().from_index(nodeinfo->timezone())));
   }
 }
 
 // Add destination edges to the reverse path adjacency list.
 void BidirectionalAStar::SetDestination(GraphReader& graphreader,
-                     const PathLocation& dest) {
+                     const odin::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(dest.edges.cbegin(), dest.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+  std::for_each(dest.path_edges().begin(), dest.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
     has_other_edges = has_other_edges || !e.begin_node();
   });
 
   // Iterate through edges and add to adjacency list
   Cost c;
-  for (const auto& edge : dest.edges) {
+  for (const auto& edge : dest.path_edges()) {
     // If the destination is at a node, skip any outbound edges (so any
     // opposing inbound edges are not considered)
     if (has_other_edges && edge.begin_node()) {
@@ -642,7 +644,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    GraphId edgeid = edge.id;
+    GraphId edgeid(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -658,12 +660,12 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost = costing_->EdgeCost(directededge) * edge.dist;
+    Cost cost = costing_->EdgeCost(directededge) * edge.dist();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score;
+    cost.cost += edge.score();
     float dist = astarheuristic_reverse_.GetDistance(tile->node(
                     opp_dir_edge->endnode())->latlng());
     float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);

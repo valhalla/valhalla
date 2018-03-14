@@ -25,8 +25,8 @@ TrafficAlgorithm::~TrafficAlgorithm() {
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
-             PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
+             odin::Location& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
   // Set the mode and costing
@@ -34,8 +34,10 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.edges.front().projected, destination.edges.front().projected);
-  float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
+  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  Init(origin_new, destination_new);
+  float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.

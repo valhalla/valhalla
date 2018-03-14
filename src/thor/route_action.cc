@@ -7,7 +7,7 @@
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
-#include "proto/trippath.pb.h"
+#include "proto/tripcommon.pb.h"
 #include "thor/attributes_controller.h"
 
 using namespace valhalla;
@@ -35,7 +35,7 @@ namespace valhalla {
   }
 
   thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
-        const baldr::PathLocation& origin, const baldr::PathLocation& destination) {
+        const odin::Location& origin, const odin::Location& destination) {
     if (routetype == "multimodal" || routetype == "transit") {
       multi_modal_astar.set_interrupt(interrupt);
       return &multi_modal_astar;
@@ -44,9 +44,9 @@ namespace valhalla {
     // Use A* if any origin and destination edges are the same - otherwise
     // use bidirectional A*. Bidirectional A* does not handle trivial cases
     // with oneways.
-    for (auto& edge1 : origin.edges) {
-      for (auto& edge2 : destination.edges) {
-        if (edge1.id == edge2.id) {
+    for (auto& edge1 : origin.path_edges()) {
+      for (auto& edge2 : destination.path_edges()) {
+        if (edge1.graph_id() == edge2.graph_id()) {
           astar.set_interrupt(interrupt);
           return &astar;
         }
@@ -56,8 +56,8 @@ namespace valhalla {
     return &bidir_astar;
   }
 
-  std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
-      baldr::PathLocation& destination, const std::string& costing) {
+  std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorithm, odin::Location& origin,
+      odin::Location& destination, const std::string& costing) {
     // Find the path. If bidirectional A* disable use of destination only
     // edges on the first pass. If there is a failure, we allow them on the
     // second pass.
@@ -76,8 +76,10 @@ namespace valhalla {
         // 2nd pass. Less aggressive hierarchy transitioning, and retry with more candidate edges(filterd by heading in loki).
 
         // add filtered edges to candidate edges for origin and destination
-        origin.edges.insert(origin.edges.end(), origin.filtered_edges.begin(), origin.filtered_edges.end());
-        destination.edges.insert(destination.edges.end(), destination.filtered_edges.begin(), destination.filtered_edges.end());
+        //origin.mutable_path_edges()->MergeFrom(origin.filtered_edges());
+        //destination.mutable_path_edges()->MergeFrom(destination.filtered_edges());
+        origin.mutable_path_edges()->Add(origin.path_edges().end(), origin.filtered_edges.begin(), origin.filtered_edges.end());
+        destination.mutable_path_edges()->Add(destination.path_edges().end(), destination.filtered_edges.begin(), destination.filtered_edges.end());
 
         path_algorithm->Clear();
         cost->set_pass(1);
@@ -97,11 +99,12 @@ namespace valhalla {
     return path;
   }
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(std::vector<PathLocation>& correlated, const std::string &costing) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(std::vector<odin::Location>& correlated, const std::string &costing) {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
-    correlated.front().stoptype_ = correlated.back().stoptype_ = Location::StopType::BREAK;
+    correlated.front().set_type(odin::Location::kBreak);
+    correlated.back().set_type(odin::Location::kBreak);
 
     // For each pair of locations
     for(auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
@@ -113,11 +116,11 @@ namespace valhalla {
       // If we are continuing through a location we need to make sure we
       // only allow the edge that was used previously (avoid u-turns)
       if(!path.empty()) {
-        auto erasure_position = std::remove_if(destination->edges.begin(), destination->edges.end(),
-          [&path](const PathLocation::PathEdge& e){
-            return e.id != path.front().edgeid;
+        auto erasure_position = std::remove_if(destination->path_edges().begin(), destination->path_edges().end(),
+          [&path](const odin::Location::PathEdge& e){
+            return e.graph_id() != path.front().edgeid;
         });
-        destination->edges.erase(erasure_position, destination->edges.end());
+        destination->path_edges().erase(erasure_position, destination->path_edges().end());
       }
 
       // Get best path and keep it
@@ -134,10 +137,10 @@ namespace valhalla {
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
-      if (origin->stoptype_ == Location::StopType::BREAK) {
+      if (origin->type() == odin::Location::kBreak) {
         // Move destination back to the last break and collect the throughs
-        std::list<PathLocation> throughs;
-        while(destination->stoptype_ != Location::StopType::BREAK) {
+        std::list<odin::Location> throughs;
+        while(destination->type() != odin::Location::kBreak) {
           throughs.push_back(*destination);
           --destination;
         }
@@ -159,11 +162,12 @@ namespace valhalla {
     return trip_paths;
   }
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(std::vector<PathLocation>& correlated, const std::string &costing, const boost::optional<int> &date_time_type) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(std::vector<odin::Location>& correlated, const std::string &costing, const boost::optional<int> &date_time_type) {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
-    correlated.front().stoptype_ = correlated.back().stoptype_ = Location::StopType::BREAK;
+    correlated.front().set_type(odin::Location::kBreak);
+    correlated.back().set_type(odin::Location::kBreak);
 
     // For each pair of locations
     for(auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {
@@ -175,11 +179,11 @@ namespace valhalla {
       // If we are continuing through a location we need to make sure we
       // only allow the edge that was used previously (avoid u-turns)
       if(!path.empty()) {
-        auto erasure_position = std::remove_if(origin->edges.begin(), origin->edges.end(),
-          [&path](const PathLocation::PathEdge& e){
-            return e.id != path.back().edgeid;
+        auto erasure_position = std::remove_if(origin->path_edges().begin(), origin->path_edges().end(),
+          [&path](const odin::Location::PathEdge& e){
+            return e.graph_id() != path.back().edgeid;
         });
-        origin->edges.erase(erasure_position, origin->edges.end());
+        origin->path_edges().erase(erasure_position, origin->path_edges().end());
       }
 
       // Get best path and keep it
@@ -197,10 +201,10 @@ namespace valhalla {
 
       // Build trip path for this leg and add to the result if this
       // location is a BREAK or if this is the last location
-      if (destination->stoptype_ == Location::StopType::BREAK) {
+      if (destination->type() == odin::Location::kBreak) {
         // Move origin back to the last break and collect the throughs
-        std::list<PathLocation> throughs;
-        while(origin->stoptype_ != Location::StopType::BREAK) {
+        std::list<odin::Location> throughs;
+        while(origin->type() != odin::Location::kBreak) {
           throughs.push_front(*origin);
           --origin;
         }

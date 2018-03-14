@@ -19,7 +19,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/costconstants.h"
-#include "proto/trippath.pb.h"
+#include "proto/tripcommon.pb.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -258,7 +258,7 @@ constexpr odin::Location::SideOfStreet kTripPathSideOfStreet[] = {
     odin::Location::kLeft,
     odin::Location::kRight };
 odin::Location::SideOfStreet GetTripPathSideOfStreet(
-          const PathLocation::SideOfStreet sos) {
+          const odin::Location::SideOfStreet sos) {
   return kTripPathSideOfStreet[static_cast<uint32_t>(sos)];
 }
 
@@ -372,29 +372,29 @@ TripPath_Use GetTripPathUse(const Use use) {
  * @param  type       Location type (break or through)
  * @return Returns a proto Location object.
  */
-odin::Location* AddLocation(TripPath& trip_path, const PathLocation& loc,
+odin::Location* AddLocation(TripPath& trip_path, const odin::Location& loc,
                             const odin::Location::Type type) {
   odin::Location* tp_loc = trip_path.add_location();
   odin::LatLng* ll = tp_loc->mutable_ll();
-  ll->set_lat(loc.latlng_.lat());
-  ll->set_lng(loc.latlng_.lng());
+  ll->set_lat(loc.ll().lat());
+  ll->set_lng(loc.ll().lng());
   tp_loc->set_type(type);
-  if (!loc.name_.empty())
-    tp_loc->set_name(loc.name_);
-  if (!loc.street_.empty())
-    tp_loc->set_street(loc.street_);
-  if (!loc.city_.empty())
-    tp_loc->set_city(loc.city_);
-  if (!loc.state_.empty())
-    tp_loc->set_state(loc.state_);
-  if (!loc.zip_.empty())
-    tp_loc->set_postal_code(loc.zip_);
-  if (!loc.country_.empty())
-    tp_loc->set_country(loc.country_);
-  if (loc.heading_)
-    tp_loc->set_heading(*loc.heading_);
-  if (loc.date_time_)
-    tp_loc->set_date_time(*loc.date_time_);
+  if (!loc.has_name())
+    tp_loc->set_name(loc.name());
+  if (!loc.has_street())
+    tp_loc->set_street(loc.street());
+  if (!loc.has_city())
+    tp_loc->set_city(loc.city());
+  if (!loc.has_state())
+    tp_loc->set_state(loc.state());
+  if (!loc.has_postal_code())
+    tp_loc->set_postal_code(loc.postal_code());
+  if (!loc.has_country())
+    tp_loc->set_country(loc.country());
+  if (loc.has_heading())
+    tp_loc->set_heading(loc.heading());
+  if (loc.has_date_time())
+    tp_loc->set_date_time(loc.date_time());
 
   return tp_loc;
 }
@@ -504,8 +504,8 @@ TripPathBuilder::~TripPathBuilder() {
 TripPath TripPathBuilder::Build(
     const AttributesController& controller, GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
-    const std::vector<PathInfo>& path, PathLocation& origin, PathLocation& dest,
-    const std::list<PathLocation>& through_loc,
+    const std::vector<PathInfo>& path, odin::Location& origin, odin::Location& dest,
+    const std::list<odin::Location>& through_loc,
     const std::function<void ()>* interrupt_callback,
     std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>* route_discontinuities) {
   // Test interrupt prior to building trip path
@@ -531,8 +531,8 @@ TripPath TripPathBuilder::Build(
                                  odin::Location::kBreak);
 
   uint32_t origin_sec_from_mid = 0;
-  if (origin.date_time_)
-    origin_sec_from_mid = DateTime::seconds_from_midnight(*origin.date_time_);
+  if (origin.has_date_time())
+    origin_sec_from_mid = DateTime::seconds_from_midnight(origin.date_time());
 
   // Create an array of travel types per mode
   uint8_t travel_types[4];
@@ -553,13 +553,13 @@ TripPath TripPathBuilder::Build(
 
   // Partial edge at the start and side of street (sos)
   float start_pct;
-  PathLocation::SideOfStreet start_sos = PathLocation::SideOfStreet::NONE;
+  odin::Location::SideOfStreet start_sos = odin::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL start_vrt;
-  for(const auto& e : origin.edges) {
-    if (e.id == path.front().edgeid) {
-      start_pct = e.dist;
-      start_sos = e.sos;
-      start_vrt = e.projected;
+  for(const auto& e : origin.path_edges()) {
+    if (e.graph_id() == path.front().edgeid) {
+      start_pct = e.dist();
+      start_sos = e.side_of_street();
+      start_vrt = PointLL(e.ll().lng(), e.ll().lat());
       break;
     }
   }
@@ -570,18 +570,18 @@ TripPath TripPathBuilder::Build(
   proj_ll->set_lng(start_vrt.lng());
 
   // Set the origin side of street, if one exists
-  if (start_sos != PathLocation::SideOfStreet::NONE)
+  if (start_sos != odin::Location::SideOfStreet::Location_SideOfStreet_kNone)
     tp_orig->set_side_of_street(GetTripPathSideOfStreet(start_sos));
 
   // Partial edge at the end
   float end_pct;
-  PathLocation::SideOfStreet end_sos = PathLocation::SideOfStreet::NONE;
+  odin::Location::SideOfStreet end_sos = odin::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL end_vrt;
-  for(const auto&e : dest.edges) {
-    if (e.id == path.back().edgeid) {
-      end_pct = e.dist;
-      end_sos = e.sos;
-      end_vrt = e.projected;
+  for(const auto&e : dest.path_edges()) {
+    if (e.graph_id() == path.back().edgeid) {
+      end_pct = e.dist();
+      end_sos = e.side_of_street();
+      end_vrt = PointLL(e.ll().lng(), e.ll().lat());
       break;
     }
   }
@@ -592,7 +592,7 @@ TripPath TripPathBuilder::Build(
   proj_ll->set_lng(end_vrt.lng());
 
   // Set the destination side of street, if one exists
-  if (end_sos != PathLocation::SideOfStreet::NONE)
+  if (end_sos != odin::Location::SideOfStreet::Location_SideOfStreet_kNone)
     tp_dest->set_side_of_street(GetTripPathSideOfStreet(end_sos));
 
   // Structures to process admins
@@ -619,10 +619,10 @@ TripPath TripPathBuilder::Build(
       start_pct = 1.0f - start_pct;
       end_pct   = 1.0f - end_pct;
       edge = graphreader.GetOpposingEdge(path.front().edgeid, tile);
-      if (end_sos == PathLocation::SideOfStreet::LEFT) {
-        tp_dest->set_side_of_street(GetTripPathSideOfStreet(PathLocation::SideOfStreet::RIGHT));
-      } else if (end_sos == PathLocation::SideOfStreet::RIGHT) {
-        tp_dest->set_side_of_street(GetTripPathSideOfStreet(PathLocation::SideOfStreet::LEFT));
+      if (end_sos == odin::Location::SideOfStreet::Location_SideOfStreet_kLeft) {
+        tp_dest->set_side_of_street(GetTripPathSideOfStreet(odin::Location::SideOfStreet::Location_SideOfStreet_kRight));
+      } else if (end_sos == odin::Location::SideOfStreet::Location_SideOfStreet_kRight) {
+        tp_dest->set_side_of_street(GetTripPathSideOfStreet(odin::Location::SideOfStreet::Location_SideOfStreet_kLeft));
       }
     }
 
@@ -630,8 +630,8 @@ TripPath TripPathBuilder::Build(
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
     uint32_t current_time = 0;
-    if (origin.date_time_) {
-      DateTime::seconds_from_midnight(*origin.date_time_);
+    if (origin.has_date_time()) {
+      DateTime::seconds_from_midnight(origin.date_time());
       current_time += path.front().elapsed_time;
     }
 
@@ -673,9 +673,9 @@ TripPath TripPathBuilder::Build(
     uint32_t elapsedtime = node->elapsed_time();
 
     auto* last_tile = graphreader.GetGraphTile(startnode);
-    if (dest.date_time_) { // arrive by
+    if (dest.has_date_time()) { // arrive by
 
-      uint64_t sec = DateTime::seconds_since_epoch(*dest.date_time_,
+      uint64_t sec = DateTime::seconds_since_epoch(dest.date_time(),
                                                    DateTime::get_tz_db().
                                                    from_index(last_tile->node(startnode)->timezone()));
 
@@ -687,11 +687,11 @@ TripPath TripPathBuilder::Build(
                                 origin_date, dest_date);
 
       tp_orig->set_date_time(origin_date);
-      origin.date_time_ = tp_orig->date_time();
+      origin.set_date_time(tp_orig->date_time());
       tp_dest->set_date_time(dest_date);
 
-    } else if (origin.date_time_) { // leave at
-      uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
+    } else if (origin.has_date_time()) { // leave at
+      uint64_t sec = DateTime::seconds_since_epoch(origin.date_time(),
                                                    DateTime::get_tz_db().
                                                    from_index(first_node->timezone()));
 
@@ -703,7 +703,7 @@ TripPath TripPathBuilder::Build(
                                 origin_date, dest_date);
 
       tp_dest->set_date_time(dest_date);
-      dest.date_time_ = tp_dest->date_time();
+      dest.set_date_time(tp_dest->date_time());
       tp_orig->set_date_time(origin_date);
     }
 
@@ -769,8 +769,8 @@ TripPath TripPathBuilder::Build(
     }
 
     uint32_t current_time;
-    if (origin.date_time_) {
-      current_time = DateTime::seconds_from_midnight(*origin.date_time_);
+    if (origin.has_date_time()) {
+      current_time = DateTime::seconds_from_midnight(origin.date_time());
       current_time += elapsedtime;
     }
 
@@ -880,8 +880,8 @@ TripPath TripPathBuilder::Build(
 
         assumed_schedule = false;
         uint32_t date, day = 0;
-        if (origin.date_time_) {
-          date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+        if (origin.has_date_time()) {
+          date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
 
           if (graphtile->header()->date_created() > date) {
             // Set assumed schedule if requested
@@ -901,7 +901,7 @@ TripPath TripPathBuilder::Build(
 
         if (transit_departure) {
 
-          std::string dt = DateTime::get_duration(*origin.date_time_,
+          std::string dt = DateTime::get_duration(origin.date_time(),
                            (transit_departure->departure_time() - origin_sec_from_mid),
                            DateTime::get_tz_db().from_index(node->timezone()));
 
@@ -916,7 +916,7 @@ TripPath TripPathBuilder::Build(
           //TODO:  set removed tz abbrev on transit_platform_info for departure.
 
           // Copy the arrival time for use at the next transit stop
-          arrival_time = DateTime::get_duration(*origin.date_time_,
+          arrival_time = DateTime::get_duration(origin.date_time(),
                                      (transit_departure->departure_time() +
                                      transit_departure->elapsed_time()) -
                                      origin_sec_from_mid,
@@ -1145,9 +1145,9 @@ TripPath TripPathBuilder::Build(
   }
 
   auto* last_tile = graphreader.GetGraphTile(startnode);
-  if (dest.date_time_) { // arrive by
+  if (dest.has_date_time()) { // arrive by
 
-    uint64_t sec = DateTime::seconds_since_epoch(*dest.date_time_,
+    uint64_t sec = DateTime::seconds_since_epoch(dest.date_time(),
                                                  DateTime::get_tz_db().
                                                  from_index(last_tile->node(startnode)->timezone()));
 
@@ -1159,11 +1159,11 @@ TripPath TripPathBuilder::Build(
                               origin_date, dest_date);
 
     tp_orig->set_date_time(origin_date);
-    origin.date_time_ = tp_orig->date_time();
+    origin.set_date_time(tp_orig->date_time());
     tp_dest->set_date_time(dest_date);
 
-  } else if (origin.date_time_) { // leave at
-    uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
+  } else if (origin.has_date_time()) { // leave at
+    uint64_t sec = DateTime::seconds_since_epoch(origin.date_time(),
                                                  DateTime::get_tz_db().
                                                  from_index(first_node->timezone()));
 
@@ -1175,7 +1175,7 @@ TripPath TripPathBuilder::Build(
                               origin_date, dest_date);
 
     tp_dest->set_date_time(dest_date);
-    dest.date_time_ = tp_dest->date_time();
+    dest.set_date_time(tp_dest->date_time());
     tp_orig->set_date_time(origin_date);
   }
 

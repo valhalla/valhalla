@@ -23,7 +23,7 @@ template <class coord_t>
 std::string serializeIsochrones(const valhalla_request_t& request,
                   const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
                   bool polygons, const std::unordered_map<float, std::string>& colors,
-                  const std::vector<baldr::PathLocation>& locations) {
+                  const std::vector<odin::Location>& locations) {
   //for each contour interval
   int i = 0;
   auto features = array({});
@@ -116,11 +116,11 @@ std::string serializeIsochrones(const valhalla_request_t& request,
 template std::string serializeIsochrones<midgard::Point2>(const valhalla_request_t&,
                                             const midgard::GriddedData<midgard::Point2>::contours_t&, bool,
                                             const std::unordered_map<float, std::string>&,
-                                            const std::vector<baldr::PathLocation>& locations);
+                                            const std::vector<odin::Location>& locations);
 template std::string serializeIsochrones<midgard::PointLL>(const valhalla_request_t&,
                                              const midgard::GriddedData<midgard::PointLL>::contours_t&, bool,
                                              const std::unordered_map<float, std::string>&,
-                                             const std::vector<baldr::PathLocation>& locations);
+                                             const std::vector<odin::Location>& locations);
 
 }
 }

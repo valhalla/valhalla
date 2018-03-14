@@ -32,9 +32,9 @@ namespace {
 
   constexpr double kMilePerMeter = 0.000621371;
 
-  std::vector<baldr::PathLocation> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
+  std::vector<odin::Location> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
     //we require correlated locations
-    std::vector<baldr::PathLocation> correlated;
+    std::vector<odin::Location> correlated;
     correlated.reserve(locations.size());
     size_t i = 0;
     do {
@@ -44,15 +44,15 @@ namespace {
 
       try {
         correlated.emplace_back(PathLocation::FromRapidJson(locations, *path_location));
-        auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
-          [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
-            return i.score < j.score;
+        auto minScoreEdge = *std::min_element (correlated.back().path_edges().begin(), correlated.back().path_edges().end(),
+          [](odin::Location::PathEdge i, odin::Location::PathEdge j)->bool {
+            return i.score() < j.score();
           });
 
-        for(auto& e : correlated.back().edges) {
-          e.score -= minScoreEdge.score;
-          if (e.score > kMaxScore) {
-            e.score = kMaxScore;
+        for(auto& e : *correlated.back().mutable_path_edges()) {
+          e.set_score(e.score() - minScoreEdge.score());
+          if (e.score() > kMaxScore) {
+            e.set_score(kMaxScore);
           }
         }
       }
