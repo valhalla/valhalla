@@ -505,7 +505,12 @@ namespace {
       uint32_t out_brg = maneuver.begin_heading();
       osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
       osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
-      osrm_man->emplace("modifier", turn_modifier(in_brg, out_brg));
+
+      std::string modifier;
+      if (!depart) {
+        modifier = turn_modifier(in_brg, out_brg);
+        osrm_man->emplace("modifier", modifier);
+      }
 
       // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
       std::string maneuver_type;
@@ -535,7 +540,7 @@ namespace {
         } else if (ramp) {
           maneuver_type = ramp_type(prior_edge, idx, path_leg);
         } else if (new_name) {
-          maneuver_type = "new_name";
+          maneuver_type = "new name";
         } else if (roundabout) {
           maneuver_type = "roundabout";
         }
@@ -587,9 +592,11 @@ namespace {
           if (count > 1 && road_ends) {
             maneuver_type = "end of road";
           } else if (false_node && new_name) {
-            maneuver_type = "new_name";
+            maneuver_type = "new name";
           } else {
-            maneuver_type = "turn";
+            if (modifier != "uturn")
+              maneuver_type = "turn";
+            else maneuver_type = "continue";
           }
         }
       }
