@@ -87,6 +87,7 @@ namespace valhalla {
       factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("transit", sif::CreateTransitCost);
       factory.Register("truck", sif::CreateTruckCost);
+      factory.Register("auto_electric", sif::CreateAutoElectricCost);
 
       for (const auto& item : config.get_child("meili.customizable")) {
         trace_customizable.insert(item.second.get_value<std::string>());

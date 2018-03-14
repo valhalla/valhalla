@@ -189,6 +189,7 @@ namespace valhalla {
       factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("truck", sif::CreateTruckCost);
       factory.Register("transit", sif::CreateTransitCost);
+      factory.Register("auto_electric", sif::CreateAutoElectricCost);
     }
 
     void loki_worker_t::cleanup() {

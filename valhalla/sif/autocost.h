@@ -35,6 +35,13 @@ cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config);
  */
 cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config);
 
+/**
+ * Create an electric auto route cost method. This is derived from auto costing and
+ * uses the same rules except the edge and transition costs are based energy consumption
+ * rather than time
+ */
+cost_ptr_t CreateAutoElectricCost(const boost::property_tree::ptree& config);
+
 }
 }
 

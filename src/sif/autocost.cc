@@ -989,6 +989,171 @@ cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
   return std::make_shared<HOVCost>(config);
 }
 
+/**
+ * Derived class providing an alternate costing for driving that is intended
+ * to provide an energy-efficient path.
+ */
+class AutoElectricCost : public AutoCost {
+ public:
+  /**
+   * Construct auto costing for energy-efficient path.
+   * Pass in configuration using property tree.
+   * @param  config  Property tree with configuration/options.
+   */
+  AutoElectricCost(const boost::property_tree::ptree& config);
+
+  virtual ~AutoElectricCost();
+
+  /**
+   * Returns the cost to traverse the edge and an estimate of the actual time
+   * (in seconds) to traverse the edge.
+   * @param  edge     Pointer to a directed edge.
+   * @return  Returns the cost to traverse the edge.
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+
+  /**
+   * Returns the cost to make the transition from the predecessor edge.
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  edge  Directed edge (the to edge)
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  Predecessor edge information.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred) const;
+
+  /**
+   * Returns the cost to make the transition from the predecessor edge
+   * when using a reverse search (from destination towards the origin).
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  the opposing current edge in the reverse tree.
+   * @param  edge  the opposing predecessor in the reverse tree
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCostReverse(
+      const uint32_t idx, const baldr::NodeInfo* node,
+      const baldr::DirectedEdge* pred,
+      const baldr::DirectedEdge* edge) const;
+
+  /**
+   * Get the cost factor for A* heuristics. This factor is multiplied
+   * with the distance to the destination to produce an estimate of the
+   * minimum cost to the destination. The A* heuristic must underestimate the
+   * cost to the destination. So a time based estimate based on speed should
+   * assume the maximum speed is used to the destination such that the time
+   * estimate is less than the least possible time along roads.
+   */
+  virtual float AStarCostFactor() const;
+
+ protected:
+  //per second per slope power consumption (joules or watt seconds)
+  float grade_consumption[16];
+  //how grippy are the tires on the car, slicks or snow tires?
+  //is there weather on the ground making the ground stickier
+  float surface_factor;
+  //is the wind pushing you forward or against you
+  float wind_factor;
+  //colder temps make the battery less efficient
+  float temp_factor;
+};
+
+// Constructor
+AutoElectricCost::AutoElectricCost(const boost::property_tree::ptree& pt)
+    : AutoCost(pt) {
+  //get the energy consumption per grade defaulted
+  for(int i = 0; i < 16; ++i) {
+    grade_consumption[i] = (i == 0 ? 0 : grade_consumption[i - 1]) +
+        i / 5 + 1;
+  }
+  //read it from input
+  int i = 0;
+  auto input_consumption = pt.get_child_optional("grade_consumption");
+  if(input_consumption) {
+    for(const auto& c : *input_consumption) {
+      if(i > 15)
+        break;
+      auto v = c.second.get_value<float>();
+      if(v < 1.f || v > 100.f)
+        continue;
+      grade_consumption[i++] = v;
+    }
+  }
+
+  //get the surface factor
+  surface_factor = pt.get<float>("surface_factor", 2.f);
+  if(surface_factor < 1.f || surface_factor > 10.f)
+    surface_factor = 2.f;
+
+  //get the wind factor
+  wind_factor = pt.get<float>("wind_factor", 1.f);
+  if(wind_factor < 0.5f || wind_factor > 5.f)
+    wind_factor = 1.f;
+
+  //get the temp factor
+  temp_factor = pt.get<float>("temp_factor", 1.f);
+  if(temp_factor < 1.f || temp_factor > 2.f)
+    temp_factor = 1.f;
+}
+
+// Destructor
+AutoElectricCost::~AutoElectricCost() {
+}
+
+// Returns the cost to traverse the edge and an estimate of the actual time
+// (in seconds) to traverse the edge.
+Cost AutoElectricCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+  // Get the number of seconds to traverse the edge at this speed since our
+  // consumption is in per second units
+  float sec = (edge->length() * speedfactor_[edge->speed()]);
+
+  // Usage based on weighted grade is how much consumption happens per second
+  // with a certain slope of road
+  auto joules = grade_consumption[edge->weighted_grade()];
+
+  // Penalize consumption based on friction due to type of road surface or tires
+  joules *= surface_factor + ((static_cast<int>(edge->surface()) + 1) * .02f);
+
+  // Penalize consumption based on the wind helping or hindering you
+  joules *= wind_factor;
+
+  // Penalize consumption based on the temperature
+  joules *= temp_factor;
+
+  // Give back the actual number of joules required for the time and the time itself
+  return Cost{joules * sec, sec};
+}
+
+// Spending time at an intersection is free except for whatever we use at idle
+Cost AutoElectricCost::TransitionCost(const baldr::DirectedEdge* edge,
+    const baldr::NodeInfo* node, const EdgeLabel& pred) const {
+  auto cost = AutoCost::TransitionCost(edge, node, pred);
+  cost.cost = cost.secs * grade_consumption[0];
+  return cost;
+}
+
+// Spending time at an intersection is free except for whatever we use at idle
+Cost AutoElectricCost::TransitionCostReverse(const uint32_t idx, const baldr::NodeInfo* node,
+    const baldr::DirectedEdge* pred, const baldr::DirectedEdge* edge) const {
+  auto cost = AutoCost::TransitionCostReverse(idx, node, pred, edge);
+  cost.cost = cost.secs * grade_consumption[0];
+  return cost;
+}
+
+// Best case scenario is that we don't have to spend anything other than idle
+// to traverse the entire distance (coast the whole distance)
+float AutoElectricCost::AStarCostFactor() const {
+  return grade_consumption[0];
+}
+
+// For registering the costing model to the factor
+cost_ptr_t CreateAutoElectricCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<AutoElectricCost>(config);
+}
+
 }
 }
 
