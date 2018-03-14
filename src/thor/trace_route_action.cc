@@ -47,7 +47,7 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-odin::TripPath thor_worker_t::trace_route(const valhalla_request_t& request) {
+odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
 
   // Parse request
   parse_locations(request);

@@ -23,7 +23,7 @@ template <class coord_t>
 std::string serializeIsochrones(const valhalla_request_t& request,
                   const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
                   bool polygons, const std::unordered_map<float, std::string>& colors,
-                  const std::vector<odin::Location>& locations) {
+                  bool show_locations) {
   //for each contour interval
   int i = 0;
   auto features = array({});
@@ -84,20 +84,22 @@ std::string serializeIsochrones(const valhalla_request_t& request,
     }
   }
   // Add original locations to the geojson
-  for (const auto& location : locations) {
-    features->emplace_back(
-        map({
-        {"type", std::string("Feature")},
-        {"properties", map({})},
-        {"geometry", map({
-          {"type", std::string("Point")},
-          {"coordinates", array({
-            fp_t{location.latlng_.lng(), 6},
-            fp_t{location.latlng_.lat(), 6}
+  if(show_locations) {
+    for (const auto& location : request.options.locations()) {
+      features->emplace_back(
+          map({
+          {"type", std::string("Feature")},
+          {"properties", map({})},
+          {"geometry", map({
+            {"type", std::string("Point")},
+            {"coordinates", array({
+              fp_t{location.ll().lng(), 6},
+              fp_t{location.ll().lat(), 6}
+            })}
           })}
-        })}
-      })
-    );
+        })
+      );
+    }
   }
   //make the collection
   auto feature_collection = map({

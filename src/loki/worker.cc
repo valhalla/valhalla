@@ -219,9 +219,23 @@ namespace valhalla {
       l->set_radius(pl.radius_);
 
       auto* path_edges = l->mutable_path_edges();
-      const GraphTile* tile = nullptr;
       for(const auto& e : pl.edges) {
         auto* edge = path_edges->Add();
+        edge->set_graph_id(e.id);
+        edge->set_dist(e.dist);
+        edge->mutable_ll()->set_lng(e.projected.first);
+        edge->mutable_ll()->set_lat(e.projected.second);
+        edge->set_side_of_street(e.sos == PathLocation::LEFT ? odin::Location::kLeft :
+            (e.sos == PathLocation::RIGHT ? odin::Location::kRight : odin::Location::kNone));
+        edge->set_score(e.score);
+        edge->set_minimum_reachability(e.minimum_reachability);
+        for(const auto& n : reader.edgeinfo(e.id).GetNames())
+          edge->mutable_names()->Add()->assign(n);
+      }
+
+      auto* filtered_edges = l->mutable_filtered_edges();
+      for(const auto& e : pl.edges) {
+        auto* edge = filtered_edges->Add();
         edge->set_graph_id(e.id);
         edge->set_dist(e.dist);
         edge->mutable_ll()->set_lng(e.projected.first);

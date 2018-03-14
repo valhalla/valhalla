@@ -74,7 +74,7 @@ void Isochrone::Clear() {
 // a max distance in meters based on an estimate of max average speed for
 // the travel mode.
 void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
-                                 std::vector<odin::Location>& origin_locations) {
+                                 google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations) {
   float max_distance;
   auto max_seconds = max_minutes * 60;
   if (multimodal) {
@@ -289,7 +289,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
 
 // Compute iso-tile that we can use to generate isochrones.
 std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
-             std::vector<odin::Location>& origin_locations,
+             google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
              const unsigned int max_minutes,
              GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
@@ -439,7 +439,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
 
 // Compute iso-tile that we can use to generate isochrones.
 std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
-             std::vector<odin::Location>& dest_locations,
+             google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
              const unsigned int max_minutes,
              GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
@@ -492,7 +492,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
 
 // Compute isochrone for mulit-modal route.
 std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
-             std::vector<odin::Location>& origin_locations,
+             google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
              const unsigned int max_minutes, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
@@ -522,7 +522,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
   SetOriginLocationsMM(graphreader, origin_locations, costing);
 
   // For now the date_time must be set on the origin.
-  if (!origin_locations.front().has_date_time()) {
+  if (!origin_locations.Get(0).has_date_time()) {
     LOG_ERROR("No date time set on the origin location");
     return isotile_;
   }
@@ -530,9 +530,9 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
   // Update start time
   uint32_t start_time, localtime, date, dow, day = 0;
   bool date_before_tile = false;
-  if (origin_locations[0].has_date_time()) {
+  if (origin_locations.Get(0).has_date_time()) {
     // Set route start time (seconds from midnight), date, and day of week
-    start_time = DateTime::seconds_from_midnight(origin_locations[0].date_time());
+    start_time = DateTime::seconds_from_midnight(origin_locations.Get(0).date_time());
     localtime = start_time;
   }
 
@@ -625,8 +625,8 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       // we must get the date from level 3 transit tiles and not level 2.  The level 3 date is
       // set when the fetcher grabbed the transit data and created the schedules.
       if (!date_set) {
-        date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin_locations[0].date_time()));
-        dow  = DateTime::day_of_week_mask(origin_locations[0].date_time());
+        date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin_locations.Get(0).date_time()));
+        dow  = DateTime::day_of_week_mask(origin_locations.Get(0).date_time());
         uint32_t date_created = tile->header()->date_created();
         if (date < date_created)
           date_before_tile = true;
@@ -909,7 +909,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
 
 // Add edge(s) at each origin to the adjacency list
 void Isochrone::SetOriginLocations(GraphReader& graphreader,
-                 std::vector<odin::Location>& origin_locations,
+                 google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& origin : origin_locations) {
@@ -980,7 +980,7 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
 
 // Add edge(s) at each origin to the adjacency list
 void Isochrone::SetOriginLocationsMM(GraphReader& graphreader,
-                 std::vector<odin::Location>& origin_locations,
+                 google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& origin : origin_locations) {
@@ -1052,7 +1052,7 @@ void Isochrone::SetOriginLocationsMM(GraphReader& graphreader,
 
 // Add destination edges to the reverse path adjacency list.
 void Isochrone::SetDestinationLocations(GraphReader& graphreader,
-                     std::vector<odin::Location>& dest_locations,
+                     google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
                      const std::shared_ptr<DynamicCost>& costing) {
   // Add edges for each location to the adjacency list
   for (auto& dest : dest_locations) {

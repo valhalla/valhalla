@@ -62,7 +62,7 @@ void thor_worker_t::filter_attributes(const valhalla_request_t& request, Attribu
  * portion of the route. This includes details for each section of road along the
  * path as well as any intersections along the path.
  */
-std::string thor_worker_t::trace_attributes(const valhalla_request_t& request) {
+std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
 
   // Parse request
   parse_locations(request);

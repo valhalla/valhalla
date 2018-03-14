@@ -54,13 +54,13 @@ class thor_worker_t : public service_worker_t{
 #endif
   virtual void cleanup() override;
 
-  std::list<odin::TripPath> route(const valhalla_request_t& request,
+  std::list<odin::TripPath> route(valhalla_request_t& request,
              const boost::optional<int> &date_time_type);
-  std::string matrix(const valhalla_request_t& request);
-  std::list<odin::TripPath> optimized_route(const valhalla_request_t& request);
-  std::string isochrones(const valhalla_request_t& request);
-  odin::TripPath trace_route(const valhalla_request_t& request);
-  std::string trace_attributes(const valhalla_request_t& request);
+  std::string matrix(valhalla_request_t& request);
+  std::list<odin::TripPath> optimized_route(valhalla_request_t& request);
+  std::string isochrones(valhalla_request_t& request);
+  odin::TripPath trace_route(valhalla_request_t& request);
+  std::string trace_attributes(valhalla_request_t& request);
 
  protected:
 
@@ -78,21 +78,19 @@ class thor_worker_t : public service_worker_t{
       uint32_t best_paths = 1);
 
   std::list<odin::TripPath> path_arrive_by(
-      std::vector<odin::Location>& correlated, const std::string &costing);
+      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing);
   std::list<odin::TripPath> path_depart_at(
-      std::vector<odin::Location>& correlated, const std::string &costing,
+      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing,
       const boost::optional<int> &date_time_type);
 
-  void parse_locations(const valhalla_request_t& request);
+  void parse_locations(valhalla_request_t& request);
   void parse_measurements(const valhalla_request_t& request);
   void parse_trace_config(const valhalla_request_t& request);
   std::string parse_costing(const valhalla_request_t& request);
   void filter_attributes(const valhalla_request_t& request, AttributesController& controller);
 
   valhalla::sif::TravelMode mode;
-  std::vector<baldr::Location> locations;
   std::vector<meili::Measurement> trace;
-  std::vector<odin::Location> correlated;
   sif::CostFactory<sif::DynamicCost> factory;
   valhalla::sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
   // Path algorithms (TODO - perhaps use a map?))

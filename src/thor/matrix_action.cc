@@ -22,7 +22,7 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    std::string thor_worker_t::matrix(const valhalla_request_t& request) {
+    std::string thor_worker_t::matrix(valhalla_request_t& request) {
       parse_locations(request);
       auto costing = parse_costing(request);
 

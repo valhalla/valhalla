@@ -341,7 +341,7 @@ bool RouteMatcher::FormPath(
                                (end.second.first.dist() - edge.dist());
 
         // Add end edge
-        path_infos.emplace_back(mode, elapsed_time, edge.graph_id(), 0);
+        path_infos.emplace_back(mode, elapsed_time, GraphId(edge.graph_id()), 0);
         return true;
       }
     }

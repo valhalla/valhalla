@@ -19,7 +19,7 @@ using namespace valhalla::thor;
 namespace valhalla {
   namespace thor {
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::route(const valhalla_request_t& request, const boost::optional<int> &date_time_type){
+  std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& request, const boost::optional<int> &date_time_type){
     parse_locations(request);
     auto costing = parse_costing(request);
 
@@ -76,10 +76,8 @@ namespace valhalla {
         // 2nd pass. Less aggressive hierarchy transitioning, and retry with more candidate edges(filterd by heading in loki).
 
         // add filtered edges to candidate edges for origin and destination
-        //origin.mutable_path_edges()->MergeFrom(origin.filtered_edges());
-        //destination.mutable_path_edges()->MergeFrom(destination.filtered_edges());
-        origin.mutable_path_edges()->Add(origin.path_edges().end(), origin.filtered_edges.begin(), origin.filtered_edges.end());
-        destination.mutable_path_edges()->Add(destination.path_edges().end(), destination.filtered_edges.begin(), destination.filtered_edges.end());
+        origin.mutable_path_edges()->MergeFrom(origin.filtered_edges());
+        destination.mutable_path_edges()->MergeFrom(destination.filtered_edges());
 
         path_algorithm->Clear();
         cost->set_pass(1);
@@ -99,7 +97,7 @@ namespace valhalla {
     return path;
   }
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(std::vector<odin::Location>& correlated, const std::string &costing) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing) {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
@@ -116,11 +114,13 @@ namespace valhalla {
       // If we are continuing through a location we need to make sure we
       // only allow the edge that was used previously (avoid u-turns)
       if(!path.empty()) {
-        auto erasure_position = std::remove_if(destination->path_edges().begin(), destination->path_edges().end(),
+        auto erasure_position = std::remove_if(destination->mutable_path_edges()->begin(), destination->mutable_path_edges()->end(),
           [&path](const odin::Location::PathEdge& e){
             return e.graph_id() != path.front().edgeid;
         });
-        destination->path_edges().erase(erasure_position, destination->path_edges().end());
+        int erasure_index = erasure_position - destination->mutable_path_edges()->begin();
+        int erasure_count = destination->path_edges_size() - erasure_index;
+        destination->mutable_path_edges()->DeleteSubrange(erasure_index, erasure_count);
       }
 
       // Get best path and keep it
@@ -162,7 +162,7 @@ namespace valhalla {
     return trip_paths;
   }
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(std::vector<odin::Location>& correlated, const std::string &costing, const boost::optional<int> &date_time_type) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing, const boost::optional<int> &date_time_type) {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
@@ -179,11 +179,13 @@ namespace valhalla {
       // If we are continuing through a location we need to make sure we
       // only allow the edge that was used previously (avoid u-turns)
       if(!path.empty()) {
-        auto erasure_position = std::remove_if(origin->path_edges().begin(), origin->path_edges().end(),
+        auto erasure_position = std::remove_if(origin->mutable_path_edges()->begin(), origin->mutable_path_edges()->end(),
           [&path](const odin::Location::PathEdge& e){
-            return e.graph_id() != path.back().edgeid;
+            return e.graph_id() != path.front().edgeid;
         });
-        origin->path_edges().erase(erasure_position, origin->path_edges().end());
+        int erasure_index = erasure_position - origin->mutable_path_edges()->begin();
+        int erasure_count = origin->path_edges_size() - erasure_index;
+        origin->mutable_path_edges()->DeleteSubrange(erasure_index, erasure_count);
       }
 
       // Get best path and keep it

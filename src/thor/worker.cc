@@ -32,36 +32,24 @@ namespace {
 
   constexpr double kMilePerMeter = 0.000621371;
 
-  std::vector<odin::Location> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
-    //we require correlated locations
-    std::vector<odin::Location> correlated;
-    correlated.reserve(locations.size());
-    size_t i = 0;
-    do {
-      auto path_location = rapidjson::get_child_optional(request, ("/correlated_" + std::to_string(i)).c_str());
-      if(!path_location)
-        break;
+  void adjust_scores(valhalla_request_t& request) {
 
-      try {
-        correlated.emplace_back(PathLocation::FromRapidJson(locations, *path_location));
-        auto minScoreEdge = *std::min_element (correlated.back().path_edges().begin(), correlated.back().path_edges().end(),
+    for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
+      for(auto& location : *locations) {
+        auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
           [](odin::Location::PathEdge i, odin::Location::PathEdge j)->bool {
             return i.score() < j.score();
           });
 
-        for(auto& e : *correlated.back().mutable_path_edges()) {
+        for(auto& e : *location.mutable_path_edges()) {
           e.set_score(e.score() - minScoreEdge.score());
-          if (e.score() > kMaxScore) {
+          if (e.score() > kMaxScore)
             e.set_score(kMaxScore);
-          }
         }
       }
-      catch (...) {
-        throw valhalla_exception_t{420};
-      }
-    }while(++i);
-    return correlated;
+    }
   }
+
 }
 
 namespace valhalla {
@@ -253,29 +241,9 @@ namespace valhalla {
       return costing;
     }
 
-    void thor_worker_t::parse_locations(const valhalla_request_t& request) {
+    void thor_worker_t::parse_locations(valhalla_request_t& request) {
       //we require locations
-      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/locations");
-      auto request_sources = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/sources");
-      auto request_targets = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/targets");
-      if(request_locations) {
-        for(const auto& location : *request_locations) {
-          try{ locations.push_back(baldr::Location::FromRapidJson(location)); }
-          catch (...) { throw valhalla_exception_t{421}; }
-        }
-        correlated = store_correlated_locations(request.document, locations);
-      }//if we have a sources and targets request here we will divy up the correlated amongst them
-      else if(request_sources && request_targets) {
-        for(const auto& s : *request_sources) {
-          try{ locations.push_back(baldr::Location::FromRapidJson(s)); }
-          catch (...) { throw valhalla_exception_t{422}; }
-        }
-        for(const auto& t : *request_targets) {
-          try{ locations.push_back(baldr::Location::FromRapidJson(t)); }
-          catch (...) { throw valhalla_exception_t{423}; }
-        }
-        correlated = store_correlated_locations(request.document, locations);
-      }
+      adjust_scores(request);
 
       //type - 0: current, 1: depart, 2: arrive
       if (!request.document.HasMember("/date_time/type"))

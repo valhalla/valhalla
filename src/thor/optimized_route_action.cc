@@ -17,7 +17,7 @@ using namespace valhalla::thor;
 namespace valhalla {
   namespace thor {
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(const valhalla_request_t& request) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(valhalla_request_t& request) {
     parse_locations(request);
     auto costing = parse_costing(request);
 
