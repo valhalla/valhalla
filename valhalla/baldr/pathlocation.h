@@ -48,7 +48,7 @@ struct PathLocation : public Location {
     float score;
     //minimum number of edges reachable from this edge, this is a lower limit
     //it could be reachable from many many more edges than are reported here
-    int minimum_reachability;
+    unsigned int minimum_reachability;
   };
 
   //list of edges this location appears on within the graph
