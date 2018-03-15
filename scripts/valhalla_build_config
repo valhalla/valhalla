@@ -16,6 +16,7 @@ config = {
     'transit_dir': '/data/valhalla/transit',
     'hierarchy': True,
     'shortcuts': True,
+    'include_driveways': True,
     'logging': {
       'type': 'std_out',
       'color': True,
