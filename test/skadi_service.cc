@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <fstream>
 
-#include "skadi/worker.h"
+#include "loki/worker.h"
 #include "pixels.h"
 
 using namespace valhalla;
@@ -66,16 +66,32 @@ namespace {
 
     //service worker
     boost::property_tree::ptree config;
-    config.add("skadi.actions", "['height']");
-    config.add("skadi.service.proxy", "ipc:///tmp/test_skadi_proxy");
-    config.add("skadi.logging.long_request", "5.0");
-    config.add("httpd.service.loopback", "ipc:///tmp/test_skadi_results");
-    config.add("httpd.service.interrupt", "ipc:///tmp/test_skadi_interrupt");
-    config.add("additional_data.elevation", "test/data/service/");
-    config.add("service_limits.skadi.max_shape", "100");
-    config.add("service_limits.skadi.min_resample", "10");
+    std::stringstream json; json << R"({
+      "mjolnir": { "tile_dir": "test/tiles" },
+      "loki": { "actions": [ "height" ],
+                  "logging": { "long_request": 100.0 },
+                  "service": { "proxy": "ipc:///tmp/test_skadi_proxy" }, 
+                "service_defaults": { "minimum_reachability": 50, "radius": 0} },
+      "thor": { "service": { "proxy": "ipc:///tmp/test_skadi_thor_proxy" } },
+      "httpd": { "service": { "loopback": "ipc:///tmp/test_skadi_results", "interrupt": "ipc:///tmp/test_skadi_interrupt" } }, 
+      "service_limits": {
+        "skadi": { "max_shape": 100, "min_resample": "10"},
+        "auto": { "max_distance": 5000000.0, "max_locations": 20,
+                  "max_matrix_distance": 400000.0, "max_matrix_locations": 50 },
+        "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
+                        "max_matrix_distance": 200000.0, "max_matrix_locations": 50,
+                        "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 },
+        "isochrone": { "max_contours": 4, "max_time": 120, "max_distance": 25000, "max_locations": 1},
+        "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
+        "max_avoid_locations": 0,
+        "max_reachability": 100,
+        "max_radius": 200
+      },
+      "costing_options": { "auto": {}, "pedestrian": {} }
+    })";
+    boost::property_tree::json_parser::read_json(json, config);
 
-    std::thread worker(valhalla::skadi::run_service, config);
+    std::thread worker(valhalla::loki::run_service, config);
     worker.detach();
   }
 

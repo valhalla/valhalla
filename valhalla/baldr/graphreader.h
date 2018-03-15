@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <mutex>
 
+#include <valhalla/baldr/curler.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/tilehierarchy.h>
@@ -518,6 +519,13 @@ class GraphReader {
   std::unordered_set<GraphId> GetTileSet() const;
 
   /**
+   * Gets back a set of available tiles on the specified level
+   * @param  level  Level to get tile set.
+   * @return  returns the list of available tiles on this level
+   */
+  std::unordered_set<GraphId> GetTileSet(const uint8_t level) const;
+
+  /**
    * Returns the tile directory.
    * @return  Returns the tile directory.
    */
@@ -531,6 +539,10 @@ class GraphReader {
   std::shared_ptr<const tile_extract_t> tile_extract_;
   static std::shared_ptr<const GraphReader::tile_extract_t> get_extract_instance(const boost::property_tree::ptree& pt);
 
+  // Stuff for getting at remote tiles
+  curler_t curler;
+  std::string tile_url_;
+  std::unordered_set<GraphId> _404s;
   // Information about where the tiles are kept
   std::string tile_dir_;
 

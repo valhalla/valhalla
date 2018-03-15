@@ -582,6 +582,22 @@ class DirectedEdge {
   void set_classification(const RoadClass roadclass);
 
   /**
+   * Gets the sac scale. Shows if edge is meant for hiking, and if so how difficult
+   * of a hike it is.
+   * @return  sac_scale
+   */
+  SacScale sac_scale() const {
+    return static_cast<SacScale>(sac_scale_);
+  }
+
+  /**
+   * Sets the sac scale. Shows if edge is meant for hiking, and if so how difficult
+   * of a hike it is.
+   * @param  sac_scale SacScale type
+   */
+  void set_sac_scale(const SacScale sac_scale);
+
+  /**
    * Is this edge unpaved or bad surface?
    */
   bool unpaved() const {
@@ -1091,7 +1107,8 @@ class DirectedEdge {
   uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed
   uint64_t lane_conn_      : 1;  // 1 if has lane connectivity, 0 otherwise
   uint64_t traffic_seg_    : 1;  // 1 if has a traffic segment, 0 otherwise
-  uint64_t spare_          : 9;
+  uint64_t sac_scale_      : 3;  // Is this edge for hiking and if so how difficult is the hike?
+  uint64_t spare_          : 6;
 
   // Geometric attributes: length, weighted grade, curvature factor.
   // Turn types between edges.

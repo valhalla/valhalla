@@ -613,9 +613,9 @@
     }, 
     "exit_roundabout": {
       "phrases": {
-        "0": "Quttez le rond-point.", 
-        "1": "Quttez le rond-point dans <STREET_NAMES>.", 
-        "2": "Quttez le rond-point dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>."
+        "0": "Quittez le rond-point.", 
+        "1": "Quittez le rond-point dans <STREET_NAMES>.", 
+        "2": "Quittez le rond-point dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
         "l'allée", 
@@ -624,21 +624,21 @@
       ], 
       "example_phrases": {
         "0": [
-          "Quttez le rond-point."
+          "Quittez le rond-point."
         ], 
         "1": [
-          "Quttez le rond-point dans Philadelphia Road/MD 7."
+          "Quittez le rond-point dans Philadelphia Road/MD 7."
         ], 
         "2": [
-          "Quttez le rond-point dans Catoctin Mountain Highway/US 15. Continuez sur US 15."
+          "Quittez le rond-point dans Catoctin Mountain Highway/US 15. Continuez sur US 15."
         ]
       }
     }, 
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Quttez le rond-point.", 
-        "1": "Quttez le rond-point pour <STREET_NAMES>.", 
-        "2": "Quttez le rond-point pour <BEGIN_STREET_NAMES>."
+        "0": "Quittez le rond-point.", 
+        "1": "Quittez le rond-point pour <STREET_NAMES>.", 
+        "2": "Quittez le rond-point pour <BEGIN_STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
         "l'allée", 
@@ -647,13 +647,13 @@
       ], 
       "example_phrases": {
         "0": [
-          "Quttez le rond-point."
+          "Quittez le rond-point."
         ], 
         "1": [
-          "Quttez le rond-point pour Philadelphia Road, Maryland 7."
+          "Quittez le rond-point pour Philadelphia Road, Maryland 7."
         ], 
         "2": [
-          "Quttez le rond-point pour Catoctin Mountain Highway, U.S. 15."
+          "Quittez le rond-point pour Catoctin Mountain Highway, U.S. 15."
         ]
       }
     }, 
@@ -1837,12 +1837,12 @@
     }, 
     "uturn": {
       "phrases": {
-        "0": "Faites un demi-tour à <RELATIVE_DIRECTION>.", 
-        "1": "Faites un demi-tour à <RELATIVE_DIRECTION> dans <STREET_NAMES>.", 
-        "2": "Faites un demi-tour à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.", 
-        "3": "Faites un demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES>.", 
-        "4": "Faites un demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> dans <STREET_NAMES>.", 
-        "5": "Faites un demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> pour rester sur <STREET_NAMES>."
+        "0": "Faites demi-tour à <RELATIVE_DIRECTION>.", 
+        "1": "Faites demi-tour à <RELATIVE_DIRECTION> dans <STREET_NAMES>.", 
+        "2": "Faites demi-tour à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.", 
+        "3": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES>.", 
+        "4": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> dans <STREET_NAMES>.", 
+        "5": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> pour rester sur <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
         "l'allée", 
@@ -1855,33 +1855,33 @@
       ], 
       "example_phrases": {
         "0": [
-          "Faites un demi-tour à gauche un demi-tour."
+          "Faites demi-tour à gauche un demi-tour."
         ], 
         "1": [
-          "Faites un demi-tour à droite dans Bunker Hill Road."
+          "Faites demi-tour à droite dans Bunker Hill Road."
         ], 
         "2": [
-          "Faites un demi-tour à gauche pour rester sur Bunker Hill Road."
+          "Faites demi-tour à gauche pour rester sur Bunker Hill Road."
         ], 
         "3": [
-          "Faites un demi-tour à gauche à Devonshire Road."
+          "Faites demi-tour à gauche à Devonshire Road."
         ], 
         "4": [
-          "Faites un demi-tour à gauche à Devonshire Road dans Jonestown Road/US 22."
+          "Faites demi-tour à gauche à Devonshire Road dans Jonestown Road/US 22."
         ], 
         "5": [
-          "Faites un demi-tour à gauche à Devonshire Road pour rester sur Jonestown Road/US 22."
+          "Faites demi-tour à gauche à Devonshire Road pour rester sur Jonestown Road/US 22."
         ]
       }
     }, 
     "uturn_verbal": {
       "phrases": {
-        "0": "Faites un demi-tour à <RELATIVE_DIRECTION> un demi-tour.", 
-        "1": "Faites un demi-tour à <RELATIVE_DIRECTION> dans <STREET_NAMES>.", 
-        "2": "Faites un demi-tour à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.", 
-        "3": "Faites un demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES>.", 
-        "4": "Faites un demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> dans <STREET_NAMES>.", 
-        "5": "Faites un demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> pour rester sur <STREET_NAMES>."
+        "0": "Faites demi-tour à <RELATIVE_DIRECTION> un demi-tour.", 
+        "1": "Faites demi-tour à <RELATIVE_DIRECTION> dans <STREET_NAMES>.", 
+        "2": "Faites demi-tour à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.", 
+        "3": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES>.", 
+        "4": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> dans <STREET_NAMES>.", 
+        "5": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> pour rester sur <STREET_NAMES>."
       }, 
       "empty_street_name_labels": [
         "l'allée", 
@@ -1894,22 +1894,22 @@
       ], 
       "example_phrases": {
         "0": [
-          "Faites un demi-tour à gauche un demi-tour."
+          "Faites demi-tour à gauche un demi-tour."
         ], 
         "1": [
-          "Faites un demi-tour à droite dans Bunker Hill Road."
+          "Faites demi-tour à droite dans Bunker Hill Road."
         ], 
         "2": [
-          "Faites un demi-tour à gauche pour rester sur Bunker Hill Road."
+          "Faites demi-tour à gauche pour rester sur Bunker Hill Road."
         ], 
         "3": [
-          "Faites un demi-tour à gauche à Devonshire Road."
+          "Faites demi-tour à gauche à Devonshire Road."
         ], 
         "4": [
-          "Faites un demi-tour à gauche à Devonshire Road dans Jonestown Road, U.S. 22."
+          "Faites demi-tour à gauche à Devonshire Road dans Jonestown Road, U.S. 22."
         ], 
         "5": [
-          "Faites un demi-tour à gauche à Devonshire Road pour rester sur Jonestown Road, U.S. 22."
+          "Faites demi-tour à gauche à Devonshire Road pour rester sur Jonestown Road, U.S. 22."
         ]
       }
     }, 

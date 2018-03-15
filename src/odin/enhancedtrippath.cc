@@ -104,7 +104,7 @@ float EnhancedTripPath::GetLength(const DirectionsOptions::Units& units) {
       length += n.edge().length();
     }
   }
-  if (units == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+  if (units == DirectionsOptions::miles) {
     return (length * kMilePerKm);
   }
   return length;
@@ -288,7 +288,7 @@ std::vector<std::string> EnhancedTripPath_Edge::GetNameList() const {
 }
 
 float EnhancedTripPath_Edge::GetLength(const DirectionsOptions::Units& units) {
-  if (units == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+  if (units == DirectionsOptions::miles) {
     return (length() * kMilePerKm);
   }
   return length();

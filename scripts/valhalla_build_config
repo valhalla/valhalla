@@ -8,11 +8,14 @@ import pprint
 config = {
   'mjolnir': {
     'max_cache_size': 1000000000,
+    'tile_url': None,
     'tile_dir': '/data/valhalla',
     'tile_extract': '/data/valhalla/tiles.tar',
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
+    'hierarchy': True,
+    'shortcuts': True,
     'logging': {
       'type': 'std_out',
       'color': True,
@@ -23,7 +26,7 @@ config = {
     'elevation': '/data/valhalla/elevation/'
   },
   'loki': {
-    'actions':['locate','route','one_to_many','many_to_one','many_to_many','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes'],
+    'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available'],
     'use_connectivity': True,
     'service_defaults': {
       'radius': 0,
@@ -37,18 +40,6 @@ config = {
     },
     'service': {
       'proxy': 'ipc:///tmp/loki'
-    }
-  },
-  'skadi': {
-    'actions':['height'],
-    'logging': {
-      'type': 'std_out',
-      'color': True,
-      'file_name': 'path_to_some_file.log',
-      'long_request': 5.0
-    },
-    'service': {
-      'proxy': 'ipc:///tmp/skadi'
     }
   },
   'thor': {
@@ -215,11 +206,14 @@ config = {
 help_text = {
   'mjolnir': {
     'max_cache_size': 'Number of bytes per thread used to store tile data in memory',
+    'tile_url': 'Location to read tiles from if they are not found in the tile_dir',
     'tile_dir': 'Location to read/write tiles to/from',
     'tile_extract': 'Location to read tiles from tar',
     'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
     'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
     'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
+    'hierarchy': 'bool indicating whether road hierarchy is to be built - default to True',
+    'shortcuts': 'bool indicating whether shortcuts are to be builr - default to True',
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',
@@ -230,24 +224,12 @@ help_text = {
     'elevation': 'Location of srtmgl1 elevation tiles for using in valhalla_build_tiles'
   },
   'loki': {
-    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, one_to_many, many_to_one, many_to_many, sources_to_targets, optimized_route, isochrone, trace_route, trace_attributes',
+    'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available',
     'use_connectivity': 'a boolean value to know whether or not to construct the connectivity maps',
     'service_defaults': {
       'radius': 'Default radius to apply to incoming locations should one not be supplied',
       'minimum_reachability': 'Default minimum reachability to apply to incoming locations should one not be supplied',
     },
-    'logging': {
-      'type': 'Type of logger either std_out or file',
-      'color': 'User colored log level in std_out logger',
-      'file_name': 'Output log file for the file logger',
-      'long_request': 'Value used in processing to determine whether it took too long'
-    },
-    'service': {
-      'proxy': 'IPC linux domain socket file location'
-    }
-  },
-  'skadi': {
-    'actions': 'Comma separated list of allowable actions for the service, one or more of: height',
     'logging': {
       'type': 'Type of logger either std_out or file',
       'color': 'User colored log level in std_out logger',
@@ -459,6 +441,8 @@ if __name__ == '__main__':
     for k in keys[:-1]:
       v = v[k]
     v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
+    if v[keys[-1]] is None:
+      del v[keys[-1]]
 
   #show the config
   print(json.dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))

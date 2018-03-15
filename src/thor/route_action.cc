@@ -19,13 +19,17 @@ using namespace valhalla::thor;
 namespace valhalla {
   namespace thor {
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::route(const boost::property_tree::ptree& request, const boost::optional<int> &date_time_type){
+  std::list<valhalla::odin::TripPath> thor_worker_t::route(const valhalla_request_t& request, const boost::optional<int> &date_time_type){
     parse_locations(request);
     auto costing = parse_costing(request);
 
     auto trippaths = (date_time_type && *date_time_type == 2) ?
         path_arrive_by(correlated, costing) :
         path_depart_at(correlated, costing, date_time_type);
+
+    if(!request.options.do_not_track())
+      for(const auto& tp : trippaths)
+        log_admin(tp);
 
     return trippaths;
   }
@@ -148,9 +152,6 @@ namespace valhalla {
 
         // Keep the protobuf path
         trip_paths.emplace_back(std::move(trip_path));
-
-        // Some logging
-        log_admin(trip_paths.back());
       }
     }
 
@@ -214,9 +215,6 @@ namespace valhalla {
 
         // Keep the protobuf path
         trip_paths.emplace_back(std::move(trip_path));
-
-        // Some logging
-        log_admin(trip_paths.back());
       }
     }
 

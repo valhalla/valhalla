@@ -1,0 +1,33 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: ubuntu:16.04
+        environment:
+          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          LD_LIBRARY_PATH: /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+    steps:
+      - checkout
+      - run: apt-get update && apt-get -y install git && git submodule sync && git submodule update --init
+      - run: bash -c '[[ $(grep -cE "^ " Makefile.am) -eq 0 ]]'
+      - restore_cache:
+          keys:
+            - ccache
+      #get dependencies and do the actual build
+      - run: .circleci/make_test.sh
+      - run: mkdir test/logs && cp test/*.log test/logs
+      - store_artifacts:
+          path: test/logs
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+      #fail if tests failed
+      - run: (if [ $(cat test/logs/* | grep -cF FAIL) -ne 0 ]; then exit 1; fi)
+      #make sure installer works
+      - run: make install
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build

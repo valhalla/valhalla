@@ -532,45 +532,61 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result)
 std::vector<MatchResults>
 MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t k)
 {
+  if (k <= 0) {
+    throw std::invalid_argument("expect k to be positive but got " + std::to_string(k));
+  }
+
   // Reset everything
   Clear();
 
+  std::vector<MatchResults> best_paths;
+
   // Nothing to do
-  if (measurements.empty())
-    return {};
+  if (measurements.empty()) {
+    best_paths.emplace_back(
+        std::vector<MatchResult>{},
+        std::vector<EdgeSegment>{},
+        0);
+    return best_paths;
+  }
+
+  bool found_broken_path = false;
 
   // Separate the measurements we are using for matching from the ones we'll just interpolate
   auto interpolated = AppendMeasurements(measurements);
 
-  // Get the time at the last column of states
-  auto time = container_.size() - 1;
-
   //For k paths
-  std::vector<MatchResults> best_paths;
-  std::vector<StateId> state_ids, original_state_ids;
-  while(best_paths.size() < k) {
-    // If we just got some results then we need to remove them from consideration
-    // we avoid doing this for the common case where k==1 by putting this at the start of the loop
-    if(best_paths.size()) {
-      // Remove all the candidates pairs whose paths are redundant with this one
-      RemoveRedundancies(original_state_ids);
-      // Remove this particular sequence of stateids
-      ts_.RemovePath(state_ids);
-      // Prepare for a fresh search in the next search iteration
-      vs_.ClearSearch();
+  while(best_paths.size() < k && !found_broken_path) {
+    // Get the states for the kth best path in reversed order then fix the order
+    std::vector<StateId> state_ids;
+    double accumulated_cost = 0.f;
+    while (state_ids.size() < container_.size()) {
+      // Get the time at the last column of states
+      const auto time = container_.size() - state_ids.size() - 1;
+      std::copy(vs_.SearchPath(time, false), vs_.PathEnd(), std::back_inserter(state_ids));
+      const auto& winner = vs_.SearchWinner(time);
+      if (winner.IsValid()) {
+        accumulated_cost += vs_.AccumulatedCost(winner);
+      } else {
+        // TODO need a sane constant cost for invalid state
+        accumulated_cost += MAX_ACCUMULATED_COST;
+        found_broken_path = true;
+      }
+
+      if (state_ids.size() < container_.size()) {
+        found_broken_path = true;
+        // cost for disconnection
+        accumulated_cost += MAX_ACCUMULATED_COST;
+      }
     }
 
-    // Get the states for the kth best path in reversed order then fix the order
-    state_ids.clear();
-    std::copy(vs_.SearchPath(time, best_paths.empty()), vs_.PathEnd(), std::back_inserter(state_ids));
-
-    // If we ended up finding a break in the path and this is not the first result we are done
-    if(state_ids.empty() || state_ids.back().time() != 0) {
+    // early quit if we found best paths
+    if (!best_paths.empty() && found_broken_path) {
       break;
     }
 
     // Get back the real state ids in order
-    original_state_ids.clear();
+    std::vector<StateId> original_state_ids;
     for(auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr) {
       original_state_ids.push_back(ts_.GetOrigin(*s_itr, *s_itr));
     }
@@ -609,17 +625,6 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       std::copy(interpolated_results.cbegin(), interpolated_results.cend(), std::back_inserter(best_path));
     }
 
-    // TODO: do something to get real cost later, if we dont like sending back cost from here we can simply send
-    // back k as the float value so that at least we know the smaller ones are relatively better than the larger
-    // ones we just dont know how much and then if we want to call back in with the result to get the real cost
-    // we can do that later
-
-    // Keep the path and the cost for it, if you cant find a valid state id we just give it a huge cost
-    auto found_state = std::find_if(original_state_ids.rbegin(), original_state_ids.rend(), [](const StateId& si) {
-      return si.IsValid();
-    });
-    auto accumulated_cost = found_state != original_state_ids.rend() ? static_cast<float>(vs_.AccumulatedCost(*found_state)) : MAX_ACCUMULATED_COST;
-
     // Construct a result
     auto segments = ConstructRoute(*this, best_path.cbegin(), best_path.cend());
     MatchResults match_results(std::move(best_path), std::move(segments), accumulated_cost);
@@ -637,6 +642,21 @@ MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements, uint32_t 
       std::cout << R"(]})" << std::endl;*/
       best_paths.emplace_back(std::move(match_results));
     }
+
+    // RemoveRedundancies doesn't work with broken paths yet,
+    // also we want to avoid removing path for the last best path
+    if (!found_broken_path && best_paths.size() < k) {
+      // Remove all the candidates pairs whose paths are redundant with this one
+      RemoveRedundancies(original_state_ids);
+      // Remove this particular sequence of stateids
+      ts_.RemovePath(state_ids);
+      // Prepare for a fresh search in the next search iteration
+      vs_.ClearSearch();
+    }
+  }
+
+  if (!(0 < best_paths.size() && best_paths.size() <= k)) {
+    throw std::logic_error("got " + std::to_string(best_paths.size()) + " paths but k = " + std::to_string(k));
   }
 
   // Give back anywhere from 1 to k results

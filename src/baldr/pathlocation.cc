@@ -59,18 +59,18 @@ namespace baldr{
   }
 
 
-  PathLocation PathLocation::FromPtree(const std::vector<Location>& locations, const boost::property_tree::ptree& path_location){
-    auto index = path_location.get<size_t>("location_index");
+  PathLocation PathLocation::FromRapidJson(const std::vector<Location>& locations, const rapidjson::Value& path_location){
+    auto index = rapidjson::get<uint64_t>(path_location, "/location_index");
     PathLocation p(locations[index]);
-    for(const auto& edge : path_location.get_child("edges")) {
-      p.edges.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"),
-        midgard::PointLL(edge.second.get<double>("projected.lon"), edge.second.get<double>("projected.lat")),
-        edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")), edge.second.get<int>("minimum_reachability"));
+    for(const auto& edge : rapidjson::get<rapidjson::Value::ConstArray>(path_location, "/edges")) {
+      p.edges.emplace_back(GraphId(rapidjson::get<uint64_t>(edge, "/id")), rapidjson::get<float>(edge, "/dist"),
+        midgard::PointLL(rapidjson::get<double>(edge, "/projected/lon"), rapidjson::get<double>(edge, "/projected/lat")),
+        rapidjson::get<float>(edge, "/score"), static_cast<SideOfStreet>(rapidjson::get<int>(edge, "/sos")), rapidjson::get<int>(edge, "/minimum_reachability"));
     }
-    for (const auto& edge : path_location.get_child("filtered_edges")) {
-      p.filtered_edges.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"),
-        midgard::PointLL(edge.second.get<double>("projected.lon"), edge.second.get<double>("projected.lat")),
-        edge.second.get<float>("score"), static_cast<SideOfStreet>(edge.second.get<int>("sos")), edge.second.get<int>("minimum_reachability"));
+    for (const auto& edge : rapidjson::get<rapidjson::Value::ConstArray>(path_location, "/filtered_edges")) {
+      p.filtered_edges.emplace_back(GraphId(rapidjson::get<uint64_t>(edge, "/id")), rapidjson::get<float>(edge, "/dist"),
+        midgard::PointLL(rapidjson::get<double>(edge, "/projected/lon"), rapidjson::get<double>(edge, "/projected/lat")),
+        rapidjson::get<float>(edge, "/score"), static_cast<SideOfStreet>(rapidjson::get<int>(edge, "/sos")), rapidjson::get<int>(edge, "/minimum_reachability"));
     }
     return p;
   }

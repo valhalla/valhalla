@@ -12,7 +12,6 @@
 #include "baldr/json.h"
 #include "midgard/logging.h"
 
-#include "proto/directions_options.pb.h"
 #include "proto/trippath.pb.h"
 #include "odin/worker.h"
 #include "odin/util.h"
@@ -33,24 +32,12 @@ namespace valhalla {
 
     void odin_worker_t::cleanup(){}
 
-    std::list<TripDirections> odin_worker_t::narrate(boost::property_tree::ptree& request, std::list<TripPath>& legs) const {
-      // Grab language from options and set
-      auto language = request.get_optional<std::string>("directions_options.language");
-      // If language is not found then set to the default language (en-US)
-      if (!language || (odin::get_locales().find(*language) == odin::get_locales().end()))
-        request.put<std::string>("directions_options.language", odin::DirectionsOptions::default_instance().language());
-
-      //see if we can get some options
-      valhalla::odin::DirectionsOptions directions_options;
-      auto options = request.get_child_optional("directions_options");
-      if(options)
-        directions_options = valhalla::odin::GetDirectionsOptions(*options);
-
+    std::list<TripDirections> odin_worker_t::narrate(const valhalla_request_t& request, std::list<TripPath>& legs) const {
       //get some annotated directions
       std::list<TripDirections> narrated;
       try{
         for(auto& leg : legs) {
-          narrated.emplace_back(odin::DirectionsBuilder().Build(directions_options, leg));
+          narrated.emplace_back(odin::DirectionsBuilder().Build(request.options, leg));
           LOG_INFO("maneuver_count::" + std::to_string(narrated.back().maneuver_size()));
         }
       }
@@ -64,43 +51,37 @@ namespace valhalla {
     worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Odin Request " + std::to_string(info.id));
-      boost::optional<std::string> jsonp;
+      valhalla_request_t request;
       try{
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-        std::stringstream stream(request_str);
-        boost::property_tree::ptree request;
-        try{
-          boost::property_tree::read_json(stream, request);
-          jsonp = request.get_optional<std::string>("jsonp");
-        }
-        catch(...) {
-          return jsonify_error({200}, info, jsonp);
-        }
+        std::string serialized_options(static_cast<const char*>((++job.cbegin())->data()), (++job.cbegin())->size());
+        request = std::move(valhalla_request_t(request_str, serialized_options));
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
 
         //parse each leg
         std::list<TripPath> legs;
-        for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
+        for(auto leg = ++(++job.cbegin()); leg != job.cend(); ++leg) {
           //crack open the path
           legs.emplace_back();
           try {
             legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            return jsonify_error({201}, info, jsonp);
+            return jsonify_error({201}, info, request);
           }
         }
 
         //narrate them and serialize them along
         auto narrated = narrate(request, legs);
-        ACTION_TYPE action = static_cast<ACTION_TYPE>(request.get<int>("action"));
-        return to_response(tyr::serializeDirections(action, request, narrated), jsonp, info);
+        auto response = tyr::serializeDirections(request, legs, narrated);
+        auto* to_response = request.options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
+        return to_response(response, info, request);
       }
       catch(const std::exception& e) {
-        return jsonify_error({299, std::string(e.what())}, info, jsonp);
+        return jsonify_error({299, std::string(e.what())}, info, request);
       }
     }
 

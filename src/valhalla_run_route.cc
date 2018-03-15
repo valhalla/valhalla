@@ -11,8 +11,6 @@
 #include <boost/optional.hpp>
 #include <boost/format.hpp>
 
-#include "config.h"
-
 #include "midgard/encoded.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
@@ -33,6 +31,9 @@
 #include "thor/trippathbuilder.h"
 #include "thor/attributes_controller.h"
 #include "thor/route_matcher.h"
+#include "worker.h"
+
+#include "config.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -287,7 +288,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
                                                     trip_path);
   std::string units = (
       directions_options.units()
-          == DirectionsOptions::Units::DirectionsOptions_Units_kKilometers ?
+          == DirectionsOptions::kilometers ?
           "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin),
@@ -482,9 +483,6 @@ int main(int argc, char *argv[]) {
 
   // Directions options - set defaults
   DirectionsOptions directions_options;
-  directions_options.set_units(
-      DirectionsOptions::Units::DirectionsOptions_Units_kMiles);
-  directions_options.set_language("en-US");
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
@@ -532,12 +530,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Grab the directions options, if they exist
-    auto directions_options_ptree_ptr = json_ptree.get_child_optional(
-        "directions_options");
-    if (directions_options_ptree_ptr) {
-      directions_options = valhalla::odin::GetDirectionsOptions(
-          *directions_options_ptree_ptr);
-    }
+    valhalla::valhalla_request_t request(json, valhalla::odin::DirectionsOptions::route);
+    directions_options = request.options;
 
     // Grab the date_time, if is exists
     auto date_time_ptr = json_ptree.get_child_optional("date_time");
@@ -770,7 +764,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Set the arc distance. Convert to miles if needed
-  if (directions_options.units() == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+  if (directions_options.units() == DirectionsOptions::miles) {
     d1 *= kMilePerKm;
   }
   data.setArcDist(d1);

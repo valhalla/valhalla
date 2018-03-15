@@ -35,8 +35,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-
-    void loki_worker_t::init_route(rapidjson::Document& request) {
+    void loki_worker_t::init_route(valhalla_request_t& request) {
       locations = parse_locations(request, "locations");
       //need to check location size here instead of in parse_locations because of locate action needing a different size
       if(locations.size() < 2)
@@ -44,18 +43,18 @@ namespace valhalla {
       parse_costing(request);
     }
 
-    void loki_worker_t::route(rapidjson::Document& request) {
+    void loki_worker_t::route(valhalla_request_t& request) {
       init_route(request);
-      auto costing = GetOptionalFromRapidJson<std::string>(request, "/costing");
+      auto costing = rapidjson::get_optional<std::string>(request.document, "/costing");
       check_locations(locations.size(), max_locations.find(*costing)->second);
       check_distance(reader, locations, max_distance.find(*costing)->second);
-      auto& allocator = request.GetAllocator();
+      auto& allocator = request.document.GetAllocator();
 
       // Validate walking distances (make sure they are in the accepted range)
       if (*costing == "multimodal" || *costing == "transit") {
-        auto transit_start_end_max_distance = GetOptionalFromRapidJson<int>(request,
+        auto transit_start_end_max_distance = rapidjson::get_optional<int>(request.document,
             "/costing_options/pedestrian/transit_start_end_max_distance").get_value_or(min_transit_walking_dis);
-        auto transit_transfer_max_distance = GetOptionalFromRapidJson<int>(request,
+        auto transit_transfer_max_distance = rapidjson::get_optional<int>(request.document,
             "/costing_options/pedestrian/transit_transfer_max_distance").get_value_or(min_transit_walking_dis);
 
         if (transit_start_end_max_distance < min_transit_walking_dis || transit_start_end_max_distance > max_transit_walking_dis) {
@@ -69,13 +68,13 @@ namespace valhalla {
       }
       auto date_type_pointer = rapidjson::Pointer("/date_time/type");
       //default to current date_time for mm or transit.
-      if (! date_type_pointer.Get(request) && (*costing == "multimodal" || *costing == "transit")) {
-        date_type_pointer.Set(request, 0);
+      if (! date_type_pointer.Get(request.document) && (*costing == "multimodal" || *costing == "transit")) {
+        date_type_pointer.Set(request.document, 0);
       }
-      auto& locations_array = request["locations"];
+      auto& locations_array = request.document["locations"];
       //check the date stuff
-      auto date_time_value = GetOptionalFromRapidJson<std::string>(request, "/date_time/value");
-      if (boost::optional<int> date_type = GetOptionalFromRapidJson<int>(request, "/date_time/type")) {
+      auto date_time_value = rapidjson::get_optional<std::string>(request.document, "/date_time/value");
+      if (boost::optional<int> date_type = rapidjson::get_optional<int>(request.document, "/date_time/type")) {
         //not yet on this
         if(*date_type == 2 && (*costing == "multimodal" || *costing == "transit"))
           throw valhalla_exception_t{141};
@@ -111,7 +110,7 @@ namespace valhalla {
         const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         for(size_t i = 0; i < locations.size(); ++i) {
           const auto& correlated = projections.at(locations[i]);
-          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request, correlated.ToRapidJson(i,allocator));
+          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request.document, correlated.ToRapidJson(i,allocator));
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           if (!connectivity_map)

@@ -11,7 +11,6 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <sqlite3.h>
-#include <spatialite.h>
 #include <unordered_map>
 
 #include <valhalla/mjolnir/graphtilebuilder.h>

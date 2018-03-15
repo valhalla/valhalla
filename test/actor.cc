@@ -23,7 +23,7 @@ namespace {
     return json_to_pt(R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "loki":{
-        "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
+        "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available"],
         "logging":{"long_request": 100},
         "service_defaults":{"minimum_reachability": 50,"radius": 0}
       },
@@ -56,10 +56,10 @@ namespace {
     auto conf = make_conf();
     tyr::actor_t actor(conf);
 
-    actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+    actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
       {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
     actor.cleanup();
-    auto route_json = actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+    auto route_json = actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
           {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
     actor.cleanup();
     auto route = json_to_pt(route_json);
@@ -74,6 +74,15 @@ namespace {
     auto attributes = json_to_pt(attributes_json);
     attributes_json.find("Tulpehocken");
 
+    actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
+      {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
+    actor.cleanup();
+    auto transit_json = actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
+      {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
+    actor.cleanup();
+    auto transit = json_to_pt(transit_json);
+    transit_json.find(std::to_string(false));
+
     //TODO: test the rest of them
 
   }
@@ -84,7 +93,7 @@ namespace {
     struct test_exception_t {};
 
     try {
-      actor.route(tyr::ROUTE, R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+      actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
         {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})", []()->void{throw test_exception_t{};});
       throw std::logic_error("this should have thrown already");
     } catch (const test_exception_t& e) { }

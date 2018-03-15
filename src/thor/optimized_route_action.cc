@@ -17,11 +17,11 @@ using namespace valhalla::thor;
 namespace valhalla {
   namespace thor {
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(const boost::property_tree::ptree& request) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(const valhalla_request_t& request) {
     parse_locations(request);
     auto costing = parse_costing(request);
 
-    if (!healthcheck)
+    if (!request.options.do_not_track())
       valhalla::midgard::logging::Log("matrix_type::optimized_route", " [ANALYTICS] ");
 
     // Use CostMatrix to find costs from each location to every other location

@@ -410,7 +410,8 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
   //cannot be approximated with linear constructs so instead we resample it at a sufficiently
   //small interval so as to approximate the arc with piecewise linear segments
   container_t resampled;
-  auto max_meters = subdivision_size_ * .25f * DistanceApproximator::MetersPerLngDegree(linestring.front().second);
+  auto max_meters = std::max(1.f,
+    subdivision_size_ * .25f * DistanceApproximator::MetersPerLngDegree(linestring.front().second));
   if(coord_t::IsSpherical() && Polyline2<coord_t>::Length(linestring) > max_meters)
     resampled = resample_spherical_polyline(linestring, max_meters, true);
 

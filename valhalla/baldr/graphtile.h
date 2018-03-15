@@ -19,6 +19,7 @@
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/curler.h>
 
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
@@ -58,6 +59,13 @@ class GraphTile {
    * @param  size     Size in bytes of the tile data.
    */
   GraphTile(const GraphId& graphid, char* ptr, size_t size);
+
+  /**
+   * Constructor given the graph Id, in memory tile data
+   * @param  graphid  Tile Id.
+   * @param  tile     Vector of char data with tile's data..
+   */
+  GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler);
 
   /**
    * Destructor
@@ -221,6 +229,14 @@ class GraphTile {
    * @return  Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
+
+  /**
+   * Convenience method to get the types for the names given the offset to the
+   * edge information.
+   * @param  edgeinfo_offset  Offset to the edge info.
+   * @return  Returns unit16_t.  If a bit is set, then it is a ref.
+   */
+  uint16_t GetTypes(const uint32_t edgeinfo_offset) const;
 
   /**
    * Get the admininfo at the specified index. Populates the state name and
