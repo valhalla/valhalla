@@ -191,6 +191,8 @@ namespace valhalla {
         auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         rapidjson::Pointer("/correlated_0").Set(request.document, projections.at(locations.front()).ToRapidJson(0, allocator));
         rapidjson::Pointer("/correlated_1").Set(request.document, projections.at(locations.back()).ToRapidJson(1, allocator));
+        PathLocation::toPBF(projections.at(locations.front()), request.options.mutable_locations()->Add(), reader);
+        PathLocation::toPBF(projections.at(locations.back()), request.options.mutable_locations()->Add(), reader);
       }
       catch(const std::exception&) {
         throw valhalla_exception_t{171};
