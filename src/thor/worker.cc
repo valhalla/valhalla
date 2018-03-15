@@ -33,7 +33,6 @@ namespace {
   constexpr double kMilePerMeter = 0.000621371;
 
   void adjust_scores(valhalla_request_t& request) {
-
     for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
       for(auto& location : *locations) {
         auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
