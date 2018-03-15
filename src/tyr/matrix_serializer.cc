@@ -12,56 +12,6 @@ using namespace valhalla::thor;
 
 namespace osrm_serializers {
 
-  /*json::MapPtr waypoints(const baldr::PathLocation& correlated) {
-    auto waypoint = json::map({});
-    auto loc = json::array({});
-    loc->emplace_back(json::fp_t{correlated.latlng_.lat(), 6});
-    loc->emplace_back(json::fp_t{correlated.latlng_.lng(), 6});
-
-    waypoint->emplace("location", loc);
-    waypoint->emplace("name", std::string(correlated.name_));
-    waypoint->emplace("hint", std::string("shape"));
-    return waypoint;
-  }
-*/
-
-  json::ArrayPtr waypoints(const std::vector<valhalla::odin::Location>& locations){
-    int index = 0;
-    auto waypoints = json::array({});
-    for (const auto& location : locations) {
-
-      index = 1;
-
-      // Create a waypoint to add to the array
-      auto waypoint = json::map({});
-
-      // Output location as a lon,lat array. Note this is the projected
-      // lon,lat on the nearest road.
-      PointLL input_ll(location.ll().lng(), location.ll().lat());
-      PointLL proj_ll(location.projected_ll().lng(), location.projected_ll().lat());
-      auto loc = json::array({});
-      loc->emplace_back(json::fp_t{proj_ll.lng(), 6});
-      loc->emplace_back(json::fp_t{proj_ll.lat(), 6});
-      waypoint->emplace("location", loc);
-
-      // Add street name.
-      waypoint->emplace("street", location.name());
-
-      // Add distance in meters from the input location to the nearest
-      // point on the road used in the route
-      float distance = input_ll.Distance(proj_ll);
-      waypoint->emplace("distance", json::fp_t{distance, 1});
-
-      // Add hint. Goal is for the hint returned from a locate request to be able
-      // to quickly find the edge and point along the edge in a route request.
-      // Defer this - not currently used in OSRM.
-      waypoint->emplace("hint", std::string("TODO"));
-
-      // Add the waypoint to the JSON array
-      waypoints->emplace_back(waypoint);
-    }
-    return waypoints;
-  }
   json::ArrayPtr serialize_duration(const std::vector<TimeDistance>& tds, size_t start_td, const size_t td_count) {
     auto time = json::array({});
     for(size_t i = start_td; i < start_td + td_count; ++i) {
