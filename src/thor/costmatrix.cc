@@ -21,6 +21,11 @@ int GetThreshold(const TravelMode mode, const int n) {
           std::min(2700, std::max(100, n / 3)) : 500;
 }
 
+bool equals(const valhalla::odin::LatLng& a, const valhalla::odin::LatLng&b) {
+  return a.has_lat() == b.has_lat() && a.has_lng() == b.has_lng() &&
+      (!a.has_lat() || a.lat() == b.lat()) && (!a.has_lng() || a.lng() == b.lng());
+}
+
 }
 
 namespace valhalla {
@@ -203,7 +208,7 @@ void CostMatrix::Initialize(
   Cost max_cost(kMaxCost, kMaxCost);
   for (uint32_t i = 0; i < source_count_; i++) {
     for (uint32_t j = 0; j < target_count_; j++) {
-      if (pbf_utils::equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
+      if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
         best_connection_.back().found = true;
       } else {

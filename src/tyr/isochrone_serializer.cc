@@ -117,12 +117,10 @@ std::string serializeIsochrones(const valhalla_request_t& request,
 
 template std::string serializeIsochrones<midgard::Point2>(const valhalla_request_t&,
                                             const midgard::GriddedData<midgard::Point2>::contours_t&, bool,
-                                            const std::unordered_map<float, std::string>&,
-                                            const std::vector<odin::Location>& locations);
+                                            const std::unordered_map<float, std::string>&, bool);
 template std::string serializeIsochrones<midgard::PointLL>(const valhalla_request_t&,
                                              const midgard::GriddedData<midgard::PointLL>::contours_t&, bool,
-                                             const std::unordered_map<float, std::string>&,
-                                             const std::vector<odin::Location>& locations);
+                                             const std::unordered_map<float, std::string>&, bool);
 
 }
 }

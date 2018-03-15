@@ -49,9 +49,7 @@ namespace valhalla {
       valhalla_request_t request(request_str, odin::DirectionsOptions::route);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.route(request);
-      //route between the locations in the graph to find the best path
-      auto date_time_type = rapidjson::get_optional<int>(request.document, "/date_time.type");
-      auto legs = pimpl->thor_worker.route(request, date_time_type);
+      auto legs = pimpl->thor_worker.route(request);
       //get some directions back from them
       auto directions = pimpl->odin_worker.narrate(request, legs);
       //serialize them out to json string

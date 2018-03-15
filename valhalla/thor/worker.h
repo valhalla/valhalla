@@ -54,8 +54,7 @@ class thor_worker_t : public service_worker_t{
 #endif
   virtual void cleanup() override;
 
-  std::list<odin::TripPath> route(valhalla_request_t& request,
-             const boost::optional<int> &date_time_type);
+  std::list<odin::TripPath> route(valhalla_request_t& request);
   std::string matrix(valhalla_request_t& request);
   std::list<odin::TripPath> optimized_route(valhalla_request_t& request);
   std::string isochrones(valhalla_request_t& request);
@@ -72,7 +71,7 @@ class thor_worker_t : public service_worker_t{
   thor::PathAlgorithm* get_path_algorithm(
       const std::string& routetype, const odin::Location& origin,
       const odin::Location& destination);
-  odin::TripPath route_match(const AttributesController& controller);
+  odin::TripPath route_match(valhalla_request_t& request, const AttributesController& controller);
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match(
       const AttributesController& controller, bool trace_attributes_action = false,
       uint32_t best_paths = 1);
@@ -80,8 +79,7 @@ class thor_worker_t : public service_worker_t{
   std::list<odin::TripPath> path_arrive_by(
       google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing);
   std::list<odin::TripPath> path_depart_at(
-      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing,
-      const boost::optional<int> &date_time_type);
+      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing);
 
   void parse_locations(valhalla_request_t& request);
   void parse_measurements(const valhalla_request_t& request);
@@ -102,7 +100,6 @@ class thor_worker_t : public service_worker_t{
   float long_request;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
-  boost::optional<int> date_time_type;
   valhalla::meili::MapMatcherFactory matcher_factory;
   valhalla::baldr::GraphReader& reader;
   std::unordered_set<std::string> trace_customizable;

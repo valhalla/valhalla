@@ -119,8 +119,6 @@ namespace valhalla {
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
 
-        boost::optional<int> date_time_type = rapidjson::get_optional<int>(request.document, "/date_time/type");
-
         worker_t::result_t result{true};
         double denominator = 0;
         size_t order_index = 0;
@@ -150,9 +148,9 @@ namespace valhalla {
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
             result.messages.emplace_back(std::move(serialized_options));
-            for (const auto& trippath : route(request, date_time_type))
+            for (const auto& trippath : route(request))
               result.messages.emplace_back(trippath.SerializeAsString());
-            denominator = correlated.size();
+            denominator = request.options.locations_size();
             break;
           case odin::DirectionsOptions::trace_route:
             // Forward the original request
@@ -244,20 +242,6 @@ namespace valhalla {
     void thor_worker_t::parse_locations(valhalla_request_t& request) {
       //we require locations
       adjust_scores(request);
-
-      //type - 0: current, 1: depart, 2: arrive
-      if (!request.document.HasMember("/date_time/type"))
-        return;
-
-      int date_time_type = rapidjson::get<float>(request.document, "/date_time/type");
-      auto date_time_value = rapidjson::get_optional<std::string>(request.document, "/date_time/value");
-
-      if (date_time_type == 0) //current.
-        locations.front().date_time_ = "current";
-      else if (date_time_type == 1) //depart at
-        locations.front().date_time_ = date_time_value;
-      else if (date_time_type == 2) //arrive)
-        locations.back().date_time_ = date_time_value;
     }
 
     void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
@@ -337,9 +321,7 @@ namespace valhalla {
       astar.Clear();
       bidir_astar.Clear();
       multi_modal_astar.Clear();
-      locations.clear();
       trace.clear();
-      correlated.clear();
       isochrone_gen.Clear();
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())

@@ -50,9 +50,9 @@ float length_comparison(const float length, const bool exact_match) {
 // Get a map of end edges and the start node of each edge. This is used
 // to terminate the edge walking method.
 end_node_t GetEndEdges(GraphReader& reader,
-        const std::vector<odin::Location>& correlated) {
+        const google::protobuf::RepeatedPtrField<odin::Location>& correlated) {
   end_node_t end_nodes;
-  for (const auto& edge : correlated.back().path_edges()) {
+  for (const auto& edge : correlated.rbegin()->path_edges()) {
     // If destination is at a node - skip any outbound edge
     GraphId graphid(edge.graph_id());
     if (edge.begin_node() || !graphid.Is_Valid()) {
@@ -215,7 +215,7 @@ bool RouteMatcher::FormPath(
     const std::shared_ptr<DynamicCost>* mode_costing,
     const sif::TravelMode& mode, GraphReader& reader,
     const std::vector<meili::Measurement>& shape,
-    const std::vector<odin::Location>& correlated,
+    const google::protobuf::RepeatedPtrField<odin::Location>& correlated,
     std::vector<PathInfo>& path_infos) {
   // Form distances between shape points
   float total_distance = 0.0f;
@@ -233,7 +233,7 @@ bool RouteMatcher::FormPath(
 
   // Iterate through start edges
   float elapsed_time = 0.0f;
-  for (const auto& edge : correlated.front().path_edges()) {
+  for (const auto& edge : correlated.begin()->path_edges()) {
     // If origin is at a node - skip any inbound edge
     if (edge.end_node()) {
       continue;

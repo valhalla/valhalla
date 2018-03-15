@@ -19,13 +19,14 @@ using namespace valhalla::thor;
 namespace valhalla {
   namespace thor {
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& request, const boost::optional<int> &date_time_type){
+  std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& request){
     parse_locations(request);
     auto costing = parse_costing(request);
 
-    auto trippaths = (date_time_type && *date_time_type == 2) ?
-        path_arrive_by(correlated, costing) :
-        path_depart_at(correlated, costing, date_time_type);
+    auto trippaths = (request.options.has_date_time_type() &&
+        request.options.date_time_type() == odin::DirectionsOptions::arrive_by) ?
+        path_arrive_by(*request.options.mutable_locations(), costing) :
+        path_depart_at(*request.options.mutable_locations(), costing);
 
     if(!request.options.do_not_track())
       for(const auto& tp : trippaths)
@@ -101,8 +102,8 @@ namespace valhalla {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
-    correlated.front().set_type(odin::Location::kBreak);
-    correlated.back().set_type(odin::Location::kBreak);
+    correlated.begin()->set_type(odin::Location::kBreak);
+    correlated.rbegin()->set_type(odin::Location::kBreak);
 
     // For each pair of locations
     for(auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
@@ -162,12 +163,12 @@ namespace valhalla {
     return trip_paths;
   }
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing, const boost::optional<int> &date_time_type) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing) {
     // Things we'll need
     std::vector<thor::PathInfo> path;
     std::list<valhalla::odin::TripPath> trip_paths;
-    correlated.front().set_type(odin::Location::kBreak);
-    correlated.back().set_type(odin::Location::kBreak);
+    correlated.begin()->set_type(odin::Location::kBreak);
+    correlated.rbegin()->set_type(odin::Location::kBreak);
 
     // For each pair of locations
     for(auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {

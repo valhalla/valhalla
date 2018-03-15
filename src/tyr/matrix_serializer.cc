@@ -25,7 +25,7 @@ namespace osrm_serializers {
   }
 */
 
-json::ArrayPtr waypoints(const std::vector<valhalla::odin::Location>& locations){
+  json::ArrayPtr waypoints(const std::vector<valhalla::odin::Location>& locations){
     int index = 0;
     auto waypoints = json::array({});
     for (const auto& location : locations) {
@@ -94,19 +94,12 @@ json::ArrayPtr waypoints(const std::vector<valhalla::odin::Location>& locations)
     auto json = json::map({});
     auto time = json::array({});
     auto distance = json::array({});
-    std::vector<odin::Location> start;
-    std::vector<odin::Location> end;
-    for(size_t i = 0; i < request.options.sources_size(); i++) {
-      start.emplace_back(json::array({request.options.sources(i)}));
-    }
-    for(size_t i = 0; i < request.options.targets_size(); i++) {
-      end.emplace_back(json::array({request.options.targets(i)}));
-    }
+
     // If here then the matrix succeeded. Set status code to OK and serialize
     // waypoints (locations).
     json->emplace("code", std::string("Ok"));
-    json->emplace("sources", osrm_serializers::waypoints(start));
-    json->emplace("destinations", osrm_serializers::waypoints(end));
+    json->emplace("sources", osrm::waypoints(request.options.sources()));
+    json->emplace("destinations", osrm::waypoints(request.options.targets()));
 
     for(size_t source_index = 0; source_index < request.options.sources_size(); ++source_index) {
       time->emplace_back(serialize_duration(time_distances, source_index * request.options.targets_size(), request.options.targets_size()));

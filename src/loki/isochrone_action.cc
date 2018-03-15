@@ -111,7 +111,7 @@ namespace valhalla {
           //TODO: remove this when using pbf everywhere
           rapidjson::Pointer("/correlated_" + std::to_string(i)).
               Set(request.document, projection.ToRapidJson(i,allocator));
-          toPBF(projection, request.options.mutable_locations()->Add());
+          PathLocation::toPBF(projection, request.options.mutable_locations()->Add(), reader);
         }
       }
       catch(const std::exception&) {

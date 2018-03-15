@@ -89,7 +89,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   switch (shape_match->second) {
       case EDGE_WALK:
         try {
-          trip_path = route_match(controller);
+          trip_path = route_match(request, controller);
           if (trip_path.node().size() == 0)
             throw std::exception{};
           map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
@@ -111,7 +111,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
       // then we want to fallback to try and use meili map matching to match to local route network.
       // No shortcuts are used and detailed information at every intersection becomes available.
       case WALK_OR_SNAP:
-        trip_path = route_match(controller);
+        trip_path = route_match(request, controller);
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {

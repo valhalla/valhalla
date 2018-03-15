@@ -353,7 +353,7 @@ vb::Location location_for_lrp(const pbf::Segment::LocationReference &lrp) {
   return location;
 }
 
-vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &reader, uint8_t level) {
+vo::Location loki_search_single(const vb::Location &loc, vb::GraphReader &reader, uint8_t level) {
   //we dont want non real edges but also we want the edges to be on the right level
   //also right now only driveable edges please
   auto edge_filter = [level](const DirectedEdge* edge) -> float {
@@ -368,7 +368,10 @@ vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &re
   if(results.size())
     path_loc = std::move(results.begin()->second);
 
-  return path_loc;
+  vo::Location l;
+  vb::PathLocation::toPBF(path_loc, &l, reader);
+
+  return l;
 }
 
 struct last_tile_cache {
@@ -508,8 +511,9 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
   } else {
     // Use edge search with loki
     auto loc = loki_search_single(vb::Location(ll), m_reader, level);
-    for (const auto& edge : loc.edges) {
-      edges.emplace_back(edge, 0.0f);  // TODO??
+    for (const auto& edge : loc.path_edges()) {
+      PathLocation::PathEdge e(GraphId(edge.graph_id()), edge.dist(), PointLL{edge.ll().lng(), edge.ll().lat()}, edge.score());
+      edges.emplace_back(std::move(e), 0.0f);  // TODO??
     }
     if (origin) {
       // Remove inbound edges to an origin node
@@ -677,7 +681,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     auto coord = coord_for_lrp(lrp);
     auto next_coord = coord_for_lrp(segment.lrps(i+1));
     auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, segment_id.level());
-    if (dest.edges.size() == 0) {
+    if (dest.path_edges_size() == 0) {
       LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) +
                 ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();

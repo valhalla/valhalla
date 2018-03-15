@@ -90,7 +90,7 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
 
   // Form bounding box that's just big enough to surround all of the locations.
   // Convert to PointLL
-  PointLL center_ll(origin_locations.at(0).ll().lng(), origin_locations.at(0).ll().lat());
+  PointLL center_ll(origin_locations.Get(0).ll().lng(), origin_locations.Get(0).ll().lat());
   AABB2<PointLL> loc_bounds(center_ll.lng(), center_ll.lat(), center_ll.lng(), center_ll.lat());
 
   for (const auto& origin : origin_locations) {

@@ -52,11 +52,12 @@ namespace valhalla {
     Optimizer optimizer;
     //returns the optimal order of the path_locations
     optimal_order = optimizer.Solve(correlated.size(), time_costs);
-    std::vector<odin::Location> best_order;
-    for (size_t i = 0; i< optimal_order.size(); i++)
-      best_order.emplace_back(correlated.Get(optimal_order[i]));
+    //put the optimal order into the locations array
+    request.options.mutable_locations()->Clear();
+    for (size_t i = 0; i < optimal_order.size(); i++)
+      request.options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
 
-    auto trippaths = path_depart_at(best_order, costing, date_time_type);
+    auto trippaths = path_depart_at(*request.options.mutable_locations(), costing);
 
     return trippaths;
   }

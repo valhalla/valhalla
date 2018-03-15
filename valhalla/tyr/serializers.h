@@ -106,5 +106,19 @@ namespace valhalla {
   }
 }
 
+namespace osrm {
+
+  /*
+   *
+   */
+  valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location);
+
+  /*
+   *
+   */
+  valhalla::baldr::json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::odin::Location>& locations);
+
+}
+
 
 #endif //__VALHALLA_TYR_SERVICE_H__

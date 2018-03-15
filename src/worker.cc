@@ -451,6 +451,16 @@ namespace {
     parse_locations(doc, options.mutable_targets(), "targets");
 */
 
+    //time
+    auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
+    if(date_time_type)
+      options.set_date_time_type(static_cast<valhalla::odin::DirectionsOptions::DateTimeType>(*date_time_type));
+    auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
+    if(date_time_value)
+      options.set_date_time(*date_time_value);
+
+    //TODO: set times on specific locations
+
     //force these into the output so its obvious what we did to the user
     doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
     doc.AddMember({"format", allocator},
