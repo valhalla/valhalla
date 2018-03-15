@@ -29,6 +29,7 @@
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
+namespace vo = valhalla::odin;
 namespace vl = valhalla::loki;
 namespace vs = valhalla::sif;
 namespace vt = valhalla::thor;
@@ -512,12 +513,12 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
     }
     if (origin) {
       // Remove inbound edges to an origin node
-      std::remove_if(edges.begin(), edges.end(),
-         [](const CandidateEdge& e){return e.edge.end_node();});
+      edges.erase(std::remove_if(edges.begin(), edges.end(),
+         [](const CandidateEdge& e){return e.edge.end_node();}));
     } else {
       // remove outbound edges to a destination node
-      std::remove_if(edges.begin(), edges.end(),
-         [](const CandidateEdge& e){return e.edge.begin_node();});
+      edges.erase(std::remove_if(edges.begin(), edges.end(),
+         [](const CandidateEdge& e){return e.edge.begin_node();}));
     }
   }
   return edges;
