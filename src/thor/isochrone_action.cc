@@ -19,6 +19,7 @@ namespace valhalla {
         colors[contours.back()] = rapidjson::get<std::string>(contour, "/color", "");
       }
       auto polygons = rapidjson::get<bool>(request.document, "/polygons", false);
+      auto use_cost = rapidjson::get<bool>(request.document, "/use_cost", false);
       auto denoise = std::max(std::min(rapidjson::get<float>(request.document, "/denoise", 1.f), 1.f), 0.f);
 
       // Get the generalization factor (in meters). If none is provided then
@@ -32,7 +33,7 @@ namespace valhalla {
       //where there has been a higher cost that might still be marked in the isochrone
       auto grid = (costing == "multimodal" || costing == "transit") ?
         isochrone_gen.ComputeMultiModal(correlated, contours.back()+10, reader, mode_costing, mode) :
-        isochrone_gen.Compute(correlated, contours.back()+10, reader, mode_costing, mode);
+        isochrone_gen.Compute(correlated, contours.back()+10, reader, mode_costing, mode, use_cost);
 
       //turn it into geojson
       auto isolines = grid->GenerateContours(contours, polygons, denoise, generalize);

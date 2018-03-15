@@ -52,13 +52,15 @@ class Isochrone {
    * @param  graphreader  Graphreader
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
+   * @param  use_cost     The units in the grid should be in cost instead of seconds
    */
   std::shared_ptr<const GriddedData<midgard::PointLL> > Compute(
           std::vector<baldr::PathLocation>& origin_locs,
           const unsigned int max_minutes,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+          const sif::TravelMode mode,
+          const bool use_cost = false);
 
   // Compute iso-tile that we can use to generate isochrones. This is used for
   // the reverse direction - construct times for gridded data indicating how
@@ -68,7 +70,8 @@ class Isochrone {
                const unsigned int max_minutes,
                baldr::GraphReader& graphreader,
                const std::shared_ptr<sif::DynamicCost>* mode_costing,
-               const sif::TravelMode mode);
+               const sif::TravelMode mode,
+               const bool use_cost = false);
 
   /**
    * Compute an isochrone grid for multi-modal routes. This creates and
@@ -93,6 +96,7 @@ class Isochrone {
   float shape_interval_;        // Interval along shape to mark time
   sif::TravelMode mode_;        // Current travel mode
   uint32_t access_mode_;        // Access mode used by the costing method
+  bool use_cost_;               // Use cost units instead of minutes
 
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;

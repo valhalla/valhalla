@@ -49,7 +49,8 @@ Isochrone::Isochrone()
       shape_interval_(50.0f),
       mode_(TravelMode::kDrive),
       adjacencylist_(nullptr),
-      edgestatus_(nullptr) {
+      edgestatus_(nullptr),
+      use_cost_(false){
 }
 
 // Destructor
@@ -73,10 +74,10 @@ void Isochrone::Clear() {
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
 // a max distance in meters based on an estimate of max average speed for
 // the travel mode.
-void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
+void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_units,
                                  std::vector<baldr::PathLocation>& origin_locations) {
   float max_distance;
-  auto max_seconds = max_minutes * 60;
+  auto max_seconds = use_cost_ ? max_units / 10 : max_units * 60;
   if (multimodal) {
     max_distance = max_seconds * 70.0f * kMPHtoMetersPerSec;
   } else if (mode_ == TravelMode::kPedestrian) {
@@ -133,7 +134,7 @@ void Isochrone::ConstructIsoTile(const bool multimodal, const unsigned int max_m
                         loc_bounds.maxx() + dlon, loc_bounds.maxy() + dlat);
 
   // Create isotile (gridded data)
-  isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_minutes));
+  isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_units));
 
   // Find the center of the grid that the location lies within. Shift the
   // tilebounds so the location lies in the center of a tile.
@@ -212,8 +213,9 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
   const NodeInfo* nodeinfo = tile->node(node);
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
-    float secs0 = (idx == kInvalidLabel) ? 0 : edgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    float value = idx == kInvalidLabel ? 0 :
+        (use_cost_ ? edgelabels_[idx].cost().cost : edgelabels_[idx].cost().secs);
+    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), value);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -288,24 +290,26 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
 // Compute iso-tile that we can use to generate isochrones.
 std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
              std::vector<PathLocation>& origin_locations,
-             const unsigned int max_minutes,
+             const unsigned int max_units,
              GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
-             const TravelMode mode) {
+             const TravelMode mode,
+             const bool use_cost) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
+  use_cost_ = use_cost;
 
   // Initialize and create the isotile
-  auto max_seconds = max_minutes * 60;
   Initialize(costing_->UnitSize());
-  ConstructIsoTile(false, max_minutes, origin_locations);
+  ConstructIsoTile(false, max_units, origin_locations);
 
   // Set the origin locations
   SetOriginLocations(graphreader, origin_locations, costing_);
 
   // Compute the isotile
+  auto stop_value = use_cost_ ? max_units : max_units * 60;
   uint32_t n = 0;
   const GraphTile* tile;
   while (true) {
@@ -325,8 +329,8 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
     n++;
 
     // Return after the time interval has been met
-    if (pred.cost().secs > max_seconds || pred.cost().cost > max_seconds * 4) {
-      LOG_DEBUG("Exceed time interval: n = " + std::to_string(n));
+    if ((use_cost_ ? pred.cost().cost : pred.cost().secs) > stop_value){
+      LOG_DEBUG("Exceeded max interval: n = " + std::to_string(n));
       return isotile_;
     }
   }
@@ -348,8 +352,9 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
   const NodeInfo* nodeinfo = tile->node(node);
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
-    float secs0 = (idx == kInvalidLabel) ? 0 : bdedgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    float value = idx == kInvalidLabel ? 0 :
+        (use_cost_ ? bdedgelabels_[idx].cost().cost : bdedgelabels_[idx].cost().secs);
+    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), value);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -441,11 +446,13 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
              const unsigned int max_minutes,
              GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
-             const TravelMode mode) {
+             const TravelMode mode,
+             const bool use_cost) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
+  use_cost_ = use_cost;
 
   // Initialize and create the isotile
   auto max_seconds = max_minutes * 60;
@@ -502,6 +509,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
   // Set the mode from the origin
   mode_ = mode;
+  use_cost_ = false;
   const auto& costing = mode_costing[static_cast<uint8_t>(mode)];
   const auto& tc = mode_costing[static_cast<uint8_t>(TravelMode::kPublicTransit)];
   bool wheelchair = tc->wheelchair();
@@ -836,7 +844,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
 // Update the isotile
 void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
-                              const PointLL& ll, float secs0) {
+                              const PointLL& ll, float value0) {
   // Skip if the opposing edge has already been settled.
   const GraphTile* t2;
   GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid(), t2);
@@ -857,19 +865,20 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
 
   // Get the time at the end node of the predecessor
   // TODO - do we need partial shape from origin location to end of edge?
-  float secs1 = pred.cost().secs;
+  float value1 = use_cost_ ? pred.cost().cost : pred.cost().secs;
+  float multiplier = use_cost_ ? 1.f : kMinPerSec;
 
   // Avoid getting the shape for short edges
   if (edge->length() < shape_interval_) {
     // Mark the cell at the begin node
     const auto* de = t2->directededge(opp);
     const auto* node = tile->node(de->endnode());
-    isotile_->SetIfLessThan(node->latlng(), secs0 * kMinPerSec);
+    isotile_->SetIfLessThan(node->latlng(), value0 * multiplier);
 
     // Mark the cell at the end node (and any intervening cells)
     auto tiles = isotile_->Intersect(std::list<PointLL>{node->latlng(), ll});
     for (auto t : tiles) {
-      isotile_->SetIfLessThan(t.first, secs1 * kMinPerSec);
+      isotile_->SetIfLessThan(t.first, value1 * multiplier);
     }
     return;
   }
@@ -883,24 +892,24 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
   auto resampled = resample_spherical_polyline(shape, shape_interval_);
 
   // Mark the initial grid cell and iterate through the shape pairs
-  float secs = secs0;
-  isotile_->SetIfLessThan(shape.front(), secs * kMinPerSec);
+  float value = value0;
+  isotile_->SetIfLessThan(shape.front(), value * multiplier);
   auto tiles = isotile_->Intersect(std::list<PointLL>{shape.front(), shape.back()});
   for (auto t : tiles) {
-    isotile_->SetIfLessThan(t.first, secs * kMinPerSec);
+    isotile_->SetIfLessThan(t.first, value * multiplier);
   }
 
   // Mark grid cells along the shape if time is less than what is
   // already populated. Get intersection of tiles along each segment
   // so this doesn't miss shape that crosses tile corners
-  float delta = (shape_interval_ * (secs1 - secs0)) / edge->length();
+  float delta = (shape_interval_ * (value1 - value0)) / edge->length();
   auto itr1 = resampled.begin();
   auto itr2 = itr1 + 1;
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
-    secs += delta;
+    value += delta;
     auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
     for (auto t : tiles) {
-      isotile_->SetIfLessThan(t.first, secs * kMinPerSec);
+      isotile_->SetIfLessThan(t.first, value * multiplier);
     }
   }
 }

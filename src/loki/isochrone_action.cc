@@ -46,11 +46,12 @@ namespace valhalla {
       if(contours->Size() > max_contours)
         throw valhalla_exception_t{152, std::to_string(max_contours)};
       size_t prev = 0;
+      auto use_cost = rapidjson::get<bool>(request.document, "/use_cost", false);
       for(const auto& contour : *contours) {
         const int c = rapidjson::get_optional<int>(contour, "/time").get_value_or(-1);
         if(c < prev || c == -1)
           throw valhalla_exception_t{111};
-        if(c > max_time)
+        if(!use_cost && c > max_time)
           throw valhalla_exception_t{151, std::to_string(max_time)};
         prev = c;
       }
