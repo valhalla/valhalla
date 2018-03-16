@@ -730,7 +730,7 @@ namespace {
         // Iterate through maneuvers - convert to OSRM steps
         uint32_t index = 0;
         uint32_t count = 0;
-        std::string prev_name, prev_ref, mode, prev_mode, prev_maneuver;
+        std::string prev_name, prev_ref, mode, prev_mode;
         auto steps = json::array({});
         std::unordered_map<std::string, float> maneuvers;
         for (const auto& maneuver : leg.maneuver()) {
