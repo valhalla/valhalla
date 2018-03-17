@@ -8,7 +8,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/worker.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/directededge.h>
@@ -24,6 +23,7 @@
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/meili/map_matcher_factory.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/tyr/actor.h>
 
@@ -64,23 +64,23 @@ class thor_worker_t : public service_worker_t{
 
  protected:
 
-  std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin,
-                baldr::PathLocation& destination, const std::string& costing);
+  std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm, odin::Location& origin,
+      odin::Location& destination, const std::string& costing);
   void log_admin(const odin::TripPath&);
   valhalla::sif::cost_ptr_t get_costing(
       const rapidjson::Document& request, const std::string& costing);
   thor::PathAlgorithm* get_path_algorithm(
-      const std::string& routetype, const baldr::PathLocation& origin,
-      const baldr::PathLocation& destination);
+      const std::string& routetype, const odin::Location& origin,
+      const odin::Location& destination);
   odin::TripPath route_match(const AttributesController& controller);
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match(
       const AttributesController& controller, bool trace_attributes_action = false,
       uint32_t best_paths = 1);
 
   std::list<odin::TripPath> path_arrive_by(
-      std::vector<baldr::PathLocation>& correlated, const std::string &costing);
+      std::vector<odin::Location>& correlated, const std::string &costing);
   std::list<odin::TripPath> path_depart_at(
-      std::vector<baldr::PathLocation>& correlated, const std::string &costing,
+      std::vector<odin::Location>& correlated, const std::string &costing,
       const boost::optional<int> &date_time_type);
 
   void parse_locations(const valhalla_request_t& request);
@@ -92,9 +92,7 @@ class thor_worker_t : public service_worker_t{
   valhalla::sif::TravelMode mode;
   std::vector<baldr::Location> locations;
   std::vector<meili::Measurement> trace;
-  std::vector<baldr::PathLocation> correlated;
-  std::vector<baldr::PathLocation> correlated_s;
-  std::vector<baldr::PathLocation> correlated_t;
+  std::vector<odin::Location> correlated;
   sif::CostFactory<sif::DynamicCost> factory;
   valhalla::sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
   // Path algorithms (TODO - perhaps use a map?))

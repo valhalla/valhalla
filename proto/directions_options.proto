@@ -1,4 +1,5 @@
 package valhalla.odin;
+import public "tripcommon.proto";
 
 message DirectionsOptions {
   
@@ -24,6 +25,19 @@ message DirectionsOptions {
     height = 11;
     transit_available = 12;
   }
+  
+  enum Costing {
+    auto_ = 0;
+    auto_shorter = 1;
+    bicycle = 2;
+    bus = 3;
+    hov = 4;
+    motor_scooter = 5;
+    multimodal = 6;
+    pedestrian = 7;
+    transit = 8;
+    truck = 9;
+  } 
 
   optional Units units = 1;                         // kilometers or miles
   optional string language = 2 [default = "en-US"]; // Based on IETF BCP 47 language tag string
@@ -36,4 +50,9 @@ message DirectionsOptions {
   optional bool do_not_track = 9 [default = false]; // Disable analytics for this request
   optional bool range = 10 [default = false];       // Used in /height if the range between points should be serialized
   optional bool verbose = 11 [default = false];     // Used in /locate request to give back extensive information
+  optional Costing costing = 12;                    // Used to tell what type of costing to use
+  repeated Location locations = 13;                 // Locations for /route /optimized /locate /isochrone
+  repeated Location avoid_locations = 14;           // Avoids for any costing
+  repeated Location sources = 15;                   // Sources for /sources_to_targets
+  repeated Location targets = 16;					// Targets for /sources_to_targets
 }

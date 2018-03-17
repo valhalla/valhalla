@@ -6,6 +6,7 @@
 #include "worker.h"
 #include "baldr/location.h"
 #include "odin/util.h"
+#include "midgard/util.h"
 
 namespace {
   // Credits: http://werkzeug.pocoo.org/
@@ -297,6 +298,73 @@ namespace {
     return d;
   }
 
+  google::protobuf::RepeatedPtrField<valhalla::odin::Location>
+  parse_locations(const rapidjson::Document& doc, const std::string& node, unsigned location_parse_error_code = 130,
+      boost::optional<valhalla::valhalla_exception_t> required_exception = valhalla::valhalla_exception_t{110}) {
+    google::protobuf::RepeatedPtrField<valhalla::odin::Location> locations;
+    auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
+    if (request_locations) {
+      for(const auto& location : *request_locations) {
+        try {
+          auto* location = locations.Add();
+          auto lat = rapidjson::get_optional<float>(doc, "/lat");
+          if (! lat) throw std::runtime_error{"lat is missing"};
+
+          if (*lat < -90.0f || *lat > 90.0f)
+            throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+
+          auto lon = rapidjson::get_optional<float>(doc, "/lon");
+          if (! lon) throw std::runtime_error{"lon is missing"};
+
+          lon = valhalla::midgard::circular_range_clamp<float>(*lon, -180, 180);
+          location->mutable_ll()->set_lat(*lat);
+          location->mutable_ll()->set_lng(*lon);
+
+          auto stop_type_json = rapidjson::get_optional<std::string>(doc, "/type");
+          if (stop_type_json && *stop_type_json == std::string("through")){
+            location->set_type(valhalla::odin::Location::kThrough);
+          }
+
+          auto name = rapidjson::get_optional<std::string>(doc, "/name");
+          if(name) location->set_name(*name);
+          auto street = rapidjson::get_optional<std::string>(doc, "/street");
+          if(street) location->set_street(*street);
+          auto city = rapidjson::get_optional<std::string>(doc, "/city");
+          if(city) location->set_city(*city);
+          auto state = rapidjson::get_optional<std::string>(doc, "/state");
+          if(state) location->set_state(*state);
+          auto zip = rapidjson::get_optional<std::string>(doc, "/postal_code");
+          if(zip) location->set_postal_code(*zip);
+          auto country = rapidjson::get_optional<std::string>(doc, "/country");
+          if(country) location->set_country(*country);
+          auto phone = rapidjson::get_optional<std::string>(doc, "/phone");
+          if(phone) location->set_phone(*phone);
+          auto url = rapidjson::get_optional<std::string>(doc, "/url");
+          if(url) location->set_url(*url);
+
+          auto date_time = rapidjson::get_optional<std::string>(doc, "/date_time");
+          if(date_time) location->set_date_time(*date_time);
+          auto heading = rapidjson::get_optional<int>(doc, "/heading");
+          if(heading) location->set_heading(*heading);
+          auto heading_tolerance = rapidjson::get_optional<int>(doc, "/heading_tolerance");
+          if(heading_tolerance) location->set_heading_tolerance(*heading_tolerance);
+          auto node_snap_tolerance = rapidjson::get_optional<float>(doc, "/node_snap_tolerance");
+          if(node_snap_tolerance) location->set_node_snap_tolerance(*node_snap_tolerance);
+          auto way_id = rapidjson::get_optional<uint64_t>(doc, "/way_id");
+          if(way_id) location->set_way_id(*way_id);
+          auto minimum_reachability = rapidjson::get_optional<unsigned int>(doc, "/minimum_reachability");
+          if(minimum_reachability) location->set_minimum_reachability(*minimum_reachability);
+          auto radius = rapidjson::get_optional<unsigned int>(doc, "/radius");
+          if(radius) location->set_radius(*radius);
+        }
+        catch (...) { throw valhalla::valhalla_exception_t{location_parse_error_code}; }
+      }
+    }
+    else if(required_exception)
+      throw *required_exception;
+    return locations;
+  }
+
   valhalla::odin::DirectionsOptions from_json(rapidjson::Document& doc) {
     valhalla::odin::DirectionsOptions options;
 
@@ -353,6 +421,35 @@ namespace {
     options.set_range(rapidjson::get(doc, "/range", false));
 
     options.set_verbose(rapidjson::get(doc, "/verbose",false));
+
+    //costing
+    auto costing_str = rapidjson::get_optional<std::string>(doc, "/costing");
+    if(costing_str) {
+      //sadly auto is a keyword
+      if(*costing_str == "auto")
+        options.set_costing(valhalla::odin::DirectionsOptions::auto_);
+      //otherwise parse it
+      valhalla::odin::DirectionsOptions::Costing costing;
+      if(valhalla::odin::DirectionsOptions::Costing_Parse(*costing_str, &costing))
+        options.set_costing(costing);
+    }
+
+    //TODO: costing options
+
+/*
+    //TODO: trace* supports also uncompressed shape as location objects
+    //get the locations in there
+    parse_locations(doc, options.mutable_locations(), "locations");
+
+    //get the avoids in there
+    parse_locations(doc, options.mutable_avoid_locations(), "avoid_locations");
+
+    //get the sources in there
+    parse_locations(doc, options.mutable_sourcess(), "sources");
+
+    //get the targets in there
+    parse_locations(doc, options.mutable_targets(), "targets");
+*/
 
     //force these into the output so its obvious what we did to the user
     doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);

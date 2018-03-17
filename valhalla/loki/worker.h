@@ -9,6 +9,7 @@
 #include <valhalla/worker.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/location.h>
+#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
@@ -29,6 +30,7 @@ namespace valhalla {
       loki_worker_t(const boost::property_tree::ptree& config);
 #ifdef HAVE_HTTP
       virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt) override;
+      void limits(valhalla_request_t& request) const;
 #endif
       virtual void cleanup() override;
 
@@ -55,6 +57,8 @@ namespace valhalla {
       void init_trace(valhalla_request_t& request);
       void init_height(valhalla_request_t& request);
       void init_transit_available(valhalla_request_t& request);
+
+      void toPBF(const baldr::PathLocation& pl, odin::Location* l);
 
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;

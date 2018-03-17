@@ -10,7 +10,6 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -55,8 +54,8 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(baldr::PathLocation& origin,
-          baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+  virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
+          odin::Location& dest, baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode);
 
@@ -134,7 +133,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node, const sif::EdgeLabel& pred,
                      const uint32_t pred_idx, const bool from_transition,
-                     const baldr::PathLocation& dest,
+                     const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
   /**
@@ -144,8 +143,8 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @param  dest         Location information of the destination.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 baldr::PathLocation& origin,
-                 const baldr::PathLocation& dest);
+                 odin::Location& origin,
+                 const odin::Location& dest);
 
   /**
    * Set the destination edge(s).
@@ -154,7 +153,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @return  Returns the relative density near the destination (0-15)
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader,
-                          const baldr::PathLocation& dest);
+                          const odin::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

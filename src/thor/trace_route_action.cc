@@ -7,8 +7,6 @@
 #include <unordered_map>
 
 #include "exception.h"
-#include "midgard/logging.h"
-#include "baldr/pathlocation.h"
 #include "meili/map_matcher.h"
 
 #include "thor/route_matcher.h"
@@ -133,7 +131,7 @@ odin::TripPath thor_worker_t::route_match(const AttributesController& controller
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
                                              path_infos, correlated.front(),
-                                             correlated.back(), std::list<PathLocation>{},
+                                             correlated.back(), std::list<odin::Location>{},
                                              interrupt);
   }
 
@@ -149,7 +147,7 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
     uint32_t best_paths) {
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
 
-  // Call Meili for map matching to get a collection of pathLocation Edges
+  // Call Meili for map matching to get a collection of Location Edges
   matcher->set_interrupt(interrupt);
   // Create the vector of matched path results
   std::vector<meili::MatchResults> offline_results;
@@ -348,14 +346,14 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
 
     if ((first_result_with_state != match_results.end())
         && (last_result_with_state != match_results.rend())) {
-      baldr::PathLocation origin = matcher->state_container().state(
+      odin::Location origin = matcher->state_container().state(
           first_result_with_state->stateid).candidate();
-      baldr::PathLocation destination = matcher->state_container().state(
+      odin::Location destination = matcher->state_container().state(
           last_result_with_state->stateid).candidate();
 
       bool found_origin = false;
-      for (const auto& e : origin.edges) {
-        if (e.id == path_edges.front().edgeid) {
+      for (const auto& e : origin.path_edges()) {
+        if (e.graph_id() == path_edges.front().edgeid) {
           found_origin = true;
           break;
         }
@@ -367,16 +365,16 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
 
         // 2. path_edges.front().edgeid must be the downstream edge that
         // connects one of origin.edges (twins) at its start node
-        origin.edges.emplace_back(path_edges.front().edgeid,
+        origin.path_edges().emplace_back(path_edges.front().edgeid),
             0.f,
-            origin.edges.front().projected,
-            origin.edges.front().score,
-            origin.edges.front().sos);
+            origin.path_edges().Get(0).ll(),
+            origin.path_edges().Get(0).score(),
+            origin.path_edges().Get(0).side_of_street();
       }
 
       bool found_destination = false;
-      for (const auto& e : destination.edges) {
-        if (e.id == path_edges.back().edgeid) {
+      for (const auto& e : destination.path_edges()) {
+        if (e.graph_id() == path_edges.back().edgeid) {
           found_destination = true;
           break;
         }
@@ -388,11 +386,11 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
 
         // 2. path_edges.back().edgeid must be the upstream edge that
         // connects one of destination.edges (twins) at its end node
-        destination.edges.emplace_back(path_edges.back().edgeid,
+        destination.path_edges().emplace_back(path_edges.back().edgeid,
             1.f,
-            destination.edges.front().projected,
-            destination.edges.front().score,
-            destination.edges.front().sos);
+            destination.path_edges().Get(0).ll(),
+            destination.path_edges().Get(0).score(),
+            destination.path_edges().Get(0).side_of_street());
       }
 
 
@@ -402,7 +400,7 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
       // Form the trip path based on mode costing, origin, destination, and path edges
       trip_path = thor::TripPathBuilder::Build(controller, matcher->graphreader(),
           mode_costing, path_edges, origin,
-          destination, std::list<PathLocation>{},
+          destination, std::list<odin::Location>{},
           interrupt, &route_discontinuities);
     } else {
       throw valhalla_exception_t { 442 };

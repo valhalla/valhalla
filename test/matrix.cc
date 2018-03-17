@@ -201,6 +201,22 @@ namespace {
     "costing":"auto"
   })";
 
+  const auto test_request_osrm = R"({
+    "sources":[
+      {"lat":52.106337,"lon":5.101728},
+      {"lat":52.111276,"lon":5.089717},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.094273,"lon":5.075254}
+    ],
+    "costing":"auto"
+  }&format=osrm)";
+
   std::vector<TimeDistance> cost_matrix_answers = {
       {29, 29},
       {1967, 1852},
@@ -302,11 +318,74 @@ void test_matrix() {
 
 }
 
+void test_matrix_osrm() {
+  loki_worker_t loki_worker (config);
+
+  valhalla::valhalla_request_t request(test_request_osrm, valhalla::odin::DirectionsOptions::sources_to_targets);
+
+  loki_worker.matrix (request);
+  auto request_pt = json_to_pt (rapidjson::to_string(request.document));
+  auto request_sources = request_pt.get_child_optional("sources");
+  auto request_targets = request_pt.get_child_optional("targets");
+  std::vector<Location> locations;
+
+  for(const auto& s : *request_sources) {
+    try{ locations.push_back(Location::FromPtree(s.second)); }
+    catch (...) { throw valhalla::valhalla_exception_t{422}; }
+  }
+  for(const auto& t : *request_targets) {
+    try{ locations.push_back(Location::FromPtree(t.second)); }
+    catch (...) { throw valhalla::valhalla_exception_t{423}; }
+  }
+  std::vector<PathLocation> correlated = store_correlated_locations (request.document, locations);
+
+  std::vector<PathLocation> correlated_s (correlated.begin(), correlated.begin() + request_sources->size());
+  std::vector<PathLocation> correlated_t (correlated.begin() + request_sources->size(), correlated.end());
+
+  GraphReader reader (config.get_child("mjolnir"));
+
+  cost_ptr_t costing = CreateSimpleCost(request_pt);
+
+  CostMatrix cost_matrix;
+  std::vector<TimeDistance> results;
+  results = cost_matrix.SourceToTarget(correlated_s, correlated_t, reader, &costing, TravelMode::kDrive, 400000.0);
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist != cost_matrix_answers[i].dist) {
+      throw std::runtime_error("Something is wrong");
+      throw std::runtime_error("result " + std::to_string(i) + "'s distance is not close enough"
+          " to expected value for CostMatrix. Expected: " + std::to_string(cost_matrix_answers[i].dist)
+          + " Actual: " + std::to_string(results[i].dist));
+    }
+    if (results[i].time != cost_matrix_answers[i].time) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s time is not close enough"
+          " to expected value for CostMatrix. Expected: " + std::to_string(cost_matrix_answers[i].time)
+          + " Actual: " + std::to_string(results[i].time));
+    }
+  }
+
+  TimeDistanceMatrix timedist_matrix;
+  results = timedist_matrix.SourceToTarget(correlated_s, correlated_t, reader, &costing, TravelMode::kDrive, 400000.0);
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist != timedist_matrix_answers[i].dist) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s distance is not equal to"
+          " the expected value for TimeDistMatrix. Expected: " + std::to_string(timedist_matrix_answers[i].dist)
+          + " Actual: " + std::to_string(results[i].dist));
+    }
+    if (results[i].time != timedist_matrix_answers[i].time) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s time is not equal to"
+          " the expected value for TimeDistMatrix. Expected: " + std::to_string(timedist_matrix_answers[i].time)
+          + " Actual: " + std::to_string(results[i].time));
+    }
+  }
+
+}
+
 int main(int argc, char* argv[]) {
   test::suite suite ("matrix");
   logging::Configure({{"type", ""}}); //silence logs
 
   suite.test(TEST_CASE(test_matrix));
+  //suite.test(TEST_CASE(test_matrix_osrm));
 
   return suite.tear_down();
 }
