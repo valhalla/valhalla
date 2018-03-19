@@ -488,8 +488,8 @@ namespace {
     json::MapPtr osrm_maneuver(const valhalla::odin::TripDirections::Maneuver& maneuver,
                 std::list<odin::TripPath>::const_iterator path_leg,
                 const PointLL& man_ll, const bool depart, const bool arrive,
-                const uint32_t count, const std::string mode, const std::string prev_mode,
-                const std::string name) {
+                const uint32_t count, const std::string& mode, const std::string& prev_mode,
+                const std::string& name) {
       auto osrm_man = json::map({});
 
       // Set the location
@@ -521,14 +521,23 @@ namespace {
         maneuver_type = "arrive";
       } else if (mode != prev_mode) {
         maneuver_type = "notification";
+      } else if (maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutEnter) {
+        if (!name.empty())
+          maneuver_type = name;
+        else
+          maneuver_type = "roundabout";
+        // Roundabout count
+        if (maneuver.has_roundabout_exit_count()) {
+          osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+        }
+      } else if (maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutExit) {
+        maneuver_type = "exit roundabout";
       } else {
         // Special cases
         const auto& prior_edge = path_leg->node(idx-1).edge();
         const auto& current_edge = path_leg->node(idx).edge();
         bool new_name = maneuver.type() == odin::TripDirections_Maneuver_Type_kContinue ||
                         maneuver.type() == odin::TripDirections_Maneuver_Type_kBecomes;
-        bool roundabout = maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutEnter ||
-                          maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutExit;
         bool ramp = current_edge.use() == odin::TripPath_Use_kRampUse;
         bool fork = path_leg->node(idx).fork();
         bool merge = prior_edge.use() == odin::TripPath_Use_kRampUse &&
@@ -543,18 +552,6 @@ namespace {
           maneuver_type = ramp_type(prior_edge, idx, path_leg);
         } else if (new_name) {
           maneuver_type = "new name";
-        } else if (maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutEnter) {
-
-          if (!name.empty())
-            maneuver_type = name;
-          else
-            maneuver_type = "roundabout";
-          // Roundabout count
-          if (maneuver.has_roundabout_exit_count()) {
-            osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
-          }
-        } else if (maneuver.type() == odin::TripDirections_Maneuver_Type_kRoundaboutExit) {
-          maneuver_type = "exit roundabout";
         }
 
         // Are there any intersecting edges
