@@ -30,7 +30,10 @@ namespace {
   // Maximum edge score - base this on costing type.
   // Large values can cause very bad performance. Setting this back
   // to 2 hours for bike and pedestrian and 12 hours for driving routes.
-  // Need to re-evaluate edge scores and balance performacne vs. quality.
+  // TODO - re-evaluate edge scores and balance performance vs. quality.
+  // Perhaps tie the edge score logic in with the costing type - but
+  // may want to do this in loki. At this point in thor the costing method
+  // has not yet been constructed.
   constexpr float kMaxScore[] = {
     43200.0f, // auto
     43200.0f, // auto_shorter
