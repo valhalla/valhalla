@@ -27,9 +27,25 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-  //maximum edge score (24 hours)
-  constexpr float kMaxScore = 86400.0f;
-
+  // Maximum edge score - base this on costing type.
+  // Large values can cause very bad performance. Setting this back
+  // to 2 hours for bike and pedestrian and 12 hours for driving routes.
+  // TODO - re-evaluate edge scores and balance performance vs. quality.
+  // Perhaps tie the edge score logic in with the costing type - but
+  // may want to do this in loki. At this point in thor the costing method
+  // has not yet been constructed.
+  constexpr float kMaxScore[] = {
+    43200.0f, // auto
+    43200.0f, // auto_shorter
+    7200.0f,  // bicycle
+    43200.0f, // bus
+    43200.0f, // hov
+    14400.0f, // motor_scooter
+    7200.0f,  // multimodal
+    7200.0f,  // pedestrian
+    14400.0f, // transit
+    43200.0f  // truck
+  };
   constexpr double kMilePerMeter = 0.000621371;
 
   std::vector<baldr::PathLocation> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
@@ -49,10 +65,35 @@ namespace {
             return i.score < j.score;
           });
 
+        // TODO - this gets simplified with proto updates
+        uint32_t index;
+        auto costing = rapidjson::get<std::string>(request,  "/costing");
+        if (costing == "auto") {
+          index = 0;
+        } else if (costing == "auto_shorter") {
+          index = 1;
+        } else if (costing == "bicycle") {
+          index = 2;
+        } else if (costing == "bus") {
+          index = 3;
+        } else if (costing == "hov") {
+          index = 4;
+        } else if (costing == "motor_scooter") {
+          index = 5;
+        } else if (costing == "multimodal") {
+          index = 6;
+        } else if (costing == "pedestrian") {
+          index = 7;
+        } else if (costing == "transit") {
+          index = 8;
+        } else {
+          index = 9; // truck
+        }
+
         for(auto& e : correlated.back().edges) {
           e.score -= minScoreEdge.score;
-          if (e.score > kMaxScore) {
-            e.score = kMaxScore;
+          if (e.score > kMaxScore[index]) {
+            e.score = kMaxScore[index];
           }
         }
       }
