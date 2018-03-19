@@ -58,8 +58,6 @@ namespace valhalla {
       void init_height(valhalla_request_t& request);
       void init_transit_available(valhalla_request_t& request);
 
-      void toPBF(const baldr::PathLocation& pl, odin::Location* l);
-
       boost::property_tree::ptree config;
       std::vector<baldr::Location> locations;
       std::vector<baldr::Location> sources;

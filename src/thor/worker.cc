@@ -32,36 +32,23 @@ namespace {
 
   constexpr double kMilePerMeter = 0.000621371;
 
-  std::vector<odin::Location> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
-    //we require correlated locations
-    std::vector<odin::Location> correlated;
-    correlated.reserve(locations.size());
-    size_t i = 0;
-    do {
-      auto path_location = rapidjson::get_child_optional(request, ("/correlated_" + std::to_string(i)).c_str());
-      if(!path_location)
-        break;
-
-      try {
-        correlated.emplace_back(PathLocation::FromRapidJson(locations, *path_location));
-        auto minScoreEdge = *std::min_element (correlated.back().path_edges().begin(), correlated.back().path_edges().end(),
+  void adjust_scores(valhalla_request_t& request) {
+    for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
+      for(auto& location : *locations) {
+        auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
           [](odin::Location::PathEdge i, odin::Location::PathEdge j)->bool {
             return i.score() < j.score();
           });
 
-        for(auto& e : *correlated.back().mutable_path_edges()) {
+        for(auto& e : *location.mutable_path_edges()) {
           e.set_score(e.score() - minScoreEdge.score());
-          if (e.score() > kMaxScore) {
+          if (e.score() > kMaxScore)
             e.set_score(kMaxScore);
-          }
         }
       }
-      catch (...) {
-        throw valhalla_exception_t{420};
-      }
-    }while(++i);
-    return correlated;
+    }
   }
+
 }
 
 namespace valhalla {
@@ -131,8 +118,6 @@ namespace valhalla {
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
 
-        boost::optional<int> date_time_type = rapidjson::get_optional<int>(request.document, "/date_time/type");
-
         worker_t::result_t result{true};
         double denominator = 0;
         size_t order_index = 0;
@@ -162,9 +147,9 @@ namespace valhalla {
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
             result.messages.emplace_back(std::move(serialized_options));
-            for (const auto& trippath : route(request, date_time_type))
+            for (const auto& trippath : route(request))
               result.messages.emplace_back(trippath.SerializeAsString());
-            denominator = correlated.size();
+            denominator = request.options.locations_size();
             break;
           case odin::DirectionsOptions::trace_route:
             // Forward the original request
@@ -253,43 +238,9 @@ namespace valhalla {
       return costing;
     }
 
-    void thor_worker_t::parse_locations(const valhalla_request_t& request) {
+    void thor_worker_t::parse_locations(valhalla_request_t& request) {
       //we require locations
-      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/locations");
-      auto request_sources = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/sources");
-      auto request_targets = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/targets");
-      if(request_locations) {
-        for(const auto& location : *request_locations) {
-          try{ locations.push_back(baldr::Location::FromRapidJson(location)); }
-          catch (...) { throw valhalla_exception_t{421}; }
-        }
-        correlated = store_correlated_locations(request.document, locations);
-      }//if we have a sources and targets request here we will divy up the correlated amongst them
-      else if(request_sources && request_targets) {
-        for(const auto& s : *request_sources) {
-          try{ locations.push_back(baldr::Location::FromRapidJson(s)); }
-          catch (...) { throw valhalla_exception_t{422}; }
-        }
-        for(const auto& t : *request_targets) {
-          try{ locations.push_back(baldr::Location::FromRapidJson(t)); }
-          catch (...) { throw valhalla_exception_t{423}; }
-        }
-        correlated = store_correlated_locations(request.document, locations);
-      }
-
-      //type - 0: current, 1: depart, 2: arrive
-      if (!request.document.HasMember("/date_time/type"))
-        return;
-
-      int date_time_type = rapidjson::get<float>(request.document, "/date_time/type");
-      auto date_time_value = rapidjson::get_optional<std::string>(request.document, "/date_time/value");
-
-      if (date_time_type == 0) //current.
-        locations.front().date_time_ = "current";
-      else if (date_time_type == 1) //depart at
-        locations.front().date_time_ = date_time_value;
-      else if (date_time_type == 2) //arrive)
-        locations.back().date_time_ = date_time_value;
+      adjust_scores(request);
     }
 
     void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
@@ -369,9 +320,7 @@ namespace valhalla {
       astar.Clear();
       bidir_astar.Clear();
       multi_modal_astar.Clear();
-      locations.clear();
       trace.clear();
-      correlated.clear();
       isochrone_gen.Clear();
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())

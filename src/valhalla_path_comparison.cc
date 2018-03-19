@@ -113,9 +113,11 @@ void walk_edges(const std::string& shape, GraphReader& reader, const std::string
   locations.push_back({shape_pts.back()});
   const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_location;
+  valhalla::odin::DirectionsOptions directions_options;
   for (auto loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
+      PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(), reader);
     } catch (...) {
       return;
     }
@@ -123,7 +125,7 @@ void walk_edges(const std::string& shape, GraphReader& reader, const std::string
 
   std::vector<PathInfo> path_infos;
   std::vector<PathLocation> correlated;
-  bool rtn = RouteMatcher::FormPath(mode_costing, mode, reader, measurements, path_location, path_infos);
+  bool rtn = RouteMatcher::FormPath(mode_costing, mode, reader, measurements, directions_options.locations(), path_infos);
   if (!rtn) {
     std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
   }

@@ -27,7 +27,7 @@ class RouteMatcher {
   static bool FormPath(const std::shared_ptr<sif::DynamicCost>* mode_costing,
                        const sif::TravelMode& mode, baldr::GraphReader& reader,
                        const std::vector<meili::Measurement>& shape,
-                       const std::vector<odin::Location>& correlated,
+                       const google::protobuf::RepeatedPtrField<odin::Location>& correlated,
                        std::vector<PathInfo>& path_infos);
 };
 

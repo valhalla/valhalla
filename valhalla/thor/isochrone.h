@@ -55,7 +55,7 @@ class Isochrone {
    * @param  mode         Travel mode
    */
   std::shared_ptr<const GriddedData<midgard::PointLL> > Compute(
-          std::vector<odin::Location>& origin_locs,
+          google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locs,
           const unsigned int max_minutes,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -65,11 +65,11 @@ class Isochrone {
   // the reverse direction - construct times for gridded data indicating how
   // long it takes to reach the destination location.
   std::shared_ptr<const GriddedData<midgard::PointLL> > ComputeReverse(
-               std::vector<odin::Location>& dest_locations,
-               const unsigned int max_minutes,
-               baldr::GraphReader& graphreader,
-               const std::shared_ptr<sif::DynamicCost>* mode_costing,
-               const sif::TravelMode mode);
+      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
+      const unsigned int max_minutes,
+      baldr::GraphReader& graphreader,
+      const std::shared_ptr<sif::DynamicCost>* mode_costing,
+      const sif::TravelMode mode);
 
   /**
    * Compute an isochrone grid for multi-modal routes. This creates and
@@ -84,11 +84,11 @@ class Isochrone {
    * @param  mode         Travel mode
    */
   std::shared_ptr<const GriddedData<midgard::PointLL> > ComputeMultiModal(
-               std::vector<odin::Location>& origin_locations,
-               const unsigned int max_minutes,
-               baldr::GraphReader& graphreader,
-               const std::shared_ptr<sif::DynamicCost>* mode_costing,
-               const sif::TravelMode mode);
+      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
+      const unsigned int max_minutes,
+      baldr::GraphReader& graphreader,
+      const std::shared_ptr<sif::DynamicCost>* mode_costing,
+      const sif::TravelMode mode);
 
  protected:
   float shape_interval_;        // Interval along shape to mark time
@@ -141,7 +141,7 @@ class Isochrone {
    * @param  origin_locations  List of origin locations.
    */
   void ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
-                        std::vector<odin::Location>& origin_locations);
+                        google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations);
 
   /**
    * Expand from the node along the forward search path.
@@ -177,7 +177,7 @@ class Isochrone {
    * @param  costing           Dynamic costing.
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
-                  std::vector<odin::Location>& origin_locations,
+                  google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
                   const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -187,7 +187,7 @@ class Isochrone {
    * @param  costing           Dynamic costing.
    */
   void SetOriginLocationsMM(baldr::GraphReader& graphreader,
-                  std::vector<odin::Location>& origin_locations,
+                  google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
                   const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -197,7 +197,7 @@ class Isochrone {
     * @param  costing           Dynamic costing.
     */
   void SetDestinationLocations(baldr::GraphReader& graphreader,
-                       std::vector<odin::Location>& dest_locations,
+                       google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
                        const std::shared_ptr<sif::DynamicCost>& costing);
 
 };

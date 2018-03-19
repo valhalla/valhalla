@@ -51,7 +51,7 @@ namespace valhalla {
      */
     template <class coord_t>
     std::string serializeIsochrones(const valhalla_request_t& request, const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
-        bool polygons = true, const std::unordered_map<float, std::string>& colors = {}, const std::vector<odin::Location>& locations = {});
+        bool polygons = true, const std::unordered_map<float, std::string>& colors = {}, bool show_locations = false);
 
     /**
      * Turn heights and ranges into a height response
@@ -104,6 +104,20 @@ namespace valhalla {
      */
     void jsonToProtoRoute(const std::string& json_route, Route& proto_route);
   }
+}
+
+namespace osrm {
+
+  /*
+   *
+   */
+  valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location);
+
+  /*
+   *
+   */
+  valhalla::baldr::json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::odin::Location>& locations);
+
 }
 
 

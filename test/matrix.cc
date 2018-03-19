@@ -134,31 +134,21 @@ namespace {
       throw valhalla::valhalla_exception_t{100};
     return d;
   }
-  std::vector<PathLocation> store_correlated_locations(const rapidjson::Document& request, const std::vector<Location>& locations) {
-    //we require correlated locations
-    std::vector<PathLocation> correlated;
-    correlated.reserve(locations.size());
-    size_t i = 0;
-    do {
-      auto path_location = rapidjson::get_child_optional(request, ("/correlated_" + std::to_string(i)).c_str());
-      if(!path_location)
-        break;
-      try {
-        correlated.emplace_back(PathLocation::FromRapidJson(locations, *path_location));
-        auto minScoreEdge = *std::min_element(correlated.back().edges.begin(),
-            correlated.back().edges.end(),
-            [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
-              return i.score < j.score;
-            });
+  void adjust_scores(valhalla::valhalla_request_t& request) {
+    for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
+      for(auto& location : *locations) {
+        auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
+          [](valhalla::odin::Location::PathEdge i, valhalla::odin::Location::PathEdge j)->bool {
+            return i.score() < j.score();
+          });
 
-        for (auto& e : correlated.back().edges) {
-          e.score -= minScoreEdge.score;
+        for(auto& e : *location.mutable_path_edges()) {
+          e.set_score(e.score() - minScoreEdge.score());
+          if (e.score() > 86400)
+            e.set_score(86400);
         }
-      } catch (...) {
-        throw valhalla::valhalla_exception_t { 420 };
       }
-    }while(++i);
-    return correlated;
+    }
   }
 
   const auto config = json_to_pt(R"({
@@ -261,25 +251,9 @@ void test_matrix() {
 
   valhalla::valhalla_request_t request(test_request, valhalla::odin::DirectionsOptions::sources_to_targets);
   loki_worker.matrix (request);
+  adjust_scores(request);
 
   auto request_pt = json_to_pt (rapidjson::to_string(request.document));
-
-  auto request_sources = request_pt.get_child_optional("sources");
-  auto request_targets = request_pt.get_child_optional("targets");
-  std::vector<Location> locations;
-
-  for(const auto& s : *request_sources) {
-    try{ locations.push_back(Location::FromPtree(s.second)); }
-    catch (...) { throw valhalla::valhalla_exception_t{422}; }
-  }
-  for(const auto& t : *request_targets) {
-    try{ locations.push_back(Location::FromPtree(t.second)); }
-    catch (...) { throw valhalla::valhalla_exception_t{423}; }
-  }
-  std::vector<PathLocation> correlated = store_correlated_locations (request.document, locations);
-
-  std::vector<PathLocation> correlated_s (correlated.begin(), correlated.begin() + request_sources->size());
-  std::vector<PathLocation> correlated_t (correlated.begin() + request_sources->size(), correlated.end());
 
   GraphReader reader (config.get_child("mjolnir"));
 
@@ -287,7 +261,7 @@ void test_matrix() {
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
-  results = cost_matrix.SourceToTarget(correlated_s, correlated_t, reader, &costing, TravelMode::kDrive, 400000.0);
+  results = cost_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     if (results[i].dist != cost_matrix_answers[i].dist) {
       throw std::runtime_error("result " + std::to_string(i) + "'s distance is not close enough"
@@ -302,7 +276,54 @@ void test_matrix() {
   }
 
   TimeDistanceMatrix timedist_matrix;
-  results = timedist_matrix.SourceToTarget(correlated_s, correlated_t, reader, &costing, TravelMode::kDrive, 400000.0);
+  results = timedist_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, &costing, TravelMode::kDrive, 400000.0);
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist != timedist_matrix_answers[i].dist) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s distance is not equal to"
+          " the expected value for TimeDistMatrix. Expected: " + std::to_string(timedist_matrix_answers[i].dist)
+          + " Actual: " + std::to_string(results[i].dist));
+    }
+    if (results[i].time != timedist_matrix_answers[i].time) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s time is not equal to"
+          " the expected value for TimeDistMatrix. Expected: " + std::to_string(timedist_matrix_answers[i].time)
+          + " Actual: " + std::to_string(results[i].time));
+    }
+  }
+
+}
+
+void test_matrix_osrm() {
+  loki_worker_t loki_worker (config);
+
+  valhalla::valhalla_request_t request(test_request_osrm, valhalla::odin::DirectionsOptions::sources_to_targets);
+
+  loki_worker.matrix (request);
+  adjust_scores(request);
+  auto request_pt = json_to_pt (rapidjson::to_string(request.document));
+
+  GraphReader reader (config.get_child("mjolnir"));
+
+  cost_ptr_t costing = CreateSimpleCost(request_pt);
+
+  CostMatrix cost_matrix;
+  std::vector<TimeDistance> results;
+  results = cost_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, &costing, TravelMode::kDrive, 400000.0);
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist != cost_matrix_answers[i].dist) {
+      throw std::runtime_error("Something is wrong");
+      throw std::runtime_error("result " + std::to_string(i) + "'s distance is not close enough"
+          " to expected value for CostMatrix. Expected: " + std::to_string(cost_matrix_answers[i].dist)
+          + " Actual: " + std::to_string(results[i].dist));
+    }
+    if (results[i].time != cost_matrix_answers[i].time) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s time is not close enough"
+          " to expected value for CostMatrix. Expected: " + std::to_string(cost_matrix_answers[i].time)
+          + " Actual: " + std::to_string(results[i].time));
+    }
+  }
+
+  TimeDistanceMatrix timedist_matrix;
+  results = timedist_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     if (results[i].dist != timedist_matrix_answers[i].dist) {
       throw std::runtime_error("result " + std::to_string(i) + "'s distance is not equal to"

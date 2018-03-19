@@ -589,7 +589,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
-            Cost dest_cost = costing->EdgeCost(tile->directededge(destination_edge.graph_id())) *
+            Cost dest_cost = costing->EdgeCost(tile->directededge(GraphId(destination_edge.graph_id()))) *
                                             (1.0f - destination_edge.dist());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
@@ -650,7 +650,7 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
     // up to the end of the destination edge.
     GraphId id(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(id);
-    destinations_[edge.graph_id()] = costing->EdgeCost(tile->directededge(edge.graph_id())) *
+    destinations_[edge.graph_id()] = costing->EdgeCost(tile->directededge(id)) *
                                 (1.0f - edge.dist());
 
     // We need to penalize this location based on its score (distance in meters from input)

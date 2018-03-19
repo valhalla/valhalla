@@ -27,46 +27,54 @@ using namespace valhalla::baldr;
 using namespace valhalla::tyr;
 using namespace std;
 
-namespace osrm_serializers {
+double distance_scale = kKmPerMeter;
+
+namespace osrm {
+
+  valhalla::baldr::json::MapPtr waypoint(const odin::Location& location) {
+    // Create a waypoint to add to the array
+    auto waypoint = json::map({});
+
+    // Output location as a lon,lat array. Note this is the projected
+    // lon,lat on the nearest road.
+    PointLL input_ll(location.ll().lng(), location.ll().lat());
+    PointLL proj_ll;
+    if (location.path_edges_size() > 0 && !location.has_projected_ll()) {
+      proj_ll = PointLL(location.path_edges(0).ll().lng(), location.path_edges(0).ll().lat());
+    } else {
+      proj_ll = PointLL(location.projected_ll().lng(), location.projected_ll().lat());
+    }
+
+    auto loc = json::array({});
+    loc->emplace_back(json::fp_t{proj_ll.lng(), 6});
+    loc->emplace_back(json::fp_t{proj_ll.lat(), 6});
+    waypoint->emplace("location", loc);
+
+    // Add street name.
+    std::string name = location.path_edges_size() && location.path_edges(0).names_size()
+        ? location.path_edges(0).names(0) : "";
+    waypoint->emplace("street", name);
+
+    // Add distance in meters from the input location to the nearest
+    // point on the road used in the route
+    float distance = input_ll.Distance(proj_ll);
+    waypoint->emplace("distance", json::fp_t{distance * distance_scale, 3});
+
+    // Add hint. Goal is for the hint returned from a locate request to be able
+    // to quickly find the edge and point along the edge in a route request.
+    // Defer this - not currently used in OSRM.
+    waypoint->emplace("hint", std::string("TODO"));
+
+    return waypoint;
+  }
 
   // Serialize locations (called waypoints in OSRM). Waypoints are described here:
   //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-  json::ArrayPtr waypoints(const std::vector<valhalla::odin::Location>& locations){
-    int index = 0;
+  json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locations){
     auto waypoints = json::array({});
-    for (const auto& location : locations) {
-
-      index = 1;
-
-      // Create a waypoint to add to the array
-      auto waypoint = json::map({});
-
-      // Output location as a lon,lat array. Note this is the projected
-      // lon,lat on the nearest road.
-      PointLL input_ll(location.ll().lng(), location.ll().lat());
-      PointLL proj_ll(location.projected_ll().lng(), location.projected_ll().lat());
-      auto loc = json::array({});
-      loc->emplace_back(json::fp_t{proj_ll.lng(), 6});
-      loc->emplace_back(json::fp_t{proj_ll.lat(), 6});
-      waypoint->emplace("location", loc);
-
-      // Add street name.
-      waypoint->emplace("street", location.name());
-
-      // Add distance in meters from the input location to the nearest
-      // point on the road used in the route
-      float distance = input_ll.Distance(proj_ll);
-      waypoint->emplace("distance", json::fp_t{distance, 1});
-
-      // Add hint. Goal is for the hint returned from a locate request to be able
-      // to quickly find the edge and point along the edge in a route request.
-      // Defer this - not currently used in OSRM.
-      waypoint->emplace("hint", std::string("TODO"));
-
-      // Add the waypoint to the JSON array
-      waypoints->emplace_back(waypoint);
-    }
+    for (const auto& location : locations)
+      waypoints->emplace_back(waypoint(location));
     return waypoints;
   }
-}
 
+}

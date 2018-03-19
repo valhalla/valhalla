@@ -226,7 +226,7 @@ namespace {
 	{163,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
 	{170,R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-	{171,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{171,R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 
 	{199,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
 
@@ -274,7 +274,7 @@ namespace {
 
 	{440,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
 	{441,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-	{442,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+	{442,R"({"code":"NoRoute","message":"Impossible route between points"})"},
 	{443,R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 	{444,R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
 	{445,R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
@@ -450,6 +450,16 @@ namespace {
     //get the targets in there
     parse_locations(doc, options.mutable_targets(), "targets");
 */
+
+    //time
+    auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
+    if(date_time_type)
+      options.set_date_time_type(static_cast<valhalla::odin::DirectionsOptions::DateTimeType>(*date_time_type));
+    auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
+    if(date_time_value)
+      options.set_date_time(*date_time_value);
+
+    //TODO: set times on specific locations
 
     //force these into the output so its obvious what we did to the user
     doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);

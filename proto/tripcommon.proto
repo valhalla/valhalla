@@ -55,8 +55,9 @@ message Location {
   
   //outputs
   repeated PathEdge path_edges = 19;
-  optional uint32 original_index = 20;
-  optional LatLng projected_ll = 21;
+  repeated PathEdge filtered_edges = 20;
+  optional uint32 original_index = 21;
+  optional LatLng projected_ll = 22;
 }
 
 message TransitEgressInfo {

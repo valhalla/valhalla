@@ -113,7 +113,7 @@ namespace valhalla {
           //TODO: remove this when using pbf everywhere
           rapidjson::Pointer("/correlated_" + std::to_string(i)).
               Set(request.document, correlated.ToRapidJson(i,allocator));
-          toPBF(correlated, request.options.mutable_locations()->Add());
+          PathLocation::toPBF(correlated, request.options.mutable_locations()->Add(), reader);
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           if (!connectivity_map)

@@ -47,7 +47,7 @@ namespace thor {
 /*
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
-odin::TripPath thor_worker_t::trace_route(const valhalla_request_t& request) {
+odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
 
   // Parse request
   parse_locations(request);
@@ -73,7 +73,7 @@ odin::TripPath thor_worker_t::trace_route(const valhalla_request_t& request) {
     switch (shape_match->second) {
       case EDGE_WALK:
         try {
-          trip_path = route_match(controller);
+          trip_path = route_match(request, controller);
           if (trip_path.node().size() == 0)
             throw;
         } catch (...) {
@@ -95,7 +95,7 @@ odin::TripPath thor_worker_t::trace_route(const valhalla_request_t& request) {
       // then we want to fallback to try and use meili map matching to match to local route network.
       //No shortcuts are used and detailed information at every intersection becomes available.
       case WALK_OR_SNAP:
-        trip_path = route_match(controller);
+        trip_path = route_match(request, controller);
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
@@ -124,14 +124,14 @@ odin::TripPath thor_worker_t::trace_route(const valhalla_request_t& request) {
  * form the list of edges. It will return no nodes if path not found.
  *
  */
-odin::TripPath thor_worker_t::route_match(const AttributesController& controller) {
+odin::TripPath thor_worker_t::route_match(valhalla_request_t& request, const AttributesController& controller) {
   odin::TripPath trip_path;
   std::vector<PathInfo> path_infos;
-  if (RouteMatcher::FormPath(mode_costing, mode, reader, trace, correlated, path_infos)) {
+  if (RouteMatcher::FormPath(mode_costing, mode, reader, trace, request.options.locations(), path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
     trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing,
-                                             path_infos, correlated.front(),
-                                             correlated.back(), std::list<odin::Location>{},
+                                             path_infos, *request.options.mutable_locations()->begin(),
+                                             *request.options.mutable_locations()->rbegin(), std::list<odin::Location>{},
                                              interrupt);
   }
 
@@ -346,10 +346,12 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
 
     if ((first_result_with_state != match_results.end())
         && (last_result_with_state != match_results.rend())) {
-      odin::Location origin = matcher->state_container().state(
-          first_result_with_state->stateid).candidate();
-      odin::Location destination = matcher->state_container().state(
-          last_result_with_state->stateid).candidate();
+      odin::Location origin;
+      PathLocation::toPBF(matcher->state_container().state(
+          first_result_with_state->stateid).candidate(), &origin, reader);
+      odin::Location destination;
+      PathLocation::toPBF(matcher->state_container().state(
+          last_result_with_state->stateid).candidate(), &destination, reader);
 
       bool found_origin = false;
       for (const auto& e : origin.path_edges()) {
@@ -365,11 +367,10 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
 
         // 2. path_edges.front().edgeid must be the downstream edge that
         // connects one of origin.edges (twins) at its start node
-        origin.path_edges().emplace_back(path_edges.front().edgeid),
-            0.f,
-            origin.path_edges().Get(0).ll(),
-            origin.path_edges().Get(0).score(),
-            origin.path_edges().Get(0).side_of_street();
+        auto* pe = origin.mutable_path_edges()->Add();
+        pe->CopyFrom(origin.path_edges(0));
+        pe->set_graph_id(path_edges.front().edgeid);
+        pe->set_dist(0.f);
       }
 
       bool found_destination = false;
@@ -386,11 +387,10 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
 
         // 2. path_edges.back().edgeid must be the upstream edge that
         // connects one of destination.edges (twins) at its end node
-        destination.path_edges().emplace_back(path_edges.back().edgeid,
-            1.f,
-            destination.path_edges().Get(0).ll(),
-            destination.path_edges().Get(0).score(),
-            destination.path_edges().Get(0).side_of_street());
+        auto* pe = destination.mutable_path_edges()->Add();
+        pe->CopyFrom(destination.path_edges(0));
+        pe->set_graph_id(path_edges.back().edgeid);
+        pe->set_dist(1.f);
       }
 
 

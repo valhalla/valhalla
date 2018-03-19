@@ -200,41 +200,6 @@ namespace valhalla {
         reader.Clear();
     }
 
-    void loki_worker_t::toPBF(const PathLocation& pl, odin::Location* l) {
-      l->mutable_ll()->set_lng(pl.latlng_.first);
-      l->mutable_ll()->set_lat(pl.latlng_.second);
-      l->set_type(pl.stoptype_ == Location::StopType::BREAK ? odin::Location::kBreak : odin::Location::kThrough);
-      if(!pl.name_.empty()) l->set_name(pl.name_);
-      if(!pl.street_.empty()) l->set_street(pl.street_);
-      if(!pl.city_.empty()) l->set_city(pl.city_);
-      if(!pl.state_.empty()) l->set_state(pl.state_);
-      if(!pl.zip_.empty()) l->set_postal_code(pl.zip_);
-      if(!pl.country_.empty()) l->set_country(pl.country_);
-      if(pl.date_time_) l->set_date_time(*pl.date_time_);
-      if(pl.heading_) l->set_heading(*pl.heading_);
-      if(pl.heading_tolerance_) l->set_heading_tolerance(*pl.heading_tolerance_);
-      if(pl.node_snap_tolerance_) l->set_node_snap_tolerance(*pl.node_snap_tolerance_);
-      if(pl.way_id_) l->set_way_id(*pl.way_id_);
-      l->set_minimum_reachability(pl.minimum_reachability_);
-      l->set_radius(pl.radius_);
-
-      auto* path_edges = l->mutable_path_edges();
-      const GraphTile* tile = nullptr;
-      for(const auto& e : pl.edges) {
-        auto* edge = path_edges->Add();
-        edge->set_graph_id(e.id);
-        edge->set_dist(e.dist);
-        edge->mutable_ll()->set_lng(e.projected.first);
-        edge->mutable_ll()->set_lat(e.projected.second);
-        edge->set_side_of_street(e.sos == PathLocation::LEFT ? odin::Location::kLeft :
-            (e.sos == PathLocation::RIGHT ? odin::Location::kRight : odin::Location::kNone));
-        edge->set_score(e.score);
-        edge->set_minimum_reachability(e.minimum_reachability);
-        for(const auto& n : reader.edgeinfo(e.id).GetNames())
-          edge->mutable_names()->Add()->assign(n);
-      }
-    }
-
 #ifdef HAVE_HTTP
     void loki_worker_t::limits(valhalla_request_t& request) const {
       for(auto& location : *request.options.mutable_locations()) {
