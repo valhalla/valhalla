@@ -438,6 +438,8 @@ namespace valhalla {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
   const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
+  const headers_t::value_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
+  const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filename=route.gpx"};
 
   worker_t::result_t jsonify_error(const valhalla_exception_t& exception, http_request_info_t& request_info, const valhalla_request_t& request) {
     //get the http status
@@ -520,7 +522,7 @@ namespace valhalla {
 
   worker_t::result_t to_response_xml(const std::string& xml, http_request_info_t& request_info, const valhalla_request_t& request) {
     worker_t::result_t result{false};
-    http_response_t response(200, "OK", xml, headers_t{CORS, XML_MIME});
+    http_response_t response(200, "OK", xml, headers_t{CORS, GPX_MIME, ATTACHMENT});
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;
