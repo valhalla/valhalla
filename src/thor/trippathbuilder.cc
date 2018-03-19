@@ -21,6 +21,7 @@
 #include "sif/costconstants.h"
 #include "proto/tripcommon.pb.h"
 
+using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::sif;
@@ -158,13 +159,6 @@ void SetBoundingBox(TripPath& trip_path, std::vector<PointLL>& shape) {
   max_ll->set_lat(bbox.maxy());
   max_ll->set_lng(bbox.maxx());
 }
-
-}
-
-namespace valhalla {
-namespace thor {
-
-namespace {
 
 // Associate RoadClass values to TripPath proto
 constexpr odin::TripPath_RoadClass kTripPathRoadClass[] = {
@@ -366,37 +360,52 @@ TripPath_Use GetTripPathUse(const Use use) {
 }
 
 /**
- * Add a location to the Trip path.
- * @param  trip_path  Trip path (proto)
- * @param  loc        Location information.
- * @param  type       Location type (break or through)
- * @return Returns a proto Location object.
+ * Removes all edges but the one with the id that we are passing
+ * @param location  The location
+ * @param edge_id   The edge id to keep
  */
-odin::Location* AddLocation(TripPath& trip_path, const odin::Location& loc,
-                            const odin::Location::Type type) {
-  odin::Location* tp_loc = trip_path.add_location();
-  odin::LatLng* ll = tp_loc->mutable_ll();
-  ll->set_lat(loc.ll().lat());
-  ll->set_lng(loc.ll().lng());
-  tp_loc->set_type(type);
-  if (!loc.has_name())
-    tp_loc->set_name(loc.name());
-  if (!loc.has_street())
-    tp_loc->set_street(loc.street());
-  if (!loc.has_city())
-    tp_loc->set_city(loc.city());
-  if (!loc.has_state())
-    tp_loc->set_state(loc.state());
-  if (!loc.has_postal_code())
-    tp_loc->set_postal_code(loc.postal_code());
-  if (!loc.has_country())
-    tp_loc->set_country(loc.country());
-  if (loc.has_heading())
-    tp_loc->set_heading(loc.heading());
-  if (loc.has_date_time())
-    tp_loc->set_date_time(loc.date_time());
+void RemovePathEdges(odin::Location* location, const GraphId& edge_id) {
+  auto pos = std::find_if(location->path_edges().begin(), location->path_edges().end(), [&edge_id](const odin::Location::PathEdge& e){
+    return e.graph_id() == edge_id;
+  });
+  if(pos == location->path_edges().end())
+    location->mutable_path_edges()->Clear();
+  else if(location->path_edges_size() > 1) {
+    location->mutable_path_edges()->SwapElements(0, pos - location->path_edges().begin());
+    location->mutable_path_edges()->DeleteSubrange(1, location->path_edges_size() - 1);
+  }
+}
 
-  return tp_loc;
+/**
+ *
+ */
+void CopyLocations(TripPath& trip_path, const odin::Location& origin, const std::list<odin::Location>& throughs,
+    const odin::Location& dest, const std::vector<PathInfo>& path) {
+  //origin
+  trip_path.add_location()->CopyFrom(origin);
+  auto pe = path.begin();
+  RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
+
+  //throughs
+  for (const auto& through : throughs) {
+    //copy
+    odin::Location* tp_through = trip_path.add_location();
+    tp_through->CopyFrom(through);
+    //id set
+    std::unordered_set<uint64_t> ids;
+    for(const auto& e : tp_through->path_edges())
+      ids.insert(e.graph_id());
+    //find id
+    auto found = std::find_if(pe, path.end(), [&ids](const PathInfo& pi) {
+      return ids.find(pi.edgeid) != ids.end();
+    });
+    pe = found;
+    RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), pe->edgeid);
+  }
+
+  //destination
+  trip_path.add_location()->CopyFrom(dest);
+  RemovePathEdges(trip_path.mutable_location(trip_path.location_size() - 1), path.back().edgeid);
 }
 
 /**
@@ -490,6 +499,9 @@ void AddTransitNodes(TripPath_Node* trip_node, const NodeInfo* node,
   }
 }
 
+namespace valhalla {
+namespace thor {
+
 // Default constructor
 TripPathBuilder::TripPathBuilder() {
 }
@@ -521,14 +533,9 @@ TripPath TripPathBuilder::Build(
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
-  odin::Location* tp_orig = AddLocation(trip_path, origin,
-                               odin::Location::kBreak);
-  for (const auto& through : through_loc) {
-    odin::Location* tp_through = AddLocation(trip_path, through,
-                                    odin::Location::kThrough);
-  }
-  odin::Location* tp_dest = AddLocation(trip_path, dest,
-                                 odin::Location::kBreak);
+  CopyLocations(trip_path, origin, through_loc, dest, path);
+  auto* tp_orig = trip_path.mutable_location(0);
+  auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
   uint32_t origin_sec_from_mid = 0;
   if (origin.has_date_time())
