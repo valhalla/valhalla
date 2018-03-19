@@ -43,7 +43,9 @@ namespace osrm {
     waypoint->emplace("location", loc);
 
     // Add street name.
-    waypoint->emplace("street", location.name());
+    std::string name = location.path_edges_size() && location.path_edges(0).names_size()
+        ? location.path_edges(0).names(0) : "";
+    waypoint->emplace("street", name);
 
     // Add distance in meters from the input location to the nearest
     // point on the road used in the route
