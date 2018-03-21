@@ -23,9 +23,6 @@ namespace valhalla {
   namespace loki {
 
     std::vector<PointLL> loki_worker_t::init_height(valhalla_request_t& request) {
-      //get some parameters
-      auto resample_distance = rapidjson::get_optional<double>(request.document, "/resample_distance");
-
       //not enough shape
       if (request.options.shape_size() < 1)
         throw valhalla_exception_t{312};
@@ -36,13 +33,13 @@ namespace valhalla {
 
       //resample the shape
       bool resampled = false;
-      if(resample_distance) {
-        if(*resample_distance < min_resample)
+      if(request.options.has_resample_distance()) {
+        if(request.options.resample_distance() < min_resample)
           throw valhalla_exception_t{313, " " + std::to_string(min_resample) + " meters"};
         if(request.options.shape_size() > 1) {
           //resample the shape but make sure to keep the first and last shapepoint
           auto last = shape.back();
-          shape = midgard::resample_spherical_polyline(shape, *resample_distance);
+          shape = midgard::resample_spherical_polyline(shape, request.options.resample_distance());
           shape.emplace_back(std::move(last));
           //put it back
           request.options.clear_shape();

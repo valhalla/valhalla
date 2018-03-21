@@ -501,6 +501,11 @@ namespace {
       }
     }
 
+    //get some parameters
+    auto resample_distance = rapidjson::get_optional<double>(doc, "/resample_distance");
+    if(resample_distance)
+      options.set_resample_distance(*resample_distance);
+
     //force these into the output so its obvious what we did to the user
     doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
     doc.AddMember({"format", allocator},

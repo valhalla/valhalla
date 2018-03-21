@@ -254,7 +254,7 @@ void test_matrix() {
   loki_worker.matrix (request);
   adjust_scores(request);
 
-  auto request_pt = json_to_pt (rapidjson::to_string(request.document));
+  auto request_pt = json_to_pt (test_request);
 
   GraphReader reader (config.get_child("mjolnir"));
 
@@ -301,7 +301,7 @@ void test_matrix_osrm() {
 
   loki_worker.matrix (request);
   adjust_scores(request);
-  auto request_pt = json_to_pt (rapidjson::to_string(request.document));
+  auto request_pt = json_to_pt (test_request_osrm);
 
   GraphReader reader (config.get_child("mjolnir"));
 

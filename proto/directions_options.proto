@@ -64,4 +64,5 @@ message DirectionsOptions {
   optional DateTimeType date_time_type = 17;        // Are you leaving now or then or arriving then
   optional string date_time = 18;                   // And what day and time
   repeated Location shape = 19;                     // Raw shape for map matching
+  optional double resample_distance = 20;           // Resampling shape at regular intervals
 }

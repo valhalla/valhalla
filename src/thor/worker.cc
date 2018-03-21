@@ -234,7 +234,8 @@ namespace valhalla {
 
     std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
       // Parse out the type of route - this provides the costing method to use
-      auto costing = rapidjson::get<std::string>(request.document,  "/costing");
+      auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
+      if(costing.back() == '_') costing.pop_back();
 
       // Set travel mode and construct costing
       if (costing == "multimodal" || costing == "transit") {
