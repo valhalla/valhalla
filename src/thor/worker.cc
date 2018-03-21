@@ -27,23 +27,39 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-  //maximum edge score (24 hours)
-  constexpr float kMaxScore = 86400.0f;
-
+  // Maximum edge score - base this on costing type.
+  // Large values can cause very bad performance. Setting this back
+  // to 2 hours for bike and pedestrian and 12 hours for driving routes.
+  // TODO - re-evaluate edge scores and balance performance vs. quality.
+  // Perhaps tie the edge score logic in with the costing type - but
+  // may want to do this in loki. At this point in thor the costing method
+  // has not yet been constructed.
+  const std::unordered_map<std::string, float> kMaxScores = {
+    {"auto_", 43200.0f},
+    {"auto_shorter", 43200.0f},
+    {"bicycle", 7200.0f},
+    {"bus", 43200.0f},
+    {"hov", 43200.0f},
+    {"motor_scooter", 14400.0f},
+    {"multimodal", 7200.0f},
+    {"pedestrian", 7200.0f},
+    {"transit", 14400.0f},
+    {"truck", 43200.0f},
+  };
   constexpr double kMilePerMeter = 0.000621371;
 
   void adjust_scores(valhalla_request_t& request) {
+    auto max_score = kMaxScores.find(odin::DirectionsOptions::Costing_Name(request.options.costing()));
     for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
       for(auto& location : *locations) {
         auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
           [](odin::Location::PathEdge i, odin::Location::PathEdge j)->bool {
             return i.score() < j.score();
           });
-
         for(auto& e : *location.mutable_path_edges()) {
           e.set_score(e.score() - minScoreEdge.score());
-          if (e.score() > kMaxScore)
-            e.set_score(kMaxScore);
+          if (e.score() > max_score->second)
+            e.set_score(max_score->second);
         }
       }
     }
