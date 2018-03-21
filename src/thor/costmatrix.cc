@@ -1,6 +1,8 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+
+#include "worker.h"
 #include "thor/costmatrix.h"
 #include "midgard/logging.h"
 #include "exception.h"
@@ -17,6 +19,11 @@ constexpr uint32_t kMaxMatrixIterations = 2000000;
 int GetThreshold(const TravelMode mode, const int n) {
   return (mode == TravelMode::kDrive) ?
           std::min(2700, std::max(100, n / 3)) : 500;
+}
+
+bool equals(const valhalla::odin::LatLng& a, const valhalla::odin::LatLng&b) {
+  return a.has_lat() == b.has_lat() && a.has_lng() == b.has_lng() &&
+      (!a.has_lat() || a.lat() == b.lat()) && (!a.has_lng() || a.lng() == b.lng());
 }
 
 }
@@ -99,8 +106,8 @@ void CostMatrix::Clear() {
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
 std::vector<TimeDistance> CostMatrix::SourceToTarget(
-        const std::vector<PathLocation>& source_location_list,
-        const std::vector<PathLocation>& target_location_list,
+        const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
+        const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
         GraphReader& graphreader,
         const std::shared_ptr<DynamicCost>* mode_costing,
         const TravelMode mode, const float max_matrix_distance) {
@@ -183,8 +190,8 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 // are the same get set to 0 time, distance and do not add to the
 // remaining locations set.
 void CostMatrix::Initialize(
-        const std::vector<PathLocation>& source_locations,
-        const std::vector<PathLocation>& target_locations) {
+        const google::protobuf::RepeatedPtrField<odin::Location>& source_locations,
+        const google::protobuf::RepeatedPtrField<odin::Location>& target_locations) {
   // Add initial status
   const uint32_t kMaxThreshold = std::numeric_limits<int>::max();
   for (uint32_t i = 0; i < source_count_; i++) {
@@ -201,7 +208,7 @@ void CostMatrix::Initialize(
   Cost max_cost(kMaxCost, kMaxCost);
   for (uint32_t i = 0; i < source_count_; i++) {
     for (uint32_t j = 0; j < target_count_; j++) {
-      if (source_locations[i].latlng_ == target_locations[j].latlng_) {
+      if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
         best_connection_.back().found = true;
       } else {
@@ -681,7 +688,7 @@ void CostMatrix::BackwardSearch(const uint32_t index,
 // Sets the source/origin locations. Search expands forward from these
 // locations.
 void CostMatrix::SetSources(GraphReader& graphreader,
-                      const std::vector<PathLocation>& sources) {
+                      const google::protobuf::RepeatedPtrField<odin::Location>& sources) {
   // Allocate edge labels and edge status
   source_count_ = sources.size();
   source_edgelabel_.resize(source_count_);
@@ -705,27 +712,27 @@ void CostMatrix::SetSources(GraphReader& graphreader,
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (origin.edges)) {
+    for (const auto& edge : origin.path_edges()) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (edge.end_node()) {
         continue;
       }
 
       // Get the directed edge and the opposing edge Id
-      GraphId edgeid = edge.id;
+      GraphId edgeid = static_cast<GraphId>(edge.graph_id());
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
       // Get cost. Get distance along the remainder of this edge.
       Cost edgecost = costing_->EdgeCost(directededge);
-      Cost cost = edgecost * (1.0f - edge.dist);
-      uint32_t d = std::round(directededge->length() * (1.0f - edge.dist));
+      Cost cost = edgecost * (1.0f - edge.dist());
+      uint32_t d = std::round(directededge->length() * (1.0f - edge.dist()));
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score;
+      cost.cost += edge.score();
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and
@@ -751,7 +758,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // Set the target/destination locations. Search expands backwards from
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
-                     const std::vector<PathLocation>& targets) {
+                     const google::protobuf::RepeatedPtrField<odin::Location>& targets) {
   // Allocate target edge labels and edge status
   target_count_ = targets.size();
   target_edgelabel_.resize(targets.size());
@@ -775,7 +782,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (dest.edges)) {
+    for (const auto& edge : dest.path_edges()) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
       if (edge.begin_node()) {
@@ -783,7 +790,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       }
 
       // Get the directed edge
-      GraphId edgeid = edge.id;
+      GraphId edgeid = static_cast<GraphId>(edge.graph_id());
       const GraphTile* tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -798,13 +805,13 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
       Cost edgecost = costing_->EdgeCost(directededge);
-      Cost cost = edgecost * edge.dist;
-      uint32_t d = std::round(directededge->length() * edge.dist);
+      Cost cost = edgecost * edge.dist();
+      uint32_t d = std::round(directededge->length() * edge.dist());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score;
+      cost.cost += edge.score();
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and

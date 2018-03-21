@@ -1014,9 +1014,9 @@ namespace {
           if (!location->date_time().empty())
             loc->emplace("date_time",location->date_time());
           if (location->has_side_of_street()) {
-            if (location->side_of_street() == odin::Location_SideOfStreet_kLeft)
+            if (location->side_of_street() == odin::Location::kLeft)
               loc->emplace("side_of_street", std::string("left"));
-            else if (location->side_of_street() == odin::Location_SideOfStreet_kRight)
+            else if (location->side_of_street() == odin::Location::kRight)
               loc->emplace("side_of_street", std::string("right"));
           }
           if (location->has_original_index())

@@ -296,11 +296,11 @@ struct bin_handler_t {
     reaches.reserve(std::max(max_reach_limit, static_cast<decltype(max_reach_limit)>(1)) * 1024);
   }
 
-  //returns -1 when we dont know it
-  int get_reach(const DirectedEdge* edge) {
+  //returns 0 when we dont know it
+  unsigned int get_reach(const DirectedEdge* edge) {
     auto itr = reach_indices.find(edge->endnode());
     if(itr == reach_indices.cend())
-      return -1; //TODO: if we didnt find it should we run the reachability check
+      return 0; //TODO: if we didnt find it should we run the reachability check
     return reaches[itr->second];
   }
 

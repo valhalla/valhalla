@@ -22,6 +22,7 @@
 #include <valhalla/thor/match_result.h>
 #include <valhalla/tyr/actor.h>
 
+
 namespace valhalla {
   namespace tyr {
 
@@ -39,8 +40,8 @@ namespace valhalla {
      *
      * @param
      */
-    std::string serializeMatrix(const valhalla_request_t& request, const std::vector<baldr::PathLocation>& sources,
-        const std::vector<baldr::PathLocation>& targets, const std::vector<thor::TimeDistance>& time_distances, double distance_scale);
+    std::string serializeMatrix(const valhalla_request_t& request,
+        const std::vector<thor::TimeDistance>& time_distances, double distance_scale);
 
     /**
      * Turn grid data contours into geojson
@@ -50,17 +51,16 @@ namespace valhalla {
      */
     template <class coord_t>
     std::string serializeIsochrones(const valhalla_request_t& request, const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
-        bool polygons = true, const std::unordered_map<float, std::string>& colors = {}, const std::vector<baldr::PathLocation>& locations = {});
+        bool polygons = true, const std::unordered_map<float, std::string>& colors = {}, bool show_locations = false);
 
     /**
      * Turn heights and ranges into a height response
      *
      * @param request  The original request
-     * @param shape    The shape from the request
      * @param heights  The actual height at each shape point
      * @param ranges   The distances between each point. If this is empty no ranges are serialized
      */
-    std::string serializeHeight(const valhalla_request_t& request, const std::vector<PointLL>& shape,
+    std::string serializeHeight(const valhalla_request_t& request,
         const std::vector<double>& heights, std::vector<float> ranges = {});
 
     /**
@@ -103,6 +103,20 @@ namespace valhalla {
      */
     void jsonToProtoRoute(const std::string& json_route, Route& proto_route);
   }
+}
+
+namespace osrm {
+
+  /*
+   *
+   */
+  valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location);
+
+  /*
+   *
+   */
+  valhalla::baldr::json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::odin::Location>& locations);
+
 }
 
 

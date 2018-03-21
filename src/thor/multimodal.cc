@@ -103,7 +103,7 @@ void MultiModalPathAlgorithm::Clear() {
 
 // Calculate best path using multiple modes (e.g. transit).
 std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
-            PathLocation& origin, PathLocation& destination,
+            odin::Location& origin, odin::Location& destination,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
@@ -124,15 +124,17 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   uint32_t max_transfer_distance = costing->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
-  if (!origin.date_time_)
+  if (!origin.has_date_time())
     return { };
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   //Note: because we can correlate to more than one place for a given PathLocation
   //using edges.front here means we are only setting the heuristics to one of them
   //alternate paths using the other correlated points to may be harder to find
-  Init(origin.edges.front().projected, destination.edges.front().projected, costing);
-  float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
+  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  Init(origin_new, destination_new, costing);
+  float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Check if there no possible path to destination based on mode to the
   // destination - for now assume pedestrian
@@ -157,9 +159,9 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
 
   uint32_t start_time, localtime, date, dow, day = 0;
   bool date_before_tile = false;
-  if (origin.date_time_) {
+  if (origin.has_date_time()) {
     // Set route start time (seconds from midnight), date, and day of week
-    start_time = DateTime::seconds_from_midnight(*origin.date_time_);
+    start_time = DateTime::seconds_from_midnight(origin.date_time());
     localtime = start_time;
   }
 
@@ -277,8 +279,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // we must get the date from level 3 transit tiles and not level 2.  The level 3 date is
       // set when the fetcher grabbed the transit data and created the schedules.
       if (!date_set) {
-        date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
-        dow  = DateTime::day_of_week_mask(*origin.date_time_);
+        date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
+        dow  = DateTime::day_of_week_mask(origin.date_time());
         uint32_t date_created = tile->header()->date_created();
         if (date < date_created)
           date_before_tile = true;
@@ -533,25 +535,25 @@ void MultiModalPathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
 
 // Add an edge at the origin to the adjacency list
 void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
-                 PathLocation& origin,
-                 const PathLocation& destination,
+                 odin::Location& origin,
+                 const odin::Location& destination,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.edges.cbegin(), origin.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+  std::for_each(origin.path_edges().begin(), origin.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
     has_other_edges = has_other_edges || !e.end_node();
   });
 
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
-  for (const auto& edge : origin.edges) {
+  for (const auto& edge : origin.path_edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
     if (has_other_edges && edge.end_node()) {
       continue;
     }
 
     // Get the directed edge
-    GraphId edgeid = edge.id;
+    GraphId edgeid(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -564,14 +566,14 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist);
+    Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist());
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     // Perhaps need to adjust score?
-    cost.cost += edge.score;
+    cost.cost += edge.score();
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
@@ -582,16 +584,16 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     if (p != destinations_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
         // Find the destination edge and update cost.
-        for (const auto& destination_edge : destination.edges) {
-          if (destination_edge.id == edgeid) {
+        for (const auto& destination_edge : destination.path_edges()) {
+          if (destination_edge.graph_id() == edgeid) {
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
-            Cost dest_cost = costing->EdgeCost(tile->directededge(destination_edge.id)) *
-                                            (1.0f - destination_edge.dist);
+            Cost dest_cost = costing->EdgeCost(tile->directededge(GraphId(destination_edge.graph_id()))) *
+                                            (1.0f - destination_edge.dist());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
-            cost.cost += destination_edge.score;
+            cost.cost += destination_edge.score();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
           }
@@ -605,7 +607,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
-    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
+    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist()));
     MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                          sortcost, dist, mode_, d, 0, GraphId(), 0, 0, false);
     // Set the origin flag
@@ -617,26 +619,27 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (nodeinfo != nullptr && origin.date_time_ &&
-    *origin.date_time_ == "current") {
-    origin.date_time_= DateTime::iso_date_time(
-        DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+  if (nodeinfo != nullptr && origin.has_date_time() &&
+    origin.date_time() == "current") {
+    origin.set_date_time(DateTime::iso_date_time(
+        DateTime::get_tz_db().from_index(nodeinfo->timezone())));
   }
 }
 
 // Add a destination edge
 uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
-                     const PathLocation& dest,
+                     const odin::Location& dest,
                      const std::shared_ptr<DynamicCost>& costing) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(dest.edges.cbegin(), dest.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+  std::for_each(dest.path_edges().begin(), dest.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
     has_other_edges = has_other_edges || !e.begin_node();
   });
 
+
   // For each edge
   uint32_t density = 0;
-  for (const auto& edge : dest.edges) {
+  for (const auto& edge : dest.path_edges()) {
     // If destination is at a node skip any outbound edges
     if (has_other_edges && edge.begin_node()) {
       continue;
@@ -645,14 +648,15 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
     // Keep the id and the cost to traverse the partial distance for the
     // remainder of the edge. This cost is subtracted from the total cost
     // up to the end of the destination edge.
-    const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-    destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id)) *
-                                (1.0f - edge.dist);
+    GraphId id(edge.graph_id());
+    const GraphTile* tile = graphreader.GetGraphTile(id);
+    destinations_[edge.graph_id()] = costing->EdgeCost(tile->directededge(id)) *
+                                (1.0f - edge.dist());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    destinations_[edge.id].cost += edge.score;
+    destinations_[edge.graph_id()].cost += edge.score();
 
     // Get the tile relative density
     density = tile->header()->density();
@@ -664,7 +668,7 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
 // if there are any transit stops within maximum walking distance.
 // TODO - once auto/bicycle are allowed modes we need to check if parking
 // or bikeshare locations are within walking distance.
-bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destination,
+bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destination,
                           GraphReader& graphreader,
                           const TravelMode dest_mode,
                           const std::shared_ptr<DynamicCost>& costing) {
@@ -689,10 +693,11 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
   DoubleBucketQueue adjlist(0.0f, kBucketCount * bucketsize, bucketsize, edgecost);
 
   // Add the opposing destination edges to the priority queue
-  for (const auto& edge : destination.edges) {
+  for (const auto& edge : destination.path_edges()) {
     // Keep the id and the cost to traverse the partial distance
-    float ratio = (1.0f - edge.dist);
-    GraphId oppedge = graphreader.GetOpposingEdgeId(edge.id);
+    float ratio = (1.0f - edge.dist());
+    GraphId id(edge.graph_id());
+    GraphId oppedge = graphreader.GetOpposingEdgeId(id);
     const GraphTile* tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;

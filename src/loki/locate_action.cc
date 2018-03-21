@@ -9,10 +9,10 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_locate(valhalla_request_t& request) {
-      locations = parse_locations(request, "locations");
-      if(locations.size() < 1)
+      parse_locations(request.options.mutable_locations());
+      if(request.options.locations_size() < 1)
         throw valhalla_exception_t{120};
-      if(request.document.HasMember("costing"))
+      if(request.options.has_costing())
         parse_costing(request);
       else {
         edge_filter = loki::PassThroughEdgeFilter;
@@ -23,6 +23,7 @@ namespace valhalla {
     std::string loki_worker_t::locate(valhalla_request_t& request) {
       //correlate the various locations to the underlying graph
       init_locate(request);
+      auto locations = PathLocation::fromPBF(request.options.locations());
       auto projections = loki::Search(locations, reader, edge_filter, node_filter);
       return tyr::serializeLocate(request, locations, projections, reader);
     }

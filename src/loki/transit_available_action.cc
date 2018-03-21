@@ -11,13 +11,13 @@ namespace valhalla {
   namespace loki {
 
     void loki_worker_t::init_transit_available(valhalla_request_t& request) {
-      locations = parse_locations(request, "locations");
-      if(locations.size() < 1)
+      if(request.options.locations_size() < 1)
         throw valhalla_exception_t{120};
     }
 
     std::string loki_worker_t::transit_available(valhalla_request_t& request) {
       init_transit_available(request);
+      auto locations = PathLocation::fromPBF(request.options.locations());
       std::unordered_set<baldr::Location> found;
       try{
         const auto& tiles = TileHierarchy::levels().find(TileHierarchy::levels().rbegin()->first)->second.tiles;
