@@ -130,6 +130,31 @@ struct PathLocation : public Location {
         edge->mutable_names()->Add()->assign(n);
     }
   }
+
+  static Location fromPBF(const odin::Location& loc) {
+    Location l({loc.ll().lng(), loc.ll().lat()},
+    odin::Location::kBreak ? Location::StopType::BREAK : Location::StopType::THROUGH,
+        loc.minimum_reachability(), loc.radius());
+    if(loc.has_name()) l.name_ = loc.name();
+    if(loc.has_street()) l.street_ = loc.street();
+    if(loc.has_city()) l.city_ = loc.city();
+    if(loc.has_state()) l.state_ = loc.state();
+    if(loc.has_postal_code()) l.zip_ = loc.postal_code();
+    if(loc.has_country()) l.country_ = loc.country();
+    if(loc.has_date_time()) l.date_time_ = loc.date_time();
+    if(loc.has_heading()) l.heading_ = loc.heading();
+    if(loc.has_heading_tolerance()) l.heading_tolerance_ = loc.heading_tolerance();
+    if(loc.has_node_snap_tolerance()) l.node_snap_tolerance_ = loc.node_snap_tolerance();
+    if(loc.has_way_id()) l.way_id_ = loc.way_id();
+    return l;
+  }
+
+  static std::vector<Location> fromPBF(const google::protobuf::RepeatedPtrField<odin::Location>& locations) {
+    std::vector<Location> pls;
+    for(const auto& l : locations)
+      pls.emplace_back(fromPBF(l));
+    return pls;
+  }
 };
 
 }

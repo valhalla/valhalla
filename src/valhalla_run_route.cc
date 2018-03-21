@@ -532,7 +532,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Grab the directions options, if they exist
-    valhalla::valhalla_request_t request(json, valhalla::odin::DirectionsOptions::route);
+    valhalla::valhalla_request_t request;
+    request.parse(json, valhalla::odin::DirectionsOptions::route);
     directions_options = request.options;
 
     // Grab the date_time, if is exists

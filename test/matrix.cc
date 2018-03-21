@@ -249,7 +249,8 @@ namespace {
 void test_matrix() {
   loki_worker_t loki_worker (config);
 
-  valhalla::valhalla_request_t request(test_request, valhalla::odin::DirectionsOptions::sources_to_targets);
+  valhalla::valhalla_request_t request;
+  request.parse(test_request, valhalla::odin::DirectionsOptions::sources_to_targets);
   loki_worker.matrix (request);
   adjust_scores(request);
 
@@ -295,7 +296,8 @@ void test_matrix() {
 void test_matrix_osrm() {
   loki_worker_t loki_worker (config);
 
-  valhalla::valhalla_request_t request(test_request_osrm, valhalla::odin::DirectionsOptions::sources_to_targets);
+  valhalla::valhalla_request_t request;
+  request.parse(test_request_osrm, valhalla::odin::DirectionsOptions::sources_to_targets);
 
   loki_worker.matrix (request);
   adjust_scores(request);

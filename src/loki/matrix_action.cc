@@ -16,12 +16,17 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
 namespace {
-  void check_distance(const std::vector<Location>& sources, const std::vector<Location>& targets, float matrix_max_distance, float& max_location_distance) {
+  PointLL to_ll(const odin::Location& l) {
+    return PointLL{l.ll().lng(), l.ll().lat()};
+  }
+
+  void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& sources,
+      const google::protobuf::RepeatedPtrField<odin::Location>& targets, float matrix_max_distance, float& max_location_distance) {
     //see if any locations pairs are unreachable or too far apart
     for(const auto& source : sources){
       for(const auto& target : targets) {
         //check if distance between latlngs exceed max distance limit
-        auto path_distance = source.latlng_.Distance(target.latlng_);
+        auto path_distance = to_ll(source).Distance(to_ll(target));
 
         //only want to log the maximum distance between 2 locations for matrix
         LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
@@ -43,12 +48,12 @@ namespace valhalla {
     void loki_worker_t::init_matrix(valhalla_request_t& request) {
       //we require sources and targets
       if(request.options.action() == odin::DirectionsOptions::sources_to_targets) {
-        sources = parse_locations(request, "sources", 131, valhalla_exception_t{112});
-        targets = parse_locations(request, "targets", 132, valhalla_exception_t{112});
+        parse_locations(request.options.mutable_sources(), valhalla_exception_t{112});
+        parse_locations(request.options.mutable_targets(), valhalla_exception_t{112});
       }//optimized route uses locations but needs to do a matrix
       else {
-        locations = parse_locations(request, "locations", 130, valhalla_exception_t{112});
-        if (locations.size() < 2)
+        parse_locations(request.options.mutable_locations(), valhalla_exception_t{112});
+        if (request.options.locations_size() < 2)
           throw valhalla_exception_t{120};
 
         //create new sources and targets ptree from locations
@@ -57,18 +62,18 @@ namespace valhalla {
         auto& allocator = request.document.GetAllocator();
         request.document.AddMember("targets", rapidjson::Value{request.document["locations"], allocator}, allocator);
         request.document.AddMember("sources", *request_locations, allocator);
-        targets = locations;
-        sources.swap(locations);
+        request.options.mutable_targets()->CopyFrom(request.options.locations());
+        request.options.mutable_sources()->CopyFrom(request.options.locations());
       }
 
       //sanitize
-      if(sources.size() < 1) throw valhalla_exception_t{121};
-      for(auto& s : sources) s.heading_.reset();
-      if(targets.size() < 1) throw valhalla_exception_t{122};
-      for(auto& t : targets) t.heading_.reset();
+      if(request.options.sources_size() < 1) throw valhalla_exception_t{121};
+      for(auto& s : *request.options.mutable_sources()) s.clear_heading();
+      if(request.options.targets_size() < 1) throw valhalla_exception_t{122};
+      for(auto& t : *request.options.mutable_targets()) t.clear_heading();
 
       //no locations!
-      request.document.RemoveMember("locations");
+      request.options.clear_locations();
 
       //need costing
       parse_costing(request);
@@ -76,23 +81,25 @@ namespace valhalla {
 
     void loki_worker_t::matrix(valhalla_request_t& request) {
       init_matrix(request);
-      std::string costing = request.document["costing"].GetString();
+      auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
+      if(costing.back() == '_') costing.pop_back();
+
       if (costing == "multimodal")
         throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
 
       //check that location size does not exceed max.
       auto max = max_matrix_locations.find(costing)->second;
-      if (sources.size() > max || targets.size() > max)
+      if (request.options.sources_size() > max || request.options.targets_size() > max)
         throw valhalla_exception_t{150, std::to_string(max)};
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
-      check_distance(sources, targets, max_matrix_distance.find(costing)->second, max_location_distance);
+      check_distance(request.options.sources(), request.options.targets(), max_matrix_distance.find(costing)->second, max_location_distance);
 
       //correlate the various locations to the underlying graph
-      std::vector<baldr::Location> sources_targets;
-      std::move(sources.begin(), sources.end(), std::back_inserter(sources_targets));
-      std::move(targets.begin(), targets.end(), std::back_inserter(sources_targets));
+      auto sources_targets = PathLocation::fromPBF(request.options.sources());
+      auto st = PathLocation::fromPBF(request.options.targets());
+      sources_targets.insert(sources_targets.end(), std::make_move_iterator(st.begin()), std::make_move_iterator(st.end()));
 
       //correlate the various locations to the underlying graph
       std::unordered_map<size_t, size_t> color_counts;
@@ -101,12 +108,9 @@ namespace valhalla {
         for(size_t i = 0; i < sources_targets.size(); ++i) {
           const auto& l = sources_targets[i];
           const auto& projection = searched.at(l);
-          //TODO: remove this when using pbf everywhere
-          rapidjson::Pointer("/correlated_" + std::to_string(i)).
-              Set(request.document, projection.ToRapidJson(i, request.document.GetAllocator()));
-          PathLocation::toPBF(projection, i < sources.size() ?
-              request.options.mutable_sources()->Add() :
-              request.options.mutable_targets()->Add(), reader);
+          PathLocation::toPBF(projection, i < request.options.sources_size() ?
+              request.options.mutable_sources(i) :
+              request.options.mutable_targets(i - request.options.sources_size()), reader);
           //TODO: get transit level for transit costing
           //TODO: if transit send a non zero radius
           if (!connectivity_map)

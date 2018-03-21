@@ -57,11 +57,10 @@ namespace valhalla {
      * Turn heights and ranges into a height response
      *
      * @param request  The original request
-     * @param shape    The shape from the request
      * @param heights  The actual height at each shape point
      * @param ranges   The distances between each point. If this is empty no ranges are serialized
      */
-    std::string serializeHeight(const valhalla_request_t& request, const std::vector<PointLL>& shape,
+    std::string serializeHeight(const valhalla_request_t& request,
         const std::vector<double>& heights, std::vector<float> ranges = {});
 
     /**

@@ -52,12 +52,14 @@ message Location {
   optional uint64 way_id = 16;
   optional uint32 minimum_reachability = 17 [default = 0];
   optional uint32 radius = 18 [default = 0];
+  optional uint32 accuracy = 19;
+  optional double time = 20 [default = -1.0];
   
   //outputs
-  repeated PathEdge path_edges = 19;
-  repeated PathEdge filtered_edges = 20;
-  optional uint32 original_index = 21;
-  optional LatLng projected_ll = 22;
+  repeated PathEdge path_edges = 21;
+  repeated PathEdge filtered_edges = 22;
+  optional uint32 original_index = 23;
+  optional LatLng projected_ll = 24;
 }
 
 message TransitEgressInfo {

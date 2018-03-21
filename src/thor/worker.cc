@@ -113,7 +113,7 @@ namespace valhalla {
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::string serialized_options(static_cast<const char*>(job.back().data()), job.back().size());
-        request = std::move(valhalla_request_t(request_str, serialized_options));
+        request.parse(request_str, serialized_options);
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
@@ -252,15 +252,13 @@ namespace valhalla {
       }
 
       //we require locations
-      auto request_shape = rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/shape");
       try{
-        for(const auto& pt : request_shape) {
-          float lat = rapidjson::get<float>(pt, "/lat");
-          float lon = midgard::circular_range_clamp<float>(rapidjson::get<float>(pt, "/lon"), -180, 180);
-          double time = rapidjson::get<double>(pt, "/time", -1.0);
-          float accuracy = rapidjson::get<float>(pt, "/accuracy", matcher->config().get<float>("gps_accuracy"));
-          float radius = rapidjson::get<float>(pt, "/radius", matcher->config().get<float>("search_radius"));
-          trace.emplace_back(meili::Measurement{{lon, lat}, accuracy, radius, time});
+        auto default_accuracy = matcher->config().get<float>("gps_accuracy");
+        auto default_radius = matcher->config().get<float>("search_radius");
+        for(const auto& pt : request.options.shape()) {
+          trace.emplace_back(meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
+            pt.has_accuracy() ? pt.accuracy() : default_accuracy,
+            pt.has_radius() ? pt.radius() : default_radius, pt.time()});
         }
       }
       catch (...) {
