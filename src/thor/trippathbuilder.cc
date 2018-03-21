@@ -563,6 +563,12 @@ TripPath TripPathBuilder::Build(
       break;
     }
   }
+
+  // Set the origin projected location
+  odin::LatLng* proj_ll = tp_orig->mutable_projected_ll();
+  proj_ll->set_lat(start_vrt.lat());
+  proj_ll->set_lng(start_vrt.lng());
+
   // Set the origin side of street, if one exists
   if (start_sos != PathLocation::SideOfStreet::NONE)
     tp_orig->set_side_of_street(GetTripPathSideOfStreet(start_sos));
@@ -579,6 +585,11 @@ TripPath TripPathBuilder::Build(
       break;
     }
   }
+
+  // Set the destination projected location
+  proj_ll = tp_dest->mutable_projected_ll();
+  proj_ll->set_lat(end_vrt.lat());
+  proj_ll->set_lng(end_vrt.lng());
 
   // Set the destination side of street, if one exists
   if (end_sos != PathLocation::SideOfStreet::NONE)
@@ -1218,9 +1229,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
-    std::vector<std::string> names = edgeinfo.GetNames();
-    for (const auto& name : names) {
-      trip_edge->add_name(name);
+    auto names_and_info = edgeinfo.GetNamesAndInfo();
+    for (const auto& ni : names_and_info) {
+      trip_edge->add_name(ni.first);
+      trip_edge->add_name_is_ref(ni.second.is_ref_);
     }
   }
 

@@ -29,10 +29,10 @@ using namespace valhalla::loki;
 
 namespace valhalla {
   namespace loki {
-    std::vector<baldr::Location> loki_worker_t::parse_locations(const rapidjson::Document& request, const std::string& node,
+    std::vector<baldr::Location> loki_worker_t::parse_locations(const valhalla_request_t& request, const std::string& node,
       unsigned location_parse_error_code, boost::optional<valhalla_exception_t> required_exception) {
       std::vector<baldr::Location> parsed;
-      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, std::string("/" + node).c_str());
+      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, std::string("/" + node).c_str());
       if (request_locations) {
         for(const auto& location : *request_locations) {
           try { parsed.push_back(baldr::Location::FromRapidJson(location, default_reachability, default_radius)); }
@@ -42,7 +42,7 @@ namespace valhalla {
           if(parsed.back().radius_ > max_radius)
             parsed.back().radius_ = max_radius;
         }
-        if (!healthcheck)
+        if (!request.options.do_not_track())
           valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()), " [ANALYTICS] ");
       }
       else if(required_exception)
@@ -50,12 +50,12 @@ namespace valhalla {
       return parsed;
     }
 
-    void loki_worker_t::parse_costing(rapidjson::Document& request) {
+    void loki_worker_t::parse_costing(valhalla_request_t& request) {
       //using the costing we can determine what type of edge filtering to use
-      auto costing = rapidjson::get_optional<std::string>(request, "/costing");
+      auto costing = rapidjson::get_optional<std::string>(request.document, "/costing");
       if (!costing)
         throw valhalla_exception_t{124};
-      else if (!healthcheck)
+      else if (!request.options.do_not_track())
         valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
 
       // TODO - have a way of specifying mode at the location
@@ -64,16 +64,16 @@ namespace valhalla {
 
       // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
-      auto* method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request);
-      auto& allocator = request.GetAllocator();
+      auto* method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request.document);
+      auto& allocator = request.document.GetAllocator();
       if(!method_options_ptr) {
-        auto* costing_options = rapidjson::Pointer{"/costing_options"}.Get(request);
+        auto* costing_options = rapidjson::Pointer{"/costing_options"}.Get(request.document);
         if(!costing_options) {
-          request.AddMember(rapidjson::Value("costing_options", allocator), rapidjson::Value(rapidjson::kObjectType), allocator);
-          costing_options = rapidjson::Pointer{"/costing_options"}.Get(request);
+          request.document.AddMember(rapidjson::Value("costing_options", allocator), rapidjson::Value(rapidjson::kObjectType), allocator);
+          costing_options = rapidjson::Pointer{"/costing_options"}.Get(request.document);
         }
         costing_options->AddMember(rapidjson::Value(*costing, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
-        method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request);
+        method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request.document);
       }
 
       try{
@@ -120,18 +120,17 @@ namespace valhalla {
         max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
         max_time(config.get<size_t>("service_limits.isochrone.max_time")),
         max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
-        sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
+        sample(config.get<std::string>("additional_data.elevation", "test/data/")),
         max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
-        min_resample(config.get<float>("service_limits.skadi.min_resample")),
-        healthcheck(false) {
+        min_resample(config.get<float>("service_limits.skadi.min_resample")) {
 
       // Keep a string noting which actions we support, throw if one isnt supported
+      odin::DirectionsOptions::Action action;
       for (const auto& kv : config.get_child("loki.actions")) {
-        auto path = "/" + kv.second.get_value<std::string>();
-        if(PATH_TO_ACTION.find(path) == PATH_TO_ACTION.cend())
-          throw std::runtime_error("Path action not supported " + path);
-        action_str.append("'" + path + "' ");
-        actions.insert(path);
+        auto path = kv.second.get_value<std::string>();
+        if(!odin::DirectionsOptions::Action_Parse(path, &action))
+          throw std::runtime_error("Action not supported " + path);
+        action_str.append("'/" + path + "' ");
       }
       // Make sure we have at least something to support!
       if(action_str.empty())
@@ -197,10 +196,8 @@ namespace valhalla {
       sources.clear();
       targets.clear();
       shape.clear();
-      encoded_polyline.reset();
       if(reader.OverCommitted())
         reader.Clear();
-      options = odin::DirectionsOptions::default_instance();
     }
 
 #ifdef HAVE_HTTP
@@ -209,74 +206,65 @@ namespace valhalla {
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
+      valhalla_request_t request;
       try{
         //request parsing
-        auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
+        auto http_request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
+        request = std::move(valhalla_request_t(http_request));
 
-        //is the request path action in the action set?
-        auto action = PATH_TO_ACTION.find(request.path);
-        if (action == PATH_TO_ACTION.cend() || actions.find(request.path) == actions.cend())
-          return jsonify_error({106, action_str}, info, options);
-
-        //parse the query's json
-        auto request_rj = from_request(request);
-        options = from_json(request_rj);
-        //let further processes more easily know what kind of request it was
-        rapidjson::SetValueByPointer(request_rj, "/action", action->second);
-        //flag healthcheck requests
-        healthcheck = rapidjson::get_optional<bool>(request_rj, "/healthcheck").get_value_or(false);
-        //let further processes know about tracking
-        auto do_not_track = request.headers.find("DNT");
-        info.spare = do_not_track != request.headers.cend() && do_not_track->second == "1";
+        //check there is a valid action
+        if(!request.options.has_action())
+          return jsonify_error({106, action_str}, info, request);
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
 
         worker_t::result_t result{true};
         //do request specific processing
-        switch (action->second) {
-          case ROUTE:
-            route(request_rj);
-            result.messages.emplace_back(rapidjson::to_string(request_rj));
+        switch (request.options.action()) {
+          case odin::DirectionsOptions::route:
+            route(request);
+            result.messages.emplace_back(rapidjson::to_string(request.document));
+            result.messages.emplace_back(request.options.SerializeAsString());
             break;
-          case LOCATE:
-            result = to_response(locate(request_rj), info, options);
+          case odin::DirectionsOptions::locate:
+            result = to_response_json(locate(request), info, request);
             break;
-          case ONE_TO_MANY:
-          case MANY_TO_ONE:
-          case MANY_TO_MANY:
-          case SOURCES_TO_TARGETS:
-          case OPTIMIZED_ROUTE:
-            matrix(action->second, request_rj);
-            result.messages.emplace_back(rapidjson::to_string(request_rj));
+          case odin::DirectionsOptions::sources_to_targets:
+          case odin::DirectionsOptions::optimized_route:
+            matrix(request);
+            result.messages.emplace_back(rapidjson::to_string(request.document));
+            result.messages.emplace_back(request.options.SerializeAsString());
             break;
-          case ISOCHRONE:
-            isochrones(request_rj);
-            result.messages.emplace_back(rapidjson::to_string(request_rj));
+          case odin::DirectionsOptions::isochrone:
+            isochrones(request);
+            result.messages.emplace_back(rapidjson::to_string(request.document));
+            result.messages.emplace_back(request.options.SerializeAsString());
             break;
-          case TRACE_ATTRIBUTES:
-          case TRACE_ROUTE:
-            trace(action->second, request_rj);
-            result.messages.emplace_back(rapidjson::to_string(request_rj));
+          case odin::DirectionsOptions::trace_attributes:
+          case odin::DirectionsOptions::trace_route:
+            trace(request);
+            result.messages.emplace_back(rapidjson::to_string(request.document));
+            result.messages.emplace_back(request.options.SerializeAsString());
             break;
-          case HEIGHT:
-            result = to_response(height(request_rj), info, options);
+          case odin::DirectionsOptions::height:
+            result = to_response_json(height(request), info, request);
             break;
-          case TRANSIT_AVAILABLE:
-            result = to_response(transit_available(request_rj), info, options);
+          case odin::DirectionsOptions::transit_available:
+            result = to_response_json(transit_available(request), info, request);
             break;
           default:
             //apparently you wanted something that we figured we'd support but havent written yet
-            return jsonify_error({107}, info, options);
+            return jsonify_error({107}, info, request);
         }
         //get processing time for loki
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
         auto work_units = locations.size() ? locations.size() : shape.size() * 20;
-        if (!healthcheck && !info.spare && elapsed_time.count() / work_units > long_request) {
+        if (!request.options.do_not_track() && elapsed_time.count() / work_units > long_request) {
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
-          LOG_WARN("loki::request exceeded threshold::"+ rapidjson::to_string(request_rj));
+          LOG_WARN("loki::request exceeded threshold::"+ rapidjson::to_string(request.document));
           midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
         }
 
@@ -284,11 +272,11 @@ namespace valhalla {
       }
       catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(e, info, options);
+        return jsonify_error(e, info, request);
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({199, std::string(e.what())}, info, options);
+        return jsonify_error({199, std::string(e.what())}, info, request);
       }
     }
 

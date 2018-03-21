@@ -1,5 +1,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/datetime.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
@@ -77,7 +78,7 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid)
     return;
 
   // Open to the end of the file so we can immediately get size;
-  std::string file_location = tile_dir + "/" + FileSuffix(graphid.Tile_Base());
+  std::string file_location = tile_dir + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
@@ -128,7 +129,7 @@ GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler
     return;
 
   // Get the response returned from curl
-  std::string uri = tile_url + "/" + FileSuffix(graphid.Tile_Base());
+  std::string uri = tile_url + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
   long http_code;
   auto tile_data = curler(uri, http_code);
 
@@ -326,9 +327,9 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  const std::unordered_set<std::string::value_type> allowed{ '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+  const std::unordered_set<std::string::value_type> allowed{ filesystem::path_separator, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
   //we require slashes
-  auto pos = fname.find_last_of('/');
+  auto pos = fname.find_last_of(filesystem::path_separator);
   if(pos == fname.npos)
     throw std::runtime_error("Invalid tile path: " + fname);
 
@@ -350,7 +351,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
     if(allowed.find(c) == allowed.cend())
       throw std::runtime_error("Invalid tile path: " + fname);
     //if its a slash thats another digit
-    if(c == '/') {
+    if(c == filesystem::path_separator) {
       //this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if(dist != 4 && dist != 2)
@@ -490,6 +491,12 @@ const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
 // edge info
 std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) const {
   return edgeinfo(edgeinfo_offset).GetNames();
+}
+
+// Convenience method to get the types for the names given the offset to the
+// edge info
+uint16_t GraphTile::GetTypes(const uint32_t edgeinfo_offset) const {
+  return edgeinfo(edgeinfo_offset).GetTypes();
 }
 
 // Get the admininfo at the specified index.

@@ -176,6 +176,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  wayid  The target edge is part of this the way id.
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
+   * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
    *
@@ -187,6 +188,7 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const uint64_t wayid,
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
+                       const uint16_t types,
                        bool& added);
 
   /**
@@ -205,6 +207,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  wayid  The target edge is part of this the way id.
    * @param  llstr  The shape of the target edge as an encoded string.
    * @param  names  The names of the target edge.
+   * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
    *
@@ -214,6 +217,7 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const baldr::GraphId& nodeb, const uint64_t wayid,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
+                       const uint16_t types,
                        bool& added);
 
   /**

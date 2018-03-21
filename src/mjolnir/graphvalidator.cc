@@ -13,6 +13,7 @@
 #include <utility>
 #include <queue>
 #include <list>
+#include <set>
 #include <thread>
 #include <future>
 #include <mutex>

@@ -615,11 +615,14 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if(!graphtile.HasEdgeInfo(edge_pair.second, (*nodes[source]).graph_id, (*nodes[target]).graph_id, edge_info_offset)) {
             //add the info
             auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+
+            uint16_t types = 0;
+            auto names = w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map, types);
+
             edge_info_offset = graphtile.AddEdgeInfo(
               edge_pair.second, (*nodes[source]).graph_id,
               (*nodes[target]).graph_id, w.way_id(), shape,
-              w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map),
-              added);
+              names, types, added);
 
             //length
             auto length = valhalla::midgard::length(shape);

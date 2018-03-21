@@ -2,8 +2,10 @@
 #include "valhalla/midgard/util.h"
 #include "valhalla/midgard/constants.h"
 #include "valhalla/midgard/point2.h"
+#include <valhalla/midgard/polyline2.h>
 #include "valhalla/midgard/distanceapproximator.h"
 
+#include <cctype>
 #include <cstdint>
 #include <stdlib.h>
 #include <sstream>
@@ -18,6 +20,25 @@ namespace {
 constexpr double RAD_PER_METER  = 1.0 / 6378160.187;
 constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
 constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
+
+std::vector<valhalla::midgard::PointLL> resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
+  std::vector<valhalla::midgard::PointLL> resampled;
+  float time_remainder = 0.0;
+  for(const auto& segment: segments) {
+    //get the speed of this edge
+    auto meters = valhalla::midgard::Polyline2<valhalla::midgard::PointLL>::Length(segment.shape);
+    //trim the shape to account of the portion of the previous second that bled onto this edge
+    auto to_trim = segment.speed * time_remainder;
+    auto trimmed = valhalla::midgard::trim_polyline(segment.shape.cbegin(), segment.shape.cend(), to_trim / meters, 1.f);
+    //resample it at 1 second intervals
+    auto second_interval = valhalla::midgard::resample_spherical_polyline(trimmed, segment.speed, false);
+    resampled.insert(resampled.end(), second_interval.begin(), second_interval.end());
+    //figure out how much of the last second will bleed into the next edge
+    double intpart;
+    time_remainder = std::modf((meters - to_trim) / segment.speed, &intpart);
+  }
+  return resampled;
+}
 
 }
 
@@ -235,6 +256,55 @@ template PointLL::first_type polygon_area(const std::list<PointLL>&);
 template PointLL::first_type polygon_area(const std::vector<PointLL>&);
 template Point2::first_type polygon_area(const std::list<Point2>&);
 template Point2::first_type polygon_area(const std::vector<Point2>&);
+
+std::vector<midgard::PointLL> simulate_gps(
+    const std::vector<gps_segment_t>& segments, std::vector<float>& accuracies,
+    float smoothing, float accuracy, size_t sample_rate) {
+  //resample the coords along a given edge at one second intervals
+  auto resampled = resample_at_1hz(segments);
+
+  //a way to get noise but only allow for slow change
+  std::default_random_engine generator(0);
+  std::uniform_real_distribution<float> distribution(-1, 1);
+  ring_queue_t<std::pair<float, float> > noises(smoothing);
+  auto get_noise = [&]() {
+    //we generate a vector whose magnitude is no more than accuracy
+    auto lon_adj = distribution(generator);
+    auto lat_adj = distribution(generator);
+    auto len = std::sqrt((lon_adj * lon_adj) + (lat_adj * lat_adj));
+    lon_adj /= len; lat_adj /= len; //norm
+    auto scale = (distribution(generator) + 1.f) / 2.f;
+    lon_adj *= scale * accuracy;  lat_adj *= scale * accuracy; //random scale <= accuracy
+    noises.emplace_back(std::make_pair(lon_adj, lat_adj));
+    //average over last n to smooth
+    std::pair<float, float> noise{0, 0};
+    std::for_each(noises.begin(), noises.end(),
+      [&noise](const std::pair<float, float>& n) { noise.first += n.first; noise.second += n.second; });
+    noise.first /= noises.size();
+    noise.second /= noises.size();
+    return noise;
+  };
+  //fill up the noise queue so the first points arent unsmoothed
+  while(!noises.full()) get_noise();
+
+  //for each point of the 1hz shape
+  std::vector<midgard::PointLL> simulated;
+  for(size_t i = 0; i < resampled.size(); ++i) {
+    const auto& p = resampled[i];
+    //is this a harmonic of the desired sampling rate
+    if(i % sample_rate == 0) {
+      //meters of noise with extremely low likelihood its larger than accuracy
+      auto noise = get_noise();
+      //use the number of meters per degree in both axis to offset the point by the noise
+      auto metersPerDegreeLon = DistanceApproximator::MetersPerLngDegree(p.second);
+      simulated.emplace_back(midgard::PointLL(p.first + noise.first / metersPerDegreeLon,
+        p.second + noise.second / kMetersPerDegreeLat));
+      //keep the distance to use for accuracy
+      accuracies.emplace_back(simulated.back().Distance(p));
+    }
+  }
+  return simulated;
+}
 
 }
 }

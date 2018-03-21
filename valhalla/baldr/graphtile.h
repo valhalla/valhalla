@@ -231,6 +231,14 @@ class GraphTile {
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
   /**
+   * Convenience method to get the types for the names given the offset to the
+   * edge information.
+   * @param  edgeinfo_offset  Offset to the edge info.
+   * @return  Returns unit16_t.  If a bit is set, then it is a ref.
+   */
+  uint16_t GetTypes(const uint32_t edgeinfo_offset) const;
+
+  /**
    * Get the admininfo at the specified index. Populates the state name and
    * country name from the text/name list.
    * @param  idx  Index into the admin list.

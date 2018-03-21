@@ -12,7 +12,6 @@
 #include "midgard/logging.h"
 #include "midgard/constants.h"
 #include "baldr/json.h"
-#include "baldr/geojson.h"
 #include "exception.h"
 
 #include "thor/worker.h"
@@ -28,9 +27,25 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-  //maximum edge score (24 hours)
-  constexpr float kMaxScore = 86400.0f;
-
+  // Maximum edge score - base this on costing type.
+  // Large values can cause very bad performance. Setting this back
+  // to 2 hours for bike and pedestrian and 12 hours for driving routes.
+  // TODO - re-evaluate edge scores and balance performance vs. quality.
+  // Perhaps tie the edge score logic in with the costing type - but
+  // may want to do this in loki. At this point in thor the costing method
+  // has not yet been constructed.
+  constexpr float kMaxScore[] = {
+    43200.0f, // auto
+    43200.0f, // auto_shorter
+    7200.0f,  // bicycle
+    43200.0f, // bus
+    43200.0f, // hov
+    14400.0f, // motor_scooter
+    7200.0f,  // multimodal
+    7200.0f,  // pedestrian
+    14400.0f, // transit
+    43200.0f  // truck
+  };
   constexpr double kMilePerMeter = 0.000621371;
 
   std::vector<baldr::PathLocation> store_correlated_locations(const rapidjson::Document& request, const std::vector<baldr::Location>& locations) {
@@ -50,10 +65,35 @@ namespace {
             return i.score < j.score;
           });
 
+        // TODO - this gets simplified with proto updates
+        uint32_t index;
+        auto costing = rapidjson::get<std::string>(request,  "/costing");
+        if (costing == "auto") {
+          index = 0;
+        } else if (costing == "auto_shorter") {
+          index = 1;
+        } else if (costing == "bicycle") {
+          index = 2;
+        } else if (costing == "bus") {
+          index = 3;
+        } else if (costing == "hov") {
+          index = 4;
+        } else if (costing == "motor_scooter") {
+          index = 5;
+        } else if (costing == "multimodal") {
+          index = 6;
+        } else if (costing == "pedestrian") {
+          index = 7;
+        } else if (costing == "transit") {
+          index = 8;
+        } else {
+          index = 9; // truck
+        }
+
         for(auto& e : correlated.back().edges) {
           e.score -= minScoreEdge.score;
-          if (e.score > kMaxScore) {
-            e.score = kMaxScore;
+          if (e.score > kMaxScore[index]) {
+            e.score = kMaxScore[index];
           }
         }
       }
@@ -77,8 +117,7 @@ namespace valhalla {
     thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config):
       mode(valhalla::sif::TravelMode::kPedestrian),
       matcher_factory(config), reader(matcher_factory.graphreader()),
-      long_request(config.get<float>("thor.logging.long_request")),
-      healthcheck(false) {
+      long_request(config.get<float>("thor.logging.long_request")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -123,45 +162,31 @@ namespace valhalla {
       auto s = std::chrono::system_clock::now();
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
-      const std::string* jsonp = nullptr;
-
+      valhalla_request_t request;
       try{
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-        rapidjson::Document request;
-        request.Parse(request_str.c_str());
-        if (request.HasParseError()) {
-          valhalla::midgard::logging::Log("500::non-std::exception", " [ANALYTICS] ");
-          return jsonify_error({401}, info, options);
-        }
-
-        //parse it to pbf object
-        options = from_json(request);
+        std::string serialized_options(static_cast<const char*>(job.back().data()), job.back().size());
+        request = std::move(valhalla_request_t(request_str, serialized_options));
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
 
-        //flag healthcheck requests
-        healthcheck = rapidjson::get_optional<bool>(request, "/healthcheck").get_value_or(false);
-        // Initialize request - get the PathALgorithm to use
-        ACTION_TYPE action = static_cast<ACTION_TYPE>(rapidjson::get<int>(request, "/action", -1));
-        boost::optional<int> date_time_type = rapidjson::get_optional<int>(request, "/date_time/type");
+        boost::optional<int> date_time_type = rapidjson::get_optional<int>(request.document, "/date_time/type");
 
         worker_t::result_t result{true};
         double denominator = 0;
         size_t order_index = 0;
         //do request specific processing
-        switch (action) {
-          case ONE_TO_MANY:
-          case MANY_TO_ONE:
-          case MANY_TO_MANY:
-          case SOURCES_TO_TARGETS:
-            result = to_response(matrix(action, request), info, options);
+        switch (request.options.action()) {
+          case odin::DirectionsOptions::sources_to_targets:
+            result = to_response_json(matrix(request), info, request);
             denominator = correlated_s.size() * correlated_t.size();
             break;
-          case OPTIMIZED_ROUTE:
+          case odin::DirectionsOptions::optimized_route:
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
+            result.messages.emplace_back(std::move(serialized_options));
             for (auto& trippath : optimized_route(request)) {
               for (auto& location : *trippath.mutable_location())
                 location.set_original_index(optimal_order[order_index++]);
@@ -170,25 +195,27 @@ namespace valhalla {
             }
             denominator = std::max(correlated_s.size(), correlated_t.size());
             break;
-          case ISOCHRONE:
-            result = to_response(isochrones(request), info, options);
+          case odin::DirectionsOptions::isochrone:
+            result = to_response_json(isochrones(request), info, request);
             denominator = correlated_s.size() * correlated_t.size();
             break;
-          case ROUTE:
+          case odin::DirectionsOptions::route:
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
+            result.messages.emplace_back(std::move(serialized_options));
             for (const auto& trippath : route(request, date_time_type))
               result.messages.emplace_back(trippath.SerializeAsString());
             denominator = correlated.size();
             break;
-          case TRACE_ROUTE:
+          case odin::DirectionsOptions::trace_route:
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
+            result.messages.emplace_back(std::move(serialized_options));
             result.messages.emplace_back(trace_route(request).SerializeAsString());
             denominator = trace.size() / 1100;
             break;
-          case TRACE_ATTRIBUTES:
-            result = to_response(trace_attributes(request), info, options);
+          case odin::DirectionsOptions::trace_attributes:
+            result = to_response_json(trace_attributes(request), info, request);
             denominator = trace.size() / 1100;
             break;
           default:
@@ -196,21 +223,21 @@ namespace valhalla {
         }
 
         double elapsed_time = std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
-        if (!healthcheck && !info.spare && elapsed_time / denominator > long_request) {
-          LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request elapsed time (ms)::"+ std::to_string(elapsed_time));
-          LOG_WARN("thor::" + ACTION_TO_STRING.find(action)->second + " request exceeded threshold::"+ request_str);
-          midgard::logging::Log("valhalla_thor_long_request_"+ACTION_TO_STRING.find(action)->second, " [ANALYTICS] ");
+        if (!request.options.do_not_track() && elapsed_time / denominator > long_request) {
+          LOG_WARN("thor::" + odin::DirectionsOptions::Action_Name(request.options.action()) + " request elapsed time (ms)::"+ std::to_string(elapsed_time));
+          LOG_WARN("thor::" + odin::DirectionsOptions::Action_Name(request.options.action()) + " request exceeded threshold::"+ request_str);
+          midgard::logging::Log("valhalla_thor_long_request_"+odin::DirectionsOptions::Action_Name(request.options.action()), " [ANALYTICS] ");
         }
 
         return result;
       }
       catch(const valhalla_exception_t& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error(e, info, options);
+        return jsonify_error(e, info, request);
       }
       catch(const std::exception& e) {
         valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
-        return jsonify_error({499, std::string(e.what())}, info, options);
+        return jsonify_error({499, std::string(e.what())}, info, request);
       }
     }
 
@@ -245,21 +272,21 @@ namespace valhalla {
       return factory.Create(costing, boost::property_tree::ptree{});
     }
 
-    std::string thor_worker_t::parse_costing(const rapidjson::Document& request) {
+    std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
       // Parse out the type of route - this provides the costing method to use
-      auto costing = rapidjson::get<std::string>(request,  "/costing");
+      auto costing = rapidjson::get<std::string>(request.document,  "/costing");
 
       // Set travel mode and construct costing
       if (costing == "multimodal" || costing == "transit") {
         // For multi-modal we construct costing for all modes and set the
         // initial mode to pedestrian. (TODO - allow other initial modes)
-        mode_costing[0] = get_costing(request, "auto");
-        mode_costing[1] = get_costing(request, "pedestrian");
-        mode_costing[2] = get_costing(request, "bicycle");
-        mode_costing[3] = get_costing(request, "transit");
+        mode_costing[0] = get_costing(request.document, "auto");
+        mode_costing[1] = get_costing(request.document, "pedestrian");
+        mode_costing[2] = get_costing(request.document, "bicycle");
+        mode_costing[3] = get_costing(request.document, "transit");
         mode = valhalla::sif::TravelMode::kPedestrian;
       } else {
-        valhalla::sif::cost_ptr_t cost = get_costing(request, costing);
+        valhalla::sif::cost_ptr_t cost = get_costing(request.document, costing);
         mode = cost->travel_mode();
         mode_costing[static_cast<uint32_t>(mode)] = cost;
       }
@@ -267,17 +294,17 @@ namespace valhalla {
       return costing;
     }
 
-    void thor_worker_t::parse_locations(const rapidjson::Document& request) {
+    void thor_worker_t::parse_locations(const valhalla_request_t& request) {
       //we require locations
-      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, "/locations");
-      auto request_sources = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, "/sources");
-      auto request_targets = rapidjson::get_optional<rapidjson::Value::ConstArray>(request, "/targets");
+      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/locations");
+      auto request_sources = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/sources");
+      auto request_targets = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/targets");
       if(request_locations) {
         for(const auto& location : *request_locations) {
           try{ locations.push_back(baldr::Location::FromRapidJson(location)); }
           catch (...) { throw valhalla_exception_t{421}; }
         }
-        correlated = store_correlated_locations(request, locations);
+        correlated = store_correlated_locations(request.document, locations);
       }//if we have a sources and targets request here we will divy up the correlated amongst them
       else if(request_sources && request_targets) {
         for(const auto& s : *request_sources) {
@@ -288,18 +315,18 @@ namespace valhalla {
           try{ locations.push_back(baldr::Location::FromRapidJson(t)); }
           catch (...) { throw valhalla_exception_t{423}; }
         }
-        correlated = store_correlated_locations(request, locations);
+        correlated = store_correlated_locations(request.document, locations);
 
         correlated_s.insert(correlated_s.begin(), correlated.begin(), correlated.begin() + request_sources->Size());
         correlated_t.insert(correlated_t.begin(), correlated.begin() + request_sources->Size(), correlated.end());
       }
 
       //type - 0: current, 1: depart, 2: arrive
-      if (!request.HasMember("/date_time/type"))
+      if (!request.document.HasMember("/date_time/type"))
         return;
 
-      int date_time_type = rapidjson::get<float>(request, "/date_time/type");
-      auto date_time_value = rapidjson::get_optional<std::string>(request, "/date_time/value");
+      int date_time_type = rapidjson::get<float>(request.document, "/date_time/type");
+      auto date_time_value = rapidjson::get_optional<std::string>(request.document, "/date_time/value");
 
       if (date_time_type == 0) //current.
         locations.front().date_time_ = "current";
@@ -309,7 +336,7 @@ namespace valhalla {
         locations.back().date_time_ = date_time_value;
     }
 
-    void thor_worker_t::parse_measurements(const rapidjson::Document& request) {
+    void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
       // Create a matcher
       try {
         matcher.reset(matcher_factory.Create(trace_config));
@@ -318,7 +345,7 @@ namespace valhalla {
       }
 
       //we require locations
-      auto request_shape = rapidjson::get<rapidjson::Value::ConstArray>(request, "/shape");
+      auto request_shape = rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/shape");
       try{
         for(const auto& pt : request_shape) {
           float lat = rapidjson::get<float>(pt, "/lat");
@@ -334,15 +361,15 @@ namespace valhalla {
       }
     }
 
-    void thor_worker_t::parse_trace_config(const rapidjson::Document& request) {
-      auto costing = rapidjson::get<std::string>(request, "/costing");
+    void thor_worker_t::parse_trace_config(const valhalla_request_t& request) {
+      auto costing = rapidjson::get<std::string>(request.document, "/costing");
       trace_config.put<std::string>("mode", costing);
 
       if (trace_customizable.empty()) {
         return;
       }
 
-      auto trace_options = rapidjson::get_optional<rapidjson::Value::ConstObject>(request, "/trace_options");
+      auto trace_options = rapidjson::get_optional<rapidjson::Value::ConstObject>(request.document, "/trace_options");
       if (!trace_options) {
         return;
       }
@@ -362,25 +389,23 @@ namespace valhalla {
       }
     }
 
-    void thor_worker_t::log_admin(valhalla::odin::TripPath& trip_path) {
-      if (!healthcheck) {
-        std::unordered_set<std::string> state_iso;
-        std::unordered_set<std::string> country_iso;
-        std::stringstream s_ss, c_ss;
-        if (trip_path.admin_size() > 0) {
-          for (const auto& admin : trip_path.admin()) {
-            if (admin.has_state_code())
-              state_iso.insert(admin.state_code());
-            if (admin.has_country_code())
-              country_iso.insert(admin.country_code());
-          }
-          for (const std::string& x: state_iso)
-            s_ss << " " << x;
-          for (const std::string& x: country_iso)
-            c_ss << " " << x;
-          if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
-          if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
+    void thor_worker_t::log_admin(const valhalla::odin::TripPath& trip_path) {
+      std::unordered_set<std::string> state_iso;
+      std::unordered_set<std::string> country_iso;
+      std::stringstream s_ss, c_ss;
+      if (trip_path.admin_size() > 0) {
+        for (const auto& admin : trip_path.admin()) {
+          if (admin.has_state_code())
+            state_iso.insert(admin.state_code());
+          if (admin.has_country_code())
+            country_iso.insert(admin.country_code());
         }
+        for (const std::string& x: state_iso)
+          s_ss << " " << x;
+        for (const std::string& x: country_iso)
+          c_ss << " " << x;
+        if (!s_ss.eof()) valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
+        if (!c_ss.eof()) valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
       }
     }
 
@@ -397,7 +422,6 @@ namespace valhalla {
       matcher_factory.ClearFullCache();
       if(reader.OverCommitted())
         reader.Clear();
-      options = odin::DirectionsOptions::default_instance();
     }
 
   }

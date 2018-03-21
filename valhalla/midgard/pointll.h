@@ -5,6 +5,7 @@
 #include <valhalla/midgard/constants.h>
 #include <tuple>
 #include <cmath>
+#include <limits>
 
 namespace valhalla {
 namespace midgard {
@@ -119,16 +120,19 @@ class PointLL : public Point2 {
    * Finds the closest point to the supplied polyline as well as the distance
    * to that point and the index of the segment where the closest
    * point lies.
-   * @param  pts  List of points on the polyline.
+   * @param  pts          List of points on the polyline.
    * @param  begin_index  Index where the processing of closest point should start.
    *                      Default value is 0.
+   * @param  dist_cutoff  Minimum linear distance along pts that should be considered
+   *                      before giving up.
    *
    * @return tuple of <Closest point along the polyline,
    *                   Distance in meters of the closest point,
    *                   Index of the segment of the polyline which contains the closest point >
    */
-    std::tuple<PointLL, float, int> ClosestPoint(
-        const std::vector<PointLL>& pts, size_t begin_index = 0) const;
+  std::tuple<PointLL, float, int> ClosestPoint(
+      const std::vector<PointLL>& pts, size_t begin_index = 0,
+      float dist_cutoff = std::numeric_limits<float>::infinity()) const;
 
   /**
    * Calculate the heading from the start index within a polyline of lng,lat
