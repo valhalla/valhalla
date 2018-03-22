@@ -48,23 +48,6 @@ namespace {
   };
   constexpr double kMilePerMeter = 0.000621371;
 
-  void adjust_scores(valhalla_request_t& request) {
-    auto max_score = kMaxScores.find(odin::DirectionsOptions::Costing_Name(request.options.costing()));
-    for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
-      for(auto& location : *locations) {
-        auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
-          [](odin::Location::PathEdge i, odin::Location::PathEdge j)->bool {
-            return i.score() < j.score();
-          });
-        for(auto& e : *location.mutable_path_edges()) {
-          e.set_score(e.score() - minScoreEdge.score());
-          if (e.score() > max_score->second)
-            e.set_score(max_score->second);
-        }
-      }
-    }
-  }
-
 }
 
 namespace valhalla {
@@ -256,8 +239,29 @@ namespace valhalla {
     }
 
     void thor_worker_t::parse_locations(valhalla_request_t& request) {
-      //we require locations
-      adjust_scores(request);
+      auto max_score = kMaxScores.find(odin::DirectionsOptions::Costing_Name(request.options.costing()));
+      for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
+        for(auto& location : *locations) {
+          //completely disable scores for this location
+          if(location.has_rank_candidates() && !location.rank_candidates()) {
+            for(auto& c : *location.mutable_path_edges())
+              c.set_score(0);
+            for(auto& c : *location.mutable_filtered_edges())
+              c.set_score(0);
+            continue;
+          }
+          //subtract off the min score so that the search doesnt go farther than it has to
+          auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
+            [](odin::Location::PathEdge i, odin::Location::PathEdge j)->bool {
+              return i.score() < j.score();
+            });
+          for(auto& e : *location.mutable_path_edges()) {
+            e.set_score(e.score() - minScoreEdge.score());
+            if (e.score() > max_score->second)
+              e.set_score(max_score->second);
+          }
+        }
+      }
     }
 
     void thor_worker_t::parse_measurements(const valhalla_request_t& request) {

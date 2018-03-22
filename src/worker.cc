@@ -362,6 +362,8 @@ namespace {
           if(accuracy) location->set_accuracy(*accuracy);
           auto time = rapidjson::get_optional<unsigned int>(r_loc, "/time");
           if(time) location->set_time(*time);
+          auto rank_candidates = rapidjson::get_optional<bool>(r_loc, "/rank_candidates");
+          if(rank_candidates) location->set_rank_candidates(*rank_candidates);
         }
         catch (...) { throw valhalla::valhalla_exception_t{location_parse_error_code}; }
       }
