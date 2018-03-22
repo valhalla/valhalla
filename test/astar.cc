@@ -234,10 +234,10 @@ void assert_is_trivial_path(
 
 void add(GraphId id, float dist, PointLL ll, vo::Location& l) {
   l.mutable_path_edges()->Add()->set_graph_id(id);
-  l.mutable_path_edges()->rbegin()->set_dist(dist);
+  l.mutable_path_edges()->rbegin()->set_percent_along(dist);
   l.mutable_path_edges()->rbegin()->mutable_ll()->set_lng(ll.first);
   l.mutable_path_edges()->rbegin()->mutable_ll()->set_lat(ll.second);
-  l.mutable_path_edges()->rbegin()->set_score(0.0f);
+  l.mutable_path_edges()->rbegin()->set_distance(0.0f);
 }
 
 // test that a path from A to B succeeds, even if the edges from A to C and B

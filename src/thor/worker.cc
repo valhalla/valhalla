@@ -34,7 +34,7 @@ namespace {
   // Perhaps tie the edge score logic in with the costing type - but
   // may want to do this in loki. At this point in thor the costing method
   // has not yet been constructed.
-  const std::unordered_map<std::string, float> kMaxScores = {
+  const std::unordered_map<std::string, float> kMaxDistances = {
     {"auto_", 43200.0f},
     {"auto_shorter", 43200.0f},
     {"bicycle", 7200.0f},
@@ -47,7 +47,7 @@ namespace {
     {"truck", 43200.0f},
   };
   //a scale factor to apply to the score so that we bias towards closer results more
-  constexpr float kScoreScale = 10.f;
+  constexpr float kDistanceScale = 10.f;
   constexpr double kMilePerMeter = 0.000621371;
 
 }
@@ -249,23 +249,23 @@ namespace valhalla {
             for(auto& candidate : *candidates) {
               //completely disable scores for this location
               if(location.has_rank_candidates() && !location.rank_candidates())
-                candidate.set_score(0);
+                candidate.set_distance(0);
               //scale the score to favor closer results more
               else
-                candidate.set_score(candidate.score() * candidate.score() * kScoreScale);
+                candidate.set_distance(candidate.distance() * candidate.distance() * kDistanceScale);
               //remember the min score
-              if(minScore > candidate.score())
-                minScore = candidate.score();
+              if(minScore > candidate.distance())
+                minScore = candidate.distance();
             }
           }
 
           //subtract off the min score and cap at max so that path algorithm doesnt go too far
-          auto max_score = kMaxScores.find(odin::DirectionsOptions::Costing_Name(request.options.costing()));
+          auto max_score = kMaxDistances.find(odin::DirectionsOptions::Costing_Name(request.options.costing()));
           for(auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
             for(auto& candidate : *candidates) {
-              candidate.set_score(candidate.score() - minScore);
-              if (candidate.score() > max_score->second)
-                candidate.set_score(max_score->second);
+              candidate.set_distance(candidate.distance() - minScore);
+              if (candidate.distance() > max_score->second)
+                candidate.set_distance(max_score->second);
             }
           }
         }

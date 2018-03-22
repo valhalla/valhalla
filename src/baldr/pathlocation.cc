@@ -6,13 +6,13 @@ namespace baldr{
 
   PathLocation::PathEdge::PathEdge(const GraphId& id, const float dist,
     const midgard::PointLL& projected, const float score, const SideOfStreet sos, const unsigned int minimum_reachability):
-    id(id), dist(dist), projected(projected), sos(sos), score(score), minimum_reachability(minimum_reachability) {
+    id(id), percent_along(dist), projected(projected), sos(sos), distance(score), minimum_reachability(minimum_reachability) {
   }
   bool PathLocation::PathEdge::begin_node() const {
-    return dist == 0.f;
+    return percent_along == 0.f;
   }
   bool PathLocation::PathEdge::end_node() const {
-    return dist == 1.f;
+    return percent_along == 1.f;
   }
 
   PathLocation::PathLocation(const Location& location):Location(location) {
@@ -23,8 +23,8 @@ namespace baldr{
     for(const auto& edge : edges) {
       bool found = false;
       for(const auto& other_edge : other.edges) {
-        if(edge.id == other_edge.id && edge.sos == other_edge.sos && midgard::equal<float>(edge.dist, other_edge.dist) &&
-            midgard::similar<float>(edge.score + 1, other_edge.score + 1) && edge.projected.ApproximatelyEqual(other_edge.projected)){
+        if(edge.id == other_edge.id && edge.sos == other_edge.sos && midgard::equal<float>(edge.percent_along, other_edge.percent_along) &&
+            midgard::similar<float>(edge.distance + 1, other_edge.distance + 1) && edge.projected.ApproximatelyEqual(other_edge.projected)){
           found = true;
           break;
         }
@@ -79,9 +79,9 @@ namespace baldr{
     rapidjson::Value e{rapidjson::kObjectType};
 
     e.AddMember("id", edge.id.value, allocator)
-     .AddMember("dist", edge.dist, allocator)
+     .AddMember("dist", edge.percent_along, allocator)
      .AddMember("sos", static_cast<int>(edge.sos), allocator)
-     .AddMember("score", edge.score, allocator)
+     .AddMember("score", edge.distance, allocator)
      .AddMember("minimum_reachability", edge.minimum_reachability, allocator);
 
     // Serialize projected lat,lng as double (otherwise leads to shape

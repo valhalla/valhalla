@@ -945,19 +945,19 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       nodeinfo = endtile->node(directededge->endnode());
-      Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist());
+      Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: high edge scores cause issues as there is code to limit cost so
       // that large penalties (e.g., ferries) are excluded.
-      cost.cost += edge.score() * 0.005f;
+      cost.cost += edge.distance() * 0.005f;
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
       uint32_t idx = edgelabels_.size();
-      uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist()));
+      uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
       edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                            cost.cost, 0.0f, mode_, d);
@@ -1016,19 +1016,19 @@ void Isochrone::SetOriginLocationsMM(GraphReader& graphreader,
 
       // Get cost
       nodeinfo = endtile->node(directededge->endnode());
-      Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.dist());
+      Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: high edge scores cause issues as there is code to limit cost so
       // that large penalties (e.g., ferries) are excluded.
-      cost.cost += edge.score() * 0.005f;
+      cost.cost += edge.distance() * 0.005f;
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
       uint32_t idx = mmedgelabels_.size();
-      uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist()));
+      uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
       edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                              cost.cost, 0.0f, mode_, d, 0, GraphId(), 0, 0, false);
@@ -1092,12 +1092,12 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
       // the end node of the opposing edge is in the same tile as the directed
       // edge.  Use the directed edge for costing, as this is the forward
       // direction along the destination edge.
-      Cost cost = costing->EdgeCost(directededge) * edge.dist();
+      Cost cost = costing->EdgeCost(directededge) * edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score();
+      cost.cost += edge.distance();
 
       // Add EdgeLabel to the adjacency list. Set the predecessor edge index
       // to invalid to indicate the origin of the path. Make sure the opposing

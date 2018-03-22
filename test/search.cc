@@ -158,7 +158,7 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
 
   valhalla::baldr::PathLocation answer(location);
   for(const auto& expected_edge : expected_edges) {
-    answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.dist,
+    answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.percent_along,
       expected_point, expected_point.Distance(location.latlng_), expected_edge.sos});
   }
   //note that this just checks that p has the edges that answer has

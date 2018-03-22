@@ -14,7 +14,7 @@ static bool IsTrivial(const uint64_t& edgeid,
     if (destination_edge.graph_id() == edgeid) {
       for (const auto& origin_edge : origin.path_edges()) {
         if (origin_edge.graph_id() == edgeid &&
-            origin_edge.dist() <= destination_edge.dist()) {
+            origin_edge.percent_along() <= destination_edge.percent_along()) {
           return true;
         }
       }
@@ -450,14 +450,14 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
 
     // Get cost. Use this as sortcost since A* is not used for time+distance
     // matrix computations. . Get distance along the remainder of this edge.
-    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.dist());
+    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.percent_along());
     uint32_t d = static_cast<uint32_t>(directededge->length() *
-                             (1.0f - edge.dist()));
+                             (1.0f - edge.percent_along()));
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score();
+    cost.cost += edge.distance();
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
@@ -496,13 +496,13 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
 
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations. Get the distance along the edge.
-    Cost cost = costing_->EdgeCost(opp_dir_edge) * edge.dist();
-    uint32_t d = static_cast<uint32_t>(directededge->length() * edge.dist());
+    Cost cost = costing_->EdgeCost(opp_dir_edge) * edge.percent_along();
+    uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score();
+    cost.cost += edge.distance();
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
@@ -530,7 +530,7 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
     for (const auto& edge : loc.path_edges()) {
       // Keep the id and the partial distance for the
       // remainder of the edge.
-      d.dest_edges[edge.graph_id()] = (1.0f - edge.dist());
+      d.dest_edges[edge.graph_id()] = (1.0f - edge.percent_along());
 
       // Form a threshold cost (the total cost to traverse the edge)
       const GraphTile* tile = graphreader.GetGraphTile(static_cast<GraphId>(edge.graph_id()));
@@ -539,7 +539,7 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      c += edge.score();
+      c += edge.distance();
       if (c > d.threshold) {
         d.threshold = c;
       }
@@ -571,7 +571,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
 
       // Keep the id and the partial distance for the
       // remainder of the edge.
-      d.dest_edges[opp_edge_id] = edge.dist();
+      d.dest_edges[opp_edge_id] = edge.percent_along();
 
       // Form a threshold cost (the total cost to traverse the edge)
       const GraphTile* tile = graphreader.GetGraphTile(static_cast<GraphId>(edge.graph_id()));
@@ -580,7 +580,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      c += edge.score();
+      c += edge.distance();
       if (c > d.threshold) {
         d.threshold = c;
       }

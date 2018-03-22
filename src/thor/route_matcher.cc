@@ -77,7 +77,7 @@ end_node_t GetEndEdges(GraphReader& reader,
       auto* opp_edge = tile->directededge(opp_edge_id);
 
       // Compute partial distance along end edge
-      float dist = opp_edge->length() * edge.dist();
+      float dist = opp_edge->length() * edge.percent_along();
       end_nodes.insert({opp_edge->endnode(), std::make_pair(edge, dist)});
     }
   }
@@ -260,7 +260,7 @@ bool RouteMatcher::FormPath(
     // Initialize indexes and shape
     size_t index = 0;
     float length = 0.0f;
-    float de_remaining_length = de->length() * (1 - edge.dist());
+    float de_remaining_length = de->length() * (1 - edge.percent_along());
     float de_length = length_comparison(de_remaining_length, true);
     EdgeLabel prev_edge_label;
     // Loop over shape to form path from matching edges
@@ -275,7 +275,7 @@ bool RouteMatcher::FormPath(
 
         // Update the elapsed time edge cost at begin edge
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs
-            * (1 - edge.dist());
+            * (1 - edge.percent_along());
 
         // Add begin edge
         path_infos.emplace_back(mode, elapsed_time, graphid, 0);
@@ -318,7 +318,7 @@ bool RouteMatcher::FormPath(
 
           // Update the elapsed time based on edge cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(end_de).secs *
-                          end_edge.dist();
+                          end_edge.percent_along();
 
           // Add end edge
           path_infos.emplace_back(mode, elapsed_time, end_edge_graphid, 0);
@@ -338,7 +338,7 @@ bool RouteMatcher::FormPath(
       if (end.second.first.graph_id() == edge.graph_id()) {
         // Update the elapsed time based on edge cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs *
-                               (end.second.first.dist() - edge.dist());
+                               (end.second.first.percent_along() - edge.percent_along());
 
         // Add end edge
         path_infos.emplace_back(mode, elapsed_time, GraphId(edge.graph_id()), 0);

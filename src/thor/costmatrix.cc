@@ -726,13 +726,13 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Get cost. Get distance along the remainder of this edge.
       Cost edgecost = costing_->EdgeCost(directededge);
-      Cost cost = edgecost * (1.0f - edge.dist());
-      uint32_t d = std::round(directededge->length() * (1.0f - edge.dist()));
+      Cost cost = edgecost * (1.0f - edge.percent_along());
+      uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score();
+      cost.cost += edge.distance();
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and
@@ -805,13 +805,13 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
       Cost edgecost = costing_->EdgeCost(directededge);
-      Cost cost = edgecost * edge.dist();
-      uint32_t d = std::round(directededge->length() * edge.dist());
+      Cost cost = edgecost * edge.percent_along();
+      uint32_t d = std::round(directededge->length() * edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.score();
+      cost.cost += edge.distance();
 
       // Store the edge cost and length in the transition cost (so we can
       // recover the full length and cost for cases where origin and

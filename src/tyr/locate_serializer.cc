@@ -27,8 +27,8 @@ namespace {
               edge.sos == PathLocation::LEFT ? std::string("left") :
                 (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
             },
-            {"percent_along", json::fp_t{edge.dist, 5} },
-            {"score", json::fp_t{edge.score, 1}},
+            {"percent_along", json::fp_t{edge.percent_along, 5} },
+            {"distance", json::fp_t{edge.distance, 1}},
             {"minimum_reachability", static_cast<int64_t>(edge.minimum_reachability)},
             {"edge_id", edge.id.json()},
             {"edge", directed_edge->json()},
@@ -46,7 +46,7 @@ namespace {
                 edge.sos == PathLocation::LEFT ? std::string("left") :
                   (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
               },
-              {"percent_along", json::fp_t{edge.dist, 5} },
+              {"percent_along", json::fp_t{edge.percent_along, 5} },
             })
           );
         }

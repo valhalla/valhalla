@@ -512,7 +512,7 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
     // Use edge search with loki
     auto loc = loki_search_single(vb::Location(ll), m_reader, level);
     for (const auto& edge : loc.path_edges()) {
-      PathLocation::PathEdge e(GraphId(edge.graph_id()), edge.dist(), PointLL{edge.ll().lng(), edge.ll().lat()}, edge.score());
+      PathLocation::PathEdge e(GraphId(edge.graph_id()), edge.percent_along(), PointLL{edge.ll().lng(), edge.ll().lat()}, edge.distance());
       edges.emplace_back(std::move(e), 0.0f);  // TODO??
     }
     if (origin) {
@@ -568,7 +568,7 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
     // Check the bearing for this edge and make sure within tolerance
     // TODO - short edges have bearing inaccuracy (what is too short?)
     if (segment_length > 5 && edge->length() > 5) {
-      uint16_t walked_bearing = bearing(tile, origin_edge.edge.id, origin_edge.edge.dist);
+      uint16_t walked_bearing = bearing(tile, origin_edge.edge.id, origin_edge.edge.percent_along);
       // Increase bearing tolerance if LRP is not at a node and edge length is long
       float tolerance = kBearingTolerance;
       if (!segment.lrps(0).at_node() && edge->length() > 1000) {
@@ -581,19 +581,19 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
 
     // Walk a path from this origin edge.
     std::vector<EdgeMatch> edges;
-    edges.emplace_back(EdgeMatch{origin_edge.edge.id, edge->length(), origin_edge.edge.dist, 1.0f});
+    edges.emplace_back(EdgeMatch{origin_edge.edge.id, edge->length(), origin_edge.edge.percent_along, 1.0f});
 
     // Check if the origin edge matches a destination edge
     auto dest = dest_edges.find(origin_edge.edge.id);
     if (dest != dest_edges.end()) {
       // Check if this path is a better match
-      uint32_t walked_length = edge->length() * (dest->second.edge.dist - origin_edge.edge.dist);
+      uint32_t walked_length = edge->length() * (dest->second.edge.percent_along - origin_edge.edge.percent_along);
       uint32_t d = abs_u32_diff(walked_length, segment_length);
       if (d < kLengthTolerance) {
         uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
         if (score < best_score) {
           best_path = edges;
-          best_path.back().end_pct = dest->second.edge.dist;
+          best_path.back().end_pct = dest->second.edge.percent_along;
           best_score = score;
         }
       }
@@ -601,7 +601,7 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
 
     // Continue even if the origin edge matches a destination edge - this could
     // be to a different nearby node but it is not the optimal one.
-    uint32_t walked_length = edge->length() * (1.0f - origin_edge.edge.dist);
+    uint32_t walked_length = edge->length() * (1.0f - origin_edge.edge.percent_along);
     while (true) {
       // Get the next edge. Break if next edge is invalid.
       GraphId edgeid = next_edge(edges.back().edgeid, m_reader, tile, edge_length);
@@ -613,13 +613,13 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
       auto dest = dest_edges.find(edgeid);
       if (dest != dest_edges.end()) {
         // Check if this path is within tolerance and a better match
-        uint32_t length = walked_length + (edge_length * dest->second.edge.dist);
+        uint32_t length = walked_length + (edge_length * dest->second.edge.percent_along);
         uint32_t d = abs_u32_diff(length, segment_length);
         if (d < kLengthTolerance) {
           uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
           if (score < best_score) {
             best_path = edges;
-            best_path.emplace_back(EdgeMatch{edgeid, edge_length, 0.0f, dest->second.edge.dist});
+            best_path.emplace_back(EdgeMatch{edgeid, edge_length, 0.0f, dest->second.edge.percent_along});
             best_score = score;
           }
         }

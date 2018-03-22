@@ -662,8 +662,8 @@ struct bin_handler_t {
       //filtered edges so that when finding a route using non filtered edges fails the
       //use of filtered edges are always penalized higher than the non filtered ones
       auto max = std::max_element(correlated.edges.begin(), correlated.edges.end(),
-        [](const PathLocation::PathEdge& a, const PathLocation::PathEdge& b){ return a.score < b.score; });
-      std::for_each(filtered.begin(), filtered.end(), [&max](PathLocation::PathEdge& e){ e.score += (3600.0f + max->score);});
+        [](const PathLocation::PathEdge& a, const PathLocation::PathEdge& b){ return a.distance < b.distance; });
+      std::for_each(filtered.begin(), filtered.end(), [&max](PathLocation::PathEdge& e){ e.distance += (3600.0f + max->distance);});
       correlated.filtered_edges.insert(correlated.filtered_edges.end(), std::make_move_iterator(filtered.begin()),
         std::make_move_iterator(filtered.end()));
 
