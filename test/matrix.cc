@@ -134,18 +134,55 @@ namespace {
       throw valhalla::valhalla_exception_t{100};
     return d;
   }
+
+  // Maximum edge score - base this on costing type.
+  // Large values can cause very bad performance. Setting this back
+  // to 2 hours for bike and pedestrian and 12 hours for driving routes.
+  // TODO - re-evaluate edge scores and balance performance vs. quality.
+  // Perhaps tie the edge score logic in with the costing type - but
+  // may want to do this in loki. At this point in thor the costing method
+  // has not yet been constructed.
+  const std::unordered_map<std::string, float> kMaxScores = {
+    {"auto_", 43200.0f},
+    {"auto_shorter", 43200.0f},
+    {"bicycle", 7200.0f},
+    {"bus", 43200.0f},
+    {"hov", 43200.0f},
+    {"motor_scooter", 14400.0f},
+    {"multimodal", 7200.0f},
+    {"pedestrian", 7200.0f},
+    {"transit", 14400.0f},
+    {"truck", 43200.0f},
+  };
+  //a scale factor to apply to the score so that we bias towards closer results more
+  constexpr float kScoreScale = 10.f;
   void adjust_scores(valhalla::valhalla_request_t& request) {
     for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
       for(auto& location : *locations) {
-        auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
-          [](valhalla::odin::Location::PathEdge i, valhalla::odin::Location::PathEdge j)->bool {
-            return i.score() < j.score();
-          });
+        //get the minimum score for all the candidates
+        auto minScore = std::numeric_limits<float>::max();
+        for(auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+          for(auto& candidate : *candidates) {
+            //completely disable scores for this location
+            if(location.has_rank_candidates() && !location.rank_candidates())
+              candidate.set_score(0);
+            //scale the score to favor closer results more
+            else
+              candidate.set_score(candidate.score() * candidate.score() * kScoreScale);
+            //remember the min score
+            if(minScore > candidate.score())
+              minScore = candidate.score();
+          }
+        }
 
-        for(auto& e : *location.mutable_path_edges()) {
-          e.set_score(e.score() - minScoreEdge.score());
-          if (e.score() > 86400)
-            e.set_score(86400);
+        //subtract off the min score and cap at max so that path algorithm doesnt go too far
+        auto max_score = kMaxScores.find(valhalla::odin::DirectionsOptions::Costing_Name(request.options.costing()));
+        for(auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+          for(auto& candidate : *candidates) {
+            candidate.set_score(candidate.score() - minScore);
+            if (candidate.score() > max_score->second)
+              candidate.set_score(max_score->second);
+          }
         }
       }
     }
