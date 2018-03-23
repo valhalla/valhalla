@@ -27,8 +27,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::tyr;
 using namespace std;
 
-double distance_scale = kKmPerMeter;
-
 namespace osrm {
 
   valhalla::baldr::json::MapPtr waypoint(const odin::Location& location) {
@@ -37,17 +35,9 @@ namespace osrm {
 
     // Output location as a lon,lat array. Note this is the projected
     // lon,lat on the nearest road.
-    PointLL input_ll(location.ll().lng(), location.ll().lat());
-    PointLL proj_ll;
-    if (location.path_edges_size() > 0 && !location.has_projected_ll()) {
-      proj_ll = PointLL(location.path_edges(0).ll().lng(), location.path_edges(0).ll().lat());
-    } else {
-      proj_ll = PointLL(location.projected_ll().lng(), location.projected_ll().lat());
-    }
-
     auto loc = json::array({});
-    loc->emplace_back(json::fp_t{proj_ll.lng(), 6});
-    loc->emplace_back(json::fp_t{proj_ll.lat(), 6});
+    loc->emplace_back(json::fp_t{location.path_edges(0).ll().lng(), 6});
+    loc->emplace_back(json::fp_t{location.path_edges(0).ll().lat(), 6});
     waypoint->emplace("location", loc);
 
     // Add street name.
@@ -57,13 +47,21 @@ namespace osrm {
 
     // Add distance in meters from the input location to the nearest
     // point on the road used in the route
-    float distance = input_ll.Distance(proj_ll);
-    waypoint->emplace("distance", json::fp_t{distance * distance_scale, 3});
+    waypoint->emplace("distance", json::fp_t{location.path_edges(0).distance(), 3});
 
     // Add hint. Goal is for the hint returned from a locate request to be able
     // to quickly find the edge and point along the edge in a route request.
     // Defer this - not currently used in OSRM.
     waypoint->emplace("hint", std::string("TODO"));
+
+    // For now, having multiple path edges is the way to signal to this serializer
+    // that the location was used for a match point, so if that is the case
+    // trigger the extra serialization for the tracepoint logic
+    if(location.path_edges_size() > 1) {
+      waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
+      waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.original_index()));
+      waypoint->emplace("matchings_index", static_cast<uint64_t>(0)); //we only have one matching for now
+    }
 
     return waypoint;
   }
