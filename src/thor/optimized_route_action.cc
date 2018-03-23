@@ -54,10 +54,8 @@ namespace valhalla {
     optimal_order = optimizer.Solve(correlated.size(), time_costs);
     //put the optimal order into the locations array
     request.options.mutable_locations()->Clear();
-    for (size_t i = 0; i < optimal_order.size(); i++) {
+    for (size_t i = 0; i < optimal_order.size(); i++)
       request.options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
-      request.options.mutable_locations()->rbegin()->set_original_index(optimal_order[i]);
-    }
 
     auto trippaths = path_depart_at(*request.options.mutable_locations(), costing);
 
