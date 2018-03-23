@@ -564,7 +564,7 @@ TripPath TripPathBuilder::Build(
   PointLL start_vrt;
   for(const auto& e : origin.path_edges()) {
     if (e.graph_id() == path.front().edgeid) {
-      start_pct = e.dist();
+      start_pct = e.percent_along();
       start_sos = e.side_of_street();
       start_vrt = PointLL(e.ll().lng(), e.ll().lat());
       break;
@@ -586,7 +586,7 @@ TripPath TripPathBuilder::Build(
   PointLL end_vrt;
   for(const auto&e : dest.path_edges()) {
     if (e.graph_id() == path.back().edgeid) {
-      end_pct = e.dist();
+      end_pct = e.percent_along();
       end_sos = e.side_of_street();
       end_vrt = PointLL(e.ll().lng(), e.ll().lat());
       break;

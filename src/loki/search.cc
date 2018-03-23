@@ -30,9 +30,6 @@ constexpr float SIDE_OF_STREET_SNAP = 25.f; //this is 5 meters squared, the comp
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
 constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
-//a scale factor to apply to the score so that we bias towards closer results more
-constexpr float SCORE_SCALE = 10.f;
-
 
 //TODO: move this to midgard and test the crap out of it
 //we are essentially estimating the angle of the tangent
@@ -306,7 +303,7 @@ struct bin_handler_t {
 
   void correlate_node(const Location& location, const GraphId& found_node, const candidate_t& candidate, PathLocation& correlated, std::vector<PathLocation::PathEdge>& filtered){
     //we need this because we might need to go to different levels
-    auto score = candidate.sq_distance * SCORE_SCALE;
+    auto score = candidate.point.Distance(location.latlng_);
     std::function<void (const GraphId& node_id, bool transition)> crawl;
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       //now that we have a node we can pass back all the edges leaving and entering it
@@ -361,7 +358,7 @@ struct bin_handler_t {
 
   void correlate_edge(const Location& location, const candidate_t& candidate, PathLocation& correlated, std::vector<PathLocation::PathEdge>& filtered) {
     //now that we have an edge we can pass back all the info about it
-    auto score = candidate.sq_distance * SCORE_SCALE;
+    auto score = candidate.point.Distance(location.latlng_);
     if(candidate.edge != nullptr){
       //we need the ratio in the direction of the edge we are correlated to
       double partial_length = 0;
@@ -665,8 +662,8 @@ struct bin_handler_t {
       //filtered edges so that when finding a route using non filtered edges fails the
       //use of filtered edges are always penalized higher than the non filtered ones
       auto max = std::max_element(correlated.edges.begin(), correlated.edges.end(),
-        [](const PathLocation::PathEdge& a, const PathLocation::PathEdge& b){ return a.score < b.score; });
-      std::for_each(filtered.begin(), filtered.end(), [&max](PathLocation::PathEdge& e){ e.score += (3600.0f + max->score);});
+        [](const PathLocation::PathEdge& a, const PathLocation::PathEdge& b){ return a.distance < b.distance; });
+      std::for_each(filtered.begin(), filtered.end(), [&max](PathLocation::PathEdge& e){ e.distance += (3600.0f + max->distance);});
       correlated.filtered_edges.insert(correlated.filtered_edges.end(), std::make_move_iterator(filtered.begin()),
         std::make_move_iterator(filtered.end()));
 

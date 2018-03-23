@@ -56,12 +56,7 @@ namespace valhalla {
         if (request.options.locations_size() < 2)
           throw valhalla_exception_t{120};
 
-        //create new sources and targets ptree from locations
-        rapidjson::Value sources_child{rapidjson::kArrayType}, targets_child{rapidjson::kArrayType};
-        auto request_locations = rapidjson::get_optional<rapidjson::Value::Array>(request.document, "/locations");
-        auto& allocator = request.document.GetAllocator();
-        request.document.AddMember("targets", rapidjson::Value{request.document["locations"], allocator}, allocator);
-        request.document.AddMember("sources", *request_locations, allocator);
+        //create new sources and targets from locations
         request.options.mutable_targets()->CopyFrom(request.options.locations());
         request.options.mutable_sources()->CopyFrom(request.options.locations());
       }

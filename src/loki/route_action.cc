@@ -53,7 +53,6 @@ namespace valhalla {
       if(costing.back() == '_') costing.pop_back();
       check_locations(request.options.locations_size(), max_locations.find(costing)->second);
       check_distance(reader, request.options.locations(), max_distance.find(costing)->second);
-      auto& allocator = request.document.GetAllocator();
 
       // Validate walking distances (make sure they are in the accepted range)
       if (costing == "multimodal" || costing == "transit") {

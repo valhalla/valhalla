@@ -157,10 +157,9 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
     throw std::runtime_error("Found wrong point");
 
   valhalla::baldr::PathLocation answer(location);
-  DistanceApproximator approx(location.latlng_);
   for(const auto& expected_edge : expected_edges) {
-    answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.dist,
-      expected_point, approx.DistanceSquared(expected_point) * 10.f, expected_edge.sos});
+    answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.percent_along,
+      expected_point, expected_point.Distance(location.latlng_), expected_edge.sos});
   }
   //note that this just checks that p has the edges that answer has
   //p can have more edges than answer has and that wont fail this check!

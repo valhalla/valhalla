@@ -24,10 +24,10 @@ message Location {
 
   message PathEdge {
     optional uint64 graph_id = 1;
-    optional float dist = 2;
+    optional float percent_along = 2;
     optional LatLng ll = 3;
     optional SideOfStreet side_of_street = 4;
-    optional float score = 5;
+    optional float distance = 5;
     optional int32 minimum_reachability = 6;
     optional bool begin_node = 7;
     optional bool end_node = 8;
@@ -54,12 +54,13 @@ message Location {
   optional uint32 radius = 18 [default = 0];
   optional uint32 accuracy = 19;
   optional double time = 20 [default = -1.0];
+  optional bool rank_candidates = 21 [default = true];
   
   //outputs
-  repeated PathEdge path_edges = 21;
-  repeated PathEdge filtered_edges = 22;
-  optional uint32 original_index = 23;
-  optional LatLng projected_ll = 24;
+  repeated PathEdge path_edges = 22;
+  repeated PathEdge filtered_edges = 23;
+  optional uint32 original_index = 24;
+  optional LatLng projected_ll = 25;
 }
 
 message TransitEgressInfo {

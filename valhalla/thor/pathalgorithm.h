@@ -98,7 +98,7 @@ class PathAlgorithm {
       if (destination_edge.graph_id() == edgeid) {
         for (const auto& origin_edge : origin.path_edges()) {
           if (origin_edge.graph_id() == edgeid &&
-              origin_edge.dist() <= destination_edge.dist()) {
+              origin_edge.percent_along() <= destination_edge.percent_along()) {
             return true;
           }
         }

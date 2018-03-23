@@ -668,11 +668,11 @@ int main(int argc, char *argv[]) {
   for (auto& correlated : path_location) {
     auto minScoreEdge = *std::min_element(correlated.edges.begin(), correlated.edges.end(),
        [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
-         return i.score < j.score;
+         return i.distance < j.distance;
        });
 
     for(auto& e : correlated.edges) {
-      e.score -= minScoreEdge.score;
+      e.distance -= minScoreEdge.distance;
     }
   }
   auto t2 = std::chrono::high_resolution_clock::now();

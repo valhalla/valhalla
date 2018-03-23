@@ -595,12 +595,12 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.dist());
+    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score();
+    cost.cost += edge.distance();
     float dist = astarheuristic_forward_.GetDistance(nodeinfo->latlng());
     float sortcost = cost.cost + astarheuristic_forward_.Get(dist);
 
@@ -660,12 +660,12 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost = costing_->EdgeCost(directededge) * edge.dist();
+    Cost cost = costing_->EdgeCost(directededge) * edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-    cost.cost += edge.score();
+    cost.cost += edge.distance();
     float dist = astarheuristic_reverse_.GetDistance(tile->node(
                     opp_dir_edge->endnode())->latlng());
     float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);

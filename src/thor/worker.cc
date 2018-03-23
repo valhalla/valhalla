@@ -34,7 +34,7 @@ namespace {
   // Perhaps tie the edge score logic in with the costing type - but
   // may want to do this in loki. At this point in thor the costing method
   // has not yet been constructed.
-  const std::unordered_map<std::string, float> kMaxScores = {
+  const std::unordered_map<std::string, float> kMaxDistances = {
     {"auto_", 43200.0f},
     {"auto_shorter", 43200.0f},
     {"bicycle", 7200.0f},
@@ -46,24 +46,9 @@ namespace {
     {"transit", 14400.0f},
     {"truck", 43200.0f},
   };
+  //a scale factor to apply to the score so that we bias towards closer results more
+  constexpr float kDistanceScale = 10.f;
   constexpr double kMilePerMeter = 0.000621371;
-
-  void adjust_scores(valhalla_request_t& request) {
-    auto max_score = kMaxScores.find(odin::DirectionsOptions::Costing_Name(request.options.costing()));
-    for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
-      for(auto& location : *locations) {
-        auto minScoreEdge = *std::min_element (location.path_edges().begin(), location.path_edges().end(),
-          [](odin::Location::PathEdge i, odin::Location::PathEdge j)->bool {
-            return i.score() < j.score();
-          });
-        for(auto& e : *location.mutable_path_edges()) {
-          e.set_score(e.score() - minScoreEdge.score());
-          if (e.score() > max_score->second)
-            e.set_score(max_score->second);
-        }
-      }
-    }
-  }
 
 }
 
@@ -234,7 +219,8 @@ namespace valhalla {
 
     std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
       // Parse out the type of route - this provides the costing method to use
-      auto costing = rapidjson::get<std::string>(request.document,  "/costing");
+      auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
+      if(costing.back() == '_') costing.pop_back();
 
       // Set travel mode and construct costing
       if (costing == "multimodal" || costing == "transit") {
@@ -255,8 +241,35 @@ namespace valhalla {
     }
 
     void thor_worker_t::parse_locations(valhalla_request_t& request) {
-      //we require locations
-      adjust_scores(request);
+      for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
+        for(auto& location : *locations) {
+          //get the minimum score for all the candidates
+          auto minScore = std::numeric_limits<float>::max();
+          for(auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+            for(auto& candidate : *candidates) {
+              //completely disable scores for this location
+              if(location.has_rank_candidates() && !location.rank_candidates())
+                candidate.set_distance(0);
+              //scale the score to favor closer results more
+              else
+                candidate.set_distance(candidate.distance() * candidate.distance() * kDistanceScale);
+              //remember the min score
+              if(minScore > candidate.distance())
+                minScore = candidate.distance();
+            }
+          }
+
+          //subtract off the min score and cap at max so that path algorithm doesnt go too far
+          auto max_score = kMaxDistances.find(odin::DirectionsOptions::Costing_Name(request.options.costing()));
+          for(auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+            for(auto& candidate : *candidates) {
+              candidate.set_distance(candidate.distance() - minScore);
+              if (candidate.distance() > max_score->second)
+                candidate.set_distance(max_score->second);
+            }
+          }
+        }
+      }
     }
 
     void thor_worker_t::parse_measurements(const valhalla_request_t& request) {

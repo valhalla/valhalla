@@ -370,7 +370,7 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
         auto* pe = origin.mutable_path_edges()->Add();
         pe->CopyFrom(origin.path_edges(0));
         pe->set_graph_id(path_edges.front().edgeid);
-        pe->set_dist(0.f);
+        pe->set_percent_along(0.f);
       }
 
       bool found_destination = false;
@@ -390,7 +390,7 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
         auto* pe = destination.mutable_path_edges()->Add();
         pe->CopyFrom(destination.path_edges(0));
         pe->set_graph_id(path_edges.back().edgeid);
-        pe->set_dist(1.f);
+        pe->set_percent_along(1.f);
       }
 
 

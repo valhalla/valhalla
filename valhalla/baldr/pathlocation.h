@@ -36,7 +36,7 @@ struct PathLocation : public Location {
     //the directed edge it appears on
     GraphId id;
     //how far along the edge it is (as a percentage  from 0 - 1)
-    float dist;
+    float percent_along;
     //the projected point along the edge where the original location correlates
     midgard::PointLL projected;
     //what side of the edge is it on
@@ -48,7 +48,7 @@ struct PathLocation : public Location {
 
     //a measure of how close the result is to the original input where the
     //lower the score the better the match, maybe there's a better word for this?
-    float score;
+    float distance;
     //minimum number of edges reachable from this edge, this is a lower limit
     //it could be reachable from many many more edges than are reported here
     unsigned int minimum_reachability;
@@ -104,12 +104,12 @@ struct PathLocation : public Location {
     for(const auto& e : pl.edges) {
       auto* edge = path_edges->Add();
       edge->set_graph_id(e.id);
-      edge->set_dist(e.dist);
+      edge->set_percent_along(e.percent_along);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
       edge->set_side_of_street(e.sos == PathLocation::LEFT ? odin::Location::kLeft :
           (e.sos == PathLocation::RIGHT ? odin::Location::kRight : odin::Location::kNone));
-      edge->set_score(e.score);
+      edge->set_distance(e.distance);
       edge->set_minimum_reachability(e.minimum_reachability);
       for(const auto& n : reader.edgeinfo(e.id).GetNames())
         edge->mutable_names()->Add()->assign(n);
@@ -119,12 +119,12 @@ struct PathLocation : public Location {
     for(const auto& e : pl.edges) {
       auto* edge = filtered_edges->Add();
       edge->set_graph_id(e.id);
-      edge->set_dist(e.dist);
+      edge->set_percent_along(e.percent_along);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
       edge->set_side_of_street(e.sos == PathLocation::LEFT ? odin::Location::kLeft :
           (e.sos == PathLocation::RIGHT ? odin::Location::kRight : odin::Location::kNone));
-      edge->set_score(e.score);
+      edge->set_distance(e.distance);
       edge->set_minimum_reachability(e.minimum_reachability);
       for(const auto& n : reader.edgeinfo(e.id).GetNames())
         edge->mutable_names()->Add()->assign(n);
