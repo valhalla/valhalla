@@ -73,8 +73,7 @@ class thor_worker_t : public service_worker_t{
       const odin::Location& destination);
   odin::TripPath route_match(valhalla_request_t& request, const AttributesController& controller);
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match(
-      const AttributesController& controller, bool trace_attributes_action = false,
-      uint32_t best_paths = 1);
+      valhalla_request_t& request, const AttributesController& controller, uint32_t best_paths = 1);
 
   std::list<odin::TripPath> path_arrive_by(
       google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing);

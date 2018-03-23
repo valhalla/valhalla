@@ -84,7 +84,7 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          auto map_match_results = map_match(controller);
+          auto map_match_results = map_match(request, controller);
           if (!map_match_results.empty())
             trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
         } catch(...) {
@@ -99,7 +99,7 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            auto map_match_results = map_match(controller);
+            auto map_match_results = map_match(request, controller);
             if (!map_match_results.empty())
               trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
           } catch(...) {
@@ -143,8 +143,7 @@ odin::TripPath thor_worker_t::route_match(valhalla_request_t& request, const Att
 // of each edge. We will need to use the existing costing method to form the elapsed time
 // the path. We will start with just using edge costs and will add transition costs.
 std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> thor_worker_t::map_match(
-    const AttributesController& controller, bool trace_attributes_action,
-    uint32_t best_paths) {
+    valhalla_request_t& request, const AttributesController& controller, uint32_t best_paths) {
   std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match_results;
 
   // Call Meili for map matching to get a collection of Location Edges
@@ -165,9 +164,13 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
     // Form the path edges based on the matched points and populate disconnected edges
     std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
     std::vector<PathInfo> path_edges = MapMatcher::FormPath(matcher.get(),
-        match_results, edge_segments, mode_costing, mode, disconnected_edges, trace_attributes_action);
+        match_results, edge_segments, mode_costing, mode, disconnected_edges);
 
-    if (trace_attributes_action) {
+    // Throw exception if not trace attributes action and disconnected path
+    if (request.options.action() == odin::DirectionsOptions::trace_route && disconnected_edges.size())
+        throw valhalla_exception_t{442};
+
+    if (request.options.action() == odin::DirectionsOptions::trace_attributes) {
       // Associate match points to edges, if enabled
       if (controller.category_attribute_enabled(kMatchedCategory)) {
         // Populate for matched points so we have 1:1 with trace points

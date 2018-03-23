@@ -29,8 +29,7 @@ class MapMatcher {
       const std::vector<meili::EdgeSegment>& edge_segments,
       const std::shared_ptr<sif::DynamicCost>* mode_costing,
       const sif::TravelMode mode,
-      std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
-      bool trace_attributes_action = false);
+      std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges);
 
 };
 
