@@ -102,7 +102,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
       case MAP_SNAP:
         try {
           uint32_t best_paths = rapidjson::get<uint32_t>(request.document, "/best_paths", 1);
-          map_match_results = map_match(controller, true, best_paths);
+          map_match_results = map_match(request, controller, best_paths);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
@@ -115,7 +115,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            map_match_results = map_match(controller, true);
+            map_match_results = map_match(request, controller);
           } catch (const std::exception& e) {
             throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }
