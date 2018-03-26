@@ -114,14 +114,10 @@ namespace valhalla {
 
       // If we are continuing through a location we need to make sure we
       // only allow the edge that was used previously (avoid u-turns)
-      if(!path.empty()) {
-        auto erasure_position = std::remove_if(destination->mutable_path_edges()->begin(), destination->mutable_path_edges()->end(),
-          [&path](const odin::Location::PathEdge& e){
-            return e.graph_id() != path.front().edgeid;
-        });
-        int erasure_index = erasure_position - destination->mutable_path_edges()->begin();
-        int erasure_count = destination->path_edges_size() - erasure_index;
-        destination->mutable_path_edges()->DeleteSubrange(erasure_index, erasure_count);
+      while(!path.empty() && destination->path_edges_size() > 1) {
+        if(destination->path_edges().rbegin()->graph_id() == path.front().edgeid)
+          destination->mutable_path_edges()->SwapElements(0, destination->path_edges_size() - 1);
+        destination->mutable_path_edges()->RemoveLast();
       }
 
       // Get best path and keep it
@@ -179,14 +175,10 @@ namespace valhalla {
 
       // If we are continuing through a location we need to make sure we
       // only allow the edge that was used previously (avoid u-turns)
-      if(!path.empty()) {
-        auto erasure_position = std::remove_if(origin->mutable_path_edges()->begin(), origin->mutable_path_edges()->end(),
-          [&path](const odin::Location::PathEdge& e){
-            return e.graph_id() != path.front().edgeid;
-        });
-        int erasure_index = erasure_position - origin->mutable_path_edges()->begin();
-        int erasure_count = origin->path_edges_size() - erasure_index;
-        origin->mutable_path_edges()->DeleteSubrange(erasure_index, erasure_count);
+      while(!path.empty() && origin->path_edges_size() > 1) {
+        if(origin->path_edges().rbegin()->graph_id() == path.back().edgeid)
+          origin->mutable_path_edges()->SwapElements(0, origin->path_edges_size() - 1);
+        origin->mutable_path_edges()->RemoveLast();
       }
 
       // Get best path and keep it
