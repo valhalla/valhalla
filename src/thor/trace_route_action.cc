@@ -55,9 +55,9 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
   parse_trace_config(request);
   parse_measurements(request);
 
-  // Initialize the controller with no attribution since this is for a trip path only
+  // Initialize the controller
   odin::TripPath trip_path;
-  AttributesController controller(decltype(AttributesController::kRouteAttributes){});
+  AttributesController controller;
 
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
@@ -199,7 +199,8 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
     }
 
     // Associate match points to edges, if enabled
-    if (controller.category_attribute_enabled(kMatchedCategory)) {
+    if (request.options.action() == odin::DirectionsOptions::trace_attributes &&
+        controller.category_attribute_enabled(kMatchedCategory)) {
       // Populate for matched points so we have 1:1 with trace points
       for (const auto& match_result : match_results) {
         // Matched type is set in constructor
