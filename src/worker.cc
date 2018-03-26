@@ -306,11 +306,10 @@ namespace {
 
     auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
     if (request_locations) {
-      int original_index = 0;
       for(const auto& r_loc : *request_locations) {
         try {
           auto* location = locations->Add();
-          location->set_original_index(original_index++);
+          location->set_original_index(locations->size() - 1);
 
           auto lat = rapidjson::get_optional<float>(r_loc, "/lat");
           if (! lat) throw std::runtime_error{"lat is missing"};

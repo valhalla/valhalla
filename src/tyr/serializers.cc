@@ -54,9 +54,7 @@ namespace osrm {
     // Defer this - not currently used in OSRM.
     waypoint->emplace("hint", std::string("TODO"));
 
-    // For now, having multiple path edges is the way to signal to this serializer
-    // that the location was used for a match point, so if that is the case
-    // trigger the extra serialization for the tracepoint logic
+    // If the location was used for a tracepoint we trigger extra serialization
     if(tracepoint) {
       waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
       waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.original_index()));
