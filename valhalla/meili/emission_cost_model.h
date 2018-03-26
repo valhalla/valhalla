@@ -40,7 +40,7 @@ class EmissionCostModel
   { return sq_distance * inv_double_sq_sigma_z_; }
 
   float operator()(const StateId& stateid) const
-  { return CalculateEmissionCost(container_.state(stateid).candidate().edges.front().score); }
+  { return CalculateEmissionCost(container_.state(stateid).candidate().edges.front().distance); }
 
  private:
   baldr::GraphReader& graphreader_;

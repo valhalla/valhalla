@@ -157,10 +157,9 @@ void search(const valhalla::baldr::Location& location, bool expected_node, const
     throw std::runtime_error("Found wrong point");
 
   valhalla::baldr::PathLocation answer(location);
-  DistanceApproximator approx(location.latlng_);
   for(const auto& expected_edge : expected_edges) {
-    answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.dist,
-      expected_point, approx.DistanceSquared(expected_point) * 10.f, expected_edge.sos});
+    answer.edges.emplace_back(PathLocation::PathEdge{expected_edge.id, expected_edge.percent_along,
+      expected_point, expected_point.Distance(location.latlng_), expected_edge.sos});
   }
   //note that this just checks that p has the edges that answer has
   //p can have more edges than answer has and that wont fail this check!
@@ -252,13 +251,13 @@ void test_reachability_radius() {
   unsigned int shortest = ob.Distance(a.second);
 
   //zero everything should be a single closest result
-  search({ob, Location::StopType::BREAK, 0, 0}, 2, -1);
+  search({ob, Location::StopType::BREAK, 0, 0}, 2, 0);
 
   //set radius high to get them all
-  search({b.second,Location::StopType::BREAK, 0, longest + 100}, 10, -1);
+  search({b.second,Location::StopType::BREAK, 0, longest + 100}, 10, 0);
 
   //set radius mid to get just some
-  search({b.second,Location::StopType::BREAK, 0, shortest - 100}, 4, -1);
+  search({b.second,Location::StopType::BREAK, 0, shortest - 100}, 4, 0);
 
   //set reachability high to see it gets all nodes reachable
   search({ob, Location::StopType::BREAK, 5, 0}, 2, 4);

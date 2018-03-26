@@ -250,14 +250,14 @@ FindMatchResult(const MapMatcher& mapmatcher,
   // If we get a valid edge and find it in the state that's good
   for(const auto& edge : state.candidate().edges) {
     if (edge.id == edgeid) {
-      return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), stateid};
+      return {edge.projected, std::sqrt(edge.distance), edgeid, edge.percent_along, measurement.epoch_time(), stateid};
     }
   }
 
   // If we failed to get a valid edge or can't find it
   // At least we know which point it matches
   const auto& edge = state.candidate().edges.front();
-  return {edge.projected, std::sqrt(edge.score), edgeid, edge.dist, measurement.epoch_time(), stateid};
+  return {edge.projected, std::sqrt(edge.distance), edgeid, edge.percent_along, measurement.epoch_time(), stateid};
 }
 
 

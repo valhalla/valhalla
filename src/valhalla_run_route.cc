@@ -83,8 +83,8 @@ namespace {
 /**
  * Test a single path from origin to destination.
  */
-TripPath PathTest(GraphReader& reader, PathLocation& origin,
-                  PathLocation& dest, PathAlgorithm* pathalgorithm,
+TripPath PathTest(GraphReader& reader, valhalla::odin::Location& origin,
+                  valhalla::odin::Location& dest, PathAlgorithm* pathalgorithm,
                   const std::shared_ptr<DynamicCost>* mode_costing,
                   const TravelMode mode, PathStatistics& data,
                   bool multi_run, uint32_t iterations,
@@ -123,7 +123,7 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
   AttributesController controller;
   TripPath trip_path = TripPathBuilder::Build(controller, reader, mode_costing,
                                               pathedges, origin, dest,
-                                              std::list<PathLocation>{});
+                                              std::list<valhalla::odin::Location>{});
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
@@ -153,12 +153,14 @@ TripPath PathTest(GraphReader& reader, PathLocation& origin,
     std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
     const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
     std::vector<PathLocation> path_location;
+    valhalla::odin::DirectionsOptions directions_options;
     for (auto loc : locations) {
       path_location.push_back(projections.at(loc));
+      PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(), reader);
     }
     std::vector<PathInfo> path;
     bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace,
-                     path_location, path);
+        directions_options.locations(), path);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
@@ -530,7 +532,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Grab the directions options, if they exist
-    valhalla::valhalla_request_t request(json, valhalla::odin::DirectionsOptions::route);
+    valhalla::valhalla_request_t request;
+    request.parse(json, valhalla::odin::DirectionsOptions::route);
     directions_options = request.options;
 
     // Grab the date_time, if is exists
@@ -665,11 +668,11 @@ int main(int argc, char *argv[]) {
   for (auto& correlated : path_location) {
     auto minScoreEdge = *std::min_element(correlated.edges.begin(), correlated.edges.end(),
        [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
-         return i.score < j.score;
+         return i.distance < j.distance;
        });
 
     for(auto& e : correlated.edges) {
-      e.score -= minScoreEdge.score;
+      e.distance -= minScoreEdge.distance;
     }
   }
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -701,7 +704,10 @@ int main(int argc, char *argv[]) {
 
     // Get the best path
     try {
-      trip_path = PathTest(reader, path_location[i], path_location[i + 1],
+      valhalla::odin::Location src, sync;
+      PathLocation::toPBF(path_location[i], &src, reader);
+      PathLocation::toPBF(path_location[i + 1], &sync, reader);
+      trip_path = PathTest(reader, src, sync,
                            pathalgorithm, mode_costing, mode, data, multi_run,
                            iterations, using_astar, match_test, routetype);
     } catch (std::runtime_error& rte) {

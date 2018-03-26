@@ -40,12 +40,12 @@ namespace {
     return array;
   }
 
-  json::ArrayPtr serialize_shape(const std::vector<PointLL>& shape) {
+  json::ArrayPtr serialize_shape(const google::protobuf::RepeatedPtrField<odin::Location>& shape) {
     auto array = json::array({});
     for(const auto& p : shape) {
       array->emplace_back(json::map({
-        {"lon", json::fp_t{p.first, 6}},
-        {"lat", json::fp_t{p.second, 6}}
+        {"lon", json::fp_t{p.ll().lng(), 6}},
+        {"lat", json::fp_t{p.ll().lat(), 6}}
       }));
     }
     return array;
@@ -62,7 +62,7 @@ namespace valhalla {
       "range_height": [ [0,303], [8467,275], [25380,198] ]
     }
     */
-    std::string serializeHeight(const valhalla_request_t& request, const std::vector<PointLL>& shape,
+    std::string serializeHeight(const valhalla_request_t& request,
         const std::vector<double>& heights, std::vector<float> ranges) {
       auto json = json::map({});
 
@@ -81,7 +81,7 @@ namespace valhalla {
       if(request.options.has_encoded_polyline())
         json->emplace("encoded_polyline", request.options.encoded_polyline());
       else
-        json->emplace("shape", serialize_shape(shape));
+        json->emplace("shape", serialize_shape(request.options.shape()));
       if (request.options.has_id())
         json->emplace("id", request.options.id());
 

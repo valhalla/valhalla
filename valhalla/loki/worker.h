@@ -9,6 +9,7 @@
 #include <valhalla/worker.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/location.h>
+#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
@@ -29,6 +30,7 @@ namespace valhalla {
       loki_worker_t(const boost::property_tree::ptree& config);
 #ifdef HAVE_HTTP
       virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt) override;
+      void limits(valhalla_request_t& request) const;
 #endif
       virtual void cleanup() override;
 
@@ -42,7 +44,7 @@ namespace valhalla {
 
      protected:
 
-      std::vector<baldr::Location> parse_locations(const valhalla_request_t& request, const std::string& node, unsigned location_parse_error_code = 130,
+      void parse_locations(google::protobuf::RepeatedPtrField<odin::Location>* locations,
         boost::optional<valhalla_exception_t> required_exception = valhalla_exception_t{110});
       void parse_trace(valhalla_request_t& request);
       void parse_costing(valhalla_request_t& request);
@@ -53,14 +55,10 @@ namespace valhalla {
       void init_matrix(valhalla_request_t& request);
       void init_isochrones(valhalla_request_t& request);
       void init_trace(valhalla_request_t& request);
-      void init_height(valhalla_request_t& request);
+      std::vector<PointLL> init_height(valhalla_request_t& request);
       void init_transit_available(valhalla_request_t& request);
 
       boost::property_tree::ptree config;
-      std::vector<baldr::Location> locations;
-      std::vector<baldr::Location> sources;
-      std::vector<baldr::Location> targets;
-      std::vector<midgard::PointLL> shape;
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter edge_filter;
       sif::NodeFilter node_filter;

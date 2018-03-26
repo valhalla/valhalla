@@ -23,59 +23,55 @@
 
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 using namespace valhalla::tyr;
 using namespace std;
 
-namespace {
+namespace osrm {
 
-  namespace osrm_serializers {
+  valhalla::baldr::json::MapPtr waypoint(const odin::Location& location, bool tracepoint) {
+    // Create a waypoint to add to the array
+    auto waypoint = json::map({});
 
-/** TODO - make the OSRM serializer common so it can be used by matrix, route, locate, etc.
-    // Serialize locations (called waypoints in OSRM). Waypoints are described here:
-    //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-    json::ArrayPtr waypoints(const std::list<valhalla::odin::TripDirections>& legs){
-      int index = 0;
-      auto waypoints = json::array({});
-      for (auto leg = legs.begin(); leg != legs.end(); ++leg) {
-        for (auto location = leg->location().begin() + index; location != leg->location().end(); ++location) {
-          index = 1;
+    // Output location as a lon,lat array. Note this is the projected
+    // lon,lat on the nearest road.
+    auto loc = json::array({});
+    loc->emplace_back(json::fp_t{location.path_edges(0).ll().lng(), 6});
+    loc->emplace_back(json::fp_t{location.path_edges(0).ll().lat(), 6});
+    waypoint->emplace("location", loc);
 
-          // Create a waypoint to add to the array
-          auto waypoint = json::map({});
+    // Add street name.
+    std::string name = location.path_edges_size() && location.path_edges(0).names_size()
+        ? location.path_edges(0).names(0) : "";
+    waypoint->emplace("name", name);
 
-          // Output location as a lon,lat array. Note this is the projected
-          // lon,lat on the nearest road.
-          PointLL input_ll(location->ll().lng(), location->ll().lat());
-          PointLL proj_ll(location->projected_ll().lng(), location->projected_ll().lat());
-          auto loc = json::array({});
-          loc->emplace_back(json::fp_t{proj_ll.lng(), 6});
-          loc->emplace_back(json::fp_t{proj_ll.lat(), 6});
-          waypoint->emplace("location", loc);
+    // Add distance in meters from the input location to the nearest
+    // point on the road used in the route
+    waypoint->emplace("distance", json::fp_t{location.path_edges(0).distance(), 3});
 
-          // Add street name. For now is just getting the name from the first
-          // maneuver - this is not really correct.
-          // TODO - get names from the edges in TripPath for the first edge of
-          // the leg?
-          waypoint->emplace("street", street_names(leg->maneuver(0)));
+    // Add hint. Goal is for the hint returned from a locate request to be able
+    // to quickly find the edge and point along the edge in a route request.
+    // Defer this - not currently used in OSRM.
+    waypoint->emplace("hint", std::string("TODO"));
 
-          // Add distance in meters from the input location to the nearest
-          // point on the road used in the route
-          float distance = input_ll.Distance(proj_ll);
-          waypoint->emplace("distance", json::fp_t{distance, 1});
-
-          // Add hint. Goal is for the hint returned from a locate request to be able
-          // to quickly find the edge and point along the edge in a route request.
-          // Defer this - not currently used in OSRM.
-          waypoint->emplace("hint", std::string("TODO"));
-
-          // Add the waypoint to the JSON array
-          waypoints->emplace_back(waypoint);
-        }
-      }
-      return waypoints;
+    // If the location was used for a tracepoint we trigger extra serialization
+    if(tracepoint) {
+      waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
+      waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.original_index()));
+      waypoint->emplace("matchings_index", static_cast<uint64_t>(0)); //we only have one matching for now
     }
-*/
 
+    return waypoint;
+  }
+
+  // Serialize locations (called waypoints in OSRM). Waypoints are described here:
+  //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
+  json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locations, bool tracepoints){
+    auto waypoints = json::array({});
+    for (const auto& location : locations)
+      waypoints->emplace_back(waypoint(location, tracepoints));
+    return waypoints;
   }
 
 }
+

@@ -43,9 +43,9 @@ class TripPathBuilder {
   static odin::TripPath Build(
       const AttributesController& controller, baldr::GraphReader& graphreader,
       const std::shared_ptr<sif::DynamicCost>* mode_costing,
-      const std::vector<PathInfo>& path, baldr::PathLocation& origin,
-      baldr::PathLocation& dest,
-      const std::list<baldr::PathLocation>& through_loc,
+      const std::vector<PathInfo>& path, odin::Location& origin,
+      odin::Location& dest,
+      const std::list<odin::Location>& through_loc,
       const std::function<void ()>* interrupt_callback = nullptr,
       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
         route_discontinuities = nullptr);
