@@ -121,44 +121,45 @@ namespace valhalla {
 
         worker_t::result_t result{true};
         double denominator = 0;
-        size_t order_index = 0;
         //do request specific processing
         switch (request.options.action()) {
           case odin::DirectionsOptions::sources_to_targets:
             result = to_response_json(matrix(request), info, request);
             denominator = request.options.sources_size() + request.options.targets_size();
             break;
-          case odin::DirectionsOptions::optimized_route:
+          case odin::DirectionsOptions::optimized_route: {
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
-            result.messages.emplace_back(std::move(serialized_options));
-            for (auto& trippath : optimized_route(request)) {
-              for (auto& location : *trippath.mutable_location())
-                location.set_original_index(optimal_order[order_index++]);
-              --order_index;
+            auto trip_paths = optimized_route(request);
+            result.messages.emplace_back(request.options.SerializeAsString());
+            for (auto& trippath : trip_paths)
               result.messages.emplace_back(trippath.SerializeAsString());
-            }
             denominator = std::max(request.options.sources_size(), request.options.targets_size());
             break;
+          }
           case odin::DirectionsOptions::isochrone:
             result = to_response_json(isochrones(request), info, request);
             denominator = request.options.sources_size() * request.options.targets_size();
             break;
-          case odin::DirectionsOptions::route:
+          case odin::DirectionsOptions::route: {
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
-            result.messages.emplace_back(std::move(serialized_options));
-            for (const auto& trippath : route(request))
+            auto trip_paths = route(request);
+            result.messages.emplace_back(request.options.SerializeAsString());
+            for (const auto& trippath : trip_paths)
               result.messages.emplace_back(trippath.SerializeAsString());
             denominator = request.options.locations_size();
             break;
-          case odin::DirectionsOptions::trace_route:
+          }
+          case odin::DirectionsOptions::trace_route: {
             // Forward the original request
             result.messages.emplace_back(std::move(request_str));
-            result.messages.emplace_back(std::move(serialized_options));
-            result.messages.emplace_back(trace_route(request).SerializeAsString());
+            auto trip_path = trace_route(request);
+            result.messages.emplace_back(request.options.SerializeAsString());
+            result.messages.emplace_back(trip_path.SerializeAsString());
             denominator = trace.size() / 1100;
             break;
+          }
           case odin::DirectionsOptions::trace_attributes:
             result = to_response_json(trace_attributes(request), info, request);
             denominator = trace.size() / 1100;
