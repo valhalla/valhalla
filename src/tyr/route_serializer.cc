@@ -852,7 +852,7 @@ namespace {
       json->emplace("code", status);
       switch(directions_options.action()) {
         case valhalla::odin::DirectionsOptions::trace_route:
-          json->emplace("tracepoints", osrm::waypoints(directions_options.shape()));
+          json->emplace("tracepoints", osrm::waypoints(directions_options.shape(), true));
           break;
         case valhalla::odin::DirectionsOptions::route:
           json->emplace("waypoints", osrm::waypoints(directions_options.locations()));

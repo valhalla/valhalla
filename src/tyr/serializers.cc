@@ -29,7 +29,7 @@ using namespace std;
 
 namespace osrm {
 
-  valhalla::baldr::json::MapPtr waypoint(const odin::Location& location) {
+  valhalla::baldr::json::MapPtr waypoint(const odin::Location& location, bool tracepoint) {
     // Create a waypoint to add to the array
     auto waypoint = json::map({});
 
@@ -57,7 +57,7 @@ namespace osrm {
     // For now, having multiple path edges is the way to signal to this serializer
     // that the location was used for a match point, so if that is the case
     // trigger the extra serialization for the tracepoint logic
-    if(location.path_edges_size() > 1) {
+    if(tracepoint) {
       waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
       waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.original_index()));
       waypoint->emplace("matchings_index", static_cast<uint64_t>(0)); //we only have one matching for now
@@ -68,10 +68,10 @@ namespace osrm {
 
   // Serialize locations (called waypoints in OSRM). Waypoints are described here:
   //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-  json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locations){
+  json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locations, bool tracepoints){
     auto waypoints = json::array({});
     for (const auto& location : locations)
-      waypoints->emplace_back(waypoint(location));
+      waypoints->emplace_back(waypoint(location, tracepoints));
     return waypoints;
   }
 
