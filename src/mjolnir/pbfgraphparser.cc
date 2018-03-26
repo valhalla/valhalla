@@ -230,12 +230,10 @@ struct graph_callback : public OSMPBF::Callback {
     }
 
     // Throw away driveways if include_driveways_ is false
-    if (!include_driveways_) {
-      for (const auto& tag : results) {
-        if (tag.first == "use" && (Use)std::stoi(tag.second) == Use::kDriveway) {
-          return;
-        }
-      }
+    Tags::const_iterator driveways;
+    if (!include_driveways_ && (driveways = results.find("use")) != results.end() && 
+         static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
+      return;
     }
 
     // Check for ways that loop back on themselves (simple check) and add
