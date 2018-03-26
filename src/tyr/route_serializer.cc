@@ -850,7 +850,17 @@ namespace {
       // waypoints (locations).
       std::string status("Ok");
       json->emplace("code", status);
-      json->emplace("waypoints", waypoints(legs));
+      switch(directions_options.action()) {
+        case valhalla::odin::DirectionsOptions::trace_route:
+          json->emplace("tracepoints", osrm::waypoints(directions_options.shape(), true));
+          break;
+        case valhalla::odin::DirectionsOptions::route:
+          json->emplace("waypoints", osrm::waypoints(directions_options.locations()));
+          break;
+        case valhalla::odin::DirectionsOptions::optimized_route:
+          json->emplace("waypoints", waypoints(legs));
+          break;
+      }
 
       // Add each route
       // TODO - alternate routes (currently Valhalla only has 1 route)
@@ -872,7 +882,10 @@ namespace {
 
         routes->emplace_back(route);
       }
-      json->emplace("routes", routes);
+
+      // Routes are called matchings in osrm
+      json->emplace(directions_options.action() == valhalla::odin::DirectionsOptions::trace_route
+          ? "matchings" : "routes", routes);
 
       std::stringstream ss;
       ss << *json;

@@ -110,12 +110,12 @@ namespace osrm {
   /*
    *
    */
-  valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location);
+  valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location, bool tracepoint = false);
 
   /*
    *
    */
-  valhalla::baldr::json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::odin::Location>& locations);
+  valhalla::baldr::json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::odin::Location>& locations, bool tracepoints = false);
 
 }
 

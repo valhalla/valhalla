@@ -55,9 +55,9 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
   parse_trace_config(request);
   parse_measurements(request);
 
-  // Initialize the controller with no attribution since this is for a trip path only
+  // Initialize the controller
   odin::TripPath trip_path;
-  AttributesController controller(decltype(AttributesController::kRouteAttributes){});
+  AttributesController controller;
 
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a
@@ -177,21 +177,30 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
         request.options.format() == odin::DirectionsOptions::osrm) {
       const GraphTile* tile = nullptr;
       for(int i = 0; i < match_results.size(); ++i) {
+        // Get the match
         const auto& match = match_results[i];
         if(!match.edgeid.Is_Valid())
           continue;
+
+        // Make one path edge from it
         reader.GetGraphTile(match.edgeid, tile);
         auto* pe = request.options.mutable_shape(i)->mutable_path_edges()->Add();
         pe->mutable_ll()->set_lat(match.lnglat.lat());
         pe->mutable_ll()->set_lng(match.lnglat.lng());
         for(const auto& n : reader.edgeinfo(match.edgeid).GetNames())
           pe->mutable_names()->Add()->assign(n);
-        //TODO: we should some how signal how many edge candidates there were at this stateid
+
+        //signal how many edge candidates there were at this stateid by adding empty path edges
+        if(!match.HasState())
+          continue;
+        for(int j = 0; j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1; ++j)
+          request.options.mutable_shape(i)->mutable_path_edges()->Add();
       }
     }
 
     // Associate match points to edges, if enabled
-    if (controller.category_attribute_enabled(kMatchedCategory)) {
+    if (request.options.action() == odin::DirectionsOptions::trace_attributes &&
+        controller.category_attribute_enabled(kMatchedCategory)) {
       // Populate for matched points so we have 1:1 with trace points
       for (const auto& match_result : match_results) {
         // Matched type is set in constructor

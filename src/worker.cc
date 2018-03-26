@@ -309,6 +309,8 @@ namespace {
       for(const auto& r_loc : *request_locations) {
         try {
           auto* location = locations->Add();
+          location->set_original_index(locations->size() - 1);
+
           auto lat = rapidjson::get_optional<float>(r_loc, "/lat");
           if (! lat) throw std::runtime_error{"lat is missing"};
 
