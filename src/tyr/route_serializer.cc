@@ -201,25 +201,24 @@ namespace {
     // original location order, and stores an index for the waypoint index in
     // the optimized sequence.
     json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locs) {
-      // Create a pair with original index and new index.
-      std::vector<std::pair<uint32_t, uint32_t>> locations;
-      int i = 0;
+      // Create a vector of indexes.
+      uint32_t i = 0;
+      std::vector<uint32_t> indexes;
       for (const auto& loc : locs) {
-        locations.push_back(std::make_pair(loc.original_index(), i));
-        i++;
+        indexes.push_back(i++);
       }
 
-      // Sort the locations by original index
-      std::sort(locations.begin(), locations.end(),
-          [](const std::pair<uint32_t, uint32_t>& a,
-             const std::pair<uint32_t, uint32_t>& b) -> bool {
-        return a.first < b.first;
+      // Sort the the vector by the location's original index
+      std::sort(indexes.begin(), indexes.end(),
+          [&locs](const uint32_t a, const uint32_t b) -> bool {
+        return locs.Get(a).original_index() < locs.Get(b).original_index();
       });
 
-      // Output each location (first item in the pair) with its waypoint index (2nd item in the pair).
+      // Output each location in its original index order along with its
+      // waypoint index (which is the index in the optimized order).
       auto waypoints = json::array({});
-      for (const auto& location : locations) {
-        waypoints->emplace_back(osrm::waypoint(locs.Get(location.first), false, true, location.second));
+      for (const auto& index : indexes) {
+        waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true, index));
       }
       return waypoints;
     }
