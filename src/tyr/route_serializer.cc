@@ -197,46 +197,28 @@ namespace {
       return street;
     }
 
-    // Serialize locations (called waypoints in OSRM). Waypoints are described here:
-    //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-    json::ArrayPtr waypoints(const std::list<valhalla::odin::TripDirections>& legs){
-      int index = 0;
+    // Serialize waypoints for optimized route. Note that OSRM retains the
+    // original location order, and stores an index for the waypoint index in
+    // the optimized sequence.
+    json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locs) {
+      // Create a vector of indexes.
+      uint32_t i = 0;
+      std::vector<uint32_t> indexes;
+      for (const auto& loc : locs) {
+        indexes.push_back(i++);
+      }
+
+      // Sort the the vector by the location's original index
+      std::sort(indexes.begin(), indexes.end(),
+          [&locs](const uint32_t a, const uint32_t b) -> bool {
+        return locs.Get(a).original_index() < locs.Get(b).original_index();
+      });
+
+      // Output each location in its original index order along with its
+      // waypoint index (which is the index in the optimized order).
       auto waypoints = json::array({});
-      for (auto leg = legs.begin(); leg != legs.end(); ++leg) {
-        for (auto location = leg->location().begin() + index; location != leg->location().end(); ++location) {
-          index = 1;
-
-          // Create a waypoint to add to the array
-          auto waypoint = json::map({});
-
-          // Output location as a lon,lat array. Note this is the projected
-          // lon,lat on the nearest road.
-          PointLL input_ll(location->ll().lng(), location->ll().lat());
-          PointLL proj_ll(location->projected_ll().lng(), location->projected_ll().lat());
-          auto loc = json::array({});
-          loc->emplace_back(json::fp_t{proj_ll.lng(), 6});
-          loc->emplace_back(json::fp_t{proj_ll.lat(), 6});
-          waypoint->emplace("location", loc);
-
-          // Add street name. For now is just getting the name from the first
-          // maneuver - this is not really correct.
-          // TODO - get names from the edges in TripPath for the first edge of
-          // the leg?
-          waypoint->emplace("street", street_names(leg->maneuver(0)));
-
-          // Add distance in meters from the input location to the nearest
-          // point on the road used in the route
-          float distance = input_ll.Distance(proj_ll);
-          waypoint->emplace("distance", json::fp_t{distance, 1});
-
-          // Add hint. Goal is for the hint returned from a locate request to be able
-          // to quickly find the edge and point along the edge in a route request.
-          // Defer this - not currently used in OSRM.
-          waypoint->emplace("hint", std::string("TODO"));
-
-          // Add the waypoint to the JSON array
-          waypoints->emplace_back(waypoint);
-        }
+      for (const auto& index : indexes) {
+        waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true, index));
       }
       return waypoints;
     }
@@ -858,7 +840,7 @@ namespace {
           json->emplace("waypoints", osrm::waypoints(directions_options.locations()));
           break;
         case valhalla::odin::DirectionsOptions::optimized_route:
-          json->emplace("waypoints", waypoints(legs));
+          json->emplace("waypoints", waypoints(directions_options.locations()));
           break;
       }
 

@@ -110,7 +110,8 @@ namespace osrm {
   /*
    *
    */
-  valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location, bool tracepoint = false);
+  valhalla::baldr::json::MapPtr waypoint(const valhalla::odin::Location& location, bool tracepoint = false,
+      const bool optimized = false, const uint32_t waypoint_index = 0);
 
   /*
    *
