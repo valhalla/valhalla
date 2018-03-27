@@ -29,7 +29,10 @@ using namespace std;
 
 namespace osrm {
 
-  valhalla::baldr::json::MapPtr waypoint(const odin::Location& location, bool tracepoint) {
+  // Serialize a location (waypoint) in OSRM compatible format. Waypoint format is described here:
+  //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
+  valhalla::baldr::json::MapPtr waypoint(const odin::Location& location, bool tracepoint,
+        const bool optimized, const uint32_t waypoint_index) {
     // Create a waypoint to add to the array
     auto waypoint = json::map({});
 
@@ -59,6 +62,14 @@ namespace osrm {
       waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
       waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.original_index()));
       waypoint->emplace("matchings_index", static_cast<uint64_t>(0)); //we only have one matching for now
+    }
+
+    // If the location was used for optimized route we add trips_index and waypoint
+    // index (index of the waypoint in the trip)
+    if (optimized) {
+      int trips_index = 0; // TODO
+      waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
+      waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
     }
 
     return waypoint;
