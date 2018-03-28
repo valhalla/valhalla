@@ -468,8 +468,8 @@ namespace {
     parse_locations(doc, options.mutable_avoid_locations(), "avoid_locations", 133, track);
 
     //time type
-    auto date_time_type = rapidjson::get_optional<int>(doc, "/date_time/type");
-    if(date_time_type) {
+    auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
+    if(date_time_type && valhalla::odin::DirectionsOptions::DateTimeType_IsValid(*date_time_type)
       options.set_date_time_type(static_cast<valhalla::odin::DirectionsOptions::DateTimeType>(*date_time_type));
     }
     else if(options.has_costing() && (options.costing() == valhalla::odin::DirectionsOptions::multimodal ||
