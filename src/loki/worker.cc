@@ -55,10 +55,8 @@ namespace valhalla {
         valhalla::midgard::logging::Log("costing_type::" + costing, " [ANALYTICS] ");
 
       // TODO - have a way of specifying mode at the location
-      if(costing == "multimodal") {
-        request.options.set_costing(odin::DirectionsOptions::pedestrian);
+      if(costing == "multimodal")
         costing = "pedestrian";
-      }
 
       // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
