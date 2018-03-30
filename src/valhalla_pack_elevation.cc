@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cstdint>
 #include <fstream>
+#include <stdexcept>
 
 #include <zlib.h>
 #include <lz4.h>
