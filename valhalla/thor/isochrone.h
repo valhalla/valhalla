@@ -107,7 +107,7 @@ class Isochrone {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_;
+  EdgeStatus edgestatus_;
 
   // Isochrone gridded time data
   std::shared_ptr<GriddedData<midgard::PointLL> > isotile_;

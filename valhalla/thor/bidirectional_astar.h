@@ -96,8 +96,8 @@ class BidirectionalAStar : public PathAlgorithm {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_reverse_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_forward_;
-  std::shared_ptr<EdgeStatus> edgestatus_reverse_;
+  EdgeStatus edgestatus_forward_;
+  EdgeStatus edgestatus_reverse_;
 
   // Best candidate connection and threshold to extend search.
   uint32_t threshold_;

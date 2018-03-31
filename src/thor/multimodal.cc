@@ -47,7 +47,6 @@ MultiModalPathAlgorithm::MultiModalPathAlgorithm()
       mode_(TravelMode::kPedestrian),
       travel_type_(0),
       adjacencylist_(nullptr),
-      edgestatus_(nullptr),
       max_label_count_(std::numeric_limits<uint32_t>::max()) {
 }
 
@@ -77,7 +76,7 @@ void MultiModalPathAlgorithm::Init(const PointLL& origll,
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
-  edgestatus_.reset(new EdgeStatus());
+  edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
@@ -94,7 +93,7 @@ void MultiModalPathAlgorithm::Clear() {
   adjacencylist_.reset();
 
   // Clear the edge status flags
-  edgestatus_.reset();
+  edgestatus_.clear();
 
   // Set the ferry flag to false
   has_ferry_ = false;
@@ -209,7 +208,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
     if (!pred.origin()) {
-      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+      edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -319,17 +318,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // Expand from end node.
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
-      // Skip shortcuts
-      if (directededge->is_shortcut()) {
-        continue;
-      }
-
-      // Get the current set. Skip this edge if permanently labeled (best
-      // path already found to this directed edge).
-      EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-      if (edgestatus.set() == EdgeSet::kPermanent) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
+      // Skip shortcuts and edges that are permanently labeled (best path already found to
+      // this directed edge).
+      if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -337,8 +331,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         // Add the transition edge to the adjacency list and edge labels
         // using the predecessor information. Transition edges have
         // no length.
+        uint32_t idx = edgelabels_.size();
+        *es = { EdgeSet::kTemporary, idx };
         edgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
-        AddToAdjacencyList(edgeid, pred.sortcost());
+        adjacencylist_->add(idx);
         continue;
       }
 
@@ -486,11 +482,11 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
-      if (edgestatus.set() == EdgeSet::kTemporary) {
-        MMEdgeLabel& lab = edgelabels_[edgestatus.index()];
+      if (es->set() == EdgeSet::kTemporary) {
+        MMEdgeLabel& lab = edgelabels_[es->index()];
         if (newcost.cost < lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          adjacencylist_->decrease(es->index(), newsortcost);
           lab.Update(predindex, newcost, newsortcost, walking_distance_,
                      tripid, blockid);
         }
@@ -515,22 +511,15 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       }
 
       // Add edge label, add to the adjacency list and set edge status
+      uint32_t idx = edgelabels_.size();
+      *es = { EdgeSet::kTemporary, idx };
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, mode_, walking_distance_,
                     tripid, prior_stop, blockid, operator_id, has_transit);
-      AddToAdjacencyList(edgeid, sortcost);
+      adjacencylist_->add(idx);
     }
   }
   return {};      // Should never get here
-}
-
-// Convenience method to add an edge to the adjacency list and temporarily
-// label it.
-void MultiModalPathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
-                                       const float sortcost) {
-  uint32_t idx = edgelabels_.size() - 1;
-  adjacencylist_->add(idx);
-  edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
 // Add an edge at the origin to the adjacency list
@@ -705,7 +694,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
     edgelabels.emplace_back(kInvalidLabel, oppedge,
             diredge, cost, cost.cost, 0.0f, mode_, length);
     adjlist.add(label_idx);
-    edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx);
+    edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx, tile);
     label_idx++;
   }
 
@@ -724,7 +713,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
     // Mark the edge as as permanently labeled - copy the EdgeLabel
     // for use in costing
     EdgeLabel pred = edgelabels[predindex];
-    edgestatus.Set(pred.edgeid(), EdgeSet::kPermanent, pred.edgeid());
+    edgestatus.Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Get the end node of the prior directed edge and check access
     GraphId node = pred.endnode();
@@ -743,12 +732,12 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
 
     // Expand edges from the node
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    EdgeStatusInfo* es = edgestatus.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
-      // Get the current set. Skip this edge if permanently labeled (best
-      // path already found to this directed edge).
-      EdgeStatusInfo es = edgestatus.Get(edgeid);
-      if (es.set() == EdgeSet::kPermanent) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
+      // Skip this edge if permanently labeled (best path already found to
+      // this directed edge).
+      if (es->set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -758,7 +747,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
         // using the predecessor information.
         edgelabels.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         adjlist.add(label_idx);
-        edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
+        *es = { EdgeSet::kTemporary, label_idx };
         label_idx++;
         continue;
       }
@@ -774,11 +763,11 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
       uint32_t walking_distance = pred.path_distance() + directededge->length();
 
       // Check if lower cost path
-      if (es.set() == EdgeSet::kTemporary) {
-        EdgeLabel& lab = edgelabels[es.index()];
+      if (es->set() == EdgeSet::kTemporary) {
+        EdgeLabel& lab = edgelabels[es->index()];
         if (newcost.cost < lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-          adjlist.decrease(es.index(), newsortcost);
+          adjlist.decrease(es->index(), newsortcost);
           lab.Update(predindex, newcost, newsortcost, walking_distance);
         }
         continue;
@@ -788,7 +777,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
       edgelabels.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, mode_, walking_distance);
       adjlist.add(label_idx);
-      edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
+      *es = { EdgeSet::kTemporary, label_idx };
       label_idx++;
     }
   }

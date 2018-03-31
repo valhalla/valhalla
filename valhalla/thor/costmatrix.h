@@ -199,30 +199,6 @@ class CostMatrix {
   void ForwardSearch(const uint32_t index, const uint32_t n,
                      baldr::GraphReader& graphreader);
 
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphTile* tile,
-                     const baldr::GraphId& node,
-                     const baldr::NodeInfo* nodeinfo,
-                     sif::BDEdgeLabel& pred, const uint32_t pred_idx,
-                     std::vector<sif::HierarchyLimits>& hierarchy_limits,
-                     std::vector<sif::BDEdgeLabel>& edgelabels,
-                     EdgeStatus& edgestate,
-                     std::shared_ptr<baldr::DoubleBucketQueue>& adj,
-                     const bool from_transition);
-
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphTile* tile,
-                     const baldr::GraphId& node,
-                     const baldr::NodeInfo* nodeinfo,
-                     const uint32_t index,
-                     sif::BDEdgeLabel& pred, const uint32_t pred_idx,
-                     const baldr::DirectedEdge* opp_pred_edge,
-                     std::vector<sif::HierarchyLimits>& hierarchy_limits,
-                     std::vector<sif::BDEdgeLabel>& edgelabels,
-                     EdgeStatus& edgestate,
-                     std::shared_ptr<baldr::DoubleBucketQueue>& adj,
-                     const bool from_transition);
-
   /**
    * Check if the edge on the forward search connects to a reached edge
    * on the reverse search tree.

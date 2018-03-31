@@ -81,7 +81,7 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_;
+  EdgeStatus edgestatus_;
 
   // Destinations, id and cost
   std::map<uint64_t, sif::Cost> destinations_;
@@ -94,15 +94,6 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    */
   void Init(const PointLL& origll, const PointLL& destll,
             const std::shared_ptr<sif::DynamicCost>& costing);
-
-  /**
-   * Convenience method to add an edge to the adjacency list and temporarily
-   * label it. This must be called before adding the edge label (so it uses
-   * the correct index).
-   * @param  edgeid    Edge to add to the adjacency list.
-   * @param  sortcost  Sort cost.
-   */
-  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
 
   /**
    * Add edges at the origin to the adjacency list.
