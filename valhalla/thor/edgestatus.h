@@ -7,9 +7,6 @@
 namespace valhalla {
 namespace thor {
 
-// Default size to reserve for the EdgeStatus unordered map
-constexpr uint32_t kDefaultEdgeStatusSize = 2000000;
-
 // Edge label status
 enum class EdgeSet : uint8_t {
   kUnreached = 0,   // Unreached - not yet encountered in search
@@ -24,9 +21,9 @@ struct EdgeStatusInfo {
   uint32_t index_ : 28;
   uint32_t set_   : 4;
 
-  EdgeStatusInfo() {
-    set_   = static_cast<uint32_t>(EdgeSet::kUnreached);
-    index_ = 0;
+  EdgeStatusInfo()
+    : index_(0),
+      set_(0) {
   }
 
   EdgeStatusInfo(const EdgeSet set, const uint32_t index) {
@@ -45,22 +42,28 @@ struct EdgeStatusInfo {
 
 /**
  * Class to define / lookup the status and index of an edge in the edge label
- * list during shortest path algorithms.
+ * list during shortest path algorithms. This method stores status info for
+ * edges within arrays for each tile. This allows the path algorithms to get
+ * a pointer to the first edge status and iterate that pointer over sequential
+ * edges. This reduces the number of map lookups.
  */
 class EdgeStatus {
  public:
   /**
-   * Constructor given an initial size.
-   * @param  sz  Size to reserve for edgestatus unordered map.
+   * Destructor. Delete any allocated EdgeStatusInfo arrays.
    */
-  EdgeStatus(const uint32_t sz = kDefaultEdgeStatusSize) {
-    edgestatus_.reserve(sz);
+  ~EdgeStatus() {
+    clear();
   }
 
   /**
-   * Initialize the status to unreached for all edges.
+   * Clear the EdgeStatusInfo arrays and the edge status map.
    */
-  void Init() {
+  void clear() {
+    // Delete any allocated arrays for tiles within the map.
+    for (auto iter : edgestatus_) {
+      delete [] iter.second;
+    }
     edgestatus_.clear();
   }
 
@@ -69,19 +72,35 @@ class EdgeStatus {
    * @param  edgeid   GraphId of the directed edge to set.
    * @param  set      Label set for this directed edge.
    * @param  index    Index of the edge label.
+   * @param  tile     Graph tile of the directed edge.
    */
   void Set(const baldr::GraphId& edgeid, const EdgeSet set,
-           const uint32_t index) {
-    edgestatus_[edgeid.value] = { set, index };
+           const uint32_t index, const baldr::GraphTile* tile) {
+    auto p = edgestatus_.find(edgeid.Tile_Base().value);
+    if (p != edgestatus_.end()) {
+      p->second[edgeid.id()] = { set, index };
+    } else {
+      // Tile is not in the map. Add an array of EdgeStatusInfo, sized to
+      // the number of directed edges in the specified tile.
+      uint64_t t = edgeid.Tile_Base().value;
+      edgestatus_[t] = new EdgeStatusInfo[tile->header()->directededgecount()];
+      edgestatus_[t][edgeid.id()] = { set, index };
+    }
   }
 
   /**
-   * Update the status of a directed edge given its GraphId.
+   * Update the status (set) of a directed edge given its GraphId.
+   * This method assumes that the edge id has already been encountered.
    * @param  edgeid   GraphId of the directed edge to set.
    * @param  set      Label set for this directed edge.
    */
   void Update(const baldr::GraphId& edgeid, const EdgeSet set) {
-    edgestatus_[edgeid.value].set_ = static_cast<uint32_t>(set);
+    const auto p = edgestatus_.find(edgeid.Tile_Base().value);
+    if (p != edgestatus_.end()) {
+      p->second[edgeid.id()].set_ = static_cast<uint32_t>(set);
+    } else {
+      throw std::runtime_error("EdgeStatus Update on edge not previously set");
+    }
   }
 
   /**
@@ -90,14 +109,36 @@ class EdgeStatus {
    * @return  Returns edge status info.
    */
   EdgeStatusInfo Get(const baldr::GraphId& edgeid) const {
-    auto p = edgestatus_.find(edgeid.value);
-    return (p == edgestatus_.end()) ? EdgeStatusInfo() : p->second;
+    const auto p = edgestatus_.find(edgeid.Tile_Base().value);
+    return (p == edgestatus_.end()) ? EdgeStatusInfo() : p->second[edgeid.id()];
+  }
+
+  /**
+   * Get a pointer to the edge status info of a directed edge. Since directed
+   * edges are stored sequentially from a node this reduces the number of
+   * lookups by edgeid.
+   * @param   edgeid  GraphId of the directed edge.
+   * @param  tile     Graph tile of the directed edge.
+   * @return  Returns a pointer to edge status info for this edge.
+   */
+  EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid, const baldr::GraphTile* tile) {
+    const auto p = edgestatus_.find(edgeid.Tile_Base().value);
+    if (p != edgestatus_.end()) {
+      return &p->second[edgeid.id()];
+    } else {
+      // Tile is not in the map. Add an array of EdgeStatusInfo, sized to
+      // the number of directed edges in the specified tile.
+      uint64_t t = edgeid.Tile_Base().value;
+      edgestatus_[t] = new EdgeStatusInfo[tile->header()->directededgecount()];
+      return &(edgestatus_[t])[edgeid.id()];
+    }
   }
 
  private:
-  // Map to store the status and index of GraphIds that have been encountered.
-  // Any unreached edges are not added to the map.
-  std::unordered_map<uint64_t, EdgeStatusInfo> edgestatus_;
+  // Edge status - keys are the tile Ids (level and tile Id) and the
+  // values are dynamically allocated arrays of EdgeStatusInfo (sized
+  // based on the directed edge count within the tile).
+  std::unordered_map<uint64_t, EdgeStatusInfo*> edgestatus_;
 };
 
 }
