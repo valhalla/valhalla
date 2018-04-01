@@ -194,11 +194,11 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_forward_.size();
-    *es = { EdgeSet::kTemporary, idx };
     edgelabels_forward_.emplace_back(pred_idx, edgeid, oppedge, directededge,
                   newcost, sortcost, dist, mode_, tc,
                   (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_forward_->add(idx);
+    *es = { EdgeSet::kTemporary, idx };
   }
 }
 
@@ -302,11 +302,11 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_reverse_.size();
-    *es = { EdgeSet::kTemporary, idx };
     edgelabels_reverse_.emplace_back(pred_idx, edgeid, oppedge,
                  directededge, newcost, sortcost, dist, mode_, tc,
                  (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_reverse_->add(idx);
+    *es = { EdgeSet::kTemporary, idx };
   }
 }
 
@@ -342,7 +342,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(odin::Location& origin,
   // TODO - CostMatrix alternates, maybe should try alternating here?
   int n = 1;
   uint32_t forward_pred_idx, reverse_pred_idx;
-  BDEdgeLabel pred, pred2;
+  BDEdgeLabel fwd_pred, rev_pred;
   const GraphTile* tile;
   const GraphTile* tile2;
   bool expand_forward  = true;
@@ -361,9 +361,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(odin::Location& origin,
       if (forward_pred_idx != kInvalidLabel) {
         // Check if the edge on the forward search connects to a
         // settled edge on the reverse search tree.
-        pred = edgelabels_forward_[forward_pred_idx];
-        if (edgestatus_reverse_.Get(pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          SetForwardConnection(pred);
+        fwd_pred = edgelabels_forward_[forward_pred_idx];
+        if (edgestatus_reverse_.Get(fwd_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
+          SetForwardConnection(fwd_pred);
         }
       } else {
         // Search is exhausted. If a connection has been found, return it
@@ -383,9 +383,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(odin::Location& origin,
       if (reverse_pred_idx != kInvalidLabel) {
         // Check if the edge on the reverse search connects to a
         // settled edge on the forward search tree.
-        pred2 = edgelabels_reverse_[reverse_pred_idx];
-        if (edgestatus_forward_.Get(pred2.opp_edgeid()).set() == EdgeSet::kPermanent) {
-          SetReverseConnection(pred2);
+        rev_pred = edgelabels_reverse_[reverse_pred_idx];
+        if (edgestatus_forward_.Get(rev_pred.opp_edgeid()).set() == EdgeSet::kPermanent) {
+          SetReverseConnection(rev_pred);
         }
       } else {
         // Search is exhausted. If a connection has been found, return it
@@ -412,24 +412,24 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(odin::Location& origin,
     }
 
     // Expand from the search direction with lower sort cost.
-    if ((pred.sortcost() + cost_diff_) < pred2.sortcost()) {
+    if ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost()) {
       // Expand forward - set to get next edge from forward adj. list
       // on the next pass
       expand_forward = true;
       expand_reverse = false;
 
       // Settle this edge.
-      edgestatus_forward_.Update(pred.edgeid(), EdgeSet::kPermanent);
+      edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
 
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
-      if ((pred.not_thru() && pred.not_thru_pruning()) ||
-          hierarchy_limits_forward_[pred.endnode().level()].StopExpanding()) {
+      if ((fwd_pred.not_thru() && fwd_pred.not_thru_pruning()) ||
+          hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding()) {
         continue;
       }
 
       // Expand from the end node in forward direction.
-      ExpandForward(graphreader, pred.endnode(), pred, forward_pred_idx, false);
+      ExpandForward(graphreader, fwd_pred.endnode(), fwd_pred, forward_pred_idx, false);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list
       // on the next pass
@@ -437,21 +437,21 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(odin::Location& origin,
       expand_reverse = true;
 
       // Settle this edge
-      edgestatus_reverse_.Update(pred2.edgeid(), EdgeSet::kPermanent);
+      edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
       // Prune path if predecessor is not a through edge
-      if ((pred2.not_thru() && pred2.not_thru_pruning()) ||
-          hierarchy_limits_reverse_[pred2.endnode().level()].StopExpanding()) {
+      if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
+          hierarchy_limits_reverse_[rev_pred.endnode().level()].StopExpanding()) {
         continue;
       }
 
       // Get the opposing predecessor directed edge. Need to make sure we get
       // the correct one if a transition occurred
       const DirectedEdge* opp_pred_edge =
-        graphreader.GetGraphTile(pred2.opp_edgeid())->directededge(pred2.opp_edgeid());
+        graphreader.GetGraphTile(rev_pred.opp_edgeid())->directededge(rev_pred.opp_edgeid());
 
       // Expand from the end node in reverse direction.
-      ExpandReverse(graphreader, pred2.endnode(), pred2, reverse_pred_idx,
+      ExpandReverse(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx,
                     opp_pred_edge, false);
     }
   }
@@ -486,20 +486,20 @@ void BidirectionalAStar::SetForwardConnection(const BDEdgeLabel& pred) {
     c = edgelabels_forward_[pred.predecessor()].cost().cost +
         edgelabels_reverse_[oppedgestatus.index()].cost().cost +
         pred.transition_cost();
-    } else {
-     // If no predecessor on the forward path get the predecessor on
-     // the reverse path to form the cost.
-     uint32_t predidx = edgelabels_reverse_[oppedgestatus.index()].predecessor();
-     float oppcost = (predidx == kInvalidLabel) ?
-           0 : edgelabels_reverse_[predidx].cost().cost;
-     c = pred.cost().cost + oppcost +
-         edgelabels_reverse_[oppedgestatus.index()].transition_cost();
-    }
+  } else {
+    // If no predecessor on the forward path get the predecessor on
+    // the reverse path to form the cost.
+    uint32_t predidx = edgelabels_reverse_[oppedgestatus.index()].predecessor();
+    float oppcost = (predidx == kInvalidLabel) ?
+         0 : edgelabels_reverse_[predidx].cost().cost;
+    c = pred.cost().cost + oppcost +
+       edgelabels_reverse_[oppedgestatus.index()].transition_cost();
+  }
 
-    // Set best_connection if cost is less than the best cost so far.
-    if (c < best_connection_.cost) {
-      best_connection_ = { pred.edgeid(), oppedge, c };
-    }
+  // Set best_connection if cost is less than the best cost so far.
+  if (c < best_connection_.cost) {
+    best_connection_ = { pred.edgeid(), oppedge, c };
+  }
 }
 
 // The edge on the reverse search connects to a reached edge on the forward
