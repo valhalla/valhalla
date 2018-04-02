@@ -932,12 +932,10 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       // that large penalties (e.g., ferries) are excluded.
       cost.cost += edge.distance() * 0.005f;
 
-      // Add EdgeLabel to the adjacency list (but do not set its status).
-      // Set the predecessor edge index to invalid to indicate the origin
-      // of the path.
+      // Construct the edge label. Set the predecessor edge index to invalid
+      // to indicate the origin of the path.
       uint32_t idx = edgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
       EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                            cost.cost, 0.0f, mode_, d);
       // Set the origin flag
@@ -946,6 +944,7 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list
       edgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
+      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     }
 
     // Set the origin timezone

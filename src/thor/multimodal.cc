@@ -603,8 +603,10 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     edge_label.set_origin();
 
     // Add EdgeLabel to the adjacency list
+    uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(edgelabels_.size() - 1);
+    adjacencylist_->add(idx);
+    edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
   }
 
   // Set the origin timezone
