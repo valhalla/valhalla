@@ -732,8 +732,10 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
+      uint32_t idx = source_edgelabel_[index].size();
       source_edgelabel_[index].push_back(std::move(edge_label));
-      source_adjacency_[index]->add(source_edgelabel_[index].size() - 1);
+      source_adjacency_[index]->add(idx);
+      source_edgestatus_[index].Set(edgeid, EdgeSet::kTemporary, idx, tile);
     }
     index++;
   }
@@ -811,8 +813,11 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path. Set the origin flag
+      uint32_t idx = target_edgelabel_[index].size();
       target_edgelabel_[index].push_back(std::move(edge_label));
-      target_adjacency_[index]->add(target_edgelabel_[index].size() - 1);
+      target_adjacency_[index]->add(idx);
+      target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kTemporary, idx,
+          graphreader.GetGraphTile(opp_edge_id));
       targets_[opp_edge_id].push_back(index);
     }
     index++;
