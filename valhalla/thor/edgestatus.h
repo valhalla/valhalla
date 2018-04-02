@@ -76,15 +76,15 @@ class EdgeStatus {
    */
   void Set(const baldr::GraphId& edgeid, const EdgeSet set,
            const uint32_t index, const baldr::GraphTile* tile) {
-    auto p = edgestatus_.find(edgeid.Tile_Base().value);
+    auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       p->second[edgeid.id()] = { set, index };
     } else {
       // Tile is not in the map. Add an array of EdgeStatusInfo, sized to
       // the number of directed edges in the specified tile.
-      uint64_t t = edgeid.Tile_Base().value;
-      edgestatus_[t] = new EdgeStatusInfo[tile->header()->directededgecount()];
-      edgestatus_[t][edgeid.id()] = { set, index };
+      auto inserted = edgestatus_.emplace(edgeid.tile_value(),
+          new EdgeStatusInfo[tile->header()->directededgecount()]);
+      inserted.first->second[edgeid.id()] = { set, index };
     }
   }
 
@@ -95,7 +95,7 @@ class EdgeStatus {
    * @param  set      Label set for this directed edge.
    */
   void Update(const baldr::GraphId& edgeid, const EdgeSet set) {
-    const auto p = edgestatus_.find(edgeid.Tile_Base().value);
+    const auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       p->second[edgeid.id()].set_ = static_cast<uint32_t>(set);
     } else {
@@ -109,7 +109,7 @@ class EdgeStatus {
    * @return  Returns edge status info.
    */
   EdgeStatusInfo Get(const baldr::GraphId& edgeid) const {
-    const auto p = edgestatus_.find(edgeid.Tile_Base().value);
+    const auto p = edgestatus_.find(edgeid.tile_value());
     return (p == edgestatus_.end()) ? EdgeStatusInfo() : p->second[edgeid.id()];
   }
 
@@ -122,15 +122,15 @@ class EdgeStatus {
    * @return  Returns a pointer to edge status info for this edge.
    */
   EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid, const baldr::GraphTile* tile) {
-    const auto p = edgestatus_.find(edgeid.Tile_Base().value);
+    const auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       return &p->second[edgeid.id()];
     } else {
       // Tile is not in the map. Add an array of EdgeStatusInfo, sized to
       // the number of directed edges in the specified tile.
-      uint64_t t = edgeid.Tile_Base().value;
-      edgestatus_[t] = new EdgeStatusInfo[tile->header()->directededgecount()];
-      return &(edgestatus_[t])[edgeid.id()];
+      auto inserted = edgestatus_.emplace(edgeid.tile_value(),
+          new EdgeStatusInfo[tile->header()->directededgecount()]);
+      return &(inserted.first->second)[edgeid.id()];
     }
   }
 
