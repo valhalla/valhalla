@@ -135,6 +135,14 @@ struct GraphId {
   }
 
   /**
+   * Returns a value indicating the tile (level and tile id) of the graph Id.
+   * @return  Returns a 64 bit value indicating the tile.
+   */
+  uint64_t tile_value() const {
+    return (value & 0x1ffffff);
+  }
+
+  /**
    * The json representation of the id
    * @return  json
    */
