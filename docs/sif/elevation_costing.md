@@ -6,7 +6,7 @@ Bicycle routing presents several unique challenges. Among the challenges are the
 
 #### Addition of Elevation Factors into Valhalla Routing Tiles
 
-In order to measure the change in elevation over a given segment of road, we've built a library (and service) called [Skadi](https://github.com/valhalla/skadi); the godess of the mountains. Skadi has the ability to efficiently query world-wide digital elevation model data. We use this library when building routing tiles to estimate the prevaling grade/slope of a given section of road. We call this the weighted grade. Here's how it works.
+In order to measure the change in elevation over a given segment of road, we've built a library (and service) called [Skadi](https://github.com/valhalla/skadi); the goddess of the mountains. Skadi has the ability to efficiently query world-wide digital elevation model data. We use this library when building routing tiles to estimate the prevaling grade/slope of a given section of road. We call this the weighted grade. Here's how it works.
 
 ![Weighting Function](images/weighted_grade.png "Weight Per Grade")
 
