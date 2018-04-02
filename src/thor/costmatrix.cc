@@ -735,7 +735,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       uint32_t idx = source_edgelabel_[index].size();
       source_edgelabel_[index].push_back(std::move(edge_label));
       source_adjacency_[index]->add(idx);
-      source_edgestatus_[index].Set(edgeid, EdgeSet::kTemporary, idx, tile);
+      source_edgestatus_[index].Set(edgeid, EdgeSet::kUnreached, idx, tile);
     }
     index++;
   }
@@ -816,7 +816,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       uint32_t idx = target_edgelabel_[index].size();
       target_edgelabel_[index].push_back(std::move(edge_label));
       target_adjacency_[index]->add(idx);
-      target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kTemporary, idx,
+      target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kUnreached, idx,
           graphreader.GetGraphTile(opp_edge_id));
       targets_[opp_edge_id].push_back(index);
     }
