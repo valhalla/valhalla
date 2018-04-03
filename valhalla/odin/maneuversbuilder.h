@@ -140,7 +140,7 @@ class ManeuversBuilder {
       bool start_man) const;
 
   /**
-   * Enhance a signless interchange maneuver by adding the subsquent street name
+   * Enhance a signless interchange maneuver by adding the subsequent street name
    * as a branch name.
    *
    * @param maneuvers The list of maneuvers to process.

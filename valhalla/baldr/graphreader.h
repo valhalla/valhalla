@@ -191,7 +191,7 @@ class TileCacheFactory final {
  public:
   /**
    * Constructs tile cache.
-   * @param pt  Property tree listing the configuration for the cahce configration
+   * @param pt  Property tree listing the configuration for the cahce configuration
    */
   static TileCache* createTileCache(const boost::property_tree::ptree& pt);
 };
@@ -325,7 +325,7 @@ class GraphReader {
    * Convenience method to get an end node.
    * @param edge  the edge whose end node you want
    * @param  tile    Reference to a pointer to a const tile.
-   * @return returns the end node of edge or nullptr if it couldnt
+   * @return returns the end node of edge or nullptr if it couldn't
    */
   const NodeInfo* GetEndNode(const DirectedEdge* edge, const GraphTile*& tile) {
     return GetGraphTile(edge->endnode(), tile) ? tile->node(edge->endnode()) : nullptr;

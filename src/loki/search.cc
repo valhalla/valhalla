@@ -658,7 +658,7 @@ struct bin_handler_t {
       }
 
       //keep filtered edges for retry in case we cant find a route non filtered edges
-      //use the max score of the non filtered edges as a penality increase on each of the
+      //use the max score of the non filtered edges as a penalty increase on each of the
       //filtered edges so that when finding a route using non filtered edges fails the
       //use of filtered edges are always penalized higher than the non filtered ones
       auto max = std::max_element(correlated.edges.begin(), correlated.edges.end(),

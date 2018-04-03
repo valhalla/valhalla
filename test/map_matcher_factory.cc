@@ -139,7 +139,7 @@ void TestMapMatcher()
 
   // Share the same pool
   test::assert_bool(&auto_matcher->graphreader() == &pedestrian_matcher->graphreader(),
-                    "graph reader shoule be shared among matchers");
+                    "graph reader should be shared among matchers");
   test::assert_bool(&auto_matcher->candidatequery() == &pedestrian_matcher->candidatequery(),
                     "range query should be shared among matchers");
 
