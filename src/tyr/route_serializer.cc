@@ -696,12 +696,15 @@ namespace {
 
       // Create distance and duration arrays. Iterate through trip edges and
       // form distance and duration.
+      // NOTE: if we need to do per node Id pair we could walk the shape,
+      // compute distances, and interpolate durations.
       uint32_t elapsed_time = 0;
       auto distances = json::array({});
       auto durations = json::array({});
       for (uint32_t idx = 0; idx < path_leg->node().size() - 1; ++idx) {
         distances->emplace_back(json::fp_t{path_leg->node(idx).edge().length() * 1000.0f, 1});
-        uint32_t t = path_leg->node(idx+1).elapsed_time() - path_leg->node(idx).elapsed_time();
+        uint32_t t = path_leg->node(idx+1).elapsed_time() > path_leg->node(idx).elapsed_time() ?
+            path_leg->node(idx+1).elapsed_time() - path_leg->node(idx).elapsed_time() : 0;
         durations->emplace_back(static_cast<uint64_t>(t));
       }
 
