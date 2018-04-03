@@ -34,7 +34,7 @@ namespace {
   constexpr int16_t NO_DATA_LOW = -16384;
   constexpr size_t TILE_COUNT = 180 * 360;
 
-  //macro is faster than inline funciton for this..
+  //macro is faster than inline function for this..
   #define out_of_range(v) v > NO_DATA_HIGH || v < NO_DATA_LOW
 
   std::list<std::string> get_files(const std::string& root_dir) {

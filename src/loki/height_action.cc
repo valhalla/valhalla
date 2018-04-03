@@ -44,7 +44,7 @@ namespace valhalla {
           //put it back
           request.options.clear_shape();
           for(const auto& p : shape) from_ll(request.options.mutable_shape()->Add(), p);
-          //reencode it for display if they sent it encoded
+          //re-encode it for display if they sent it encoded
           if(request.options.has_encoded_polyline())
             request.options.set_encoded_polyline(midgard::encode(shape));
           resampled = true;

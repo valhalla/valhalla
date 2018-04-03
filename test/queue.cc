@@ -47,7 +47,7 @@ void SimpleTestQueue()
 {
   SPQueue<Label> queue;
   test::assert_bool(queue.size() == 0 && queue.empty(),
-                    "intial queue should be empty");
+                    "initial queue should be empty");
 
   queue.push(Label(1, 3));
   test::assert_bool(queue.top() == Label(1, 3),
@@ -121,7 +121,7 @@ void TestQueue()
   test::assert_bool(queue.size() == N,
                     "all should be pushed");
   test::assert_bool(!queue.empty(),
-                    "definately should be non-empty");
+                    "definitely should be non-empty");
 
   for (int i=0; i<N; i++) {
     queue.push(Label(i, i+2));
@@ -130,7 +130,7 @@ void TestQueue()
   test::assert_bool(queue.size() == N,
                     "size should not be changes since no new id introduced");
   test::assert_bool(!queue.empty(),
-                    "definately should be non-empty");
+                    "definitely should be non-empty");
 
   std::vector<Label> labels;
   while (!queue.empty()) {
