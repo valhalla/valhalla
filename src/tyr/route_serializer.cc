@@ -689,6 +689,28 @@ namespace {
       return std::make_pair(names, refs);
     }
 
+
+    // Add annotations to the leg
+    json::MapPtr annotations(std::list<odin::TripPath>::const_iterator path_leg) {
+      auto annotations = json::map({});
+
+      // Create distance and duration arrays. Iterate through trip edges and
+      // form distance and duration.
+      uint32_t elapsed_time = 0;
+      auto distances = json::array({});
+      auto durations = json::array({});
+      for (uint32_t idx = 0; idx < path_leg->node().size() - 1; ++idx) {
+        distances->emplace_back(json::fp_t{path_leg->node(idx).edge().length() * 1000.0f, 1});
+        uint32_t t = path_leg->node(idx+1).elapsed_time() - path_leg->node(idx).elapsed_time();
+        durations->emplace_back(static_cast<uint64_t>(t));
+      }
+
+      // Add arrays and return
+      annotations->emplace("duration", durations);
+      annotations->emplace("distance", distances);
+      return annotations;
+    }
+
     // Serialize each leg
     json::ArrayPtr  serialize_legs(const std::list<valhalla::odin::TripDirections>& legs,
                  const std::list<odin::TripPath>& path_legs) {
@@ -700,9 +722,6 @@ namespace {
       auto path_leg = path_legs.begin();
       for (const auto& leg : legs) {
         auto output_leg = json::map({});
-
-        // TODO (DEFER) - add annotation (node Ids, etc.).
-        // DEFER since OSRM needs node Ids but Valhalla does not store them.
 
         // Get the full shape for the leg. We want to use this for serializing
         // encoded shape for each step (maneuver) in OSRM output.
@@ -799,6 +818,12 @@ namespace {
 
           index++;
         }
+
+        // Add annotations. Valhalla cannot support node Ids (Valhalla does
+        // not store node Ids) but can support distance, duration, speed.
+        // NOTE: Valhalla outputs annotations per edge not between node Id
+        // pairs like OSRM does.
+        output_leg->emplace("annotation", annotations(path_leg));
 
         // Add distance, duration, weight, and summary
         // Get a summary based on longest maneuvers.
