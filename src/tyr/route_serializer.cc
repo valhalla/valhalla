@@ -826,7 +826,10 @@ namespace {
         // not store node Ids) but can support distance, duration, speed.
         // NOTE: Valhalla outputs annotations per edge not between node Id
         // pairs like OSRM does.
-        output_leg->emplace("annotation", annotations(path_leg));
+        // Protect against empty trip path
+        if (path_leg->node().size() > 0) {
+          output_leg->emplace("annotation", annotations(path_leg));
+        }
 
         // Add distance, duration, weight, and summary
         // Get a summary based on longest maneuvers.
