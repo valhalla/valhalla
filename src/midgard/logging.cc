@@ -24,7 +24,7 @@ inline std::tm* get_gmtime(const std::time_t* time, std::tm* tm)
 #endif
 }
 
-//returns formated to: 'year/mo/dy hr:mn:sc.xxxxxx'
+//returns formatted to: 'year/mo/dy hr:mn:sc.xxxxxx'
 std::string TimeStamp() {
   //get the time
   std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();

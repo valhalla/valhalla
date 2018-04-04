@@ -45,7 +45,7 @@ constexpr double kMinimumInterval = 10.0f;
 
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
- * we also need to then update the egdes that pointed to them
+ * we also need to then update the edges that pointed to them
  *
  */
 std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
