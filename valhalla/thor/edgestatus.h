@@ -118,7 +118,7 @@ class EdgeStatus {
    * edges are stored sequentially from a node this reduces the number of
    * lookups by edgeid.
    * @param   edgeid  GraphId of the directed edge.
-   * @param  tile     Graph tile of the directed edge.
+   * @param   tile    Graph tile of the directed edge.
    * @return  Returns a pointer to edge status info for this edge.
    */
   EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid, const baldr::GraphTile* tile) {
@@ -138,7 +138,7 @@ class EdgeStatus {
   // Edge status - keys are the tile Ids (level and tile Id) and the
   // values are dynamically allocated arrays of EdgeStatusInfo (sized
   // based on the directed edge count within the tile).
-  std::unordered_map<uint64_t, EdgeStatusInfo*> edgestatus_;
+  std::unordered_map<uint32_t, EdgeStatusInfo*> edgestatus_;
 };
 
 }

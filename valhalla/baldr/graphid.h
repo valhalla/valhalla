@@ -34,7 +34,7 @@ struct GraphId {
   // Single 64 bit value representing the graph id.
   // Bit fields within the Id include:
   //      3  bits for hierarchy level
-  //      22 bits for tile Id and
+  //      22 bits for tile Id (supports lat,lon tiles down to 1/8 degree)
   //      21 bits for id within the tile.
   uint64_t value;
 
@@ -136,9 +136,9 @@ struct GraphId {
 
   /**
    * Returns a value indicating the tile (level and tile id) of the graph Id.
-   * @return  Returns a 64 bit value indicating the tile.
+   * @return  Returns a 32 bit value.
    */
-  uint64_t tile_value() const {
+  uint32_t tile_value() const {
     return (value & 0x1ffffff);
   }
 
