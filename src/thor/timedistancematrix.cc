@@ -61,7 +61,7 @@ void TimeDistanceMatrix::Clear() {
   adjacencylist_.reset();
 
   // Clear the edge status flags
-  edgestatus_.reset();
+  edgestatus_.clear();
 }
 
 // Expand from a node in the forward direction
@@ -81,8 +81,9 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
 
   // Expand from end node.
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
     // Skip shortcut edges
     if (directededge->is_shortcut()) {
       continue;
@@ -97,17 +98,12 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Get the current set. Skip this edge if permanently labeled (best
-    // path already found to this directed edge).
-    EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-    if (edgestatus.set() == EdgeSet::kPermanent) {
-      continue;
-    }
-
-    // Skip if no access is allowed to this edge (based on costing method)
-    // or if a complex restriction prevents this path.
-    if (!costing_->Allowed(directededge, pred, tile, edgeid) ||
-         costing_->Restricted(directededge, pred, edgelabels_, tile,
+    // Skip this edge if permanently labeled (best path already found to this
+    // directed edge), if no access is allowed to this edge (based on costing
+    // method), or if a complex restriction prevents this path.
+    if (es->set() == EdgeSet::kPermanent ||
+       !costing_->Allowed(directededge, pred, tile, edgeid) ||
+        costing_->Restricted(directededge, pred, edgelabels_, tile,
                                  edgeid, true)) {
       continue;
     }
@@ -121,11 +117,11 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
-    if (edgestatus.set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[edgestatus.index()];
+    if (es->set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost <  lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(edgestatus.index(), newsortcost);
+        adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, distance);
       }
       continue;
@@ -135,7 +131,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge,
                       newcost, newcost.cost, 0.0f, mode_, distance);
-    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+    *es = { EdgeSet::kTemporary, idx };
     adjacencylist_->add(idx);
   }
 }
@@ -164,7 +160,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   };
   adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_,
                                              bucketsize, edgecost));
-  edgestatus_.reset(new EdgeStatus());
+  edgestatus_.clear();
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
@@ -189,7 +185,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge. Otherwise loops/around the block cases will not work
     if (!pred.origin()) {
-      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+      edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
     // Identify any destinations on this edge
@@ -240,11 +236,13 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 
   // Expand from end node.
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-              i++, directededge++, ++edgeid) {
-    // Skip shortcut edges
-    if (directededge->is_shortcut()) {
+              i++, directededge++, ++edgeid, ++es) {
+    // Skip shortcut edges and edges permanently labeled (best
+    // path already found to this directed edge).
+    if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent) {
       continue;
     }
 
@@ -254,13 +252,6 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       if (!from_transition) {
         ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, true);
       }
-      continue;
-    }
-
-    // Get the current set. Skip this edge if permanently labeled (best
-    // path already found to this directed edge).
-    EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-    if (edgestatus.set() == EdgeSet::kPermanent) {
       continue;
     }
 
@@ -288,11 +279,11 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
-    if (edgestatus.set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[edgestatus.index()];
+    if (es->set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost <  lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(edgestatus.index(), newsortcost);
+        adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, distance);
       }
       continue;
@@ -302,7 +293,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge,
                       newcost, newcost.cost, 0.0f, mode_, distance);
-    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+    *es = { EdgeSet::kTemporary, idx };
     adjacencylist_->add(idx);
   }
 }
@@ -330,7 +321,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   };
   adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_,
                                          bucketsize, edgecost));
-  edgestatus_.reset(new EdgeStatus());
+  edgestatus_.clear();
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
@@ -355,7 +346,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
     if (!pred.origin()) {
-      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+      edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
     // Identify any destinations on this edge

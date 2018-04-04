@@ -48,8 +48,7 @@ Isochrone::Isochrone()
     : access_mode_(kAutoAccess),
       shape_interval_(50.0f),
       mode_(TravelMode::kDrive),
-      adjacencylist_(nullptr),
-      edgestatus_(nullptr) {
+      adjacencylist_(nullptr) {
 }
 
 // Destructor
@@ -64,10 +63,8 @@ void Isochrone::Clear() {
   edgelabels_.clear();
   bdedgelabels_.clear();
   mmedgelabels_.clear();
-  bdedgelabels_.clear();
-  mmedgelabels_.clear();
   adjacencylist_.reset();
-  edgestatus_.reset();
+  edgestatus_.clear();
 }
 
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
@@ -166,7 +163,7 @@ void Isochrone::Initialize(const uint32_t bucketsize) {
 
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
-  edgestatus_.reset(new EdgeStatus());
+  edgestatus_.clear();
 }
 
 // Initialize - create adjacency list, edgestatus support, and reserve
@@ -181,7 +178,7 @@ void Isochrone::InitializeReverse(const uint32_t bucketsize) {
 
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
-  edgestatus_.reset(new EdgeStatus());
+  edgestatus_.clear();
 }
 
 // Initialize - create adjacency list, edgestatus support, and reserve
@@ -196,7 +193,7 @@ void Isochrone::InitializeMultiModal(const uint32_t bucketsize) {
 
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
-  edgestatus_.reset(new EdgeStatus());
+  edgestatus_.clear();
 }
 
 // Expand from a node in the forward direction
@@ -223,8 +220,9 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
 
   // Expand from end node in forward direction.
   GraphId edgeid = { node.tileid(), node.level(), nodeinfo->edge_index() };
+  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
     // Handle transition edges - expand from the end node of the transition
     // (unless this is called from a transition).
     if (directededge->trans_up()) {
@@ -232,31 +230,22 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
       }
       continue;
-    }
-    if (directededge->trans_down()) {
+    } else if (directededge->trans_down()) {
       if (!from_transition) {
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
       }
       continue;
     }
 
-    // Quick check to skip if no access for this mode. Also, skip shortcuts.
+    // Skip this edge if permanently labeled (best path already found to this
+    // directed edge). skip shortcuts or if no access is allowed to this edge
+    // (based on the costing method) or if a complex restriction exists for
+    // this path.
     if (directededge->is_shortcut() ||
-      !(directededge->forwardaccess() & access_mode_)) {
-      continue;
-    }
-
-    // Get the current set. Skip this edge if permanently labeled (best
-    // path already found to this directed edge).
-    EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-    if (edgestatus.set() == EdgeSet::kPermanent) {
-      continue;
-    }
-
-    // Skip if no access is allowed to this edge (based on the costing
-    // method) or if a complex restriction exists for this path.
-    if (!costing_->Allowed(directededge, pred, tile, edgeid) ||
-         costing_->Restricted(directededge, pred, edgelabels_, tile,
+        es->set() == EdgeSet::kPermanent ||
+      !(directededge->forwardaccess() & access_mode_) ||
+      !costing_->Allowed(directededge, pred, tile, edgeid) ||
+       costing_->Restricted(directededge, pred, edgelabels_, tile,
                              edgeid, true)) {
       continue;
     }
@@ -268,11 +257,11 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
-    if (edgestatus.set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[edgestatus.index()];
+    if (es->set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost <  lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(edgestatus.index(), newsortcost);
+        adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost);
       }
       continue;
@@ -280,7 +269,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_.size();
-    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+    *es = { EdgeSet::kTemporary, idx };
     edgelabels_.emplace_back(pred_idx, edgeid, directededge,
                              newcost, newcost.cost, 0.0f, mode_, 0);
     adjacencylist_->add(idx);
@@ -320,7 +309,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
 
     // Copy the EdgeLabel for use in costing and settle the edge.
     EdgeLabel pred = edgelabels_[predindex];
-    edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+    edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Expand from the end node in forward direction.
     ExpandForward(graphreader, pred.endnode(), pred, predindex, false);
@@ -359,8 +348,9 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
 
   // Expand from end node in reverse direction.
   GraphId edgeid = { node.tileid(), node.level(), nodeinfo->edge_index() };
+  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
     // Handle transition edges - expand from the end not of the transition
     // unless this is called from a transition.
     if (directededge->trans_up()) {
@@ -377,17 +367,11 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    // Quick check to skip if no access for this mode or if edge is
-    // a shortcut
+    // Skip this edge if permanently labeled (best path already found to this
+    // directed edge), if no access for this mode, or if edge is a shortcut
     if (!(directededge->reverseaccess() & access_mode_) ||
-         directededge->is_shortcut()) {
-      continue;
-    }
-
-    // Get the current set. Skip this edge if permanently labeled (best
-    // path already found to this directed edge).
-    EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-    if (edgestatus.set() == EdgeSet::kPermanent) {
+         directededge->is_shortcut() ||
+         es->set() == EdgeSet::kPermanent) {
       continue;
     }
 
@@ -417,11 +401,11 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
-    if (edgestatus.set() == EdgeSet::kTemporary) {
-      BDEdgeLabel& lab = bdedgelabels_[edgestatus.index()];
+    if (es->set() == EdgeSet::kTemporary) {
+      BDEdgeLabel& lab = bdedgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(edgestatus.index(), newsortcost);
+        adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, tc);
       }
       continue;
@@ -429,7 +413,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
-    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+    *es = { EdgeSet::kTemporary, idx };
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedge,
                    directededge, newcost, newcost.cost, 0.0f,
                    mode_, tc, false);
@@ -470,7 +454,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
 
     // Copy the EdgeLabel for use in costing and settle the edge.
     BDEdgeLabel pred = bdedgelabels_[predindex];
-    edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+    edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Get the opposing predecessor directed edge. Need to make sure we get
     // the correct one if a transition occurred
@@ -553,7 +537,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
     // Copy the EdgeLabel for use in costing and settle the edge.
     MMEdgeLabel pred = mmedgelabels_[predindex];
-    edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+    edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Skip edges with large penalties (e.g. ferries?)
     if (pred.cost().cost > max_seconds * 2) {
@@ -646,18 +630,13 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     // Expand from end node.
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count();
-                i++, directededge++, ++edgeid) {
-      // Skip shortcut edges
-      if (directededge->is_shortcut()) {
-        continue;
-      }
-
-      // Get the current set. Skip this edge if permanently labeled (best
+                i++, directededge++, ++edgeid, ++es) {
+      // Skip shortcut edges and edges that are permanently labeled (best
       // path already found to this directed edge).
-      EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-      if (edgestatus.set() == EdgeSet::kPermanent) {
+      if (directededge->is_shortcut() || es->set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -665,7 +644,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       // information.
       if (directededge->IsTransition()) {
         uint32_t idx = mmedgelabels_.size();
-        edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+        *es = { EdgeSet::kTemporary, idx };
         mmedgelabels_.emplace_back(predindex, edgeid, directededge->endnode(), pred);
         adjacencylist_->add(idx);
         continue;
@@ -813,11 +792,11 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
-      if (edgestatus.set() == EdgeSet::kTemporary) {
-        MMEdgeLabel& lab = mmedgelabels_[edgestatus.index()];
+      if (es->set() == EdgeSet::kTemporary) {
+        MMEdgeLabel& lab = mmedgelabels_[es->index()];
         if (newcost.cost < lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          adjacencylist_->decrease(es->index(), newsortcost);
           lab.Update(predindex, newcost, newsortcost, walking_distance,
                      tripid, blockid);
         }
@@ -826,7 +805,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
 
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = mmedgelabels_.size();
-      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+      *es = { EdgeSet::kTemporary, idx };
       mmedgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, newcost.cost, 0.0f, mode_, walking_distance,
                     tripid, prior_stop, blockid, operator_id, has_transit);
@@ -842,8 +821,8 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
   // Skip if the opposing edge has already been settled.
   const GraphTile* t2;
   GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid(), t2);
-  EdgeStatusInfo edgestatus = edgestatus_->Get(opp);
-  if (edgestatus.set() == EdgeSet::kPermanent) {
+  EdgeStatusInfo es = edgestatus_.Get(opp);
+  if (es.set() == EdgeSet::kPermanent) {
     return;
   }
 
@@ -953,12 +932,10 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       // that large penalties (e.g., ferries) are excluded.
       cost.cost += edge.distance() * 0.005f;
 
-      // Add EdgeLabel to the adjacency list (but do not set its status).
-      // Set the predecessor edge index to invalid to indicate the origin
-      // of the path.
+      // Construct the edge label. Set the predecessor edge index to invalid
+      // to indicate the origin of the path.
       uint32_t idx = edgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
       EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                            cost.cost, 0.0f, mode_, d);
       // Set the origin flag
@@ -967,6 +944,7 @@ void Isochrone::SetOriginLocations(GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list
       edgelabels_.push_back(std::move(edge_label));
       adjacencylist_->add(idx);
+      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     }
 
     // Set the origin timezone
@@ -1029,7 +1007,7 @@ void Isochrone::SetOriginLocationsMM(GraphReader& graphreader,
       // of the path.
       uint32_t idx = mmedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                              cost.cost, 0.0f, mode_, d, 0, GraphId(), 0, 0, false);
 
@@ -1103,7 +1081,8 @@ void Isochrone::SetDestinationLocations(GraphReader& graphreader,
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
-      edgestatus_->Set(opp_edge_id, EdgeSet::kTemporary, idx);
+      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
+          graphreader.GetGraphTile(opp_edge_id));
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid,
                   opp_dir_edge, cost, cost.cost, 0.0f, mode_, c, false);
       adjacencylist_->add(idx);

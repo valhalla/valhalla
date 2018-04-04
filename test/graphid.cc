@@ -29,6 +29,10 @@ void TestValues() {
     throw runtime_error("Target 2:  Id does not match value set");
   }
 
+  // Test the tile_value
+  if (target2.Tile_Base().value != target2.tile_value())
+    throw runtime_error("Tile value does not match Tile_Base value");
+
   target.set_id(5678);
   if (target.id() != 5678 || target.tileid() != 123 || target.level() != 2)
     throw runtime_error("Values do not match after set_id");
