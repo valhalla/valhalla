@@ -126,11 +126,11 @@ private:
 // functor to sort GraphId objects by level, tile then id within the tile.
 struct sort_by_tile {
   inline bool operator()(vb::GraphId a, vb::GraphId b) const {
-    return ((a.fields.level < b.fields.level) ||
-            ((a.fields.level == b.fields.level) &&
-             ((a.fields.tileid < b.fields.tileid) ||
-              ((a.fields.tileid == b.fields.tileid) &&
-               (a.fields.id < b.fields.id)))));
+    return ((a.level() < b.level()) ||
+            ((a.level() == b.level()) &&
+             ((a.tileid() < b.tileid()) ||
+              ((a.tileid() == b.tileid()) &&
+               (a.id() < b.id())))));
   }
 };
 
@@ -261,7 +261,7 @@ void graph_builder::write_tiles(uint8_t level) const {
       // make more complex edge geom so that there are 3 segments, affine
       // combination doesnt properly handle arcs but who cares
       edge_info_offset = tile.AddEdgeInfo(
-        edge_index, e.first, e.second, 123, shape, {std::to_string(edge_index)},
+        edge_index, e.first, e.second, 123, shape, {std::to_string(edge_index)}, 0,
         add);
     }
     edge_builder.set_edgeinfo_offset(edge_info_offset);

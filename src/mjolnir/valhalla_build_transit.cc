@@ -22,6 +22,7 @@
 #include <google/protobuf/io/coded_stream.h>
 
 #include "midgard/logging.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/tilehierarchy.h"
@@ -111,20 +112,18 @@ struct logged_error_t: public std::runtime_error {
   }
 };
 
-struct curler_t {
-  curler_t():connection(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);}),
-    generator(std::chrono::system_clock::now().time_since_epoch().count()),
-    distribution(static_cast<size_t>(300), static_cast<size_t>(700)) {
+//TODO: use curler_t and expand its interface to be more flexible
+struct pt_curler_t {
+  pt_curler_t():connection(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);}) {
     if(connection.get() == nullptr)
       throw logged_error_t("Failed to created CURL connection");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ERRORBUFFER, error), "Failed to set error buffer");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FOLLOWLOCATION, 1L), "Failed to set redirect option ");
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &result), "Failed to set write data ");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEFUNCTION, write_callback), "Failed to set writer ");
   }
   //for now we only need to handle json
   //with templates we could return a string or whatever
-  ptree operator()(const std::string& url, const std::string& retry_if_no = "", bool gzip = true, boost::optional<size_t> timeout = boost::none) {
+  ptree operator()(const std::string& url, const std::string& retry_if_no = "", bool gzip = true) {
     //content encoding header
     if(gzip) {
       char encoding[] = "gzip"; //TODO: allow "identity" and "deflate"
@@ -135,6 +134,8 @@ struct curler_t {
     //dont stop until we have something useful!
     ptree pt;
     size_t tries = 0;
+    std::stringstream result;
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &result), "Failed to set write data ");
     while(++tries) {
       result.str("");
       long http_code = 0;
@@ -154,15 +155,12 @@ struct curler_t {
           log_extra = "Unusable response ";
         }
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(timeout ? *timeout : distribution(generator)));
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
       //dont log rate limit stuff its too frequent
       if(http_code != 429 || (tries % 10) == 0)
         LOG_WARN(log_extra + "retrying " + url);
     };
     return pt;
-  }
-  std::string last() const {
-    return result.str();
   }
 protected:
   void assert_curl(CURLcode code, const std::string& msg){
@@ -176,9 +174,6 @@ protected:
   }
   std::shared_ptr<CURL> connection;
   char error[CURL_ERROR_SIZE];
-  std::stringstream result;
-  std::default_random_engine generator;
-  std::uniform_int_distribution<size_t> distribution;
 };
 
 std::string url(const std::string& path, const ptree& pt) {
@@ -200,7 +195,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
 
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().rbegin()->second;
-  curler_t curler;
+  pt_curler_t curler;
   auto feeds = curler(url("/api/v1/feeds.geojson?per_page=false", pt), "features");
   for(const auto& feature : feeds.get_child("features")) {
 
@@ -325,8 +320,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
       else if (traversability == "exit")
         node->set_traversability(static_cast<uint32_t>(Traversability::kBackward));
 
-      GraphId egress_id = tile_id;
-      egress_id.fields.id = nodes.size();
+      GraphId egress_id(tile_id.tileid(), tile_id.level(), nodes.size());
       node->set_graphid(egress_id);
 
       // we want to set the previous id to the first egress in the
@@ -354,8 +348,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
     node->set_type(static_cast<uint32_t>(NodeType::kTransitStation));
     set_no_null(std::string, station_pt.second, "name", "null", node->set_name);
     node->set_wheelchair_boarding(station_pt.second.get<bool>("wheelchair_boarding", true));
-    GraphId station_id = tile_id;
-    station_id.fields.id = nodes.size();
+    GraphId station_id(tile_id.tileid(), tile_id.level(), nodes.size());
     node->set_graphid(station_id);
 
     auto tz = station_pt.second.get<std::string>("timezone", "null");
@@ -382,8 +375,7 @@ void get_stop_stations(Transit& tile, std::unordered_map<std::string, uint64_t>&
       node->set_type(static_cast<uint32_t>(NodeType::kMultiUseTransitPlatform));
       set_no_null(std::string, platforms_pt.second, "name", "null", node->set_name);
       node->set_wheelchair_boarding(platforms_pt.second.get<bool>("wheelchair_boarding", true));
-      GraphId platform_id = tile_id;
-      platform_id.fields.id = nodes.size();
+      GraphId platform_id(tile_id.tileid(), tile_id.level(), nodes.size());
       node->set_graphid(platform_id);
 
       auto tz = platforms_pt.second.get<std::string>("timezone", "null");
@@ -479,13 +471,15 @@ void get_stop_patterns(Transit& tile, std::unordered_map<std::string, size_t>& s
       auto lat = geom.second.back().second.get_value<float>();
       trip_shape.emplace_back(PointLL(lon,lat));
     }
-    // encode the points to reduce size
-    shape->set_encoded_shape(encode7(trip_shape));
+    if (trip_shape.size() > 1) {
+      // encode the points to reduce size
+      shape->set_encoded_shape(encode7(trip_shape));
 
-    // shapes.size()+1 because we can't have a shape id of 0.
-    // 0 means shape id is not set in the transit builder.
-    shape->set_shape_id(shapes.size()+1);
-    shapes.emplace(shape_id, shape->shape_id());
+      // shapes.size()+1 because we can't have a shape id of 0.
+      // 0 means shape id is not set in the transit builder.
+      shape->set_shape_id(shapes.size()+1);
+      shapes.emplace(shape_id, shape->shape_id());
+    }
   }
 }
 
@@ -699,7 +693,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
                  std::promise<std::list<GraphId> >& promise) {
   const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   std::list<GraphId> dangling;
-  curler_t curler;
+  pt_curler_t curler;
   auto now = time(nullptr);
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon; //TODO: use timezone code?
 
@@ -727,7 +721,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     Transit tile;
     auto file_name = GraphTile::FileSuffix(current);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
+    boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator + file_name;
 
     //tiles are wrote out with .pbf or .pbf.n ext
     uint32_t ext = 0;
@@ -919,7 +913,7 @@ void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
   auto tile_name = [&pt](const GraphId& id){
     auto file_name = GraphTile::FileSuffix(id);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    return pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
+    return pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator + file_name;
   };
 
   //for each tile
@@ -1586,7 +1580,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::vector<std::string> names;
         std::list<PointLL> shape = { egress_ll, station_ll };
 
-        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, shape, names, added);
+        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, shape, names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1632,7 +1626,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::list<PointLL> shape = { station_ll, egress_ll };
 
         // TODO - these need to be valhalla graph Ids
-        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, shape, names, added);
+        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, shape, names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1684,7 +1678,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::list<PointLL> shape = { station_ll, platform_ll };
 
         // TODO - these need to be valhalla graph Ids
-        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, shape, names, added);
+        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, shape, names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1756,7 +1750,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     std::list<PointLL> shape = { platform_ll, station_ll };
 
     // TODO - these need to be valhalla graph Ids
-    uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, shape, names, added);
+    uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, shape, names, 0, added);
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(true);
 
@@ -1792,7 +1786,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::string file_name = GraphTile::FileSuffix(GraphId(end_platform_graphid.tileid(), end_platform_graphid.level(),0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
-        const std::string file = transit_dir + '/' + file_name;
+        const std::string file = transit_dir + filesystem::path_separator + file_name;
         Transit endtransit = read_pbf(file, lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
@@ -1844,7 +1838,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                             transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
 
       uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(transitedge.routeid,
-                                                                  platform_graphid, endnode, 0, shape, names, added);
+                                                                  platform_graphid, endnode, 0, shape, names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
@@ -1910,7 +1904,7 @@ void build_tiles(const boost::property_tree::ptree& pt, std::mutex& lock,
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
-    const std::string file = transit_dir + '/' + file_name;
+    const std::string file = transit_dir + filesystem::path_separator + file_name;
 
     // Make sure it exists
     if (!boost::filesystem::exists(file)) {
@@ -2223,7 +2217,7 @@ int main(int argc, char** argv) {
   curl_global_cleanup();
 
   //figure out which transit tiles even exist
-  boost::filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.transit_dir") + '/' +
+  boost::filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator +
                                                                    std::to_string(TileHierarchy::levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;

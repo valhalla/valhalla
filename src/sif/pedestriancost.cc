@@ -36,6 +36,7 @@ constexpr uint32_t kDefaultMaxGradeFoot = 90;
 constexpr uint32_t kDefaultMaxGradeWheelchair = 12; // Conservative for now...
 
 // Other defaults (not dependent on type)
+constexpr uint8_t kDefaultMaxHikingDifficulty = 1; // T1 (kHiking)
 constexpr float kModeFactor             = 1.5f;   // Favor this mode?
 constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
 constexpr float kDefaultGatePenalty     = 10.0f;  // Seconds
@@ -72,7 +73,6 @@ constexpr float kMaxPedestrianSpeed = 25.0f;
 // Crossing penalties. TODO - may want to lower stop impact when
 // 2 cycleways or walkways cross
 constexpr uint32_t kCrossingCosts[] = { 0, 0, 1, 1, 2, 3, 5, 15 };
-}
 
 // Maximum amount of seconds that will be allowed to be passed in to influence paths
 // This can't be too high because sometimes a certain kind of path is required to be taken
@@ -95,6 +95,7 @@ constexpr ranged_default_t<uint32_t> kMaxGradeWheelchairRange{0, kDefaultMaxGrad
 constexpr ranged_default_t<uint32_t> kMaxGradeFootRange{0, kDefaultMaxGradeFoot, kDefaultMaxGradeFoot};
 
 // Other valid ranges and defaults (not dependent on type)
+constexpr ranged_default_t<uint8_t> kMaxHikingDifficultyRange{0, kDefaultMaxHikingDifficulty, 6};
 constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMaxFactor};
 constexpr ranged_default_t<float> kManeuverPenaltyRange{kMinFactor, kDefaultManeuverPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kGatePenaltyRange{kMinFactor, kDefaultGatePenalty, kMaxSeconds};
@@ -110,6 +111,28 @@ constexpr ranged_default_t<uint32_t> kTransitStartEndMaxDistanceRange{0, kTransi
 constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{0, kTransitTransferMaxDistance,
                                                                       50000}; // Max 50k
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+
+constexpr float kSacScaleSpeedFactor[] = {
+    1.0f,   // kNone
+    1.11f,  // kHiking (~90% speed)
+    1.25f,  // kMountainHiking (80% speed)
+    1.54f,  // kDemandingMountainHiking (~65% speed)
+    2.5f,   // kAlpineHiking (40% speed)
+    4.0f,   // kDemandingAlpineHiking (25% speed)
+    6.67f   // kDifficultAlpineHiking (~15% speed)
+};
+
+constexpr float kSacScaleCostFactor[] = {
+    0.0f,   // kNone
+    0.25f,  // kHiking
+    0.75f,  // kMountainHiking
+    1.25f,  // kDemandingMountainHiking
+    2.0f,   // kAlpineHiking
+    2.5f,   // kDemandingAlpineHiking
+    3.0f    // kDifficultAlpineHiking
+};
+
+}
 
 /**
  * Derived class providing dynamic edge costing for pedestrian routes.
@@ -265,9 +288,10 @@ class PedestrianCost : public DynamicCost {
    virtual const EdgeFilter GetEdgeFilter() const {
      // Throw back a lambda that checks the access for this type of costing
      auto access_mask = access_mask_;
-     return [access_mask](const baldr::DirectedEdge* edge) {
+     auto max_sac_scale = max_hiking_difficulty_;
+     return [access_mask, max_sac_scale](const baldr::DirectedEdge* edge) {
        return !(edge->IsTransition() || edge->is_shortcut() ||
-           edge->use() >= Use::kRail ||
+           edge->use() >= Use::kRail || edge->sac_scale() > max_sac_scale ||
           !(edge->forwardaccess() & access_mask));
      };
    }
@@ -315,6 +339,7 @@ class PedestrianCost : public DynamicCost {
   Surface minimal_allowed_surface_;
 
   uint32_t max_grade_;    // Maximum grade (percent).
+  SacScale max_hiking_difficulty_;  // Max sac_scale (0 - 6)
   float speed_;           // Pedestrian speed.
   float speedfactor_;     // Speed factor for costing. Based on speed.
   float walkway_factor_;  // Factor for favoring walkways and paths.
@@ -387,6 +412,14 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     minimal_allowed_surface_ = Surface::kPath;
   }
 
+  if (type == "foot")
+  {
+    max_hiking_difficulty_ = static_cast<SacScale> (kMaxHikingDifficultyRange(
+      pt.get<uint8_t>("max_hiking_difficulty", kDefaultMaxHikingDifficulty)
+    ));
+  } else {
+    max_hiking_difficulty_ = SacScale::kNone;
+  }
 
   mode_factor_ = kModeFactorRange(
     pt.get<float>("mode_factor", kModeFactor)
@@ -496,6 +529,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   if (!(edge->forwardaccess() & access_mask_) ||
        (edge->surface() > minimal_allowed_surface_) ||
         edge->is_shortcut() || IsUserAvoidEdge(edgeid) ||
+        edge->sac_scale() > max_hiking_difficulty_ ||
  //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
@@ -525,6 +559,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & access_mask_) ||
        (opp_edge->surface() > minimal_allowed_surface_) ||
         opp_edge->is_shortcut() || IsUserAvoidEdge(opp_edgeid) ||
+        edge->sac_scale() > max_hiking_difficulty_ ||
  //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
         opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
         opp_edge->use() == Use::kPlatformConnection) {
@@ -549,21 +584,24 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return { sec * ferry_factor_, sec };
   }
 
-  // Slightly favor walkways/paths and penalize alleys and driveways.
-  float sec = edge->length() * speedfactor_;
+  float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())];
+
   if (edge->use() == Use::kFootway) {
-    return { sec * walkway_factor_, sec };
+    factor *= walkway_factor_;
   } else if (edge->use() == Use::kAlley) {
-    return { sec * alley_factor_, sec };
+    factor *= alley_factor_;
   } else if (edge->use() == Use::kDriveway) {
-    return { sec * driveway_factor_, sec };
+    factor *= driveway_factor_;
   } else if (edge->use() == Use::kSidewalk) {
-    return { sec * sidewalk_factor_, sec };
+    factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
-    return { sec * kRoundaboutFactor, sec };
-  } else {
-    return { sec, sec };
+    factor *= kRoundaboutFactor;
   }
+
+  // Slightly favor walkways/paths and penalize alleys and driveways.
+  float sec = edge->length() * speedfactor_
+      * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())];
+  return { sec * factor, sec };
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor

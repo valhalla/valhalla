@@ -201,7 +201,7 @@ void Maneuver::set_instruction(std::string&& instruction) {
 }
 
 float Maneuver::length(const DirectionsOptions::Units& units) const {
-  if (units == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+  if (units == DirectionsOptions::miles) {
     return (length_ * midgard::kMilePerKm);
   }
   return length_;

@@ -74,7 +74,7 @@ namespace {
   const auto conf = json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
-      "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
+      "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
       "service_defaults":{"minimum_reachability": 50,"radius": 0}
     },
@@ -137,7 +137,7 @@ namespace {
       auto test_case = make_test_case(start, end);
       std::cout << test_case << std::endl;
       boost::property_tree::ptree route;
-      try { route = json_to_pt(actor.route(tyr::ROUTE, test_case)); }
+      try { route = json_to_pt(actor.route(test_case)); }
       catch (...) { std::cout << "route failed" << std::endl; continue; }
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
@@ -163,11 +163,17 @@ namespace {
         throw std::logic_error("Edge walk failed with exact shape");
       }
       std::vector<uint64_t> walked_edges;
-      for(const auto& edge : walked.get_child("edges"))
+      std::vector<gps_segment_t> segments;
+      for(const auto& edge : walked.get_child("edges")) {
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
+        auto b = edge.second.get<size_t>("begin_shape_index");
+        auto e = edge.second.get<size_t>("end_shape_index") + 1;
+        segments.emplace_back(gps_segment_t{std::vector<PointLL>(shape.cbegin() + b, shape.cbegin() + e),
+            static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
+      }
       //simulate gps from the route shape
       std::vector<float> accuracies;
-      auto simulation = midgard::simulate_gps(walked.get_child("edges"), shape, accuracies, 50, 100.f, 1);
+      auto simulation = simulate_gps(segments, accuracies, 50, 100.f, 1);
       auto locations = to_locations(simulation, accuracies, 1);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
@@ -182,7 +188,7 @@ namespace {
           std::cout << "route had a possible loop" << std::endl;
           continue;
         }
-        auto decoded_match = midgard::decode<std::vector<midgard::PointLL> >(matched.get<std::string>("shape"));
+        auto decoded_match = midgard::decode<std::vector<PointLL> >(matched.get<std::string>("shape"));
         std::string geojson = R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
         geojson += print(shape);
         geojson += R"(]},"type":"Feature","properties":{"stroke":"#00ff00","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
@@ -236,7 +242,7 @@ namespace {
   void test32bit() {
     tyr::actor_t actor(conf, true);
     std::string test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5.110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
-    actor.route(tyr::ROUTE, test_case);
+    actor.route(test_case);
   }
 
   void test_topk_validate() {

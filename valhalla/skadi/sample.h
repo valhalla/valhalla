@@ -45,11 +45,36 @@ namespace valhalla {
       /**
        * @return the no data value for this data source
        */
-      double get_no_data_value() const;
+      static double get_no_data_value();
 
      protected:
 
-      std::vector<midgard::mem_map<int16_t> > cache;
+      /**
+       * @param  index  the index of the data tile being requested
+       * @return the array of data or nullptr if there was none
+       */
+      const int16_t* source(uint16_t index) const;
+
+      /**
+       * maps a new source, used at start up and called periodically
+       * for lazily loaded sources
+       *
+       * @param  index  the index of the data tile being mapped
+       * @param  format the format of the data tile being mapped
+       * @param  file   the file name of the data tile being mapped
+       * @return none
+       */
+      enum class format_t{ UNKNOWN = 0, GZIP = 1, LZ4HC = 2, RAW = 3 };
+      void map(uint16_t index, format_t format, const std::string& file);
+
+      //using memory maps
+      mutable std::vector<std::pair<format_t, midgard::mem_map<char> > > mapped_cache;
+
+      //TODO: make an LRU
+      using unzipped_t = std::pair<int16_t, std::vector<int16_t> >;
+      mutable unzipped_t unzipped_cache;
+
+      std::string data_source;
     };
 
   }

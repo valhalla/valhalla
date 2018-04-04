@@ -96,7 +96,7 @@ class Polyline2 {
   /**
    * Clip this polyline to the specified bounding box.
    * @param box  Bounding box to clip this polyline to.
-   * @return  Returns the number of vertices in hte clipped polygon.
+   * @return  Returns the number of vertices in the clipped polygon.
    */
   uint32_t Clip(const AABB2<coord_t>& box);
 

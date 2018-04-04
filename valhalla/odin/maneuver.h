@@ -72,7 +72,7 @@ class Maneuver {
 
   // Kilometers
   float length(const DirectionsOptions::Units& units =
-      DirectionsOptions::Units::DirectionsOptions_Units_kKilometers) const;
+      DirectionsOptions::kilometers) const;
   void set_length(float length);
 
   // Seconds

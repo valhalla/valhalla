@@ -19,14 +19,7 @@ struct MatchResult : meili::MatchResult {
       kMatched
   };
 
-  MatchResult(meili::MatchResult result) {
-    lnglat = result.lnglat;
-    distance_from = result.distance_from;
-    edgeid = result.edgeid;
-    distance_along = result.distance_along;
-    epoch_time = result.epoch_time;
-    stateid = result.stateid;
-
+  MatchResult(meili::MatchResult result): meili::MatchResult(result) {
     // Set the type based on edge id and state
     if (edgeid.Is_Valid() && HasState())
       type = Type::kMatched;

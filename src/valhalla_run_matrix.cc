@@ -263,13 +263,26 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
   const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_locations;
+  valhalla::odin::DirectionsOptions directions_options;
   for (auto& loc : locations) {
     try {
       path_locations.push_back(projections.at(loc));
+      PathLocation::toPBF(path_locations.back(), directions_options.mutable_locations()->Add(), reader);
     } catch (...) {
       exit(EXIT_FAILURE);
     }
   }
+  if (matrixtype == "one_to_many") {
+    directions_options.mutable_sources()->Add()->CopyFrom(*directions_options.locations().begin());
+    directions_options.mutable_targets()->CopyFrom(directions_options.locations());
+  } else if (matrixtype == "many_to_many") {
+    directions_options.mutable_sources()->CopyFrom(directions_options.locations());
+    directions_options.mutable_targets()->CopyFrom(directions_options.locations());
+  } else {
+    directions_options.mutable_sources()->CopyFrom(directions_options.locations());
+    directions_options.mutable_targets()->Add()->CopyFrom(*directions_options.locations().rbegin());
+  }
+
   auto t1 = std::chrono::high_resolution_clock::now();
   uint32_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
@@ -295,19 +308,9 @@ int main(int argc, char *argv[]) {
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
     CostMatrix matrix;
-    if (matrixtype == "one_to_many") {
-     res = matrix.SourceToTarget({path_locations.front()}, path_locations,
+    res = matrix.SourceToTarget(directions_options.sources(), directions_options.targets(),
                                   reader, mode_costing, mode,
                                   max_matrix_distance.find(routetype)->second);
-    } else if (matrixtype == "many_to_many") {
-      res = matrix.SourceToTarget(path_locations, path_locations, reader,
-                                  mode_costing, mode,
-                                  max_matrix_distance.find(routetype)->second);
-    } else {
-      res = matrix.SourceToTarget(path_locations, {path_locations.back()},
-                                  reader, mode_costing, mode,
-                                  max_matrix_distance.find(routetype)->second);
-    }
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
@@ -320,13 +323,13 @@ int main(int argc, char *argv[]) {
     res.clear();
     TimeDistanceMatrix tdm;
     if (matrixtype == "one_to_many") {
-      res = tdm.OneToMany(path_locations[0], path_locations, reader, mode_costing,
+      res = tdm.OneToMany(*directions_options.locations().begin(), directions_options.locations(), reader, mode_costing,
                           mode, max_matrix_distance.find(routetype)->second);
     } else if (matrixtype == "many_to_many") {
-      res = tdm.ManyToOne(path_locations.back(), path_locations, reader, mode_costing,
+      res = tdm.ManyToOne(*directions_options.locations().rbegin(), directions_options.locations(), reader, mode_costing,
                           mode, max_matrix_distance.find(routetype)->second);
     } else {
-      res = tdm.ManyToMany(path_locations, reader, mode_costing, mode,
+      res = tdm.ManyToMany(directions_options.locations(), reader, mode_costing, mode,
                           max_matrix_distance.find(routetype)->second);
     }
   }

@@ -116,7 +116,7 @@ void AStarPathAlgorithm::ModifyHierarchyLimits(const float dist,
 void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
                    const GraphId& node, const EdgeLabel& pred,
                    const uint32_t pred_idx, const bool from_transition,
-                   const PathLocation& destination,
+                   const odin::Location& destination,
                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -199,9 +199,9 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       // Find the destination edge and update cost to include the edge score.
       // Note - with high edge scores the convergence test fails some routes
       // so reduce the edge score.
-      for (const auto& destination_edge : destination.edges) {
-        if (destination_edge.id == edgeid) {
-          newcost.cost += destination_edge.score;
+      for (const auto& destination_edge : destination.path_edges()) {
+        if (destination_edge.graph_id() == edgeid) {
+          newcost.cost += destination_edge.distance();
         }
       }
       newcost.cost = std::max(0.0f, newcost.cost);
@@ -254,8 +254,8 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
-             PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(odin::Location& origin,
+             odin::Location& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
   // Set the mode and costing
@@ -267,8 +267,10 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
   //Note: because we can correlate to more than one place for a given PathLocation
   //using edges.front here means we are only setting the heuristics to one of them
   //alternate paths using the other correlated points to may be harder to find
-  Init(origin.edges.front().projected, destination.edges.front().projected);
-  float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
+  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  Init(origin_new, destination_new);
+  float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
@@ -357,24 +359,38 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(PathLocation& origin,
 
 // Add an edge at the origin to the adjacency list
 void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
-                 PathLocation& origin,
-                 const PathLocation& destination) {
+                 odin::Location& origin,
+                 const odin::Location& destination) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.edges.cbegin(), origin.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+  std::for_each(origin.path_edges().begin(), origin.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
     has_other_edges = has_other_edges || !e.end_node();
   });
 
+  // Check if the origin edge matches a destination edge at the node.
+  auto trivial_at_node = [this, &destination](const odin::Location::PathEdge& edge) {
+    auto p = destinations_.find(edge.graph_id());
+    if (p != destinations_.end()) {
+      for (const auto& destination_edge : destination.path_edges()) {
+        if (destination_edge.graph_id() == edge.graph_id()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
-  for (const auto& edge : origin.edges) {
-    // If origin is at a node - skip any inbound edge (dist = 1)
-    if (has_other_edges && edge.end_node()) {
+  for (const auto& edge : origin.path_edges()) {
+    // If origin is at a node - skip any inbound edge (dist = 1) unless the
+    // destination is also at the same end node (trivial path).
+    if (has_other_edges && edge.end_node() && !trivial_at_node(edge)) {
       continue;
     }
 
     // Get the directed edge
-    GraphId edgeid = edge.id;
+    GraphId edgeid(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -387,14 +403,14 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.dist);
+    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     // Perhaps need to adjust score?
-    cost.cost += edge.score;
+    cost.cost += edge.distance();
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge) if the
@@ -405,16 +421,16 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     if (p != destinations_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
         // Find the destination edge and update cost.
-        for (const auto& destination_edge : destination.edges) {
-          if (destination_edge.id == edgeid) {
+        for (const auto& destination_edge : destination.path_edges()) {
+          if (destination_edge.graph_id() == edgeid) {
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
-            Cost dest_cost = costing_->EdgeCost(tile->directededge(destination_edge.id)) *
-                                            (1.0f - destination_edge.dist);
+            Cost dest_cost = costing_->EdgeCost(tile->directededge(GraphId(destination_edge.graph_id()))) *
+                                            (1.0f - destination_edge.percent_along());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
-            cost.cost += destination_edge.score;
+            cost.cost += destination_edge.distance();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
           }
@@ -428,7 +444,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
-    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
+    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
                          sortcost, dist, mode_, d);
     // Set the origin flag
@@ -440,25 +456,25 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (nodeinfo != nullptr && origin.date_time_ &&
-	  *origin.date_time_ == "current") {
-    origin.date_time_= DateTime::iso_date_time(
-    		DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+  if (nodeinfo != nullptr && origin.has_date_time() &&
+    origin.date_time() == "current") {
+    origin.set_date_time(DateTime::iso_date_time(
+        DateTime::get_tz_db().from_index(nodeinfo->timezone())));
   }
 }
 
 // Add a destination edge
 uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
-                     const PathLocation& dest) {
+                     const odin::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(dest.edges.cbegin(), dest.edges.cend(), [&has_other_edges](const PathLocation::PathEdge& e){
+  std::for_each(dest.path_edges().begin(), dest.path_edges().end(), [&has_other_edges](const odin::Location::PathEdge& e){
     has_other_edges = has_other_edges || !e.begin_node();
   });
 
   // For each edge
   uint32_t density = 0;
-  for (const auto& edge : dest.edges) {
+  for (const auto& edge : dest.path_edges()) {
     // If destination is at a node skip any outbound edges
     if (has_other_edges && edge.begin_node()) {
       continue;
@@ -467,9 +483,10 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader,
     // Keep the id and the cost to traverse the partial distance for the
     // remainder of the edge. This cost is subtracted from the total cost
     // up to the end of the destination edge.
-    const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-    destinations_[edge.id] = costing_->EdgeCost(tile->directededge(edge.id)) *
-                                (1.0f - edge.dist);
+    GraphId id(edge.graph_id());
+    const GraphTile* tile = graphreader.GetGraphTile(id);
+    destinations_[edge.graph_id()] = costing_->EdgeCost(tile->directededge(id)) *
+                                (1.0f - edge.percent_along());
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 

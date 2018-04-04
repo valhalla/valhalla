@@ -2,6 +2,7 @@
 #define __VALHALLA_ODIN_SERVICE_H__
 
 #include <valhalla/worker.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 
@@ -21,7 +22,7 @@ namespace valhalla {
 #endif
       virtual void cleanup() override;
 
-      std::list<TripDirections> narrate(boost::property_tree::ptree& request, std::list<TripPath>& legs) const;
+      std::list<TripDirections> narrate(const valhalla_request_t& request, std::list<TripPath>& legs) const;
     };
   }
 }

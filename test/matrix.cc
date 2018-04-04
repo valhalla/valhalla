@@ -134,38 +134,65 @@ namespace {
       throw valhalla::valhalla_exception_t{100};
     return d;
   }
-  std::vector<PathLocation> store_correlated_locations(const boost::property_tree::ptree& request, const std::vector<Location>& locations) {
-    //we require correlated locations
-    std::vector<PathLocation> correlated;
-    correlated.reserve(locations.size());
-    size_t i = 0;
-    do {
-     auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-     if(!path_location)
-       break;
-     try {
-       correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
 
-       auto minScoreEdge = *std::min_element (correlated.back().edges.begin(), correlated.back().edges.end(),
-          [](PathLocation::PathEdge i, PathLocation::PathEdge j)->bool {
-            return i.score < j.score;
-          });
+  // Maximum edge score - base this on costing type.
+  // Large values can cause very bad performance. Setting this back
+  // to 2 hours for bike and pedestrian and 12 hours for driving routes.
+  // TODO - re-evaluate edge scores and balance performance vs. quality.
+  // Perhaps tie the edge score logic in with the costing type - but
+  // may want to do this in loki. At this point in thor the costing method
+  // has not yet been constructed.
+  const std::unordered_map<std::string, float> kMaxDistances = {
+    {"auto_", 43200.0f},
+    {"auto_shorter", 43200.0f},
+    {"bicycle", 7200.0f},
+    {"bus", 43200.0f},
+    {"hov", 43200.0f},
+    {"motor_scooter", 14400.0f},
+    {"multimodal", 7200.0f},
+    {"pedestrian", 7200.0f},
+    {"transit", 14400.0f},
+    {"truck", 43200.0f},
+  };
+  //a scale factor to apply to the score so that we bias towards closer results more
+  constexpr float kDistanceScale = 10.f;
 
-       for(auto& e : correlated.back().edges) {
-         e.score -= minScoreEdge.score;
-       }
-     }
-     catch (...) {
-       throw valhalla::valhalla_exception_t{420};
-     }
-    }while(++i);
-    return correlated;
+  void adjust_scores(valhalla::valhalla_request_t& request) {
+    for(auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(), request.options.mutable_targets()}) {
+      for(auto& location : *locations) {
+        //get the minimum score for all the candidates
+        auto minScore = std::numeric_limits<float>::max();
+        for(auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+          for(auto& candidate : *candidates) {
+            //completely disable scores for this location
+            if(location.has_rank_candidates() && !location.rank_candidates())
+              candidate.set_distance(0);
+            //scale the score to favor closer results more
+            else
+              candidate.set_distance(candidate.distance() * candidate.distance() * kDistanceScale);
+            //remember the min score
+            if(minScore > candidate.distance())
+              minScore = candidate.distance();
+          }
+        }
+
+        //subtract off the min score and cap at max so that path algorithm doesnt go too far
+        auto max_score = kMaxDistances.find(valhalla::odin::DirectionsOptions::Costing_Name(request.options.costing()));
+        for(auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+          for(auto& candidate : *candidates) {
+            candidate.set_distance(candidate.distance() - minScore);
+            if (candidate.distance() > max_score->second)
+              candidate.set_distance(max_score->second);
+          }
+        }
+      }
+    }
   }
 
   const auto config = json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
-      "actions":["one_to_many","many_to_one","many_to_many","sources_to_targets"],
+      "actions":["sources_to_targets"],
       "logging":{"long_request": 100},
       "service_defaults":{"minimum_reachability": 50,"radius": 0}
     },
@@ -201,6 +228,22 @@ namespace {
     ],
     "costing":"auto"
   })";
+
+  const auto test_request_osrm = R"({
+    "sources":[
+      {"lat":52.106337,"lon":5.101728},
+      {"lat":52.111276,"lon":5.089717},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.094273,"lon":5.075254}
+    ],
+    "costing":"auto"
+  }&format=osrm)";
 
   std::vector<TimeDistance> cost_matrix_answers = {
       {29, 29},
@@ -244,27 +287,12 @@ namespace {
 void test_matrix() {
   loki_worker_t loki_worker (config);
 
-  auto request_doc = to_document(test_request);
-  loki_worker.matrix (SOURCES_TO_TARGETS, request_doc);
+  valhalla::valhalla_request_t request;
+  request.parse(test_request, valhalla::odin::DirectionsOptions::sources_to_targets);
+  loki_worker.matrix (request);
+  adjust_scores(request);
 
-  auto request_pt = json_to_pt (rapidjson::to_string(request_doc));
-
-  auto request_sources = request_pt.get_child_optional("sources");
-  auto request_targets = request_pt.get_child_optional("targets");
-  std::vector<Location> locations;
-
-  for(const auto& s : *request_sources) {
-    try{ locations.push_back(Location::FromPtree(s.second)); }
-    catch (...) { throw valhalla::valhalla_exception_t{422}; }
-  }
-  for(const auto& t : *request_targets) {
-    try{ locations.push_back(Location::FromPtree(t.second)); }
-    catch (...) { throw valhalla::valhalla_exception_t{423}; }
-  }
-  std::vector<PathLocation> correlated = store_correlated_locations (request_pt, locations);
-
-  std::vector<PathLocation> correlated_s (correlated.begin(), correlated.begin() + request_sources->size());
-  std::vector<PathLocation> correlated_t (correlated.begin() + request_sources->size(), correlated.end());
+  auto request_pt = json_to_pt (test_request);
 
   GraphReader reader (config.get_child("mjolnir"));
 
@@ -272,7 +300,7 @@ void test_matrix() {
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
-  results = cost_matrix.SourceToTarget(correlated_s, correlated_t, reader, &costing, TravelMode::kDrive, 400000.0);
+  results = cost_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     if (results[i].dist != cost_matrix_answers[i].dist) {
       throw std::runtime_error("result " + std::to_string(i) + "'s distance is not close enough"
@@ -287,7 +315,55 @@ void test_matrix() {
   }
 
   TimeDistanceMatrix timedist_matrix;
-  results = timedist_matrix.SourceToTarget(correlated_s, correlated_t, reader, &costing, TravelMode::kDrive, 400000.0);
+  results = timedist_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, &costing, TravelMode::kDrive, 400000.0);
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist != timedist_matrix_answers[i].dist) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s distance is not equal to"
+          " the expected value for TimeDistMatrix. Expected: " + std::to_string(timedist_matrix_answers[i].dist)
+          + " Actual: " + std::to_string(results[i].dist));
+    }
+    if (results[i].time != timedist_matrix_answers[i].time) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s time is not equal to"
+          " the expected value for TimeDistMatrix. Expected: " + std::to_string(timedist_matrix_answers[i].time)
+          + " Actual: " + std::to_string(results[i].time));
+    }
+  }
+
+}
+
+void test_matrix_osrm() {
+  loki_worker_t loki_worker (config);
+
+  valhalla::valhalla_request_t request;
+  request.parse(test_request_osrm, valhalla::odin::DirectionsOptions::sources_to_targets);
+
+  loki_worker.matrix (request);
+  adjust_scores(request);
+  auto request_pt = json_to_pt (test_request_osrm);
+
+  GraphReader reader (config.get_child("mjolnir"));
+
+  cost_ptr_t costing = CreateSimpleCost(request_pt);
+
+  CostMatrix cost_matrix;
+  std::vector<TimeDistance> results;
+  results = cost_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, &costing, TravelMode::kDrive, 400000.0);
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist != cost_matrix_answers[i].dist) {
+      throw std::runtime_error("Something is wrong");
+      throw std::runtime_error("result " + std::to_string(i) + "'s distance is not close enough"
+          " to expected value for CostMatrix. Expected: " + std::to_string(cost_matrix_answers[i].dist)
+          + " Actual: " + std::to_string(results[i].dist));
+    }
+    if (results[i].time != cost_matrix_answers[i].time) {
+      throw std::runtime_error("result " + std::to_string(i) + "'s time is not close enough"
+          " to expected value for CostMatrix. Expected: " + std::to_string(cost_matrix_answers[i].time)
+          + " Actual: " + std::to_string(results[i].time));
+    }
+  }
+
+  TimeDistanceMatrix timedist_matrix;
+  results = timedist_matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, &costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     if (results[i].dist != timedist_matrix_answers[i].dist) {
       throw std::runtime_error("result " + std::to_string(i) + "'s distance is not equal to"
@@ -308,6 +384,7 @@ int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); //silence logs
 
   suite.test(TEST_CASE(test_matrix));
+  //suite.test(TEST_CASE(test_matrix_osrm));
 
   return suite.tear_down();
 }

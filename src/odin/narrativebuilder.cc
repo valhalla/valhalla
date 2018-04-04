@@ -266,7 +266,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         // Set verbal transition alert instruction if previous maneuver
         // is greater than 2 km
         if (prev_maneuver
-            && (prev_maneuver->length(DirectionsOptions_Units_kKilometers)
+            && (prev_maneuver->length(DirectionsOptions::kilometers)
                 > kVerbalAlertMergePriorManeuverMinimumLength)) {
           maneuver.set_verbal_transition_alert_instruction(
               std::move(FormVerbalAlertMergeInstruction(maneuver)));
@@ -3502,13 +3502,13 @@ std::string NarrativeBuilder::FormLength(
     Maneuver& maneuver, const std::vector<std::string>& metric_lengths,
     const std::vector<std::string>& us_customary_lengths) {
   switch (directions_options_.units()) {
-    case DirectionsOptions_Units_kMiles: {
+    case DirectionsOptions::miles: {
       return FormUsCustomaryLength(
-          maneuver.length(DirectionsOptions_Units_kMiles), us_customary_lengths);
+          maneuver.length(DirectionsOptions::miles), us_customary_lengths);
     }
     default: {
       return FormMetricLength(
-          maneuver.length(DirectionsOptions_Units_kKilometers), metric_lengths);
+          maneuver.length(DirectionsOptions::kilometers), metric_lengths);
     }
   }
 }

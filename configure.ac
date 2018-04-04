@@ -1,8 +1,8 @@
 AC_INIT([valhalla],
 	[m4_esyscmd([./version.sh])],
-	[https://github.com/valhalla/valahlla/issues],
+	[https://github.com/valhalla/valhalla/issues],
 	[valhalla-[m4_esyscmd([./version.sh])]],
-	[https://github.com/valhalla/valahlla])
+	[https://github.com/valhalla/valhalla])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 # no static lib by default but you can ask for it
@@ -48,7 +48,11 @@ AX_BOOST_IOSTREAMS
 AC_SUBST(BOOST_CPPFLAGS, "$BOOST_CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS")
 AC_SUBST(RAPIDJSON_CPPFLAGS, "$RAPIDJSON_CPPFLAGS -DRAPIDJSON_HAS_STDSTRING")
 
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0])
+# Note - because libz4 changed it's versioning scheme, we need to check for both >131, and if
+#        that fails, try >= 1.7.3
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libcurl >= 7.35.0 zlib >= 1.2.8 liblz4 >= 131],, [
+  PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libcurl >= 7.35.0 zlib >= 1.2.8 liblz4 >= 1.7.3])
+])
 
 # if we wanted services
 AC_ARG_ENABLE([services],
@@ -96,8 +100,6 @@ AM_CONDITIONAL([DATA_TOOLS], [test x$data_tools = xtrue])
 
 # then we require lots more stuff
 AM_COND_IF([DATA_TOOLS], [
-
-    PKG_CHECK_MODULES([DATA_DEPS], [libcurl >= 7.35.0])
 
     # check for lua libraries and headers
     AX_PROG_LUA([5.2],[],[

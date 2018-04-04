@@ -131,13 +131,18 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
   auto last_node_index = (trip_path_->node_size() - 2);
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(last_node_index)->name(0);
-  std::string units = (directions_options_.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles";
+  std::string units = (directions_options_.units() == valhalla::odin::DirectionsOptions::kilometers) ? "kilometers" : "miles";
   LOG_DEBUG(
       (boost::format(
               "ROUTE_REQUEST|-j '{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"%7%\"}}'")
           % orig.ll().lat() % orig.ll().lng() % first_name
           % dest.ll().lat() % dest.ll().lng() % last_name
           % units).str());
+  LOG_TRACE(
+      (boost::format("http://localhost:8000/?loc=%1$.6f,%2$.6f&loc=%3$.6f,%4$.6f&hl=en&alt=0")
+          % orig.ll().lat() % orig.ll().lng()
+          % dest.ll().lat() % dest.ll().lng()).str());
+
 #endif
 
   return maneuvers;
@@ -697,12 +702,12 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
   // Determine if the destination has a side of street
   // and set the appropriate destination maneuver type
   switch (trip_path_->GetDestination().side_of_street()) {
-    case Location_SideOfStreet_kLeft: {
+    case Location::kLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kDestinationLeft);
       LOG_TRACE("ManeuverType=DESTINATION_LEFT");
       break;
     }
-    case Location_SideOfStreet_kRight: {
+    case Location::kRight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kDestinationRight);
       LOG_TRACE("ManeuverType=DESTINATION_RIGHT");
       break;
@@ -758,12 +763,12 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   // Determine if the origin has a side of street
   // and set the appropriate start maneuver type
   switch (trip_path_->GetOrigin().side_of_street()) {
-    case Location_SideOfStreet_kLeft: {
+    case Location::kLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kStartLeft);
       LOG_TRACE("ManeuverType=START_LEFT");
       break;
     }
-    case Location_SideOfStreet_kRight: {
+    case Location::kRight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kStartRight);
       LOG_TRACE("ManeuverType=START_RIGHT");
       break;

@@ -970,7 +970,7 @@ function filter_tags_generic(kv)
 
   local oneway_reverse = kv["oneway"]
   local oneway_norm = oneway[kv["oneway"]]
-  if kv["junction"] == "roundabout" then
+  if kv["junction"] == "roundabout" or kv["junction"] == "circular" then
     oneway_norm = "true"
     kv["roundabout"] = "true"
   else

@@ -350,6 +350,13 @@ void DirectedEdge::set_classification(const RoadClass roadclass) {
   classification_= static_cast<uint32_t>(roadclass);
 }
 
+// Sets the sac scale. Shows if edge is meant for hiking, and if so how difficult
+// of a hike it is.
+void DirectedEdge::set_sac_scale(const SacScale sac_scale)
+{
+  sac_scale_ = static_cast<uint64_t>(sac_scale);
+}
+
 // Sets the surface type (see baldr/graphconstants.h). This is a general
 // indication of smoothness.
 void DirectedEdge::set_surface(const Surface surface) {

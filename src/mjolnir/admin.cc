@@ -1,7 +1,10 @@
 #include "mjolnir/admin.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+#include <unordered_map>
 #include <boost/filesystem/operations.hpp>
+#include <sqlite3.h>
+#include <spatialite.h>
 
 namespace valhalla {
 namespace mjolnir {

@@ -1,4 +1,5 @@
 #include "skadi/util.h"
+#include <algorithm>
 
 namespace {
 

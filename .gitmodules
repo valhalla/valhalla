@@ -6,4 +6,4 @@
 	url = https://github.com/miloyip/rapidjson
 [submodule "proto"]
 	path = OSMLR
-	url = https://github.com/opentraffic/osmlr-tile-spec.git
+	url = https://github.com/valhalla/osmlr-tile-spec.git

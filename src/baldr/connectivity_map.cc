@@ -1,10 +1,3 @@
-#include "baldr/connectivity_map.h"
-#include "baldr/json.h"
-#include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
-#include <valhalla/baldr/tilehierarchy.h>
-
-#include "midgard/pointll.h"
 #include <boost/filesystem.hpp>
 #include <list>
 #include <iomanip>
@@ -12,6 +5,13 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "baldr/connectivity_map.h"
+#include "baldr/json.h"
+#include "baldr/graphtile.h"
+#include "baldr/graphreader.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/constants.h"
+#include "midgard/pointll.h"
 #include "midgard/logging.h"
 
 using namespace valhalla::baldr;
@@ -250,16 +250,19 @@ namespace valhalla {
         return result;
       const auto& tiles = TileHierarchy::levels().find(hierarchy_level)->second.tiles;
       for(const auto& edge : location.edges) {
-        //TODO: generate more ids by intersecting this circle with the tiles object
-        //take the edge.projected and subtract radius in the x and y dimensions
-        //convert that into a tileid and get its col,row tile coords that will start the for loop
-        //add radius in the x and y to edge.projected to get the ending tile col,row for the for loop
-        //then while iterating create a tile for each tile col,row pair, get its aabb2 and call
-        //aabb2::intersects(edge.projected, radius), if it returns true, get the color as below
-        auto id = tiles.TileId(edge.projected);
-        auto color = level->second.find(id);
-        if(color != level->second.cend())
-          result.emplace(color->second);
+        // Get a list of tiles required within the radius of the projected point
+        const auto& ll = edge.projected;
+        DistanceApproximator approximator(ll);
+        float latdeg = (radius / kMetersPerDegreeLat);
+        float lngdeg = (radius / DistanceApproximator::MetersPerLngDegree(ll.lat()));
+        AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
+                            Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
+        std::vector<int32_t> tilelist = tiles.TileList(bbox);
+        for (auto& id : tilelist) {
+          auto color = level->second.find(id);
+          if(color != level->second.cend())
+            result.emplace(color->second);
+        }
       }
       return result;
     }

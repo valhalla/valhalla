@@ -10,8 +10,6 @@
 #include <unordered_map>
 #include <tuple>
 #include <set>
-#include <sqlite3.h>
-#include <spatialite.h>
 #include <fstream>
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
@@ -20,6 +18,7 @@
 #include <boost/foreach.hpp>
 
 #include "baldr/datetime.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/graphtile.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
@@ -210,7 +209,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
       uint32_t edge_info_offset = tilebuilder_local.AddEdgeInfo(0, conn.osm_node,
-                     endnode, conn.wayid, conn.shape, conn.names, added);
+                     endnode, conn.wayid, conn.shape, conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -328,7 +327,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         std::list<PointLL> r_shape = conn.shape;
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, origin_node,
-                       conn.osm_node, conn.wayid, r_shape, conn.names, added);
+                       conn.osm_node, conn.wayid, r_shape, conn.names, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
@@ -442,8 +441,8 @@ void FindOSMConnection(const PointLL& stop_ll, GraphReader& reader_local_level,
             // use the new wayid
 
             wayid = edgeinfo.wayid();
-            startnode.Set(newtile->header()->graphid().tileid(),
-                          newtile->header()->graphid().level(), i);
+            startnode = { newtile->header()->graphid().tileid(),
+                          newtile->header()->graphid().level(), i };
             endnode = directededge->endnode();
             mindist = std::get<1>(this_closest);
             closest = this_closest;
@@ -493,8 +492,8 @@ void AddOSMConnection(const GraphId& transit_stop_node,
         names = edgeinfo.GetNames();
 
         if (std::get<1>(this_closest) < mindist) {
-          startnode.Set(tile->header()->graphid().tileid(),
-                        tile->header()->graphid().level(), i);
+          startnode = { tile->header()->graphid().tileid(),
+                        tile->header()->graphid().level(), i };
           endnode = directededge->endnode();
           mindist = std::get<1>(this_closest);
           closest = this_closest;
@@ -685,20 +684,19 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   }
 
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
-  transit_dir->push_back('/');
+  transit_dir->push_back(filesystem::path_separator);
   GraphReader reader(hierarchy_properties);
   auto local_level = TileHierarchy::levels().rbegin()->first;
-  if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {
-    boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + "/"), end_file_itr;
+  if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + filesystem::path_separator)) {
+    boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + filesystem::path_separator), end_file_itr;
     for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
       if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".gph") {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
-        auto local_graph_id = graph_id;
-        local_graph_id.fields.level -= 1;
+        GraphId local_graph_id(graph_id.tileid(), graph_id.level() -1, graph_id.id());
         if(GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
-          const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") + '/' + GraphTile::FileSuffix(graph_id);
+          const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") + filesystem::path_separator + GraphTile::FileSuffix(graph_id);
           boost::filesystem::path filename = destination_path;
           // Make sure the directory exists on the system and copy to the tile_dir
           if (!boost::filesystem::exists(filename.parent_path()))

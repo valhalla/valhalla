@@ -56,6 +56,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
     }
 
+    include_driveways_ = pt.get<bool>("include_driveways", true);
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -228,6 +229,13 @@ struct graph_callback : public OSMPBF::Callback {
           return;
         }
       }
+    }
+
+    // Throw away driveways if include_driveways_ is false
+    Tags::const_iterator driveways;
+    if (!include_driveways_ && (driveways = results.find("use")) != results.end() && 
+         static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
+      return;
     }
 
     // Check for ways that loop back on themselves (simple check) and add
@@ -540,31 +548,55 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
 
       else if (tag.first == "max_speed") {
-        max_speed = std::stof(tag.second);
-        has_max_speed = true;
-        w.set_tagged_speed(true);
+        try {
+          max_speed = std::stof(tag.second);
+          has_max_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "average_speed") {
-        average_speed = std::stof(tag.second);
-        has_average_speed = true;
-        w.set_tagged_speed(true);
+        try {
+          average_speed = std::stof(tag.second);
+          has_average_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "advisory_speed") {
-        advisory_speed = std::stof(tag.second);
-        has_advisory_speed = true;
-        w.set_tagged_speed(true);
+        try {
+          advisory_speed = std::stof(tag.second);
+          has_advisory_speed = true;
+          w.set_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "forward_speed") {
-        w.set_forward_speed(std::stof(tag.second));
-        w.set_forward_tagged_speed(true);
+        try {
+          w.set_forward_speed(std::stof(tag.second));
+          w.set_forward_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "backward_speed") {
-        w.set_backward_speed(std::stof(tag.second));
-        w.set_backward_tagged_speed(true);
+        try {
+          w.set_backward_speed(std::stof(tag.second));
+          w.set_backward_tagged_speed(true);
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
 
       else if (tag.first == "maxspeed:hgv") {
-        w.set_truck_speed(std::stof(tag.second));
+        try {
+          w.set_truck_speed(std::stof(tag.second));
+        } catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
       else if (tag.first == "truck_route") {
         w.set_truck_route(tag.second == "true" ? true : false);
@@ -677,14 +709,45 @@ struct graph_callback : public OSMPBF::Callback {
       }
 
       else if (tag.first == "default_speed") {
-        default_speed = std::stof(tag.second);
-        has_default_speed = true;
+        try {
+          default_speed = std::stof(tag.second);
+          has_default_speed = true;
+        }
+        catch (const std::out_of_range& oor) {
+          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+        }
       }
 
       else if (tag.first == "ref" && !tag.second.empty())
         w.set_ref_index(osmdata_.ref_offset_map.index(tag.second));
       else if (tag.first == "int_ref" && !tag.second.empty())
         w.set_int_ref_index(osmdata_.ref_offset_map.index(tag.second));
+
+      else if (tag.first == "sac_scale") {
+        std::string value = tag.second;
+        boost::algorithm::to_lower(value);
+
+        if (value.find("difficult_alpine_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kDifficultAlpineHiking);
+
+        else if (value.find("demanding_alpine_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kDemandingAlpineHiking);
+
+        else if (value.find("alpine_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kAlpineHiking);
+
+        else if (value.find("demanding_mountain_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kDemandingMountainHiking);
+
+        else if (value.find("mountain_hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kMountainHiking);
+
+        else if (value.find("hiking") != std::string::npos)
+          w.set_sac_scale(SacScale::kHiking);
+
+        else
+          w.set_sac_scale(SacScale::kNone);
+      }
 
       else if (tag.first == "surface") {
         std::string value = tag.second;
@@ -1392,6 +1455,9 @@ struct graph_callback : public OSMPBF::Callback {
     loops_.clear();
     loops_.shrink_to_fit();
   }
+
+  // Configuration option to include driveways
+  bool include_driveways_;
 
   //Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

@@ -499,7 +499,7 @@ void seconds_to_date(const bool is_depart_at,
       ss_time << origin_tz->dst_offset() + origin_tz->base_utc_offset();
     else ss_time << origin_tz->base_utc_offset();
 
-    //postive tz
+    //positive tz
     if (ss_time.str().find("+") == std::string::npos && ss_time.str().find("-") == std::string::npos)
       iso_origin = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
     else iso_origin = to_iso_extended_string(date) + "T" + time + ss_time.str();
@@ -523,7 +523,7 @@ void seconds_to_date(const bool is_depart_at,
       ss_time << dest_tz->dst_offset() + dest_tz->base_utc_offset();
     else ss_time << dest_tz->base_utc_offset();
 
-    //postive tz
+    //positive tz
     if (ss_time.str().find("+") == std::string::npos && ss_time.str().find("-") == std::string::npos)
       iso_dest = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
     else iso_dest = to_iso_extended_string(date) + "T" + time + ss_time.str();
