@@ -32,7 +32,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
  * @param   locale
- * @return  Returns the formated time based on the locale.
+ * @return  Returns the formatted time based on the locale.
  */
 std::string get_localized_time(const std::string& date_time,
                                const std::locale& locale);
@@ -42,7 +42,7 @@ std::string get_localized_time(const std::string& date_time,
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
  * @param   locale
- * @return  Returns the formated date based on the locale.
+ * @return  Returns the formatted date based on the locale.
  */
 std::string get_localized_date(const std::string& date_time,
                                const std::locale& locale);

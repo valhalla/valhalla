@@ -13,7 +13,7 @@ using namespace valhalla::baldr;
 namespace {
 
 void TestWriteRead() {
-  // Make an admin recrod
+  // Make an admin record
   Admin ai(5, 6,"US", "PA");
 
   if (ai.country_offset() != 5)

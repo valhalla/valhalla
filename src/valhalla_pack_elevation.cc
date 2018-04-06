@@ -46,7 +46,7 @@ enum class algorithm_t { DEFAULT, HIGH, FRAME };
 std::vector<char> lzip(const std::vector<char>& in, int compression_level, algorithm_t algorithm) {
   LZ4F_preferences_t frame_prefs{LZ4F_frameInfo_t{}, compression_level};
 
-  //prepair for destination in memory
+  //prepare for destination in memory
   size_t max_compressed_size = algorithm == algorithm_t::FRAME ?
       LZ4F_compressFrameBound(in.size(), &frame_prefs) : LZ4_compressBound(in.size());
   std::vector<char> out(max_compressed_size);

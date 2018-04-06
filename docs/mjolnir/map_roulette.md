@@ -1,7 +1,7 @@
 #Automatic Map Roulette Task Updates
 
 ## Overview
-The tool is located under `mjonir/py/challenge_admin/` as  `admin_tool.py` and is run from the command line. This tool works in conjuction with `valhalla_build_statistics` which detects errors in the OpenStreetMap data set and outputs those errors as a geojson file. This tool then reads the geojson file and compares it to the existing tasks already uploaded to Map Roulette and uploads the new tasks. Optionally, the tool can also detect when tasks have been marked as fixed, but have shown up again during the detection process.
+The tool is located under `mjonir/py/challenge_admin/` as  `admin_tool.py` and is run from the command line. This tool works in conjunction with `valhalla_build_statistics` which detects errors in the OpenStreetMap data set and outputs those errors as a geojson file. This tool then reads the geojson file and compares it to the existing tasks already uploaded to Map Roulette and uploads the new tasks. Optionally, the tool can also detect when tasks have been marked as fixed, but have shown up again during the detection process.
 
 ## Configuring
 A sample configuration file can be found at [valhalla/conf/maproulette.json](https://github.com/valhalla/conf/blob/master/maproulette.json) and must be configured before this tool will work properly. Additionally, you will have to do some setup on the [maproulette website](http://maproulette.org).
