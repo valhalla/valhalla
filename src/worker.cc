@@ -11,6 +11,8 @@
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
 
+using namespace valhalla;
+
 namespace {
   // Credits: http://werkzeug.pocoo.org/
   const std::unordered_map<unsigned, std::string> HTTP_STATUS_CODES {
@@ -301,7 +303,7 @@ namespace {
     return d;
   }
 
-  void parse_locations(const rapidjson::Document& doc, google::protobuf::RepeatedPtrField<valhalla::odin::Location>* locations,
+  void parse_locations(const rapidjson::Document& doc, google::protobuf::RepeatedPtrField<odin::Location>* locations,
       const std::string& node, unsigned location_parse_error_code, bool track) {
 
     auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
@@ -320,13 +322,13 @@ namespace {
           auto lon = rapidjson::get_optional<float>(r_loc, "/lon");
           if (! lon) throw std::runtime_error{"lon is missing"};
 
-          lon = valhalla::midgard::circular_range_clamp<float>(*lon, -180, 180);
+          lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
           location->mutable_ll()->set_lat(*lat);
           location->mutable_ll()->set_lng(*lon);
 
           auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
           if (stop_type_json && *stop_type_json == std::string("through")){
-            location->set_type(valhalla::odin::Location::kThrough);
+            location->set_type(odin::Location::kThrough);
           }
 
           auto name = rapidjson::get_optional<std::string>(r_loc, "/name");
@@ -367,14 +369,14 @@ namespace {
           auto rank_candidates = rapidjson::get_optional<bool>(r_loc, "/rank_candidates");
           if(rank_candidates) location->set_rank_candidates(*rank_candidates);
         }
-        catch (...) { throw valhalla::valhalla_exception_t{location_parse_error_code}; }
+        catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
       }
       if(track)
-        valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()), " [ANALYTICS] ");
+        midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()), " [ANALYTICS] ");
     }
   }
 
-  void from_json(rapidjson::Document& doc, valhalla::odin::DirectionsOptions& options) {
+  void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     bool track = !options.has_do_not_track() || !options.do_not_track();
 
     //TODO: stop doing this after a sufficient amount of time has passed
@@ -392,8 +394,8 @@ namespace {
     }
 
     auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
-    valhalla::odin::DirectionsOptions::Format format;
-    if (fmt && valhalla::odin::DirectionsOptions::Format_Parse(*fmt, &format))
+    odin::DirectionsOptions::Format format;
+    if (fmt && odin::DirectionsOptions::Format_Parse(*fmt, &format))
       options.set_format(format);
 
     auto id = rapidjson::get_optional<std::string>(doc, "/id");
@@ -407,13 +409,13 @@ namespace {
     auto units = rapidjson::get_optional<std::string>(doc, "/units");
     if(units) {
       if((*units == "miles") || (*units == "mi"))
-        options.set_units(valhalla::odin::DirectionsOptions::miles);
+        options.set_units(odin::DirectionsOptions::miles);
       else
-        options.set_units(valhalla::odin::DirectionsOptions::kilometers);
+        options.set_units(odin::DirectionsOptions::kilometers);
     }
 
     auto language = rapidjson::get_optional<std::string>(doc, "/language");
-    if(language && valhalla::odin::get_locales().find(*language) != valhalla::odin::get_locales().end())
+    if(language && odin::get_locales().find(*language) != odin::get_locales().end())
       options.set_language(*language);
 
     auto narrative = rapidjson::get_optional<bool>(doc, "/narrative");
@@ -423,7 +425,7 @@ namespace {
     auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
     if(encoded_polyline) {
       options.set_encoded_polyline(*encoded_polyline);
-      auto decoded = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(*encoded_polyline);
+      auto decoded = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
       for(const auto& ll : decoded) {
         auto* sll = options.mutable_shape()->Add();
         sll->mutable_ll()->set_lat(ll.lat());
@@ -444,13 +446,13 @@ namespace {
     auto costing_str = rapidjson::get_optional<std::string>(doc, "/costing");
     if(costing_str) {
       //try the string directly, some strings are keywords so add an underscore
-      valhalla::odin::DirectionsOptions::Costing costing;
-      if(valhalla::odin::DirectionsOptions::Costing_Parse(*costing_str, &costing))
+      odin::DirectionsOptions::Costing costing;
+      if(odin::DirectionsOptions::Costing_Parse(*costing_str, &costing))
         options.set_costing(costing);
-      else if(valhalla::odin::DirectionsOptions::Costing_Parse(*costing_str + '_', &costing))
+      else if(odin::DirectionsOptions::Costing_Parse(*costing_str + '_', &costing))
         options.set_costing(costing);
       else
-        throw valhalla::valhalla_exception_t{125, "'" + *costing_str + "'"};
+        throw valhalla_exception_t{125, "'" + *costing_str + "'"};
     }
 
     //TODO: costing options
@@ -469,39 +471,43 @@ namespace {
 
     //time type
     auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
-    if(date_time_type && valhalla::odin::DirectionsOptions::DateTimeType_IsValid(*date_time_type)) {
-      options.set_date_time_type(static_cast<valhalla::odin::DirectionsOptions::DateTimeType>(*date_time_type));
-    }
-    else if(options.has_costing() && (options.costing() == valhalla::odin::DirectionsOptions::multimodal ||
-        options.costing() == valhalla::odin::DirectionsOptions::transit))
-      options.set_date_time_type(valhalla::odin::DirectionsOptions::current);
+    if(date_time_type && odin::DirectionsOptions::DateTimeType_IsValid(*date_time_type)) {
+      options.set_date_time_type(static_cast<odin::DirectionsOptions::DateTimeType>(*date_time_type));
+    }//not specified but you want transit, then we default to current
+    else if(options.has_costing() && (options.costing() == odin::DirectionsOptions::multimodal ||
+        options.costing() == odin::DirectionsOptions::transit))
+      options.set_date_time_type(odin::DirectionsOptions::current);
 
     //time value
     if(options.has_date_time_type()) {
       auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
       switch(options.date_time_type()) {
-      case valhalla::odin::DirectionsOptions::current:
+      case odin::DirectionsOptions::current:
         options.set_date_time("current");
         options.mutable_locations(0)->set_date_time("current");
         break;
-      case valhalla::odin::DirectionsOptions::depart_at:
+      case odin::DirectionsOptions::depart_at:
         if(!date_time_value)
-          throw valhalla::valhalla_exception_t{160};
-        if(!valhalla::baldr::DateTime::is_iso_local(*date_time_value))
-          throw valhalla::valhalla_exception_t{162};
+          throw valhalla_exception_t{160};
+        if(!baldr::DateTime::is_iso_local(*date_time_value))
+          throw valhalla_exception_t{162};
         options.set_date_time(*date_time_value);
         options.mutable_locations(0)->set_date_time(*date_time_value);
         break;
-      case valhalla::odin::DirectionsOptions::arrive_by:
+      case odin::DirectionsOptions::arrive_by:
+        //not yet for transit
+        if(options.costing() == odin::DirectionsOptions::multimodal ||
+            options.costing() == odin::DirectionsOptions::transit)
+          throw valhalla_exception_t{141};
         if(!date_time_value)
-          throw valhalla::valhalla_exception_t{161};
-        if(!valhalla::baldr::DateTime::is_iso_local(*date_time_value))
-          throw valhalla::valhalla_exception_t{162};
+          throw valhalla_exception_t{161};
+        if(!baldr::DateTime::is_iso_local(*date_time_value))
+          throw valhalla_exception_t{162};
         options.set_date_time(*date_time_value);
         options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
         break;
       default:
-        throw valhalla::valhalla_exception_t{163};
+        throw valhalla_exception_t{163};
       }
     }
 
@@ -513,7 +519,7 @@ namespace {
     //force these into the output so its obvious what we did to the user
     doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
     doc.AddMember({"format", allocator},
-      {valhalla::odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
+      {odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
   }
 }
 
