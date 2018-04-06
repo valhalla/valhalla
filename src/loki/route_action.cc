@@ -1,8 +1,6 @@
 #include "loki/worker.h"
 #include "loki/search.h"
 
-#include <boost/property_tree/info_parser.hpp>
-
 #include "baldr/datetime.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/rapidjson_utils.h"

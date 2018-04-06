@@ -2,7 +2,6 @@
 #define __VALHALLA_TYR_SERVICE_H__
 
 #include <list>
-#include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
