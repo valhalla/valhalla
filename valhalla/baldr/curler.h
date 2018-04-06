@@ -1,7 +1,16 @@
 #ifndef VALHALLA_BALDR_CURLER_H_
 #define VALHALLA_BALDR_CURLER_H_
 
+#if defined(_MSC_VER) && !defined(NOGDI)
+#define NOGDI // prevents winsock2.h drag in wingdi.h
+#endif
+
 #include <curl/curl.h>
+
+#if defined(_MSC_VER) && defined(GetNameInfo)
+#undef GetNameInfo // winsock2.h imports #define GetNameInfo which clashes with EdgeInfo::GetNameInfo
+#endif
+
 #include <string>
 #include <vector>
 #include <memory>

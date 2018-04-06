@@ -15,39 +15,65 @@ message Location {
     kBreak = 0;
     kThrough = 1;
   }
-
+  
   enum SideOfStreet {
     kNone = 0;
     kLeft = 1;
     kRight = 2;
   }
 
+  message PathEdge {
+    optional uint64 graph_id = 1;
+    optional float percent_along = 2;
+    optional LatLng ll = 3;
+    optional SideOfStreet side_of_street = 4;
+    optional float distance = 5;
+    optional int32 minimum_reachability = 6;
+    optional bool begin_node = 7;
+    optional bool end_node = 8;
+    repeated string names = 10;
+  }
+
   optional LatLng ll = 1;
-  optional Type type = 2;
-  optional uint32 heading = 3;        // 0-359
+  optional Type type = 2 [default = kBreak];
+  optional uint32 heading = 3;                                 // 0-359
   optional string name = 4;
   optional string street = 5;
   optional string city = 6;
   optional string state = 7;
   optional string postal_code = 8;
   optional string country = 9;
-  optional string date_time = 10;
-  optional SideOfStreet side_of_street = 11;
-  optional uint32 original_index = 12;
-  optional LatLng projected_ll = 13;
+  optional string phone = 10;
+  optional string url = 11;
+  optional string date_time = 12;
+  optional SideOfStreet side_of_street = 13;
+  optional uint32 heading_tolerance = 14 [default = 60];
+  optional uint32 node_snap_tolerance = 15 [default = 5];
+  optional uint64 way_id = 16;
+  optional uint32 minimum_reachability = 17 [default = 0];
+  optional uint32 radius = 18 [default = 0];
+  optional uint32 accuracy = 19;
+  optional double time = 20 [default = -1.0];
+  optional bool rank_candidates = 21 [default = true];
+  
+  //outputs
+  repeated PathEdge path_edges = 22;
+  repeated PathEdge filtered_edges = 23;
+  optional uint32 original_index = 24;
+  optional LatLng projected_ll = 25;
 }
 
-  message TransitEgressInfo {
-    optional string onestop_id = 1;        // Unique transitland ID
-    optional string name = 2;              // The name of the egress
-    optional LatLng ll = 3;                // Latitude, longitude of the egress
-  }
+message TransitEgressInfo {
+  optional string onestop_id = 1;        // Unique transitland ID
+  optional string name = 2;              // The name of the egress
+  optional LatLng ll = 3;                // Latitude, longitude of the egress
+}
 
-  message TransitStationInfo {
-    optional string onestop_id = 1;        // Unique transitland ID
-    optional string name = 2;              // The name of the station
-    optional LatLng ll = 3;                // Latitude, longitude of the station
-  }
+message TransitStationInfo {
+  optional string onestop_id = 1;        // Unique transitland ID
+  optional string name = 2;              // The name of the station
+  optional LatLng ll = 3;                // Latitude, longitude of the station
+}
 
 message TransitPlatformInfo {
   enum Type {
@@ -63,5 +89,5 @@ message TransitPlatformInfo {
   optional bool assumed_schedule = 6;      // true if the times are based on an assumed schedule
   optional LatLng ll = 7;                  // Latitude, longitude of the transit stop
   optional string station_onestop_id = 8;  // Unique transitland station ID
-  optional string station_name = 9;       // The station name of the platform
+  optional string station_name = 9;        // The station name of the platform
 }

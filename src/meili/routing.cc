@@ -406,11 +406,11 @@ find_shortest_path(baldr::GraphReader& reader,
               // Get cost - use EdgeCost to get time along the edge. Override
               // cost portion to be distance. Heuristic cost from a destination
               // to itself must be 0, so sortcost = cost
-              sif::Cost cost(label.cost().cost + directededge->length() * edge.dist,
-                             label.cost().secs + costing->EdgeCost(directededge).secs * edge.dist);
+              sif::Cost cost(label.cost().cost + directededge->length() * edge.percent_along,
+                             label.cost().secs + costing->EdgeCost(directededge).secs * edge.percent_along);
               // We only add the labels if we are under the limits for distance and for time or time limit is 0
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
-                labelset->put(dest, edgeid, 0.f, edge.dist, cost, turn_cost,
+                labelset->put(dest, edgeid, 0.f, edge.percent_along, cost, turn_cost,
                               cost.cost, label_idx, directededge, travelmode);
               }
             }
@@ -518,17 +518,17 @@ find_shortest_path(baldr::GraphReader& reader,
           for (const auto other_dest : edge_dests[origin_edge.id]) {
             // All edges of this destination
             for (const auto& other_edge : destinations[other_dest].edges) {
-              if (origin_edge.id == other_edge.id && origin_edge.dist <= other_edge.dist) {
+              if (origin_edge.id == other_edge.id && origin_edge.percent_along <= other_edge.percent_along) {
                 // Get cost - use EdgeCost to get time along the edge. Override
                 // cost portion to be distance. The heuristic cost from a
                 // destination to itself must be 0
-                float f = (other_edge.dist - origin_edge.dist);
+                float f = (other_edge.percent_along - origin_edge.percent_along);
                 sif::Cost cost(label.cost().cost + directededge->length() * f,
                                label.cost().secs + costing->EdgeCost(directededge).secs * f);
                 // We only add the labels if we are under the limits for distance and for time or time limit is 0
                 if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
-                  labelset->put(other_dest, origin_edge.id, origin_edge.dist,
-                                other_edge.dist, cost, turn_cost, cost.cost,
+                  labelset->put(other_dest, origin_edge.id, origin_edge.percent_along,
+                                other_edge.percent_along, cost, turn_cost, cost.cost,
                                 label_idx, directededge, travelmode);
                 }
               }
@@ -538,7 +538,7 @@ find_shortest_path(baldr::GraphReader& reader,
           // Get cost - use EdgeCost to get time along the edge. Override
           // cost portion to be distance. The heuristic cost from a
           // destination to itself must be 0
-          float f = (1.0f - origin_edge.dist);
+          float f = (1.0f - origin_edge.percent_along);
           sif::Cost cost(label.cost().cost + directededge->length() * f,
                          label.cost().secs + costing->EdgeCost(directededge).secs * f);
           // We only add the labels if we are under the limits for distance and for time or time limit is 0
@@ -548,7 +548,7 @@ find_shortest_path(baldr::GraphReader& reader,
             if(nodeinfo == nullptr)
               continue;
             float sortcost = cost.cost + heuristic(nodeinfo->latlng());
-            labelset->put(directededge->endnode(), origin_edge.id, origin_edge.dist, 1.f,
+            labelset->put(directededge->endnode(), origin_edge.id, origin_edge.percent_along, 1.f,
                        cost, turn_cost, sortcost, label_idx, directededge, travelmode);
           }
         }

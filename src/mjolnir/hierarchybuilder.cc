@@ -14,6 +14,7 @@
 #include "midgard/logging.h"
 #include "midgard/encoded.h"
 #include "midgard/sequence.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
@@ -303,7 +304,7 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
       uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(w, nodea, nodeb,
                     edgeinfo.wayid(), encoded_shape,
-                    tile->GetNames(idx), added);
+                    tile->GetNames(idx), tile->GetTypes(idx), added);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge
@@ -543,7 +544,7 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir) {
     if (!itr->second ) {
       // Remove the file
       GraphId empty_tile = itr->first;
-      std::string file_location = tile_dir + "/" +
+      std::string file_location = tile_dir + filesystem::path_separator +
           GraphTile::FileSuffix(empty_tile.Tile_Base());
       remove(file_location.c_str());
       LOG_DEBUG("Remove file: " + file_location);

@@ -1,6 +1,10 @@
 #ifndef VALHALLA_MIDGARD_LOGGING_H_
 #define VALHALLA_MIDGARD_LOGGING_H_
 
+#if defined(_MSC_VER) && defined(ERROR)
+#undef ERROR
+#endif
+
 #include <string>
 #include <mutex>
 #include <unordered_map>

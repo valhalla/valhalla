@@ -10,9 +10,9 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/thor/pathinfo.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace thor {
@@ -50,8 +50,8 @@ class PathAlgorithm {
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(baldr::PathLocation& origin,
-          baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+  virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
+          odin::Location& dest, baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode) = 0;
 
@@ -92,13 +92,13 @@ class PathAlgorithm {
    * @param  destination  Destination path location information.
    */
   bool IsTrivial(const baldr::GraphId& edgeid,
-                 const baldr::PathLocation& origin,
-                 const baldr::PathLocation& destination) const {
-    for (const auto& destination_edge : destination.edges) {
-      if (destination_edge.id == edgeid) {
-        for (const auto& origin_edge : origin.edges) {
-          if (origin_edge.id == edgeid &&
-              origin_edge.dist <= destination_edge.dist) {
+                 const odin::Location& origin,
+                 const odin::Location& destination) const {
+    for (const auto& destination_edge : destination.path_edges()) {
+      if (destination_edge.graph_id() == edgeid) {
+        for (const auto& origin_edge : origin.path_edges()) {
+          if (origin_edge.graph_id() == edgeid &&
+              origin_edge.percent_along() <= destination_edge.percent_along()) {
             return true;
           }
         }

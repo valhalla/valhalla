@@ -79,7 +79,7 @@ Project(const coord_t& p,
   float offset = total_length > 0.f? static_cast<float>(closest_partial_length / total_length) : 0.f;
   offset = std::max(0.f, std::min(offset, 1.f));
 
-  // Snapp to vertexes if it's close
+  // Snapp to vertices if it's close
   if (total_length * offset <= snap_distance) {
     closest_point = shape.front();
     closest_distance = approximator.DistanceSquared(closest_point);

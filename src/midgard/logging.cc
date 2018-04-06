@@ -11,12 +11,25 @@
 
 namespace {
 
-//returns formated to: 'year/mo/dy hr:mn:sc.xxxxxx'
+inline std::tm* get_gmtime(const std::time_t* time, std::tm* tm)
+{
+#ifdef _MSC_VER
+  // MSVC gmtime() already returns tm allocated in thread-local storage
+  if (gmtime_s(tm, time) == 0)
+    return tm;
+  else
+    return nullptr;
+#else
+  return gmtime_r(time, tm);
+#endif
+}
+
+//returns formatted to: 'year/mo/dy hr:mn:sc.xxxxxx'
 std::string TimeStamp() {
   //get the time
   std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
   std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-  std::tm gmt{}; gmtime_r(&tt, &gmt);
+  std::tm gmt{}; get_gmtime(&tt, &gmt);
   using sec_t = std::chrono::duration<double>;
   std::chrono::duration<double> fractional_seconds =
     (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);

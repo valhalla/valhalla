@@ -6,6 +6,7 @@
 #include <limits>
 #include <list>
 #include <fstream>
+#include <string>
 #include <boost/regex.hpp>
 #include <sys/stat.h>
 #include <zlib.h>
@@ -14,6 +15,8 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+
+#include "baldr/filesystem_utils.h"
 
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -31,7 +34,7 @@ namespace {
   constexpr int16_t NO_DATA_LOW = -16384;
   constexpr size_t TILE_COUNT = 180 * 360;
 
-  //macro is faster than inline funciton for this..
+  //macro is faster than inline function for this..
   #define out_of_range(v) v > NO_DATA_HIGH || v < NO_DATA_LOW
 
   std::list<std::string> get_files(const std::string& root_dir) {
@@ -128,7 +131,7 @@ namespace skadi {
   sample::sample(const std::string& data_source):
       mapped_cache(TILE_COUNT), unzipped_cache(-1, std::vector<int16_t>(HGT_PIXELS)), data_source(data_source) {
     //messy but needed
-    while(this->data_source.size() && this->data_source.back() == '/')
+    while(this->data_source.size() && this->data_source.back() == baldr::filesystem::path_separator)
       this->data_source.pop_back();
 
     //check the directory for files that look like what we need
@@ -265,7 +268,7 @@ namespace skadi {
     return values;
   }
 
-  double sample::get_no_data_value() const {
+  double sample::get_no_data_value() {
     return NO_DATA_VALUE;
   }
 

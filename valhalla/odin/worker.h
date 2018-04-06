@@ -22,10 +22,7 @@ namespace valhalla {
 #endif
       virtual void cleanup() override;
 
-      std::list<TripDirections> narrate(std::list<TripPath>& legs) const;
-
-     private:
-      DirectionsOptions options;
+      std::list<TripDirections> narrate(const valhalla_request_t& request, std::list<TripPath>& legs) const;
     };
   }
 }

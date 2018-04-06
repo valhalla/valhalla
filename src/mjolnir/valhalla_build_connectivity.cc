@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
@@ -169,12 +170,13 @@ int main(int argc, char** argv) {
         ppm.push_back(color->second);
       }
     }
+    assert(ppm.size() == height*width*sizeof(RGB)) ;
 
     std::string tmp;
     outfile << "P6" << std::endl; //  << “# foreground “ << std::endl;
     outfile << std::to_string(width) << " " << std::to_string(height) << std::endl;
     outfile << std::to_string(255) << std::endl;
-    outfile.write(reinterpret_cast<char*>(&ppm[0]), height*width*3);
+    outfile.write(reinterpret_cast<char*>(ppm.data()), height*width*3);
     outfile.close();
   }
 

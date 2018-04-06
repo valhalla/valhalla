@@ -14,6 +14,7 @@
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace thor {
@@ -54,8 +55,8 @@ class BidirectionalAStar : public PathAlgorithm {
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(baldr::PathLocation& origin,
-           baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+  std::vector<PathInfo> GetBestPath(odin::Location& origin,
+           odin::Location& dest, baldr::GraphReader& graphreader,
            const std::shared_ptr<sif::DynamicCost>* mode_costing,
            const sif::TravelMode mode);
 
@@ -95,8 +96,8 @@ class BidirectionalAStar : public PathAlgorithm {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_reverse_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_forward_;
-  std::shared_ptr<EdgeStatus> edgestatus_reverse_;
+  EdgeStatus edgestatus_forward_;
+  EdgeStatus edgestatus_reverse_;
 
   // Best candidate connection and threshold to extend search.
   uint32_t threshold_;
@@ -133,7 +134,7 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param  costing      Dynamic costing
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 baldr::PathLocation& origin);
+                 odin::Location& origin);
 
   /**
    * Add destination edges to the reverse path adjacency list.
@@ -141,7 +142,7 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param   costing      Dynamic costing
    */
   void SetDestination(baldr::GraphReader& graphreader,
-                       const baldr::PathLocation& dest);
+                       const odin::Location& dest);
 
   /**
    * The edge on the forward search connects to a reached edge on the reverse

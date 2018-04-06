@@ -30,14 +30,14 @@ namespace valhalla {
 
     odin_worker_t::~odin_worker_t(){}
 
-    void odin_worker_t::cleanup(){ options = DirectionsOptions::default_instance(); }
+    void odin_worker_t::cleanup(){}
 
-    std::list<TripDirections> odin_worker_t::narrate(std::list<TripPath>& legs) const {
+    std::list<TripDirections> odin_worker_t::narrate(const valhalla_request_t& request, std::list<TripPath>& legs) const {
       //get some annotated directions
       std::list<TripDirections> narrated;
       try{
         for(auto& leg : legs) {
-          narrated.emplace_back(odin::DirectionsBuilder().Build(options, leg));
+          narrated.emplace_back(odin::DirectionsBuilder().Build(request.options, leg));
           LOG_INFO("maneuver_count::" + std::to_string(narrated.back().maneuver_size()));
         }
       }
@@ -51,41 +51,37 @@ namespace valhalla {
     worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       auto& info = *static_cast<http_request_info_t*>(request_info);
       LOG_INFO("Got Odin Request " + std::to_string(info.id));
+      valhalla_request_t request;
       try{
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-        rapidjson::Document request;
-        request.Parse(request_str.c_str());
-        if (request.HasParseError())
-          return jsonify_error({200}, info, options);
-
-        //parse it to pbf object
-        options = from_json(request);
+        std::string serialized_options(static_cast<const char*>((++job.cbegin())->data()), (++job.cbegin())->size());
+        request.parse(request_str, serialized_options);
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
 
         //parse each leg
         std::list<TripPath> legs;
-        for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
+        for(auto leg = ++(++job.cbegin()); leg != job.cend(); ++leg) {
           //crack open the path
           legs.emplace_back();
           try {
             legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
           }
           catch(...) {
-            return jsonify_error({201}, info, options);
+            return jsonify_error({201}, info, request);
           }
         }
 
         //narrate them and serialize them along
-        auto narrated = narrate(legs);
-        auto response = tyr::serializeDirections(options, legs, narrated);
-        auto* to_response = options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
-        return to_response(response, info, options);
+        auto narrated = narrate(request, legs);
+        auto response = tyr::serializeDirections(request, legs, narrated);
+        auto* to_response = request.options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
+        return to_response(response, info, request);
       }
       catch(const std::exception& e) {
-        return jsonify_error({299, std::string(e.what())}, info, options);
+        return jsonify_error({299, std::string(e.what())}, info, request);
       }
     }
 

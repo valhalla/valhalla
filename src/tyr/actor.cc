@@ -13,17 +13,6 @@ using namespace valhalla::loki;
 using namespace valhalla::thor;
 using namespace valhalla::odin;
 
-namespace {
-  rapidjson::Document to_document(const std::string& request) {
-    rapidjson::Document d;
-    auto& allocator = d.GetAllocator();
-    d.Parse(request.c_str());
-    if (d.HasParseError())
-      throw valhalla_exception_t{100};
-    return d;
-  }
-}
-
 namespace valhalla {
   namespace tyr {
 
@@ -57,17 +46,15 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
-      auto options = from_json(request);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::route);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.route(request);
-      //route between the locations in the graph to find the best path
-      auto date_time_type = rapidjson::get_optional<int>(request, "/date_time.type");
-      auto legs = pimpl->thor_worker.route(request, date_time_type);
+      auto legs = pimpl->thor_worker.route(request);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(legs);
+      auto directions = pimpl->odin_worker.narrate(request, legs);
       //serialize them out to json string
-      auto bytes = tyr::serializeDirections(options, legs, directions);
+      auto bytes = tyr::serializeDirections(request, legs, directions);
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
@@ -78,50 +65,46 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
-      auto options = from_json(request);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::locate);
       //check the request and locate the locations in the graph
       auto json = pimpl->loki_worker.locate(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::matrix(const std::string& request_str, const std::function<void ()>& interrupt) {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
-      auto options = from_json(request);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::sources_to_targets);
       //check the request and locate the locations in the graph
-      pimpl->loki_worker.matrix(SOURCES_TO_TARGETS, request);
+      pimpl->loki_worker.matrix(request);
       //compute the matrix
-      auto json = pimpl->thor_worker.matrix(SOURCES_TO_TARGETS, request);
-      std::stringstream ss;
-      ss << *json;
+      auto json = pimpl->thor_worker.matrix(request);
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::optimized_route(const std::string& request_str, const std::function<void ()>& interrupt) {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
-      auto options = from_json(request);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::optimized_route);
       //check the request and locate the locations in the graph
-      pimpl->loki_worker.matrix(OPTIMIZED_ROUTE, request);
+      pimpl->loki_worker.matrix(request);
       //compute compute all pairs and then the shortest path through them all
       auto legs = pimpl->thor_worker.optimized_route(request);
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(legs);
+      auto directions = pimpl->odin_worker.narrate(request, legs);
       //serialize them out to json string
-      auto bytes = tyr::serializeDirections(options, legs, directions);
+      auto bytes = tyr::serializeDirections(request, legs, directions);
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
@@ -132,34 +115,32 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
-      auto options = from_json(request);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::isochrone);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.isochrones(request);
       //compute the isochrones
       auto json = pimpl->thor_worker.isochrones(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::trace_route(const std::string& request_str, const std::function<void ()>& interrupt) {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
-      auto options = from_json(request);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::trace_route);
       //check the request and locate the locations in the graph
-      pimpl->loki_worker.trace(TRACE_ROUTE, request);
+      pimpl->loki_worker.trace(request);
       //route between the locations in the graph to find the best path
       std::list<TripPath> legs{pimpl->thor_worker.trace_route(request)};
       //get some directions back from them
-      auto directions = pimpl->odin_worker.narrate(legs);
+      auto directions = pimpl->odin_worker.narrate(request, legs);
       //serialize them out to json string
-      auto bytes = tyr::serializeDirections(options, legs, directions);
+      auto bytes = tyr::serializeDirections(request, legs, directions);
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
@@ -170,49 +151,44 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
-      auto options = from_json(request);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::trace_attributes);
       //check the request and locate the locations in the graph
-      pimpl->loki_worker.trace(TRACE_ATTRIBUTES, request);
+      pimpl->loki_worker.trace(request);
       //get the path and turn it into attribution along it
       auto json = pimpl->thor_worker.trace_attributes(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::height(const std::string& request_str, const std::function<void ()>& interrupt) {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
-      auto options = from_json(request);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::height);
       //get the height at each point
       auto json = pimpl->loki_worker.height(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
     }
 
     std::string actor_t::transit_available(const std::string& request_str, const std::function<void ()>& interrupt) {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      auto request = to_document(request_str);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::transit_available);
       //check the request and locate the locations in the graph
       auto json = pimpl->loki_worker.transit_available(request);
-      std::stringstream ss;
-      ss << *json;
       //if they want you do to do the cleanup automatically
       if(auto_cleanup)
         cleanup();
-      return ss.str();
+      return json;
    }
 
   }

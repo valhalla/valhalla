@@ -55,6 +55,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
     }
 
+    include_driveways_ = pt.get<bool>("include_driveways", true);
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -226,6 +227,13 @@ struct graph_callback : public OSMPBF::Callback {
           return;
         }
       }
+    }
+
+    // Throw away driveways if include_driveways_ is false
+    Tags::const_iterator driveways;
+    if (!include_driveways_ && (driveways = results.find("use")) != results.end() && 
+         static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
+      return;
     }
 
     // Check for ways that loop back on themselves (simple check) and add
@@ -1342,6 +1350,9 @@ struct graph_callback : public OSMPBF::Callback {
     loops_.clear();
     loops_.shrink_to_fit();
   }
+
+  // Configuration option to include driveways
+  bool include_driveways_;
 
   //Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

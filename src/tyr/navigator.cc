@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cctype>
 #include <iomanip>
 #include <iostream>
 #include <locale>

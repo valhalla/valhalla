@@ -11,10 +11,10 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/thor/edgestatus.h>
 
 namespace valhalla {
@@ -116,8 +116,8 @@ class CostMatrix {
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> SourceToTarget(
-          const std::vector<baldr::PathLocation>& source_location_list,
-          const std::vector<baldr::PathLocation>& target_location_list,
+          const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
+          const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode, const float max_matrix_distance);
@@ -186,8 +186,8 @@ class CostMatrix {
    * @return Returns the initial time distance matrix.
    */
   void Initialize(
-      const std::vector<baldr::PathLocation>& source_location_list,
-      const std::vector<baldr::PathLocation>& target_location_list);
+      const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
+      const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list);
 
   /**
    * Iterate the forward search from the source/origin location.
@@ -198,30 +198,6 @@ class CostMatrix {
    */
   void ForwardSearch(const uint32_t index, const uint32_t n,
                      baldr::GraphReader& graphreader);
-
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphTile* tile,
-                     const baldr::GraphId& node,
-                     const baldr::NodeInfo* nodeinfo,
-                     sif::BDEdgeLabel& pred, const uint32_t pred_idx,
-                     std::vector<sif::HierarchyLimits>& hierarchy_limits,
-                     std::vector<sif::BDEdgeLabel>& edgelabels,
-                     EdgeStatus& edgestate,
-                     std::shared_ptr<baldr::DoubleBucketQueue>& adj,
-                     const bool from_transition);
-
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphTile* tile,
-                     const baldr::GraphId& node,
-                     const baldr::NodeInfo* nodeinfo,
-                     const uint32_t index,
-                     sif::BDEdgeLabel& pred, const uint32_t pred_idx,
-                     const baldr::DirectedEdge* opp_pred_edge,
-                     std::vector<sif::HierarchyLimits>& hierarchy_limits,
-                     std::vector<sif::BDEdgeLabel>& edgelabels,
-                     EdgeStatus& edgestate,
-                     std::shared_ptr<baldr::DoubleBucketQueue>& adj,
-                     const bool from_transition);
 
   /**
    * Check if the edge on the forward search connects to a reached edge
@@ -256,7 +232,7 @@ class CostMatrix {
    * @param  costing       Costing method.
    */
   void SetSources(baldr::GraphReader& graphreader,
-                  const std::vector<baldr::PathLocation>& sources);
+                  const google::protobuf::RepeatedPtrField<odin::Location>& sources);
 
   /**
    * Set the target/destination locations. Search expands backwards from
@@ -266,7 +242,7 @@ class CostMatrix {
    * @param  costing       Costing method.
    */
   void SetTargets(baldr::GraphReader& graphreader,
-                  const std::vector<baldr::PathLocation>& targets);
+                  const google::protobuf::RepeatedPtrField<odin::Location>& targets);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -281,7 +257,7 @@ class CostMatrix {
    * @return  Returns true if all destinations have been settled.
    */
   bool UpdateDestinations(const uint32_t origin_index,
-                          const std::vector<baldr::PathLocation>& locations,
+                          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const sif::BDEdgeLabel& pred,

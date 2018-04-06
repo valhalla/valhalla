@@ -22,10 +22,82 @@
 #include <cerrno>
 #include <stdexcept>
 #include <iostream>
+
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
+#endif // _MSC_VER
+#include <fcntl.h>
+
+#ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN 1
+#define VC_EXTRALEAN 1
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_WARNINGS 1
+#include <windows.h>
+
+#define PROT_READ 0x01
+#define PROT_WRITE 0x02
+#define MAP_SHARED 0x01
+#define MAP_PRIVATE 0x02
+#define MAP_ANONYMOUS 0x20
+#define MAP_FAILED (reinterpret_cast<void*>(static_cast<LONG_PTR>(-1)))
+#define POSIX_MADV_NORMAL 0 // ignored
+#define POSIX_MADV_SEQUENTIAL 2 // ignored
+
+inline void* mmap(void *addr, size_t length, int prot, int flags, int fd, long long offset)
+{
+  (void)addr; // ignored
+
+  DWORD access = 0;
+  DWORD protect = 0;
+  if ((prot & PROT_WRITE)) {
+    if ((flags & MAP_PRIVATE)) {
+      access = FILE_MAP_COPY;
+      protect = PAGE_WRITECOPY;
+    } else {
+      access = FILE_MAP_WRITE;
+      protect = PAGE_READWRITE;
+    }
+  } else if ((prot & PROT_READ)) {
+    access = FILE_MAP_READ;
+    protect = PAGE_READONLY;
+  }
+
+  HANDLE file_handle = INVALID_HANDLE_VALUE;
+  if ((fd != -1) && (flags & MAP_ANONYMOUS) == 0) {
+    file_handle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
+  }
+
+  void* map = nullptr;
+  HANDLE mapped_handle = ::CreateFileMapping(file_handle, nullptr, protect, 0, 0, nullptr);
+  if (mapped_handle) {
+    map = ::MapViewOfFile(mapped_handle, access, (DWORD)((offset >> 32) & 0xffffffffUL), (DWORD)(offset & 0xffffffffUL), 0);
+
+    BOOL rc = FALSE;
+    rc = ::CloseHandle(mapped_handle); // release internal reference to mapped view
+  }
+
+  if (!map) {
+    return static_cast<void*>(static_cast<char*>(MAP_FAILED));
+  }
+
+  return static_cast<void*>(static_cast<char*>(map));
+}
+
+inline int munmap(void* addr, size_t length)
+{
+  (void)length; // ignored
+  if (::UnmapViewOfFile(addr) == 0) {
+    return -1;
+  }
+  return 0;
+}
+
+#endif // _MSC_VER
 
 namespace valhalla{
 namespace midgard{
@@ -60,14 +132,24 @@ class mem_map {
 
     //has to be something to map
     if(new_count > 0) {
-      auto fd = open(new_file_name.c_str(), O_RDWR, 0);
+      auto fd =
+#if defined(_MSC_VER)
+        _open(new_file_name.c_str(), O_RDWR, 0);
+#else
+        open(new_file_name.c_str(), O_RDWR, 0);
+#endif
       if(fd == -1)
         throw std::runtime_error(new_file_name + "(open): " + strerror(errno));
       ptr = mmap(nullptr, new_count * sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
       if(ptr == MAP_FAILED)
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
+
+#if defined(_MSC_VER)
+      auto cl = _close(fd);
+#else
       auto cl = close(fd);
       posix_madvise(ptr, new_count * sizeof(T), advice);
+#endif
       if(cl == -1)
         throw std::runtime_error(new_file_name + "(close): " + strerror(errno));
       count = new_count;
@@ -140,8 +222,8 @@ class sequence {
     if(!*file)
       throw std::runtime_error(file_name + ": " + strerror(errno));
     auto end = file->tellg();
-    auto element_count = std::ceil<size_t>(end / sizeof(T));
-    if(end != element_count * sizeof(T))
+    auto element_count = static_cast<std::streamoff>(std::ceil(end / sizeof(T)));
+    if(end != static_cast<decltype(end)>(element_count * sizeof(T)))
       throw std::runtime_error("This file has an incorrect size for type");
     write_buffer.reserve(write_buffer_size ? write_buffer_size : 1);
 
@@ -430,7 +512,7 @@ struct tar {
       if(!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0'))
         contents.emplace(std::piecewise_construct, std::forward_as_tuple(std::string{h->name}), std::forward_as_tuple(position, size));
       //every entry's data is rounded to the nearst header_t sized "block"
-      size_t blocks = std::ceil(static_cast<double>(size) / sizeof(header_t));
+      auto blocks = static_cast<size_t>(std::ceil(static_cast<double>(size) / sizeof(header_t)));
       position += blocks * sizeof(header_t);
     }
   }

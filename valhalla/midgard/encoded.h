@@ -10,7 +10,7 @@
 namespace valhalla {
 namespace midgard {
 
-// specialized implemetation for std::vector with reserve
+// specialized implementation for std::vector with reserve
 template<class container_t,
          class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
 typename

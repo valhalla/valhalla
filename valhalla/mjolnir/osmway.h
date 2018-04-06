@@ -1050,7 +1050,8 @@ struct OSMWay {
    */
   std::vector<std::string> GetNames(const std::string& ref,
                                     const UniqueNames& ref_offset_map,
-                                    const UniqueNames& name_offset_map) const;
+                                    const UniqueNames& name_offset_map,
+                                    uint16_t& types) const;
 
   // OSM way Id
   uint64_t osmwayid_;

@@ -1,24 +1,29 @@
-#include "baldr/geojson.h"
+
+#include "baldr/json.h"
 #include "midgard/point2.h"
 #include "midgard/pointll.h"
+#include "tyr/serializers.h"
 
 #include <sstream>
 #include <iomanip>
 #include <cmath>
 #include <utility>
 
+using namespace valhalla::baldr::json;
+
 namespace {
   using rgba_t = std::tuple<float,float,float>;
 }
 
 namespace valhalla {
-namespace baldr {
-namespace json {
+namespace tyr {
+
 
 template <class coord_t>
-MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
+std::string serializeIsochrones(const valhalla_request_t& request,
+                  const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
                   bool polygons, const std::unordered_map<float, std::string>& colors,
-                  const std::vector<PathLocation>& locations) {
+                  bool show_locations) {
   //for each contour interval
   int i = 0;
   auto features = array({});
@@ -59,7 +64,7 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
       }
       //add a feature
       features->emplace_back(
-        map({
+          map({
           {"type", std::string("Feature")},
           {"geometry", map({
             {"type", std::string(polygons ? "Polygon" : "LineString")},
@@ -70,45 +75,52 @@ MapPtr to_geojson(const typename midgard::GriddedData<coord_t>::contours_t& grid
             { "color", hex.str()}, //lines
             { "fill", hex.str()}, //geojson.io polys
             { "fillColor", hex.str()}, //leaflet polys
-            { "opacity", json::fp_t{.33f, 2}}, //lines
-            { "fill-opacity", json::fp_t{.33f, 2}}, //geojson.io polys
-            { "fillOpacity", json::fp_t{.33f, 2}}, //leaflet polys
+            { "opacity", fp_t{.33f, 2}}, //lines
+            { "fill-opacity", fp_t{.33f, 2}}, //geojson.io polys
+            { "fillOpacity", fp_t{.33f, 2}}, //leaflet polys
           })},
         })
       );
     }
   }
   // Add original locations to the geojson
-  for (const auto& location : locations) {
-    features->emplace_back(
-      map({
-        {"type", std::string("Feature")},
-        {"properties", map({})},
-        {"geometry", map({
-          {"type", std::string("Point")},
-          {"coordinates", array({
-            fp_t{location.latlng_.lng(), 6},
-            fp_t{location.latlng_.lat(), 6}
+  if(show_locations) {
+    for (const auto& location : request.options.locations()) {
+      features->emplace_back(
+          map({
+          {"type", std::string("Feature")},
+          {"properties", map({})},
+          {"geometry", map({
+            {"type", std::string("Point")},
+            {"coordinates", array({
+              fp_t{location.ll().lng(), 6},
+              fp_t{location.ll().lat(), 6}
+            })}
           })}
-        })}
-      })
-    );
+        })
+      );
+    }
   }
   //make the collection
   auto feature_collection = map({
     {"type", std::string("FeatureCollection")},
     {"features", features},
   });
-  return feature_collection;
+
+  if(request.options.has_id())
+    feature_collection->emplace("id", request.options.id());
+
+  std::stringstream ss;
+  ss << *feature_collection;
+  return ss.str();
 }
 
-template MapPtr to_geojson<midgard::Point2>(const midgard::GriddedData<midgard::Point2>::contours_t&, bool,
-                                            const std::unordered_map<float, std::string>&,
-                                            const std::vector<PathLocation>& locations);
-template MapPtr to_geojson<midgard::PointLL>(const midgard::GriddedData<midgard::PointLL>::contours_t&, bool,
-                                             const std::unordered_map<float, std::string>&,
-                                             const std::vector<PathLocation>& locations);
+template std::string serializeIsochrones<midgard::Point2>(const valhalla_request_t&,
+                                            const midgard::GriddedData<midgard::Point2>::contours_t&, bool,
+                                            const std::unordered_map<float, std::string>&, bool);
+template std::string serializeIsochrones<midgard::PointLL>(const valhalla_request_t&,
+                                             const midgard::GriddedData<midgard::PointLL>::contours_t&, bool,
+                                             const std::unordered_map<float, std::string>&, bool);
 
-}
 }
 }

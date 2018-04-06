@@ -149,7 +149,6 @@ nobase_include_HEADERS = \
 	valhalla/baldr/double_bucket_queue.h \
 	valhalla/baldr/edge_elevation.h \
 	valhalla/baldr/edgeinfo.h \
-	valhalla/baldr/geojson.h \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
 	valhalla/baldr/graphreader.h \
@@ -281,7 +280,6 @@ libvalhalla_la_SOURCES = \
 	src/baldr/double_bucket_queue.cc \
 	src/baldr/edge_elevation.cc \
 	src/baldr/edgeinfo.cc \
-	src/baldr/geojson.cc \
 	src/baldr/graphid.cc \
 	src/baldr/graphreader.cc \
 	src/baldr/graphtile.cc \
@@ -380,6 +378,13 @@ libvalhalla_la_SOURCES = \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
 	src/tyr/serializers.cc \
+	src/tyr/isochrone_serializer.cc \
+	src/tyr/matrix_serializer.cc \
+	src/tyr/height_serializer.cc \
+	src/tyr/locate_serializer.cc \
+	src/tyr/route_serializer.cc \
+	src/tyr/transit_available_serializer.cc \
+	src/tyr/trace_serializer.cc \
 	src/tyr/navigator.cc \
 	src/tyr/actor.cc
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
