@@ -45,7 +45,7 @@ struct ToGraphId {
   uint64_t id     : 21;  // Id of the element within the tile
   uint64_t day    : 5;   // begin day
   uint64_t month  : 4;   // begin month
-  uint64_t year   : 8;   // minutes
+  uint64_t year   : 8;   // begin year
   uint64_t spare  : 1;
 
   // Operator not equal
