@@ -22,6 +22,8 @@ namespace {
 namespace valhalla {
   namespace thor {
 
+    constexpr uint32_t kCostMatrixThreshold = 5;
+
     std::string thor_worker_t::matrix(valhalla_request_t& request) {
       parse_locations(request);
       auto costing = parse_costing(request);
@@ -53,6 +55,15 @@ namespace valhalla {
           switch (mode) {
             case TravelMode::kPedestrian:
             case TravelMode::kBicycle:
+              // Use CostMatrix if number of sources and number of targets
+              // exceeds some threshold
+              if (request.options.sources().size() > kCostMatrixThreshold &&
+                  request.options.targets().size() > kCostMatrixThreshold) {
+                time_distances = costmatrix();
+              } else {
+                time_distances = timedistancematrix();
+              }
+              break;
             case TravelMode::kPublicTransit:
               time_distances = timedistancematrix();
               break;
