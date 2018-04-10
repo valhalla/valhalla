@@ -71,8 +71,6 @@ uint32_t compute_curvature(const std::list<PointLL>& shape) {
       float score = (radius > 1000.0f) ? 0.0f : 1500.0f / radius;
       total_score += (score > 25.0f) ? 25.0f : score;
       n++;
-    } else {
-      printf("nan\n");
     }
   }
   float average_score = (n == 0) ? 0.0f : total_score / n;
