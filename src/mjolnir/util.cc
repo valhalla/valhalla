@@ -47,6 +47,38 @@ std::string remove_double_quotes(const std::string& s) {
   return ret;
 }
 
+// Compute a curvature metric given an edge shape
+uint32_t compute_curvature(const std::list<PointLL>& shape) {
+  // Edges with just 2 shape points have no curvature.
+  // TODO - perhaps a post-process to "average" curvature along adjacent edges
+  // and smooth curvature on connected edges may be desirable?
+  if (shape.size() == 2) {
+    return 0;
+  }
+
+  // Iterate through sets of shape vertices and compute a radius of curvature.
+  // Apply a score to each section.
+  uint32_t n = 0;
+  float total_score = 0.0f;
+  auto p1 = shape.begin();
+  auto p2 = p1; p2++;
+  auto p3 = p2; p3++;
+  for (; p3 != shape.end(); ++p1, ++p2, ++p3) {
+    float radius = p1->Curvature(*p2, *p3);
+    if (!std::isnan(radius)) {
+      // Compute a score and cap it at 25 (that way one sharp turn doesn't
+      // impact the total edge more than it should)
+      float score = (radius > 1000.0f) ? 0.0f : 1500.0f / radius;
+      total_score += (score > 25.0f) ? 25.0f : score;
+      n++;
+    } else {
+      printf("nan\n");
+    }
+  }
+  float average_score = (n == 0) ? 0.0f : total_score / n;
+  return average_score > 15.0f ? 15 : static_cast<uint32_t>(average_score);
+}
+
 void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files, const std::string& bin_file_prefix, bool free_protobuf) {
   //cannot allow this when building tiles
   if(config.get_child("mjolnir").get_optional<std::string>("tile_extract"))
