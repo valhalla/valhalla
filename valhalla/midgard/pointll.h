@@ -103,7 +103,8 @@ class PointLL : public Point2 {
    * computing the radius of the circle that circumscribes the 3 positions.
    * @param   ll1   Second lng,lat position
    * @param   ll2   Third lng,lat position
-   * @return  Returns the curvature in meters.
+   * @return  Returns the curvature in meters. Returns max float if the points
+   *          are collinear.
    */
   float Curvature(const PointLL& ll1, const PointLL& ll2) const;
 
