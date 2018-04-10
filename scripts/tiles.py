@@ -179,7 +179,7 @@ if __name__ == "__main__":
 
    for features in tl_bbs.kv.get('features', []):
       coords = features['geometry']['coordinates'][0]
-      # following for debuging.
+      # following for debugging.
       #for index in range(len(coords)-1):
       #   print(coords[index][0])
       #   print(coords[index][1])

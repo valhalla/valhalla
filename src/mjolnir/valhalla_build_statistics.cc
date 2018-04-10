@@ -153,7 +153,7 @@ bool IsLoop(GraphReader& reader, const DirectedEdge& directededge, const GraphId
   const auto* current_edge = &directededge;
   const auto* starttile = reader.GetGraphTile(startnode);
   const auto* opp_edge = starttile->directededge(startnode);
-  //keep looking while we are stuck on a oneway and we dont look too far
+  //keep looking while we are stuck on a oneway and we don't look too far
   for(size_t i = 0; i < 3; ++i){
     //where can we go from here
     const DirectedEdge* next = nullptr;
@@ -174,7 +174,7 @@ bool IsLoop(GraphReader& reader, const DirectedEdge& directededge, const GraphId
     if(!next && isOneWay(current_edge)) {
       return true;
     }
-    //continue the loop if you havent finished it
+    //continue the loop if you haven't finished it
     if(next == &directededge) {
       rd.AddTask(AABB2<PointLL>(tile->edgeinfo(next->edgeinfo_offset()).shape()),
           tile->edgeinfo(next->edgeinfo_offset()).wayid(),
@@ -583,7 +583,7 @@ int main (int argc, char** argv) {
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config_file_path.c_str(), pt);
 
-  //configure loggin
+  //configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto loggin_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());

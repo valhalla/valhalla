@@ -22,7 +22,6 @@ AStarPathAlgorithm::AStarPathAlgorithm()
       mode_(TravelMode::kDrive),
       travel_type_(0),
       adjacencylist_(nullptr),
-      edgestatus_(nullptr),
       max_label_count_(std::numeric_limits<uint32_t>::max()) {
 }
 
@@ -33,15 +32,12 @@ AStarPathAlgorithm::~AStarPathAlgorithm() {
 
 // Clear the temporary information generated during path construction.
 void AStarPathAlgorithm::Clear() {
-  // Clear the edge labels and destination list
+  // Clear the edge labels and destination list. Reset the adjacency list
+  // and clear edge status.
   edgelabels_.clear();
   destinations_.clear();
-
-  // Clear elements from the adjacency list
   adjacencylist_.reset();
-
-  // Clear the edge status flags
-  edgestatus_.reset();
+  edgestatus_.clear();
 
   // Set the ferry flag to false
   has_ferry_ = false;
@@ -68,12 +64,12 @@ void AStarPathAlgorithm::Init(const PointLL& origll, const PointLL& destll) {
     return edgelabels_[label].sortcost();
   };
 
-  // Construct adjacency list, edge status, and done set
+  // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
   adjacencylist_.reset(new DoubleBucketQueue(mincost, range, bucketsize, edgecost));
-  edgestatus_.reset(new EdgeStatus());
+  edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
@@ -133,8 +129,9 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
   uint32_t shortcuts = 0;
   uint32_t max_shortcut_length = static_cast<uint32_t>(pred.distance() * 0.5f);
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+  EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
     // Handle transition edges - expand from the end node of the transition
     // (unless this is called from a transition).
     if (directededge->trans_up()) {
@@ -144,8 +141,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
                       true, destination, best_path);
       }
       continue;
-    }
-    if (directededge->trans_down()) {
+    } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx,
@@ -154,17 +150,15 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Get the current set. Skip this edge if permanently labeled (best
-    // path already found to this directed edge).
-    EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-    if (edgestatus.set() == EdgeSet::kPermanent) {
-      continue;
-    }
-
-    // Skip any superseded edges that match the shortcut mask. Also skip
-    // if no access is allowed to this edge (based on costing method)
-    if ((shortcuts & directededge->superseded()) ||
-        !costing_->Allowed(directededge, pred, tile, edgeid)) {
+    // Skip this edge if permanently labeled (best path already found to this
+    // directed edge), if edge is superseded by a shortcut edge that was taken,
+    // or if no access is allowed to this edge (based on costing method), or if
+    // a complex restriction exists.
+    if (es->set() == EdgeSet::kPermanent ||
+        (shortcuts & directededge->superseded()) ||
+       !costing_->Allowed(directededge, pred, tile, edgeid) ||
+        costing_->Restricted(directededge, pred, edgelabels_, tile,
+                                     edgeid, true)) {
       continue;
     }
 
@@ -173,12 +167,6 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // TODO - configure this distance based on density?
     if (directededge->is_shortcut() && (pred.distance() < 10000.0f ||
         directededge->length() > max_shortcut_length)) {
-      continue;
-    }
-
-    // Check for complex restriction
-    if (costing_->Restricted(directededge, pred, edgelabels_, tile,
-                             edgeid, true)) {
       continue;
     }
 
@@ -210,8 +198,8 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       // a path to be formed even if the convergence test fails (can
       // happen with large edge scores)
       if (best_path.first == -1 || newcost.cost < best_path.second) {
-         best_path.first = (edgestatus.set() == EdgeSet::kTemporary) ?
-            edgestatus.index() : edgelabels_.size();
+         best_path.first = (es->set() == EdgeSet::kTemporary) ?
+            es->index() : edgelabels_.size();
         best_path.second = newcost.cost;
       }
     }
@@ -219,11 +207,11 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
-    if (edgestatus.set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[edgestatus.index()];
+    if (es->set() == EdgeSet::kTemporary) {
+      EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost <  lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(edgestatus.index(), newsortcost);
+        adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost);
       }
       continue;
@@ -248,7 +236,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost,
                                  sortcost, dist, mode_, 0);
-    edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+    *es = { EdgeSet::kTemporary, idx };
     adjacencylist_->add(idx);
   }
 }
@@ -325,7 +313,7 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(odin::Location& origin,
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
     if (!pred.origin()) {
-      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+      edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -451,8 +439,10 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     edge_label.set_origin();
 
     // Add EdgeLabel to the adjacency list
+    uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(edgelabels_.size() - 1);
+    adjacencylist_->add(idx);
+    edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
   }
 
   // Set the origin timezone
