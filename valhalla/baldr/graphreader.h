@@ -135,7 +135,7 @@ class SynchronizedTileCache : public TileCache {
  public:
   /**
   * Constructor.
-  * @param max_size  maximum size of the cache
+  * @param cache reference to an external cache
   * @param mutex reference to an external mutex
   */
   SynchronizedTileCache(TileCache& cache, std::mutex& mutex);
@@ -373,7 +373,7 @@ class GraphReader {
    *         the specified edge. Returns an invalid GraphId if the edge is not
    *         part of a shortcut.
    */
-  GraphId GetShortcut(const GraphId& id);
+  GraphId GetShortcut(const GraphId& edgeid);
 
   /**
    * Convenience method to get the relative edge density (from the
