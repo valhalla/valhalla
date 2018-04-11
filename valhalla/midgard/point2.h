@@ -139,7 +139,7 @@ class Point2 : public std::pair<float, float>{
 
   /**
    * Subtraction of a point from the current point.
-   * @param   Point to subtract from the current point.
+   * @param p Point to subtract from the current point.
    * @return  Returns a vector.
    */
   Vector2 operator - (const Point2& p) const;

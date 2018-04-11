@@ -31,7 +31,7 @@ namespace valhalla {
        * Returns the colors for the given level,point,radius
        *
        * @param hierarchy_level  the hierarchy level whos connectivity you are querying
-       * @param center           the center of the circle
+       * @param location           the center of the circle
        * @param radius           the radius of the circle
        * @return colors          the colors of the tiles that intersect this circle at this level
        */

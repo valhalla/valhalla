@@ -162,7 +162,7 @@ class AutoCost : public DynamicCost {
   /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
-   * @param  edge  Pointer to node information.
+   * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
@@ -698,7 +698,7 @@ class BusCost : public AutoCost {
   /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
-   * @param  edge  Pointer to node information.
+   * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
@@ -869,7 +869,7 @@ class HOVCost : public AutoCost {
   /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
-   * @param  edge  Pointer to node information.
+   * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;

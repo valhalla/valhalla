@@ -1,7 +1,6 @@
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
-#include <boost/property_tree/json_parser.hpp>
 
 #include "worker.h"
 #include "baldr/datetime.h"
@@ -296,7 +295,6 @@ namespace {
 
   rapidjson::Document from_string(const std::string& json, const std::exception& e) {
     rapidjson::Document d;
-    auto& allocator = d.GetAllocator();
     d.Parse(json.c_str());
     if (d.HasParseError())
       throw e;

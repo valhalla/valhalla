@@ -45,7 +45,7 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    * @param  origin  Origin location
    * @param  dest    Destination location
    * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  costing  An array of costing methods, one per TravelMode.
+   * @param  mode_costing  An array of costing methods, one per TravelMode.
    * @param  mode     Travel mode from the origin.
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).

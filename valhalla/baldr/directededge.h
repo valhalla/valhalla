@@ -390,7 +390,7 @@ class DirectedEdge {
   /**
    * Sets the bike network mask indicating which (if any) bicycle networks are
    * along this edge. See baldr/directededge.h for definitions.
-   * @param  bikenetwork  Bicycle network mask.
+   * @param  bike_network  Bicycle network mask.
    */
   void set_bike_network(const uint32_t bike_network);
 
@@ -563,7 +563,7 @@ class DirectedEdge {
 
   /**
    * Sets the truck speed in KPH.
-   * @param  truck speed  Speed in KPH.
+   * @param speed Speed in KPH.
    */
   void set_truck_speed(const uint32_t speed);
 

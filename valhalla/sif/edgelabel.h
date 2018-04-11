@@ -426,7 +426,7 @@ class BDEdgeLabel : public EdgeLabel {
    *                       directed edge in the shortest path.
    * @param edgeid        Directed edge.
    * @param oppedgeid     Opposing directed edge Id.
-   * @param endnode       End node of the directed edge.
+   * @param edge          End node of the directed edge.
    * @param cost          True cost (cost and time in seconds) to the edge.
    * @param mode          Mode of travel along this edge.
    * @param tc            Transition cost entering this edge.
@@ -556,7 +556,7 @@ class MMEdgeLabel : public EdgeLabel {
    * @param predecessor   Index into the edge label list for the predecessor
    *                      directed edge in the shortest path.
    * @param edgeid        Directed edge.
-   * @param endnode       End node of the directed edge.
+   * @param edge          End node of the directed edge.
    * @param cost          True cost (cost and time in seconds) to the edge.
    * @param sortcost      Cost for sorting (includes A* heuristic)
    * @param dist          Distance meters to the destination

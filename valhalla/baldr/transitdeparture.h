@@ -60,7 +60,7 @@ class TransitDeparture {
    * @param  routeid  Route index within the tile.
    * @param  blockid  Block Id.
    * @param  headsign_offset  Offset to headsign within the text/name table.
-   * @param  departure_time   Departure time (seconds from midnight)
+   * @param  start_time   Departure time (seconds from midnight)
    * @param  end_time     End time for departures (seconds from midnight)
    * @param  frequency    Seconds between successive departures.
    * @param  elapsed_time     Elapsed time to next stop

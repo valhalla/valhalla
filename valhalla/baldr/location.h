@@ -59,12 +59,12 @@ struct Location {
    */
   static Location FromRapidJson(const rapidjson::Value& d, unsigned int default_reachability = 0, unsigned long default_radius = 0);
 
+  enum class ParseMethod: int { PTREE, RAPIDJSON };
   /**
    * conversion.
    * @param  json  a json representation of the location
    * @param  method use ptree or rapidjson, ptree by default
    */
-  enum class ParseMethod: int { PTREE, RAPIDJSON };
   static Location FromJson(const std::string& json, const ParseMethod& method = ParseMethod::PTREE);
 
   /**

@@ -2,7 +2,6 @@
 #define __VALHALLA_TYR_SERVICE_H__
 
 #include <list>
-#include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -28,8 +27,6 @@ namespace valhalla {
 
     /**
      * Turn path and directions into a route that one can follow
-     *
-     * @param
      */
     std::string serializeDirections(const valhalla_request_t& request,
         const std::list<odin::TripPath>& path_legs,
@@ -37,8 +34,6 @@ namespace valhalla {
 
     /**
      * Turn a time distance matrix into json that one can look up location pair results from
-     *
-     * @param
      */
     std::string serializeMatrix(const valhalla_request_t& request,
         const std::vector<thor::TimeDistance>& time_distances, double distance_scale);

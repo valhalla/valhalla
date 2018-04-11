@@ -45,7 +45,7 @@ class PathAlgorithm {
    * @param  origin       Origin location
    * @param  dest         Destination location
    * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  costing      Costing methods.
+   * @param  mode_costing Costing methods.
    * @param  mode         Travel mode to use.
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
