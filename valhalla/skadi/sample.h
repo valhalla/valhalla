@@ -55,6 +55,7 @@ namespace valhalla {
        */
       const int16_t* source(uint16_t index) const;
 
+      enum class format_t{ UNKNOWN = 0, GZIP = 1, LZ4HC = 2, RAW = 3 };
       /**
        * maps a new source, used at start up and called periodically
        * for lazily loaded sources
@@ -62,9 +63,7 @@ namespace valhalla {
        * @param  index  the index of the data tile being mapped
        * @param  format the format of the data tile being mapped
        * @param  file   the file name of the data tile being mapped
-       * @return none
        */
-      enum class format_t{ UNKNOWN = 0, GZIP = 1, LZ4HC = 2, RAW = 3 };
       void map(uint16_t index, format_t format, const std::string& file);
 
       //using memory maps

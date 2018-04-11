@@ -266,7 +266,7 @@ class AABB2 {
    * Expands (if necessary) the bounding box to include the specified point.
    * @param  point  Point to "add" to this bounding box.
    */
-  void Expand(const coord_t& r2);
+  void Expand(const coord_t& point);
 
  protected:
   // Edge to clip against

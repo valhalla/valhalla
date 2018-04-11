@@ -244,8 +244,8 @@ class Vector2 {
 /**
  * Creates a new vector that is the specified vector multiplied
  * with the specified scalar.
- * @param   scalar   Scalar to muliply the vector with.
- * @param   Vector2  Vector to be multiplied with the scalar
+ * @param   s  Scalar to muliply the vector with.
+ * @param   v  Vector to be multiplied with the scalar
  * @return  Returns the resulting vector
  */
 Vector2 operator *(float s, const Vector2 &v);

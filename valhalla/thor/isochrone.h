@@ -136,7 +136,7 @@ class Isochrone {
   /**
    * Constructs the isotile - 2-D gridded data containing the time
    * to get to each lat,lng tile.
-   * @param  mulitmodal  True if the route type is multimodal.
+   * @param  multimodal  True if the route type is multimodal.
    * @param  max_minutes Maximum time (minutes) for computing isochrones.
    * @param  origin_locations  List of origin locations.
    */

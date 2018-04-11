@@ -46,7 +46,7 @@ decode(const char* encoded, size_t length) {
 /**
  * Polyline decode a string into a container of points
  *
- * @param string    the encoded points
+ * @param encoded    the encoded points
  * @return points   the container of points
  */
 template<class container_t,
@@ -63,7 +63,7 @@ container_t decode7(const char* encoded, size_t length) {
 /**
  * Varint decode a string into a container of points
  *
- * @param string    the encoded points
+ * @param encoded    the encoded points
  * @return points   the container of points
  */
 template<class container_t>

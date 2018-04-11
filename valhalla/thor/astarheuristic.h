@@ -70,7 +70,7 @@ class AStarHeuristic {
    * Get the A* heuristic given the lat,lng. Also return distance via
    * an argument.
    * @param   ll  Lat,lng
-   * @param   distance  Distance (meters) to the destination.
+   * @param   dist  Distance (meters) to the destination.
    * @return  Returns an estimate of the cost to the destination.
    *          For A* shortest path this MUST UNDERESTIMATE the true cost.
    */

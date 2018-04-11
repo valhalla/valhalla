@@ -55,10 +55,9 @@ namespace DateTime {
 
   /**
    * Get the days that this transit service is running in 60 days or less
-   * @param   start_date
-   * @param   end_date
+   * @param   start_date start date
+   * @param   end_date end date
    * @param   tile_date seconds from epoch
-   * @param   tz timezone which is used to get the current time.
    * @param   dow_mask that this service runs.
    * @return  Returns the number of days.
    */
@@ -68,7 +67,7 @@ namespace DateTime {
   /**
    * Adds a service day to the days.
    * @param   days supported by the gtfs feed/service
-   * @param   end_date
+   * @param   end_date end date
    * @param   tile_date seconds from epoch
    * @param   added_date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the updated days.  Days will only be updated if the added date
@@ -82,7 +81,7 @@ namespace DateTime {
   /**
    * Removes a service day to the days.
    * @param   days supported by the gtfs feed/service
-   * @param   end_date
+   * @param   end_date end date
    * @param   tile_date seconds from epoch
    * @param   removed_date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the updated days.  Days will only be updated if the removed date
@@ -106,7 +105,7 @@ namespace DateTime {
   /**
    * Get the number of days elapsed from the pivot date until
    * inputed date.
-   * @param   date_time
+   * @param   date_time date
    * @return  Returns the number of days.
    */
   uint32_t days_from_pivot_date(const boost::gregorian::date& date_time);

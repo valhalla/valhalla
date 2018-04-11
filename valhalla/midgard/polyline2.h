@@ -57,10 +57,10 @@ class Polyline2 {
   static float Length(const container_t& pts);
 
   /**
-   * Finds the closest point to the supplied polyline as well as the distance
+   * Finds the closest point to the supplied point as well as the distance
    * to that point and the index of the segment where the closest
    * point lies.
-   * @param   pts     List of points on the polyline.
+   * @param   pt     point to find distance from
    * @return  tuple of <Closest point along the polyline,
    *                    Distance in meters of the closest point,
    *                    Index of the segment of the polyline which contains

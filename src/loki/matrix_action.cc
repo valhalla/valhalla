@@ -1,7 +1,6 @@
 #include "loki/worker.h"
 #include "loki/search.h"
 
-#include <boost/property_tree/info_parser.hpp>
 #include <unordered_map>
 
 #include "baldr/tilehierarchy.h"
