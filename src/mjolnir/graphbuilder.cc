@@ -695,6 +695,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             // hack until we figure out what is wrong with duration.
             if (spd != 0)
               speed = spd;
+            else speed = 1;
 
           }
 
