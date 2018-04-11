@@ -324,7 +324,7 @@ class NodeInfo {
 
   /**
    * Returns the json representation of the object
-   * @param   the tile required to get admin information
+   * @param tile the tile required to get admin information
    * @return  json object
    */
   json::MapPtr json(const GraphTile* tile) const;

@@ -31,7 +31,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
  * Get the time from the inputed date.
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
- * @param   locale
+ * @param   locale locale
  * @return  Returns the formatted time based on the locale.
  */
 std::string get_localized_time(const std::string& date_time,
@@ -41,18 +41,18 @@ std::string get_localized_time(const std::string& date_time,
  * Get the date from the inputed date.
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
- * @param   locale
+ * @param   locale locale
  * @return  Returns the formatted date based on the locale.
  */
 std::string get_localized_date(const std::string& date_time,
                                const std::locale& locale);
 
+using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<NarrativeDictionary> >;
 /**
  * Returns locale strings mapped to NarrativeDictionaries containing parsed narrative information
  *
  * @return the map of locales to NarrativeDictionaries
  */
-using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<NarrativeDictionary> >;
 const locales_singleton_t& get_locales();
 
 /**

@@ -288,8 +288,8 @@ inline T2 ToSet(const T1& inset) {
 
 /**
  * equals with an epsilon for approximation
- * @param first operand
- * @param second operand
+ * @param a first operand
+ * @param b second operand
  * @param epsilon to help with approximate equality
  */
 template <class T>

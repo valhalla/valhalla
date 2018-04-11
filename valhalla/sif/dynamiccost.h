@@ -386,7 +386,6 @@ class DynamicCost {
 
   /**
    * Checks if we should exclude or not.
-   * @return  Returns true if we should exclude, false if not.
    */
   virtual void AddToExcludeList(const baldr::GraphTile*& tile);
 
