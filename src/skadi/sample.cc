@@ -10,8 +10,11 @@
 #include <boost/regex.hpp>
 #include <sys/stat.h>
 #include <zlib.h>
+
+#ifndef NO_LZ4
 #include <lz4.h>
 #include <lz4hc.h>
+#endif
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
@@ -117,11 +120,13 @@ namespace {
     inflateEnd(&stream);
   }
 
+#ifndef NO_LZ4
   void lunzip(const valhalla::midgard::mem_map<char>& in, int16_t* tile) {
     auto compressed_size = LZ4_decompress_fast(in.get(), static_cast<char*>(static_cast<void*>(tile)), HGT_BYTES);
     if(compressed_size != in.size())
       throw std::runtime_error("Corrupt lz4 elevation data");
   }
+#endif
 
 }
 
@@ -179,7 +184,11 @@ namespace skadi {
     //we have to unzip it
     try {
       if(mapped.first == format_t::LZ4HC)
+#ifndef NO_LZ4
         lunzip(mapped.second, unzipped_cache.second.data());
+#else
+        throw std::invalid_argument("Unsupported format");
+#endif
       else
         gunzip(mapped.second, unzipped_cache.second.data());
     }//failed to unzip
