@@ -401,8 +401,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         // If needed, set the begin street names
         if (!curr_man->HasBeginStreetNames() && !curr_man->portions_highway()
             && (curr_man->street_names().size() > common_base_names->size())) {
-          curr_man->set_begin_street_names(
-              std::move(curr_man->street_names().clone()));
+          curr_man->set_begin_street_names(curr_man->street_names().clone());
         }
 
         // Update current maneuver street names
@@ -915,10 +914,8 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // or usable internal intersection name exists
   if ((maneuver.street_names().empty() && !maneuver.internal_intersection())
       || UsableInternalIntersectionName(maneuver, node_index)) {
-    maneuver.set_street_names(
-        std::move(
-            StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index),
-                                       prev_edge->GetNameList())));
+    maneuver.set_street_names(StreetNamesFactory::Create(trip_path_->GetCountryCode(node_index),
+                                       prev_edge->GetNameList()));
   }
 
   // Update the internal turn count
