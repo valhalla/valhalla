@@ -393,6 +393,10 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       // TODO:  Need to handle restictions that take place only at certain
       // times.  Currently, we only support kAllDaysOfWeek;
       switch (restriction.type()) {
+        case AccessType::kTimedAllowed:
+        case AccessType::kTimedDenied:
+          return false;
+        break;
         case AccessType::kHazmat:
           if (hazmat_ != restriction.value())
             return false;
@@ -454,6 +458,10 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       if (restriction.modes() & kTruckAccess) {
 
         switch (restriction.type()) {
+          case AccessType::kTimedAllowed:
+          case AccessType::kTimedDenied:
+            return false;
+          break;
           case AccessType::kHazmat:
             if (hazmat_ != restriction.value())
               return false;
