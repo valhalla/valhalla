@@ -571,7 +571,7 @@ json::MapPtr DirectedEdge::json() const {
     {"geo_attributes", json::map({
       {"length", static_cast<uint64_t>(length_)},
       {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
-      //{"curvature", static_cast<uint64_t>(curvature_)},
+      {"curvature", static_cast<uint64_t>(curvature_)},
     })},
     {"access", access_json(forwardaccess_)},
     //{"access", access_json(reverseaccess_)},
