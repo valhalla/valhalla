@@ -81,12 +81,12 @@ namespace {
     if(boost::regex_search(name, m, e)) {
       //enum class format_t{ UNKNOWN = 0, GZIP = 1, LZ4 = 2, RAW = 3 };
       fmt = static_cast<fmt_t>(m[5].length() ? (m[5] == ".lz4" ? 2 : (m[5] == ".gz" ? 1 : 0)) : 3);
-      auto lon = std::stoul(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
-      auto lat = std::stoul(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
+      auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
+      auto lat = std::stoi(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
       if(lon >= 0 && lon < 360 && lat >=0 && lat < 180)
         return lat * 360 + lon;
     }
-    return -1;
+    return std::numeric_limits<uint16_t>::max();
   }
 
   int16_t flip(int16_t value) {
@@ -138,9 +138,9 @@ namespace skadi {
     auto files = get_files(data_source);
     for(const auto& f : files) {
       //make sure its a valid index
-      format_t format;
+      format_t format = format_t::UNKNOWN;
       auto index = is_hgt(f, format);
-      if(index < mapped_cache.size() && format > mapped_cache[index].first) {
+      if(index < mapped_cache.size() && format != format_t::UNKNOWN) {
         auto size = file_size(f);
         if(format == format_t::RAW && size != HGT_BYTES) {
           LOG_WARN("Corrupt elevation data: " + f);
