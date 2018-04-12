@@ -61,7 +61,7 @@ class TripPathBuilder {
    * @param  trip_node     Trip node to add the edge information to.
    * @param  graphtile     Graph tile for accessing data.
    * @param   current_time Current time (seconds from midnight).
-   * @param  length_pct    Scale for the edge length for the partial distance
+   * @param  length_percentage Scale for the edge length for the partial distance
    *                       at begin and end edges
    */
   static odin::TripPath_Edge* AddTripEdge(const AttributesController& controller,
@@ -79,7 +79,7 @@ class TripPathBuilder {
   /**
     * Add trip intersecting edge.
    * @param  controller   Controller to determine which attributes to set.
-    * @param  edge_index  Index of the local intersecting path edge at intersection.
+    * @param  local_edge_index  Index of the local intersecting path edge at intersection.
     * @param  prev_edge_index  Index of the local previous path edge at intersection.
     * @param  curr_edge_index  Index of the local current path edge at intersection.
     * @param  nodeinfo  Node information of the intersection.

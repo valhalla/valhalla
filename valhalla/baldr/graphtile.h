@@ -62,8 +62,9 @@ class GraphTile {
 
   /**
    * Constructor given the graph Id, in memory tile data
-   * @param  graphid  Tile Id.
-   * @param  tile     Vector of char data with tile's data..
+   * @param  tile_url URL of tile
+   * @param  graphid Tile Id
+   * @param  curler curler that will handle tile downloading
    */
   GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler);
 
@@ -82,7 +83,6 @@ class GraphTile {
   /**
    * Get the tile Id given the full path to the file.
    * @param  fname    Filename with complete path.
-   * @param  tile_dir Base tile directory.
    * @return  Returns the tile Id.
    */
   static GraphId GetTileId(const std::string& fname);
@@ -278,7 +278,7 @@ class GraphTile {
    * @param   date_before_tile  Is the date that was inputed before
    *                            the tile creation date?
    * @param   wheelchair        Only find departures with wheelchair access if true
-   * @param   bicyle            Only find departures with bicycle access if true
+   * @param   bicycle           Only find departures with bicycle access if true
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departures are found.
    */
@@ -396,7 +396,7 @@ class GraphTile {
 
   /**
    * Get lane connections ending on this edge.
-   * @param  edge  GraphId of the directed edge.
+   * @param  idx  GraphId of the directed edge.
    * @return  Returns a list of lane connections ending on this edge.
    */
   std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;

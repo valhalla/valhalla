@@ -255,7 +255,7 @@ class GraphTileHeader {
 
   /**
    * Sets the number of transit transfers in this tile.
-   * @param  schedules   The number of transit transfers.
+   * @param  transfers   The number of transit transfers.
    */
   void set_transfercount(const uint32_t transfers);
 
@@ -366,7 +366,7 @@ class GraphTileHeader {
 
   /**
    * Sets the edge bin offsets
-   * @param the offsets
+   * @param offsets the offsets
    */
   void set_edge_bin_offsets(const uint32_t (&offsets)[baldr::kBinCount]);
 
@@ -380,7 +380,7 @@ class GraphTileHeader {
 
   /**
    * Sets the number of traffic segment Ids in this tile.
-   * @param  schedules   The number of traffic segment Ids.
+   * @param  count   The number of traffic segment Ids.
    */
   void set_traffic_id_count(const uint32_t count);
 
@@ -466,7 +466,7 @@ class GraphTileHeader {
 
   /**
    * Sets the offset to the end of the tile
-   * @param the offset in bytes to the end of the tile
+   * @param offset the offset in bytes to the end of the tile
    */
   void set_end_offset(uint32_t offset);
 

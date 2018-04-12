@@ -59,7 +59,6 @@ class DoubleBucketQueue {
    * is placed in the overflow bucket. If the cost is < the current bucket
    * cost then the label is placed in the current bucket to prevent underflow.
    * @param   label  Label index to add to the queue.
-   * @param   cost   Cost for this label.
    */
   void add(const uint32_t label) {
     get_bucket(labelcost_(label)).push_back(label);

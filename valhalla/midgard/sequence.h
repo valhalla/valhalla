@@ -322,55 +322,59 @@ class sequence {
       return *this;
     }
     iterator& operator=(const T& other) {
-      *(static_cast<T*>(parent->memmap) + index) = other;
+      // If index is beyond the end of the mmap buffer, then
+      // access items that may be in the write_buffer.
+      if (index >= parent->memmap.size()) {
+        parent->write_buffer[index - parent->memmap.size()] = other;
+      } else {
+        *(static_cast<T*>(parent->memmap) + index) = other;
+      }
       return *this;
     }
     operator T() {
-      return *(static_cast<T*>(parent->memmap) + index);
+      // If index is beyond the end of the mmap buffer, then
+      // access items that may be in the write_buffer.
+      if (index >= parent->memmap.size()) {
+        return parent->write_buffer.at(index - parent->memmap.size());
+      } else {
+         return *(static_cast<T*>(parent->memmap) + index);
+      }
     }
     T operator*() {
       return operator T();
     }
     iterator& operator++() {
-      parent->flush();
       ++index;
       return *this;
     }
     iterator operator++(int) {
-      parent->flush();
       auto other = *this;
       ++index;
       return other;
     }
     iterator& operator+=(size_t offset) {
-      parent->flush();
       index += offset;
       return *this;
     }
     iterator operator+(size_t offset) {
-      parent->flush();
       auto other = *this;
       other.index += offset;
       return other;
     }
     iterator& operator--() {
-      parent->flush();
       --index;
       return *this;
     }
     iterator operator--(int) {
-      parent->flush();
       auto other = *this;
       --index;
       return other;
     }
     iterator& operator-=(size_t offset) {
-      parent->flush();
       index -= offset;
       return *this;
     }
     iterator operator-(size_t offset) {
-      parent->flush();
       auto other = *this;
       other.index -= offset;
       return other;
@@ -411,7 +415,6 @@ class sequence {
 
   iterator at(size_t index) {
     //dump to file and make an element
-    flush();
     return iterator(this, index);
   }
 
@@ -438,8 +441,7 @@ class sequence {
 
   //invalid end iterator
   iterator end() {
-    flush();
-    return iterator(this, memmap.size());
+    return iterator(this, memmap.size() + write_buffer.size());
   }
 
  protected:

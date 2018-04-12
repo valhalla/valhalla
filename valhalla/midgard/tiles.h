@@ -151,7 +151,7 @@ class Tiles {
 
   /**
    * Get a maximum tileid given a bounds and a tile size.
-   * @param bound       the region for which to compute the maximum tile id
+   * @param bounds      the region for which to compute the maximum tile id
    * @param tile_size   the size of a tile within the region
    * @return the highest tile number within the region
    */
@@ -272,7 +272,6 @@ class Tiles {
    * and recursively checking if tile is inside and checking/adding
    * neighboring tiles
    * @param  boundingbox  Bounding box
-   * @param  maxTiles  Maximum number of tiles to find.
    */
   std::vector<int32_t> TileList(const AABB2<coord_t>& boundingbox) const;
 
@@ -280,8 +279,7 @@ class Tiles {
    * Color a "connectivity map" starting with a sparse map of uncolored tiles.
    * Any 2 tiles that have a connected path between them will have the same
    * value in the connectivity map.
-   * @param  tilemap  map of tileid to color value
-   * @return
+   * @param  connectivity_map  map of tileid to color value
    */
   void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) const;
 
@@ -291,7 +289,7 @@ class Tiles {
    * @return             the map of each tile intersected to a list of its intersected sub cell indices
    */
   template <class container_t>
-  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const container_t& linestring) const;
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const container_t& line_string) const;
 
   /**
    * Intersect the bounding box with the tiles to see which tiles and sub-cells

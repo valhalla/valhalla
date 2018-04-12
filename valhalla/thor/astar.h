@@ -94,7 +94,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_;
+  EdgeStatus edgestatus_;
 
   // Destinations, id and cost
   std::map<uint64_t, sif::Cost> destinations_;

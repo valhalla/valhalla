@@ -220,7 +220,7 @@ class PedestrianCost : public DynamicCost {
   /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
-   * @param  edge  Pointer to node information.
+   * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
@@ -296,6 +296,11 @@ class PedestrianCost : public DynamicCost {
      };
    }
 
+    /**
+     * Returns a function/functor to be used in location searching which will
+     * exclude results from the search by looking at each node's attribution
+     * @return Function/functor to be used in filtering out nodes
+     */
    virtual const NodeFilter GetNodeFilter() const {
      //throw back a lambda that checks the access for this type of costing
      auto access_mask = access_mask_;
@@ -303,12 +308,6 @@ class PedestrianCost : public DynamicCost {
        return !(node->access() & access_mask);
      };
    }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
 
  public:
   // Type: foot (default), wheelchair, etc.

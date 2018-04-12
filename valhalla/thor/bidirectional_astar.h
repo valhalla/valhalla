@@ -96,8 +96,8 @@ class BidirectionalAStar : public PathAlgorithm {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_reverse_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_forward_;
-  std::shared_ptr<EdgeStatus> edgestatus_reverse_;
+  EdgeStatus edgestatus_forward_;
+  EdgeStatus edgestatus_reverse_;
 
   // Best candidate connection and threshold to extend search.
   uint32_t threshold_;
@@ -108,7 +108,6 @@ class BidirectionalAStar : public PathAlgorithm {
    * and reverse search.
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
-   * @param  costing Dynamic costing method.
    */
   void Init(const PointLL& origll, const PointLL& destll);
 
@@ -131,15 +130,14 @@ class BidirectionalAStar : public PathAlgorithm {
    * Add edges at the origin to the forward adjacency list.
    * @param  graphreader  Graph tile reader.
    * @param  origin       Location information of the destination
-   * @param  costing      Dynamic costing
    */
   void SetOrigin(baldr::GraphReader& graphreader,
                  odin::Location& origin);
 
   /**
    * Add destination edges to the reverse path adjacency list.
+   * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination
-   * @param   costing      Dynamic costing
    */
   void SetDestination(baldr::GraphReader& graphreader,
                        const odin::Location& dest);

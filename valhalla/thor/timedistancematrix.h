@@ -66,7 +66,7 @@ class TimeDistanceMatrix {
    * @param  origin        Location of the origin.
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
+   * @param  mode_costing  Costing methods.
    * @param  mode          Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
@@ -83,7 +83,7 @@ class TimeDistanceMatrix {
    * @param  dest          Location of the destination.
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
+   * @param  mode_costing  Costing methods.
    * @param  mode          Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance to the destination index from all other locations
@@ -99,7 +99,7 @@ class TimeDistanceMatrix {
    * matrix from many locations to many locations.
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
+   * @param  mode_costing  Costing methods.
    * @param  mode          Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance between all pairs of locations
@@ -116,7 +116,7 @@ class TimeDistanceMatrix {
    * @param  source_location_list  List of source/origin locations.
    * @param  target_location_list  List of target/destination locations.
    * @param  graphreader           Graph reader for accessing routing graph.
-   * @param  costing               Costing methods.
+   * @param  mode_costing          Costing methods.
    * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
@@ -159,7 +159,7 @@ class TimeDistanceMatrix {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_;
+  EdgeStatus edgestatus_;
 
   AStarHeuristic astarheuristic_;
 
@@ -232,7 +232,6 @@ class TimeDistanceMatrix {
    * Set destinations for the many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
-   * @param  costing       Costing method.
    */
   void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
             const google::protobuf::RepeatedPtrField<odin::Location>& locations);
