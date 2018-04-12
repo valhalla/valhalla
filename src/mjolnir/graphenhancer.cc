@@ -213,8 +213,11 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock,
 
   // Expand until we either find a tertiary or higher classification,
   // expand more than kUnreachableIterations nodes, or cannot expand
-  // any further.
+  // any further. To reduce calls to lock and unlock keep a record of
+  // current tile and only read a new tile when needed.
   uint32_t n = 0;
+  GraphId prior_tile;
+  const GraphTile* tile;
   while (n < kUnreachableIterations) {
     if (expandset.empty()) {
       // Have expanded all nodes without reaching a higher classification
@@ -226,9 +229,12 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock,
     const GraphId expandnode = *expandset.cbegin();
     expandset.erase(expandset.begin());
     visitedset.insert(expandnode);
-    lock.lock();
-    const GraphTile* tile = reader.GetGraphTile(expandnode);
-    lock.unlock();
+    if (expandnode.Tile_Base() != prior_tile) {
+      lock.lock();
+      tile = reader.GetGraphTile(expandnode);
+      lock.unlock();
+      prior_tile = expandnode.Tile_Base();
+    }
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
@@ -260,6 +266,10 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
 
   // Expand edges until exhausted, the maximum number of expansions occur,
   // or end up back at the starting node. No node can be visited twice.
+  // To reduce calls to lock and unlock keep a record of current tile and
+  // only read a new tile when needed.
+  GraphId prior_tile;
+  const GraphTile* tile;
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
     if (expandset.empty())
@@ -270,9 +280,12 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const GraphId expandnode = *expandset.cbegin();
     expandset.erase(expandset.begin());
     visitedset.insert(expandnode);
-    lock.lock();
-    const GraphTile* tile = reader.GetGraphTile(expandnode);
-    lock.unlock();
+    if (expandnode.Tile_Base() != prior_tile) {
+      lock.lock();
+      tile = reader.GetGraphTile(expandnode);
+      lock.unlock();
+      prior_tile = expandnode.Tile_Base();
+    }
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
@@ -306,7 +319,8 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
 }
 
 // Test if the edge is internal to an intersection.
-bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
+bool IsIntersectionInternal(const GraphTile* start_tile,
+                            GraphReader& reader, std::mutex& lock,
                             const GraphId& startnode,
                             NodeInfo& startnodeinfo,
                             DirectedEdge& directededge,
@@ -334,9 +348,7 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
   // Iterate through inbound edges and get turn degrees from driveable inbound
   // edges onto the candidate edge.
   bool oneway_inbound = false;
-  lock.lock();
-  const GraphTile* tile = reader.GetGraphTile(startnode);
-  lock.unlock();
+  const GraphTile* tile = start_tile;
   uint32_t heading = startnodeinfo.heading(idx);
   std::set<Turn::Type> incoming_turn_type;
   const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
@@ -1227,7 +1239,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
-        if (IsIntersectionInternal(reader, lock, startnode, nodeinfo,
+        if (IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo,
                                     directededge, j)) {
           directededge.set_internal(true);
           stats.internalcount++;
