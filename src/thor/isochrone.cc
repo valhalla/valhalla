@@ -298,7 +298,6 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
 
   // Compute the isotile
   uint32_t n = 0;
-  const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -443,7 +442,6 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
 
   // Compute the isotile
   uint32_t n = 0;
-  const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -628,7 +626,6 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     bool mode_change = false;
 
     // Expand from end node.
-    uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
@@ -876,7 +873,6 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
   // so this doesn't miss shape that crosses tile corners
   float delta = (shape_interval_ * (secs1 - secs0)) / edge->length();
   auto itr1 = resampled.begin();
-  auto itr2 = itr1 + 1;
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
     secs += delta;
     auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});

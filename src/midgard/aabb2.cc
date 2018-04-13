@@ -117,7 +117,6 @@ bool AABB2<coord_t>::Intersect(coord_t& u, coord_t& v) const {
     return true;
   //find intercepts with each box edge
   std::list<coord_t> intersections;
-  bool assigned = false;
   x_t x;
   y_t y;
   //intersect with each edge keeping it if its on this box and on the segment uv

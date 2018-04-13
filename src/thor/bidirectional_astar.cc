@@ -343,8 +343,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(odin::Location& origin,
   int n = 1;
   uint32_t forward_pred_idx, reverse_pred_idx;
   BDEdgeLabel fwd_pred, rev_pred;
-  const GraphTile* tile;
-  const GraphTile* tile2;
   bool expand_forward  = true;
   bool expand_reverse  = true;
   while (true) {

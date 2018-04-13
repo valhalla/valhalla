@@ -250,7 +250,6 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
   // If more than 2 points, walk edges of the polyline until the length
   // is exceeded.
   if (n > 1) {
-    int i = n - 2;
     double d = 0.0;
     double seglength;
     auto pt1 = pts.begin() + idx1;

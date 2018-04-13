@@ -501,7 +501,6 @@ struct tar {
     //rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     //but we can concatenate tars and get empty blocks in between so we'll just be pretty
     //lax about it and we'll count the ones we cant make sense of
-    constexpr header_t BLANK{};
     const char* position = mm.get();
     while(position < mm.get() + mm.size()) {
       //get the header for this file

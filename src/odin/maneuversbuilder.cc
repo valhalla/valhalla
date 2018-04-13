@@ -1436,7 +1436,6 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
                                                   int node_index) {
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   auto* curr_edge = trip_path_->GetCurrEdge(node_index);
-  auto* prev_node = trip_path_->GetEnhancedNode(node_index-1);
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit

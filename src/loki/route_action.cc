@@ -22,7 +22,6 @@ namespace {
 
   void check_distance(const GraphReader& reader, const google::protobuf::RepeatedPtrField<odin::Location>& locations, float max_distance){
     //see if any locations pairs are unreachable or too far apart
-    auto lowest_level = TileHierarchy::levels().rbegin();
     for(auto location = ++locations.begin(); location != locations.end(); ++location) {
       //check if distance between latlngs exceed max distance limit for each mode of travel
       auto path_distance = to_ll(*std::prev(location)).Distance(to_ll(*location));
