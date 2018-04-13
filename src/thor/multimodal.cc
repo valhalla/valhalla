@@ -316,7 +316,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     }*/
 
     // Expand from end node.
-    uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
