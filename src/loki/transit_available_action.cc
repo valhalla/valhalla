@@ -30,7 +30,6 @@ namespace valhalla {
           AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
                               Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
           std::vector<int32_t> tilelist = tiles.TileList(bbox);
-          bool istransit = false;
           for (auto id : tilelist) {
             // transit is level hierarchy level 3
             auto color = connectivity_map->get_color(GraphId(id, 3, 0));

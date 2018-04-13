@@ -210,7 +210,6 @@ std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripP
       // Iterate over results to set edge_index, if found
       int edge_index = 0;
       int last_matched_edge_index = edge_index;
-      int match_index = 0;
       auto edge = path_edges.cbegin();
       auto last_matched_edge = edge;
       for (auto& enhanced_match_result : enhanced_match_results) {

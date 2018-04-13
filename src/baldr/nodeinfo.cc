@@ -36,7 +36,6 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
   });
 
   //timezone
-  const auto& tz_db = DateTime::get_tz_db();
   auto tz = DateTime::get_tz_db().from_index(tz_index);
   if(tz) {
     //TODO: so much to do but posix tz has pretty much all the info
