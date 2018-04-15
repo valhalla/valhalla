@@ -102,7 +102,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
     if (es->set() == EdgeSet::kPermanent ||
-       !costing_->Allowed(directededge, pred, tile, edgeid) ||
+       !costing_->Allowed(directededge, pred, tile, edgeid, 0) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile,
                                  edgeid, true)) {
       continue;
@@ -266,7 +266,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
     if (opp_edge == nullptr ||
-       !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge)) {
+       !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0)) {
       continue;
     }
 

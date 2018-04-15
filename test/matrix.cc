@@ -41,7 +41,8 @@ namespace {
     bool Allowed(const DirectedEdge* edge,
           const EdgeLabel& pred,
           const GraphTile*& tile,
-          const GraphId& edgeid) const {
+          const GraphId& edgeid,
+          const uint32_t current_time) const {
       if (!(edge->forwardaccess() & kAutoAccess) ||
           (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
           (pred.restrictions() & (1 << edge->localedgeidx())) ||
@@ -57,7 +58,8 @@ namespace {
           const EdgeLabel& pred,
           const DirectedEdge* opp_edge,
           const GraphTile*& tile,
-          const GraphId& opp_edgeid) const {
+          const GraphId& opp_edgeid,
+          const uint32_t current_time) const {
       if (!(opp_edge->forwardaccess() & kAutoAccess) ||
            (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
            (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||

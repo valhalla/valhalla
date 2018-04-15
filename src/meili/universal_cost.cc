@@ -12,13 +12,14 @@ class UniversalCost : public sif::DynamicCost
 {
  public:
   UniversalCost(const boost::property_tree::ptree& pt)
-      : DynamicCost(pt, kUniversalTravelMode) {}
+      : DynamicCost(pt, kUniversalTravelMode) {
+  }
 
   bool Allowed(const baldr::DirectedEdge* edge,
                const sif::EdgeLabel& pred,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& edgeid) const override
-  {
+               const baldr::GraphId& edgeid,
+               const uint32_t current_time) const override {
     // Disable transit lines
     if (edge->IsTransitLine()) {
       return false;
@@ -34,24 +35,26 @@ class UniversalCost : public sif::DynamicCost
                       const sif::EdgeLabel& pred,
                       const baldr::DirectedEdge* opp_edge,
                       const baldr::GraphTile*& tile,
-                      const baldr::GraphId& edgeid) const override
-  { return true; }
+                      const baldr::GraphId& edgeid,
+                      const uint32_t current_time) const override {
+    return true;
+  }
 
-  bool Allowed(const baldr::NodeInfo* node) const override
-  { return true; }
+  bool Allowed(const baldr::NodeInfo* node) const override {
+    return true;
+  }
 
-  sif::Cost EdgeCost(const baldr::DirectedEdge* edge) const override
-  {
+  sif::Cost EdgeCost(const baldr::DirectedEdge* edge) const override {
     float length = edge->length();
     return { length, length };
   }
 
   // Disable astar
-  float AStarCostFactor() const override
-  { return 0.f; }
+  float AStarCostFactor() const override {
+    return 0.f;
+  }
 
-  virtual const sif::EdgeFilter GetEdgeFilter() const override
-  {
+  virtual const sif::EdgeFilter GetEdgeFilter() const override {
     //throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge){
       // Disable transit lines
@@ -62,8 +65,7 @@ class UniversalCost : public sif::DynamicCost
     };
   }
 
-  virtual const sif::NodeFilter GetNodeFilter() const override
-  {
+  virtual const sif::NodeFilter GetNodeFilter() const override {
     //throw back a lambda that checks the access for this type of costing
     return [](const baldr::NodeInfo* node){
       // Do not filter any nodes
@@ -73,8 +75,9 @@ class UniversalCost : public sif::DynamicCost
 };
 
 
-sif::cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config)
-{ return std::make_shared<UniversalCost>(config); }
+sif::cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<UniversalCost>(config);
+}
 
 }
 
