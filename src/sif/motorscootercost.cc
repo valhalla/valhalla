@@ -177,35 +177,45 @@ class MotorScooterCost : public DynamicCost {
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
-   * based on other parameters.
-   * @param  edge     Pointer to a directed edge.
-   * @param  pred     Predecessor edge information.
-   * @param  tile     current tile
-   * @param  edgeid   edgeid that we care about
-   * @return  Returns true if access is allowed, false if not.
+   * based on other parameters such as conditional restrictions and
+   * conditional access that can depend on time and travel mode.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the directed edge.
+   * @param  current_time   Current time (seconds since epoch). A value of 0
+   *                        indicates the route is not time dependent.
+   * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& edgeid) const;
+                       const baldr::GraphId& edgeid,
+                       const uint32_t current_time) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
-   * (from destination towards origin). Both opposing edges are
-   * provided.
+   * (from destination towards origin). Both opposing edges (current and
+   * predecessor) are provided. The access check is generally based on mode
+   * of travel and the access modes allowed on the edge. However, it can be
+   * extended to exclude access based on other parameters such as conditional
+   * restrictions and conditional access that can depend on time and travel
+   * mode.
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           Tile for the opposing edge (for looking
-   *                        up restrictions).
-   * @param  opp_edgeid     Opposing edge Id
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @param  current_time   Current time (seconds since epoch). A value of 0
+   *                        indicates the route is not time dependent.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
-                 const EdgeLabel& pred,
-                 const baldr::DirectedEdge* opp_edge,
-                 const baldr::GraphTile*& tile,
-                 const baldr::GraphId& opp_edgeid) const;
+                              const EdgeLabel& pred,
+                              const baldr::DirectedEdge* opp_edge,
+                              const baldr::GraphTile*& tile,
+                              const baldr::GraphId& opp_edgeid,
+                              const uint32_t current_time) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -437,7 +447,8 @@ uint32_t MotorScooterCost::access_mode() const {
 bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                      const EdgeLabel& pred,
                      const baldr::GraphTile*& tile,
-                     const baldr::GraphId& edgeid) const {
+                     const baldr::GraphId& edgeid,
+                     const uint32_t current_time) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(edge->forwardaccess() & kMopedAccess) ||
@@ -456,7 +467,8 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
-                             const baldr::GraphId& opp_edgeid) const {
+                             const baldr::GraphId& opp_edgeid,
+                             const uint32_t current_time) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kMopedAccess) ||
