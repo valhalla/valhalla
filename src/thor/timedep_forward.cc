@@ -61,14 +61,14 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx,
-                      true, destination, best_path);
+                      true, localtime, destination, best_path);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx,
-                      true, destination, best_path);
+                      true, localtime, destination, best_path);
       }
       continue;
     }
@@ -81,7 +81,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
         (shortcuts & directededge->superseded()) ||
        !costing_->Allowed(directededge, pred, tile, edgeid, localtime) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile,
-                                     edgeid, true)) {
+                                     edgeid, true, localtime)) {
       continue;
     }
 

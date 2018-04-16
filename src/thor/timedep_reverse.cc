@@ -35,7 +35,7 @@ TimeDepReverse::~TimeDepReverse() {
 void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                    const GraphId& node, const EdgeLabel& pred,
                    const uint32_t pred_idx, const bool from_transition,
-                   const odin::Location& destination,
+                   const uint32_t localtime, const odin::Location& destination,
                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -61,14 +61,14 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
         ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx,
-                      true, destination, best_path);
+                      true, localtime, destination, best_path);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
         ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx,
-                      true, destination, best_path);
+                      true, localtime, destination, best_path);
       }
       continue;
     }
@@ -81,7 +81,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
         (shortcuts & directededge->superseded()) ||
        !costing_->Allowed(directededge, pred, tile, edgeid, localtime) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile,
-                                     edgeid, true)) {
+                                     edgeid, true, localtime)) {
       continue;
     }
 
