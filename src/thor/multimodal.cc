@@ -348,7 +348,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       blockid = 0;
       if (directededge->IsTransitLine()) {
         // Check if transit costing allows this edge
-        if (!tc->Allowed(directededge, pred, tile, edgeid)) {
+        if (!tc->Allowed(directededge, pred, tile, edgeid, 0)) {
           continue;
         }
         //check if excluded.
@@ -423,7 +423,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         // is allowed. If mode is pedestrian this will validate walking
         // distance has not been exceeded.
         if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(
-                directededge, pred, tile, edgeid)) {
+                directededge, pred, tile, edgeid, 0)) {
           continue;
         }
 
@@ -754,7 +754,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
       }
 
       // Skip if access is not allowed for this mode
-      if (!costing->Allowed(directededge, pred, tile, edgeid)) {
+      if (!costing->Allowed(directededge, pred, tile, edgeid, 0)) {
         continue;
       }
 
