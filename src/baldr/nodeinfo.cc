@@ -1,5 +1,5 @@
 #include "baldr/nodeinfo.h"
-#include <boost/functional/hash.hpp>
+//#include <boost/functional/hash.hpp>
 #include <cmath>
 #include "midgard/logging.h"
 

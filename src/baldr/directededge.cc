@@ -1,6 +1,5 @@
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
-#include <boost/functional/hash.hpp>
 #include "midgard/logging.h"
 
 using namespace valhalla::baldr;
