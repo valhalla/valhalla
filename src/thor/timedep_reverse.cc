@@ -198,7 +198,8 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
-  // Set route start time (seconds from midnight), date, and day of week
+  // Set route start time (seconds from midnight), date, and day of week.
+  // TODO - get the timezone at the start.
   uint32_t start_time = DateTime::seconds_from_midnight(destination.date_time());
 
   // Find shortest path
@@ -272,7 +273,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     }
 
     // Set local time (subtract elapsed time along the path from the start
-    // time). TODO: adjust for time zone.
+    // time). TODO: adjust for time zone if different than starting tz
     uint32_t localtime = start_time - pred.cost().secs;
 
     // Expand forward from the end node of the predecessor edge.

@@ -199,6 +199,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   ModifyHierarchyLimits(mindist, density);
 
   // Set route start time (seconds from midnight), date, and day of week
+  // TODO - store the timezone at the start.
   uint32_t start_time = DateTime::seconds_from_midnight(origin.date_time());
 
   // Find shortest path
@@ -271,7 +272,8 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
       continue;
     }
 
-    // Set local time. TODO: adjust for time zone.
+    // Set local time. TODO: adjust for time zone (if different from timezone
+    // at the start).
     uint32_t localtime = start_time + pred.cost().secs;
 
     // Expand forward from the end node of the predecessor edge.
