@@ -36,7 +36,7 @@ constexpr uint32_t kDefaultMaxGradeFoot = 90;
 constexpr uint32_t kDefaultMaxGradeWheelchair = 12; // Conservative for now...
 
 // Other defaults (not dependent on type)
-constexpr uint8_t kDefaultMaxHikingDifficulty = 1; // T1 (kHiking)
+constexpr uint8_t kDefaultMaxHikingDifficulty = 6; // T1 (kHiking)
 constexpr float kModeFactor             = 1.5f;   // Favor this mode?
 constexpr float kDefaultManeuverPenalty = 5.0f;   // Seconds
 constexpr float kDefaultGatePenalty     = 10.0f;  // Seconds
