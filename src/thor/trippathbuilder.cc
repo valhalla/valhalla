@@ -1377,10 +1377,18 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Set the mode and travel type
   if (mode == sif::TravelMode::kBicycle) {
-    if (controller.attributes.at(kEdgeTravelMode))
-      trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
-    if (controller.attributes.at(kEdgeBicycleType))
-      trip_edge->set_bicycle_type(GetTripPathBicycleType(travel_type));
+    // Override bicycle mode with pedestrian if dismount flag or steps
+    if (directededge->dismount() || directededge->use() == Use::kSteps) {
+      if (controller.attributes.at(kEdgeTravelMode))
+        trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPedestrian);
+      if (controller.attributes.at(kEdgePedestrianType))
+        trip_edge->set_pedestrian_type(odin::TripPath_PedestrianType::TripPath_PedestrianType_kFoot);
+    } else {
+      if (controller.attributes.at(kEdgeTravelMode))
+        trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
+      if (controller.attributes.at(kEdgeBicycleType))
+        trip_edge->set_bicycle_type(GetTripPathBicycleType(travel_type));
+    }
   } else if (mode == sif::TravelMode::kDrive) {
     if (controller.attributes.at(kEdgeTravelMode))
       trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kDrive);
