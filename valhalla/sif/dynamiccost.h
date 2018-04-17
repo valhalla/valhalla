@@ -228,6 +228,8 @@ class DynamicCost {
    * @param  tile        Graph tile (to read restriction if needed).
    * @param  edgeid      Edge Id for the directed edge.
    * @param  forward     Forward search or reverse search.
+   * @param  current_time Current time (seconds since epoch). A value of 0
+   *                     indicates the route is not time dependent.
    * @return Returns true it there is a complex restriction onto this edge
    *         that matches the mode and the predecessor list for the current
    *         path matches a complex restriction.
@@ -238,7 +240,8 @@ class DynamicCost {
                   const edge_labels_container_t& edge_labels,
                   const baldr::GraphTile*& tile,
                   const baldr::GraphId& edgeid,
-                  const bool forward) const {
+                  const bool forward,
+                  const uint32_t current_time = 0) const {
     // Lambda to get the next predecessor EdgeLabel (that is not a transition)
     auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
       // Get the next predecessor - make sure it is valid. Continue to get
