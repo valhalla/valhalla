@@ -97,35 +97,43 @@ class TransitCost : public DynamicCost {
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
-   * based on other parameters.
-   * @param  edge     Pointer to a directed edge.
-   * @param  pred     Predecessor edge information.
-   * @param  tile     current tile
-   * @param  edgeid   edgeid that we care about
-   * @return  Returns true if access is allowed, false if not.
+   * based on other parameters such as conditional restrictions and
+   * conditional access that can depend on time and travel mode.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the directed edge.
+   * @param  current_time   Current time (seconds since epoch).
+   * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& edgeid) const;
+                       const baldr::GraphId& edgeid,
+                       const uint32_t current_time) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
-   * (from destination towards origin). Both opposing edges are
-   * provided.
+   * (from destination towards origin). Both opposing edges (current and
+   * predecessor) are provided. The access check is generally based on mode
+   * of travel and the access modes allowed on the edge. However, it can be
+   * extended to exclude access based on other parameters such as conditional
+   * restrictions and conditional access that can depend on time and travel
+   * mode.
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           Tile for the opposing edge (for looking
-   *                        up restrictions).
-   * @param  opp_edgeid     Opposing edge Id
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @param  current_time   Current time (seconds since epoch).
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
-                 const EdgeLabel& pred,
-                 const baldr::DirectedEdge* opp_edge,
-                 const baldr::GraphTile*& tile,
-                 const baldr::GraphId& opp_edgeid) const;
+                              const EdgeLabel& pred,
+                              const baldr::DirectedEdge* opp_edge,
+                              const baldr::GraphTile*& tile,
+                              const baldr::GraphId& opp_edgeid,
+                              const uint32_t current_time) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -535,7 +543,8 @@ uint32_t TransitCost::access_mode() const {
 bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
                           const baldr::GraphTile*& tile,
-                          const baldr::GraphId& edgeid) const {
+                          const baldr::GraphId& edgeid,
+                          const uint32_t current_time) const {
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
@@ -561,7 +570,8 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& opp_edgeid) const {
+               const baldr::GraphId& opp_edgeid,
+               const uint32_t current_time) const {
   // TODO - obtain and check the access restrictions.
 
   // This method should not be called since time based routes do not use

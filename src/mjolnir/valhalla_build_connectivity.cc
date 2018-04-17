@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
         ppm.push_back(color->second);
       }
     }
-    assert(ppm.size() == height*width*sizeof(RGB)) ;
+    assert(ppm.size() == height*width) ;
 
     std::string tmp;
     outfile << "P6" << std::endl; //  << “# foreground “ << std::endl;

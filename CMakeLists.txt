@@ -10,7 +10,7 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 set(boost_components
   date_time
@@ -35,7 +35,7 @@ include_directories(${LZ4_INCLUDE_DIR})
 find_package(Lua REQUIRED)
 include_directories(${LUA_INCLUDE_DIR})
 
-find_package(protobuf REQUIRED)
+find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 find_package(SQLite3 REQUIRED)
