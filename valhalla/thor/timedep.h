@@ -41,6 +41,7 @@ class TimeDepForward : public AStarPathAlgorithm {
           const sif::TravelMode mode);
 
  protected:
+  uint32_t origin_tz_index_;
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -61,8 +62,16 @@ class TimeDepForward : public AStarPathAlgorithm {
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node, const sif::EdgeLabel& pred,
                      const uint32_t pred_idx, const bool from_transition,
-                     const uint32_t localtime, const odin::Location& dest,
+                     uint32_t localtime, const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
+
+  /**
+   * Get the timezone at the origin. Uses the timezone at the end node
+   * of the lowest cost edge.
+   * @param  graphreader  Graph tile reader.
+   * @return Returns the timezone index or -1 if an error occurs.
+   */
+  int GetOriginTimezone(baldr::GraphReader& graphreader);
 };
 
 /**
@@ -100,6 +109,14 @@ class TimeDepReverse : public AStarPathAlgorithm {
           const sif::TravelMode mode);
 
  protected:
+  uint32_t dest_tz_index_;
+
+  // Access mode used by the costing method
+  uint32_t access_mode_;
+
+  // Vector of edge labels that support reverse search (so use the
+  // bidirectional edge label structure.
+  std::vector<sif::BDEdgeLabel> edgelabels_rev_;
 
   /**
    * Expand from the node along the reverse search path. Immediately expands
@@ -110,6 +127,7 @@ class TimeDepReverse : public AStarPathAlgorithm {
    * @param  node         Graph Id of the node being expanded.
    * @param  pred         Predecessor edge label (for costing).
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
+   * @param  opp_pred_edge Opposing predecessor directed edge.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
    * @param  localtime    Current local time.
@@ -118,10 +136,39 @@ class TimeDepReverse : public AStarPathAlgorithm {
    *                      EdgeLabels and the cost.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node, const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx, const bool from_transition,
-                     const uint32_t localtime, const odin::Location& dest,
+                     const baldr::GraphId& node, const sif::BDEdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const baldr::DirectedEdge* opp_pred_edge,
+                     const bool from_transition,
+                     uint32_t localtime, const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
+
+  /**
+   * Get the timezone at the destination. Uses the timezone at the end node
+   * of the lowest cost edge.
+   * @param  graphreader  Graph tile reader.
+   * @return Returns the timezone index or -1 if an error occurs.
+   */
+  int GetDestinationTimezone(baldr::GraphReader& graphreader);
+
+  /**
+   * The origin of the reverse path is the destination location. Add edges at the
+   * destination to the adjacency list to start the reverse path search.
+   * @param  graphreader  Graph tile reader.
+   * @param  origin       Location information of the origin.
+   * @param  dest         Location information of the destination.
+   */
+  void SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin,
+                 odin::Location& destination);
+
+  /**
+   * The destination of the reverse path is the origin location. Set the
+   * destination edge(s) so we know when to terminate the search.
+   * @param   graphreader  Graph tile reader.
+   * @param   dest         Location information of the destination.
+   * @return  Returns the relative density near the destination (0-15)
+   */
+  uint32_t SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
 };
 
 }

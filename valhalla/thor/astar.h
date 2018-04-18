@@ -142,7 +142,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
-  void SetOrigin(baldr::GraphReader& graphreader,
+  virtual void SetOrigin(baldr::GraphReader& graphreader,
                  odin::Location& origin,
                  const odin::Location& dest);
 
@@ -152,7 +152,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  uint32_t SetDestination(baldr::GraphReader& graphreader,
+  virtual uint32_t SetDestination(baldr::GraphReader& graphreader,
                           const odin::Location& dest);
 
   /**
