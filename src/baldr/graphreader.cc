@@ -116,7 +116,7 @@ public:
     return std::make_pair(tile, t->second.second);
   }
 
-  const auto &getTiles(){
+  const std::unordered_map<uint64_t, std::pair<char*, size_t> > &getTiles(){
     return tiles_;
   }
 private:
