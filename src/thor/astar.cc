@@ -424,11 +424,11 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
           }
         }
       }
+    }
 
-      // Store the closest node info
-      if (closest_ni == nullptr) {
-        closest_ni = nodeinfo;
-      }
+    // Store the closest node info
+    if (closest_ni == nullptr) {
+      closest_ni = nodeinfo;
     }
 
     // Compute sortcost
@@ -448,6 +448,13 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_->add(idx);
     edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
+  }
+
+  // Set the origin timezone
+  if (closest_ni != nullptr && origin.has_date_time() &&
+      origin.date_time() == "current") {
+    origin.set_date_time(DateTime::iso_date_time(
+        DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
 }
 
