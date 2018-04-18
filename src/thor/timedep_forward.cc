@@ -28,12 +28,13 @@ TimeDepForward::~TimeDepForward() {
   Clear();
 }
 
+
+// Get the timezone at the origin.
 int TimeDepForward::GetOriginTimezone(GraphReader& graphreader) {
-  uint32_t predindex = adjacencylist_->pop();
-  if (predindex == kInvalidLabel) {
+  if (edgelabels_.size() == 0) {
     return -1;
   }
-  GraphId node = edgelabels_[predindex].endnode();
+  GraphId node = edgelabels_[0].endnode();
   const GraphTile* tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return -1;
@@ -66,6 +67,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
   if (nodeinfo->timezone() != origin_tz_index_) {
     // What is the difference in timezone offsets?
     localtime += 0; // TODO
+    printf("localtime = %d tz %d\n", localtime, nodeinfo->timezone());
   }
 
   // Expand from end node.
@@ -208,10 +210,6 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
 
   // Set the origin timezone to be the timezone at the end node
   origin_tz_index_ = GetOriginTimezone(graphreader);
-  if (origin.date_time() == "current") {
-    origin.set_date_time(DateTime::iso_date_time(
-        DateTime::get_tz_db().from_index(origin_tz_index_)));
-  }
 
   // Set route start time (seconds from midnight), date, and day of week
   uint32_t start_time = DateTime::seconds_from_midnight(origin.date_time());

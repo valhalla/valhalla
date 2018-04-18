@@ -13,6 +13,8 @@ namespace thor {
 
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
+// TODO - need to override the Init method!
+
 // Default constructor
 TimeDepReverse::TimeDepReverse()
     : AStarPathAlgorithm() {
