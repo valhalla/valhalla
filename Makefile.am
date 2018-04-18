@@ -659,6 +659,7 @@ check_PROGRAMS = \
 	test/optimizer \
 	test/attributes_controller \
 	test/astar \
+	test/astar2 \
 	test/serializers \
 	test/traffic_matcher \
 	test/autocost \
@@ -848,6 +849,9 @@ test_attributes_controller_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFL
 test_astar_SOURCES = test/astar.cc test/test.cc
 test_astar_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_astar_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_astar2_SOURCES = test/astar2.cc test/test.cc
+test_astar2_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_astar2_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_serializers_SOURCES = test/serializers.cc test/test.cc
 test_serializers_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_serializers_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
