@@ -31,12 +31,12 @@ TimeDepReverse::~TimeDepReverse() {
   Clear();
 }
 
+// Get the timezone at the destination.
 int TimeDepReverse::GetDestinationTimezone(GraphReader& graphreader) {
-  uint32_t predindex = adjacencylist_->pop();
-  if (predindex == kInvalidLabel) {
+  if (edgelabels_rev_.size() == 0) {
     return -1;
   }
-  GraphId node = edgelabels_rev_[predindex].endnode();
+  GraphId node = edgelabels_rev_[0].endnode();
   const GraphTile* tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return -1;
@@ -44,6 +44,35 @@ int TimeDepReverse::GetDestinationTimezone(GraphReader& graphreader) {
   return tile->node(node)->timezone();
 }
 
+// Initialize prior to finding best path
+void TimeDepReverse::Init(const PointLL& origll, const PointLL& destll) {
+  // Set the destination and cost factor in the A* heuristic
+  astarheuristic_.Init(destll, costing_->AStarCostFactor());
+
+  // Get the initial cost based on A* heuristic from origin
+  float mincost = astarheuristic_.Get(origll);
+
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects.
+  // TODO - reserve based on estimate based on distance and route type.
+  edgelabels_rev_.reserve(kInitialEdgeLabelCount);
+
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) {
+    return edgelabels_rev_[label].sortcost();
+  };
+
+  // Construct adjacency list, clear edge status.
+  // Set bucket size and cost range based on DynamicCost.
+  uint32_t bucketsize = costing_->UnitSize();
+  float range = kBucketCount * bucketsize;
+  adjacencylist_.reset(new DoubleBucketQueue(mincost, range, bucketsize, edgecost));
+  edgestatus_.clear();
+
+  // Get hierarchy limits from the costing. Get a copy since we increment
+  // transition counts (i.e., this is not a const reference).
+  hierarchy_limits_  = costing_->GetHierarchyLimits();
+}
 
 // Expand from the node along the forward search path. Immediately expands
 // from the end node of any transition edge (so no transition edges are added
@@ -273,10 +302,10 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
         if (IsTrivial(pred.edgeid(), origin, destination)) {
-          return FormPath(predindex);
+          return FormPath(graphreader, predindex);
         }
       } else {
-        return FormPath(predindex);
+        return FormPath(graphreader, predindex);
       }
     }
 
@@ -294,7 +323,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
       nc = 0;
     } else if (nc++ > 50000) {
       if (best_path.first >= 0) {
-        return FormPath(best_path.first);
+        return FormPath(graphreader, best_path.first);
       } else {
         LOG_ERROR("No convergence to destination after = " +
                            std::to_string(edgelabels_rev_.size()));
@@ -316,7 +345,6 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     // the correct one if a transition occurred
     const DirectedEdge* opp_pred_edge =
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
-
 
     // Expand forward from the end node of the predecessor edge.
     ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge,
@@ -460,7 +488,17 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader,
     // up to the end of the destination edge.
     GraphId id(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(id);
-    destinations_[edge.graph_id()] = costing_->EdgeCost(tile->directededge(id)) *
+    const DirectedEdge* directededge = tile->directededge(id);
+
+    // The opposing edge Id is added as a destination since the search
+    // is done in reverse direction.
+    const GraphTile* t2 = directededge->leaves_tile() ?
+          graphreader.GetGraphTile(directededge->endnode()) : tile;
+    if (t2 == nullptr) {
+      continue;
+    }
+    GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+    destinations_[oppedge] = costing_->EdgeCost(directededge) *
                                 (1.0f - edge.percent_along());
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
@@ -469,6 +507,48 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader,
     density = tile->header()->density();
   }
   return density;
+}
+
+// Form the path from the adjacency list.
+std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader,
+            const uint32_t dest) {
+  // Metrics to track
+  LOG_DEBUG("path_cost::" + std::to_string(edgelabels_rev_[dest].cost().cost));
+  LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_rev_.size()));
+
+  // Get the transition cost at the last edge of the reverse path
+  float tc = edgelabels_rev_[dest].transition_secs();
+
+  // From the reverse path from the destination (true origin). Use opposing
+  // edges.
+  float secs = 0.0f;
+  std::vector<PathInfo> path;
+  uint32_t edgelabel_index = edgelabels_rev_[dest].predecessor();
+  while (edgelabel_index != kInvalidLabel) {
+    const BDEdgeLabel& edgelabel = edgelabels_rev_[edgelabel_index];
+    GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
+
+    // Get elapsed time on the edge, then add the transition cost at
+    // prior edge.
+    uint32_t predidx = edgelabel.predecessor();
+    if (predidx == kInvalidLabel) {
+      secs += edgelabel.cost().secs;
+    } else {
+      secs += edgelabel.cost().secs - edgelabels_rev_[predidx].cost().secs;
+    }
+    secs += tc;
+    path.emplace_back(edgelabel.mode(), secs, oppedge, 0);
+
+    // Check if this is a ferry
+    if (edgelabel.use() == Use::kFerry) {
+      has_ferry_ = true;
+    }
+
+    // Update edgelabel_index and transition cost to apply at next iteration
+    edgelabel_index = predidx;
+    tc = edgelabel.transition_secs();
+  }
+  return path;
 }
 
 }

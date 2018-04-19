@@ -119,6 +119,13 @@ class TimeDepReverse : public AStarPathAlgorithm {
   std::vector<sif::BDEdgeLabel> edgelabels_rev_;
 
   /**
+   * Initializes the hierarchy limits, A* heuristic, and adjacency list.
+   * @param  origll  Lat,lng of the origin.
+   * @param  destll  Lat,lng of the destination.
+   */
+  void Init(const PointLL& origll, const PointLL& destll);
+
+  /**
    * Expand from the node along the reverse search path. Immediately expands
    * from the end node of any transition edge (so no transition edges are added
    * to the adjacency list or EdgeLabel list). Does not expand transition
@@ -169,6 +176,18 @@ class TimeDepReverse : public AStarPathAlgorithm {
    * @return  Returns the relative density near the destination (0-15)
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
+
+  /**
+   * Form the path from the adjacency list. Recovers the path from the
+   * destination (true origin) backwards towards the origin (true destination)
+   * (using predecessor information). This path is then reversed.
+   * @param   graphreader  Graph reader.
+   * @param   dest  Index in the edge labels of the destination edge.
+   * @return  Returns the path info, a list of GraphIds representing the
+   *          directed edges along the path - ordered from origin to
+   *          destination - along with travel modes and elapsed time.
+   */
+  std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader, const uint32_t dest);
 };
 
 }

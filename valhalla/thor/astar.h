@@ -163,7 +163,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
-  std::vector<PathInfo> FormPath(const uint32_t dest);
+  virtual std::vector<PathInfo> FormPath(const uint32_t dest);
 };
 
 }
