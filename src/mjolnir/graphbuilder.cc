@@ -660,8 +660,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               }
             }
 
-            //TODO: curvature
-            uint32_t curvature = 0;
+            // Compute a curvature metric [0-15]. TODO - use resampled polyline?
+            uint32_t curvature = compute_curvature(shape);
 
             // Add elevation info to the geo attribute cache. TODO - add mean elevation.
             uint32_t forward_grade = static_cast<uint32_t>(std::get<0>(forward_grades)  * .6 + 6.5);

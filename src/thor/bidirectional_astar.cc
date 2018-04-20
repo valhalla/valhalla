@@ -148,7 +148,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // or if a complex restriction prevents transition onto this edge.
     if (es->set() == EdgeSet::kPermanent ||
         (shortcuts & directededge->superseded()) ||
-        !costing_->Allowed(directededge, pred, tile, edgeid) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0) ||
          costing_->Restricted(directededge, pred, edgelabels_forward_, tile,
                                      edgeid, true)) {
       continue;
@@ -261,7 +261,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge) ||
+    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0) ||
          costing_->Restricted(directededge, pred, edgelabels_reverse_, tile,
                                      edgeid, false)) {
       continue;
@@ -343,8 +343,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(odin::Location& origin,
   int n = 1;
   uint32_t forward_pred_idx, reverse_pred_idx;
   BDEdgeLabel fwd_pred, rev_pred;
-  const GraphTile* tile;
-  const GraphTile* tile2;
   bool expand_forward  = true;
   bool expand_reverse  = true;
   while (true) {

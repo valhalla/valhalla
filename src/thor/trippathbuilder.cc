@@ -528,9 +528,6 @@ TripPath TripPathBuilder::Build(
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
 
-  // Get the local tile level
-  uint32_t local_level = TileHierarchy::levels().rbegin()->first;
-
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
   CopyLocations(trip_path, origin, through_loc, dest, path);
@@ -605,7 +602,6 @@ TripPath TripPathBuilder::Build(
   // Structures to process admins
   std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher> admin_info_map;
   std::vector<AdminInfo> admin_info_list;
-  uint32_t last_node_admin_index;
 
   // If the path was only one edge we have a special case
   if (path.size() == 1) {
@@ -793,7 +789,6 @@ TripPath TripPathBuilder::Build(
     }
 
     if (controller.attributes.at(kNodeTimeZone)) {
-      const auto& tz_db = DateTime::get_tz_db();
       auto tz = DateTime::get_tz_db().from_index(node->timezone());
       if(tz)
         trip_node->set_time_zone(tz->to_posix_string());
@@ -1382,10 +1377,18 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Set the mode and travel type
   if (mode == sif::TravelMode::kBicycle) {
-    if (controller.attributes.at(kEdgeTravelMode))
-      trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
-    if (controller.attributes.at(kEdgeBicycleType))
-      trip_edge->set_bicycle_type(GetTripPathBicycleType(travel_type));
+    // Override bicycle mode with pedestrian if dismount flag or steps
+    if (directededge->dismount() || directededge->use() == Use::kSteps) {
+      if (controller.attributes.at(kEdgeTravelMode))
+        trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPedestrian);
+      if (controller.attributes.at(kEdgePedestrianType))
+        trip_edge->set_pedestrian_type(odin::TripPath_PedestrianType::TripPath_PedestrianType_kFoot);
+    } else {
+      if (controller.attributes.at(kEdgeTravelMode))
+        trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
+      if (controller.attributes.at(kEdgeBicycleType))
+        trip_edge->set_bicycle_type(GetTripPathBicycleType(travel_type));
+    }
   } else if (mode == sif::TravelMode::kDrive) {
     if (controller.attributes.at(kEdgeTravelMode))
       trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kDrive);

@@ -253,6 +253,7 @@ nobase_include_HEADERS = \
 	valhalla/thor/trippathbuilder.h \
 	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
+	valhalla/thor/timedep.h \
 	valhalla/thor/timedistancematrix.h \
 	valhalla/tyr/serializers.h \
 	valhalla/tyr/navigator.h \
@@ -376,6 +377,8 @@ libvalhalla_la_SOURCES = \
 	src/thor/matrix_action.cc \
 	src/thor/optimized_route_action.cc \
 	src/thor/route_action.cc \
+	src/thor/timedep_forward.cc \
+	src/thor/timedep_reverse.cc \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
 	src/tyr/serializers.cc \

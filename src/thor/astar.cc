@@ -156,7 +156,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // a complex restriction exists.
     if (es->set() == EdgeSet::kPermanent ||
         (shortcuts & directededge->superseded()) ||
-       !costing_->Allowed(directededge, pred, tile, edgeid) ||
+       !costing_->Allowed(directededge, pred, tile, edgeid, 0) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile,
                                      edgeid, true)) {
       continue;
@@ -272,7 +272,6 @@ std::vector<PathInfo> AStarPathAlgorithm::GetBestPath(odin::Location& origin,
   uint32_t nc = 0;       // Count of iterations with no convergence
                          // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
-  const GraphTile* tile;
   size_t total_labels = 0;
   while (true) {
     // Allow this process to be aborted

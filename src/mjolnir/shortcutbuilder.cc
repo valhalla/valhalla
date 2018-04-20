@@ -23,6 +23,7 @@
 #include "baldr/graphreader.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
+#include "mjolnir/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -508,7 +509,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
         // is added.
         newedge.set_weighted_grade(6);
       }
-      newedge.set_curvature(0); //TODO:
+      newedge.set_curvature(compute_curvature(shape));
       newedge.set_endnode(end_node);
 
       // Sanity check - should never see a shortcut with signs

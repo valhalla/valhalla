@@ -101,7 +101,8 @@ float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {
   float c = Distance(ll2);
   float s = (a + b + c) * 0.5f;
   float k = sqrtf(s * (s - a) * (s - b) * (s - c));
-  return ((a * b * c) / (4.0f * k));
+  return (std::isnan(k) || k == 0.0f) ? std::numeric_limits<float>::max() :
+            ((a * b * c) / (4.0f * k));
 }
 
 // Calculates the heading or azimuth from the current lat,lng to the
@@ -249,7 +250,6 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
   // If more than 2 points, walk edges of the polyline until the length
   // is exceeded.
   if (n > 1) {
-    int i = n - 2;
     double d = 0.0;
     double seglength;
     auto pt1 = pts.begin() + idx1;

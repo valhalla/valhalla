@@ -244,7 +244,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
     if (directededge->is_shortcut() ||
         es->set() == EdgeSet::kPermanent ||
       !(directededge->forwardaccess() & access_mode_) ||
-      !costing_->Allowed(directededge, pred, tile, edgeid) ||
+      !costing_->Allowed(directededge, pred, tile, edgeid, 0) ||
        costing_->Restricted(directededge, pred, edgelabels_, tile,
                              edgeid, true)) {
       continue;
@@ -298,7 +298,6 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::Compute(
 
   // Compute the isotile
   uint32_t n = 0;
-  const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -386,7 +385,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
 
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge) ||
+    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0) ||
          costing_->Restricted(directededge, pred, bdedgelabels_, tile,
                                      edgeid, false)) {
       continue;
@@ -443,7 +442,6 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeReverse(
 
   // Compute the isotile
   uint32_t n = 0;
-  const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -628,7 +626,6 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
     bool mode_change = false;
 
     // Expand from end node.
-    uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
@@ -660,7 +657,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       blockid = 0;
       if (directededge->IsTransitLine()) {
         // Check if transit costing allows this edge
-        if (!tc->Allowed(directededge, pred, tile, edgeid)) {
+        if (!tc->Allowed(directededge, pred, tile, edgeid, 0)) {
           continue;
         }
 
@@ -736,7 +733,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
         // is allowed. If mode is pedestrian this will validate walking
         // distance has not been exceeded.
         if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(
-                directededge, pred, tile, edgeid)) {
+                directededge, pred, tile, edgeid, 0)) {
           continue;
         }
 
@@ -876,7 +873,6 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred, GraphReader& graphreader,
   // so this doesn't miss shape that crosses tile corners
   float delta = (shape_interval_ * (secs1 - secs0)) / edge->length();
   auto itr1 = resampled.begin();
-  auto itr2 = itr1 + 1;
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
     secs += delta;
     auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
