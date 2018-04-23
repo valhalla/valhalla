@@ -120,12 +120,33 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     ComplexRestrictionBuilder crb;
     crb.set_from_id(cr.from_id());
     crb.set_to_id(cr.to_id());
-    /** TODO - design common date/time structure
-    crb.set_begin_time(cr.begin_time());
-    crb.set_elapsed_time(cr.end_time());
-    crb.set_begin_day(cr.begin_day());
-    crb.set_end_day(cr.end_day());
-    */
+
+    std::cout << "here" << std::endl;
+
+    if (cr.has_dt()) {
+
+      std::cout << cr.dt_type() << " " <<  cr.dow()   <<  " "
+      << cr.begin_month()  <<  " "  <<  cr.begin_day_dow()   <<  " "
+      << cr.begin_week()  <<  " "  <<  cr.begin_hrs()   <<  " "
+      << cr.begin_mins()  <<  " "  <<  cr.end_month()   <<  " "
+      << cr.end_day_dow()  <<  " "  <<  cr.end_week()   <<  " "
+      << cr.end_hrs()  <<  " " <<  cr.end_mins() << std::endl;
+
+      crb.set_begin_day_dow(cr.begin_day_dow());
+      crb.set_begin_hrs(cr.begin_hrs());
+      crb.set_begin_mins(cr.begin_mins());
+      crb.set_begin_month(cr.begin_month());
+      crb.set_begin_week(cr.begin_week());
+      crb.set_dow(cr.dow());
+      crb.set_dt(true);
+      crb.set_dt_type(cr.dt_type());
+      crb.set_end_day_dow(cr.begin_day_dow());
+      crb.set_end_hrs(cr.end_hrs());
+      crb.set_end_mins(cr.end_mins());
+      crb.set_end_month(cr.end_month());
+      crb.set_end_week(cr.end_week());
+    }
+
     crb.set_via_list(cr.GetVias());
     crb.set_modes(cr.modes());
 
@@ -150,12 +171,30 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     ComplexRestrictionBuilder crb;
     crb.set_from_id(cr.from_id());
     crb.set_to_id(cr.to_id());
-    /** TODO
-    crb.set_begin_time(cr.begin_time());
-    crb.set_elapsed_time(cr.end_time());
-    crb.set_begin_day(cr.begin_day());
-    crb.set_end_day(cr.end_day());
-    */
+    if (cr.has_dt()) {
+
+         std::cout << cr.dt_type() << " " <<  cr.dow()   <<  " "
+         << cr.begin_month()  <<  " "  <<  cr.begin_day_dow()   <<  " "
+         << cr.begin_week()  <<  " "  <<  cr.begin_hrs()   <<  " "
+         << cr.begin_mins()  <<  " "  <<  cr.end_month()   <<  " "
+         << cr.end_day_dow()  <<  " "  <<  cr.end_week()   <<  " "
+         << cr.end_hrs()  <<  " " <<  cr.end_mins() << std::endl;
+
+
+      crb.set_begin_day_dow(cr.begin_day_dow());
+      crb.set_begin_hrs(cr.begin_hrs());
+      crb.set_begin_mins(cr.begin_mins());
+      crb.set_begin_month(cr.begin_month());
+      crb.set_begin_week(cr.begin_week());
+      crb.set_dow(cr.dow());
+      crb.set_dt(true);
+      crb.set_dt_type(cr.dt_type());
+      crb.set_end_day_dow(cr.begin_day_dow());
+      crb.set_end_hrs(cr.end_hrs());
+      crb.set_end_mins(cr.end_mins());
+      crb.set_end_month(cr.end_month());
+      crb.set_end_week(cr.end_week());
+    }
     crb.set_via_list(cr.GetVias());
     crb.set_modes(cr.modes());
 
@@ -528,6 +567,7 @@ void GraphTileBuilder::UpdateComplexRestrictions(const std::list<ComplexRestrict
       // Update edge offset for next item
       complex_restriction_forward_list_offset_ += crb.SizeOf();
     }
+
   } else {
     complex_restriction_reverse_list_offset_ = 0;
     complex_restriction_reverse_builder_.clear();
