@@ -286,6 +286,14 @@ class DynamicCost {
           next_pred = next_predecessor(next_pred);
         }
 
+        if (1304764469345 == cr.from_graphid().value) {
+
+          std::cout << cr.begin_hrs() << " " << cr.begin_mins() << " " << cr.begin_month() << " " << cr.begin_day_dow() << " " << cr.begin_week() <<
+              " " << cr.end_hrs() << " " << cr.end_mins() << " " << cr.end_month() << " " << cr.end_day_dow() << " " << cr.end_week() << " " << cr.dow() <<
+              " " << cr.dt_type() << std::endl;
+        }
+
+
         // Check against the start/end of the complex restriction
         if (match && (( forward && next_pred->edgeid() == cr.from_graphid()) ||
                       (!forward && next_pred->edgeid() == cr.to_graphid()))) {
