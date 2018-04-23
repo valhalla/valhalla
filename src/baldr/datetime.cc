@@ -374,7 +374,6 @@ uint64_t seconds_since_epoch(const std::string& date_time,
     return 0;
 
   try {
-    boost::posix_time::ptime pt;
     boost::gregorian::date date;
     boost::posix_time::time_duration td;
 
@@ -382,22 +381,19 @@ uint64_t seconds_since_epoch(const std::string& date_time,
     if (found != std::string::npos) {
       std::string dt = date_time;
       dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
-      pt = boost::posix_time::from_iso_string(dt);
       date = boost::gregorian::date_from_iso_string(dt);
       td = boost::posix_time::duration_from_string(date_time.substr(found+1));
     }
-    else if (date_time.find("-") != std::string::npos) {
+    else if (date_time.find("-") != std::string::npos) { // YYYY-MM-DD
       std::string dt = date_time;
       dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
-      pt = boost::posix_time::from_iso_string(dt + "T0000");
       date = boost::gregorian::date_from_iso_string(dt);
       td = boost::posix_time::duration_from_string("0000");
 
-    } else {
+    } else { // YYYYMMDD
       //No time on date.  Make it midnight.
-      pt = boost::posix_time::from_iso_string(date_time + "T0000");
-      date = boost::gregorian::date_from_iso_string("0000");
-
+      date = boost::gregorian::date_from_iso_string(date_time);
+      td = boost::posix_time::duration_from_string("0000");
     }
 
     boost::local_time::local_date_time in_local_time = get_ldt(date,td,time_zone);
@@ -692,6 +688,189 @@ bool is_iso_local(const std::string& date_time) {
   return is_ok;
 }
 
+bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin_mins,
+                   const uint8_t end_hrs, const uint8_t end_mins, const uint8_t dow,
+                   const uint8_t begin_week, const uint8_t begin_month, const uint8_t begin_day_dow,
+                   const uint8_t end_week, const uint8_t end_month, const uint8_t end_day_dow,
+                   const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone) {
+
+  boost::gregorian::date begin_date, end_date;
+  boost::posix_time::time_duration b_td = boost::posix_time::hours(0),
+      e_td = boost::posix_time::hours(23) + boost::posix_time::minutes(59);
+
+  boost::gregorian::date d;
+  boost::posix_time::time_duration td;
+  std::size_t found = date_time.find("T"); // YYYY-MM-DDTHH:MM
+  if (found != std::string::npos) {
+    std::string dt = date_time;
+    dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
+    d = boost::gregorian::date_from_iso_string(dt);
+    td = boost::posix_time::duration_from_string(date_time.substr(found+1));
+  }
+  else if (date_time.find("-") != std::string::npos) { // YYYY-MM-DD
+    std::string dt = date_time;
+    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+    d = boost::gregorian::date_from_iso_string(dt);
+    td = boost::posix_time::duration_from_string("0000");
+
+  } else { // YYYYMMDD
+    //No time on date.  Make it midnight.
+    d = boost::gregorian::date_from_iso_string(date_time);
+    td = boost::posix_time::duration_from_string("0000");
+  }
+
+  boost::local_time::local_date_time in_local_time = get_ldt(d,td,time_zone);
+
+  bool dow_in_range = true;
+  bool dt_in_range = false;
+
+  // we have dow
+  if (dow) {
+
+    uint8_t local_dow = 0;
+    switch (d.day_of_week()) {
+      case boost::date_time::Sunday:
+        local_dow = kSunday;
+        break;
+      case boost::date_time::Monday:
+        local_dow = kMonday;
+        break;
+      case boost::date_time::Tuesday:
+        local_dow = kTuesday;
+        break;
+      case boost::date_time::Wednesday:
+        local_dow = kWednesday;
+        break;
+      case boost::date_time::Thursday:
+        local_dow = kThursday;
+        break;
+      case boost::date_time::Friday:
+        local_dow = kFriday;
+        break;
+      case boost::date_time::Saturday:
+        local_dow = kSaturday;
+        break;
+      default:
+        return false;//should never happen
+        break;
+    }
+    dow_in_range = (dow & local_dow);
+  }
+
+  uint8_t b_month = begin_month;
+  uint8_t e_month = end_month;
+  uint8_t b_day_dow = begin_day_dow;
+  uint8_t e_day_dow = end_day_dow;
+  uint8_t b_week = begin_week;
+  uint8_t e_week = end_week;
+
+  if (type == kNthDow && begin_week && !begin_day_dow && !begin_month) // Su[-1]
+    b_month = d.month().as_enum();
+  if (type == kNthDow && end_week && !end_day_dow && !end_month) // Su[-1]
+    e_month = d.month().as_enum();
+
+  if (type == kNthDow && begin_week && !begin_day_dow && !begin_month &&
+      !end_week && !end_day_dow && !end_month) {// only Su[-1] set in begin.
+    //First Sunday of every month only.
+    e_month = b_month;
+    b_day_dow = e_day_dow = dow;
+    e_week = b_week;
+  }
+  else if (type == kYMD && (b_month && e_month) &&
+      (!b_day_dow && !e_day_dow)) { //Sep-Jun We 08:15-08:45
+
+    b_day_dow = 1;
+    boost::gregorian::date e_d = boost::gregorian::date(d.year(), e_month, 1);
+    e_day_dow = e_d.end_of_month().day();
+  }
+
+  //month only
+  if (type == kYMD && (b_month && e_month) && (!b_day_dow && !e_day_dow &&
+      !b_week && !b_week) && b_month == e_month) {
+
+    dt_in_range = (b_month <= d.month().as_enum() &&
+        d.month().as_enum() <= e_month);
+
+    if (begin_hrs || begin_mins || end_hrs || end_mins) {
+      b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
+      e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
+    }
+
+    dt_in_range = (dt_in_range && (b_td <= td && td <= e_td));
+    return (dow_in_range && dt_in_range);
+
+  } else if (type == kYMD && b_month && b_day_dow ) {
+
+    uint32_t e_year = d.year(), b_year = d.year();
+    if (b_month == e_month) {
+      if (b_day_dow > e_day_dow)// Mar 15 - Mar 1
+        e_year = d.year() + 1;
+    } else if (b_month > e_month) { // Oct 10 - Mar 3
+      if (b_month > d.month().as_enum())
+        b_year = d.year()-1;
+      else
+        e_year = d.year() + 1;
+    }
+
+    begin_date = boost::gregorian::date(b_year, b_month, b_day_dow);
+    end_date = boost::gregorian::date(e_year, e_month, e_day_dow);
+
+  } else if (type == kNthDow && b_month && b_day_dow &&
+      e_month && e_day_dow) { // kNthDow types can have a mix of ymd and nthdow. (e.g. Dec Su[-1]-Mar 3 Sat 15:00-17:00)
+
+    uint32_t e_year = d.year(), b_year = d.year();
+    if (b_month == e_month) {
+      if (b_day_dow > e_day_dow)// Mar 15 - Mar 1
+        e_year = d.year() + 1;
+    } else if (b_month > e_month) { // Oct 10 - Mar 3
+      if (b_month > d.month().as_enum())
+        b_year = d.year()-1;
+      else
+        e_year = d.year() + 1;
+    }
+
+    if (b_week && b_week <= 5) { // kNthDow
+      boost::gregorian::nth_day_of_the_week_in_month nthdow(static_cast<boost::gregorian::nth_day_of_the_week_in_month::week_num>(b_week),
+                                                            b_day_dow - 1, b_month);
+      begin_date = nthdow.get_date(b_year);
+    } else { // YMD
+      begin_date = boost::gregorian::date(b_year, b_month, b_day_dow);
+    }
+
+    if (e_week && e_week <= 5) { // kNthDow
+      boost::gregorian::nth_day_of_the_week_in_month nthdow(static_cast<boost::gregorian::nth_day_of_the_week_in_month::week_num>(e_week),
+                                                            e_day_dow - 1 , e_month);
+      end_date = nthdow.get_date(e_year);
+    } else { // YMD
+      end_date = boost::gregorian::date(e_year, e_month, e_day_dow); // Dec 5 to Mar 3
+    }
+  } else { // do we have just time?
+
+    if (begin_hrs || begin_mins || end_hrs || end_mins) {
+      b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
+      e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
+      dt_in_range = (b_td <= td && td <= e_td);
+    }
+    return (dow_in_range && dt_in_range);
+
+  }
+
+  if (begin_hrs || begin_mins || end_hrs || end_mins) {
+    b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
+    e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
+  }
+
+  boost::local_time::local_date_time b_in_local_time = get_ldt(begin_date,b_td,time_zone);
+  boost::local_time::local_date_time e_in_local_time = get_ldt(end_date,e_td,time_zone);
+
+  dt_in_range = (b_in_local_time.date() <= in_local_time.date() &&
+      in_local_time.date() <= e_in_local_time.date());
+
+  dt_in_range = (dt_in_range && (b_td <= td && td <= e_td));
+
+  return (dow_in_range && dt_in_range);
+}
+
 //get the dow mask from user inputed string.  try to handle most inputs
 uint8_t get_dow_mask(const std::string& dow) {
 
@@ -836,7 +1015,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
   std::vector<uint64_t> time_domains;
 
-  TimeDomain timedomain;
+  TimeDomain timedomain(0);
   //rm ()
   std::string condition = str;
   condition.erase(boost::remove_if(condition, boost::is_any_of("()")), condition.end());
@@ -1125,13 +1304,13 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           } else if (md.find('[') != std::string::npos && md.find(']') != std::string::npos) {
             md.erase(boost::remove_if(md, boost::is_any_of("[]")), md.end());
 
-            if (timedomain.daterange.begin_year_week == 0 && !ends_nth_week) {
-              timedomain.daterange.begin_year_week = std::stoi(md);
+            if (timedomain.daterange.begin_week == 0 && !ends_nth_week) {
+              timedomain.daterange.begin_week = std::stoi(md);
               //assume no range.  Dec Su[-1] Su-Sa 15:00-17:00 starts on the last week
               //in Dec and ends in the last week in Dec
               if (!is_range)
-                timedomain.daterange.end_year_week = timedomain.daterange.begin_year_week;
-            } else timedomain.daterange.end_year_week = std::stoi(md);
+                timedomain.daterange.end_week = timedomain.daterange.begin_week;
+            } else timedomain.daterange.end_week = std::stoi(md);
           } else if (is_date && is_range && timedomain.daterange.begin_month != 0 &&
               timedomain.daterange.end_month == 0) { //Mar 3-Dec Su[-1] Sat
               timedomain.daterange.begin_day_dow = std::stoi(md);
@@ -1157,7 +1336,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           if (week.find('[') != std::string::npos && week.find(']') != std::string::npos) {
             timedomain.daterange.type = kNthDow;
             week.erase(boost::remove_if(week, boost::is_any_of("[]")), week.end());
-            timedomain.daterange.begin_year_week = std::stoi(week);
+            timedomain.daterange.begin_week = std::stoi(week);
             break;
           }
         }
@@ -1169,10 +1348,21 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
         uint8_t b_index = static_cast<uint8_t>(get_dow(months_dow.at(0)));
         uint8_t e_index = static_cast<uint8_t>(get_dow(months_dow.at(1)));
+
+        if (b_index > e_index) { //Th - Tu
+
+          while (b_index <= static_cast<uint8_t>(DOW::kSaturday)) {
+            timedomain.daterange.dow += (1 << (b_index-1));
+            b_index++;
+          }
+          b_index = static_cast<uint8_t>(DOW::kSunday);
+        }
+
         while (b_index <= e_index) {
           timedomain.daterange.dow += (1 << (b_index-1));
           b_index++;
         }
+
       } else return time_domains;
     } else {
 
