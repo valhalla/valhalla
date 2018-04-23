@@ -19,6 +19,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/graphtile.h"
 #include "baldr/graphreader.h"
+#include "baldr/timedomain.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -362,15 +363,22 @@ void build(const std::string& complex_restriction_file,
                   complex_restriction.set_type(restriction.type());
                   complex_restriction.set_modes(restriction.modes());
 
-                  /** TODO - define common date/time format for use
-                  complex_restriction.set_begin_day(restriction.day_on());
-                  complex_restriction.set_end_day(restriction.day_off());
-                  uint64_t begin_time = DateTime::seconds_from_midnight(std::to_string(restriction.hour_on()) + ":" +
-                                                                        std::to_string(restriction.minute_on()));
-                  complex_restriction.set_begin_time(begin_time);
-                  complex_restriction.set_elapsed_time(DateTime::seconds_from_midnight(std::to_string(restriction.hour_off()) + ":" +
-                                                                                       std::to_string(restriction.minute_off())) - begin_time);
-                  */
+                  TimeDomain td = TimeDomain(restriction.time_domain());
+                  if (td) {
+                    complex_restriction.set_begin_day_dow(td.begin_dow());
+                    complex_restriction.set_begin_hrs(td.begin_hrs());
+                    complex_restriction.set_begin_mins(td.begin_mins());
+                    complex_restriction.set_begin_month(td.begin_month());
+                    complex_restriction.set_begin_week(td.begin_week());
+                    complex_restriction.set_dow(td.dow());
+                    complex_restriction.set_dt(true);
+                    complex_restriction.set_dt_type(td.type());
+                    complex_restriction.set_end_day_dow(td.end_dow());
+                    complex_restriction.set_end_hrs(td.end_hrs());
+                    complex_restriction.set_end_mins(td.end_mins());
+                    complex_restriction.set_end_month(td.end_month());
+                    complex_restriction.set_end_week(td.end_week());
+                  }
 
                   // determine if we need to add this complex restriction or not.
                   // basically we do not want any dups.
@@ -385,6 +393,19 @@ void build(const std::string& complex_restriction_file,
                     }
                   }
                   if (!bfound) { // no dups.
+
+                    if (e_offset.wayid() == 164877031 || e_offset.wayid() == 9429552) {
+
+                      std::cout << (uint64_t)(tmp_ids.at(tmp_ids.size()-1)) << std::endl;
+
+                       std::cout << td.type() << " " <<  td.dow()   <<  " "
+                       << td.begin_month()  <<  " "  <<  td.begin_day()   <<  " "
+                       << td.begin_week()  <<  " "  <<  td.begin_hrs()   <<  " "
+                       << td.begin_mins()  <<  " "  <<  td.end_month()   <<  " "
+                       << td.end_day()  <<  " "  <<  td.end_week()   <<  " "
+                       << td.end_hrs()  <<  " " <<  td.end_mins() << std::endl;
+                     }
+
                     reverse_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
                     updated_reverse_cr_list.emplace_back(complex_restriction);
                   }
@@ -473,15 +494,31 @@ void build(const std::string& complex_restriction_file,
                       complex_restriction.set_type(restriction.type());
                       complex_restriction.set_modes(restriction.modes());
 
-                      /** TODO - define common date/time format for use
-                      complex_restriction.set_begin_day(restriction.day_on());
-                      complex_restriction.set_end_day(restriction.day_off());
-                      uint64_t begin_time = DateTime::seconds_from_midnight(std::to_string(restriction.hour_on()) + ":" +
-                                                                            std::to_string(restriction.minute_on()));
-                      complex_restriction.set_begin_time(begin_time);
-                      complex_restriction.set_elapsed_time(DateTime::seconds_from_midnight(std::to_string(restriction.hour_off()) + ":" +
-                                                                                           std::to_string(restriction.minute_off())) - begin_time);
-                      */
+                      TimeDomain td = TimeDomain(restriction.time_domain());
+                      if (td) {
+                        complex_restriction.set_begin_day_dow(td.begin_dow());
+                        complex_restriction.set_begin_hrs(td.begin_hrs());
+                        complex_restriction.set_begin_mins(td.begin_mins());
+                        complex_restriction.set_begin_month(td.begin_month());
+                        complex_restriction.set_begin_week(td.begin_week());
+                        complex_restriction.set_dow(td.dow());
+                        complex_restriction.set_dt(true);
+                        complex_restriction.set_dt_type(td.type());
+                        complex_restriction.set_end_day_dow(td.end_dow());
+                        complex_restriction.set_end_hrs(td.end_hrs());
+                        complex_restriction.set_end_mins(td.end_mins());
+                        complex_restriction.set_end_month(td.end_month());
+                        complex_restriction.set_end_week(td.end_week());
+                      }
+
+                      if (e_offset.wayid() == 164877031 || e_offset.wayid() == 9429552){
+                        std::cout << td.type() << " " <<  td.dow()   <<  " "
+                        << td.begin_month()  <<  " "  <<  td.begin_day()   <<  " "
+                        << td.begin_week()  <<  " "  <<  td.begin_hrs()   <<  " "
+                        << td.begin_mins()  <<  " "  <<  td.end_month()   <<  " "
+                        << td.end_day()  <<  " "  <<  td.end_week()   <<  " "
+                        << td.end_hrs()  <<  " " <<  td.end_mins() << std::endl;
+                      }
 
                       // determine if we need to add this complex restriction or not.
                       // basically we do not want any dups.
@@ -496,6 +533,16 @@ void build(const std::string& complex_restriction_file,
                         }
                       }
                       if (!bfound) { // no dups.
+
+                      /*  if (e_offset.wayid() == 164877031 || e_offset.wayid() == 9429552){
+                          std::cout << td.type() << " " <<  td.dow()   <<  " "
+                          << td.begin_month()  <<  " "  <<  td.begin_day()   <<  " "
+                          << td.begin_week()  <<  " "  <<  td.begin_hrs()   <<  " "
+                          << td.begin_mins()  <<  " "  <<  td.end_month()   <<  " "
+                          << td.end_day()  <<  " "  <<  td.end_week()   <<  " "
+                          << td.end_hrs()  <<  " " <<  td.end_mins() << std::endl;
+                        }*/
+
                         forward_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
                         updated_forward_cr_list.emplace_back(complex_restriction);
                       }
