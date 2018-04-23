@@ -194,6 +194,33 @@ namespace DateTime {
   bool is_iso_local(const std::string& date_time);
 
   /**
+   * checks if a date is restricted within a begin and end range.
+   * @param   type          type of restriction kYMD or kNthDow
+   * @param   begin_hrs     begin hours
+   * @param   begin_mins    begin minutes
+   * @param   end_hrs       end hours
+   * @param   end_mins      end minutes
+   * @param   dow           days of the week to apply this restriction
+   * @param   begin_week    only set for kNthDow.  which week in the month
+   * @param   begin_month   begin month
+   * @param   begin_day_dow if kNthDow, then which dow to start the restriction.
+   *                        if kYMD then it is the day of the month
+   * @param   end_week      only set for kNthDow.  which week in the month
+   * @param   end_month     end month
+   * @param   end_day_dow   if kNthDow, then which dow to end the restriction.
+   *                        if kYMD then it is the day of the month
+   * @param   date_time     should be in the format of 2015-05-06T08:00
+   * @param   time_zone     timezone for the date_time
+   * @return true or false
+   */
+
+  bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin_mins,
+                     const uint8_t end_hrs, const uint8_t end_mins, const uint8_t dow,
+                     const uint8_t begin_week, const uint8_t begin_month, const uint8_t begin_day_dow,
+                     const uint8_t end_week, const uint8_t end_month, const uint8_t end_day_dow,
+                     const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone);
+
+  /**
    * get the dow mask from user inputed string.  try to handle most inputs
    * @param   dow entered by a user
    * @return dow mask
