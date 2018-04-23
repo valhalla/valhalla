@@ -688,6 +688,7 @@ bool is_iso_local(const std::string& date_time) {
   return is_ok;
 }
 
+// does this date fall in the begin and end date range?
 bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin_mins,
                    const uint8_t end_hrs, const uint8_t end_mins, const uint8_t dow,
                    const uint8_t begin_week, const uint8_t begin_month, const uint8_t begin_day_dow,
