@@ -86,6 +86,71 @@ const std::vector<GraphId> ComplexRestriction::GetVias() const {
   return vias;
 }
 
+// Get the date time flag for the restriction
+bool ComplexRestriction::has_dt() const {
+  return from_id_.has_dt;
+}
+
+// Get the begin day or dow for the restriction.
+uint64_t ComplexRestriction::begin_day_dow() const {
+  return from_id_.begin_day_dow;
+}
+
+// Get the begin month for the restriction.
+uint64_t ComplexRestriction::begin_month() const {
+  return from_id_.begin_month;
+}
+
+// Get the begin week for the restriction.
+uint64_t ComplexRestriction::begin_week() const {
+  return from_id_.begin_week;
+}
+
+// Get the begin hours for the restriction.
+uint64_t ComplexRestriction::begin_hrs() const {
+  return from_id_.begin_hrs;
+}
+
+// Get the type for the restriction
+bool ComplexRestriction::dt_type() const {
+  return to_id_.dt_type;
+}
+
+// Get the end day or dow for the restriction.
+uint64_t ComplexRestriction::end_day_dow() const {
+  return to_id_.end_day_dow;
+}
+
+// Get the end month for the restriction.
+uint64_t ComplexRestriction::end_month() const {
+  return to_id_.end_month;
+}
+
+// Get the end week for the restriction.
+uint64_t ComplexRestriction::end_week() const {
+  return to_id_.end_week;
+}
+
+// Get the end hours for the restriction.
+uint64_t ComplexRestriction::end_hrs() const {
+  return to_id_.end_hrs;
+}
+
+// Get the dow mask.  indicates days of week to apply the restriction
+uint64_t ComplexRestriction::dow() const {
+  return restriction_->dow;
+}
+
+// Get the begin minutes for the restriction.
+uint64_t ComplexRestriction::begin_mins() const {
+  return restriction_->begin_mins;
+}
+
+// Get the end minutes for the restriction.
+uint64_t ComplexRestriction::end_mins() const {
+  return restriction_->end_mins;
+}
+
 // Get the size of the complex restriction
 std::size_t ComplexRestriction::BaseSizeOf() const {
   std::size_t size = sizeof(FromGraphId);
