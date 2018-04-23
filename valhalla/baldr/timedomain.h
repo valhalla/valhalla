@@ -86,23 +86,12 @@ union TimeDomain {
   }
 
   /**
-   * Gets the year when this time domain starts
-   * @return   Returns the begin_year_week.
-   *           begin_year_week = begin year or which week(1-5) does this
-   *           start. (i.e. 1st week in Oct)
-   */
-  uint32_t begin_year() const {
-    return daterange.begin_year_week;
-  }
-
-  /**
    * Gets the week when this time domain starts
-   * @return   Returns the begin_year_week.
-   *           begin_year_week = begin year or which week(1-5) does this
-   *           start. (i.e. 1st week in Oct)
+   * @return   Returns the begin_week.
+   *           which week(1-5) does this start. (i.e. 1st week in Oct)
    */
   uint32_t begin_week() const {
-    return daterange.begin_year_week;
+    return daterange.begin_week;
   }
 
   /**
@@ -148,23 +137,12 @@ union TimeDomain {
   }
 
   /**
-   * Gets the year when this time domain ends
-   * @return   Returns the end_year_week.
-   *           end_year_week = end year or which week(1-5) does this
-   *           end. (i.e. 1st week in Oct)
-   */
-  uint32_t end_year() const {
-    return daterange.end_year_week;
-  }
-
-  /**
    * Gets the week when this time domain ends
-   * @return   Returns the end_year_week.
-   *           end_year_week = end year or which week(1-5) does this
-   *           end. (i.e. 1st week in Oct)
+   * @return   Returns the end_week.
+   *           which week(1-5) does this end. (i.e. 1st week in Oct)
    */
   uint32_t end_week() const {
-    return daterange.end_year_week;
+    return daterange.end_week;
   }
 
   // Operator EqualTo.
@@ -189,12 +167,13 @@ union TimeDomain {
     uint64_t begin_mins       :  6; // begin minutes
     uint64_t begin_month      :  4; // begin month
     uint64_t begin_day_dow    :  5; // begin day or dow enum i.e. 1st Sunday
-    uint64_t begin_year_week  :  8; // begin year or which week does this start.  i.e. 1st week in Oct
+    uint64_t begin_week       :  3; // which week does this start.  i.e. 1st week in Oct
     uint64_t end_hrs          :  5; // end hours
     uint64_t end_mins         :  6; // end minutes
     uint64_t end_month        :  4; // end month
     uint64_t end_day_dow      :  5; // end day or dow enum i.e. last Sunday
-    uint64_t end_year_week    :  8; // end year or which week does this end.  i.e. last week in Oct
+    uint64_t end_week         :  3; // which week does this end.  i.e. last week in Oct
+    uint64_t spare            : 10;
 
   } daterange;
   uint64_t value; // Single 64 bit value representing the date range.
