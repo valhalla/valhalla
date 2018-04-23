@@ -16,8 +16,6 @@ RestrictionType OSMRestriction::type() const {
   return static_cast<RestrictionType>(attributes_.type_);
 }
 
-
-
 // Set the via id
 void OSMRestriction::set_via(uint64_t via) {
   via_.osmid = via;
