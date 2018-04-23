@@ -69,32 +69,97 @@ class ComplexRestrictionBuilder {
   void set_modes(const uint64_t modes);
 
   /**
-   * set the begin dow for this restriction
-   * @param  day  begin dow.
+   * set the date time flag for the restriction
+   * @param  dt  date time bit indicating if there is date time
+   *             info for this restriction.
    *
    */
-  void set_begin_day(const DOW day);
+  void set_dt(const bool dt);
 
   /**
-   * set the end dow for this restriction
-   * @param  day  end dow.
+   * set the begin day or dow for the restriction.
+   * @param  begin_day_dow  begin day or dow for this restriction.
    *
    */
-  void set_end_day(const DOW day);
+  void set_begin_day_dow(const uint64_t begin_day_dow);
 
   /**
-   * set the begin time for this restriction
-   * @param  begin_time  when does it start - sec from midnight.
+   * set the begin month for the restriction.
+   * @param  begin_month  begin month for this restriction.
    *
    */
-  void set_begin_time(const uint64_t begin_time);
+  void set_begin_month(const uint64_t begin_month);
 
   /**
-   * set the elapsed time for this restriction
-   * @param  elapsed_time  elapsed time in secs.
+   * set the begin week for the restriction.
+   * @param  begin_week  begin week for this restriction.
    *
    */
-  void set_elapsed_time(const uint64_t elapsed_time);
+  void set_begin_week(const uint64_t begin_week);
+
+  /**
+   * set the begin hours for the restriction.
+   * @param  begin_hrs  begin hours for this restriction.
+   *
+   */
+  void set_begin_hrs(const uint64_t begin_hrs);
+
+  /**
+   * set the type for the restriction
+   * @param  type   the type of date time restriction.
+   *                YMD = 0 or nth dow = 1
+   *
+   */
+  void set_dt_type(const bool type);
+
+  /**
+   * set the end day or dow for the restriction.
+   * @param  end_day_dow  end day or dow for this restriction.
+   *
+   */
+  void set_end_day_dow(const uint64_t end_day_dow);
+
+  /**
+   * set the end month for the restriction.
+   * @param  end_month  end month for this restriction.
+   *
+   */
+  void set_end_month(const uint64_t end_month);
+
+  /**
+   * set the end week for the restriction.
+   * @param  end_week  end week for this restriction.
+   *
+   */
+  void set_end_week(const uint64_t end_week);
+
+  /**
+   * set the end hours for the restriction.
+   * @param  end_hrs  end hours for this restriction.
+   *
+   */
+  void set_end_hrs(const uint64_t end_hrs);
+
+  /**
+   * set the dow mask.  indicates days of week to apply the restriction
+   * @param  dow  day of week - This is a mask (e.g., Mo-Fr = 62).
+   *
+   */
+  void set_dow(const uint64_t dow);
+
+  /**
+   * set the begin minutes for the restriction.
+   * @param  begin_mins  begin minutes for this restriction.
+   *
+   */
+  void set_begin_mins(const uint64_t begin_mins);
+
+  /**
+   * set the end minutes for the restriction.
+   * @param  end_mins  end minutes for this restriction.
+   *
+   */
+  void set_end_mins(const uint64_t begin_mins);
 
   /**
    * Get the size of this complex restriction (without padding).

@@ -44,27 +44,70 @@ void ComplexRestrictionBuilder::set_modes(const uint64_t modes) {
   restriction_.modes_ = modes;
 }
 
-/*
-// set the begin dow for this restriction
-void ComplexRestrictionBuilder::set_begin_day(const DOW day) {
-  restriction_.begin_day_ = static_cast<uint64_t>(day);
+// set the date time flag for the restriction
+void ComplexRestrictionBuilder::set_dt(const bool dt) {
+  from_id_.has_dt = dt;
 }
 
-// set the end dow for this restriction
-void ComplexRestrictionBuilder::set_end_day(const DOW day) {
-  restriction_.end_day_ = static_cast<uint64_t>(day);
+// set the begin day or dow for the restriction.
+void ComplexRestrictionBuilder::set_begin_day_dow(const uint64_t begin_day_dow) {
+  from_id_.begin_day_dow = begin_day_dow;
 }
 
-// set the begin time for this restriction
-void ComplexRestrictionBuilder::set_begin_time(const uint64_t begin_time) {
-  restriction_.begin_time_ = begin_time;
+// set the begin month for the restriction.
+void ComplexRestrictionBuilder::set_begin_month(const uint64_t begin_month) {
+  from_id_.begin_month = begin_month;
 }
 
-// set the elapsed time for this restriction.
-void ComplexRestrictionBuilder::set_elapsed_time(const uint64_t elapsed_time) {
-  restriction_.elapsed_time_ = elapsed_time;
+// set the begin week for the restriction.
+void ComplexRestrictionBuilder::set_begin_week(const uint64_t begin_week) {
+  from_id_.begin_week = begin_week;
 }
-*/
+
+// set the begin hours for the restriction.
+void ComplexRestrictionBuilder::set_begin_hrs(const uint64_t begin_hrs) {
+  from_id_.begin_hrs = begin_hrs;
+}
+
+// set the date time type for the restriction
+void ComplexRestrictionBuilder::set_dt_type(const bool type) {
+  to_id_.dt_type = type;
+}
+
+// set the end day or dow for the restriction.
+void ComplexRestrictionBuilder::set_end_day_dow(const uint64_t end_day_dow) {
+  to_id_.end_day_dow = end_day_dow;
+}
+
+// set the end month for the restriction.
+void ComplexRestrictionBuilder::set_end_month(const uint64_t end_month) {
+  to_id_.end_month = end_month;
+}
+
+// set the end week for the restriction.
+void ComplexRestrictionBuilder::set_end_week(const uint64_t end_week) {
+  to_id_.end_week = end_week;
+}
+
+// set the end hours for the restriction.
+void ComplexRestrictionBuilder::set_end_hrs(const uint64_t end_hrs) {
+  to_id_.end_hrs = end_hrs;
+}
+
+// set the dow mask.  indicates days of week to apply the restriction
+void ComplexRestrictionBuilder::set_dow(const uint64_t dow) {
+  restriction_.dow = dow;
+}
+
+// set the begin minutes for the restriction.
+void ComplexRestrictionBuilder::set_begin_mins(const uint64_t begin_mins) {
+  restriction_.begin_mins = begin_mins;
+}
+
+// set the end minutes for the restriction.
+void ComplexRestrictionBuilder::set_end_mins(const uint64_t end_mins) {
+  restriction_.end_mins = end_mins;
+}
 
 // Set the via edge ids used by this complex restriction.
 void ComplexRestrictionBuilder::set_via_list(
@@ -110,11 +153,20 @@ std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb)
   restriction.via_count_ = via_count;
   restriction.type_ = crb.restriction_.type_;
   restriction.modes_ = crb.restriction_.modes_;
-  /** TODO
-  restriction.begin_day_ = crb.restriction_.begin_day_;
-  restriction.end_day_ = crb.restriction_.end_day_;
-  restriction.begin_time_ = crb.restriction_.begin_time_;
-  restriction.elapsed_time_ = crb.restriction_.elapsed_time_; */
+
+  restriction.dow = crb.restriction_.dow;
+  restriction.begin_mins = crb.restriction_.begin_mins;
+  restriction.end_mins = crb.restriction_.end_mins;
+
+  if (1304764469345 == GraphId(crb.from_id_.tileid,crb.from_id_.level, crb.from_id_.id).value) {
+
+  std::cout << crb.to_id_.dt_type << " " <<  restriction.dow   <<  " "
+  << crb.from_id_.begin_month  <<  " "  <<  crb.from_id_.begin_day_dow   <<  " "
+  << crb.from_id_.begin_week  <<  " "  <<  crb.from_id_.begin_hrs   <<  " "
+  << restriction.begin_mins  <<  " "  <<  crb.to_id_.end_month   <<  " "
+  << crb.to_id_.end_day_dow  <<  " "  <<  crb.to_id_.end_week   <<  " "
+  << crb.to_id_.end_hrs  <<  " " <<  restriction.end_mins << std::endl;
+  }
 
   // Write out the bytes
   os.write(reinterpret_cast<const char*>(&crb.from_id_), sizeof(FromGraphId));
@@ -140,12 +192,10 @@ bool ComplexRestrictionBuilder::operator == (const ComplexRestrictionBuilder& ot
   if (from_id_ != other.from_id_ || to_id_ != other.to_id_ ||
       via_list_ != other.via_list_ ||
       restriction_.type_ != other.restriction_.type_ ||
-      restriction_.modes_ != other.restriction_.modes_)
-      /** TODO
-      restriction_.begin_day_ != other.restriction_.begin_day_ ||
-      restriction_.end_day_ != other.restriction_.end_day_ ||
-      restriction_.begin_time_ != other.restriction_.begin_time_ ||
-      restriction_.elapsed_time_ != other.restriction_.elapsed_time_) */
+      restriction_.modes_ != other.restriction_.modes_ ||
+      restriction_.dow != other.restriction_.dow ||
+      restriction_.begin_mins != other.restriction_.begin_mins ||
+      restriction_.end_mins != other.restriction_.end_mins)
     return false;
 
   return true;
