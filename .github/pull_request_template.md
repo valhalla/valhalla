@@ -7,6 +7,7 @@ What issue is this PR targeting? If there is no issue that addresses the problem
  - [ ] add tests
  - [ ] review - you must request approval to merge any PR to master
  - [ ] Add #fixes with the issue number that this PR addresses
+ - [ ] Generally use squash merge to rebase and clean comments before merging
  - [ ] Add to release notes in valhalla-docs
  - [ ] update relevant documentation if this is an API impacting change
 
