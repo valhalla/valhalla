@@ -25,13 +25,11 @@ constexpr size_t kMaxViasPerRestriction = 31;
  *    1) Has via ways (that is not a simple edge to edge restriction),
  *    2) Applies to specific travel modes (not all driving modes),
  *    3) Has specific time periods when the restriction is in effect.
+ * This class forms the fixed size portion of the complex restriction.
+ * A list of GraphIds follows immediately after the structure.
  */
 class ComplexRestriction {
  public:
-  ComplexRestriction() {
-    memset(this, 0, 3 * sizeof(uint64_t));
-  }
-
   /**
    * Get the restriction's from graph id
    * @return  Returns the from graph id
@@ -70,14 +68,6 @@ class ComplexRestriction {
    */
   uint64_t modes() const {
     return modes_;
-  }
-
-  /**
-   * Get pointer to the list of vias.
-   * @return  Returns a pointer to the list of vias
-   */
-  const GraphId* via_list() const {
-    return via_list_;
   }
 
   /**
@@ -187,11 +177,12 @@ class ComplexRestriction {
   }
 
   /**
-   * Get the size of this complex restriction.
+   * Get the size of this complex restriction. Includes the fixed size
+   * structure plus the via edge Id list that immediately follows.
    * @return  Returns the size in bytes of this object.
    */
   std::size_t SizeOf() const {
-    return (3 * sizeof(uint64_t)) + (via_count_ * sizeof(GraphId));
+    return (sizeof(ComplexRestriction)) + (via_count_ * sizeof(GraphId));
   }
 
  protected:
@@ -221,8 +212,8 @@ class ComplexRestriction {
   uint64_t end_mins_        :  6;  // end minutes
   uint64_t spare_           : 24;
 
-  // List of vias
-  GraphId* via_list_;             // via edge ids
+  // List of vias follows the structure immediately on disk
+  // TODO - perhaps use spare to store offset to a separate list?
 };
 
 }
