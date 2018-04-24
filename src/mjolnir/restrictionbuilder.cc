@@ -249,14 +249,10 @@ void build(const std::string& complex_restriction_file,
     lock.unlock();
 
     std::unordered_multimap<GraphId, ComplexRestrictionBuilder> forward_tmp_cr;
-    std::list<ComplexRestrictionBuilder> updated_forward_cr_list;
-
     std::unordered_multimap<GraphId, ComplexRestrictionBuilder> reverse_tmp_cr;
-    std::list<ComplexRestrictionBuilder> updated_reverse_cr_list;
 
     uint32_t id  = tile_id.tileid();
     GraphId prevNode;
-
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
@@ -359,6 +355,7 @@ void build(const std::string& complex_restriction_file,
                   ComplexRestrictionBuilder complex_restriction;
                   complex_restriction.set_from_id(tmp_ids.at(tmp_ids.size()-1));
                   complex_restriction.set_via_list(vias);
+                  complex_restriction.set_via_count(vias.size());
                   complex_restriction.set_to_id(tmp_ids.at(0));
                   complex_restriction.set_type(restriction.type());
                   complex_restriction.set_modes(restriction.modes());
@@ -407,7 +404,7 @@ void build(const std::string& complex_restriction_file,
                      }
 
                     reverse_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
-                    updated_reverse_cr_list.emplace_back(complex_restriction);
+                    tilebuilder.AddReverseComplexRestriction(complex_restriction);
                   }
                 }
               }
@@ -490,6 +487,7 @@ void build(const std::string& complex_restriction_file,
                       ComplexRestrictionBuilder complex_restriction;
                       complex_restriction.set_from_id(tmp_ids.at(0));
                       complex_restriction.set_via_list(vias);
+                      complex_restriction.set_via_count(vias.size());
                       complex_restriction.set_to_id(tmp_ids.at(tmp_ids.size()-1));
                       complex_restriction.set_type(restriction.type());
                       complex_restriction.set_modes(restriction.modes());
@@ -534,17 +532,17 @@ void build(const std::string& complex_restriction_file,
                       }
                       if (!bfound) { // no dups.
 
-                      /*  if (e_offset.wayid() == 164877031 || e_offset.wayid() == 9429552){
+                       if (e_offset.wayid() == 164877031 || e_offset.wayid() == 9429552){
                           std::cout << td.type() << " " <<  td.dow()   <<  " "
                           << td.begin_month()  <<  " "  <<  td.begin_day()   <<  " "
                           << td.begin_week()  <<  " "  <<  td.begin_hrs()   <<  " "
                           << td.begin_mins()  <<  " "  <<  td.end_month()   <<  " "
                           << td.end_day()  <<  " "  <<  td.end_week()   <<  " "
                           << td.end_hrs()  <<  " " <<  td.end_mins() << std::endl;
-                        }*/
+                        }
 
                         forward_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
-                        updated_forward_cr_list.emplace_back(complex_restriction);
+                        tilebuilder.AddForwardComplexRestriction(complex_restriction);
                       }
                     }
                   }
@@ -556,12 +554,10 @@ void build(const std::string& complex_restriction_file,
         }
       }
     }
-    // update the complex restrictions in the tile.
-    tilebuilder.UpdateComplexRestrictions(updated_forward_cr_list,true);
-    tilebuilder.UpdateComplexRestrictions(updated_reverse_cr_list,false);
 
-    stats.forward_restrictions_count += updated_forward_cr_list.size();
-    stats.reverse_restrictions_count += updated_reverse_cr_list.size();
+    // TODO - get size of restrictions
+//    stats.forward_restrictions_count += updated_forward_cr_list.size();
+//    stats.reverse_restrictions_count += updated_reverse_cr_list.size();
 
     // Write the new file
     lock.lock();

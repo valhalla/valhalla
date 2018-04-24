@@ -278,25 +278,22 @@ class DynamicCost {
         // Ids do not match the path for this restriction.
         bool match = true;
         const EdgeLabel* next_pred = first_pred;
-        for (const auto& via_id : cr.GetVias()) {
-          if (via_id != next_pred->edgeid()) {
+        const baldr::GraphId* via = cr->via_list();
+        for (uint32_t i = 0; i < cr->via_count(); i++, via++) {
+          if (*via != next_pred->edgeid()) {
             match = false;
             break;
           }
           next_pred = next_predecessor(next_pred);
         }
-
-        if (1304764469345 == cr.from_graphid().value) {
-
-          std::cout << cr.begin_hrs() << " " << cr.begin_mins() << " " << cr.begin_month() << " " << cr.begin_day_dow() << " " << cr.begin_week() <<
-              " " << cr.end_hrs() << " " << cr.end_mins() << " " << cr.end_month() << " " << cr.end_day_dow() << " " << cr.end_week() << " " << cr.dow() <<
-              " " << cr.dt_type() << std::endl;
-        }
-
+// TODO - remove!
+std::cout << cr->begin_hrs() << " " << cr->begin_mins() << " " << cr->begin_month() << " " << cr->begin_day_dow() << " " << cr->begin_week() <<
+    " " << cr->end_hrs() << " " << cr->end_mins() << " " << cr->end_month() << " " << cr->end_day_dow() << " " << cr->end_week() << " " << cr->dow() <<
+    " " << cr->dt_type() << std::endl;
 
         // Check against the start/end of the complex restriction
-        if (match && (( forward && next_pred->edgeid() == cr.from_graphid()) ||
-                      (!forward && next_pred->edgeid() == cr.to_graphid()))) {
+        if (match && (( forward && next_pred->edgeid() == cr->from_graphid()) ||
+                      (!forward && next_pred->edgeid() == cr->to_graphid()))) {
           return true;
         }
       }

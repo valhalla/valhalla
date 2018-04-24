@@ -275,7 +275,6 @@ libvalhalla_la_SOURCES = \
 	src/baldr/accessrestriction.cc \
 	src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
-	src/baldr/complexrestriction.cc \
 	src/baldr/connectivity_map.cc \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
