@@ -363,8 +363,8 @@ void build(const std::string& complex_restriction_file,
                   complex_restriction.set_modes(restriction.modes());
 
                   TimeDomain td = TimeDomain(restriction.time_domain());
-                  if (td.value) {
-                    complex_restriction.set_begin_day_dow(td.begin_dow());
+                  if (td.td_value()) {
+                    complex_restriction.set_begin_day_dow(td.begin_day_dow());
                     complex_restriction.set_begin_hrs(td.begin_hrs());
                     complex_restriction.set_begin_mins(td.begin_mins());
                     complex_restriction.set_begin_month(td.begin_month());
@@ -372,7 +372,7 @@ void build(const std::string& complex_restriction_file,
                     complex_restriction.set_dow(td.dow());
                     complex_restriction.set_dt(true);
                     complex_restriction.set_dt_type(td.type());
-                    complex_restriction.set_end_day_dow(td.end_dow());
+                    complex_restriction.set_end_day_dow(td.end_day_dow());
                     complex_restriction.set_end_hrs(td.end_hrs());
                     complex_restriction.set_end_mins(td.end_mins());
                     complex_restriction.set_end_month(td.end_month());
@@ -483,8 +483,8 @@ void build(const std::string& complex_restriction_file,
                       complex_restriction.set_modes(restriction.modes());
 
                       TimeDomain td = TimeDomain(restriction.time_domain());
-                      if (td.value) {
-                        complex_restriction.set_begin_day_dow(td.begin_dow());
+                      if (td.td_value()) {
+                        complex_restriction.set_begin_day_dow(td.begin_day_dow());
                         complex_restriction.set_begin_hrs(td.begin_hrs());
                         complex_restriction.set_begin_mins(td.begin_mins());
                         complex_restriction.set_begin_month(td.begin_month());
@@ -492,7 +492,7 @@ void build(const std::string& complex_restriction_file,
                         complex_restriction.set_dow(td.dow());
                         complex_restriction.set_dt(true);
                         complex_restriction.set_dt_type(td.type());
-                        complex_restriction.set_end_day_dow(td.end_dow());
+                        complex_restriction.set_end_day_dow(td.end_day_dow());
                         complex_restriction.set_end_hrs(td.end_hrs());
                         complex_restriction.set_end_mins(td.end_mins());
                         complex_restriction.set_end_month(td.end_month());
