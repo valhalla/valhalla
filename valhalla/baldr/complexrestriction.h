@@ -214,6 +214,7 @@ class ComplexRestriction {
 
   // List of vias follows the structure immediately on disk
   // TODO - perhaps use spare to store offset to a separate list?
+  // TODO - Maybe but need to consider the fact that we may add more date time data.
 };
 
 }
