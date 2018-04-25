@@ -20,8 +20,6 @@ namespace mjolnir {
  * Class to build complex restrictions. Derived from ComplexRestriction.
  * Adds methods to set fields of the structure. Contains a vector of
  * via edge GraphIds. Includes a method to serialize the structure.
- * TODO - add range/validity checks to set methods where fields can
- * overflow.
  */
 class ComplexRestrictionBuilder : public baldr::ComplexRestriction {
  public:
