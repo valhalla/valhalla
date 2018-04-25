@@ -20,11 +20,26 @@ TimeDepForward::TimeDepForward()
   travel_type_ = 0;
   adjacencylist_ = nullptr;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
+  origin_tz_index_ = 0;
 }
 
 // Destructor
 TimeDepForward::~TimeDepForward() {
   Clear();
+}
+
+
+// Get the timezone at the origin.
+int TimeDepForward::GetOriginTimezone(GraphReader& graphreader) {
+  if (edgelabels_.size() == 0) {
+    return -1;
+  }
+  GraphId node = edgelabels_[0].endnode();
+  const GraphTile* tile = graphreader.GetGraphTile(node);
+  if (tile == nullptr) {
+    return -1;
+  }
+  return tile->node(node)->timezone();
 }
 
 // Expand from the node along the forward search path. Immediately expands
@@ -34,7 +49,7 @@ TimeDepForward::~TimeDepForward() {
 void TimeDepForward::ExpandForward(GraphReader& graphreader,
                    const GraphId& node, const EdgeLabel& pred,
                    const uint32_t pred_idx, const bool from_transition,
-                   const uint32_t localtime,
+                   uint32_t localtime,
                    const odin::Location& destination,
                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -48,8 +63,14 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     return;
   }
 
+  // Adjust for time zone (if different from timezone at the start).
+  if (nodeinfo->timezone() != origin_tz_index_) {
+    // What is the difference in timezone offsets?
+    localtime += 0; // TODO
+    printf("localtime = %d tz %d\n", localtime, nodeinfo->timezone());
+  }
+
   // Expand from end node.
-  uint32_t shortcuts = 0;
   uint32_t max_shortcut_length = static_cast<uint32_t>(pred.distance() * 0.5f);
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
@@ -73,28 +94,20 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    // Skip shortcut edges for time dependent routes
+    if (directededge->is_shortcut()) {
+      continue;
+    }
+
     // Skip this edge if permanently labeled (best path already found to this
-    // directed edge), if edge is superseded by a shortcut edge that was taken,
-    // or if no access is allowed to this edge (based on costing method), or if
-    // a complex restriction exists.
+    // directed edge), if no access is allowed to this edge (based on costing
+    // method), or if a complex restriction exists.
     if (es->set() == EdgeSet::kPermanent ||
-        (shortcuts & directededge->superseded()) ||
        !costing_->Allowed(directededge, pred, tile, edgeid, localtime) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile,
                                      edgeid, true, localtime)) {
       continue;
     }
-
-    // Skip shortcut edges when near the destination. Always skip within
-    // 10km but also reject long shortcut edges outside this distance.
-    // TODO - configure this distance based on density?
-    if (directededge->is_shortcut() && (pred.distance() < 10000.0f ||
-        directededge->length() > max_shortcut_length)) {
-      continue;
-    }
-
-    // Update the_shortcuts mask
-    shortcuts |= directededge->shortcut();
 
     // Compute the cost to the end of this edge
     Cost newcost = pred.cost() + costing_->EdgeCost(directededge) +
@@ -195,12 +208,14 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   uint32_t density = SetDestination(graphreader, destination);
   SetOrigin(graphreader, origin, destination);
 
-  // Update hierarchy limits
-  ModifyHierarchyLimits(mindist, density);
+  // Set the origin timezone to be the timezone at the end node
+  origin_tz_index_ = GetOriginTimezone(graphreader);
 
   // Set route start time (seconds from midnight), date, and day of week
-  // TODO - store the timezone at the start.
   uint32_t start_time = DateTime::seconds_from_midnight(origin.date_time());
+
+  // Update hierarchy limits
+  ModifyHierarchyLimits(mindist, density);
 
   // Find shortest path
   uint32_t nc = 0;       // Count of iterations with no convergence
@@ -272,8 +287,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
       continue;
     }
 
-    // Set local time. TODO: adjust for time zone (if different from timezone
-    // at the start).
+    // Set local time.
     uint32_t localtime = start_time + pred.cost().secs;
 
     // Expand forward from the end node of the predecessor edge.

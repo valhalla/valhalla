@@ -253,7 +253,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   stop_one_stops.reserve(header_->stopcount());
   for (uint32_t i = 0; i < header_->stopcount(); i++) {
     const auto& stop = GetName(transit_stops_[i].one_stop_offset());
-    stop_one_stops[stop] = tile_index_pair(graphid.tileid(), i);
+    stop_one_stops[stop] = { graphid.tileid(), graphid.level(), i };
   }
 
   // Associate route and operator Ids
@@ -263,22 +263,26 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
     const auto& route_one_stop = GetName(t->one_stop_offset());
     auto stops = route_one_stops.find(route_one_stop);
     if (stops == route_one_stops.end()) {
-      std::list<tile_index_pair> tile_line_ids;
-      tile_line_ids.emplace_back(tile_index_pair(graphid.tileid(), dep.second->lineid()));
+      std::list<GraphId> tile_line_ids;
+      tile_line_ids.emplace_back(graphid.tileid(), graphid.level(),
+          dep.second->lineid());
       route_one_stops[route_one_stop] = tile_line_ids;
     } else {
-      route_one_stops[route_one_stop].emplace_back(tile_index_pair(graphid.tileid(), dep.second->lineid()));
+      route_one_stops[route_one_stop].emplace_back(graphid.tileid(),
+          graphid.level(), dep.second->lineid());
     }
 
     // operators contain all of their route's tile_line pairs.
     const auto& op_one_stop = GetName(t->op_by_onestop_id_offset());
     stops = oper_one_stops.find(op_one_stop);
     if (stops == oper_one_stops.end()) {
-      std::list<tile_index_pair> tile_line_ids;
-      tile_line_ids.emplace_back(tile_index_pair(graphid.tileid(), dep.second->lineid()));
+      std::list<GraphId> tile_line_ids;
+      tile_line_ids.emplace_back(graphid.tileid(), graphid.level(),
+          dep.second->lineid());
       oper_one_stops[op_one_stop] = tile_line_ids;
     } else {
-      oper_one_stops[op_one_stop].emplace_back(tile_index_pair(graphid.tileid(), dep.second->lineid()));
+      oper_one_stops[op_one_stop].emplace_back(graphid.tileid(), graphid.level(),
+          dep.second->lineid());
     }
   }
 }
@@ -758,21 +762,18 @@ std::unordered_map<uint32_t,TransitDeparture*> GraphTile::GetTransitDepartures()
   return deps;
 }
 
-// Get the stop onestops in this tile
-std::unordered_map<std::string, tile_index_pair>
-GraphTile::GetStopOneStops() const {
+// Get the stop onestop Ids in this tile.
+const std::unordered_map<std::string, GraphId>& GraphTile::GetStopOneStops() const {
   return stop_one_stops;
 }
 
-// Get the route onestops in this tile.
-std::unordered_map<std::string, std::list<tile_index_pair>>
-GraphTile::GetRouteOneStops() const {
+// Get the route onestop Ids in this tile.
+const std::unordered_map<std::string, std::list<GraphId>>& GraphTile::GetRouteOneStops() const {
   return route_one_stops;
 }
 
-// Get the operator onestops in this tile.
-std::unordered_map<std::string, std::list<tile_index_pair>>
-GraphTile::GetOperatorOneStops() const {
+// Get the operator onestop Ids in this tile.
+const std::unordered_map<std::string, std::list<GraphId>>& GraphTile::GetOperatorOneStops() const {
   return oper_one_stops;
 }
 
