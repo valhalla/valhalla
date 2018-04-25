@@ -5,8 +5,6 @@
 #include <vector>
 #include <utility>
 
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/rapidjson_utils.h>

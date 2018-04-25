@@ -369,6 +369,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
+  const NodeInfo* closest_ni = nullptr;
   for (const auto& edge : origin.path_edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1) unless the
     // destination is also at the same end node (trivial path).
@@ -425,6 +426,11 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
       }
     }
 
+    // Store the closest node info
+    if (closest_ni == nullptr) {
+      closest_ni = nodeinfo;
+    }
+
     // Compute sortcost
     float sortcost = cost.cost + astarheuristic_.Get(dist);
 
@@ -445,10 +451,10 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (nodeinfo != nullptr && origin.has_date_time() &&
-    origin.date_time() == "current") {
+  if (closest_ni != nullptr && origin.has_date_time() &&
+      origin.date_time() == "current") {
     origin.set_date_time(DateTime::iso_date_time(
-        DateTime::get_tz_db().from_index(nodeinfo->timezone())));
+        DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
 }
 

@@ -555,6 +555,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
+  const NodeInfo* closest_ni = nullptr;
   for (const auto& edge : origin.path_edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
     if (has_other_edges && edge.end_node()) {
@@ -578,6 +579,11 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     nodeinfo = endtile->node(directededge->endnode());
     Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.percent_along());
 
+    // Store the closest node info
+    if (closest_ni == nullptr) {
+      closest_ni = nodeinfo;
+    }
+
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
@@ -599,10 +605,10 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (nodeinfo != nullptr && origin.has_date_time() &&
+  if (closest_ni != nullptr && origin.has_date_time() &&
       origin.date_time() == "current") {
     origin.set_date_time(DateTime::iso_date_time(
-    		DateTime::get_tz_db().from_index(nodeinfo->timezone())));
+    		DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
 }
 

@@ -19,6 +19,7 @@
 #include <valhalla/thor/astar.h>
 #include <valhalla/thor/match_result.h>
 #include <valhalla/thor/multimodal.h>
+#include <valhalla/thor/timedep.h>
 #include <valhalla/thor/trippathbuilder.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/isochrone.h>
@@ -94,6 +95,8 @@ class thor_worker_t : public service_worker_t{
   AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;
   MultiModalPathAlgorithm multi_modal_astar;
+  TimeDepForward timedep_forward;
+  TimeDepReverse timedep_reverse;
   Isochrone isochrone_gen;
   std::shared_ptr<meili::MapMatcher> matcher;
   float long_request;
