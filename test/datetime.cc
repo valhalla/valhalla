@@ -244,8 +244,8 @@ void TryIsRestricted(const TimeDomain td,const std::string date, const bool expe
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
   if (DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(), td.end_mins(),
-                              td.dow(), td.begin_week(), td.begin_month(), td.begin_day(),
-                              td.end_week(), td.end_month(), td.end_day(), date, tz) != expected_value ) {
+                              td.dow(), td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                              td.end_week(), td.end_month(), td.end_day_dow(), date, tz) != expected_value ) {
 
     throw std::runtime_error("Is Restricted " + date + " test failed.  Expected: " +
                              std::to_string(expected_value));
@@ -267,10 +267,10 @@ void TryConditionalRestrictions(const std::string condition,const std::vector<ui
     res.end_day() << " end week " << res.end_week() << " end hrs " <<
     res.end_hrs() << " end mins " << res.end_mins() << std::endl;*/
 
-    if (res.value != expected_values.at(x))
+    if (res.td_value() != expected_values.at(x))
       throw std::runtime_error("Time domain " + condition + " test failed.  Expected: " +
                                std::to_string(expected_values.at(x)) + " but received " +
-                               std::to_string(res.value));
+                               std::to_string(res.td_value()));
   }
 }
 
@@ -287,17 +287,17 @@ void TryConditionalRestrictions(const std::string condition, const uint32_t inde
   TimeDomain res = TimeDomain(results.at(index));
 
   if (res.type() != type || res.dow() != dow ||
-      res.begin_month() != begin_month || res.begin_day() != begin_day ||
+      res.begin_month() != begin_month || res.begin_day_dow() != begin_day ||
       res.begin_week() != begin_week || res.begin_hrs() != begin_hrs ||
       res.begin_mins() != begin_mins || res.end_month() != end_month ||
-      res.end_day() != end_day || res.end_week() != end_week ||
+      res.end_day_dow() != end_day || res.end_week() != end_week ||
       res.end_hrs() != end_hrs || res.end_mins() != end_mins) {
     throw std::runtime_error("Time domain " + condition + " test failed.  Output: " +
                              std::to_string(res.type()) + " " + std::to_string(res.dow()) + " " +
-                             std::to_string(res.begin_month()) + " " + std::to_string(res.begin_day()) + " " +
+                             std::to_string(res.begin_month()) + " " + std::to_string(res.begin_day_dow()) + " " +
                              std::to_string(res.begin_week()) + " " + std::to_string(res.begin_hrs()) + " " +
                              std::to_string(res.begin_mins()) + " " + std::to_string(res.end_month()) + " " +
-                             std::to_string(res.end_day()) + " " + std::to_string(res.end_week()) + " " +
+                             std::to_string(res.end_day_dow()) + " " + std::to_string(res.end_week()) + " " +
                              std::to_string(res.end_hrs()) + " " + std::to_string(res.end_mins()));
   }
 }
