@@ -1140,8 +1140,8 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           stream.ignore();
           stream >> min;
 
-          timedomain.daterange.begin_hrs = hour;
-          timedomain.daterange.begin_mins = min;
+          timedomain.set_begin_hrs(hour);
+          timedomain.set_begin_mins(min);
 
           //process the hour off
           found = on_off.at(1).find(":");
@@ -1156,10 +1156,10 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           stream.ignore();
           stream >> min;
 
-          timedomain.daterange.end_hrs = hour;
-          timedomain.daterange.end_mins = min;
+          timedomain.set_end_hrs(hour);
+          timedomain.set_end_mins(min);
 
-          time_domains.push_back(timedomain.value);
+          time_domains.push_back(timedomain.td_value());
 
         }
       }
@@ -1226,71 +1226,70 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
         //Feb#16-Oct#15
         if (months_dow.size() == 4 && is_date && is_range) {
-          timedomain.daterange.begin_month = static_cast<uint8_t>(get_month(months_dow.at(0)));
-          timedomain.daterange.begin_day_dow = std::stoi(months_dow.at(1));
+          timedomain.set_type(kYMD);
+          timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
+          timedomain.set_begin_day_dow(std::stoi(months_dow.at(1)));
 
-          timedomain.daterange.end_month = static_cast<uint8_t>(get_month(months_dow.at(2)));
-          timedomain.daterange.end_day_dow = std::stoi(months_dow.at(3));
+          timedomain.set_end_month(static_cast<uint8_t>(get_month(months_dow.at(2))));
+          timedomain.set_end_day_dow(std::stoi(months_dow.at(3)));
 
-          timedomain.daterange.type = kYMD;
           break;
         } //May 16-31
         else if (months_dow.size() == 3 && is_date && is_range) {
-          timedomain.daterange.begin_month = static_cast<uint8_t>(get_month(months_dow.at(0)));
-          timedomain.daterange.begin_day_dow = std::stoi(months_dow.at(1));
+          timedomain.set_type(kYMD);
+          timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
+          timedomain.set_begin_day_dow(std::stoi(months_dow.at(1)));
 
-          timedomain.daterange.end_month = timedomain.daterange.begin_month;
-          timedomain.daterange.end_day_dow = std::stoi(months_dow.at(2));
-
-          timedomain.daterange.type = kYMD;
+          timedomain.set_end_month(timedomain.begin_month());
+          timedomain.set_end_day_dow(std::stoi(months_dow.at(2)));
           break;
         }
         //Apr-Sep or May 15
         else if (months_dow.size() == 2) {
 
-          timedomain.daterange.begin_month = static_cast<uint8_t>(get_month(months_dow.at(0)));
+          timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
           baldr::MONTH month = get_month(months_dow.at(1));
 
           if (month != MONTH::kNone) {
-            timedomain.daterange.end_month = static_cast<uint8_t>(month);
-            timedomain.daterange.type = kYMD;
+            timedomain.set_type(kYMD);
+            timedomain.set_end_month(static_cast<uint8_t>(month));
           } else if (is_date) { // May 15
-            timedomain.daterange.type = kYMD;
-            timedomain.daterange.begin_day_dow = std::stoi(months_dow.at(1));
-            timedomain.daterange.end_month = timedomain.daterange.begin_month;
-            timedomain.daterange.end_day_dow = timedomain.daterange.begin_day_dow;
+            timedomain.set_type(kYMD);
+            timedomain.set_begin_day_dow(std::stoi(months_dow.at(1)));
+            timedomain.set_end_month(timedomain.begin_month());
+            timedomain.set_end_day_dow(timedomain.begin_day_dow());
           } else {
             return time_domains;
           }
 
           break;
         } else if (months_dow.size() == 1) {//May
-          timedomain.daterange.type = kYMD;
-          timedomain.daterange.begin_month = static_cast<uint8_t>(get_month(months_dow.at(0)));
-          timedomain.daterange.end_month = static_cast<uint8_t>(get_month(months_dow.at(0)));
+          timedomain.set_type(kYMD);
+          timedomain.set_begin_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
+          timedomain.set_end_month(static_cast<uint8_t>(get_month(months_dow.at(0))));
           break;
         } else if (is_nth_week) {//Oct Su[-1]-Mar Su[4] Su 09:00-16:00
           if (get_month(md) != MONTH::kNone) {
 
-            timedomain.daterange.type = kNthDow;
-            if (timedomain.daterange.begin_month == 0) {
+            timedomain.set_type(kNthDow);
+            if (timedomain.begin_month() == 0) {
 
               //assume the restriction is the entire week.
-              timedomain.daterange.dow = kAllDaysOfWeek;
+              timedomain.set_dow(kAllDaysOfWeek);
 
-              timedomain.daterange.begin_month = static_cast<uint8_t>(get_month(md));
+              timedomain.set_begin_month(static_cast<uint8_t>(get_month(md)));
               //assume no range.  Dec Su[-1] Su-Sa 15:00-17:00 starts on the last week
               //in Dec and ends in the last week in Dec
               if (!is_range)
-                timedomain.daterange.end_month = timedomain.daterange.begin_month;
+                timedomain.set_end_month(timedomain.begin_month());
             } else {
-              timedomain.daterange.end_month = static_cast<uint8_t>(get_month(md));
+              timedomain.set_end_month(static_cast<uint8_t>(get_month(md)));
 
               if (is_range && is_date &&
                   md != months_dow.at(months_dow.size()-1)) { //Dec Su[-1]-Mar 3 Sat
 
                 if (months_dow.at(months_dow.size()-1).find('[') == std::string::npos) {
-                  timedomain.daterange.end_day_dow = std::stoi(months_dow.at(months_dow.size()-1));
+                  timedomain.set_end_day_dow(std::stoi(months_dow.at(months_dow.size()-1)));
                   break;
                 } else ends_nth_week = true;
               }
@@ -1298,23 +1297,23 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
           } else if (get_dow(md) != DOW::kNone) {
 
-            if (timedomain.daterange.begin_day_dow == 0)
-              timedomain.daterange.begin_day_dow = static_cast<uint8_t>(get_dow(md));
-            else timedomain.daterange.end_day_dow = static_cast<uint8_t>(get_dow(md));
+            if (timedomain.begin_day_dow() == 0)
+              timedomain.set_begin_day_dow(static_cast<uint8_t>(get_dow(md)));
+            else timedomain.set_end_day_dow(static_cast<uint8_t>(get_dow(md)));
 
           } else if (md.find('[') != std::string::npos && md.find(']') != std::string::npos) {
             md.erase(boost::remove_if(md, boost::is_any_of("[]")), md.end());
 
-            if (timedomain.daterange.begin_week == 0 && !ends_nth_week) {
-              timedomain.daterange.begin_week = std::stoi(md);
+            if (timedomain.begin_week() == 0 && !ends_nth_week) {
+              timedomain.set_begin_week(std::stoi(md));
               //assume no range.  Dec Su[-1] Su-Sa 15:00-17:00 starts on the last week
               //in Dec and ends in the last week in Dec
               if (!is_range)
-                timedomain.daterange.end_week = timedomain.daterange.begin_week;
-            } else timedomain.daterange.end_week = std::stoi(md);
-          } else if (is_date && is_range && timedomain.daterange.begin_month != 0 &&
-              timedomain.daterange.end_month == 0) { //Mar 3-Dec Su[-1] Sat
-              timedomain.daterange.begin_day_dow = std::stoi(md);
+                timedomain.set_end_week(timedomain.begin_week());
+            } else timedomain.set_end_week(std::stoi(md));
+          } else if (is_date && is_range && timedomain.begin_month() != 0 &&
+              timedomain.end_month() == 0) { //Mar 3-Dec Su[-1] Sat
+              timedomain.set_begin_day_dow(std::stoi(md));
           }
         }
       }
@@ -1324,28 +1323,28 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
       //Mo,We,Th,Fr
       if (!is_range) {
         //wipe out assumption that this restriction is for the entire week.
-        if (timedomain.daterange.type == kNthDow)
-          timedomain.daterange.dow = 0;
+        if (timedomain.type() == kNthDow)
+          timedomain.set_dow(0);
 
         for (auto& md : months_dow){
-          timedomain.daterange.dow += get_dow_mask(md);
+          timedomain.set_dow(timedomain.dow() + get_dow_mask(md));
         }
 
         if (months_dow_times.size() == 2) {
           std::string week = months_dow_times.at(1);
           //Su[1] every 1st Sunday of every month.
           if (week.find('[') != std::string::npos && week.find(']') != std::string::npos) {
-            timedomain.daterange.type = kNthDow;
+            timedomain.set_type(kNthDow);
             week.erase(boost::remove_if(week, boost::is_any_of("[]")), week.end());
-            timedomain.daterange.begin_week = std::stoi(week);
+            timedomain.set_begin_week(std::stoi(week));
             break;
           }
         }
       //Mo-Fr
       } else if (months_dow.size() == 2) {
         //wipe out assumption that this restriction is for the entire week.
-        if (timedomain.daterange.type == kNthDow)
-          timedomain.daterange.dow = 0;
+        if (timedomain.type() == kNthDow)
+          timedomain.set_dow(0);
 
         uint8_t b_index = static_cast<uint8_t>(get_dow(months_dow.at(0)));
         uint8_t e_index = static_cast<uint8_t>(get_dow(months_dow.at(1)));
@@ -1353,14 +1352,14 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
         if (b_index > e_index) { //Th - Tu
 
           while (b_index <= static_cast<uint8_t>(DOW::kSaturday)) {
-            timedomain.daterange.dow += (1 << (b_index-1));
+            timedomain.set_dow(timedomain.dow() + (1 << (b_index-1)));
             b_index++;
           }
           b_index = static_cast<uint8_t>(DOW::kSunday);
         }
 
         while (b_index <= e_index) {
-          timedomain.daterange.dow += (1 << (b_index-1));
+          timedomain.set_dow(timedomain.dow() + (1 << (b_index-1)));
           b_index++;
         }
 
@@ -1396,8 +1395,8 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           stream.ignore();
           stream >> min;
 
-          timedomain.daterange.begin_hrs = hour;
-          timedomain.daterange.begin_mins = min;
+          timedomain.set_begin_hrs(hour);
+          timedomain.set_begin_mins(min);
 
           //process the hour off
           found = on_off.at(1).find(":");
@@ -1412,18 +1411,18 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           stream.ignore();
           stream >> min;
 
-          timedomain.daterange.end_hrs = hour;
-          timedomain.daterange.end_mins = min;
+          timedomain.set_end_hrs(hour);
+          timedomain.set_end_mins(min);
 
-          time_domains.push_back(timedomain.value);
+          time_domains.push_back(timedomain.td_value());
         }
       }
     }
   }
 
   //no time.
-  if (time_domains.size() == 0 && timedomain.value)
-    time_domains.push_back(timedomain.value);
+  if (time_domains.size() == 0 && timedomain.td_value())
+    time_domains.push_back(timedomain.td_value());
 
   return time_domains;
 }
