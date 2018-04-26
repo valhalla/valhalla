@@ -86,7 +86,7 @@ float PointLL::Distance(const PointLL& ll2) const {
   // Protect against cosb being outside -1 to 1 range.
   if (cosb >= 1.0)
     return 0.00001f;
-  else if (cosb < -1.0)
+  else if (cosb <= -1.0)
     return kPi * kRadEarthMeters;
   else
     return (float)(acos(cosb) * kRadEarthMeters);
@@ -160,21 +160,23 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(
     auto bx = v.lng() - u.lng();
     auto by = v.lat() - u.lat();
 
-    // Scale longitude when finding the projection. Avoid divided-by-zero
-    // which gives a NaN scale, otherwise comparisons below will fail
+    // Scale longitude when finding the projection. Only need the numerator
+    // at first, saving the division for the case where the lat,lon projects
+    // along the current segment.
     auto bx2 = bx * lon_scale;
     auto sq  = bx2 * bx2 + by * by;
-    auto scale = sq > 0 ?  (((lng() - u.lng()) * lon_scale * bx2 +
-                             (lat() - u.lat()) *by) / sq) : 0.f;
+    auto scale = (lng() - u.lng()) * lon_scale * bx2 +
+                 (lat() - u.lat()) * by;
 
     // Projects along the ray before u
     if (scale <= 0.f) {
       point = { u.lng(), u.lat() };
     } // Projects along the ray after v
-    else if (scale >= 1.f) {
+    else if (scale >= sq) {
       point = { v.lng(), v.lat() };
     } // Projects along the ray between u and v
     else {
+      scale /= sq;
       point = { u.lng() + bx * scale, u.lat() + by * scale };
     }
 
