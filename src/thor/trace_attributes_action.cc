@@ -42,12 +42,22 @@ void thor_worker_t::filter_attributes(const valhalla_request_t& request, Attribu
 
   if (filter_action == "include") {
     controller.disable_all();
-    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes"))
-      controller.attributes.at(v.GetString()) = true;
+    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes")) {
+      try {
+        controller.attributes.at(v.GetString()) = true;
+      } catch (...) {
+        LOG_ERROR("Invalid filter attribute " + std::string(v.GetString()));
+      }
+    }
   } else if (filter_action == "exclude") {
     controller.enable_all();
-    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes"))
-      controller.attributes.at(v.GetString()) = false;
+    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes")) {
+      try {
+        controller.attributes.at(v.GetString()) = false;
+      } catch (...) {
+        LOG_ERROR("Invalid filter attribute " + std::string(v.GetString()));
+      }
+    }
   } else {
     controller.enable_all();
   }
