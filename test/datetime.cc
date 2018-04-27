@@ -252,6 +252,27 @@ void TryIsRestricted(const TimeDomain td,const std::string date, const bool expe
   }
 }
 
+void TryTestTimezoneDiff(const bool is_depart, const uint64_t date_time,
+                         const std::string expected1, const std::string expected2,
+                         const std::string time_zone1, const std::string time_zone2 ) {
+
+  uint64_t dt = date_time;
+
+  auto tz1 = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index(time_zone1));
+  auto tz2 = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index(time_zone2));
+
+std::cout <<  DateTime::seconds_to_date(dt, tz1) << std::endl;
+
+  DateTime::timezone_diff(is_depart, dt, tz1, tz2);
+  if (DateTime::seconds_to_date(dt, tz1) != expected1)
+    throw std::runtime_error("Timezone Diff test #1: " + std::to_string(date_time) + " test failed.  Expected: " + expected1 + " but got " +
+                             DateTime::seconds_to_date(dt, tz1));
+
+  if (DateTime::seconds_to_date(dt, tz2) != expected2)
+    throw std::runtime_error("Timezone Diff test #2: " + std::to_string(date_time) + " test failed.  Expected: " + expected2 + " but got " +
+                             DateTime::seconds_to_date(dt, tz2));
+}
+
 void TryConditionalRestrictions(const std::string condition,const std::vector<uint64_t> expected_values) {
 
   std::vector<uint64_t> results = DateTime::get_time_range(condition);
@@ -674,6 +695,71 @@ void TestIsRestricted() {
   TryIsRestricted(td, "2019-03-03T08:30", false);
 }
 
+void TestTimezoneDiff() {
+
+  //dst tests
+  TryTestTimezoneDiff(true, 1478493271, "2016-11-06T23:34-05:00", "2016-11-06T23:34-05:00",
+                      "America/New_York", "America/New_York");
+  TryTestTimezoneDiff(true, 1478410471, "2016-11-06T01:34-04:00", "2016-11-06T01:34-04:00",
+                      "America/New_York", "America/New_York");
+  TryTestTimezoneDiff(true, 1478419200, "2016-11-06T03:00-05:00", "2016-11-06T03:00-05:00",
+                      "America/New_York", "America/New_York");
+  TryTestTimezoneDiff(true, 1457847695, "2016-03-13T00:41-05:00", "2016-03-13T00:41-05:00",
+                      "America/New_York", "America/New_York");
+  TryTestTimezoneDiff(true, 1457848800, "2016-03-13T01:00-05:00", "2016-03-13T01:00-05:00",
+                      "America/New_York", "America/New_York");
+  TryTestTimezoneDiff(true, 1457851295, "2016-03-13T01:41-05:00", "2016-03-13T01:41-05:00",
+                      "America/New_York", "America/New_York");
+  TryTestTimezoneDiff(true, 1457852400, "2016-03-13T03:00-04:00", "2016-03-13T03:00-04:00",
+                      "America/New_York", "America/New_York");
+
+  //crossing tz
+  // 2018-04-25T21:09-06:00 = 1524712192
+  // if you are in mtn tz and go to la tz, subtract one hour
+  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T20:09-06:00", "2018-04-25T19:09-07:00",
+                      "America/Denver", "America/Los_Angeles");
+  // 2018-04-25T20:09-07:00 = 1524712192
+  // if you are in la tz and go to mtn tz, add one hour
+  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T21:09-07:00", "2018-04-25T22:09-06:00",
+                      "America/Los_Angeles", "America/Denver");
+
+  // 2018-04-25T21:09-06:00 = 1524712192
+  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T20:09-06:00", "2018-04-25T19:09-07:00",
+                      "America/Denver", "America/Los_Angeles");
+  // 2018-04-25T20:09-07:00 = 1524712192
+  // if you are in la tz and go to mtn tz, add one hour
+  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T21:09-07:00", "2018-04-25T22:09-06:00",
+                      "America/Los_Angeles", "America/Denver");
+
+  // 2018-04-25T23:09-04:00 = 1524712192
+  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T20:09-04:00", "2018-04-25T17:09-07:00",
+                      "America/New_York", "America/Los_Angeles");
+  // 2018-04-25T20:09-07:00 = 1524712192
+  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T23:09-07:00", "2018-04-26T02:09-04:00",
+                      "America/Los_Angeles", "America/New_York");
+
+  // 2018-04-25T23:09-04:00 = 1524712192
+  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T20:09-04:00", "2018-04-25T17:09-07:00",
+                      "America/New_York", "America/Los_Angeles");
+  // 2018-04-25T20:09-07:00 = 1524712192
+  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09-07:00", "2018-04-26T02:09-04:00",
+                      "America/Los_Angeles", "America/New_York");
+
+  // 2018-04-25T23:09-04:00 = 1524712192
+  TryTestTimezoneDiff(true, 1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
+                      "America/New_York", "Europe/Berlin");
+  // 2018-04-26T05:09+02:00 = 1524712192
+  TryTestTimezoneDiff(true, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
+                      "Europe/Berlin", "America/New_York");
+
+  // 2018-04-25T23:09-04:00 = 1524712192
+  TryTestTimezoneDiff(false, 1524712192, "2018-04-26T05:09-04:00", "2018-04-26T11:09+02:00",
+                      "America/New_York", "Europe/Berlin");
+  // 2018-04-26T05:09+02:00 = 1524712192
+  TryTestTimezoneDiff(false, 1524712192, "2018-04-25T23:09+02:00", "2018-04-25T17:09-04:00",
+                      "Europe/Berlin", "America/New_York");
+}
+
 void TestConditionalRestrictions() {
 
   std::string str = "Mo-Fr 06:00-11:00,17:00-19:00;Sa 03:30-19:00";
@@ -993,6 +1079,7 @@ int main(void) {
   suite.test(TEST_CASE(TestDST));
   suite.test(TEST_CASE(TestConditionalRestrictions));
   suite.test(TEST_CASE(TestIsRestricted));
+  suite.test(TEST_CASE(TestTimezoneDiff));
 
   return suite.tear_down();
 }
