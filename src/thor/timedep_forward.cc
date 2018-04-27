@@ -49,7 +49,7 @@ int TimeDepForward::GetOriginTimezone(GraphReader& graphreader) {
 void TimeDepForward::ExpandForward(GraphReader& graphreader,
                    const GraphId& node, const EdgeLabel& pred,
                    const uint32_t pred_idx, const bool from_transition,
-                   uint32_t localtime,
+                   uint64_t localtime,
                    const odin::Location& destination,
                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -65,9 +65,8 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
 
   // Adjust for time zone (if different from timezone at the start).
   if (nodeinfo->timezone() != origin_tz_index_) {
-    // What is the difference in timezone offsets?
-    localtime += 0; // TODO
-    printf("localtime = %d tz %d\n", localtime, nodeinfo->timezone());
+    DateTime::timezone_diff(true, localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
+                           DateTime::get_tz_db().from_index(nodeinfo->timezone()));
   }
 
   // Expand from end node.
@@ -211,8 +210,9 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   // Set the origin timezone to be the timezone at the end node
   origin_tz_index_ = GetOriginTimezone(graphreader);
 
-  // Set route start time (seconds from midnight), date, and day of week
-  uint32_t start_time = DateTime::seconds_from_midnight(origin.date_time());
+  // Set route start time (seconds from epoch)
+  uint64_t start_time = DateTime::seconds_since_epoch(origin.date_time(),
+                                                      DateTime::get_tz_db().from_index(origin_tz_index_));
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -288,7 +288,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
     }
 
     // Set local time.
-    uint32_t localtime = start_time + pred.cost().secs;
+    uint64_t localtime = start_time + pred.cost().secs;
 
     // Expand forward from the end node of the predecessor edge.
     ExpandForward(graphreader, pred.endnode(), pred, predindex, false,
