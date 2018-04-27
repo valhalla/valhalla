@@ -89,6 +89,13 @@ void TryClip(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) 
   }
 }
 
+void TryClipOutside(Polyline2<Point2>& pl, const AABB2<Point2>& a) {
+  uint32_t x = pl.Clip(a);
+  if (x != 0) {
+    throw runtime_error("Clip test failed: all vertices outside so count should be 0");
+  }
+}
+
 void TestClip() {
   std::vector<Point2> pts = { Point2(25.0f, 25.0f), Point2(50.0f, 50.0f),
       Point2(25.0f, 75.0f), Point2(50.0f, 100.0f) };
@@ -98,6 +105,22 @@ void TestClip() {
   // Test with vertices on edges
   Polyline2<Point2> pl2(pts);
   TryClip(pl2, AABB2<Point2>(Point2(25.0f, 25.0f), Point2(50.0f, 100.0f)), 4);
+
+  // Test Clip with all vertices above top of AABB
+  Polyline2<Point2> pl3(pts);
+  TryClipOutside(pl3, AABB2<Point2>(Point2(0.0f, 0.0f), Point2(50.0f, 20.0f)));
+
+  // Test Clip with all vertices left of AABB
+  Polyline2<Point2> pl4(pts);
+  TryClipOutside(pl4, AABB2<Point2>(Point2(50.0f, 25.0f), Point2(100.0f, 100.0f)));
+
+  // Test Clip with all vertices right of AABB
+  Polyline2<Point2> pl5(pts);
+  TryClipOutside(pl5, AABB2<Point2>(Point2(0.0f, 25.0f), Point2(10.0f, 100.0f)));
+
+  // Test Clip with all vertices below bottom of AABB
+  Polyline2<Point2> pl6(pts);
+  TryClipOutside(pl6, AABB2<Point2>(Point2(25.0f, 100.0f), Point2(50.0f, 200.0f)));
 }
 
 void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) {
