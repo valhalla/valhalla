@@ -12,6 +12,16 @@ using namespace valhalla::midgard;
 
 namespace {
 
+void TryDefaultConstructor(const AABB2<Point2>& b) {
+  if (!(b.minx() == 0.0f && b.miny() == 0.0f && b.maxx() == 0.0f && b.maxy() == 0.0f))
+    throw runtime_error("Default constructor test failed");
+}
+
+void TestConstructor() {
+  AABB2<Point2> b;
+  TryDefaultConstructor(b);
+}
+
 void TryIntersectsBb(const AABB2<Point2>& a, const AABB2<Point2>& b) {
   if (!a.Intersects(b))
     throw runtime_error("Intersecting BB test failed");
@@ -94,6 +104,26 @@ void TryExpand(AABB2<Point2> a, const AABB2<Point2>& b) {
 void TestExpand() {
   TryExpand(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f),
             AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f));
+}
+
+void TryExpandPointMin(AABB2<Point2> a, const Point2& p) {
+  a.Expand(p);
+  if (!(a.miny() == p.y() && a.minx() == p.x()))
+    throw runtime_error("Expand test failed");
+}
+
+void TryExpandPointMax(AABB2<Point2> a, const Point2& p) {
+  a.Expand(p);
+  if (!(a.maxy() == p.y() && a.maxx() == p.x()))
+    throw runtime_error("Expand test failed");
+}
+
+void TestExpandPoint() {
+  TryExpandPointMin(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f),
+            Point2(39.8f, -76.8f));
+
+  TryExpandPointMax(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f),
+            Point2(40.8f, -76.1f));
 }
 
 void TryPtConstructor(const AABB2<Point2>& a) {
@@ -203,6 +233,10 @@ void TestIntersect() {
   if(!box.Intersect((a={0,2}), (b={2,0})) || a != Point2{1,1} || b != Point2{1,1})
     throw std::logic_error("Wrong intersection");
 
+  LineSegment2<Point2> ab(a, b);
+  if(!box.Intersects(ab))
+    throw std::logic_error("LineSegment intersects test failed");
+
   if(box.Intersect((a={-2,-2}), (b={-1,-1.001})))
     throw std::logic_error("Wrong intersection");
   if(box.Intersect((a={0,2.1}), (b={2.1,0})))
@@ -243,6 +277,9 @@ void TestIntersect() {
 int main() {
   test::suite suite("aabb2");
 
+  // Test the default constructor
+  suite.test(TEST_CASE(TestConstructor));
+
   // Tests if another bounding box intersects this bounding box
   suite.test(TEST_CASE(TestIntersectsBb));
 
@@ -260,6 +297,9 @@ int main() {
 
   //Test expand bounding box.
   suite.test(TEST_CASE(TestExpand));
+
+  //Test expand bounding box by a point.
+  suite.test(TEST_CASE(TestExpandPoint));
 
   //Test minimum and maximum point constructor.
   suite.test(TEST_CASE(TestPtConstructor));
