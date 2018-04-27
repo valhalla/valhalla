@@ -1,4 +1,8 @@
 #include <cstdint>
+#include <string>
+#include <vector>
+#include <set>
+#include <unordered_map>
 #include "test.h"
 
 #include "baldr/graphreader.h"
