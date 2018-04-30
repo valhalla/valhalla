@@ -245,10 +245,10 @@ bool AABB2<coord_t>::Inside(const ClipEdge edge, const coord_t& v) const {
       return (v.x() < maxx_);
     case kBottom:
       return (v.y() > miny_);
+    default:
     case kTop:
       return (v.y() < maxy_);
   }
-  return false;
 }
 
 // Add vertex to clip output (if not same as prior vertex)
