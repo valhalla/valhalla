@@ -139,15 +139,33 @@ namespace DateTime {
   uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone);
 
   /**
-   * Get the seconds from epoch
-   * @param   date_time        date_time.  Time is already adjusted to TZ
+   * Get the seconds from epoch for a date_time string
+   * @param   date_time   date_time.
+   * @param   time_zone   Timezone.
    *
    * @return  Returns the seconds from epoch.
    */
   uint64_t seconds_since_epoch(const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone);
 
   /**
+   * Get the difference between two timezone using the seconds from epoch
+   * (taking into account the timezones and dst) and add the difference to the seconds
+   * @param   is_depart_at  is this a depart at or arrive by
+   * @param   seconds       seconds since epoch for
+   * @param   origin_tz     timezone for origin
+   * @param   dest_tz       timezone for dest
+   *
+   */
+  void timezone_diff(const bool is_depart_at, uint64_t& seconds,
+                     const boost::local_time::time_zone_ptr& origin_tz,
+                     const boost::local_time::time_zone_ptr& dest_tz);
+
+
+  std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz);
+
+  /**
    * Get the iso date time from seconds since epoch and timezone.
+   * @param   is_depart_at        is this a depart at or arrive by
    * @param   origin_seconds      seconds since epoch for origin
    * @param   dest_seconds        seconds since epoch for dest
    * @param   origin_tz           timezone for origin
