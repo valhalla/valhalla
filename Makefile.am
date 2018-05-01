@@ -162,6 +162,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/sign.h \
 	valhalla/baldr/signinfo.h \
 	valhalla/baldr/tilehierarchy.h \
+	valhalla/baldr/timedomain.h \
 	valhalla/baldr/turn.h \
 	valhalla/baldr/streetname.h \
 	valhalla/baldr/streetnames.h \
@@ -273,7 +274,6 @@ libvalhalla_la_SOURCES = \
 	src/midgard/logging.cc \
 	src/baldr/accessrestriction.cc \
 	src/baldr/admin.cc \
-	src/baldr/complexrestriction.cc \
 	src/baldr/connectivity_map.cc \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \

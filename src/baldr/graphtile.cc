@@ -455,27 +455,28 @@ EdgeInfo GraphTile::edgeinfo(const size_t offset) const {
 
 // Get the complex restrictions in the forward or reverse order based on
 // the id and modes.
-std::vector<ComplexRestriction> GraphTile::GetRestrictions(const bool forward,
+std::vector<ComplexRestriction*> GraphTile::GetRestrictions(const bool forward,
                                                            const GraphId id,
                                                            const uint64_t modes) const {
-  std::vector<ComplexRestriction> cr_vector;
   size_t offset = 0;
-
+  std::vector<ComplexRestriction*> cr_vector;
   if (forward) {
     while (offset < complex_restriction_forward_size_) {
-
-      ComplexRestriction cr(complex_restriction_forward_ + offset);
-      offset += cr.SizeOf();
-      if (cr.to_id() == id && (cr.modes() & modes))
+      ComplexRestriction* cr =
+          reinterpret_cast<ComplexRestriction*>(complex_restriction_forward_ + offset);
+      if (cr->to_graphid() == id && (cr->modes() & modes)) {
         cr_vector.push_back(cr);
+      }
+      offset += cr->SizeOf();
     }
   } else {
     while (offset < complex_restriction_reverse_size_) {
-
-      ComplexRestriction cr(complex_restriction_reverse_ + offset);
-      offset += cr.SizeOf();
-      if (cr.from_id() == id && (cr.modes() & modes))
+      ComplexRestriction* cr =
+          reinterpret_cast<ComplexRestriction*>(complex_restriction_reverse_ + offset);
+      if (cr->from_graphid() == id && (cr->modes() & modes)) {
         cr_vector.push_back(cr);
+      }
+      offset += cr->SizeOf();
     }
   }
   return cr_vector;

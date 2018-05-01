@@ -37,19 +37,31 @@ class OSMAccessRestriction {
   /**
    * Set the value for the restriction
    */
-  void set_value(uint32_t value);
+  void set_value(uint64_t value);
 
   /**
    * Get the value
    */
-  uint32_t value() const;
+  uint64_t value() const;
+
+  /**
+   * Get the modes for the restriction
+   * @return  Returns a bit field of affected modes.
+   */
+  uint16_t modes() const;
+
+  /**
+   * Set the modes for the restriction
+   */
+  void set_modes(uint16_t modes);
 
  protected:
 
+  uint64_t value_;
+
   struct Attributes {
-    uint32_t type_        : 4;
-    uint32_t value_       : 14;
-    uint32_t spare_       : 14;
+    uint16_t type_        : 4;
+    uint16_t modes_       : 12;
   };
   Attributes attributes_;
 };

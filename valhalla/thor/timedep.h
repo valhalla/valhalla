@@ -54,7 +54,7 @@ class TimeDepForward : public AStarPathAlgorithm {
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
-   * @param  localtime    Current local time.
+   * @param  localtime    Current local time.  Seconds since epoch
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
@@ -62,7 +62,7 @@ class TimeDepForward : public AStarPathAlgorithm {
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node, const sif::EdgeLabel& pred,
                      const uint32_t pred_idx, const bool from_transition,
-                     uint32_t localtime, const odin::Location& dest,
+                     uint64_t localtime, const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
   /**
@@ -137,7 +137,7 @@ class TimeDepReverse : public AStarPathAlgorithm {
    * @param  opp_pred_edge Opposing predecessor directed edge.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
-   * @param  localtime    Current local time.
+   * @param  localtime    Current local time.  Seconds since epoch
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
@@ -147,7 +147,7 @@ class TimeDepReverse : public AStarPathAlgorithm {
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     uint32_t localtime, const odin::Location& dest,
+                     uint64_t localtime, const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
   /**

@@ -278,17 +278,21 @@ class DynamicCost {
         // Ids do not match the path for this restriction.
         bool match = true;
         const EdgeLabel* next_pred = first_pred;
-        for (const auto& via_id : cr.GetVias()) {
-          if (via_id != next_pred->edgeid()) {
-            match = false;
-            break;
+        if (cr->via_count() > 0) {
+          // The via list starts immediately after the structure
+          baldr::GraphId* via = reinterpret_cast<baldr::GraphId*>(cr + 1);
+          for (uint32_t i = 0; i < cr->via_count(); i++, via++) {
+            if (via->value != next_pred->edgeid().value) {
+              match = false;
+              break;
+            }
+            next_pred = next_predecessor(next_pred);
           }
-          next_pred = next_predecessor(next_pred);
         }
 
         // Check against the start/end of the complex restriction
-        if (match && (( forward && next_pred->edgeid() == cr.from_id()) ||
-                      (!forward && next_pred->edgeid() == cr.to_id()))) {
+        if (match && (( forward && next_pred->edgeid() == cr->from_graphid()) ||
+                      (!forward && next_pred->edgeid() == cr->to_graphid()))) {
           return true;
         }
       }
