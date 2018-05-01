@@ -273,7 +273,6 @@ libvalhalla_la_SOURCES = \
 	src/midgard/logging.cc \
 	src/baldr/accessrestriction.cc \
 	src/baldr/admin.cc \
-	src/baldr/admininfo.cc \
 	src/baldr/complexrestriction.cc \
 	src/baldr/connectivity_map.cc \
 	src/baldr/datetime.cc \
@@ -290,8 +289,6 @@ libvalhalla_la_SOURCES = \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
 	src/baldr/pathlocation.cc \
-	src/baldr/sign.cc \
-	src/baldr/signinfo.cc \
 	src/baldr/tilehierarchy.cc \
 	src/baldr/turn.cc \
 	src/baldr/streetname.cc \
@@ -895,7 +892,7 @@ endif
 if DATA_TOOLS
 #some of the tests want tiles of a certain location so lets build those
 test/data/utrecht_tiles: valhalla_build_tiles
-	@echo "Building Utrecht Tiles..." && rm -rf test/data/*utrecht_tiles && ./valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/tmp_utrecht_tiles","concurrency":1,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf && mv test/data/tmp_utrecht_tiles test/data/utrecht_tiles
+	@echo "Building Utrecht Tiles..." && rm -rf test/data/*utrecht_tiles && ./valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/tmp_utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf && mv test/data/tmp_utrecht_tiles test/data/utrecht_tiles
 TEST_CLEANFILES += test/data/utrecht_tiles
 
 check_PROGRAMS += \
