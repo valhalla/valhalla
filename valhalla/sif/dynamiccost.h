@@ -8,6 +8,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
+#include <valhalla/baldr/datetime.h>
 
 #include <memory>
 #include <unordered_set>
@@ -241,7 +242,8 @@ class DynamicCost {
                   const baldr::GraphTile*& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
-                  const uint32_t current_time = 0) const {
+                  const uint32_t tz_index = 0,
+                  const uint64_t current_time = 0) const {
     // Lambda to get the next predecessor EdgeLabel (that is not a transition)
     auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
       // Get the next predecessor - make sure it is valid. Continue to get
@@ -293,6 +295,16 @@ class DynamicCost {
         // Check against the start/end of the complex restriction
         if (match && (( forward && next_pred->edgeid() == cr->from_graphid()) ||
                       (!forward && next_pred->edgeid() == cr->to_graphid()))) {
+
+          if (current_time && cr->has_dt()) {
+            if (baldr::DateTime::is_restricted(cr->dt_type(), cr->begin_hrs(), cr->begin_mins(),
+                                               cr->end_hrs(), cr->end_mins(), cr->dow(),
+                                               cr->begin_week(), cr->begin_month(), cr->begin_day_dow(),
+                                               cr->end_week(), cr->end_month(), cr->end_day_dow(),
+                                               current_time, baldr::DateTime::get_tz_db().from_index(tz_index)))
+              return true;
+            continue;
+          }
           return true;
         }
       }
