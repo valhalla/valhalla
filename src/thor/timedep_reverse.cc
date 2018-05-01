@@ -151,7 +151,8 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     // or if a complex restriction prevents transition onto this edge.
     if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0) ||
          costing_->Restricted(directededge, pred, edgelabels_rev_, tile,
-                                     edgeid, false, localtime)) {
+                                     edgeid, false, nodeinfo->timezone(),
+                                     localtime)) {
       continue;
     }
 
@@ -338,7 +339,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
 
     // Set local time (subtract elapsed time along the path from the start
     // time). TODO: adjust for time zone if different than starting tz
-    uint32_t localtime = start_time - pred.cost().secs;
+    uint64_t localtime = start_time - (double)pred.cost().secs;
 
     // Get the opposing predecessor directed edge. Need to make sure we get
     // the correct one if a transition occurred

@@ -104,7 +104,8 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     if (es->set() == EdgeSet::kPermanent ||
        !costing_->Allowed(directededge, pred, tile, edgeid, localtime) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile,
-                                     edgeid, true, localtime)) {
+                                     edgeid, true, nodeinfo->timezone(),
+                                     localtime)) {
       continue;
     }
 
@@ -213,7 +214,6 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   // Set route start time (seconds from epoch)
   uint64_t start_time = DateTime::seconds_since_epoch(origin.date_time(),
                                                       DateTime::get_tz_db().from_index(origin_tz_index_));
-
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
@@ -288,7 +288,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
     }
 
     // Set local time.
-    uint64_t localtime = start_time + pred.cost().secs;
+    uint64_t localtime = start_time + (double)pred.cost().secs;
 
     // Expand forward from the end node of the predecessor edge.
     ExpandForward(graphreader, pred.endnode(), pred, predindex, false,
