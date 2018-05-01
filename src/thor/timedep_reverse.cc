@@ -11,9 +11,8 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
+// TODO - compute initial label count based on estimated route length
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
-
-// TODO - need to override the Init method!
 
 // Default constructor
 TimeDepReverse::TimeDepReverse()
@@ -519,14 +518,13 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader,
   // Get the transition cost at the last edge of the reverse path
   float tc = edgelabels_rev_[dest].transition_secs();
 
-  // From the reverse path from the destination (true origin). Use opposing
+  // Form the reverse path from the destination (true origin) using opposing
   // edges.
   float secs = 0.0f;
   std::vector<PathInfo> path;
-  uint32_t edgelabel_index = edgelabels_rev_[dest].predecessor();
+  uint32_t edgelabel_index = dest;
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_rev_[edgelabel_index];
-    GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
 
     // Get elapsed time on the edge, then add the transition cost at
     // prior edge.
@@ -537,7 +535,7 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader,
       secs += edgelabel.cost().secs - edgelabels_rev_[predidx].cost().secs;
     }
     secs += tc;
-    path.emplace_back(edgelabel.mode(), secs, oppedge, 0);
+    path.emplace_back(edgelabel.mode(), secs, edgelabel.opp_edgeid(), 0);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
