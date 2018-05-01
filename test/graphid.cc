@@ -38,6 +38,21 @@ void TestValues() {
     throw runtime_error("Values do not match after set_id");
 }
 
+void TestInvalidValues() {
+  try {
+    GraphId badlevel(111, kMaxGraphHierarchy+1, 222);
+    throw runtime_error("Invalid level not caught");
+  } catch(...) {}
+  try {
+    GraphId badtile(kMaxGraphTileId+1, 0, 222);
+    throw runtime_error("Invalid tileId not caught");
+  } catch(...) {}
+  try {
+    GraphId badid(111, 1, kMaxGraphId);
+    throw runtime_error("Invalid id not caught");
+  } catch(...) {}
+}
+
 void TestCtorDefault() {
   GraphId target;
   if (target.Is_Valid())
@@ -155,6 +170,9 @@ int main() {
 
   // Make sure set and get produce correct values
   suite.test(TEST_CASE(TestValues));
+
+  // Test setting invalid values
+  suite.test(TEST_CASE(TestInvalidValues));
 
   // Ctor default
   suite.test(TEST_CASE(TestCtorDefault));
