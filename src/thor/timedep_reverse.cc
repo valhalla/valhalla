@@ -148,10 +148,10 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0) ||
+    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
+                                  nodeinfo->timezone()) ||
          costing_->Restricted(directededge, pred, edgelabels_rev_, tile,
-                                     edgeid, false, nodeinfo->timezone(),
-                                     localtime)) {
+                              edgeid, false, localtime, nodeinfo->timezone())) {
       continue;
     }
 

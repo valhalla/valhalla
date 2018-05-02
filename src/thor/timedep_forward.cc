@@ -102,10 +102,10 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction exists.
     if (es->set() == EdgeSet::kPermanent ||
-       !costing_->Allowed(directededge, pred, tile, edgeid, localtime) ||
+       !costing_->Allowed(directededge, pred, tile, edgeid, localtime,
+                          nodeinfo->timezone()) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile,
-                                     edgeid, true, nodeinfo->timezone(),
-                                     localtime)) {
+                                     edgeid, true, localtime, nodeinfo->timezone())) {
       continue;
     }
 
