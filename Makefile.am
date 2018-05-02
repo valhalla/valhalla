@@ -266,7 +266,6 @@ libvalhalla_la_SOURCES = \
 	src/midgard/polyline2.cc \
 	src/midgard/obb2.cc \
 	src/midgard/pointll.cc \
-	src/midgard/vector2.cc \
 	src/midgard/aabb2.cc \
 	src/midgard/point2.cc \
 	src/midgard/util.cc \
@@ -277,7 +276,6 @@ libvalhalla_la_SOURCES = \
 	src/baldr/connectivity_map.cc \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
-	src/baldr/double_bucket_queue.cc \
 	src/baldr/edge_elevation.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/graphid.cc \
