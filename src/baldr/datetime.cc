@@ -829,7 +829,6 @@ bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin
     boost::posix_time::ptime origin_pt = time_epoch + boost::posix_time::seconds(current_time);
     boost::local_time::local_date_time in_local_time(origin_pt,time_zone);
     boost::gregorian::date d = in_local_time.date();
-
     boost::posix_time::time_duration td = in_local_time.local_time().time_of_day();
 
     // we have dow
@@ -957,7 +956,10 @@ bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin
       if (begin_hrs || begin_mins || end_hrs || end_mins) {
         b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
         e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
-        dt_in_range = (b_td <= td && td <= e_td);
+
+        if (begin_hrs > end_hrs) // 19:00 - 06:00
+          dt_in_range = !(e_td <= td && td <= b_td);
+        else dt_in_range = (b_td <= td && td <= e_td);
       }
       return (dow_in_range && dt_in_range);
 
@@ -974,7 +976,13 @@ bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin
     dt_in_range = (b_in_local_time.date() <= in_local_time.date() &&
         in_local_time.date() <= e_in_local_time.date());
 
-    dt_in_range = (dt_in_range && (b_td <= td && td <= e_td));
+    bool time_in_range = false;
+
+    if (begin_hrs > end_hrs) // 19:00 - 06:00
+      time_in_range = !(e_td <= td && td <= b_td);
+    else time_in_range = (b_td <= td && td <= e_td);
+
+    dt_in_range = (dt_in_range && time_in_range);
   } catch (std::exception& e){}
   return (dow_in_range && dt_in_range);
 }
