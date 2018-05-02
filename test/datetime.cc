@@ -245,7 +245,8 @@ void TryIsRestricted(const TimeDomain td,const std::string date, const bool expe
 
   if (DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(), td.end_mins(),
                               td.dow(), td.begin_week(), td.begin_month(), td.begin_day_dow(),
-                              td.end_week(), td.end_month(), td.end_day_dow(), date, tz) != expected_value ) {
+                              td.end_week(), td.end_month(), td.end_day_dow(),
+                              DateTime::seconds_since_epoch(date,tz), tz) != expected_value ) {
 
     throw std::runtime_error("Is Restricted " + date + " test failed.  Expected: " +
                              std::to_string(expected_value));
