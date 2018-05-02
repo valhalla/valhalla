@@ -849,8 +849,6 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
     if (access_restrictions_[found].modes() & access)
       restrictions.emplace_back(access_restrictions_[found]);
 
-  if (restrictions.size() == 0)
-    LOG_ERROR("No restrictions found for edge index = " + std::to_string(idx));
   return restrictions;
 }
 
