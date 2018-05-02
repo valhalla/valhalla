@@ -5,6 +5,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "baldr/accessrestriction.h"
+#include "baldr/timedomain.h"
 #include "midgard/util.h"
 
 #ifdef INLINE_TEST
@@ -259,13 +260,15 @@ class BicycleCost : public DynamicCost {
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const;
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -282,6 +285,7 @@ class BicycleCost : public DynamicCost {
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -289,7 +293,8 @@ class BicycleCost : public DynamicCost {
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const;
+                              const uint64_t current_time,
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -598,9 +603,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
                           const baldr::GraphTile*& tile,
                           const baldr::GraphId& edgeid,
-                          const uint32_t current_time) const {
-  // TODO - obtain and check the access restrictions.
-
+                          const uint64_t current_time,
+                          const uint32_t tz_index) const {
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
@@ -618,6 +622,44 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), kBicycleAccess);
+
+    for (const auto& restriction : restrictions ) {
+      switch (restriction.type()) {
+        case AccessType::kTimedAllowed:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //allowed at this range.
+            return (edge->surface() <= worst_allowed_surface_ &&
+                baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                               td.end_hrs(), td.end_mins(), td.dow(),
+                                               td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                               td.end_week(), td.end_month(), td.end_day_dow(),
+                                               current_time, baldr::DateTime::get_tz_db().from_index(tz_index)));
+          }
+          return true; // else allowed all the time
+          break;
+        case AccessType::kTimedDenied:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //not allowed at this range.
+            return (edge->surface() <= worst_allowed_surface_ &&
+                !baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                td.end_hrs(), td.end_mins(), td.dow(),
+                                                td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                                td.end_week(), td.end_month(), td.end_day_dow(),
+                                                current_time, baldr::DateTime::get_tz_db().from_index(tz_index)));
+          }
+          return false; // else restricted all the time
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
   // Prohibit certain roads based on surface type and bicycle type
   return edge->surface() <= worst_allowed_surface_;
 }
@@ -629,9 +671,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& opp_edgeid,
-               const uint32_t current_time) const {
-  // TODO - obtain and check the access restrictions.
-
+               const uint64_t current_time,
+               const uint32_t tz_index) const {
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
   // Do not allow transit connection edges.
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
@@ -641,6 +682,44 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
        IsUserAvoidEdge(opp_edgeid)) {
     return false;
+  }
+
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(opp_edgeid.id(), kBicycleAccess);
+
+    for (const auto& restriction : restrictions ) {
+      switch (restriction.type()) {
+        case AccessType::kTimedAllowed:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //allowed at this range.
+            return (opp_edge->surface() <= worst_allowed_surface_ &&
+                baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                               td.end_hrs(), td.end_mins(), td.dow(),
+                                               td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                               td.end_week(), td.end_month(), td.end_day_dow(),
+                                               current_time, baldr::DateTime::get_tz_db().from_index(tz_index)));
+          }
+          return true; // else allowed all the time
+          break;
+        case AccessType::kTimedDenied:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //not allowed at this range.
+            return (opp_edge->surface() <= worst_allowed_surface_ &&
+                !baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                td.end_hrs(), td.end_mins(), td.dow(),
+                                                td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                                td.end_week(), td.end_month(), td.end_day_dow(),
+                                                current_time, baldr::DateTime::get_tz_db().from_index(tz_index)));
+          }
+          return false; // else restricted all the time
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   // Prohibit certain roads based on surface type and bicycle type

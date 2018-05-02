@@ -3,6 +3,7 @@
 
 #include "baldr/accessrestriction.h"
 #include "midgard/constants.h"
+#include "baldr/timedomain.h"
 #include "midgard/util.h"
 
 #ifdef INLINE_TEST
@@ -195,13 +196,15 @@ class PedestrianCost : public DynamicCost {
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const;
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -218,6 +221,7 @@ class PedestrianCost : public DynamicCost {
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -225,7 +229,8 @@ class PedestrianCost : public DynamicCost {
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const;
+                              const uint64_t current_time,
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -533,9 +538,8 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& edgeid,
-                             const uint32_t current_time) const {
-  // TODO - obtain and check the access restrictions.
-
+                             const uint64_t current_time,
+                             const uint32_t tz_index) const {
   if (!(edge->forwardaccess() & access_mask_) ||
        (edge->surface() > minimal_allowed_surface_) ||
         edge->is_shortcut() || IsUserAvoidEdge(edgeid) ||
@@ -544,13 +548,49 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
   }
-
   // Disallow transit connections (except when set for multi-modal routes)
   if (!allow_transit_connections_ && (edge->use() == Use::kPlatformConnection ||
       edge->use() == Use::kEgressConnection ||
       edge->use() == Use::kTransitConnection)) {
     return false;
   }
+
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), access_mask_);
+
+    for (const auto& restriction : restrictions ) {
+      switch (restriction.type()) {
+        case AccessType::kTimedAllowed:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //allowed at this range.
+            return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                  td.end_hrs(), td.end_mins(), td.dow(),
+                                                  td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                                  td.end_week(), td.end_month(), td.end_day_dow(),
+                                                  current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+          }
+          return true; // else allowed all the time
+          break;
+        case AccessType::kTimedDenied:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //not allowed at this range.
+            return !baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                   td.end_hrs(), td.end_mins(), td.dow(),
+                                                   td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                                   td.end_week(), td.end_month(), td.end_day_dow(),
+                                                   current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+          }
+          return false; // else restricted all the time
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
   return true;
 }
 
@@ -561,7 +601,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& opp_edgeid,
-               const uint32_t current_time) const {
+               const uint64_t current_time,
+               const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   // Do not check max walking distance and assume we are not allowing
@@ -576,6 +617,43 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
         opp_edge->use() == Use::kPlatformConnection) {
     return false;
   }
+
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(opp_edgeid.id(), access_mask_);
+
+    for (const auto& restriction : restrictions ) {
+      switch (restriction.type()) {
+        case AccessType::kTimedAllowed:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //allowed at this range.
+            return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                  td.end_hrs(), td.end_mins(), td.dow(),
+                                                  td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                                  td.end_week(), td.end_month(), td.end_day_dow(),
+                                                  current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+          }
+          return true; // else allowed all the time
+          break;
+        case AccessType::kTimedDenied:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //not allowed at this range.
+            return !baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                   td.end_hrs(), td.end_mins(), td.dow(),
+                                                   td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                                   td.end_week(), td.end_month(), td.end_day_dow(),
+                                                   current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+          }
+          return false; // else restricted all the time
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
   return true;
 }
 

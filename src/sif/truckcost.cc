@@ -5,6 +5,7 @@
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/accessrestriction.h"
+#include "baldr/timedomain.h"
 #include "midgard/util.h"
 
 #ifdef INLINE_TEST
@@ -140,13 +141,15 @@ class TruckCost : public DynamicCost {
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const;
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -163,6 +166,7 @@ class TruckCost : public DynamicCost {
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -170,7 +174,8 @@ class TruckCost : public DynamicCost {
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const;
+                              const uint64_t current_time,
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -384,7 +389,8 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const {
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kTruckAccess) ||
@@ -401,13 +407,31 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
         tile->GetAccessRestrictions(edgeid.id(), kTruckAccess);
 
     for (const auto& restriction : restrictions ) {
-      // TODO:  Need to handle restrictions that take place only at certain
-      // times.  Currently, we only support kAllDaysOfWeek;
       switch (restriction.type()) {
         case AccessType::kTimedAllowed:
-        case AccessType::kTimedDenied:
-          return false;
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //allowed at this range.
+            return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                               td.end_hrs(), td.end_mins(), td.dow(),
+                                               td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                               td.end_week(), td.end_month(), td.end_day_dow(),
+                                               current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+          }
+          return true; // else allowed all the time
         break;
+        case AccessType::kTimedDenied:
+          if (current_time && restriction.value()) {
+            TimeDomain td(restriction.value());
+            //not allowed at this range.
+            return !baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                               td.end_hrs(), td.end_mins(), td.dow(),
+                                               td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                               td.end_week(), td.end_month(), td.end_day_dow(),
+                                               current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+          }
+            return false; // else restricted all the time
+          break;
         case AccessType::kHazmat:
           if (hazmat_ != restriction.value())
             return false;
@@ -448,7 +472,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& opp_edgeid,
-               const uint32_t current_time) const {
+               const uint64_t current_time,
+               const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kTruckAccess) ||
@@ -465,15 +490,32 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
           tile->GetAccessRestrictions(opp_edgeid.id(), kTruckAccess);
 
     for (const auto& restriction : restrictions ) {
-      // TODO:  Need to handle restictions that take place only at certain
-      // times.  Currently, we only support kAllDaysOfWeek;
       if (restriction.modes() & kTruckAccess) {
-
         switch (restriction.type()) {
           case AccessType::kTimedAllowed:
-          case AccessType::kTimedDenied:
-            return false;
+            if (current_time && restriction.value()) {
+              TimeDomain td(restriction.value());
+              //allowed at this range.
+              return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                 td.end_hrs(), td.end_mins(), td.dow(),
+                                                 td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                                 td.end_week(), td.end_month(), td.end_day_dow(),
+                                                 current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+            }
+            return true; // else allowed all the time
           break;
+          case AccessType::kTimedDenied:
+            if (current_time && restriction.value()) {
+              TimeDomain td(restriction.value());
+              //not allowed at this range.
+              return !baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                 td.end_hrs(), td.end_mins(), td.dow(),
+                                                 td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                                 td.end_week(), td.end_month(), td.end_day_dow(),
+                                                 current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+            }
+              return false; // else restricted all the time
+            break;
           case AccessType::kHazmat:
             if (hazmat_ != restriction.value())
               return false;
