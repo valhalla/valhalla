@@ -156,7 +156,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // a complex restriction exists.
     if (es->set() == EdgeSet::kPermanent ||
         (shortcuts & directededge->superseded()) ||
-       !costing_->Allowed(directededge, pred, tile, edgeid, 0) ||
+       !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile,
                                      edgeid, true)) {
       continue;
