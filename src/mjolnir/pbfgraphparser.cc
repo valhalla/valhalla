@@ -237,6 +237,11 @@ struct graph_callback : public OSMPBF::Callback {
     Tags::const_iterator driveways;
     if (!include_driveways_ && (driveways = results.find("use")) != results.end() && 
          static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
+
+      // only private driveways.
+      Tags::const_iterator priv;
+      if ((priv = results.find("private")) != results.end() &&
+          priv->second == "true")
       return;
     }
 
