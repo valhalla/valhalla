@@ -9,10 +9,23 @@ namespace midgard {
 
 namespace OpenLR {
 
+namespace {
+    constexpr double BEARING_BUCKET_SIZE = 360. / 255.;
+
+    // Used to fill in bits for 24 and 16 bit signed integers
+    constexpr uint64_t COMPLEMENT_MASK [] = {0xffffffff, 0xfffffffe, 0xfffffffc,
+                        0xfffffff8, 0xfffffff0, 0xffffffe0, 0xffffffc0, 0xffffff80,
+                        0xffffff00, 0xfffffe00, 0xfffffc00, 0xfffff800, 0xfffff000,
+                        0xffffe000, 0xffffc000, 0xffff8000, 0xffff0000, 0xfffe0000,
+                        0xfffc0000, 0xfff80000, 0xfff00000, 0xffe00000, 0xffc00000,
+                        0xff800000, 0xff000000, 0xfe000000, 0xfc000000, 0xf8000000,
+                        0xf0000000, 0xe0000000, 0xc0000000, 0x80000000, 0x00000000 };
+}
+
 // Specify 1-byte padding for this struct
 #pragma pack(push, 1)
 struct TwoPointLinearReference  {
-    using byte = std::uint8_t;
+    using byte = uint8_t;
 
     // Byte 0
     byte unused_1 : 1;
@@ -22,10 +35,10 @@ struct TwoPointLinearReference  {
     bool has_attributes : 1;
     byte version  : 3;
 
-    // Note: wire-format is big-endian
+    // Note: wire-format is big-endian (MSB first)
     // Bytes 1-6
-    std::int32_t fixed_longitude : 24;
-    std::int32_t fixed_latitude : 24;
+    byte fixed_longitude[3];
+    byte fixed_latitude[3];
 
     // Byte 7
     bool unused_2 : 2;
@@ -40,8 +53,8 @@ struct TwoPointLinearReference  {
     byte dist_to_next;
 
     // Bytes 10-13
-    std::int16_t relative_longitude;
-    std::int16_t relative_latitude;
+    byte relative_longitude[2];
+    byte relative_latitude[2];
 
     // Byte 14
     bool unused_3 : 2;
@@ -70,38 +83,63 @@ struct TwoPointLinearReference  {
         return (T(0) < val) - (val < T(0));
     }
 
-    std::int32_t deg2fixed(double deg) const {
+    // Inverse of fixed2deg - convert a decimal degrees value into
+    // a signed integer, according to the OpenLR conversion formula
+    int32_t deg2fixed(double deg) const {
         return sgn(deg) * 0.5 + (deg * std::pow(2, 24) / 360);
     }
 
-    double fixed2deg(std::int32_t fixed) const {
-        return ((fixed - sgn(fixed) * 0.5) * 360) / std::pow(2,24);
+    // Convert a big-endian sequence of bites into a signed integer
+    int32_t bytes2fixed(const byte bytes[], const int count) const {
+        int32_t value = 0;
+        for (int i=0; i<count; i++) {
+            value += bytes[count-i-1] << (i*8);
+        }
+
+        // If MSB is set, number is negative, so we need to fill
+        // in all the upper bits in the target int32_t to convert
+        // to a two's complement value
+        if ((bytes[0] & 0x80) == 0x80) {
+            // Convert value to two's complement negative
+            value |= COMPLEMENT_MASK[count * 8];
+        }
+        return value;
     }
 
+    // Convert a signed integer into a decimal degree value, according
+    // to the OpenLR conversion formula.
+    double fixed2deg(const int value) const {
+        return ((value - sgn(value) * 0.5) * 360) / std::pow(2,24);
+    }
+
+/*
+    TODO:
     void setFirstCoordinate(const midgard::PointLL &p) {
         fixed_latitude = deg2fixed(p.lat());
         fixed_longitude = deg2fixed(p.lng());
     }
+    */
 
     midgard::PointLL getFirstCoordinate() const {
         return midgard::PointLL(
-            fixed2deg(fixed_longitude),
-            fixed2deg(fixed_latitude)
+            fixed2deg(bytes2fixed(fixed_longitude,3)),
+            fixed2deg(bytes2fixed(fixed_latitude,3))
         );
     }
 
+/*
+    TODO:
     // Precondition: setFirstCoordinate already called
     void setLastCoordinate(const midgard::PointLL &p) {
         relative_longitude = deg2fixed(p.lng()) - fixed_longitude;
         relative_latitude = deg2fixed(p.lat()) - fixed_latitude;
     }
+    */
 
     midgard::PointLL getLastCoordinate() const {
-        const auto last_longitude = fixed_longitude + relative_longitude;
-        const auto last_latitude = fixed_latitude + relative_latitude;
         return midgard::PointLL(
-            fixed2deg(last_longitude),
-            fixed2deg(last_latitude)
+            fixed2deg(bytes2fixed(fixed_longitude,3)) + bytes2fixed(relative_longitude,2) / 100000.,
+            fixed2deg(bytes2fixed(fixed_latitude,3)) + bytes2fixed(relative_latitude,2) / 100000.
         );
     }
 
@@ -115,20 +153,21 @@ struct TwoPointLinearReference  {
     unsigned getLastFRC() const { return last_frc; }
     void setLastFRC(unsigned frc_) { last_frc = frc_; }
 
-    void setFirstBearing(double bearing_) { first_bearing = static_cast<std::uint8_t>(bearing_ / 360. * 255.); }
+    void setFirstBearing(double bearing_) { first_bearing = static_cast<uint8_t>(bearing_ / 360. * 255.); }
     double getFirstBearing() const { return first_bearing * 360./255.; }
 
-    void setLastBearing(double bearing_) { last_bearing = static_cast<std::uint8_t>(bearing_ / 360. * 255.); }
+    void setLastBearing(double bearing_) { last_bearing = static_cast<uint8_t>(bearing_ / 360. * 255.); }
     double getLastBearing() const { return last_bearing * 360./255.; }
 
     void setLength(double length) { dist_to_next = length / 58.6; }
     double getLength() const { return dist_to_next * 58.6; }
 
-    static TwoPointLinearReference fromBase64(const std::string base64) {
+    static TwoPointLinearReference fromBase64(const std::string &base64) {
         std::string binary;
         Base64::Decode(base64, &binary);
 
-        assert(sizeof(TwoPointLinearReference) == binary.size());
+        assert(sizeof(TwoPointLinearReference) <= binary.size());
+
         // TODO: fixme - quick hack to convert bytes to object
         TwoPointLinearReference *tmp = reinterpret_cast<TwoPointLinearReference *>(const_cast<char *>(binary.data()));
         return *tmp; // Be sure to return a copy
