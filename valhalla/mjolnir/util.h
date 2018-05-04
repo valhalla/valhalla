@@ -2,8 +2,10 @@
 #define VALHALLA_MJOLNIR_UTIL_H_
 
 #include <vector>
+#include <list>
 #include <string>
 #include <boost/property_tree/ptree.hpp>
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -23,6 +25,14 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value,
  * @param  s
  * @return string string with no quotes.
 */std::string remove_double_quotes(const std::string& s);
+
+/**
+ * Compute a curvature metric given an edge shape.
+ * @param  shape  Shape of an edge (list of lat,lon vertices).
+ * @return Returns a curvature measure [0-15] where higher numbers indicate
+ *         more curved and tighter turns.
+ */
+uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
 
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs

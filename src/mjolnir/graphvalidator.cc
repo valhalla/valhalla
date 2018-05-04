@@ -13,11 +13,13 @@
 #include <utility>
 #include <queue>
 #include <list>
+#include <set>
 #include <thread>
 #include <future>
 #include <mutex>
 #include <numeric>
 #include <tuple>
+#include <boost/filesystem/operations.hpp>
 
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -445,7 +447,9 @@ void validate(const boost::property_tree::ptree& pt,
             directededge.set_ctry_crossing(true);
           }
 
-          // Validate the complex restriction settings
+          // Validate the complex restriction settings. If no restrictions
+          // are found that end at this directed edge, set the end restriction
+          // modes to 0.
           if (de->end_restriction()) {
             uint32_t modes = 0;
             for (uint32_t mode = 1; mode < kAllAccess; mode *= 2) {
@@ -456,7 +460,6 @@ void validate(const boost::property_tree::ptree& pt,
             }
             directededge.set_end_restriction(modes);
           }
-          // Check for complex restriction
           if (de->start_restriction()) {
             uint32_t modes = 0;
             for (uint32_t mode = 1; mode < kAllAccess; mode *= 2) {
@@ -578,33 +581,16 @@ namespace valhalla {
 namespace mjolnir {
 
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
+    LOG_INFO("Validating, finishing and binning tiles...");
     auto hierarchy_properties = pt.get_child("mjolnir");
     std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");
 
-    // Create a randomized queue of tiles to work from
+    // Create a randomized queue of tiles (at all levels) to work from
     std::deque<GraphId> tilequeue;
-    for (auto tier : TileHierarchy::levels()) {
-      auto level = tier.second.level;
-      auto tiles = tier.second.tiles;
-      for (uint32_t id = 0; id < tiles.TileCount(); id++) {
-        // If tile exists add it to the queue
-        GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
-          tilequeue.emplace_back(std::move(tile_id));
-        }
-      }
-
-      //transit level
-      if (level == TileHierarchy::levels().rbegin()->second.level) {
-        level += 1;
-        for (uint32_t id = 0; id < tiles.TileCount(); id++) {
-          // If tile exists add it to the queue
-          GraphId tile_id(id, level, 0);
-          if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
-            tilequeue.emplace_back(std::move(tile_id));
-          }
-        }
-      }
+    GraphReader reader(pt.get_child("mjolnir"));
+    auto tileset = reader.GetTileSet();
+    for (const auto& id : tileset) {
+      tilequeue.emplace_back(id);
     }
     std::random_shuffle(tilequeue.begin(), tilequeue.end());
 
@@ -613,8 +599,6 @@ namespace mjolnir {
 
     // An mutex we can use to do the synchronization
     std::mutex lock;
-
-    LOG_INFO("Validating, finishing and binning tiles...");
 
     // Setup threads
     std::vector<std::shared_ptr<std::thread> > threads(

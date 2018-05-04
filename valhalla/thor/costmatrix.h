@@ -11,10 +11,10 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/thor/edgestatus.h>
 
 namespace valhalla {
@@ -110,14 +110,14 @@ class CostMatrix {
    * @param  source_location_list  List of source/origin locations.
    * @param  target_location_list  List of target/destination locations.
    * @param  graphreader           Graph reader for accessing routing graph.
-   * @param  costing               Costing methods.
+   * @param  mode_costing          Costing methods.
    * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> SourceToTarget(
-          const std::vector<baldr::PathLocation>& source_location_list,
-          const std::vector<baldr::PathLocation>& target_location_list,
+          const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
+          const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode, const float max_matrix_distance);
@@ -183,45 +183,19 @@ class CostMatrix {
    * and destinations.
    * @param  source_location_list   List of source/origin locations.
    * @param  target_location_list   List of target/destination locations.
-   * @return Returns the initial time distance matrix.
    */
   void Initialize(
-      const std::vector<baldr::PathLocation>& source_location_list,
-      const std::vector<baldr::PathLocation>& target_location_list);
+      const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
+      const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list);
 
   /**
    * Iterate the forward search from the source/origin location.
    * @param  index        Index of the source location.
    * @param  n            Iteration counter.
    * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  costing      Costing methods.
    */
   void ForwardSearch(const uint32_t index, const uint32_t n,
                      baldr::GraphReader& graphreader);
-
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphTile* tile,
-                     const baldr::GraphId& node,
-                     const baldr::NodeInfo* nodeinfo,
-                     sif::BDEdgeLabel& pred, const uint32_t pred_idx,
-                     std::vector<sif::HierarchyLimits>& hierarchy_limits,
-                     std::vector<sif::BDEdgeLabel>& edgelabels,
-                     EdgeStatus& edgestate,
-                     std::shared_ptr<baldr::DoubleBucketQueue>& adj,
-                     const bool from_transition);
-
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphTile* tile,
-                     const baldr::GraphId& node,
-                     const baldr::NodeInfo* nodeinfo,
-                     const uint32_t index,
-                     sif::BDEdgeLabel& pred, const uint32_t pred_idx,
-                     const baldr::DirectedEdge* opp_pred_edge,
-                     std::vector<sif::HierarchyLimits>& hierarchy_limits,
-                     std::vector<sif::BDEdgeLabel>& edgelabels,
-                     EdgeStatus& edgestate,
-                     std::shared_ptr<baldr::DoubleBucketQueue>& adj,
-                     const bool from_transition);
 
   /**
    * Check if the edge on the forward search connects to a reached edge
@@ -238,7 +212,7 @@ class CostMatrix {
    * @param  source  Source index
    * @param  target  Target index
    */
-  void UpdateStatus(const uint32_t source_, const uint32_t target);
+  void UpdateStatus(const uint32_t source, const uint32_t target);
 
   /**
    * Iterate the backward search from the target/destination location.
@@ -253,20 +227,18 @@ class CostMatrix {
    * locations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  sources       List of source/origin locations.
-   * @param  costing       Costing method.
    */
   void SetSources(baldr::GraphReader& graphreader,
-                  const std::vector<baldr::PathLocation>& sources);
+                  const google::protobuf::RepeatedPtrField<odin::Location>& sources);
 
   /**
    * Set the target/destination locations. Search expands backwards from
    * these locations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  locations     List of target locations.
-   * @param  costing       Costing method.
+   * @param  targets       List of target locations.
    */
   void SetTargets(baldr::GraphReader& graphreader,
-                  const std::vector<baldr::PathLocation>& targets);
+                  const google::protobuf::RepeatedPtrField<odin::Location>& targets);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -277,11 +249,10 @@ class CostMatrix {
    * @param   edge          Directed edge
    * @param   pred          Predecessor information in shortest path.
    * @param   predindex     Predecessor index in EdgeLabels vector.
-   * @param   costing       Costing method.
    * @return  Returns true if all destinations have been settled.
    */
   bool UpdateDestinations(const uint32_t origin_index,
-                          const std::vector<baldr::PathLocation>& locations,
+                          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const sif::BDEdgeLabel& pred,

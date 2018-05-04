@@ -1,5 +1,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/datetime.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
@@ -77,7 +78,7 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid)
     return;
 
   // Open to the end of the file so we can immediately get size;
-  std::string file_location = tile_dir + "/" + FileSuffix(graphid.Tile_Base());
+  std::string file_location = tile_dir + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
@@ -120,6 +121,24 @@ GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size)
   // Initialize the internal tile data structures using a pointer to the
   // tile and the tile size
   Initialize(graphid, ptr, size);
+}
+
+GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler) {
+  // Don't bother with invalid ids
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level())
+    return;
+
+  // Get the response returned from curl
+  std::string uri = tile_url + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
+  long http_code;
+  auto tile_data = curler(uri, http_code);
+
+  // If its good try to use it
+  if(http_code == 200) {
+    graphtile_ = std::make_shared<std::vector<char> >(std::move(tile_data));
+    Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
+    //TODO: optionally write the tile to disk?
+  }
 }
 
 GraphTile::~GraphTile() {
@@ -234,7 +253,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   stop_one_stops.reserve(header_->stopcount());
   for (uint32_t i = 0; i < header_->stopcount(); i++) {
     const auto& stop = GetName(transit_stops_[i].one_stop_offset());
-    stop_one_stops[stop] = tile_index_pair(graphid.tileid(), i);
+    stop_one_stops[stop] = { graphid.tileid(), graphid.level(), i };
   }
 
   // Associate route and operator Ids
@@ -244,22 +263,26 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
     const auto& route_one_stop = GetName(t->one_stop_offset());
     auto stops = route_one_stops.find(route_one_stop);
     if (stops == route_one_stops.end()) {
-      std::list<tile_index_pair> tile_line_ids;
-      tile_line_ids.emplace_back(tile_index_pair(graphid.tileid(), dep.second->lineid()));
+      std::list<GraphId> tile_line_ids;
+      tile_line_ids.emplace_back(graphid.tileid(), graphid.level(),
+          dep.second->lineid());
       route_one_stops[route_one_stop] = tile_line_ids;
     } else {
-      route_one_stops[route_one_stop].emplace_back(tile_index_pair(graphid.tileid(), dep.second->lineid()));
+      route_one_stops[route_one_stop].emplace_back(graphid.tileid(),
+          graphid.level(), dep.second->lineid());
     }
 
     // operators contain all of their route's tile_line pairs.
     const auto& op_one_stop = GetName(t->op_by_onestop_id_offset());
     stops = oper_one_stops.find(op_one_stop);
     if (stops == oper_one_stops.end()) {
-      std::list<tile_index_pair> tile_line_ids;
-      tile_line_ids.emplace_back(tile_index_pair(graphid.tileid(), dep.second->lineid()));
+      std::list<GraphId> tile_line_ids;
+      tile_line_ids.emplace_back(graphid.tileid(), graphid.level(),
+          dep.second->lineid());
       oper_one_stops[op_one_stop] = tile_line_ids;
     } else {
-      oper_one_stops[op_one_stop].emplace_back(tile_index_pair(graphid.tileid(), dep.second->lineid()));
+      oper_one_stops[op_one_stop].emplace_back(graphid.tileid(), graphid.level(),
+          dep.second->lineid());
     }
   }
 }
@@ -308,9 +331,9 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  const std::unordered_set<std::string::value_type> allowed{ '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+  const std::unordered_set<std::string::value_type> allowed{ filesystem::path_separator, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
   //we require slashes
-  auto pos = fname.find_last_of('/');
+  auto pos = fname.find_last_of(filesystem::path_separator);
   if(pos == fname.npos)
     throw std::runtime_error("Invalid tile path: " + fname);
 
@@ -332,7 +355,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
     if(allowed.find(c) == allowed.cend())
       throw std::runtime_error("Invalid tile path: " + fname);
     //if its a slash thats another digit
-    if(c == '/') {
+    if(c == filesystem::path_separator) {
       //this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if(dist != 4 && dist != 2)
@@ -432,27 +455,28 @@ EdgeInfo GraphTile::edgeinfo(const size_t offset) const {
 
 // Get the complex restrictions in the forward or reverse order based on
 // the id and modes.
-std::vector<ComplexRestriction> GraphTile::GetRestrictions(const bool forward,
+std::vector<ComplexRestriction*> GraphTile::GetRestrictions(const bool forward,
                                                            const GraphId id,
                                                            const uint64_t modes) const {
-  std::vector<ComplexRestriction> cr_vector;
   size_t offset = 0;
-
+  std::vector<ComplexRestriction*> cr_vector;
   if (forward) {
     while (offset < complex_restriction_forward_size_) {
-
-      ComplexRestriction cr(complex_restriction_forward_ + offset);
-      offset += cr.SizeOf();
-      if (cr.to_id() == id && (cr.modes() & modes))
+      ComplexRestriction* cr =
+          reinterpret_cast<ComplexRestriction*>(complex_restriction_forward_ + offset);
+      if (cr->to_graphid() == id && (cr->modes() & modes)) {
         cr_vector.push_back(cr);
+      }
+      offset += cr->SizeOf();
     }
   } else {
     while (offset < complex_restriction_reverse_size_) {
-
-      ComplexRestriction cr(complex_restriction_reverse_ + offset);
-      offset += cr.SizeOf();
-      if (cr.from_id() == id && (cr.modes() & modes))
+      ComplexRestriction* cr =
+          reinterpret_cast<ComplexRestriction*>(complex_restriction_reverse_ + offset);
+      if (cr->from_graphid() == id && (cr->modes() & modes)) {
         cr_vector.push_back(cr);
+      }
+      offset += cr->SizeOf();
     }
   }
   return cr_vector;
@@ -472,6 +496,12 @@ const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
 // edge info
 std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) const {
   return edgeinfo(edgeinfo_offset).GetNames();
+}
+
+// Convenience method to get the types for the names given the offset to the
+// edge info
+uint16_t GraphTile::GetTypes(const uint32_t edgeinfo_offset) const {
+  return edgeinfo(edgeinfo_offset).GetTypes();
 }
 
 // Get the admininfo at the specified index.
@@ -732,21 +762,18 @@ std::unordered_map<uint32_t,TransitDeparture*> GraphTile::GetTransitDepartures()
   return deps;
 }
 
-// Get the stop onestops in this tile
-std::unordered_map<std::string, tile_index_pair>
-GraphTile::GetStopOneStops() const {
+// Get the stop onestop Ids in this tile.
+const std::unordered_map<std::string, GraphId>& GraphTile::GetStopOneStops() const {
   return stop_one_stops;
 }
 
-// Get the route onestops in this tile.
-std::unordered_map<std::string, std::list<tile_index_pair>>
-GraphTile::GetRouteOneStops() const {
+// Get the route onestop Ids in this tile.
+const std::unordered_map<std::string, std::list<GraphId>>& GraphTile::GetRouteOneStops() const {
   return route_one_stops;
 }
 
-// Get the operator onestops in this tile.
-std::unordered_map<std::string, std::list<tile_index_pair>>
-GraphTile::GetOperatorOneStops() const {
+// Get the operator onestop Ids in this tile.
+const std::unordered_map<std::string, std::list<GraphId>>& GraphTile::GetOperatorOneStops() const {
   return oper_one_stops;
 }
 

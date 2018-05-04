@@ -39,13 +39,13 @@ public:
    * @param  origin  Origin location
    * @param  dest    Destination location
    * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  costing  An array of costing methods, one per TravelMode.
+   * @param  mode_costing  An array of costing methods, one per TravelMode.
    * @param  mode     Travel mode from the origin.
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(baldr::PathLocation& origin,
-           baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+  std::vector<PathInfo> GetBestPath(odin::Location& origin,
+           odin::Location& dest, baldr::GraphReader& graphreader,
            const std::shared_ptr<sif::DynamicCost>* mode_costing,
            const sif::TravelMode mode);
 

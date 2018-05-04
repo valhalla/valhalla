@@ -1,13 +1,68 @@
 package valhalla.odin;
+import public "tripcommon.proto";
 
 message DirectionsOptions {
   
   enum Units {
-    kKilometers = 0;
-    kMiles = 1;
+    kilometers = 0;
+    miles = 1;
+  }
+  
+  enum Format {
+    json = 0;
+    gpx = 1;
+    osrm = 2;
+  }
+  
+  enum Action {
+    route = 1;
+    locate = 2;
+    sources_to_targets = 6;
+    optimized_route = 7;
+    isochrone = 8;
+    trace_route = 9;
+    trace_attributes = 10;
+    height = 11;
+    transit_available = 12;
+  }
+  
+  enum Costing {
+    auto_ = 0;
+    auto_shorter = 1;
+    bicycle = 2;
+    bus = 3;
+    hov = 4;
+    motor_scooter = 5;
+    multimodal = 6;
+    pedestrian = 7;
+    transit = 8;
+    truck = 9;
+  }  
+  
+  enum DateTimeType {
+    current = 0;
+    depart_at = 1;
+    arrive_by = 2;
   }
 
-  optional Units units = 1;                         // kKilometers or kMiles
+  optional Units units = 1;                         // kilometers or miles
   optional string language = 2 [default = "en-US"]; // Based on IETF BCP 47 language tag string
   optional bool narrative = 3 [default = true];     // Enable/disable narrative production
+  optional Format format = 4 [default = json];      // What the response format should be
+  optional string id = 5;                           // Optional id for the request
+  optional string jsonp = 6;                        // Optional javascript callback for the request
+  optional string encoded_polyline = 7;             // Optional polyline 6 encoded shape used in /height /trace_*
+  optional Action action = 8;                       // Action signifying the request type
+  optional bool do_not_track = 9 [default = false]; // Disable analytics for this request
+  optional bool range = 10 [default = false];       // Used in /height if the range between points should be serialized
+  optional bool verbose = 11 [default = false];     // Used in /locate request to give back extensive information
+  optional Costing costing = 12;                    // Used to tell what type of costing to use
+  repeated Location locations = 13;                 // Locations for /route /optimized /locate /isochrone
+  repeated Location avoid_locations = 14;           // Avoids for any costing
+  repeated Location sources = 15;                   // Sources for /sources_to_targets
+  repeated Location targets = 16;					// Targets for /sources_to_targets
+  optional DateTimeType date_time_type = 17;        // Are you leaving now or then or arriving then
+  optional string date_time = 18;                   // And what day and time
+  repeated Location shape = 19;                     // Raw shape for map matching
+  optional double resample_distance = 20;           // Resampling shape at regular intervals
 }

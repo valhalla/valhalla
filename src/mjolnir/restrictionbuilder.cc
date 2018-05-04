@@ -7,6 +7,7 @@
 #include <future>
 #include <thread>
 #include <queue>
+#include <set>
 
 #include <boost/filesystem/operations.hpp>
 
@@ -18,6 +19,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/graphtile.h"
 #include "baldr/graphreader.h"
+#include "baldr/timedomain.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -247,14 +249,12 @@ void build(const std::string& complex_restriction_file,
     lock.unlock();
 
     std::unordered_multimap<GraphId, ComplexRestrictionBuilder> forward_tmp_cr;
-    std::list<ComplexRestrictionBuilder> updated_forward_cr_list;
-
     std::unordered_multimap<GraphId, ComplexRestrictionBuilder> reverse_tmp_cr;
-    std::list<ComplexRestrictionBuilder> updated_reverse_cr_list;
+
+    size_t forward_count = 0, reverse_count = 0;
 
     uint32_t id  = tile_id.tileid();
     GraphId prevNode;
-
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
@@ -357,19 +357,27 @@ void build(const std::string& complex_restriction_file,
                   ComplexRestrictionBuilder complex_restriction;
                   complex_restriction.set_from_id(tmp_ids.at(tmp_ids.size()-1));
                   complex_restriction.set_via_list(vias);
+                  complex_restriction.set_via_count(vias.size());
                   complex_restriction.set_to_id(tmp_ids.at(0));
                   complex_restriction.set_type(restriction.type());
                   complex_restriction.set_modes(restriction.modes());
 
-                  /** TODO - define common date/time format for use
-                  complex_restriction.set_begin_day(restriction.day_on());
-                  complex_restriction.set_end_day(restriction.day_off());
-                  uint64_t begin_time = DateTime::seconds_from_midnight(std::to_string(restriction.hour_on()) + ":" +
-                                                                        std::to_string(restriction.minute_on()));
-                  complex_restriction.set_begin_time(begin_time);
-                  complex_restriction.set_elapsed_time(DateTime::seconds_from_midnight(std::to_string(restriction.hour_off()) + ":" +
-                                                                                       std::to_string(restriction.minute_off())) - begin_time);
-                  */
+                  TimeDomain td = TimeDomain(restriction.time_domain());
+                  if (td.td_value()) {
+                    complex_restriction.set_begin_day_dow(td.begin_day_dow());
+                    complex_restriction.set_begin_hrs(td.begin_hrs());
+                    complex_restriction.set_begin_mins(td.begin_mins());
+                    complex_restriction.set_begin_month(td.begin_month());
+                    complex_restriction.set_begin_week(td.begin_week());
+                    complex_restriction.set_dow(td.dow());
+                    complex_restriction.set_dt(true);
+                    complex_restriction.set_dt_type(td.type());
+                    complex_restriction.set_end_day_dow(td.end_day_dow());
+                    complex_restriction.set_end_hrs(td.end_hrs());
+                    complex_restriction.set_end_mins(td.end_mins());
+                    complex_restriction.set_end_month(td.end_month());
+                    complex_restriction.set_end_week(td.end_week());
+                  }
 
                   // determine if we need to add this complex restriction or not.
                   // basically we do not want any dups.
@@ -385,7 +393,8 @@ void build(const std::string& complex_restriction_file,
                   }
                   if (!bfound) { // no dups.
                     reverse_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
-                    updated_reverse_cr_list.emplace_back(complex_restriction);
+                    tilebuilder.AddReverseComplexRestriction(complex_restriction);
+                    reverse_count++;
                   }
                 }
               }
@@ -468,19 +477,27 @@ void build(const std::string& complex_restriction_file,
                       ComplexRestrictionBuilder complex_restriction;
                       complex_restriction.set_from_id(tmp_ids.at(0));
                       complex_restriction.set_via_list(vias);
+                      complex_restriction.set_via_count(vias.size());
                       complex_restriction.set_to_id(tmp_ids.at(tmp_ids.size()-1));
                       complex_restriction.set_type(restriction.type());
                       complex_restriction.set_modes(restriction.modes());
 
-                      /** TODO - define common date/time format for use
-                      complex_restriction.set_begin_day(restriction.day_on());
-                      complex_restriction.set_end_day(restriction.day_off());
-                      uint64_t begin_time = DateTime::seconds_from_midnight(std::to_string(restriction.hour_on()) + ":" +
-                                                                            std::to_string(restriction.minute_on()));
-                      complex_restriction.set_begin_time(begin_time);
-                      complex_restriction.set_elapsed_time(DateTime::seconds_from_midnight(std::to_string(restriction.hour_off()) + ":" +
-                                                                                           std::to_string(restriction.minute_off())) - begin_time);
-                      */
+                      TimeDomain td = TimeDomain(restriction.time_domain());
+                      if (td.td_value()) {
+                        complex_restriction.set_begin_day_dow(td.begin_day_dow());
+                        complex_restriction.set_begin_hrs(td.begin_hrs());
+                        complex_restriction.set_begin_mins(td.begin_mins());
+                        complex_restriction.set_begin_month(td.begin_month());
+                        complex_restriction.set_begin_week(td.begin_week());
+                        complex_restriction.set_dow(td.dow());
+                        complex_restriction.set_dt(true);
+                        complex_restriction.set_dt_type(td.type());
+                        complex_restriction.set_end_day_dow(td.end_day_dow());
+                        complex_restriction.set_end_hrs(td.end_hrs());
+                        complex_restriction.set_end_mins(td.end_mins());
+                        complex_restriction.set_end_month(td.end_month());
+                        complex_restriction.set_end_week(td.end_week());
+                      }
 
                       // determine if we need to add this complex restriction or not.
                       // basically we do not want any dups.
@@ -496,7 +513,8 @@ void build(const std::string& complex_restriction_file,
                       }
                       if (!bfound) { // no dups.
                         forward_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
-                        updated_forward_cr_list.emplace_back(complex_restriction);
+                        tilebuilder.AddForwardComplexRestriction(complex_restriction);
+                        forward_count++;
                       }
                     }
                   }
@@ -508,12 +526,8 @@ void build(const std::string& complex_restriction_file,
         }
       }
     }
-    // update the complex restrictions in the tile.
-    tilebuilder.UpdateComplexRestrictions(updated_forward_cr_list,true);
-    tilebuilder.UpdateComplexRestrictions(updated_reverse_cr_list,false);
-
-    stats.forward_restrictions_count += updated_forward_cr_list.size();
-    stats.reverse_restrictions_count += updated_reverse_cr_list.size();
+    stats.forward_restrictions_count += forward_count;
+    stats.reverse_restrictions_count += reverse_count;
 
     // Write the new file
     lock.lock();
@@ -542,17 +556,12 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
   GraphReader reader(hierarchy_properties);
   auto level = TileHierarchy::levels().rbegin();
   for ( ; level != TileHierarchy::levels().rend(); ++level) {
-
-    auto tile_level = level->second;
     // Create a randomized queue of tiles to work from
+    auto tile_level = level->second;
     std::deque<GraphId> tempqueue;
-
-    for (uint32_t id = 0; id < tile_level.tiles.TileCount(); id++) {
-      // If tile exists add it to the queue
-      GraphId tile_id(id, tile_level.level, 0);
-      if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
-        tempqueue.push_back(tile_id);
-      }
+    auto level_tiles = reader.GetTileSet(tile_level.level);
+    for (const auto& tile_id : level_tiles) {
+      tempqueue.emplace_back(tile_id);
     }
     std::random_shuffle(tempqueue.begin(), tempqueue.end());
     std::queue<GraphId> tilequeue(tempqueue);

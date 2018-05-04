@@ -218,6 +218,10 @@ void TryOpMultiplication(const Vector2& v, const float scalar,
   Vector2 result = v * scalar;
   if (!(expected == result))
     throw runtime_error("OpMultiplication test failed");
+
+  Vector2 result2 = scalar * v;
+  if (!(expected == result))
+    throw runtime_error("OpMultiplication (pre) test failed");
 }
 
 void TestOpMultiplication() {

@@ -5,6 +5,7 @@
 #include <valhalla/midgard/constants.h>
 #include <tuple>
 #include <cmath>
+#include <limits>
 
 namespace valhalla {
 namespace midgard {
@@ -102,7 +103,8 @@ class PointLL : public Point2 {
    * computing the radius of the circle that circumscribes the 3 positions.
    * @param   ll1   Second lng,lat position
    * @param   ll2   Third lng,lat position
-   * @return  Returns the curvature in meters.
+   * @return  Returns the curvature in meters. Returns max float if the points
+   *          are collinear.
    */
   float Curvature(const PointLL& ll1, const PointLL& ll2) const;
 
@@ -119,16 +121,19 @@ class PointLL : public Point2 {
    * Finds the closest point to the supplied polyline as well as the distance
    * to that point and the index of the segment where the closest
    * point lies.
-   * @param  pts  List of points on the polyline.
+   * @param  pts          List of points on the polyline.
    * @param  begin_index  Index where the processing of closest point should start.
    *                      Default value is 0.
+   * @param  dist_cutoff  Minimum linear distance along pts that should be considered
+   *                      before giving up.
    *
    * @return tuple of <Closest point along the polyline,
    *                   Distance in meters of the closest point,
    *                   Index of the segment of the polyline which contains the closest point >
    */
-    std::tuple<PointLL, float, int> ClosestPoint(
-        const std::vector<PointLL>& pts, size_t begin_index = 0) const;
+  std::tuple<PointLL, float, int> ClosestPoint(
+      const std::vector<PointLL>& pts, size_t begin_index = 0,
+      float dist_cutoff = std::numeric_limits<float>::infinity()) const;
 
   /**
    * Calculate the heading from the start index within a polyline of lng,lat
@@ -212,14 +217,21 @@ class PointLL : public Point2 {
    * Project this point onto the line from u to v
    * @param u          first point of segment
    * @param v          second point of segment
-   * @param lon_scale  needed for spherical projections. dont pass this parameter unless
-   *                   you cached it and want to avoid trig functions in a tight loop
    * @return p  the projected point of this onto the segment uv
    */
   PointLL Project(const PointLL& u, const PointLL& v) const {
     auto lon_scale = cosf(second * kRadPerDeg);
     return Project(u, v, lon_scale);
   }
+
+  /**
+   * Project this point onto the line from u to v
+   * @param u          first point of segment
+   * @param v          second point of segment
+   * @param lon_scale  needed for spherical projections. dont pass this parameter unless
+   *                   you cached it and want to avoid trig functions in a tight loop
+   * @return p  the projected point of this onto the segment uv
+   */
   PointLL Project(const PointLL& u, const PointLL& v, float lon_scale) const;
 
  private:

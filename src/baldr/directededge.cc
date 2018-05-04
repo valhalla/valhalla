@@ -1,6 +1,5 @@
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
-#include <boost/functional/hash.hpp>
 #include "midgard/logging.h"
 
 using namespace valhalla::baldr;
@@ -350,6 +349,13 @@ void DirectedEdge::set_classification(const RoadClass roadclass) {
   classification_= static_cast<uint32_t>(roadclass);
 }
 
+// Sets the sac scale. Shows if edge is meant for hiking, and if so how difficult
+// of a hike it is.
+void DirectedEdge::set_sac_scale(const SacScale sac_scale)
+{
+  sac_scale_ = static_cast<uint64_t>(sac_scale);
+}
+
 // Sets the surface type (see baldr/graphconstants.h). This is a general
 // indication of smoothness.
 void DirectedEdge::set_surface(const Surface surface) {
@@ -564,7 +570,7 @@ json::MapPtr DirectedEdge::json() const {
     {"geo_attributes", json::map({
       {"length", static_cast<uint64_t>(length_)},
       {"weighted_grade", json::fp_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
-      //{"curvature", static_cast<uint64_t>(curvature_)},
+      {"curvature", static_cast<uint64_t>(curvature_)},
     })},
     {"access", access_json(forwardaccess_)},
     //{"access", access_json(reverseaccess_)},

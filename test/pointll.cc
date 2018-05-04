@@ -305,6 +305,24 @@ void TestMidPoint() {
     throw std::logic_error("Wrong mid point");
 }
 
+void TestDistance() {
+  float d = PointLL(-90.0f, 0.0f).Distance({90.0f, 0.0f});
+  if (d != kPi * kRadEarthMeters) {
+    throw std::logic_error("Distance 180 from each other should be PI * earth radius");
+  }
+  d = PointLL(-90.0f, 0.0f).Distance({-90.0f, 0.0f});
+  if (d != 0.0f) {
+    throw std::logic_error("Distance between same points should be 0");
+  }
+
+  d = PointLL(45.0f, 45.0f).Distance({45.0f, 40.0f});
+  if (std::abs(d - 556599.5f) > 1.0f) {
+    throw std::logic_error("Distance d = " + std::to_string(d) +
+        " between points should be approx 556599.5 meters");
+  }
+
+}
+
 }
 
 int main(void) {
@@ -327,6 +345,8 @@ int main(void) {
   // Test midpoint
   suite.test(TEST_CASE(TestMidPoint));
 
+  // Test Distance
+  suite.test(TEST_CASE(TestDistance));
   //TODO: many more!
 
   return suite.tear_down();

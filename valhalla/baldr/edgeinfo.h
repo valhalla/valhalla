@@ -30,7 +30,9 @@ struct NameInfo {
                                       // the name. These can be used for
                                       // additional information like language
                                       // phonetic string, etc.
-  uint32_t spare_             : 4;
+  uint32_t is_ref_            : 1;    // Flag used to indicate if this is a ref
+                                      // vs a name.
+  uint32_t spare_             : 3;
 
   bool operator == (const NameInfo& other) const {
     return (name_offset_ == other.name_offset_);
@@ -71,26 +73,25 @@ class EdgeInfo {
    * Gets the OSM way Id.
    * @return  Returns the OSM way Id.
    */
-  uint64_t wayid() const;
+  uint64_t wayid() const  {
+    return wayid_;
+  }
 
   /**
    * Get the number of names.
    * @return Returns the name count.
    */
-  uint32_t name_count() const;
+  uint32_t name_count() const {
+    return item_->name_count;
+  }
 
   /**
    * Get the size of the encoded shape (number of bytes).
    * @return  Returns the shape size.
    */
-  uint32_t encoded_shape_size() const;
-
-  /**
-   * Get the name offset for the specified name index.
-   * @param  index  Index into the name list.
-   * @return  Returns the offset into the text/name list.
-   */
-  uint32_t GetNameOffset(uint8_t index) const;
+  uint32_t encoded_shape_size() const  {
+    return item_->encoded_shape_size;
+  }
 
   /**
    * Get the name info for the specified name index.
@@ -104,6 +105,18 @@ class EdgeInfo {
    * @return   Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames() const;
+
+  /**
+   * Get a list of names and NameInfo for each name of the edge.
+   * @return  Returns a vector of string,NameInfo pairs.
+   */
+  std::vector<std::pair<std::string, NameInfo>> GetNamesAndInfo() const;
+
+  /**
+   * Convenience method to get the types for the names.
+   * @return   Returns types - If a bit is set, it is a ref.
+   */
+  uint16_t GetTypes() const;
 
   /**
    * Get the shape of the edge.

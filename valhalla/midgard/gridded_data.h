@@ -64,6 +64,10 @@ class GriddedData : public Tiles<coord_t> {
    */
   const std::vector<float>& data() const;
 
+
+  using contour_t = std::list<coord_t>;
+  using feature_t = std::list<contour_t>;
+  using contours_t = std::map<float, std::list<feature_t>, std::function<bool(const float, const float)> >;
   /**
    * TODO: implement two versions of this, leave this one for linestring contours
    * and make another for polygons
@@ -82,9 +86,6 @@ class GriddedData : public Tiles<coord_t> {
    *
    * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
-  using contour_t = std::list<coord_t>;
-  using feature_t = std::list<contour_t>;
-  using contours_t = std::map<float, std::list<feature_t>, std::function<bool(const float, const float)> >;
   contours_t GenerateContours(const std::vector<float>& contour_intervals, const bool rings_only = false,
     const float denoise = 1.f, const float generalize = 200.f) const;
 

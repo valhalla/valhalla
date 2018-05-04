@@ -1,5 +1,3 @@
-#include <boost/property_tree/ptree.hpp>
-
 #include "midgard/util.h"
 
 #include "proto/directions_options.pb.h"

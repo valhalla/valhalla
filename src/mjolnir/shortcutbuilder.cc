@@ -23,6 +23,7 @@
 #include "baldr/graphreader.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
+#include "mjolnir/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -425,6 +426,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
 
       // Get names - they apply over all edges of the shortcut
       auto names = tile->GetNames(directededge->edgeinfo_offset());
+      auto types = tile->GetTypes(directededge->edgeinfo_offset());
 
       // Add any access restriction records. TODO - make sure we don't contract
       // across edges with different restrictions.
@@ -480,7 +482,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(idx, start_node,
-                          end_node, 0, shape, names, forward);
+                          end_node, 0, shape, names, types, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -507,7 +509,7 @@ uint32_t AddShortcutEdges(GraphReader& reader, const GraphTile* tile,
         // is added.
         newedge.set_weighted_grade(6);
       }
-      newedge.set_curvature(0); //TODO:
+      newedge.set_curvature(compute_curvature(shape));
       newedge.set_endnode(end_node);
 
       // Sanity check - should never see a shortcut with signs
@@ -640,7 +642,8 @@ uint32_t FormShortcuts(GraphReader& reader,
           auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
           uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(),
                          node_id, directededge->endnode(), edgeinfo.wayid(), edgeinfo.encoded_shape(),
-                         tile->GetNames(directededge->edgeinfo_offset()), added);
+                         tile->GetNames(directededge->edgeinfo_offset()),
+                         tile->GetTypes(directededge->edgeinfo_offset()), added);
           newedge.set_edgeinfo_offset(edge_info_offset);
 
           // Set the superseded mask - this is the shortcut mask that

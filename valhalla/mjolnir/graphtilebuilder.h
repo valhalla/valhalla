@@ -135,13 +135,18 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  lc  Lane connectivity information.
    */
   void AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc);
+
   /**
-   * Update all of the complex restrictions.
-   * @param  complex_restriction_builder  list of complex restrictions.
-   * @param  forward                      do we update the reverse or forward list
+   * Add forward complex restriction.
+   * @param  res  Complex restriction.
    */
-  void UpdateComplexRestrictions(const std::list<ComplexRestrictionBuilder>& complex_restriction_builder,
-                                 const bool forward);
+  void AddForwardComplexRestriction(const ComplexRestrictionBuilder& res);
+
+  /**
+   * Add reverse complex restriction.
+   * @param  res  Complex restriction.
+   */
+  void AddReverseComplexRestriction(const ComplexRestrictionBuilder& res);
 
   /**
    *
@@ -176,6 +181,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  wayid  The target edge is part of this the way id.
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
+   * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
    *
@@ -187,6 +193,7 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const uint64_t wayid,
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
+                       const uint16_t types,
                        bool& added);
 
   /**
@@ -205,6 +212,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  wayid  The target edge is part of this the way id.
    * @param  llstr  The shape of the target edge as an encoded string.
    * @param  names  The names of the target edge.
+   * @param  types  Bits indicating if the name is a ref vs a name.
    * @param  added  Set to true if the target edge was newly added to the list,
    *                set to false if the target edge was already in the list.
    *
@@ -214,6 +222,7 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const baldr::GraphId& nodeb, const uint64_t wayid,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
+                       const uint16_t types,
                        bool& added);
 
   /**
@@ -408,12 +417,6 @@ class GraphTileBuilder : public baldr::GraphTile {
         std::make_tuple(edgeindex, nodeb, nodea);
   }
 
-  // Write all forward complex restriction items to specified stream
-  void SerializeComplexRestrictionsForwardToOstream(std::ostream& out) const;
-
-  // Write all reverse complex restriction items to specified stream
-  void SerializeComplexRestrictionsReverseToOstream(std::ostream& out) const;
-
   // Write all edgeinfo items to specified stream
   void SerializeEdgeInfosToOstream(std::ostream& out) const;
 
@@ -461,15 +464,11 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Admin info offset
   std::unordered_map<std::string,size_t> admin_info_offset_map_;
 
-  // forward complex list offset
-  uint32_t complex_restriction_forward_list_offset_ = 0;
   // The forward complex restriction list
-  std::list<ComplexRestrictionBuilder> complex_restriction_forward_builder_;
+  std::vector<ComplexRestrictionBuilder> complex_restriction_forward_builder_;
 
-  // reverse complex list offset
-  uint32_t complex_restriction_reverse_list_offset_ = 0;
   // The reverse complex restriction list
-  std::list<ComplexRestrictionBuilder> complex_restriction_reverse_builder_;
+  std::vector<ComplexRestrictionBuilder> complex_restriction_reverse_builder_;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;

@@ -87,8 +87,10 @@ constexpr float kLeftSideTurnPenalties[]  = {
     kTPFavorableSlight
 };
 
+// Additional stress factor for designated truck routes
+const float kTruckStress = 0.5f;
+
 // Cost of traversing an edge with steps. Make this high but not impassible.
-// Equal to about 5 minutes (penalty)
 const float kBicycleStepsFactor = 8.0f;
 
 // Default cycling speed on smooth, flat roads - based on bicycle type (KPH)
@@ -152,9 +154,9 @@ constexpr float kRoadClassFactor[] = {
 // example of speed changes based on "grade", using a base speed of 18 MPH
 // on flat roads
 constexpr float kGradeBasedSpeedFactor[] = {
-  2.5f,      // -10%  - 45
-  2.25f,     // -8%   - 40.5
-  2.0f,      // -6.5% - 36
+  2.2f,      // -10%  - 39.6
+  2.0f,      // -8%   - 36
+  1.9f,      // -6.5% - 34.2
   1.7f,      // -5%   - 30.6
   1.4f,      // -3%   - 25
   1.2f,      // -1.5% - 21.6
@@ -249,40 +251,50 @@ class BicycleCost : public DynamicCost {
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
-   * based on other parameters.
-   * @param  edge     Pointer to a directed edge.
-   * @param  pred     Predecessor edge information.
-   * @param  tile     current tile
-   * @param  edgeid   edgeid that we care about
-   * @return  Returns true if access is allowed, false if not.
+   * based on other parameters such as conditional restrictions and
+   * conditional access that can depend on time and travel mode.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the directed edge.
+   * @param  current_time   Current time (seconds since epoch). A value of 0
+   *                        indicates the route is not time dependent.
+   * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& edgeid) const;
+                       const baldr::GraphId& edgeid,
+                       const uint32_t current_time) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
-   * (from destination towards origin). Both opposing edges are
-   * provided.
+   * (from destination towards origin). Both opposing edges (current and
+   * predecessor) are provided. The access check is generally based on mode
+   * of travel and the access modes allowed on the edge. However, it can be
+   * extended to exclude access based on other parameters such as conditional
+   * restrictions and conditional access that can depend on time and travel
+   * mode.
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           Tile for the opposing edge (for looking
-   *                        up restrictions).
-   * @param  opp_edgeid     Opposing edge Id
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @param  current_time   Current time (seconds since epoch). A value of 0
+   *                        indicates the route is not time dependent.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
-                 const EdgeLabel& pred,
-                 const baldr::DirectedEdge* opp_edge,
-                 const baldr::GraphTile*& tile,
-                 const baldr::GraphId& opp_edgeid) const;
+                              const EdgeLabel& pred,
+                              const baldr::DirectedEdge* opp_edge,
+                              const baldr::GraphTile*& tile,
+                              const baldr::GraphId& opp_edgeid,
+                              const uint32_t current_time) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present. (TODO - others?)
-   * @param  edge  Pointer to node information.
+   * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
@@ -358,9 +370,6 @@ class BicycleCost : public DynamicCost {
   float use_hills_;                      // Preference of using hills between 0 and 1
   float avoid_bad_surfaces_;             // Preference of avoiding bad surfaces for the bike type
 
-  // Density factor used in edge transition costing
-  std::vector<float> trans_density_factor_;
-
   // Average speed (kph) on smooth, flat roads.
   float speed_;
 
@@ -424,15 +433,12 @@ protected:
 };
 
 // Bicycle route costs are distance based with some favor/avoid based on
-// attribution.
+// attribution. Speed is derived based on bicycle type or user input and
+// is modulated based on surface type and grade factors.
 
 // Constructor
 BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kBicycle),
-      trans_density_factor_{ 1.0f,  1.0f, 1.0f,  1.0f,
-                             1.0f,  1.0f, 1.0f,  1.0f,
-                             1.05f, 1.1f, 1.15f, 1.2f,
-                             1.25f, 1.3f, 1.4f,  1.5f } {
+    : DynamicCost(pt, TravelMode::kBicycle) {
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
@@ -591,7 +597,8 @@ uint32_t BicycleCost::access_mode() const {
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
                           const baldr::GraphTile*& tile,
-                          const baldr::GraphId& edgeid) const {
+                          const baldr::GraphId& edgeid,
+                          const uint32_t current_time) const {
   // TODO - obtain and check the access restrictions.
 
   // Check bicycle access and turn restrictions. Bicycles should obey
@@ -621,7 +628,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& opp_edgeid) const {
+               const baldr::GraphId& opp_edgeid,
+               const uint32_t current_time) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
@@ -647,10 +655,10 @@ bool BicycleCost::Allowed(const baldr::NodeInfo* node) const {
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
-  // Stairs/steps - use a high fixed cost so they are generally avoided.
+  // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * speedfactor_[1]);
-    return {sec * kBicycleStepsFactor, sec };
+    return { sec * kBicycleStepsFactor, sec };
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
@@ -718,6 +726,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     // Penalize roads that have more than one lane (in the direction of travel)
     if (edge->lanecount() > 1) {
       roadway_stress += (static_cast<float>(edge->lanecount()) - 1) * 0.05f * road_factor_;
+    }
+
+    // Designated truck routes add to roadway stress
+    if (edge->truck_route()) {
+      roadway_stress += kTruckStress;
     }
 
     // Add in penalization for road classification
@@ -832,9 +845,8 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
       turn_cost = kTCCrossing;
     }
 
-    // Transition time = densityfactor * stopimpact * turncost
-    seconds += trans_density_factor_[node->density()] *
-               edge->stopimpact(idx) * turn_cost;
+    // Transition time = stopimpact * turncost
+    seconds += edge->stopimpact(idx) * turn_cost;
   }
 
   // Reduce stress by road class factor the closer use_roads_ is to 0
@@ -936,9 +948,8 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
       turn_cost = kTCCrossing;
     }
 
-    // Transition time = densityfactor * stopimpact * turncost
-    seconds += trans_density_factor_[node->density()] *
-               edge->stopimpact(idx) * turn_cost;
+    // Transition time = stopimpact * turncost
+    seconds += edge->stopimpact(idx) * turn_cost;
   }
 
   // Reduce stress by road class factor the closer use_roads_ is to 0
@@ -969,8 +980,8 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
  * estimate is less than the least possible time along roads.
  */
 float BicycleCost::AStarCostFactor() const {
-  // Assume max speed of 80 kph (50 MPH)
-  return speedfactor_[80];
+  // Assume max speed of 2 * the average speed set for costing
+  return speedfactor_[2 * static_cast<uint32_t>(speed_)];
 }
 
 // Returns the current travel type.

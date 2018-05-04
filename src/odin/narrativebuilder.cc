@@ -60,20 +60,16 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kStart:
       case TripDirections_Maneuver_Type_kStartLeft: {
         // Set instruction
-        maneuver.set_instruction(std::move(FormStartInstruction(maneuver)));
+        maneuver.set_instruction(FormStartInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(
-                FormVerbalStartInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalStartInstruction(maneuver));
 
         // Set verbal post transition instruction only if there are
         // begin street names
         if (maneuver.HasBeginStreetNames()) {
-          maneuver.set_verbal_post_transition_instruction(
-              std::move(
-                  FormVerbalPostTransitionInstruction(
-                      maneuver, maneuver.HasBeginStreetNames())));
+          maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(
+                      maneuver, maneuver.HasBeginStreetNames()));
         }
         break;
       }
@@ -81,32 +77,25 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kDestination:
       case TripDirections_Maneuver_Type_kDestinationLeft: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormDestinationInstruction(maneuver)));
+        maneuver.set_instruction(FormDestinationInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertDestinationInstruction(maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertDestinationInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalDestinationInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalDestinationInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kBecomes: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormBecomesInstruction(maneuver, prev_maneuver)));
+        maneuver.set_instruction(FormBecomesInstruction(maneuver, prev_maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalBecomesInstruction(maneuver, prev_maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalBecomesInstruction(maneuver, prev_maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, maneuver.HasBeginStreetNames())));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(
+                    maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
       case TripDirections_Maneuver_Type_kSlightRight:
@@ -116,103 +105,84 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kSharpLeft:
       case TripDirections_Maneuver_Type_kLeft: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormTurnInstruction(maneuver, prev_maneuver)));
+        maneuver.set_instruction(FormTurnInstruction(maneuver, prev_maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertTurnInstruction(maneuver, prev_maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertTurnInstruction(maneuver, prev_maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalTurnInstruction(maneuver, prev_maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalTurnInstruction(maneuver, prev_maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, maneuver.HasBeginStreetNames())));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(
+                    maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
       case TripDirections_Maneuver_Type_kUturnRight:
       case TripDirections_Maneuver_Type_kUturnLeft: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormUturnInstruction(maneuver, prev_maneuver)));
+        maneuver.set_instruction(FormUturnInstruction(maneuver, prev_maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertUturnInstruction(maneuver, prev_maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertUturnInstruction(maneuver, prev_maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalUturnInstruction(maneuver, prev_maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalUturnInstruction(maneuver, prev_maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kRampStraight: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormRampStraightInstruction(maneuver)));
+        maneuver.set_instruction(FormRampStraightInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertRampStraightInstruction(maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertRampStraightInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalRampStraightInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalRampStraightInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
         if (maneuver.length() > kVerbalPostMinimumRampLength) {
           // Set verbal post transition instruction
-          maneuver.set_verbal_post_transition_instruction(
-              std::move(FormVerbalPostTransitionInstruction(maneuver)));
+          maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         }
         break;
       }
       case TripDirections_Maneuver_Type_kRampRight:
       case TripDirections_Maneuver_Type_kRampLeft: {
         // Set instruction
-        maneuver.set_instruction(std::move(FormRampInstruction(maneuver)));
+        maneuver.set_instruction(FormRampInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertRampInstruction(maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertRampInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalRampInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalRampInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
         if (maneuver.length() > kVerbalPostMinimumRampLength) {
           // Set verbal post transition instruction
-          maneuver.set_verbal_post_transition_instruction(
-              std::move(FormVerbalPostTransitionInstruction(maneuver)));
+          maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         }
         break;
       }
       case TripDirections_Maneuver_Type_kExitRight:
       case TripDirections_Maneuver_Type_kExitLeft: {
         // Set instruction
-        maneuver.set_instruction(std::move(FormExitInstruction(maneuver)));
+        maneuver.set_instruction(FormExitInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertExitInstruction(maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertExitInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalExitInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalExitInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
         if (maneuver.length() > kVerbalPostMinimumRampLength) {
           // Set verbal post transition instruction
-          maneuver.set_verbal_post_transition_instruction(
-              std::move(FormVerbalPostTransitionInstruction(maneuver)));
+          maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         }
         break;
       }
@@ -221,300 +191,234 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kStayLeft: {
         if (maneuver.HasSimilarNames(prev_maneuver)) {
           // Set stay on instruction
-          maneuver.set_instruction(
-              std::move(FormKeepToStayOnInstruction(maneuver)));
+          maneuver.set_instruction(FormKeepToStayOnInstruction(maneuver));
 
           // Set verbal transition alert instruction
-          maneuver.set_verbal_transition_alert_instruction(
-              std::move(FormVerbalAlertKeepToStayOnInstruction(maneuver)));
+          maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertKeepToStayOnInstruction(maneuver));
 
           // Set verbal pre transition instruction
-          maneuver.set_verbal_pre_transition_instruction(
-              std::move(FormVerbalKeepToStayOnInstruction(maneuver)));
+          maneuver.set_verbal_pre_transition_instruction(FormVerbalKeepToStayOnInstruction(maneuver));
 
           // Only set verbal post if > min ramp length
           if (maneuver.length() > kVerbalPostMinimumRampLength) {
             // Set verbal post transition instruction
-            maneuver.set_verbal_post_transition_instruction(
-                std::move(FormVerbalPostTransitionInstruction(maneuver)));
+            maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
           }
         } else {
           // Set instruction
-          maneuver.set_instruction(std::move(FormKeepInstruction(maneuver)));
+          maneuver.set_instruction(FormKeepInstruction(maneuver));
 
           // Set verbal transition alert instruction
-          maneuver.set_verbal_transition_alert_instruction(
-              std::move(FormVerbalAlertKeepInstruction(maneuver)));
+          maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertKeepInstruction(maneuver));
 
           // Set verbal pre transition instruction
-          maneuver.set_verbal_pre_transition_instruction(
-              std::move(FormVerbalKeepInstruction(maneuver)));
+          maneuver.set_verbal_pre_transition_instruction(FormVerbalKeepInstruction(maneuver));
 
           // Only set verbal post if > min ramp length
           if (maneuver.length() > kVerbalPostMinimumRampLength) {
             // Set verbal post transition instruction
-            maneuver.set_verbal_post_transition_instruction(
-                std::move(FormVerbalPostTransitionInstruction(maneuver)));
+            maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
           }
         }
         break;
       }
       case TripDirections_Maneuver_Type_kMerge: {
         // Set instruction
-        maneuver.set_instruction(std::move(FormMergeInstruction(maneuver)));
+        maneuver.set_instruction(FormMergeInstruction(maneuver));
 
         // Set verbal transition alert instruction if previous maneuver
         // is greater than 2 km
         if (prev_maneuver
-            && (prev_maneuver->length(DirectionsOptions_Units_kKilometers)
+            && (prev_maneuver->length(DirectionsOptions::kilometers)
                 > kVerbalAlertMergePriorManeuverMinimumLength)) {
-          maneuver.set_verbal_transition_alert_instruction(
-              std::move(FormVerbalAlertMergeInstruction(maneuver)));
+          maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertMergeInstruction(maneuver));
         }
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalMergeInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalMergeInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutEnter: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormEnterRoundaboutInstruction(maneuver)));
+        maneuver.set_instruction(FormEnterRoundaboutInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertEnterRoundaboutInstruction(maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertEnterRoundaboutInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalEnterRoundaboutInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalEnterRoundaboutInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutExit: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormExitRoundaboutInstruction(maneuver)));
+        maneuver.set_instruction(FormExitRoundaboutInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalExitRoundaboutInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalExitRoundaboutInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, maneuver.HasBeginStreetNames())));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(
+                    maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
       case TripDirections_Maneuver_Type_kFerryEnter: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormEnterFerryInstruction(maneuver)));
+        maneuver.set_instruction(FormEnterFerryInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertEnterFerryInstruction(maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertEnterFerryInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalEnterFerryInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalEnterFerryInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kFerryExit: {
         // Set instruction
-        maneuver.set_instruction(std::move(FormExitFerryInstruction(maneuver)));
+        maneuver.set_instruction(FormExitFerryInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertExitFerryInstruction(maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertExitFerryInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalExitFerryInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalExitFerryInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, maneuver.HasBeginStreetNames())));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(
+                    maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionStart: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormTransitConnectionStartInstruction(maneuver)));
+        maneuver.set_instruction(FormTransitConnectionStartInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalTransitConnectionStartInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalTransitConnectionStartInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionTransfer: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormTransitConnectionTransferInstruction(maneuver)));
+        maneuver.set_instruction(FormTransitConnectionTransferInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(
-                FormVerbalTransitConnectionTransferInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalTransitConnectionTransferInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionDestination: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormTransitConnectionDestinationInstruction(maneuver)));
+        maneuver.set_instruction(FormTransitConnectionDestinationInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(
-                FormVerbalTransitConnectionDestinationInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalTransitConnectionDestinationInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kTransit: {
         // Set depart instruction
-        maneuver.set_depart_instruction(
-            std::move(FormDepartInstruction(maneuver)));
+        maneuver.set_depart_instruction(FormDepartInstruction(maneuver));
 
         // Set verbal depart instruction
-        maneuver.set_verbal_depart_instruction(
-            std::move(FormVerbalDepartInstruction(maneuver)));
+        maneuver.set_verbal_depart_instruction(FormVerbalDepartInstruction(maneuver));
 
         // Set instruction
-        maneuver.set_instruction(std::move(FormTransitInstruction(maneuver)));
+        maneuver.set_instruction(FormTransitInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalTransitInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalTransitInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionTransitInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionTransitInstruction(maneuver));
 
         // Set arrive instruction
-        maneuver.set_arrive_instruction(
-            std::move(FormArriveInstruction(maneuver)));
+        maneuver.set_arrive_instruction(FormArriveInstruction(maneuver));
 
         // Set verbal arrive instruction
-        maneuver.set_verbal_arrive_instruction(
-            std::move(FormVerbalArriveInstruction(maneuver)));
+        maneuver.set_verbal_arrive_instruction(FormVerbalArriveInstruction(maneuver));
 
         break;
       }
       case TripDirections_Maneuver_Type_kTransitRemainOn: {
         // Set depart instruction
-        maneuver.set_depart_instruction(
-            std::move(FormDepartInstruction(maneuver)));
+        maneuver.set_depart_instruction(FormDepartInstruction(maneuver));
 
         // Set verbal depart instruction
-        maneuver.set_verbal_depart_instruction(
-            std::move(FormVerbalDepartInstruction(maneuver)));
+        maneuver.set_verbal_depart_instruction(FormVerbalDepartInstruction(maneuver));
 
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormTransitRemainOnInstruction(maneuver)));
+        maneuver.set_instruction(FormTransitRemainOnInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalTransitRemainOnInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalTransitRemainOnInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionTransitInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionTransitInstruction(maneuver));
 
         // Set arrive instruction
-        maneuver.set_arrive_instruction(
-            std::move(FormArriveInstruction(maneuver)));
+        maneuver.set_arrive_instruction(FormArriveInstruction(maneuver));
 
         // Set verbal arrive instruction
-        maneuver.set_verbal_arrive_instruction(
-            std::move(FormVerbalArriveInstruction(maneuver)));
+        maneuver.set_verbal_arrive_instruction(FormVerbalArriveInstruction(maneuver));
 
         break;
       }
       case TripDirections_Maneuver_Type_kTransitTransfer: {
         // Set depart instruction
-        maneuver.set_depart_instruction(
-            std::move(FormDepartInstruction(maneuver)));
+        maneuver.set_depart_instruction(FormDepartInstruction(maneuver));
 
         // Set verbal depart instruction
-        maneuver.set_verbal_depart_instruction(
-            std::move(FormVerbalDepartInstruction(maneuver)));
+        maneuver.set_verbal_depart_instruction(FormVerbalDepartInstruction(maneuver));
 
         // Set instruction
-        maneuver.set_instruction(
-            std::move(FormTransitTransferInstruction(maneuver)));
+        maneuver.set_instruction(FormTransitTransferInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalTransitTransferInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalTransitTransferInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionTransitInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionTransitInstruction(maneuver));
 
         // Set arrive instruction
-        maneuver.set_arrive_instruction(
-            std::move(FormArriveInstruction(maneuver)));
+        maneuver.set_arrive_instruction(FormArriveInstruction(maneuver));
 
         // Set verbal arrive instruction
-        maneuver.set_verbal_arrive_instruction(
-            std::move(FormVerbalArriveInstruction(maneuver)));
+        maneuver.set_verbal_arrive_instruction(FormVerbalArriveInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kPostTransitConnectionDestination: {
         // Set instruction
-        maneuver.set_instruction(
-            std::move(
-                FormPostTransitConnectionDestinationInstruction(maneuver)));
+        maneuver.set_instruction(FormPostTransitConnectionDestinationInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(
-                FormVerbalPostTransitConnectionDestinationInstruction(
-                    maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalPostTransitConnectionDestinationInstruction(maneuver));
 
         // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            std::move(FormVerbalPostTransitionInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case TripDirections_Maneuver_Type_kContinue:
       default: {
         // Set instruction
-        maneuver.set_instruction(std::move(FormContinueInstruction(maneuver)));
+        maneuver.set_instruction(FormContinueInstruction(maneuver));
 
         // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertContinueInstruction(maneuver)));
+        maneuver.set_verbal_transition_alert_instruction(FormVerbalAlertContinueInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(
-                FormVerbalContinueInstruction(maneuver,
-                                              directions_options.units())));
-
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalContinueInstruction(maneuver,
+                                              directions_options.units()));
         // NOTE: No verbal post transition instruction
         break;
       }
@@ -3502,13 +3406,13 @@ std::string NarrativeBuilder::FormLength(
     Maneuver& maneuver, const std::vector<std::string>& metric_lengths,
     const std::vector<std::string>& us_customary_lengths) {
   switch (directions_options_.units()) {
-    case DirectionsOptions_Units_kMiles: {
+    case DirectionsOptions::miles: {
       return FormUsCustomaryLength(
-          maneuver.length(DirectionsOptions_Units_kMiles), us_customary_lengths);
+          maneuver.length(DirectionsOptions::miles), us_customary_lengths);
     }
     default: {
       return FormMetricLength(
-          maneuver.length(DirectionsOptions_Units_kKilometers), metric_lengths);
+          maneuver.length(DirectionsOptions::kilometers), metric_lengths);
     }
   }
 }
@@ -3767,8 +3671,7 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
   for (auto& maneuver : maneuvers) {
     if (prev_maneuver && IsVerbalMultiCuePossible(prev_maneuver, maneuver)) {
       // Set verbal pre transition instruction as a verbal multi-cue
-      prev_maneuver->set_verbal_pre_transition_instruction(
-          std::move(FormVerbalMultiCue(prev_maneuver, maneuver)));
+      prev_maneuver->set_verbal_pre_transition_instruction(FormVerbalMultiCue(prev_maneuver, maneuver));
       prev_maneuver->set_verbal_multi_cue(true);
     }
 

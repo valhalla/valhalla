@@ -9,7 +9,7 @@ namespace valhalla {
 namespace baldr {
 
 /**
- * Interface class used to pass information about a admin.
+ * Interface class used to pass information about an administrative area.
  * Encapsulates the country and state text.
  */
 class AdminInfo {
@@ -22,38 +22,56 @@ class AdminInfo {
    * @param  state_iso    state iso string.
    */
   AdminInfo(const std::string& country_text, const std::string& state_text,
-            const std::string& country_iso, const std::string& state_iso);
+            const std::string& country_iso, const std::string& state_iso)
+     : country_text_(country_text),
+       state_text_(state_text),
+       country_iso_(country_iso),
+       state_iso_(state_iso) {
+  }
 
   /**
    * Returns true if the specified object is equal to this object.
    * @param  rhs  the specified object to compare against this object.
    * @return true if the specified object is equal to this object.
    */
-  bool operator ==(const AdminInfo& rhs) const;
+  bool operator ==(const AdminInfo& rhs) const {
+    return (country_iso_ == rhs.country_iso_ &&
+            country_text_ == rhs.country_text_ &&
+            state_iso_ == rhs.state_iso_ &&
+            state_text_ == rhs.state_text_);
+  }
 
   /**
    * Returns the country text.
    * @return  Returns the country text as a const reference to the text string.
    */
-  const std::string& country_text() const;
+  const std::string& country_text() const {
+    return country_text_;
+  }
 
   /**
    * Returns the state text.
    * @return  Returns the state text as a const reference to the text string.
    */
-  const std::string& state_text() const;
+  const std::string& state_text() const {
+    return state_text_;
+  }
 
   /**
    * Get the country iso
    * @return  Returns the country iso
    */
-  const std::string& country_iso() const;
+  const std::string& country_iso() const {
+    return country_iso_;
+  }
 
   /**
    * Get the state iso
    * @return  Returns the state iso
    */
-  const std::string& state_iso() const;
+  const std::string& state_iso() const {
+    return state_iso_;
+  }
 
   struct AdminInfoHasher {
     std::size_t operator()(const AdminInfo& ai) const {

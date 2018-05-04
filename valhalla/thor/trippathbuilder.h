@@ -43,9 +43,9 @@ class TripPathBuilder {
   static odin::TripPath Build(
       const AttributesController& controller, baldr::GraphReader& graphreader,
       const std::shared_ptr<sif::DynamicCost>* mode_costing,
-      const std::vector<PathInfo>& path, baldr::PathLocation& origin,
-      baldr::PathLocation& dest,
-      const std::list<baldr::PathLocation>& through_loc,
+      const std::vector<PathInfo>& path, odin::Location& origin,
+      odin::Location& dest,
+      const std::list<odin::Location>& through_loc,
       const std::function<void ()>* interrupt_callback = nullptr,
       std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
         route_discontinuities = nullptr);
@@ -61,7 +61,7 @@ class TripPathBuilder {
    * @param  trip_node     Trip node to add the edge information to.
    * @param  graphtile     Graph tile for accessing data.
    * @param   current_time Current time (seconds from midnight).
-   * @param  length_pct    Scale for the edge length for the partial distance
+   * @param  length_percentage Scale for the edge length for the partial distance
    *                       at begin and end edges
    */
   static odin::TripPath_Edge* AddTripEdge(const AttributesController& controller,
@@ -79,7 +79,7 @@ class TripPathBuilder {
   /**
     * Add trip intersecting edge.
    * @param  controller   Controller to determine which attributes to set.
-    * @param  edge_index  Index of the local intersecting path edge at intersection.
+    * @param  local_edge_index  Index of the local intersecting path edge at intersection.
     * @param  prev_edge_index  Index of the local previous path edge at intersection.
     * @param  curr_edge_index  Index of the local current path edge at intersection.
     * @param  nodeinfo  Node information of the intersection.

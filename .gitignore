@@ -48,7 +48,7 @@ valhalla_elevation_service
 valhalla_export_edges
 valhalla_loki_worker
 valhalla_odin_worker
-valhalla_route_service
+valhalla_service
 valhalla_validate_transit
 valhalla_run_matrix
 valhalla_run_isochrone
@@ -59,6 +59,7 @@ valhalla_thor_worker
 valhalla_tyr_worker
 valhalla_associate_segments
 valhalla_fetch_transit
+valhalla_pack_elevation
 valhalla/proto
 src/proto
 genfiles/
@@ -206,3 +207,6 @@ coverage/
 .cproject
 .project
 .settings
+/.vs*/
+/*build*/
+/CMakeSettings.json

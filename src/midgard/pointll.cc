@@ -86,7 +86,7 @@ float PointLL::Distance(const PointLL& ll2) const {
   // Protect against cosb being outside -1 to 1 range.
   if (cosb >= 1.0)
     return 0.00001f;
-  else if (cosb < -1.0)
+  else if (cosb <= -1.0)
     return kPi * kRadEarthMeters;
   else
     return (float)(acos(cosb) * kRadEarthMeters);
@@ -101,7 +101,8 @@ float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {
   float c = Distance(ll2);
   float s = (a + b + c) * 0.5f;
   float k = sqrtf(s * (s - a) * (s - b) * (s - c));
-  return ((a * b * c) / (4.0f * k));
+  return (std::isnan(k) || k == 0.0f) ? std::numeric_limits<float>::max() :
+            ((a * b * c) / (4.0f * k));
 }
 
 // Calculates the heading or azimuth from the current lat,lng to the
@@ -125,7 +126,7 @@ float PointLL::Heading(const PointLL& ll2) const {
 // squared to that point and the index of the segment where the closest point
 // lies.
 std::tuple<PointLL, float, int> PointLL::ClosestPoint(
-    const std::vector<PointLL>& pts, size_t begin_index) const {
+    const std::vector<PointLL>& pts, size_t begin_index, float dist_cutoff) const {
   PointLL closest {};
   int closest_segment = -1;
   float mindistsqr = std::numeric_limits<float>::max();
@@ -159,21 +160,23 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(
     auto bx = v.lng() - u.lng();
     auto by = v.lat() - u.lat();
 
-    // Scale longitude when finding the projection. Avoid divided-by-zero
-    // which gives a NaN scale, otherwise comparisons below will fail
+    // Scale longitude when finding the projection. Only need the numerator
+    // at first, saving the division for the case where the lat,lon projects
+    // along the current segment.
     auto bx2 = bx * lon_scale;
     auto sq  = bx2 * bx2 + by * by;
-    auto scale = sq > 0 ?  (((lng() - u.lng()) * lon_scale * bx2 +
-                             (lat() - u.lat()) *by) / sq) : 0.f;
+    auto scale = (lng() - u.lng()) * lon_scale * bx2 +
+                 (lat() - u.lat()) * by;
 
     // Projects along the ray before u
     if (scale <= 0.f) {
       point = { u.lng(), u.lat() };
     } // Projects along the ray after v
-    else if (scale >= 1.f) {
+    else if (scale >= sq) {
       point = { v.lng(), v.lat() };
     } // Projects along the ray between u and v
     else {
+      scale /= sq;
       point = { u.lng() + bx * scale, u.lat() + by * scale };
     }
 
@@ -184,6 +187,11 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(
       mindistsqr = sq_distance;
       closest = std::move(point);
     }
+
+    // Check if we should bail early because of looking at too much shape
+    if(dist_cutoff != std::numeric_limits<float>::infinity() &&
+        (dist_cutoff -= u.Distance(v)) < 0)
+      break;
   }
   return std::make_tuple(std::move(closest), sqrt(mindistsqr),
                          closest_segment);
@@ -244,7 +252,6 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
   // If more than 2 points, walk edges of the polyline until the length
   // is exceeded.
   if (n > 1) {
-    int i = n - 2;
     double d = 0.0;
     double seglength;
     auto pt1 = pts.begin() + idx1;

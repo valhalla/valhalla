@@ -87,7 +87,7 @@ StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target)
 
     auto winner = FindWinner(labels);
     if (!winner.IsValid() && 0 < time) {
-      // If it's not reachable by prevous column, we find the winner
+      // If it's not reachable by previous column, we find the winner
       // with the best emission cost only
       labels = InitLabels(column, true);
       winner = FindWinner(labels);

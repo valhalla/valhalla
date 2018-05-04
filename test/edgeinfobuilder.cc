@@ -77,8 +77,8 @@ void TestWriteRead() {
 
   // Check the name indices
   for (uint8_t i = 0; i < ei->name_count(); ++i) {
-    if (!(name_info_list[i].name_offset_ == ei->GetNameOffset(static_cast<uint8_t>(i))))
-      throw runtime_error("WriteRead:GetNameOffset test failed");
+    if (name_info_list[i].name_offset_ != ei->GetNameInfo(i).name_offset_)
+      throw runtime_error("WriteRead:NameOffset test failed");
   }
 
   // Check the shape points

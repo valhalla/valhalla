@@ -1,8 +1,6 @@
 #include "thor/worker.h"
 
-#include "baldr/json.h"
-#include "baldr/geojson.h"
-#include "midgard/logging.h"
+#include "tyr/serializers.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -10,25 +8,22 @@ using namespace valhalla::midgard;
 namespace valhalla {
   namespace thor {
 
-    json::MapPtr thor_worker_t::isochrones(const boost::property_tree::ptree &request) {
-      //get time for start of request
-      auto s = std::chrono::system_clock::now();
-
+    std::string thor_worker_t::isochrones(valhalla_request_t& request) {
       parse_locations(request);
       auto costing = parse_costing(request);
 
       std::vector<float> contours;
       std::unordered_map<float, std::string> colors;
-      for(const auto& contour : request.get_child("contours")) {
-        contours.push_back(contour.second.get<float>("time"));
-        colors[contours.back()] = contour.second.get<std::string>("color", "");
+      for(const auto& contour : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/contours")) {
+        contours.push_back(rapidjson::get<float>(contour, "/time"));
+        colors[contours.back()] = rapidjson::get<std::string>(contour, "/color", "");
       }
-      auto polygons = request.get<bool>("polygons", false);
-      auto denoise = std::max(std::min(request.get<float>("denoise", 1.f), 1.f), 0.f);
+      auto polygons = rapidjson::get<bool>(request.document, "/polygons", false);
+      auto denoise = std::max(std::min(rapidjson::get<float>(request.document, "/denoise", 1.f), 1.f), 0.f);
 
       // Get the generalization factor (in meters). If none is provided then
       // an optimal factor is computed (based on the isotile grid size).
-      auto generalize = request.get<float>("generalize", kOptimalGeneralization);
+      auto generalize = rapidjson::get<float>(request.document, "/generalize", kOptimalGeneralization);
 
       //get the raster
       //Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
@@ -36,21 +31,15 @@ namespace valhalla {
       //time in seconds is used when terminating the search. The + 10 minutes adds a buffer for edges
       //where there has been a higher cost that might still be marked in the isochrone
       auto grid = (costing == "multimodal" || costing == "transit") ?
-        isochrone_gen.ComputeMultiModal(correlated, contours.back()+10, reader, mode_costing, mode) :
-        isochrone_gen.Compute(correlated, contours.back()+10, reader, mode_costing, mode);
+        isochrone_gen.ComputeMultiModal(*request.options.mutable_locations(), contours.back()+10, reader, mode_costing, mode) :
+        isochrone_gen.Compute(*request.options.mutable_locations(), contours.back()+10, reader, mode_costing, mode);
 
       //turn it into geojson
       auto isolines = grid->GenerateContours(contours, polygons, denoise, generalize);
 
-      auto showLocations = request.get<bool>("show_locations", false);
-      auto geojson = (showLocations) ? baldr::json::to_geojson<PointLL>(isolines, polygons, colors, correlated)
-                                     : baldr::json::to_geojson<PointLL>(isolines, polygons, colors);
+      auto showLocations = rapidjson::get<bool>(request.document, "/show_locations", false);
+      return tyr::serializeIsochrones<PointLL>(request, isolines, polygons, colors, showLocations);
 
-      auto id = request.get_optional<std::string>("id");
-      if(id)
-        geojson->emplace("id", *id);
-
-      return geojson;
     }
 
   }

@@ -59,7 +59,7 @@ struct edge_t {
 edge_t opposing(GraphReader& reader, const GraphTile* tile, const DirectedEdge* edge) {
   const GraphTile* t = edge->leaves_tile() ? reader.GetGraphTile(edge->endnode()) : tile;
   auto id = edge->endnode();
-  id.fields.id = t->node(id)->edge_index() + edge->opp_index();
+  id.set_id(t->node(id)->edge_index() + edge->opp_index());
 
   // Check for invalid opposing index
   if (edge->opp_index() == kMaxEdgesPerNode) {
@@ -84,7 +84,7 @@ edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set, const bitset_
   for(size_t i = 0; i < node->edge_count(); ++i) {
     //get the edge
     GraphId id = tile->id();
-    id.fields.id = node->edge_index() + i;
+    id.set_id(node->edge_index() + i);
     //already used
     if(edge_set.get(tile_set.find(tile->id())->second + id.id()))
       continue;
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 
       //make sure we dont ever look at this again
       edge_t edge{tile_count_pair.first, tile->directededge(i)};
-      edge.i.fields.id = i;
+      edge.i.set_id(i);
       edge_set.set(tile_count_pair.second + i);
       ++set;
 

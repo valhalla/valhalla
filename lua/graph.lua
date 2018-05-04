@@ -61,57 +61,6 @@ restriction = {
 ["no_turn"] = 9
 }
 
-dow = {
-["Sunday"] = 1,
-["sunday"] = 1,
-["Sun"] = 1,
-["sun"] = 1,
-["Su"] = 1,
-["su"] = 1,
-["Monday"] = 2,
-["monday"] = 2,
-["Mon"] = 2,
-["mon"] = 2,
-["Mo"] = 2,
-["mo"] = 2,
-["Tuesday"] = 3,
-["tuesday"] = 3,
-["Tues"] = 3,
-["tues"] = 3,
-["Tue"] = 3,
-["tue"] = 3,
-["Tu"] = 3,
-["tu"] = 3,
-["Wednesday"] = 4,
-["wednesday"] = 4,
-["Weds"] = 4,
-["weds"] = 4,
-["Wed"] = 4,
-["wed"] = 4,
-["We"] = 4,
-["we"] = 4,
-["Thursday"] = 5,
-["thursday"] = 5,
-["Thurs"] = 5,
-["thurs"] = 5,
-["Thur"] = 5,
-["thur"] = 5,
-["Th"] = 5,
-["th"] = 5,
-["Friday"] = 6,
-["friday"] = 6,
-["Fri"] = 6,
-["fri"] = 6,
-["Fr"] = 6,
-["fr"] = 6,
-["Saturday"] = 7,
-["saturday"] = 7,
-["Sat"] = 7,
-["sat"] = 7,
-["Sa"] = 7,
-["sa"] = 7
-}
-
 --the default speed for tracks is lowered after 
 --the call to default_speed
 default_speed = {
@@ -560,6 +509,70 @@ function round(val, n)
   end
 end
 
+function restriction_prefix(restriction_str)
+  --not a string
+  if restriction_str == nil then
+    return nil
+  end
+
+  --find where the restriction type ends.
+  --format looks like
+  --restriction:conditional=no_left_turn @ (07:00-09:00,15:30-17:30)
+  local index = 0
+  local found = false
+  for c in restriction_str:gmatch"." do
+    if c == "@" then
+      found = true
+      break
+    end
+    if c ~= " " then
+      index = index + 1
+    end
+  end
+
+  --@ symbol did not exist
+  if found == false then
+    return nil
+  end
+
+  --return the type of restriction
+  return restriction_str:sub(0, index)
+end
+
+function restriction_suffix(restriction_str)
+  --not a string
+  if restriction_str == nil then
+    return nil
+  end
+
+  --find where the restriction type ends.
+  --format looks like
+  --restriction:conditional=no_left_turn @ (07:00-09:00,15:30-17:30)
+  local index = 0
+  local found = false
+  for c in restriction_str:gmatch"." do
+
+    if found == true then
+      if c ~= " " then
+        index = index + 1
+        break
+      end
+    elseif c == "@" then
+      found = true
+    end
+    index = index + 1
+  end
+
+  --@ symbol did not exist
+  if found == false then
+    return nil
+  end
+
+  --return the date and time information for the restriction
+  return restriction_str:sub(index, string.len(restriction_str))
+end
+
+
 --convert the numeric (non negative) number portion at the beginning of the string
 function numeric_prefix(num_str, allow_decimals)
   --not a string
@@ -957,7 +970,7 @@ function filter_tags_generic(kv)
 
   local oneway_reverse = kv["oneway"]
   local oneway_norm = oneway[kv["oneway"]]
-  if kv["junction"] == "roundabout" then
+  if kv["junction"] == "roundabout" or kv["junction"] == "circular" then
     oneway_norm = "true"
     kv["roundabout"] = "true"
   else
@@ -1644,7 +1657,7 @@ function rels_proc (kv, nokeys)
 
   if (kv["type"] == "route" or kv["type"] == "restriction") then
 
-     local restrict = restriction[kv["restriction"]]
+     local restrict = restriction[kv["restriction"]] or restriction[restriction_prefix(kv["restriction:conditional"])]
 
      local restrict_type = restriction[kv["restriction:hgv"]] or restriction[kv["restriction:emergency"]] or
                            restriction[kv["restriction:taxi"]] or restriction[kv["restriction:motorcar"]] or
@@ -1656,10 +1669,11 @@ function rels_proc (kv, nokeys)
        restrict = restrict_type
      end
 
-     if kv["type"] == "restriction" then
+     if kv["type"] == "restriction" or kv["restriction:conditional"] then
 
        if restrict ~= nil then
 
+         kv["restriction:conditional"] = restriction_suffix(kv["restriction:conditional"])
          kv["restriction:hgv"] = restriction[kv["restriction:hgv"]]
          kv["restriction:emergency"] = restriction[kv["restriction:emergency"]]
          kv["restriction:taxi"] = restriction[kv["restriction:taxi"]]
@@ -1674,22 +1688,6 @@ function rels_proc (kv, nokeys)
            kv["restriction"] = nil
          end
 
-         if kv["day_on"] or kv["day_off"] then
-
-           local day_on = dow[kv["day_on"]]
-           if day_on == nil then
-             kv["day_on"] = 0
-           else
-             kv["day_on"] = day_on
-           end
-
-           local day_off = dow[kv["day_off"]]
-           if day_off == nil then
-             kv["day_off"] = 0
-           else
-             kv["day_off"] = day_off
-           end
-         end
        else
          return 1, kv
        end

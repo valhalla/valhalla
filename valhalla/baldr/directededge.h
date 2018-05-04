@@ -390,7 +390,7 @@ class DirectedEdge {
   /**
    * Sets the bike network mask indicating which (if any) bicycle networks are
    * along this edge. See baldr/directededge.h for definitions.
-   * @param  bikenetwork  Bicycle network mask.
+   * @param  bike_network  Bicycle network mask.
    */
   void set_bike_network(const uint32_t bike_network);
 
@@ -563,7 +563,7 @@ class DirectedEdge {
 
   /**
    * Sets the truck speed in KPH.
-   * @param  truck speed  Speed in KPH.
+   * @param speed Speed in KPH.
    */
   void set_truck_speed(const uint32_t speed);
 
@@ -580,6 +580,22 @@ class DirectedEdge {
    * @param  roadclass  Road class.
    */
   void set_classification(const RoadClass roadclass);
+
+  /**
+   * Gets the sac scale. Shows if edge is meant for hiking, and if so how difficult
+   * of a hike it is.
+   * @return  sac_scale
+   */
+  SacScale sac_scale() const {
+    return static_cast<SacScale>(sac_scale_);
+  }
+
+  /**
+   * Sets the sac scale. Shows if edge is meant for hiking, and if so how difficult
+   * of a hike it is.
+   * @param  sac_scale SacScale type
+   */
+  void set_sac_scale(const SacScale sac_scale);
 
   /**
    * Is this edge unpaved or bad surface?
@@ -1084,14 +1100,15 @@ class DirectedEdge {
   uint64_t surface_        : 3;  // representation of smoothness
   uint64_t shoulder_       : 1;  // Does the edge have a shoulder?
   uint64_t spare2_         : 7;
-  uint64_t use_sidepath_   : 1;  // Is there a cycling path to the side that should be prefered?
+  uint64_t use_sidepath_   : 1;  // Is there a cycling path to the side that should be preferred?
   uint64_t dismount_       : 1;  // Do you need to dismount when biking on this edge?
   uint64_t density_        : 4;  // Density along the edge
   uint64_t speed_limit_    : 8;  // Speed limit (kph)
   uint64_t named_          : 1;  // 1 if this edge has names, 0 if unnamed
   uint64_t lane_conn_      : 1;  // 1 if has lane connectivity, 0 otherwise
   uint64_t traffic_seg_    : 1;  // 1 if has a traffic segment, 0 otherwise
-  uint64_t spare_          : 9;
+  uint64_t sac_scale_      : 3;  // Is this edge for hiking and if so how difficult is the hike?
+  uint64_t spare_          : 6;
 
   // Geometric attributes: length, weighted grade, curvature factor.
   // Turn types between edges.

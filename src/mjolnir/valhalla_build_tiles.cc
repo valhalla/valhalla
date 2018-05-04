@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     boost::property_tree::read_json(ss, pt);
   }
   else if (vm.count("config") && boost::filesystem::is_regular_file(config_file_path)) {
-    boost::property_tree::read_json(config_file_path.c_str(), pt);
+    boost::property_tree::read_json(config_file_path.string(), pt);
   }
   else {
     std::cerr << "Configuration is required\n\n" << options << "\n\n";
@@ -90,6 +90,7 @@ int main(int argc, char** argv) {
 
   //build some tiles
   pt.get_child("mjolnir").erase("tile_extract");
+  pt.get_child("mjolnir").erase("tile_url");
   build_tile_set(pt, input_files);
 
   return EXIT_SUCCESS;

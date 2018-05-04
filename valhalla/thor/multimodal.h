@@ -10,7 +10,6 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -19,6 +18,7 @@
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathinfo.h>
 #include <valhalla/thor/astar.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace thor {
@@ -45,13 +45,13 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    * @param  origin  Origin location
    * @param  dest    Destination location
    * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  costing  An array of costing methods, one per TravelMode.
+   * @param  mode_costing  An array of costing methods, one per TravelMode.
    * @param  mode     Travel mode from the origin.
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(baldr::PathLocation& origin,
-           baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+  std::vector<PathInfo> GetBestPath(odin::Location& origin,
+           odin::Location& dest, baldr::GraphReader& graphreader,
            const std::shared_ptr<sif::DynamicCost>* mode_costing,
            const sif::TravelMode mode);
 
@@ -81,7 +81,7 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_;
+  EdgeStatus edgestatus_;
 
   // Destinations, id and cost
   std::map<uint64_t, sif::Cost> destinations_;
@@ -96,15 +96,6 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
             const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
-   * Convenience method to add an edge to the adjacency list and temporarily
-   * label it. This must be called before adding the edge label (so it uses
-   * the correct index).
-   * @param  edgeid    Edge to add to the adjacency list.
-   * @param  sortcost  Sort cost.
-   */
-  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
-
-  /**
    * Add edges at the origin to the adjacency list.
    * @param  graphreader  Graph tile reader.
    * @param  origin       Location information of the origin.
@@ -112,8 +103,8 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    * @param  costing      Dynamic costing.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 baldr::PathLocation& origin,
-                 const baldr::PathLocation& dest,
+                 odin::Location& origin,
+                 const odin::Location& dest,
                  const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -124,7 +115,7 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    * @return  Returns the relative density near the destination (0-15)
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader,
-                          const baldr::PathLocation& dest,
+                          const odin::Location& dest,
                           const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -135,7 +126,7 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    * TODO - once auto/bicycle are allowed modes we need to check if parking
    * or bikeshare locations are within walking distance.
    */
-  bool CanReachDestination(const baldr::PathLocation& destination,
+  bool CanReachDestination(const odin::Location& destination,
            baldr::GraphReader& graphreader, const sif::TravelMode dest_mode,
            const std::shared_ptr<sif::DynamicCost>& costing);
 

@@ -47,6 +47,8 @@ struct City {
   }
 };
 
+// City file can be found: 
+// https://github.com/bahar/WorldCityLocations/blob/master/World_Cities_Location_table.csv
 std::vector<City> ParseCityFile(const std::string& filename) {
   typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
   boost::char_separator<char> sep{";"};

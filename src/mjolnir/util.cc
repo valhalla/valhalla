@@ -13,6 +13,7 @@
 #include "midgard/aabb2.h"
 #include "midgard/polyline2.h"
 #include "midgard/logging.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
 
 #include <boost/filesystem/operations.hpp>
@@ -46,6 +47,36 @@ std::string remove_double_quotes(const std::string& s) {
   return ret;
 }
 
+// Compute a curvature metric given an edge shape
+uint32_t compute_curvature(const std::list<PointLL>& shape) {
+  // Edges with just 2 shape points have no curvature.
+  // TODO - perhaps a post-process to "average" curvature along adjacent edges
+  // and smooth curvature on connected edges may be desirable?
+  if (shape.size() == 2) {
+    return 0;
+  }
+
+  // Iterate through sets of shape vertices and compute a radius of curvature.
+  // Apply a score to each section.
+  uint32_t n = 0;
+  float total_score = 0.0f;
+  auto p1 = shape.begin();
+  auto p2 = p1; p2++;
+  auto p3 = p2; p3++;
+  for (; p3 != shape.end(); ++p1, ++p2, ++p3) {
+    float radius = p1->Curvature(*p2, *p3);
+    if (!std::isnan(radius)) {
+      // Compute a score and cap it at 25 (that way one sharp turn doesn't
+      // impact the total edge more than it should)
+      float score = (radius > 1000.0f) ? 0.0f : 1500.0f / radius;
+      total_score += (score > 25.0f) ? 25.0f : score;
+      n++;
+    }
+  }
+  float average_score = (n == 0) ? 0.0f : total_score / n;
+  return average_score > 15.0f ? 15 : static_cast<uint32_t>(average_score);
+}
+
 void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files, const std::string& bin_file_prefix, bool free_protobuf) {
   //cannot allow this when building tiles
   if(config.get_child("mjolnir").get_optional<std::string>("tile_extract"))
@@ -54,7 +85,7 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
   //set up the directories and purge old tiles
   auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
   for(const auto& level : valhalla::baldr::TileHierarchy::levels()) {
-    auto level_dir = tile_dir + "/" + std::to_string(level.first);
+    auto level_dir = tile_dir + baldr::filesystem::path_separator + std::to_string(level.first);
     if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
       boost::filesystem::remove_all(level_dir);
@@ -62,7 +93,7 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
   }
 
   //check for transit level.
-  auto level_dir = tile_dir + "/" +
+  auto level_dir = tile_dir + baldr::filesystem::path_separator +
       std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level+1);
   if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
     LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
@@ -92,12 +123,23 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
   // Add transit
   TransitBuilder::Build(config);
 
-  // Builds additional hierarchies based on the config file. Connections
+  // Builds additional hierarchies if specified within config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
-  HierarchyBuilder::Build(config);
+  auto build_hierarchy = config.get<bool>("mjolnir.hierarchy", true);
+  if (build_hierarchy) {
+    HierarchyBuilder::Build(config);
 
-  // Build shortcuts
-  ShortcutBuilder::Build(config);
+    // Build shortcuts if specified in the config file. Shortcuts can only be
+    // applied if hierarchies are also generated.
+    auto build_shortcuts = config.get<bool>("mjolnir.shortcuts", true);
+    if (build_shortcuts) {
+      ShortcutBuilder::Build(config);
+    } else {
+      LOG_INFO("Skipping shortcut builder");
+    }
+  } else {
+    LOG_INFO("Skipping hierarchy builder and shortcut builder");
+  }
 
   // Build the Complex Restrictions
   RestrictionBuilder::Build(config, bin_file_prefix + "complex_restrictions.bin", osm_data.end_map);

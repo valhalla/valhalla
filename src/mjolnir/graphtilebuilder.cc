@@ -3,10 +3,12 @@
 #include "midgard/logging.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
 #include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>
+#include <set>
 #include <list>
 #include <algorithm>
 
@@ -108,66 +110,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     edge_info_offsets.insert(diredge.edgeinfo_offset());
   }
 
-  // create the forward list of complex restrictions.
-  complex_restriction_forward_list_offset_ = 0;
-  while (complex_restriction_forward_list_offset_ <
-      complex_restriction_forward_size_) {
-
-    ComplexRestriction cr(complex_restriction_forward_ + complex_restriction_forward_list_offset_);
-
-    ComplexRestrictionBuilder crb;
-    crb.set_from_id(cr.from_id());
-    crb.set_to_id(cr.to_id());
-    /** TODO - design common date/time structure
-    crb.set_begin_time(cr.begin_time());
-    crb.set_elapsed_time(cr.end_time());
-    crb.set_begin_day(cr.begin_day());
-    crb.set_end_day(cr.end_day());
-    */
-    crb.set_via_list(cr.GetVias());
-    crb.set_modes(cr.modes());
-
-    complex_restriction_forward_list_offset_ += crb.SizeOf();
-    complex_restriction_forward_builder_.emplace_back(std::move(crb));
-  }
-
-  if (complex_restriction_forward_list_offset_ != complex_restriction_forward_size_) {
-    LOG_WARN("GraphTileBuilder TileID: " +
-          std::to_string(header_->graphid().tileid()) +
-          " offsets are off for complex restrictions: = " +
-          std::to_string(complex_restriction_forward_list_offset_) +
-          " size = " + std::to_string(complex_restriction_forward_size_));
-  }
-
-  // create the reverse list of complex restrictions.
-  complex_restriction_reverse_list_offset_ = 0;
-  while (complex_restriction_reverse_list_offset_ < complex_restriction_reverse_size_) {
-
-    ComplexRestriction cr(complex_restriction_reverse_ + complex_restriction_reverse_list_offset_);
-
-    ComplexRestrictionBuilder crb;
-    crb.set_from_id(cr.from_id());
-    crb.set_to_id(cr.to_id());
-    /** TODO
-    crb.set_begin_time(cr.begin_time());
-    crb.set_elapsed_time(cr.end_time());
-    crb.set_begin_day(cr.begin_day());
-    crb.set_end_day(cr.end_day());
-    */
-    crb.set_via_list(cr.GetVias());
-    crb.set_modes(cr.modes());
-
-    complex_restriction_reverse_list_offset_ += crb.SizeOf();
-    complex_restriction_reverse_builder_.emplace_back(std::move(crb));
-  }
-
-  if (complex_restriction_reverse_list_offset_ != complex_restriction_reverse_size_) {
-    LOG_WARN("GraphTileBuilder TileID: " +
-          std::to_string(header_->graphid().tileid()) +
-          " offsets are off for complex restrictions: = " +
-          std::to_string(complex_restriction_reverse_list_offset_) +
-          " size = " + std::to_string(complex_restriction_reverse_size_));
-  }
+  // At this time, complex restrictions are created AFTER all need for
+  // serializing and adding to a tile - so we assume they are both empty.
 
   // EdgeInfo. Create list of EdgeInfoBuilders. Add to text offset set.
   edge_info_offset_ = 0;
@@ -231,8 +175,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 // Output the tile to file. Stores as binary data.
 void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + '/'
-      + GraphTile::FileSuffix(header_builder_.graphid());
+  boost::filesystem::path filename(tile_dir_ + filesystem::path_separator
+      + GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -245,39 +189,39 @@ void GraphTileBuilder::StoreTileData() {
   if (file.is_open()) {
     // Write the nodes
     header_builder_.set_nodecount(nodes_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(nodes_builder_.data()),
                nodes_builder_.size() * sizeof(NodeInfo));
 
     // Write the directed edges
     header_builder_.set_directededgecount(directededges_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(directededges_builder_.data()),
                directededges_builder_.size() * sizeof(DirectedEdge));
 
     // Sort and write the access restrictions
     header_builder_.set_access_restriction_count(access_restriction_builder_.size());
     std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(&access_restriction_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(access_restriction_builder_.data()),
                access_restriction_builder_.size() * sizeof(AccessRestriction));
 
     // Sort and write the transit departures
     header_builder_.set_departurecount(departure_builder_.size());
     std::sort(departure_builder_.begin(), departure_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(&departure_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(departure_builder_.data()),
                departure_builder_.size() * sizeof(TransitDeparture));
 
     // Sort write the transit stops
     header_builder_.set_stopcount(stop_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&stop_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(stop_builder_.data()),
                stop_builder_.size() * sizeof(TransitStop));
 
     // Write the transit routes
     header_builder_.set_routecount(route_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&route_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(route_builder_.data()),
                route_builder_.size() * sizeof(TransitRoute));
 
     // Write transit schedules
     header_builder_.set_schedulecount(schedule_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&schedule_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(schedule_builder_.data()),
                schedule_builder_.size() * sizeof(TransitSchedule));
 
     // TODO add transfers later
@@ -285,12 +229,12 @@ void GraphTileBuilder::StoreTileData() {
 
     // Write the signs
     header_builder_.set_signcount(signs_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&signs_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
                signs_builder_.size() * sizeof(Sign));
 
     // Write the admins
     header_builder_.set_admincount(admins_builder_.size());
-    in_mem.write(reinterpret_cast<const char*>(&admins_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(admins_builder_.data()),
                admins_builder_.size() * sizeof(Admin));
 
     // Edge bins can only be added after you've stored the tile
@@ -308,20 +252,26 @@ void GraphTileBuilder::StoreTileData() {
              // TODO - once transit transfers are added need to update here
              + (signs_builder_.size() * sizeof(Sign))
              + (admins_builder_.size() * sizeof(Admin)));
-    for (const auto& complex_restriction : complex_restriction_forward_builder_)
+    uint32_t forward_restriction_size = 0;
+    for (auto& complex_restriction : complex_restriction_forward_builder_) {
       in_mem << complex_restriction;
+      forward_restriction_size += complex_restriction.SizeOf();
+    }
 
     // Write the reverse complex restriction data
     header_builder_.set_complex_restriction_reverse_offset(
             header_builder_.complex_restriction_forward_offset() +
-            complex_restriction_forward_list_offset_);
-    for (const auto& complex_restriction : complex_restriction_reverse_builder_)
+            forward_restriction_size);
+    uint32_t reverse_restriction_size = 0;
+    for (auto& complex_restriction : complex_restriction_reverse_builder_) {
       in_mem << complex_restriction;
+      reverse_restriction_size += complex_restriction.SizeOf();
+    }
 
     // Write the edge data
     header_builder_.set_edgeinfo_offset(
             header_builder_.complex_restriction_reverse_offset() +
-            complex_restriction_reverse_list_offset_);
+            reverse_restriction_size);
     for (const auto& edgeinfo : edgeinfo_list_)
       in_mem << edgeinfo;
 
@@ -348,7 +298,7 @@ void GraphTileBuilder::StoreTileData() {
     // Write lane connections
     header_builder_.set_lane_connectivity_offset(header_builder_.traffic_chunk_offset());
     std::sort(lane_connectivity_builder_.begin(), lane_connectivity_builder_.end());
-    in_mem.write(reinterpret_cast<const char*>(&lane_connectivity_builder_[0]),
+    in_mem.write(reinterpret_cast<const char*>(lane_connectivity_builder_.data()),
                lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
     // Write the edge elevation data. Make sure that if it exists it has
@@ -360,7 +310,7 @@ void GraphTileBuilder::StoreTileData() {
         LOG_ERROR("Edge elevation count is not equal to directed edge count!");
       }
       header_builder_.set_has_edge_elevation(true);
-      in_mem.write(reinterpret_cast<const char*>(&edge_elevation_builder_[0]),
+      in_mem.write(reinterpret_cast<const char*>(edge_elevation_builder_.data()),
                          edge_elevation_builder_.size() * sizeof(EdgeElevation));
     }
 
@@ -396,7 +346,7 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     const std::vector<DirectedEdge>& directededges) {
 
   // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + '/' +
+  boost::filesystem::path filename = tile_dir_ + filesystem::path_separator +
         GraphTile::FileSuffix(header_->graphid());
 
   // Make sure the directory exists on the system
@@ -414,14 +364,14 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
     if (nodes.size() != header_->nodecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - node count has changed");
     }
-    file.write(reinterpret_cast<const char*>(&nodes[0]),
+    file.write(reinterpret_cast<const char*>(nodes.data()),
                nodes.size() * sizeof(NodeInfo));
 
     // Write the updated directed edges. Make sure edge count matches.
     if (directededges.size() != header_->directededgecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
     }
-    file.write(reinterpret_cast<const char*>(&directededges[0]),
+    file.write(reinterpret_cast<const char*>(directededges.data()),
                directededges.size() * sizeof(DirectedEdge));
 
     // Write the rest of the tiles
@@ -501,6 +451,16 @@ void GraphTileBuilder::AddLaneConnectivity(const std::vector<baldr::LaneConnecti
   lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * lc.size();
 }
 
+// Add forward complex restriction.
+void GraphTileBuilder::AddForwardComplexRestriction(const ComplexRestrictionBuilder& res) {
+  complex_restriction_forward_builder_.push_back(res);
+}
+
+// Add reverse complex restriction.
+void GraphTileBuilder::AddReverseComplexRestriction(const ComplexRestrictionBuilder& res) {
+  complex_restriction_reverse_builder_.push_back(res);
+}
+
 bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
                      const baldr::GraphId& nodeb, uint32_t& edge_info_offset) {
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
@@ -512,33 +472,6 @@ bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphI
   return false;
 }
 
-// Add the complex restrictions and update the list offset.  The to, from, and vias should all point to edgeids.
-void GraphTileBuilder::UpdateComplexRestrictions(const std::list<ComplexRestrictionBuilder>& complex_restriction_builder,
-                                                 const bool forward) {
-
-  if (forward) {
-    complex_restriction_forward_list_offset_ = 0;
-    complex_restriction_forward_builder_.clear();
-    // Add a new complex restrictions to the lists
-    complex_restriction_forward_builder_ = complex_restriction_builder;
-
-    for (const auto& crb : complex_restriction_builder) {
-      // Update edge offset for next item
-      complex_restriction_forward_list_offset_ += crb.SizeOf();
-    }
-  } else {
-    complex_restriction_reverse_list_offset_ = 0;
-    complex_restriction_reverse_builder_.clear();
-    // Add a new complex restrictions to the lists
-    complex_restriction_reverse_builder_ = complex_restriction_builder;
-
-    for (const auto& crb : complex_restriction_builder) {
-      // Update edge offset for next item
-      complex_restriction_reverse_list_offset_ += crb.SizeOf();
-    }
-  }
-}
-
 // Add edge info
 template <class shape_container_t>
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
@@ -547,6 +480,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint64_t wayid,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
+                                       const uint16_t types,
                                        bool& added) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
@@ -562,6 +496,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     std::vector<NameInfo> name_info_list;
     name_info_list.reserve(std::min(names.size(), kMaxNamesPerEdge));
     size_t name_count = 0;
+    size_t location = 0;
     for (const auto& name : names) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
@@ -572,10 +507,14 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       // Verify name is not empty
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
-        NameInfo ni({AddName(name)});
+        NameInfo ni{AddName(name)};
+        ni.is_ref_= 0;
+        if ((types & (1ULL << location)))
+          ni.is_ref_= 1; // set the ref bit.
         name_info_list.emplace_back(ni);
         ++name_count;
       }
+      location++;
     }
     edgeinfo.set_name_info_list(name_info_list);
 
@@ -600,10 +539,10 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 }
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL> >
   (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,
-   const std::vector<PointLL>&, const std::vector<std::string>&, bool&);
+   const std::vector<PointLL>&, const std::vector<std::string>&, const uint16_t, bool&);
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL> >
   (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,
-   const std::list<PointLL>&, const std::vector<std::string>&, bool&);
+   const std::list<PointLL>&, const std::vector<std::string>&, const uint16_t, bool&);
 
 // AddEdgeInfo - accepts an encoded shape string.
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
@@ -612,6 +551,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                      const uint64_t wayid,
                      const std::string& llstr,
                      const std::vector<std::string>& names,
+                     const uint16_t types,
                      bool& added){
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
@@ -627,6 +567,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     std::vector<NameInfo> name_info_list;
     name_info_list.reserve(std::min(names.size(), kMaxNamesPerEdge));
     size_t name_count = 0;
+    size_t location = 0;
     for (const auto& name : names) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
@@ -637,10 +578,14 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       // Verify name is not empty
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
-        NameInfo ni({AddName(name)});
+        NameInfo ni{AddName(name)};
+        ni.is_ref_= 0;
+        if ((types & (1ULL << location)))
+          ni.is_ref_= 1; // set the ref bit.
         name_info_list.emplace_back(ni);
         ++name_count;
       }
+      location++;
     }
     edgeinfo.set_name_info_list(name_info_list);
 
@@ -878,7 +823,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
-  boost::filesystem::path filename = tile_dir + '/' + GraphTile::FileSuffix(header.graphid());
+  boost::filesystem::path filename = tile_dir + filesystem::path_separator + GraphTile::FileSuffix(header.graphid());
   if(!boost::filesystem::exists(filename.parent_path()))
     boost::filesystem::create_directories(filename.parent_path());
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -1001,7 +946,7 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
   header_builder_.set_end_offset(header_builder_.end_offset() + shift);
 
   // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + '/'
+  boost::filesystem::path filename = tile_dir_ + filesystem::path_separator
       + GraphTile::FileSuffix(header_builder_.graphid());
 
   // Make sure the directory exists on the system
@@ -1020,11 +965,11 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
                header_->traffic_segmentid_offset() - sizeof(GraphTileHeader));
 
     // Append the traffic segment list
-    file.write(reinterpret_cast<const char*>(&traffic_segment_builder_[0]),
+    file.write(reinterpret_cast<const char*>(traffic_segment_builder_.data()),
                traffic_segment_builder_.size() * sizeof(TrafficAssociation));
 
     // Append the traffic chunks
-    file.write(reinterpret_cast<const char*>(&traffic_chunk_builder_[0]),
+    file.write(reinterpret_cast<const char*>(traffic_chunk_builder_.data()),
                traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
     // Write rest of the stuff after traffic chunks (includes lane connectivity
@@ -1054,7 +999,7 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
       // Write the updated directed edges
       size_t offset = sizeof(GraphTileHeader) + header_->nodecount() * sizeof(NodeInfo);
       file.seekp(offset, std::ios_base::beg);
-      file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
+      file.write(reinterpret_cast<const char*>(directededges_builder_.data()),
                  directededges_builder_.size() * sizeof(DirectedEdge));
     }
 

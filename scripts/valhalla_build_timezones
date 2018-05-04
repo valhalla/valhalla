@@ -35,7 +35,8 @@ if [ ! -d $(dirname $tz_file) ]; then
 fi
 rm -f $tz_file
 url="http://efele.net/maps/tz/world/tz_world_mp.zip"
-wget $url || error_exit "wget failed for " $url
+echo "downloading timezone polygon file."
+wget -q $url || error_exit "wget failed for " $url
 unzip ./tz_world_mp.zip || error_exit "unzip failed"
 spatialite_tool -i -shp ./world/tz_world_mp -d $tz_file -t tz_world -s 4326 -g geom -c UTF-8 || error_exit "spatialite_tool import failed"
 spatialite $tz_file "SELECT CreateSpatialIndex('tz_world', 'geom');" || error_exit "SpatialIndex failed" 

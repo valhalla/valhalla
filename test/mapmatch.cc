@@ -74,7 +74,7 @@ namespace {
   const auto conf = json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
-      "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
+      "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
       "service_defaults":{"minimum_reachability": 50,"radius": 0}
     },
@@ -137,7 +137,7 @@ namespace {
       auto test_case = make_test_case(start, end);
       std::cout << test_case << std::endl;
       boost::property_tree::ptree route;
-      try { route = json_to_pt(actor.route(tyr::ROUTE, test_case)); }
+      try { route = json_to_pt(actor.route(test_case)); }
       catch (...) { std::cout << "route failed" << std::endl; continue; }
       auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
       auto shape = midgard::decode<std::vector<midgard::PointLL> >(encoded_shape);
@@ -163,11 +163,17 @@ namespace {
         throw std::logic_error("Edge walk failed with exact shape");
       }
       std::vector<uint64_t> walked_edges;
-      for(const auto& edge : walked.get_child("edges"))
+      std::vector<gps_segment_t> segments;
+      for(const auto& edge : walked.get_child("edges")) {
         walked_edges.push_back(edge.second.get<uint64_t>("id"));
+        auto b = edge.second.get<size_t>("begin_shape_index");
+        auto e = edge.second.get<size_t>("end_shape_index") + 1;
+        segments.emplace_back(gps_segment_t{std::vector<PointLL>(shape.cbegin() + b, shape.cbegin() + e),
+            static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
+      }
       //simulate gps from the route shape
       std::vector<float> accuracies;
-      auto simulation = midgard::simulate_gps(walked.get_child("edges"), shape, accuracies, 50, 100.f, 1);
+      auto simulation = simulate_gps(segments, accuracies, 50, 100.f, 1);
       auto locations = to_locations(simulation, accuracies, 1);
       //get a trace-attributes from the simulated gps
       auto matched = json_to_pt(actor.trace_attributes(
@@ -182,7 +188,7 @@ namespace {
           std::cout << "route had a possible loop" << std::endl;
           continue;
         }
-        auto decoded_match = midgard::decode<std::vector<midgard::PointLL> >(matched.get<std::string>("shape"));
+        auto decoded_match = midgard::decode<std::vector<PointLL> >(matched.get<std::string>("shape"));
         std::string geojson = R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
         geojson += print(shape);
         geojson += R"(]},"type":"Feature","properties":{"stroke":"#00ff00","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
@@ -236,7 +242,31 @@ namespace {
   void test32bit() {
     tyr::actor_t actor(conf, true);
     std::string test_case = "{\"costing\":\"auto\",\"locations\":[{\"lat\":52.096672,\"lon\":5.110825},{\"lat\":52.081371,\"lon\":5.125671}]}";
-    actor.route(tyr::ROUTE, test_case);
+    actor.route(test_case);
+  }
+
+  void test_topk_validate() {
+    //tests a fork in the road
+    tyr::actor_t actor(conf, true);
+
+    //tests a previous segfault due to using a claimed state
+    auto matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
+         {"lat":52.088548,"lon":5.15357,"accuracy":30},
+         {"lat":52.088627,"lon":5.153269,"accuracy":30},
+         {"lat":52.08864,"lon":5.15298,"accuracy":30},
+         {"lat":52.08861,"lon":5.15272,"accuracy":30},
+         {"lat":52.08863,"lon":5.15253,"accuracy":30},
+         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
+
+    //this tests a fix for an infinite loop because there is only 1 result and we ask for 4
+    matched = json_to_pt(actor.trace_attributes(
+      R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
+         {"lat":52.09579,"lon":5.13137,"accuracy":5},
+         {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
+    if(matched.get_child("alternate_paths").size() > 0)
+      throw std::logic_error("There should be only one result");
+
   }
 
   void test_topk_fork_alternate() {
@@ -374,46 +404,37 @@ namespace {
     tyr::actor_t actor(conf, true);
     auto matched = json_to_pt(actor.trace_attributes(
         R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-           {"lat":52.07955,"lon":5.13705,"accuracy":10},
-           {"lat":52.079543916940345,"lon":5.137406587600709,"accuracy":10},
-           {"lat":52.07953897174955,"lon":5.137599706649781,"accuracy":10},
-           {"lat":52.079542268543484,"lon":5.137838423252107,"accuracy":10},
            {"lat":52.07956040090567,"lon":5.138160288333893,"accuracy":10},
            {"lat":52.07957358807355,"lon":5.138508975505829,"accuracy":10},
            {"lat":52.07959666560798,"lon":5.138905942440034,"accuracy":10},
            {"lat":52.0796213915245,"lon":5.139262676239015,"accuracy":10},
            {"lat":52.079637875461195,"lon":5.139581859111787,"accuracy":10},
-           {"lat":52.07964776582031,"lon":5.139828622341157,"accuracy":10}]})"));
+           {"lat":52.07964776582031,"lon":5.139828622341157,"accuracy":10},
+           {"lat":52.07965600778458,"lon":5.1402121782302865,"accuracy":10}]})"));
 
-    /*** Primary path - stay straight on the same road
+    /*** Primary path - use main road
       {"type":"FeatureCollection","features":[
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137050,52.079552]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":0}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137407,52.079544]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":1}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137600,52.079540]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":2}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137838,52.079544]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":3}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138160,52.079559]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":4}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138509,52.079575]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":5}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138906,52.079597]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":6}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139263,52.079620]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":7}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139582,52.079639]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":8}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139829,52.079647]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":9}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137053,52.079536]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":0,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.075,"distance_from_trace_point":1.695}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137405,52.079559]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":1,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.580,"distance_from_trace_point":1.692}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137595,52.079571]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":2,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.044,"distance_from_trace_point":3.390}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137832,52.079586]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":3,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.133,"distance_from_trace_point":4.662}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138153,52.079605]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":4,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.254,"distance_from_trace_point":5.085}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138501,52.079624]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":5,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.385,"distance_from_trace_point":5.511}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138898,52.079647]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":6,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.534,"distance_from_trace_point":5.511}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139255,52.079670]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":7,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.668,"distance_from_trace_point":5.511}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139574,52.079689]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":8,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.788,"distance_from_trace_point":5.511}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139820,52.079704]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":9,"matched_point_type":"matched","edge_index":2,"distance_along_edge":0.881,"distance_from_trace_point":6.357}}
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138160,52.079559]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":0}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138509,52.079575]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":1}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138906,52.079597]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":2}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139263,52.079620]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":3}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139582,52.079639]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":4}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139829,52.079647]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":5}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.140212,52.079655]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":6}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138153,52.079605]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":0,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.254,"distance_from_trace_point":5.085}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138501,52.079624]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":1,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.385,"distance_from_trace_point":5.511}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138898,52.079647]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":2,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.534,"distance_from_trace_point":5.511}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139255,52.079670]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":3,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.668,"distance_from_trace_point":5.511}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139574,52.079689]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":4,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.788,"distance_from_trace_point":5.511}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139820,52.079704]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":5,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.881,"distance_from_trace_point":6.357}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.140204,52.079727]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":6,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.070,"distance_from_trace_point":8.033}}
       ]}
      */
     std::vector<std::string> names;
     for(const auto& edge : matched.get_child("edges"))
       for(const auto& name : edge.second.get_child("names"))
         names.push_back(name.second.get_value<std::string>());
-    if(names != std::vector<std::string>{"Rubenslaan", "Rubenslaan", "Rubenslaan"}) {
+    if(names != std::vector<std::string>{"Rubenslaan", "Rubenslaan"}) {
       std::string streets;
       for(const auto& n : names)
         streets += n + ", ";
@@ -422,28 +443,22 @@ namespace {
     if(matched.get<float>("confidence_score") != 1.0f)
       throw std::logic_error("Confidence of the first result is always 1");
 
-    /*** Alternate path - take frontage road to the right
+    /*** Alternate path - use one way frontage road
       {"type":"FeatureCollection","features":[
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137050,52.079552]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":0}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137407,52.079544]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":1}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137600,52.079540]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":2}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137838,52.079544]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":3}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138160,52.079559]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":4}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138509,52.079575]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":5}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138906,52.079597]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":6}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139263,52.079620]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":7}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139582,52.079639]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":8}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139829,52.079647]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":9}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137053,52.079536]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":0,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.075,"distance_from_trace_point":1.695}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137405,52.079559]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":1,"matched_point_type":"matched","edge_index":1,"distance_along_edge":0.580,"distance_from_trace_point":1.692}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137478,52.079563]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":2,"matched_point_type":"matched","edge_index":1,"distance_along_edge":1.000,"distance_from_trace_point":8.672}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.137847,52.079483]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":3,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.088,"distance_from_trace_point":6.774}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138169,52.079498]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":4,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.223,"distance_from_trace_point":6.774}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138517,52.079517]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":5,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.369,"distance_from_trace_point":6.351}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138914,52.079540]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":6,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.536,"distance_from_trace_point":6.351}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139271,52.079559]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":7,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.686,"distance_from_trace_point":6.774}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139591,52.079575]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":8,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.821,"distance_from_trace_point":7.197}},
-      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139837,52.079586]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":9,"matched_point_type":"matched","edge_index":3,"distance_along_edge":0.924,"distance_from_trace_point":6.771}}
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138160,52.079559]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":0}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138509,52.079575]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":1}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138906,52.079597]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":2}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139263,52.079620]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":3}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139582,52.079639]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":4}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139829,52.079647]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":5}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.140212,52.079655]},"properties":{"marker-color":"#abd9e9","marker-size":"small","trace_point_index":6}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138169,52.079498]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":0,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.223,"distance_from_trace_point":6.774}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138517,52.079517]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":1,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.369,"distance_from_trace_point":6.351}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.138914,52.079540]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":2,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.536,"distance_from_trace_point":6.351}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139271,52.079559]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":3,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.686,"distance_from_trace_point":6.774}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139591,52.079575]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":4,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.821,"distance_from_trace_point":7.197}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.139837,52.079586]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":5,"matched_point_type":"matched","edge_index":0,"distance_along_edge":0.924,"distance_from_trace_point":6.771}},
+      {"type":"Feature","geometry":{"type":"Point","coordinates":[5.140018,52.079597]},"properties":{"marker-color":"#2c7bb6","marker-size":"medium","matched_point_index":6,"matched_point_type":"matched","edge_index":0,"distance_along_edge":1.000,"distance_from_trace_point":14.626}}
       ]}
      */
     names.clear();
@@ -457,7 +472,7 @@ namespace {
         names.push_back("<empty>");
       }
     }
-      if(names != std::vector<std::string>{"Rubenslaan", "Rubenslaan", "<empty>", "Rubenslaan"}) {
+      if(names != std::vector<std::string>{"Rubenslaan"}) {
       std::string streets;
       for(const auto& n : names)
         streets += n + ", ";
@@ -467,30 +482,6 @@ namespace {
       throw std::logic_error("Confidence of the second result is always less than 1");
     if(matched.get<float>("raw_score") >= alternate.get<float>("raw_score"))
       throw std::logic_error("The raw score of the first result is always less than that of the second");
-
-  }
-
-  void test_topk_validate() {
-    //tests a fork in the road
-    tyr::actor_t actor(conf, true);
-
-    //tests a previous segfault due to using a claimed state
-    auto matched = json_to_pt(actor.trace_attributes(
-      R"({"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
-         {"lat":52.088548,"lon":5.15357,"accuracy":30},
-         {"lat":52.088627,"lon":5.153269,"accuracy":30},
-         {"lat":52.08864,"lon":5.15298,"accuracy":30},
-         {"lat":52.08861,"lon":5.15272,"accuracy":30},
-         {"lat":52.08863,"lon":5.15253,"accuracy":30},
-         {"lat":52.08851,"lon":5.15249,"accuracy":30}]})"));
-
-    //this tests a fix for an infinite loop because there is only 1 result and we ask for 4
-    matched = json_to_pt(actor.trace_attributes(
-      R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
-         {"lat":52.09579,"lon":5.13137,"accuracy":5},
-         {"lat":52.09652,"lon":5.13184,"accuracy":5}]})"));
-    if(matched.get_child("alternate_paths").size() > 0)
-      throw std::logic_error("There should be only one result");
 
   }
 
@@ -512,14 +503,13 @@ int main(int argc, char* argv[]) {
 
   suite.test(TEST_CASE(test_time_rejection));
 
+  suite.test(TEST_CASE(test_topk_validate));
+
   suite.test(TEST_CASE(test_topk_fork_alternate));
 
   suite.test(TEST_CASE(test_topk_loop_alternate));
 
-  // TODO: comment out for now; does not work on 32bit and moving points produces odd results
-  //suite.test(TEST_CASE(test_topk_frontage_alternate));
-
-  suite.test(TEST_CASE(test_topk_validate));
+  suite.test(TEST_CASE(test_topk_frontage_alternate));
 
   return suite.tear_down();
 }

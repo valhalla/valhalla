@@ -19,6 +19,7 @@
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/curler.h>
 
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
@@ -28,8 +29,6 @@
 
 namespace valhalla {
 namespace baldr {
-
-using tile_index_pair = std::pair<uint32_t, uint32_t>;
 
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
@@ -60,6 +59,14 @@ class GraphTile {
   GraphTile(const GraphId& graphid, char* ptr, size_t size);
 
   /**
+   * Constructor given the graph Id, in memory tile data
+   * @param  tile_url URL of tile
+   * @param  graphid Tile Id
+   * @param  curler curler that will handle tile downloading
+   */
+  GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler);
+
+  /**
    * Destructor
    */
   virtual ~GraphTile();
@@ -74,7 +81,6 @@ class GraphTile {
   /**
    * Get the tile Id given the full path to the file.
    * @param  fname    Filename with complete path.
-   * @param  tile_dir Base tile directory.
    * @return  Returns the tile Id.
    */
   static GraphId GetTileId(const std::string& fname);
@@ -178,7 +184,7 @@ class GraphTile {
    * Convenience method to get opposing edge Id given a directed edge.
    * The end node of the directed edge must be in this tile.
    * @param  edge  Directed edge.
-   * @return Returns the GraphId of hte opposing directed edge.
+   * @return Returns the GraphId of the opposing directed edge.
    */
   GraphId GetOpposingEdgeId(const DirectedEdge* edge) const {
     GraphId endnode = edge->endnode();
@@ -200,7 +206,7 @@ class GraphTile {
    * @return  Returns the vector of complex restrictions in the order requested
    *          based on the id and modes.
    */
-  std::vector<ComplexRestriction> GetRestrictions(const bool forward,
+  std::vector<ComplexRestriction*> GetRestrictions(const bool forward,
                                                   const GraphId id,
                                                   const uint64_t modes) const;
 
@@ -221,6 +227,14 @@ class GraphTile {
    * @return  Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
+
+  /**
+   * Convenience method to get the types for the names given the offset to the
+   * edge information.
+   * @param  edgeinfo_offset  Offset to the edge info.
+   * @return  Returns unit16_t.  If a bit is set, then it is a ref.
+   */
+  uint16_t GetTypes(const uint32_t edgeinfo_offset) const;
 
   /**
    * Get the admininfo at the specified index. Populates the state name and
@@ -262,7 +276,7 @@ class GraphTile {
    * @param   date_before_tile  Is the date that was inputed before
    *                            the tile creation date?
    * @param   wheelchair        Only find departures with wheelchair access if true
-   * @param   bicyle            Only find departures with bicycle access if true
+   * @param   bicycle           Only find departures with bicycle access if true
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departures are found.
    */
@@ -293,25 +307,25 @@ class GraphTile {
   std::unordered_map<uint32_t,TransitDeparture*> GetTransitDepartures() const;
 
   /**
-   * Get the stop onestops in this tile
-   * @return  Returns a map of onestops
+   * Get the stop onestop Ids in this tile.
+   * @return  Returns a map of transit stops with onestop Ids as the key and
+   *          a GraphId (transit tile plus the stop Id) as the value.
    */
-  std::unordered_map<std::string, tile_index_pair>
-    GetStopOneStops() const;
+  const std::unordered_map<std::string, GraphId>& GetStopOneStops() const;
 
   /**
-   * Get the route onestops in this tile
-   * @return  Returns a map of onestops
+   * Get the route onestop Ids in this tile.
+   * @return  Returns a map with the route onestop Id as the key and a list
+   *          of GraphIds (transit tile plus route line Id) as the value.
    */
-  std::unordered_map<std::string, std::list<tile_index_pair>>
-    GetRouteOneStops() const;
+  const std::unordered_map<std::string, std::list<GraphId>>& GetRouteOneStops() const;
 
   /**
-   * Get the operator onestops in this tile
-   * @return  Returns a map of onestops
+   * Get the operator onestops in this tile.
+   * @return  Returns a map with onestop Id as the key with a list of GraphIds
+   *          as the value.
    */
-  std::unordered_map<std::string, std::list<tile_index_pair>>
-    GetOperatorOneStops() const;
+  const std::unordered_map<std::string, std::list<GraphId>>& GetOperatorOneStops() const;
 
   /**
    * Get the transit stop given its index
@@ -380,7 +394,7 @@ class GraphTile {
 
   /**
    * Get lane connections ending on this edge.
-   * @param  edge  GraphId of the directed edge.
+   * @param  idx  GraphId of the directed edge.
    * @return  Returns a list of lane connections ending on this edge.
    */
   std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
@@ -492,13 +506,13 @@ class GraphTile {
   EdgeElevation* edge_elevation_;
 
   // Map of stop one stops in this tile.
-  std::unordered_map<std::string, tile_index_pair> stop_one_stops;
+  std::unordered_map<std::string, GraphId> stop_one_stops;
 
   // Map of route one stops in this tile.
-  std::unordered_map<std::string, std::list<tile_index_pair>> route_one_stops;
+  std::unordered_map<std::string, std::list<GraphId>> route_one_stops;
 
   // Map of operator one stops in this tile.
-  std::unordered_map<std::string, std::list<tile_index_pair>> oper_one_stops;
+  std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
 
   /**
    * Set pointers to internal tile data structures.

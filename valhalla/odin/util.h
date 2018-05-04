@@ -11,6 +11,7 @@
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/narrative_dictionary.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 
 namespace valhalla {
 namespace odin {
@@ -26,14 +27,12 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
                          uint32_t intersecting_turn_degree, bool is_right,
                          uint32_t turn_degree_threshold = 30);
 
-DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt);
-
 /**
  * Get the time from the inputed date.
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
- * @param   locale
- * @return  Returns the formated time based on the locale.
+ * @param   locale locale
+ * @return  Returns the formatted time based on the locale.
  */
 std::string get_localized_time(const std::string& date_time,
                                const std::locale& locale);
@@ -42,18 +41,18 @@ std::string get_localized_time(const std::string& date_time,
  * Get the date from the inputed date.
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
- * @param   locale
- * @return  Returns the formated date based on the locale.
+ * @param   locale locale
+ * @return  Returns the formatted date based on the locale.
  */
 std::string get_localized_date(const std::string& date_time,
                                const std::locale& locale);
 
+using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<NarrativeDictionary> >;
 /**
  * Returns locale strings mapped to NarrativeDictionaries containing parsed narrative information
  *
  * @return the map of locales to NarrativeDictionaries
  */
-using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<NarrativeDictionary> >;
 const locales_singleton_t& get_locales();
 
 /**

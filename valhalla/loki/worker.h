@@ -9,11 +9,14 @@
 #include <valhalla/worker.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/location.h>
+#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/skadi/sample.h>
 #include <valhalla/tyr/actor.h>
+#include <valhalla/proto/directions_options.pb.h>
 
 namespace valhalla {
   namespace loki {
@@ -27,40 +30,40 @@ namespace valhalla {
       loki_worker_t(const boost::property_tree::ptree& config);
 #ifdef HAVE_HTTP
       virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt) override;
+      void limits(valhalla_request_t& request) const;
 #endif
       virtual void cleanup() override;
 
-      baldr::json::ArrayPtr locate(rapidjson::Document& request);
-      void route(rapidjson::Document& request);
-      void matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
-      void isochrones(rapidjson::Document& request);
-      void trace(tyr::ACTION_TYPE action, rapidjson::Document& request);
+      std::string locate(valhalla_request_t& request);
+      void route(valhalla_request_t& request);
+      void matrix(valhalla_request_t& request);
+      void isochrones(valhalla_request_t& request);
+      void trace(valhalla_request_t& request);
+      std::string height(valhalla_request_t& request);
+      std::string transit_available(valhalla_request_t& request);
 
      protected:
 
-      std::vector<baldr::Location> parse_locations(const rapidjson::Document& request, const std::string& node, unsigned location_parse_error_code = 130,
+      void parse_locations(google::protobuf::RepeatedPtrField<odin::Location>* locations,
         boost::optional<valhalla_exception_t> required_exception = valhalla_exception_t{110});
-      void parse_trace(rapidjson::Document& request);
-      void parse_costing(rapidjson::Document& request);
-      void locations_from_shape(rapidjson::Document& request);
+      void parse_trace(valhalla_request_t& request);
+      void parse_costing(valhalla_request_t& request);
+      void locations_from_shape(valhalla_request_t& request);
 
-      void init_locate(rapidjson::Document& request);
-      void init_route(rapidjson::Document& request);
-      void init_matrix(tyr::ACTION_TYPE action, rapidjson::Document& request);
-      void init_isochrones(rapidjson::Document& request);
-      void init_trace(rapidjson::Document& request);
+      void init_locate(valhalla_request_t& request);
+      void init_route(valhalla_request_t& request);
+      void init_matrix(valhalla_request_t& request);
+      void init_isochrones(valhalla_request_t& request);
+      void init_trace(valhalla_request_t& request);
+      std::vector<PointLL> init_height(valhalla_request_t& request);
+      void init_transit_available(valhalla_request_t& request);
 
       boost::property_tree::ptree config;
-      std::vector<baldr::Location> locations;
-      std::vector<baldr::Location> sources;
-      std::vector<baldr::Location> targets;
-      std::vector<midgard::PointLL> shape;
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter edge_filter;
       sif::NodeFilter node_filter;
       valhalla::baldr::GraphReader reader;
       std::shared_ptr<valhalla::baldr::connectivity_map_t> connectivity_map;
-      std::unordered_set<std::string> actions;
       std::string action_str;
       std::unordered_map<std::string, size_t> max_locations;
       std::unordered_map<std::string, float> max_distance;
@@ -77,12 +80,14 @@ namespace valhalla {
       size_t max_transit_walking_dis;
       size_t max_contours;
       size_t max_time;
-      size_t max_shape;
+      size_t max_trace_shape;
       float max_gps_accuracy;
       float max_search_radius;
       unsigned int max_best_paths;
       size_t max_best_paths_shape;
-      bool healthcheck;
+      skadi::sample sample;
+      size_t max_elevation_shape;
+      float min_resample;
     };
   }
 }

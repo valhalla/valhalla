@@ -269,6 +269,7 @@ const std::unordered_map<uint8_t, std::string> UseStrings = {
   {static_cast<uint8_t>(Use::kEmergencyAccess), "emergency_access"},
   {static_cast<uint8_t>(Use::kDriveThru), "drive_through"},
   {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
+  {static_cast<uint8_t>(Use::kLivingStreet), "living_street"},
   {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
   {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
   {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
@@ -339,6 +340,16 @@ inline std::string to_string(CycleLane c) {
   return i->second;
 }
 
+enum class SacScale : uint8_t {
+  kNone = 0,
+  kHiking = 1,
+  kMountainHiking = 2,
+  kDemandingMountainHiking = 3,
+  kAlpineHiking = 4,
+  kDemandingAlpineHiking = 5,
+  kDifficultAlpineHiking = 6
+};
+
 // Generalized representation of surface types. Lower values indicate smoother
 // surfaces. Vehicle or bicycle type can use this to avoid or disallow edges
 // that are "too rough" or inappropriate for the vehicle to travel on.
@@ -369,7 +380,7 @@ inline std::string to_string(Surface s) {
   return i->second;
 }
 
-// Used for restrictions.  A restriction starts and ends on a particular day
+// Used for restrictions.  A restriction can start and end on a particular day
 enum class DOW : uint8_t {
   kNone = 0,
   kSunday = 1,
@@ -379,6 +390,23 @@ enum class DOW : uint8_t {
   kThursday = 5,
   kFriday = 6,
   kSaturday = 7
+};
+
+// Used for restrictions.  A restriction can start and end on a particular month
+enum class MONTH : uint8_t {
+  kNone = 0,
+  kJan =  1,
+  kFeb =  2,
+  kMar =  3,
+  kApr =  4,
+  kMay =  5,
+  kJun =  6,
+  kJul =  7,
+  kAug =  8,
+  kSep =  9,
+  kOct = 10,
+  kNov = 11,
+  kDec = 12
 };
 
 // Used for transit. Types of transit currently supported.
@@ -430,7 +458,9 @@ enum class AccessType : uint8_t {
   kMaxWidth= 2,
   kMaxLength = 3,
   kMaxWeight = 4,
-  kMaxAxleLoad = 5
+  kMaxAxleLoad = 5,
+  kTimedAllowed = 6,
+  kTimedDenied = 7
 };
 
 // Minimum meters offset from start/end of shape for finding heading
