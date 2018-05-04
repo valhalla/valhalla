@@ -9,6 +9,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/timedomain.h>
 
 #include <memory>
 #include <unordered_set>
@@ -315,6 +316,16 @@ class DynamicCost {
       }
     }
     return false;
+  }
+
+  bool IsRestricted(const uint64_t restriction, const uint64_t current_time, const uint32_t tz_index) const {
+
+    baldr::TimeDomain td(restriction);
+    return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                          td.end_hrs(), td.end_mins(), td.dow(),
+                                          td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                          td.end_week(), td.end_month(), td.end_day_dow(),
+                                          current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
   /**
