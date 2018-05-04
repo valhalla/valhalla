@@ -3,7 +3,6 @@
 
 #include "baldr/accessrestriction.h"
 #include "midgard/constants.h"
-#include "baldr/timedomain.h"
 #include "midgard/util.h"
 
 #ifdef INLINE_TEST
@@ -563,25 +562,15 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
       switch (restriction.type()) {
         case AccessType::kTimedAllowed:
           if (current_time && restriction.value()) {
-            TimeDomain td(restriction.value());
             //allowed at this range.
-            return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
-                                                  td.end_hrs(), td.end_mins(), td.dow(),
-                                                  td.begin_week(), td.begin_month(), td.begin_day_dow(),
-                                                  td.end_week(), td.end_month(), td.end_day_dow(),
-                                                  current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+            return IsRestricted(restriction.value(), current_time, tz_index);
           }
           return true; // else allowed all the time
           break;
         case AccessType::kTimedDenied:
           if (current_time && restriction.value()) {
-            TimeDomain td(restriction.value());
             //not allowed at this range.
-            return !baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
-                                                   td.end_hrs(), td.end_mins(), td.dow(),
-                                                   td.begin_week(), td.begin_month(), td.begin_day_dow(),
-                                                   td.end_week(), td.end_month(), td.end_day_dow(),
-                                                   current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+            return !IsRestricted(restriction.value(), current_time, tz_index);
           }
           return false; // else restricted all the time
           break;
@@ -626,25 +615,15 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
       switch (restriction.type()) {
         case AccessType::kTimedAllowed:
           if (current_time && restriction.value()) {
-            TimeDomain td(restriction.value());
             //allowed at this range.
-            return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
-                                                  td.end_hrs(), td.end_mins(), td.dow(),
-                                                  td.begin_week(), td.begin_month(), td.begin_day_dow(),
-                                                  td.end_week(), td.end_month(), td.end_day_dow(),
-                                                  current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+            return IsRestricted(restriction.value(), current_time, tz_index);
           }
           return true; // else allowed all the time
           break;
         case AccessType::kTimedDenied:
           if (current_time && restriction.value()) {
-            TimeDomain td(restriction.value());
             //not allowed at this range.
-            return !baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
-                                                   td.end_hrs(), td.end_mins(), td.dow(),
-                                                   td.begin_week(), td.begin_month(), td.begin_day_dow(),
-                                                   td.end_week(), td.end_month(), td.end_day_dow(),
-                                                   current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+            return !IsRestricted(restriction.value(), current_time, tz_index);
           }
           return false; // else restricted all the time
           break;
