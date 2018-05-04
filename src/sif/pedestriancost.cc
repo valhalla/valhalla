@@ -557,25 +557,15 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), access_mask_);
-
     for (const auto& restriction : restrictions ) {
-      switch (restriction.type()) {
-        case AccessType::kTimedAllowed:
-          if (current_time && restriction.value()) {
-            //allowed at this range.
-            return IsRestricted(restriction.value(), current_time, tz_index);
-          }
-          return true; // else allowed all the time
-          break;
-        case AccessType::kTimedDenied:
-          if (current_time && restriction.value()) {
-            //not allowed at this range.
-            return !IsRestricted(restriction.value(), current_time, tz_index);
-          }
-          return false; // else restricted all the time
-          break;
-        default:
-          break;
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            IsRestricted(restriction.value(), current_time, tz_index) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            !IsRestricted(restriction.value(), current_time, tz_index) : false;
       }
     }
   }
@@ -610,25 +600,15 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(opp_edgeid.id(), access_mask_);
-
     for (const auto& restriction : restrictions ) {
-      switch (restriction.type()) {
-        case AccessType::kTimedAllowed:
-          if (current_time && restriction.value()) {
-            //allowed at this range.
-            return IsRestricted(restriction.value(), current_time, tz_index);
-          }
-          return true; // else allowed all the time
-          break;
-        case AccessType::kTimedDenied:
-          if (current_time && restriction.value()) {
-            //not allowed at this range.
-            return !IsRestricted(restriction.value(), current_time, tz_index);
-          }
-          return false; // else restricted all the time
-          break;
-        default:
-          break;
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            IsRestricted(restriction.value(), current_time, tz_index) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            !IsRestricted(restriction.value(), current_time, tz_index) : false;
       }
     }
   }

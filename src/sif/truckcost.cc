@@ -408,18 +408,14 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
     for (const auto& restriction : restrictions ) {
       switch (restriction.type()) {
         case AccessType::kTimedAllowed:
-          if (current_time && restriction.value()) {
-            //allowed at this range.
-            return IsRestricted(restriction.value(), current_time, tz_index);
-          }
-          return true; // else allowed all the time
-        break;
+          //allowed at this range or allowed all the time
+          return (current_time && restriction.value()) ?
+              IsRestricted(restriction.value(), current_time, tz_index) : true;
+          break;
         case AccessType::kTimedDenied:
-          if (current_time && restriction.value()) {
-            //not allowed at this range.
-            return !IsRestricted(restriction.value(), current_time, tz_index);
-          }
-            return false; // else restricted all the time
+          //not allowed at this range or restricted all the time
+          return (current_time && restriction.value()) ?
+              !IsRestricted(restriction.value(), current_time, tz_index) : false;
           break;
         case AccessType::kHazmat:
           if (hazmat_ != restriction.value())
@@ -482,18 +478,14 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       if (restriction.modes() & kTruckAccess) {
         switch (restriction.type()) {
           case AccessType::kTimedAllowed:
-            if (current_time && restriction.value()) {
-              //allowed at this range.
-              return IsRestricted(restriction.value(), current_time, tz_index);
-            }
-            return true; // else allowed all the time
-          break;
+            //allowed at this range or allowed all the time
+            return (current_time && restriction.value()) ?
+                IsRestricted(restriction.value(), current_time, tz_index) : true;
+            break;
           case AccessType::kTimedDenied:
-            if (current_time && restriction.value()) {
-              //not allowed at this range.
-              return !IsRestricted(restriction.value(), current_time, tz_index);
-            }
-              return false; // else restricted all the time
+            //not allowed at this range or restricted all the time
+            return (current_time && restriction.value()) ?
+                !IsRestricted(restriction.value(), current_time, tz_index) : false;
             break;
           case AccessType::kHazmat:
             if (hazmat_ != restriction.value())

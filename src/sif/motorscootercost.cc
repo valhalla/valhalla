@@ -463,35 +463,23 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
-
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), kMopedAccess);
-
     for (const auto& restriction : restrictions ) {
-      switch (restriction.type()) {
-        case AccessType::kTimedAllowed:
-          if (current_time && restriction.value()) {
-            //allowed at this range.
-            return (edge->surface() <= kMinimumScooterSurface &&
-                IsRestricted(restriction.value(), current_time, tz_index));
-          }
-          return true; // else allowed all the time
-          break;
-        case AccessType::kTimedDenied:
-          if (current_time && restriction.value()) {
-            //not allowed at this range.
-            return (edge->surface() <= kMinimumScooterSurface &&
-                !IsRestricted(restriction.value(), current_time, tz_index));
-          }
-          return false; // else restricted all the time
-          break;
-        default:
-          break;
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            (edge->surface() <= kMinimumScooterSurface &&
+                IsRestricted(restriction.value(), current_time, tz_index)) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            (edge->surface() <= kMinimumScooterSurface &&
+                !IsRestricted(restriction.value(), current_time, tz_index)) : false;
       }
     }
   }
-
   return edge->surface() <= kMinimumScooterSurface;
 }
 
@@ -517,31 +505,20 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(opp_edgeid.id(), kMopedAccess);
-
     for (const auto& restriction : restrictions ) {
-      switch (restriction.type()) {
-        case AccessType::kTimedAllowed:
-          if (current_time && restriction.value()) {
-            //allowed at this range.
-            return (opp_edge->surface() <= kMinimumScooterSurface &&
-                IsRestricted(restriction.value(), current_time, tz_index));
-          }
-          return true; // else allowed all the time
-          break;
-        case AccessType::kTimedDenied:
-          if (current_time && restriction.value()) {
-            //not allowed at this range.
-            return (opp_edge->surface() <= kMinimumScooterSurface &&
-                !IsRestricted(restriction.value(), current_time, tz_index));
-          }
-          return false; // else restricted all the time
-          break;
-        default:
-          break;
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            (edge->surface() <= kMinimumScooterSurface &&
+                IsRestricted(restriction.value(), current_time, tz_index)) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            (edge->surface() <= kMinimumScooterSurface &&
+                !IsRestricted(restriction.value(), current_time, tz_index)) : false;
       }
     }
   }
-
   return opp_edge->surface() <= kMinimumScooterSurface;
 }
 

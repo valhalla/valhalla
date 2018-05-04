@@ -624,31 +624,20 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), kBicycleAccess);
-
     for (const auto& restriction : restrictions ) {
-      switch (restriction.type()) {
-        case AccessType::kTimedAllowed:
-          if (current_time && restriction.value()) {
-            //allowed at this range.
-            return (edge->surface() <= worst_allowed_surface_ &&
-                IsRestricted(restriction.value(), current_time, tz_index));
-          }
-          return true; // else allowed all the time
-          break;
-        case AccessType::kTimedDenied:
-          if (current_time && restriction.value()) {
-            //not allowed at this range.
-            return (edge->surface() <= worst_allowed_surface_ &&
-                !IsRestricted(restriction.value(), current_time, tz_index));
-          }
-          return false; // else restricted all the time
-          break;
-        default:
-          break;
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            (edge->surface() <= worst_allowed_surface_ &&
+                IsRestricted(restriction.value(), current_time, tz_index)) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            (edge->surface() <= worst_allowed_surface_ &&
+                !IsRestricted(restriction.value(), current_time, tz_index)) : false;
       }
     }
   }
-
   // Prohibit certain roads based on surface type and bicycle type
   return edge->surface() <= worst_allowed_surface_;
 }
@@ -676,33 +665,20 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(opp_edgeid.id(), kBicycleAccess);
-
     for (const auto& restriction : restrictions ) {
-      switch (restriction.type()) {
-        case AccessType::kTimedAllowed:
-          if (current_time && restriction.value()) {
-            //allowed at this range.
-            return (opp_edge->surface() <= worst_allowed_surface_ &&
-                IsRestricted(restriction.value(), current_time, tz_index));
-
-          }
-          return true; // else allowed all the time
-          break;
-        case AccessType::kTimedDenied:
-          if (current_time && restriction.value()) {
-            //not allowed at this range.
-            return (opp_edge->surface() <= worst_allowed_surface_ &&
-                !IsRestricted(restriction.value(), current_time, tz_index));
-
-          }
-          return false; // else restricted all the time
-          break;
-        default:
-          break;
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            (edge->surface() <= worst_allowed_surface_ &&
+                IsRestricted(restriction.value(), current_time, tz_index)) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            (edge->surface() <= worst_allowed_surface_ &&
+                !IsRestricted(restriction.value(), current_time, tz_index)) : false;
       }
     }
   }
-
   // Prohibit certain roads based on surface type and bicycle type
   return opp_edge->surface() <= worst_allowed_surface_;
 }
