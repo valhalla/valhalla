@@ -318,6 +318,13 @@ class DynamicCost {
     return false;
   }
 
+ /**
+  * Test if an edge should be restricted due to a date time access restriction.
+  * @param  restriction  date and time info for the restriction
+  * @param  current_time Current time (seconds since epoch). A value of 0
+  *                      indicates the route is not time dependent.
+  * @param  tz_index     timezone index for the node
+  */
   bool IsRestricted(const uint64_t restriction, const uint64_t current_time, const uint32_t tz_index) const {
 
     baldr::TimeDomain td(restriction);
