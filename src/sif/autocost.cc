@@ -387,9 +387,12 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     pt.get<float>("use_tolls", kDefaultUseTolls)
   );
 
+  // Tool factor of 0 would indicate no adjustment to weighting for toll roads.
+  // use_tolls = 1 would reduce weighting slightly (a negative delta) while
+  // use_tolls = 0 would penalize (positive delta to weighting factor).
   toll_factor_ = use_tolls_ < 0.5f ?
-      2.0f - 3 * use_tolls_ :
-      1.0f - use_tolls_;
+      (2.0f - 4 * use_tolls_) :     // ranges from 2 to 0
+      (0.5f - use_tolls_) * 0.03f;  // ranges from 0 to -0.15
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
@@ -476,8 +479,7 @@ Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
 
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
-  if (edge->toll())
-  {
+  if (edge->toll()) {
     factor += toll_factor_;
   }
 
