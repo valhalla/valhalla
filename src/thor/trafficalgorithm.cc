@@ -25,8 +25,8 @@ TrafficAlgorithm::~TrafficAlgorithm() {
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
-             PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
+             odin::Location& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
   // Set the mode and costing
@@ -34,8 +34,10 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.edges.front().projected, destination.edges.front().projected);
-  float mindist = astarheuristic_.GetDistance(origin.edges.front().projected);
+  PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  Init(origin_new, destination_new);
+  float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
@@ -74,7 +76,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
     if (!pred.origin()) {
-      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+      edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -107,24 +109,21 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
 
     // Expand from end node.
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count();
-                i++, directededge++, ++edgeid) {
+                i++, directededge++, ++edgeid, ++es) {
       // Disable upward transitions for traffic...for now only support traffic
       // for short routes since no shortcuts have traffic yet
       if (directededge->trans_up()) {
         continue;
       }
 
-      // Skip if no access is allowed to this edge (based on costing method)
-      if (!costing_->Allowed(directededge, pred, tile, edgeid)) {
-        continue;
-      }
-
-      // Get the current set. Skip this edge if permanently labeled (best
-      // path already found to this directed edge).
-      EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-      if (edgestatus.set() == EdgeSet::kPermanent) {
+      // Skip this edge if permanently labeled (best path already found to
+      // this directed edge) or if no access is allowed to this edge (based
+      // on costing method)
+      if (es->set() == EdgeSet::kPermanent ||
+         !costing_->Allowed(directededge, pred, tile, edgeid, 0)) {
         continue;
       }
 
@@ -158,11 +157,11 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
-      if (edgestatus.set() == EdgeSet::kTemporary) {
-        EdgeLabel& lab = edgelabels_[edgestatus.index()];
+      if (es->set() == EdgeSet::kTemporary) {
+        EdgeLabel& lab = edgelabels_[es->index()];
         if (newcost.cost <  lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-          adjacencylist_->decrease(edgestatus.index(), newsortcost);
+          adjacencylist_->decrease(es->index(), newsortcost);
           lab.Update(predindex, newcost, newsortcost);
         }
         continue;
@@ -187,7 +186,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(PathLocation& origin,
       uint32_t idx = edgelabels_.size();
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                           newcost, sortcost, dist, mode_, 0);
-      edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
+      *es = { EdgeSet::kTemporary, idx };
       adjacencylist_->add(idx);
     }
   }

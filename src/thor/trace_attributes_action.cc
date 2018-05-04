@@ -4,9 +4,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-
 #include "baldr/json.h"
 #include "baldr/graphconstants.h"
 #include "baldr/directededge.h"
@@ -45,12 +42,22 @@ void thor_worker_t::filter_attributes(const valhalla_request_t& request, Attribu
 
   if (filter_action == "include") {
     controller.disable_all();
-    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes"))
-      controller.attributes.at(v.GetString()) = true;
+    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes")) {
+      try {
+        controller.attributes.at(v.GetString()) = true;
+      } catch (...) {
+        LOG_ERROR("Invalid filter attribute " + std::string(v.GetString()));
+      }
+    }
   } else if (filter_action == "exclude") {
     controller.enable_all();
-    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes"))
-      controller.attributes.at(v.GetString()) = false;
+    for (const auto& v : rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes")) {
+      try {
+        controller.attributes.at(v.GetString()) = false;
+      } catch (...) {
+        LOG_ERROR("Invalid filter attribute " + std::string(v.GetString()));
+      }
+    }
   } else {
     controller.enable_all();
   }
@@ -62,7 +69,7 @@ void thor_worker_t::filter_attributes(const valhalla_request_t& request, Attribu
  * portion of the route. This includes details for each section of road along the
  * path as well as any intersections along the path.
  */
-std::string thor_worker_t::trace_attributes(const valhalla_request_t& request) {
+std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
 
   // Parse request
   parse_locations(request);
@@ -89,7 +96,7 @@ std::string thor_worker_t::trace_attributes(const valhalla_request_t& request) {
   switch (shape_match->second) {
       case EDGE_WALK:
         try {
-          trip_path = route_match(controller);
+          trip_path = route_match(request, controller);
           if (trip_path.node().size() == 0)
             throw std::exception{};
           map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
@@ -102,7 +109,7 @@ std::string thor_worker_t::trace_attributes(const valhalla_request_t& request) {
       case MAP_SNAP:
         try {
           uint32_t best_paths = rapidjson::get<uint32_t>(request.document, "/best_paths", 1);
-          map_match_results = map_match(controller, true, best_paths);
+          map_match_results = map_match(request, controller, best_paths);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
         }
@@ -111,11 +118,11 @@ std::string thor_worker_t::trace_attributes(const valhalla_request_t& request) {
       // then we want to fallback to try and use meili map matching to match to local route network.
       // No shortcuts are used and detailed information at every intersection becomes available.
       case WALK_OR_SNAP:
-        trip_path = route_match(controller);
+        trip_path = route_match(request, controller);
         if (trip_path.node().size() == 0) {
           LOG_WARN(shape_match->first + " algorithm failed to find exact route match; Falling back to map_match...");
           try {
-            map_match_results = map_match(controller, true);
+            map_match_results = map_match(request, controller);
           } catch (const std::exception& e) {
             throw valhalla_exception_t{444, shape_match->first + " algorithm failed to snap the shape points to the correct shape."};
           }

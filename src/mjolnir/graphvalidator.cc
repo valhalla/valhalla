@@ -447,7 +447,9 @@ void validate(const boost::property_tree::ptree& pt,
             directededge.set_ctry_crossing(true);
           }
 
-          // Validate the complex restriction settings
+          // Validate the complex restriction settings. If no restrictions
+          // are found that end at this directed edge, set the end restriction
+          // modes to 0.
           if (de->end_restriction()) {
             uint32_t modes = 0;
             for (uint32_t mode = 1; mode < kAllAccess; mode *= 2) {
@@ -458,7 +460,6 @@ void validate(const boost::property_tree::ptree& pt,
             }
             directededge.set_end_restriction(modes);
           }
-          // Check for complex restriction
           if (de->start_restriction()) {
             uint32_t modes = 0;
             for (uint32_t mode = 1; mode < kAllAccess; mode *= 2) {

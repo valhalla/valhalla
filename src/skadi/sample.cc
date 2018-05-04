@@ -7,7 +7,6 @@
 #include <list>
 #include <fstream>
 #include <string>
-#include <boost/regex.hpp>
 #include <sys/stat.h>
 #include <zlib.h>
 #include <lz4.h>
@@ -16,6 +15,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
+#include "baldr/reutil.h"
 #include "baldr/filesystem_utils.h"
 
 #include "midgard/logging.h"
@@ -34,7 +34,7 @@ namespace {
   constexpr int16_t NO_DATA_LOW = -16384;
   constexpr size_t TILE_COUNT = 180 * 360;
 
-  //macro is faster than inline funciton for this..
+  //macro is faster than inline function for this..
   #define out_of_range(v) v > NO_DATA_HIGH || v < NO_DATA_LOW
 
   std::list<std::string> get_files(const std::string& root_dir) {
@@ -76,17 +76,17 @@ namespace {
 
   template<typename fmt_t>
   uint16_t is_hgt(const std::string& name, fmt_t& fmt) {
-    boost::smatch m;
-    boost::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz|\\.lz4)?$");
-    if(boost::regex_search(name, m, e)) {
+    valhalla::baldr::re::smatch m;
+    valhalla::baldr::re::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz|\\.lz4)?$");
+    if(valhalla::baldr::re::regex_search(name, m, e)) {
       //enum class format_t{ UNKNOWN = 0, GZIP = 1, LZ4 = 2, RAW = 3 };
       fmt = static_cast<fmt_t>(m[5].length() ? (m[5] == ".lz4" ? 2 : (m[5] == ".gz" ? 1 : 0)) : 3);
-      auto lon = std::stoul(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
-      auto lat = std::stoul(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
+      auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
+      auto lat = std::stoi(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
       if(lon >= 0 && lon < 360 && lat >=0 && lat < 180)
         return lat * 360 + lon;
     }
-    return -1;
+    return std::numeric_limits<uint16_t>::max();
   }
 
   int16_t flip(int16_t value) {
@@ -138,9 +138,9 @@ namespace skadi {
     auto files = get_files(data_source);
     for(const auto& f : files) {
       //make sure its a valid index
-      format_t format;
+      format_t format = format_t::UNKNOWN;
       auto index = is_hgt(f, format);
-      if(index < mapped_cache.size() && format > mapped_cache[index].first) {
+      if(index < mapped_cache.size() && format != format_t::UNKNOWN) {
         auto size = file_size(f);
         if(format == format_t::RAW && size != HGT_BYTES) {
           LOG_WARN("Corrupt elevation data: " + f);

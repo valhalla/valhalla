@@ -3,6 +3,7 @@
 #include "test.h"
 
 #include <vector>
+#include <list>
 
 #include "midgard/vector2.h"
 
@@ -117,6 +118,12 @@ void TryWithinConvexPolygon(const std::vector<Point2>& pts, const Point2&p,
     throw runtime_error("TryWithinConvexPolygon test failed");
 }
 
+void TryWithinConvexPolygonList(const std::list<Point2>& pts, const Point2&p,
+                            const bool res) {
+  if (p.WithinPolygon(pts) != res)
+    throw runtime_error("TryWithinConvexPolygon test failed");
+}
+
 void TestWithinConvexPolygon() {
   // Construct a convex polygon
   std::vector<Point2> pts = {
@@ -139,6 +146,15 @@ void TestWithinConvexPolygon() {
   TryWithinConvexPolygon(pts, Point2( 2.5f, 0.0f), false);
   TryWithinConvexPolygon(pts, Point2(-3.0f, 3.0f), false);
   TryWithinConvexPolygon(pts, Point2( 1.0f,-3.5f), false);
+
+  std::list<Point2> ptslist = {
+        {   2.0f,  2.0f },
+        {   0.0f,  4.0f },
+        { -10.0f,  0.0f },
+        {   0.0f, -4.0f },
+        {   2.0f, -2.0f }
+    };
+  TryWithinConvexPolygonList(ptslist, Point2(0.0f, 0.0f), true);
 }
 
 }

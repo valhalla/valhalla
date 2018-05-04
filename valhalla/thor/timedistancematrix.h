@@ -38,7 +38,7 @@ struct Destination {
                         // need to search for this destination.
 
   // Potential edges for this destination (and their partial distance)
-  std::unordered_map<baldr::GraphId, float> dest_edges;
+  std::unordered_map<uint64_t, float> dest_edges;
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.
@@ -66,13 +66,13 @@ class TimeDistanceMatrix {
    * @param  origin        Location of the origin.
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
+   * @param  mode_costing  Costing methods.
    * @param  mode          Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
-  std::vector<TimeDistance> OneToMany(const baldr::PathLocation& origin,
-          const std::vector<baldr::PathLocation>& locations,
+  std::vector<TimeDistance> OneToMany(const odin::Location& origin,
+          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode, const float max_matrix_distance);
@@ -83,13 +83,13 @@ class TimeDistanceMatrix {
    * @param  dest          Location of the destination.
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
+   * @param  mode_costing  Costing methods.
    * @param  mode          Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance to the destination index from all other locations
    */
-  std::vector<TimeDistance> ManyToOne(const baldr::PathLocation& dest,
-          const std::vector<baldr::PathLocation>& locations,
+  std::vector<TimeDistance> ManyToOne(const odin::Location& dest,
+          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode, const float max_matrix_distance);
@@ -99,13 +99,13 @@ class TimeDistanceMatrix {
    * matrix from many locations to many locations.
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  costing       Costing methods.
+   * @param  mode_costing  Costing methods.
    * @param  mode          Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance between all pairs of locations
    */
   std::vector<TimeDistance> ManyToMany(
-          const std::vector<baldr::PathLocation>& locations,
+          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode, const float max_matrix_distance);
@@ -116,14 +116,14 @@ class TimeDistanceMatrix {
    * @param  source_location_list  List of source/origin locations.
    * @param  target_location_list  List of target/destination locations.
    * @param  graphreader           Graph reader for accessing routing graph.
-   * @param  costing               Costing methods.
+   * @param  mode_costing          Costing methods.
    * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> SourceToTarget(
-          const std::vector<baldr::PathLocation>& source_location_list,
-          const std::vector<baldr::PathLocation>& target_location_list,
+          const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
+          const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode, const float max_matrix_distance);
@@ -150,7 +150,7 @@ class TimeDistanceMatrix {
 
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
-  std::unordered_map<baldr::GraphId, std::vector<uint32_t>> dest_edges_;
+  std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
@@ -159,7 +159,7 @@ class TimeDistanceMatrix {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_;
+  EdgeStatus edgestatus_;
 
   AStarHeuristic astarheuristic_;
 
@@ -210,7 +210,7 @@ class TimeDistanceMatrix {
    * @param  origin        Origin location information.
    */
   void SetOriginOneToMany(baldr::GraphReader& graphreader,
-                          const baldr::PathLocation& origin);
+                          const odin::Location& origin);
 
   /**
    * Sets the origin for a many to one time+distance matrix computation.
@@ -218,7 +218,7 @@ class TimeDistanceMatrix {
    * @param  dest          Destination
    */
   void SetOriginManyToOne(baldr::GraphReader& graphreader,
-                          const baldr::PathLocation& dest);
+                          const odin::Location& dest);
 
   /**
    * Add destinations.
@@ -226,16 +226,15 @@ class TimeDistanceMatrix {
    * @param  locations     List of locations.
    */
   void SetDestinations(baldr::GraphReader& graphreader,
-                       const std::vector<baldr::PathLocation>& locations);
+                       const google::protobuf::RepeatedPtrField<odin::Location>& locations);
 
   /**
    * Set destinations for the many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
-   * @param  costing       Costing method.
    */
   void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-            const std::vector<baldr::PathLocation>& locations);
+            const google::protobuf::RepeatedPtrField<odin::Location>& locations);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -248,8 +247,8 @@ class TimeDistanceMatrix {
    * @param   predindex     Predecessor index in EdgeLabels vector.
    * @return  Returns true if all destinations have been settled.
    */
-  bool UpdateDestinations(const baldr::PathLocation& origin,
-                          const std::vector<baldr::PathLocation>& locations,
+  bool UpdateDestinations(const odin::Location& origin,
+                          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const sif::EdgeLabel& pred,

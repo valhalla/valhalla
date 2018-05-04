@@ -117,7 +117,6 @@ bool AABB2<coord_t>::Intersect(coord_t& u, coord_t& v) const {
     return true;
   //find intercepts with each box edge
   std::list<coord_t> intersections;
-  bool assigned = false;
   x_t x;
   y_t y;
   //intersect with each edge keeping it if its on this box and on the segment uv
@@ -233,58 +232,6 @@ coord_t AABB2<coord_t>::ClipIntersection(const ClipEdge bdry,
 
   // Return the intersection point.
   return coord_t(inx + t * dx, iny + t * dy);
-}
-
-// Tests if the vertex is inside the rectangular boundary with respect to
-// the specified edge.
-template <class coord_t>
-bool AABB2<coord_t>::Inside(const ClipEdge edge, const coord_t& v) const {
-  switch (edge) {
-    case kLeft:
-      return (v.x() > minx_);
-    case kRight:
-      return (v.x() < maxx_);
-    case kBottom:
-      return (v.y() > miny_);
-    case kTop:
-      return (v.y() < maxy_);
-  }
-  return false;
-}
-
-// Add vertex to clip output (if not same as prior vertex)
-template <class coord_t>
-void AABB2<coord_t>::Add(const coord_t& pt, std::vector<coord_t>& vout) const {
-  if (vout.size() == 0 || vout.back() != pt) {
-    vout.push_back(pt);
-  }
-}
-
-// Expands (if necessary) the bounding box to include the specified
-// bounding box.
-template <class coord_t>
-void AABB2<coord_t>::Expand(const AABB2<coord_t>& r2) {
-  if (r2.minx() < minx_)
-    minx_ = r2.minx();
-  if (r2.miny() < miny_)
-    miny_ = r2.miny();
-  if (r2.maxx() > maxx_)
-    maxx_ = r2.maxx();
-  if (r2.maxy() > maxy_)
-    maxy_ = r2.maxy();
-}
-
-// Expands (if necessary) the bounding box to include the specified point.
-template <class coord_t>
-void AABB2<coord_t>::Expand(const coord_t& point) {
-  if (point.x() < minx_)
-    minx_ = point.x();
-  if (point.y() < miny_)
-    miny_ = point.y();
-  if (point.x() > maxx_)
-    maxx_ = point.x();
-  if (point.y() > maxy_)
-    maxy_ = point.y();
 }
 
 // Explicit instantiation

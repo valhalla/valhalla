@@ -103,7 +103,8 @@ class PointLL : public Point2 {
    * computing the radius of the circle that circumscribes the 3 positions.
    * @param   ll1   Second lng,lat position
    * @param   ll2   Third lng,lat position
-   * @return  Returns the curvature in meters.
+   * @return  Returns the curvature in meters. Returns max float if the points
+   *          are collinear.
    */
   float Curvature(const PointLL& ll1, const PointLL& ll2) const;
 
@@ -216,14 +217,21 @@ class PointLL : public Point2 {
    * Project this point onto the line from u to v
    * @param u          first point of segment
    * @param v          second point of segment
-   * @param lon_scale  needed for spherical projections. dont pass this parameter unless
-   *                   you cached it and want to avoid trig functions in a tight loop
    * @return p  the projected point of this onto the segment uv
    */
   PointLL Project(const PointLL& u, const PointLL& v) const {
     auto lon_scale = cosf(second * kRadPerDeg);
     return Project(u, v, lon_scale);
   }
+
+  /**
+   * Project this point onto the line from u to v
+   * @param u          first point of segment
+   * @param v          second point of segment
+   * @param lon_scale  needed for spherical projections. dont pass this parameter unless
+   *                   you cached it and want to avoid trig functions in a tight loop
+   * @return p  the projected point of this onto the segment uv
+   */
   PointLL Project(const PointLL& u, const PointLL& v, float lon_scale) const;
 
  private:

@@ -27,10 +27,10 @@ namespace valhalla {
     odin::DirectionsOptions options;
 
     valhalla_request_t();
-    valhalla_request_t(const std::string& request, odin::DirectionsOptions::Action action);
-    valhalla_request_t(const std::string& request, const std::string& serialized_options);
+    void parse(const std::string& request, odin::DirectionsOptions::Action action);
+    void parse(const std::string& request, const std::string& serialized_options);
 #ifdef HAVE_HTTP
-    valhalla_request_t(const http_request_t& request);
+    void parse(const http_request_t& request);
 #endif
   };
 

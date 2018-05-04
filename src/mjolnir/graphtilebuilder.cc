@@ -110,66 +110,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     edge_info_offsets.insert(diredge.edgeinfo_offset());
   }
 
-  // create the forward list of complex restrictions.
-  complex_restriction_forward_list_offset_ = 0;
-  while (complex_restriction_forward_list_offset_ <
-      complex_restriction_forward_size_) {
-
-    ComplexRestriction cr(complex_restriction_forward_ + complex_restriction_forward_list_offset_);
-
-    ComplexRestrictionBuilder crb;
-    crb.set_from_id(cr.from_id());
-    crb.set_to_id(cr.to_id());
-    /** TODO - design common date/time structure
-    crb.set_begin_time(cr.begin_time());
-    crb.set_elapsed_time(cr.end_time());
-    crb.set_begin_day(cr.begin_day());
-    crb.set_end_day(cr.end_day());
-    */
-    crb.set_via_list(cr.GetVias());
-    crb.set_modes(cr.modes());
-
-    complex_restriction_forward_list_offset_ += crb.SizeOf();
-    complex_restriction_forward_builder_.emplace_back(std::move(crb));
-  }
-
-  if (complex_restriction_forward_list_offset_ != complex_restriction_forward_size_) {
-    LOG_WARN("GraphTileBuilder TileID: " +
-          std::to_string(header_->graphid().tileid()) +
-          " offsets are off for complex restrictions: = " +
-          std::to_string(complex_restriction_forward_list_offset_) +
-          " size = " + std::to_string(complex_restriction_forward_size_));
-  }
-
-  // create the reverse list of complex restrictions.
-  complex_restriction_reverse_list_offset_ = 0;
-  while (complex_restriction_reverse_list_offset_ < complex_restriction_reverse_size_) {
-
-    ComplexRestriction cr(complex_restriction_reverse_ + complex_restriction_reverse_list_offset_);
-
-    ComplexRestrictionBuilder crb;
-    crb.set_from_id(cr.from_id());
-    crb.set_to_id(cr.to_id());
-    /** TODO
-    crb.set_begin_time(cr.begin_time());
-    crb.set_elapsed_time(cr.end_time());
-    crb.set_begin_day(cr.begin_day());
-    crb.set_end_day(cr.end_day());
-    */
-    crb.set_via_list(cr.GetVias());
-    crb.set_modes(cr.modes());
-
-    complex_restriction_reverse_list_offset_ += crb.SizeOf();
-    complex_restriction_reverse_builder_.emplace_back(std::move(crb));
-  }
-
-  if (complex_restriction_reverse_list_offset_ != complex_restriction_reverse_size_) {
-    LOG_WARN("GraphTileBuilder TileID: " +
-          std::to_string(header_->graphid().tileid()) +
-          " offsets are off for complex restrictions: = " +
-          std::to_string(complex_restriction_reverse_list_offset_) +
-          " size = " + std::to_string(complex_restriction_reverse_size_));
-  }
+  // At this time, complex restrictions are created AFTER all need for
+  // serializing and adding to a tile - so we assume they are both empty.
 
   // EdgeInfo. Create list of EdgeInfoBuilders. Add to text offset set.
   edge_info_offset_ = 0;
@@ -310,20 +252,26 @@ void GraphTileBuilder::StoreTileData() {
              // TODO - once transit transfers are added need to update here
              + (signs_builder_.size() * sizeof(Sign))
              + (admins_builder_.size() * sizeof(Admin)));
-    for (const auto& complex_restriction : complex_restriction_forward_builder_)
+    uint32_t forward_restriction_size = 0;
+    for (auto& complex_restriction : complex_restriction_forward_builder_) {
       in_mem << complex_restriction;
+      forward_restriction_size += complex_restriction.SizeOf();
+    }
 
     // Write the reverse complex restriction data
     header_builder_.set_complex_restriction_reverse_offset(
             header_builder_.complex_restriction_forward_offset() +
-            complex_restriction_forward_list_offset_);
-    for (const auto& complex_restriction : complex_restriction_reverse_builder_)
+            forward_restriction_size);
+    uint32_t reverse_restriction_size = 0;
+    for (auto& complex_restriction : complex_restriction_reverse_builder_) {
       in_mem << complex_restriction;
+      reverse_restriction_size += complex_restriction.SizeOf();
+    }
 
     // Write the edge data
     header_builder_.set_edgeinfo_offset(
             header_builder_.complex_restriction_reverse_offset() +
-            complex_restriction_reverse_list_offset_);
+            reverse_restriction_size);
     for (const auto& edgeinfo : edgeinfo_list_)
       in_mem << edgeinfo;
 
@@ -503,6 +451,16 @@ void GraphTileBuilder::AddLaneConnectivity(const std::vector<baldr::LaneConnecti
   lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * lc.size();
 }
 
+// Add forward complex restriction.
+void GraphTileBuilder::AddForwardComplexRestriction(const ComplexRestrictionBuilder& res) {
+  complex_restriction_forward_builder_.push_back(res);
+}
+
+// Add reverse complex restriction.
+void GraphTileBuilder::AddReverseComplexRestriction(const ComplexRestrictionBuilder& res) {
+  complex_restriction_reverse_builder_.push_back(res);
+}
+
 bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
                      const baldr::GraphId& nodeb, uint32_t& edge_info_offset) {
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
@@ -512,33 +470,6 @@ bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphI
     return true;
   }
   return false;
-}
-
-// Add the complex restrictions and update the list offset.  The to, from, and vias should all point to edgeids.
-void GraphTileBuilder::UpdateComplexRestrictions(const std::list<ComplexRestrictionBuilder>& complex_restriction_builder,
-                                                 const bool forward) {
-
-  if (forward) {
-    complex_restriction_forward_list_offset_ = 0;
-    complex_restriction_forward_builder_.clear();
-    // Add a new complex restrictions to the lists
-    complex_restriction_forward_builder_ = complex_restriction_builder;
-
-    for (const auto& crb : complex_restriction_builder) {
-      // Update edge offset for next item
-      complex_restriction_forward_list_offset_ += crb.SizeOf();
-    }
-  } else {
-    complex_restriction_reverse_list_offset_ = 0;
-    complex_restriction_reverse_builder_.clear();
-    // Add a new complex restrictions to the lists
-    complex_restriction_reverse_builder_ = complex_restriction_builder;
-
-    for (const auto& crb : complex_restriction_builder) {
-      // Update edge offset for next item
-      complex_restriction_reverse_list_offset_ += crb.SizeOf();
-    }
-  }
 }
 
 // Add edge info

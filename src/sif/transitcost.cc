@@ -97,40 +97,48 @@ class TransitCost : public DynamicCost {
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
-   * based on other parameters.
-   * @param  edge     Pointer to a directed edge.
-   * @param  pred     Predecessor edge information.
-   * @param  tile     current tile
-   * @param  edgeid   edgeid that we care about
-   * @return  Returns true if access is allowed, false if not.
+   * based on other parameters such as conditional restrictions and
+   * conditional access that can depend on time and travel mode.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the directed edge.
+   * @param  current_time   Current time (seconds since epoch).
+   * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
-                       const baldr::GraphId& edgeid) const;
+                       const baldr::GraphId& edgeid,
+                       const uint32_t current_time) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
-   * (from destination towards origin). Both opposing edges are
-   * provided.
+   * (from destination towards origin). Both opposing edges (current and
+   * predecessor) are provided. The access check is generally based on mode
+   * of travel and the access modes allowed on the edge. However, it can be
+   * extended to exclude access based on other parameters such as conditional
+   * restrictions and conditional access that can depend on time and travel
+   * mode.
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
    * @param  opp_edge       Pointer to the opposing directed edge.
-   * @param  tile           Tile for the opposing edge (for looking
-   *                        up restrictions).
-   * @param  opp_edgeid     Opposing edge Id
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @param  current_time   Current time (seconds since epoch).
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
-                 const EdgeLabel& pred,
-                 const baldr::DirectedEdge* opp_edge,
-                 const baldr::GraphTile*& tile,
-                 const baldr::GraphId& opp_edgeid) const;
+                              const EdgeLabel& pred,
+                              const baldr::DirectedEdge* opp_edge,
+                              const baldr::GraphTile*& tile,
+                              const baldr::GraphId& opp_edgeid,
+                              const uint32_t current_time) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
-   * @param  edge  Pointer to node information.
+   * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
@@ -277,16 +285,8 @@ class TransitCost : public DynamicCost {
   float transfer_cost_;     // Transfer cost
   float transfer_penalty_;  // Transfer penalty
 
-  struct TileIndexHasher {
-    std::size_t operator()(const tile_index_pair& tile_line) const {
-      std::size_t seed = 13;
-      boost::hash_combine(seed, id_hasher(tile_line.first));
-      boost::hash_combine(seed, id_hasher(tile_line.second));
-      return seed;
-    }
-    //function to hash each id
-    std::hash<uint32_t> id_hasher;
-  };
+  // TODO - compute transit tile level based on tile specification?
+  float transit_tile_level = 3;
 
   // stops exclude list
   std::unordered_set<std::string> stop_exclude_onestops_;
@@ -306,11 +306,11 @@ class TransitCost : public DynamicCost {
   // route include list
   std::unordered_set<std::string> route_include_onestops_;
 
-  //our final one exclude list of pairs
-  std::unordered_set<tile_index_pair, TileIndexHasher> exclude_;
+  // Set of routes to exclude (by GraphId)
+  std::unordered_set<GraphId> exclude_routes_;
 
-  //our final one exclude list of pairs
-  std::unordered_set<tile_index_pair, TileIndexHasher> exclude_stops_;
+  // Set of stops to exclude (by GraphId)
+  std::unordered_set<GraphId> exclude_stops_;
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
@@ -427,14 +427,14 @@ float TransitCost::GetModeFactor() {
   return mode_factor_;
 }
 
-// This method adds tile_index_pairs to the exclude list based on the
+// This method adds GraphIds to the exclude list based on the
 // operator, stop, and route exclude_onestops and include_onestops lists.
 // The exclude_onestops and include_onestops lists are set by the user.
 void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 
   //do we have stop work to do?
   if (stop_exclude_onestops_.size() || stop_include_onestops_.size()) {
-    const std::unordered_map<std::string, tile_index_pair> stop_onestops =
+    const std::unordered_map<std::string, GraphId> stop_onestops =
         tile->GetStopOneStops();
 
     //avoid these operators
@@ -457,7 +457,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 
   //do we have operator work to do?
   if (oper_exclude_onestops_.size() || oper_include_onestops_.size()) {
-    const std::unordered_map<std::string, std::list<tile_index_pair>> oper_onestops =
+    const std::unordered_map<std::string, std::list<GraphId>> oper_onestops =
         tile->GetOperatorOneStops();
 
     //avoid these operators
@@ -466,7 +466,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
         const auto& one_stop = oper_onestops.find(e);
         if (one_stop != oper_onestops.end()) {
           for (const auto& tls : one_stop->second)
-            exclude_.emplace(tls);
+            exclude_routes_.emplace(tls);
         }
       }
 
@@ -475,7 +475,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
         for(auto const& onestop: oper_onestops) {
           if (oper_include_onestops_.find(onestop.first) == oper_include_onestops_.end()) {
             for (const auto& tls : onestop.second)
-              exclude_.emplace(tls);
+              exclude_routes_.emplace(tls);
           }
         }
       }
@@ -485,7 +485,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
   //do we have route work to do?
   if (route_exclude_onestops_.size() || route_include_onestops_.size()) {
 
-    const std::unordered_map<std::string, std::list<tile_index_pair>> route_onestops =
+    const std::unordered_map<std::string, std::list<GraphId>> route_onestops =
         tile->GetRouteOneStops();
 
     //avoid these routes
@@ -494,7 +494,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
         const auto& one_stop = route_onestops.find(e);
         if (one_stop != route_onestops.end()) {
           for (const auto& tls : one_stop->second)
-            exclude_.emplace(tls);
+            exclude_routes_.emplace(tls);
         }
       }
 
@@ -503,7 +503,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
         for(auto const& onestop: route_onestops) {
           if (route_include_onestops_.find(onestop.first) == route_include_onestops_.end()) {
             for (const auto& tls : onestop.second)
-              exclude_.emplace(tls);
+              exclude_routes_.emplace(tls);
           }
         }
       }
@@ -515,15 +515,16 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 // determine if we should not route on a line.
 bool TransitCost::IsExcluded(const baldr::GraphTile*& tile,
                              const baldr::DirectedEdge* edge) {
-  return (exclude_.find(tile_index_pair(tile->id().tileid(),edge->lineid())) != exclude_.end());
+  return (exclude_routes_.find(GraphId(tile->id().tileid(), transit_tile_level,
+          edge->lineid())) != exclude_routes_.end());
 }
 
 // This method acts like an allowed function; however, it uses the exclude list to
 // determine if we should not route through this node.
 bool TransitCost::IsExcluded(const baldr::GraphTile*& tile,
                              const baldr::NodeInfo* node) {
-  return (exclude_stops_.find(tile_index_pair(tile->id().tileid(),
-                                             node->stop_index())) != exclude_stops_.end());
+  return (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level,
+          node->stop_index())) != exclude_stops_.end());
 }
 
 // Get the access mode used by this costing method.
@@ -535,14 +536,15 @@ uint32_t TransitCost::access_mode() const {
 bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
                           const baldr::GraphTile*& tile,
-                          const baldr::GraphId& edgeid) const {
+                          const baldr::GraphId& edgeid,
+                          const uint32_t current_time) const {
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
     // may be in another tile, skip if it is as will will check it later.
     if (edge->endnode().tileid() == tile->id().tileid()) {
-      if (exclude_stops_.find(tile_index_pair(tile->id().tileid(),
-                                           tile->node(edge->endnode())->stop_index())) != exclude_stops_.end())
+      if (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level,
+                tile->node(edge->endnode())->stop_index())) != exclude_stops_.end())
         return false;
     }
   }
@@ -561,7 +563,8 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
-               const baldr::GraphId& opp_edgeid) const {
+               const baldr::GraphId& opp_edgeid,
+               const uint32_t current_time) const {
   // TODO - obtain and check the access restrictions.
 
   // This method should not be called since time based routes do not use

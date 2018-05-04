@@ -7,7 +7,6 @@
 #include <algorithm>
 
 #include <boost/property_tree/ptree.hpp>
-#include <boost/iterator/counting_iterator.hpp>
 
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/linesegment2.h>

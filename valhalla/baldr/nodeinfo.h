@@ -324,7 +324,7 @@ class NodeInfo {
 
   /**
    * Returns the json representation of the object
-   * @param   the tile required to get admin information
+   * @param tile the tile required to get admin information
    * @return  json object
    */
   json::MapPtr json(const GraphTile* tile) const;
@@ -338,7 +338,7 @@ class NodeInfo {
                                     // first outbound directed edge
   uint64_t access_           : 12;  // Access through the node - bit field
   uint64_t edge_count_       : 7;   // Number of outbound edges (on this level)
-  uint32_t local_edge_count_ : 3;   // # of regular edges across all levels
+  uint64_t local_edge_count_ : 3;   // # of regular edges across all levels
                                     // (up to kMaxLocalEdgeIndex+1)
   uint64_t admin_index_      : 6;   // Index into this tile's admin data list
   uint64_t timezone_         : 9;   // Time zone

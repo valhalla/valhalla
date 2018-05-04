@@ -77,7 +77,7 @@ class TileHierarchy {
 
   /**
    * Gets the hierarchy level given the road class.
-   * @param  road_class  Road classification.
+   * @param  roadclass  Road classification.
    * @return Returns the level.
    */
   static uint8_t get_level(const RoadClass roadclass);

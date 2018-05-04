@@ -46,12 +46,11 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::route);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::route);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.route(request);
-      //route between the locations in the graph to find the best path
-      auto date_time_type = rapidjson::get_optional<int>(request.document, "/date_time.type");
-      auto legs = pimpl->thor_worker.route(request, date_time_type);
+      auto legs = pimpl->thor_worker.route(request);
       //get some directions back from them
       auto directions = pimpl->odin_worker.narrate(request, legs);
       //serialize them out to json string
@@ -66,7 +65,8 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::locate);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::locate);
       //check the request and locate the locations in the graph
       auto json = pimpl->loki_worker.locate(request);
       //if they want you do to do the cleanup automatically
@@ -79,7 +79,8 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::sources_to_targets);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::sources_to_targets);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.matrix(request);
       //compute the matrix
@@ -94,7 +95,8 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::optimized_route);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::optimized_route);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.matrix(request);
       //compute compute all pairs and then the shortest path through them all
@@ -113,7 +115,8 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::isochrone);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::isochrone);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.isochrones(request);
       //compute the isochrones
@@ -128,7 +131,8 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::trace_route);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::trace_route);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.trace(request);
       //route between the locations in the graph to find the best path
@@ -147,7 +151,8 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::trace_attributes);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::trace_attributes);
       //check the request and locate the locations in the graph
       pimpl->loki_worker.trace(request);
       //get the path and turn it into attribution along it
@@ -162,7 +167,8 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::height);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::height);
       //get the height at each point
       auto json = pimpl->loki_worker.height(request);
       //if they want you do to do the cleanup automatically
@@ -175,7 +181,8 @@ namespace valhalla {
       //set the interrupts
       pimpl->set_interrupts(interrupt);
       //parse the request
-      valhalla_request_t request(request_str, odin::DirectionsOptions::transit_available);
+      valhalla_request_t request;
+      request.parse(request_str, odin::DirectionsOptions::transit_available);
       //check the request and locate the locations in the graph
       auto json = pimpl->loki_worker.transit_available(request);
       //if they want you do to do the cleanup automatically

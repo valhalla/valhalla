@@ -29,42 +29,38 @@ using namespace valhalla::loki;
 
 namespace valhalla {
   namespace loki {
-    std::vector<baldr::Location> loki_worker_t::parse_locations(const valhalla_request_t& request, const std::string& node,
-      unsigned location_parse_error_code, boost::optional<valhalla_exception_t> required_exception) {
-      std::vector<baldr::Location> parsed;
-      auto request_locations = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, std::string("/" + node).c_str());
-      if (request_locations) {
-        for(const auto& location : *request_locations) {
-          try { parsed.push_back(baldr::Location::FromRapidJson(location, default_reachability, default_radius)); }
-          catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
-          if(parsed.back().minimum_reachability_ > max_reachability)
-            parsed.back().minimum_reachability_ = max_reachability;
-          if(parsed.back().radius_ > max_radius)
-            parsed.back().radius_ = max_radius;
+    void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<odin::Location>* locations,
+        boost::optional<valhalla_exception_t> required_exception) {
+      if (locations->size()) {
+        for(auto& location : *locations) {
+          if(location.minimum_reachability() > max_reachability)
+            location.set_minimum_reachability(max_reachability);
+          if(location.radius() > max_radius)
+            location.set_radius(max_radius);
         }
-        if (!request.options.do_not_track())
-          valhalla::midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()), " [ANALYTICS] ");
       }
       else if(required_exception)
         throw *required_exception;
-      return parsed;
     }
 
     void loki_worker_t::parse_costing(valhalla_request_t& request) {
       //using the costing we can determine what type of edge filtering to use
-      auto costing = rapidjson::get_optional<std::string>(request.document, "/costing");
-      if (!costing)
+      if (!request.options.has_costing())
         throw valhalla_exception_t{124};
-      else if (!request.options.do_not_track())
-        valhalla::midgard::logging::Log("costing_type::" + *costing, " [ANALYTICS] ");
+
+      auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
+      if(costing.back() == '_') costing.pop_back();
+
+      if (!request.options.do_not_track())
+        valhalla::midgard::logging::Log("costing_type::" + costing, " [ANALYTICS] ");
 
       // TODO - have a way of specifying mode at the location
-      if(*costing == "multimodal")
-        *costing = "pedestrian";
+      if(costing == "multimodal")
+        costing = "pedestrian";
 
       // Get the costing options if in the config or make a blank one.
       // Creates the cost in the cost factory
-      auto* method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request.document);
+      auto* method_options_ptr = rapidjson::Pointer{"/costing_options/" + costing}.Get(request.document);
       auto& allocator = request.document.GetAllocator();
       if(!method_options_ptr) {
         auto* costing_options = rapidjson::Pointer{"/costing_options"}.Get(request.document);
@@ -72,26 +68,26 @@ namespace valhalla {
           request.document.AddMember(rapidjson::Value("costing_options", allocator), rapidjson::Value(rapidjson::kObjectType), allocator);
           costing_options = rapidjson::Pointer{"/costing_options"}.Get(request.document);
         }
-        costing_options->AddMember(rapidjson::Value(*costing, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
-        method_options_ptr = rapidjson::Pointer{"/costing_options/" + *costing}.Get(request.document);
+        costing_options->AddMember(rapidjson::Value(costing, allocator), rapidjson::Value{rapidjson::kObjectType}, allocator);
+        method_options_ptr = rapidjson::Pointer{"/costing_options/" + costing}.Get(request.document);
       }
 
       try{
         cost_ptr_t c;
-        c = factory.Create(*costing, *method_options_ptr);
+        c = factory.Create(costing, *method_options_ptr);
         edge_filter = c->GetEdgeFilter();
         node_filter = c->GetNodeFilter();
       }
       catch(const std::runtime_error&) {
-        throw valhalla_exception_t{125, "'" + *costing + "'"};
+        throw valhalla_exception_t{125, "'" + costing + "'"};
       }
 
       // See if we have avoids and take care of them
-      auto avoid_locations = parse_locations(request, "avoid_locations", 133, boost::none);
-      if(!avoid_locations.empty()) {
-        if(avoid_locations.size() > max_avoid_locations)
-          throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+      if(request.options.avoid_locations_size() > max_avoid_locations)
+        throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+      if(request.options.avoid_locations_size()) {
         try {
+          auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
           auto results = loki::Search(avoid_locations, reader, edge_filter, node_filter);
           std::unordered_set<uint64_t> avoids;
           for(const auto& result : results) {
@@ -192,15 +188,20 @@ namespace valhalla {
     }
 
     void loki_worker_t::cleanup() {
-      locations.clear();
-      sources.clear();
-      targets.clear();
-      shape.clear();
       if(reader.OverCommitted())
         reader.Clear();
     }
 
 #ifdef HAVE_HTTP
+    void loki_worker_t::limits(valhalla_request_t& request) const {
+      for(auto& location : *request.options.mutable_locations()) {
+        if(location.minimum_reachability() > max_reachability)
+          location.set_minimum_reachability(max_reachability);
+        if(location.radius() > max_radius)
+          location.set_radius(max_radius);
+      }
+    }
+
     worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt_function) {
       //get time for start of request
       auto s = std::chrono::system_clock::now();
@@ -210,11 +211,14 @@ namespace valhalla {
       try{
         //request parsing
         auto http_request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
-        request = std::move(valhalla_request_t(http_request));
+        request.parse(http_request);
 
         //check there is a valid action
         if(!request.options.has_action())
           return jsonify_error({106, action_str}, info, request);
+
+        //enforce some limits
+        limits(request);
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);
@@ -261,7 +265,9 @@ namespace valhalla {
         auto e = std::chrono::system_clock::now();
         std::chrono::duration<float, std::milli> elapsed_time = e - s;
         //log request if greater than X (ms)
-        auto work_units = locations.size() ? locations.size() : shape.size() * 20;
+        auto work_units = request.options.locations_size() ? request.options.locations_size() :
+            (request.options.sources_size() ? request.options.sources_size() + request.options.targets_size() :
+                request.options.shape_size() * 20);
         if (!request.options.do_not_track() && elapsed_time.count() / work_units > long_request) {
           LOG_WARN("loki::request elapsed time (ms)::"+ std::to_string(elapsed_time.count()));
           LOG_WARN("loki::request exceeded threshold::"+ rapidjson::to_string(request.document));

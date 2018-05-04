@@ -167,7 +167,7 @@ Location Location::FromCsv(const std::string& csv) {
   std::vector<std::string> parts;
   boost::algorithm::split(parts, csv, boost::algorithm::is_any_of(","));
   if (parts.size() < 2)
-    throw std::runtime_error("Bad format for csv formated location");
+    throw std::runtime_error("Bad format for csv formatted location");
 
   float lat = std::stof(parts[0]);
   if (lat < -90.0f || lat > 90.0f)

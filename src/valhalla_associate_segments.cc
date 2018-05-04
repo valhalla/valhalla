@@ -29,6 +29,7 @@
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
+namespace vo = valhalla::odin;
 namespace vl = valhalla::loki;
 namespace vs = valhalla::sif;
 namespace vt = valhalla::thor;
@@ -271,12 +272,14 @@ public:
   bool Allowed(const vb::DirectedEdge* edge,
                const vs::EdgeLabel& pred,
                const vb::GraphTile*& tile,
-               const vb::GraphId& edgeid) const;
+               const vb::GraphId& edgeid,
+               const uint32_t current_time) const;
   bool AllowedReverse(const vb::DirectedEdge* edge,
                       const vs::EdgeLabel& pred,
                       const vb::DirectedEdge* opp_edge,
                       const vb::GraphTile*& tile,
-                      const vb::GraphId& edgeid) const;
+                      const vb::GraphId& edgeid,
+                      const uint32_t current_time) const;
   bool Allowed(const vb::NodeInfo* node) const;
   vs::Cost EdgeCost(const vb::DirectedEdge* edge) const;
   const vs::EdgeFilter GetEdgeFilter() const;
@@ -298,7 +301,8 @@ uint32_t DistanceOnlyCost::access_mode() const {
 bool DistanceOnlyCost::Allowed(const vb::DirectedEdge* edge,
                                const vs::EdgeLabel& pred,
                                const vb::GraphTile*&,
-                               const vb::GraphId&) const {
+                               const vb::GraphId&,
+                               const uint32_t) const {
   // Do not allow U-turns/back-tracking
   return allow_edge_pred(edge) &&
         (pred.opp_local_idx() != edge->localedgeidx());
@@ -308,7 +312,8 @@ bool DistanceOnlyCost::AllowedReverse(const vb::DirectedEdge* edge,
                                       const vs::EdgeLabel& pred,
                                       const vb::DirectedEdge* opp_edge,
                                       const vb::GraphTile*& tile,
-                                      const vb::GraphId& edgeid) const {
+                                      const vb::GraphId& edgeid,
+                                      const uint32_t) const {
   // Do not allow U-turns/back-tracking
   return allow_edge_pred(edge) &&
         (pred.opp_local_idx() != edge->localedgeidx());
@@ -352,7 +357,7 @@ vb::Location location_for_lrp(const pbf::Segment::LocationReference &lrp) {
   return location;
 }
 
-vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &reader, uint8_t level) {
+vo::Location loki_search_single(const vb::Location &loc, vb::GraphReader &reader, uint8_t level) {
   //we dont want non real edges but also we want the edges to be on the right level
   //also right now only driveable edges please
   auto edge_filter = [level](const DirectedEdge* edge) -> float {
@@ -367,7 +372,10 @@ vb::PathLocation loki_search_single(const vb::Location &loc, vb::GraphReader &re
   if(results.size())
     path_loc = std::move(results.begin()->second);
 
-  return path_loc;
+  vo::Location l;
+  vb::PathLocation::toPBF(path_loc, &l, reader);
+
+  return l;
 }
 
 struct last_tile_cache {
@@ -507,17 +515,18 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
   } else {
     // Use edge search with loki
     auto loc = loki_search_single(vb::Location(ll), m_reader, level);
-    for (const auto& edge : loc.edges) {
-      edges.emplace_back(edge, 0.0f);  // TODO??
+    for (const auto& edge : loc.path_edges()) {
+      PathLocation::PathEdge e(GraphId(edge.graph_id()), edge.percent_along(), PointLL{edge.ll().lng(), edge.ll().lat()}, edge.distance());
+      edges.emplace_back(std::move(e), 0.0f);  // TODO??
     }
     if (origin) {
       // Remove inbound edges to an origin node
-      std::remove_if(edges.begin(), edges.end(),
-         [](const CandidateEdge& e){return e.edge.end_node();});
+      edges.erase(std::remove_if(edges.begin(), edges.end(),
+         [](const CandidateEdge& e){return e.edge.end_node();}));
     } else {
       // remove outbound edges to a destination node
-      std::remove_if(edges.begin(), edges.end(),
-         [](const CandidateEdge& e){return e.edge.begin_node();});
+      edges.erase(std::remove_if(edges.begin(), edges.end(),
+         [](const CandidateEdge& e){return e.edge.begin_node();}));
     }
   }
   return edges;
@@ -563,7 +572,7 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
     // Check the bearing for this edge and make sure within tolerance
     // TODO - short edges have bearing inaccuracy (what is too short?)
     if (segment_length > 5 && edge->length() > 5) {
-      uint16_t walked_bearing = bearing(tile, origin_edge.edge.id, origin_edge.edge.dist);
+      uint16_t walked_bearing = bearing(tile, origin_edge.edge.id, origin_edge.edge.percent_along);
       // Increase bearing tolerance if LRP is not at a node and edge length is long
       float tolerance = kBearingTolerance;
       if (!segment.lrps(0).at_node() && edge->length() > 1000) {
@@ -576,19 +585,19 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
 
     // Walk a path from this origin edge.
     std::vector<EdgeMatch> edges;
-    edges.emplace_back(EdgeMatch{origin_edge.edge.id, edge->length(), origin_edge.edge.dist, 1.0f});
+    edges.emplace_back(EdgeMatch{origin_edge.edge.id, edge->length(), origin_edge.edge.percent_along, 1.0f});
 
     // Check if the origin edge matches a destination edge
     auto dest = dest_edges.find(origin_edge.edge.id);
     if (dest != dest_edges.end()) {
       // Check if this path is a better match
-      uint32_t walked_length = edge->length() * (dest->second.edge.dist - origin_edge.edge.dist);
+      uint32_t walked_length = edge->length() * (dest->second.edge.percent_along - origin_edge.edge.percent_along);
       uint32_t d = abs_u32_diff(walked_length, segment_length);
       if (d < kLengthTolerance) {
         uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
         if (score < best_score) {
           best_path = edges;
-          best_path.back().end_pct = dest->second.edge.dist;
+          best_path.back().end_pct = dest->second.edge.percent_along;
           best_score = score;
         }
       }
@@ -596,7 +605,7 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
 
     // Continue even if the origin edge matches a destination edge - this could
     // be to a different nearby node but it is not the optimal one.
-    uint32_t walked_length = edge->length() * (1.0f - origin_edge.edge.dist);
+    uint32_t walked_length = edge->length() * (1.0f - origin_edge.edge.percent_along);
     while (true) {
       // Get the next edge. Break if next edge is invalid.
       GraphId edgeid = next_edge(edges.back().edgeid, m_reader, tile, edge_length);
@@ -608,13 +617,13 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
       auto dest = dest_edges.find(edgeid);
       if (dest != dest_edges.end()) {
         // Check if this path is within tolerance and a better match
-        uint32_t length = walked_length + (edge_length * dest->second.edge.dist);
+        uint32_t length = walked_length + (edge_length * dest->second.edge.percent_along);
         uint32_t d = abs_u32_diff(length, segment_length);
         if (d < kLengthTolerance) {
           uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
           if (score < best_score) {
             best_path = edges;
-            best_path.emplace_back(EdgeMatch{edgeid, edge_length, 0.0f, dest->second.edge.dist});
+            best_path.emplace_back(EdgeMatch{edgeid, edge_length, 0.0f, dest->second.edge.percent_along});
             best_score = score;
           }
         }
@@ -676,7 +685,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     auto coord = coord_for_lrp(lrp);
     auto next_coord = coord_for_lrp(segment.lrps(i+1));
     auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, segment_id.level());
-    if (dest.edges.size() == 0) {
+    if (dest.path_edges_size() == 0) {
       LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) +
                 ". Segment cannot be matched, discarding.");
       return std::vector<EdgeMatch>();

@@ -9,6 +9,7 @@
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/routing.h>
 #include <valhalla/meili/stateid.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace meili {

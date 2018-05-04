@@ -5,6 +5,8 @@
 #include <string>
 #include <memory>
 #include <vector>
+
+#include <valhalla/baldr/graphconstants.h>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/local_time/tz_database.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
@@ -55,10 +57,9 @@ namespace DateTime {
 
   /**
    * Get the days that this transit service is running in 60 days or less
-   * @param   start_date
-   * @param   end_date
+   * @param   start_date start date
+   * @param   end_date end date
    * @param   tile_date seconds from epoch
-   * @param   tz timezone which is used to get the current time.
    * @param   dow_mask that this service runs.
    * @return  Returns the number of days.
    */
@@ -68,7 +69,7 @@ namespace DateTime {
   /**
    * Adds a service day to the days.
    * @param   days supported by the gtfs feed/service
-   * @param   end_date
+   * @param   end_date end date
    * @param   tile_date seconds from epoch
    * @param   added_date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the updated days.  Days will only be updated if the added date
@@ -82,7 +83,7 @@ namespace DateTime {
   /**
    * Removes a service day to the days.
    * @param   days supported by the gtfs feed/service
-   * @param   end_date
+   * @param   end_date end date
    * @param   tile_date seconds from epoch
    * @param   removed_date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the updated days.  Days will only be updated if the removed date
@@ -106,7 +107,7 @@ namespace DateTime {
   /**
    * Get the number of days elapsed from the pivot date until
    * inputed date.
-   * @param   date_time
+   * @param   date_time date
    * @return  Returns the number of days.
    */
   uint32_t days_from_pivot_date(const boost::gregorian::date& date_time);
@@ -116,7 +117,7 @@ namespace DateTime {
    * @param   dow_mask    Day of the week mask.
    * @param   time        Time in the format of 08:00
    * @param   time_zone   Timezone.
-   * @return  Returns the formated date 2015-05-06.
+   * @return  Returns the formatted date 2015-05-06.
    */
   std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
                             const boost::local_time::time_zone_ptr& time_zone);
@@ -138,15 +139,33 @@ namespace DateTime {
   uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone);
 
   /**
-   * Get the seconds from epoch
-   * @param   date_time        date_time.  Time is already adjusted to TZ
+   * Get the seconds from epoch for a date_time string
+   * @param   date_time   date_time.
+   * @param   time_zone   Timezone.
    *
    * @return  Returns the seconds from epoch.
    */
   uint64_t seconds_since_epoch(const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone);
 
   /**
+   * Get the difference between two timezone using the seconds from epoch
+   * (taking into account the timezones and dst) and add the difference to the seconds
+   * @param   is_depart_at  is this a depart at or arrive by
+   * @param   seconds       seconds since epoch for
+   * @param   origin_tz     timezone for origin
+   * @param   dest_tz       timezone for dest
+   *
+   */
+  void timezone_diff(const bool is_depart_at, uint64_t& seconds,
+                     const boost::local_time::time_zone_ptr& origin_tz,
+                     const boost::local_time::time_zone_ptr& dest_tz);
+
+
+  std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz);
+
+  /**
    * Get the iso date time from seconds since epoch and timezone.
+   * @param   is_depart_at        is this a depart at or arrive by
    * @param   origin_seconds      seconds since epoch for origin
    * @param   dest_seconds        seconds since epoch for dest
    * @param   origin_tz           timezone for origin
@@ -191,6 +210,57 @@ namespace DateTime {
    * @return true or false
    */
   bool is_iso_local(const std::string& date_time);
+
+  /**
+   * checks if a date is restricted within a begin and end range.
+   * @param   type          type of restriction kYMD or kNthDow
+   * @param   begin_hrs     begin hours
+   * @param   begin_mins    begin minutes
+   * @param   end_hrs       end hours
+   * @param   end_mins      end minutes
+   * @param   dow           days of the week to apply this restriction
+   * @param   begin_week    only set for kNthDow.  which week in the month
+   * @param   begin_month   begin month
+   * @param   begin_day_dow if kNthDow, then which dow to start the restriction.
+   *                        if kYMD then it is the day of the month
+   * @param   end_week      only set for kNthDow.  which week in the month
+   * @param   end_month     end month
+   * @param   end_day_dow   if kNthDow, then which dow to end the restriction.
+   *                        if kYMD then it is the day of the month
+   * @param   date_time     should be in the format of 2015-05-06T08:00
+   * @param   time_zone     timezone for the date_time
+   * @return true or false
+   */
+
+  bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin_mins,
+                     const uint8_t end_hrs, const uint8_t end_mins, const uint8_t dow,
+                     const uint8_t begin_week, const uint8_t begin_month, const uint8_t begin_day_dow,
+                     const uint8_t end_week, const uint8_t end_month, const uint8_t end_day_dow,
+                     const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone);
+
+  /**
+   * get the dow mask from user inputed string.  try to handle most inputs
+   * @param   dow entered by a user
+   * @return dow mask
+   */
+  uint8_t get_dow_mask(const std::string& dow);
+
+  /**
+   * get the dow from user inputed string.  try to handle most inputs
+   * @param   dow entered by a user
+   * @return DOW
+   */
+  DOW get_dow(const std::string& dow);
+
+  /**
+   * get the month from user inputed string.  try to handle most inputs
+   * @param   month entered by a user
+   * @return MONTH
+   */
+  MONTH get_month(const std::string& month);
+
+  std::vector<uint64_t> get_time_range(const std::string& condition);
+
 }
 }
 }

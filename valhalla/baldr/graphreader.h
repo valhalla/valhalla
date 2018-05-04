@@ -135,7 +135,7 @@ class SynchronizedTileCache : public TileCache {
  public:
   /**
   * Constructor.
-  * @param max_size  maximum size of the cache
+  * @param cache reference to an external cache
   * @param mutex reference to an external mutex
   */
   SynchronizedTileCache(TileCache& cache, std::mutex& mutex);
@@ -191,7 +191,7 @@ class TileCacheFactory final {
  public:
   /**
    * Constructs tile cache.
-   * @param pt  Property tree listing the configuration for the cahce configration
+   * @param pt  Property tree listing the configuration for the cahce configuration
    */
   static TileCache* createTileCache(const boost::property_tree::ptree& pt);
 };
@@ -325,7 +325,7 @@ class GraphReader {
    * Convenience method to get an end node.
    * @param edge  the edge whose end node you want
    * @param  tile    Reference to a pointer to a const tile.
-   * @return returns the end node of edge or nullptr if it couldnt
+   * @return returns the end node of edge or nullptr if it couldn't
    */
   const NodeInfo* GetEndNode(const DirectedEdge* edge, const GraphTile*& tile) {
     return GetGraphTile(edge->endnode(), tile) ? tile->node(edge->endnode()) : nullptr;
@@ -373,7 +373,7 @@ class GraphReader {
    *         the specified edge. Returns an invalid GraphId if the edge is not
    *         part of a shortcut.
    */
-  GraphId GetShortcut(const GraphId& id);
+  GraphId GetShortcut(const GraphId& edgeid);
 
   /**
    * Convenience method to get the relative edge density (from the
@@ -501,12 +501,34 @@ class GraphReader {
   /**
    * Get the start node of an edge.
    * @param edgeid Edge Id (Graph Id)
-   * @param tile   Current tile.
    * @return  Returns the start node of the edge.
    */
   GraphId edge_startnode(const GraphId& edgeid) {
     const GraphTile* NO_TILE = nullptr;
     return edge_startnode(edgeid, NO_TILE);
+  }
+
+  /**
+   * Get the edgeinfo of an edge
+   * @param edgeid Edge Id (Graph Id)
+   * @param tile   Current tile.
+   * @returns Returns the edgeinfo for the specified id.
+   */
+  EdgeInfo edgeinfo(const GraphId& edgeid, const GraphTile*& tile) {
+    auto* edge = directededge(edgeid, tile);
+    if(edge == nullptr)
+      throw std::runtime_error("Cannot find edgeinfo for edge: " + std::to_string(edgeid));
+    return tile->edgeinfo(edge->edgeinfo_offset());
+  }
+
+  /**
+   * Get the edgeinfo of an edge
+   * @param edgeid Edge Id (Graph Id)
+   * @returns Returns the edgeinfo for the specified id.
+   */
+  EdgeInfo edgeinfo(const GraphId& edgeid) {
+    const GraphTile* NO_TILE = nullptr;
+    return edgeinfo(edgeid, NO_TILE);
   }
 
   /**

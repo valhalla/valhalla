@@ -9,12 +9,16 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-  void check_distance(const std::vector<Location>& locations, float matrix_max_distance, float& max_location_distance) {
+  PointLL to_ll(const odin::Location& l) {
+    return PointLL{l.ll().lng(), l.ll().lat()};
+  }
+
+  void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& locations, float matrix_max_distance, float& max_location_distance) {
     //see if any locations pairs are unreachable or too far apart
     for(auto source = locations.begin(); source != locations.end() - 1; ++source){
       for(auto target = source + 1; target != locations.end(); ++target){
         //check if distance between latlngs exceed max distance limit
-        auto path_distance = source->latlng_.Distance(target->latlng_);
+        auto path_distance = to_ll(*source).Distance(to_ll(*target));
 
         if (path_distance >= max_location_distance) {
           max_location_distance = path_distance;
@@ -32,11 +36,11 @@ namespace valhalla {
 
     void loki_worker_t::init_isochrones(valhalla_request_t& request) {
       //strip off unused information
-      locations = parse_locations(request, "locations");
-      if(locations.size() < 1)
+      parse_locations(request.options.mutable_locations());
+      if(request.options.locations_size() < 1)
         throw valhalla_exception_t{120};
-      for(auto& l : locations)
-        l.heading_.reset();
+      for(auto& l : *request.options.mutable_locations())
+        l.clear_heading();
 
       //make sure the isoline definitions are valid
       auto contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/contours");
@@ -59,55 +63,22 @@ namespace valhalla {
     void loki_worker_t::isochrones(valhalla_request_t& request) {
       init_isochrones(request);
       //check that location size does not exceed max
-      if (locations.size() > max_locations.find("isochrone")->second)
+      if (request.options.locations_size() > max_locations.find("isochrone")->second)
         throw valhalla_exception_t{150, std::to_string(max_locations.find("isochrone")->second)};
 
       //check the distances
       auto max_location_distance = std::numeric_limits<float>::min();
-      check_distance(locations, max_distance.find("isochrone")->second, max_location_distance);
+      check_distance(request.options.locations(), max_distance.find("isochrone")->second, max_location_distance);
       if (!request.options.do_not_track())
         valhalla::midgard::logging::Log("max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
 
-      auto costing = rapidjson::get_optional<std::string>(request.document, "/costing").get_value_or("");
-      auto date_type = rapidjson::get_optional<int>(request.document, "/date_time/type");
-
-      auto& allocator = request.document.GetAllocator();
-      //default to current date_time for mm or transit.
-      if (! date_type && (costing == "multimodal" || costing == "transit")) {
-        rapidjson::SetValueByPointer(request.document, "/date_time/type", 0);
-        date_type = 0;
-      }
-
-      //check the date stuff
-      auto date_time_value = rapidjson::get_optional<std::string>(request.document, "/date_time/value");
-      if (date_type) {
-        //not yet on this
-        if(! date_type || *date_type == 2) {
-          throw valhalla_exception_t{142};
-        }
-        //what kind
-        switch(*date_type) {
-        case 0: //current
-          rapidjson::GetValueByPointer(request.document, "/locations/0")->AddMember("date_time", "current", allocator);
-          break;
-        case 1: //depart
-          if(! date_time_value)
-            throw valhalla_exception_t{160};
-          if (!DateTime::is_iso_local(*date_time_value))
-            throw valhalla_exception_t{162};
-          rapidjson::GetValueByPointer(request.document, "/locations/0")->AddMember("date_time", *date_time_value, allocator);
-          break;
-        default:
-          throw valhalla_exception_t{163};
-          break;
-        }
-      }
-
       try{
         //correlate the various locations to the underlying graph
+        auto locations = PathLocation::fromPBF(request.options.locations());
         const auto projections = loki::Search(locations, reader, edge_filter, node_filter);
         for(size_t i = 0; i < locations.size(); ++i) {
-          rapidjson::Pointer("/correlated_" + std::to_string(i)).Set(request.document, projections.at(locations[i]).ToRapidJson(i, allocator));
+          const auto& projection = projections.at(locations[i]);
+          PathLocation::toPBF(projection, request.options.mutable_locations(i), reader);
         }
       }
       catch(const std::exception&) {

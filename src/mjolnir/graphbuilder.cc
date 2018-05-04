@@ -45,7 +45,7 @@ constexpr double kMinimumInterval = 10.0f;
 
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
- * we also need to then update the egdes that pointed to them
+ * we also need to then update the edges that pointed to them
  *
  */
 std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
@@ -272,13 +272,10 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
   std::vector<OSMRestriction> trs;
   for (auto r = res.first; r != res.second; ++r) {
     if (r->second.via() == node.node.osmid) {
-      if (r->second.day_on() != DOW::kNone) {
-        stats.timedrestrictions++;
-      } else {
         trs.push_back(r->second);
-      }
     }
   }
+
   if (trs.empty()) {
     return 0;
   }
@@ -345,13 +342,13 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
     return 0;
   }
 
-  // TODO - support modes (for now is just truck), days of week,
-  // 64 bit values (with different meanings based on restriction type).
-  uint32_t modes = kTruckAccess;
+  uint32_t modes = 0;
   for (auto r = res.first; r != res.second; ++r) {
-    AccessRestriction access_restriction(edgeid, r->second.type(), modes,
+    AccessRestriction access_restriction(edgeid, r->second.type(),
+                                         r->second.modes(),
                                          r->second.value());
     graphtile.AddAccessRestriction(access_restriction);
+    modes |= r->second.modes();
   }
   return modes;
 }
@@ -663,8 +660,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               }
             }
 
-            //TODO: curvature
-            uint32_t curvature = 0;
+            // Compute a curvature metric [0-15]. TODO - use resampled polyline?
+            uint32_t curvature = compute_curvature(shape);
 
             // Add elevation info to the geo attribute cache. TODO - add mean elevation.
             uint32_t forward_grade = static_cast<uint32_t>(std::get<0>(forward_grades)  * .6 + 6.5);
@@ -690,7 +687,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           //ferry speed override.  duration is set on the way
           if (w.ferry() && w.duration()) {
             //convert to kph
-            speed = static_cast<uint32_t>((std::get<0>(found->second) * 3.6f) / w.duration());
+            uint32_t spd = static_cast<uint32_t>((std::get<0>(found->second) * 3.6f) / w.duration());
+            speed = (spd == 0) ? 1 : spd;
           }
 
           // Add a directed edge and get a reference to it

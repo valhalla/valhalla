@@ -11,11 +11,12 @@
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/location.h>
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace thor {
@@ -54,7 +55,7 @@ class Isochrone {
    * @param  mode         Travel mode
    */
   std::shared_ptr<const GriddedData<midgard::PointLL> > Compute(
-          std::vector<baldr::PathLocation>& origin_locs,
+          google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locs,
           const unsigned int max_minutes,
           baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -64,11 +65,11 @@ class Isochrone {
   // the reverse direction - construct times for gridded data indicating how
   // long it takes to reach the destination location.
   std::shared_ptr<const GriddedData<midgard::PointLL> > ComputeReverse(
-               std::vector<baldr::PathLocation>& dest_locations,
-               const unsigned int max_minutes,
-               baldr::GraphReader& graphreader,
-               const std::shared_ptr<sif::DynamicCost>* mode_costing,
-               const sif::TravelMode mode);
+      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
+      const unsigned int max_minutes,
+      baldr::GraphReader& graphreader,
+      const std::shared_ptr<sif::DynamicCost>* mode_costing,
+      const sif::TravelMode mode);
 
   /**
    * Compute an isochrone grid for multi-modal routes. This creates and
@@ -83,11 +84,11 @@ class Isochrone {
    * @param  mode         Travel mode
    */
   std::shared_ptr<const GriddedData<midgard::PointLL> > ComputeMultiModal(
-               std::vector<baldr::PathLocation>& origin_locations,
-               const unsigned int max_minutes,
-               baldr::GraphReader& graphreader,
-               const std::shared_ptr<sif::DynamicCost>* mode_costing,
-               const sif::TravelMode mode);
+      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
+      const unsigned int max_minutes,
+      baldr::GraphReader& graphreader,
+      const std::shared_ptr<sif::DynamicCost>* mode_costing,
+      const sif::TravelMode mode);
 
  protected:
   float shape_interval_;        // Interval along shape to mark time
@@ -106,7 +107,7 @@ class Isochrone {
   std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
-  std::shared_ptr<EdgeStatus> edgestatus_;
+  EdgeStatus edgestatus_;
 
   // Isochrone gridded time data
   std::shared_ptr<GriddedData<midgard::PointLL> > isotile_;
@@ -135,12 +136,12 @@ class Isochrone {
   /**
    * Constructs the isotile - 2-D gridded data containing the time
    * to get to each lat,lng tile.
-   * @param  mulitmodal  True if the route type is multimodal.
+   * @param  multimodal  True if the route type is multimodal.
    * @param  max_minutes Maximum time (minutes) for computing isochrones.
    * @param  origin_locations  List of origin locations.
    */
   void ConstructIsoTile(const bool multimodal, const unsigned int max_minutes,
-                        std::vector<baldr::PathLocation>& origin_locations);
+                        google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations);
 
   /**
    * Expand from the node along the forward search path.
@@ -176,7 +177,7 @@ class Isochrone {
    * @param  costing           Dynamic costing.
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
-                  std::vector<baldr::PathLocation>& origin_locations,
+                  google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
                   const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -186,7 +187,7 @@ class Isochrone {
    * @param  costing           Dynamic costing.
    */
   void SetOriginLocationsMM(baldr::GraphReader& graphreader,
-                  std::vector<baldr::PathLocation>& origin_locations,
+                  google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
                   const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -196,7 +197,7 @@ class Isochrone {
     * @param  costing           Dynamic costing.
     */
   void SetDestinationLocations(baldr::GraphReader& graphreader,
-                       std::vector<baldr::PathLocation>& dest_locations,
+                       google::protobuf::RepeatedPtrField<valhalla::odin::Location>& dest_locations,
                        const std::shared_ptr<sif::DynamicCost>& costing);
 
 };

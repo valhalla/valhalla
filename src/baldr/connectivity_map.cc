@@ -1,4 +1,3 @@
-#include <boost/filesystem.hpp>
 #include <list>
 #include <iomanip>
 #include <random>
@@ -124,6 +123,7 @@ namespace {
       if(tile == -1) return -1;
       auto rc = tiles.GetRowColumn(tile);
       switch(side) {
+        default:
         case 0: return rc.second == 0 ? -1 : tile - 1;
         case 1: return rc.first == 0 ? -1 : tile - tiles.ncolumns();
         case 2: return rc.second == tiles.ncolumns() - 1 ? -1 : tile + 1;
@@ -134,6 +134,7 @@ namespace {
     auto coord = [&tiles](uint32_t tile, int side) -> PointLL {
       auto box = tiles.TileBounds(tile);
       switch(side) {
+        default:
         case 0: return PointLL(box.minx(), box.maxy());
         case 1: return box.minpt();
         case 2: return PointLL(box.maxx(), box.miny());

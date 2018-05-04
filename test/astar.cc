@@ -193,8 +193,8 @@ void write_config(const std::string& filename) {
 
 // check that a path from origin to dest goes along the edge with expected_edge_index
 void assert_is_trivial_path(
-  vb::PathLocation &origin,
-  vb::PathLocation &dest,
+  vo::Location &origin,
+  vo::Location &dest,
   uint32_t expected_edge_index) {
 
   //make the config file
@@ -232,23 +232,35 @@ void assert_is_trivial_path(
   }
 }
 
+void add(GraphId id, float dist, PointLL ll, vo::Location& l) {
+  l.mutable_path_edges()->Add()->set_graph_id(id);
+  l.mutable_path_edges()->rbegin()->set_percent_along(dist);
+  l.mutable_path_edges()->rbegin()->mutable_ll()->set_lng(ll.first);
+  l.mutable_path_edges()->rbegin()->mutable_ll()->set_lat(ll.second);
+  l.mutable_path_edges()->rbegin()->set_distance(0.0f);
+}
+
 // test that a path from A to B succeeds, even if the edges from A to C and B
 // to D appear first in the PathLocation.
 void TestTrivialPath() {
   using node::a;
   using node::b;
 
-  vb::PathLocation origin(a.second);
-  origin.edges.emplace_back(tile_id + uint64_t(1), 0.0f, a.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(4), 1.0f, a.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(0), 0.0f, a.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(2), 1.0f, a.second, 0.0f);
+  vo::Location origin;
+  origin.mutable_ll()->set_lng(a.second.first);
+  origin.mutable_ll()->set_lat(a.second.second);
+  add(tile_id + uint64_t(1), 0.0f, a.second, origin);
+  add(tile_id + uint64_t(4), 1.0f, a.second, origin);
+  add(tile_id + uint64_t(0), 0.0f, a.second, origin);
+  add(tile_id + uint64_t(2), 1.0f, a.second, origin);
 
-  vb::PathLocation dest(b.second);
-  dest.edges.emplace_back(tile_id + uint64_t(3), 0.0f, b.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(7), 1.0f, b.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(2), 0.0f, b.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(0), 1.0f, b.second, 0.0f);
+  vo::Location dest;
+  dest.mutable_ll()->set_lng(b.second.first);
+  dest.mutable_ll()->set_lat(b.second.second);
+  add(tile_id + uint64_t(3), 0.0f, b.second, dest);
+  add(tile_id + uint64_t(7), 1.0f, b.second, dest);
+  add(tile_id + uint64_t(2), 0.0f, b.second, dest);
+  add(tile_id + uint64_t(0), 1.0f, b.second, dest);
 
   // this should go along the path from A to B
   assert_is_trivial_path(origin, dest, 0);
@@ -260,17 +272,21 @@ void TestTrivialPathTriangle() {
   using node::e;
   using node::f;
 
-  vb::PathLocation origin(e.second);
-  origin.edges.emplace_back(tile_id + uint64_t(9), 0.0f, e.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(12), 1.0f, e.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(8), 0.0f, e.second, 0.0f);
-  origin.edges.emplace_back(tile_id + uint64_t(10), 1.0f, e.second, 0.0f);
+  vo::Location origin;
+  origin.mutable_ll()->set_lng(e.second.first);
+  origin.mutable_ll()->set_lat(e.second.second);
+  add(tile_id + uint64_t(9), 0.0f, e.second, origin);
+  add(tile_id + uint64_t(12), 1.0f, e.second, origin);
+  add(tile_id + uint64_t(8), 0.0f, e.second, origin);
+  add(tile_id + uint64_t(10), 1.0f, e.second, origin);
 
-  vb::PathLocation dest(f.second);
-  dest.edges.emplace_back(tile_id + uint64_t(11), 0.0f, f.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(13), 1.0f, f.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(10), 0.0f, f.second, 0.0f);
-  dest.edges.emplace_back(tile_id + uint64_t(8), 1.0f, f.second, 0.0f);
+  vo::Location dest;
+  dest.mutable_ll()->set_lng(f.second.first);
+  dest.mutable_ll()->set_lat(f.second.second);
+  add(tile_id + uint64_t(11), 0.0f, f.second, dest);
+  add(tile_id + uint64_t(13), 1.0f, f.second, dest);
+  add(tile_id + uint64_t(10), 0.0f, f.second, dest);
+  add(tile_id + uint64_t(8), 1.0f, f.second, dest);
 
   // this should go along the path from E to F
   assert_is_trivial_path(origin, dest, 8);
@@ -321,23 +337,25 @@ void trivial_path_no_uturns(const std::string& config_file) {
 
   const auto projections = vk::Search(locations, graph_reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_location;
+  vo::DirectionsOptions directions_options;
   for (auto loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
+      PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(), graph_reader);
     } catch (...) {
       throw std::runtime_error("fail_invalid_origin");
     }
   }
 
   vt::AStarPathAlgorithm astar;
-  auto path = astar.GetBestPath(path_location.at(0), path_location.at(1), graph_reader, mode_costing, mode);
+  auto path = astar.GetBestPath(*directions_options.mutable_locations(0), *directions_options.mutable_locations(1),
+      graph_reader, mode_costing, mode);
 
   vt::AttributesController controller;
-  vo::TripPath trip_path = vt::TripPathBuilder::Build(controller, graph_reader, mode_costing,
-                                                      path, path_location.at(0), path_location.at(1),
-                                                      std::list<PathLocation>{});
+  vo::TripPath trip_path = vt::TripPathBuilder::Build(controller, graph_reader, mode_costing,path,
+      *directions_options.mutable_locations(0), *directions_options.mutable_locations(1),
+                                                      std::list<vo::Location>{});
   //really could of got the total of the elapsed_time.
-  vo::DirectionsOptions directions_options;
   vo::DirectionsBuilder directions;
   vo::TripDirections trip_directions = directions.Build(directions_options, trip_path);
 

@@ -22,7 +22,9 @@ namespace {
 namespace valhalla {
   namespace thor {
 
-    std::string thor_worker_t::matrix(const valhalla_request_t& request) {
+    constexpr uint32_t kCostMatrixThreshold = 5;
+
+    std::string thor_worker_t::matrix(valhalla_request_t& request) {
       parse_locations(request);
       auto costing = parse_costing(request);
 
@@ -39,12 +41,12 @@ namespace valhalla {
       std::vector<TimeDistance> time_distances;
       auto costmatrix = [&]() {
         thor::CostMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+        return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, mode_costing,
                                     mode, max_matrix_distance.find(costing)->second);
       };
       auto timedistancematrix = [&]() {
         thor::TimeDistanceMatrix matrix;
-        return matrix.SourceToTarget(correlated_s, correlated_t, reader, mode_costing,
+        return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, mode_costing,
                                     mode, max_matrix_distance.find(costing)->second);
       };
       switch (source_to_target_algorithm) {
@@ -53,6 +55,15 @@ namespace valhalla {
           switch (mode) {
             case TravelMode::kPedestrian:
             case TravelMode::kBicycle:
+              // Use CostMatrix if number of sources and number of targets
+              // exceeds some threshold
+              if (request.options.sources().size() > kCostMatrixThreshold &&
+                  request.options.targets().size() > kCostMatrixThreshold) {
+                time_distances = costmatrix();
+              } else {
+                time_distances = timedistancematrix();
+              }
+              break;
             case TravelMode::kPublicTransit:
               time_distances = timedistancematrix();
               break;
@@ -67,7 +78,7 @@ namespace valhalla {
           time_distances = timedistancematrix();
           break;
       }
-      return tyr::serializeMatrix(request, correlated_s, correlated_t, time_distances, distance_scale);
+      return tyr::serializeMatrix(request, time_distances, distance_scale);
     }
   }
 }

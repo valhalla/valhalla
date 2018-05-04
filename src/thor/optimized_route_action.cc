@@ -17,7 +17,7 @@ using namespace valhalla::thor;
 namespace valhalla {
   namespace thor {
 
-  std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(const valhalla_request_t& request) {
+  std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(valhalla_request_t& request) {
     parse_locations(request);
     auto costing = parse_costing(request);
 
@@ -26,12 +26,13 @@ namespace valhalla {
 
     // Use CostMatrix to find costs from each location to every other location
     CostMatrix costmatrix;
-    std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(correlated_s, correlated_t, reader,
+    std::vector<thor::TimeDistance> td = costmatrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
                                                                   mode_costing, mode,
                                                                   max_matrix_distance.find(costing)->second);
 
     // Return an error if any locations are totally unreachable
-    std::vector<baldr::PathLocation> correlated =  (correlated_s.size() > correlated_t.size() ? correlated_s : correlated_t);
+    const auto& correlated =  (request.options.sources_size() > request.options.targets_size() ?
+        request.options.sources() : request.options.targets());
 
     // Set time costs to send to Optimizer.
     std::vector<float> time_costs;
@@ -50,14 +51,13 @@ namespace valhalla {
 
     Optimizer optimizer;
     //returns the optimal order of the path_locations
-    optimal_order = optimizer.Solve(correlated.size(), time_costs);
-    std::vector<PathLocation> best_order;
-    for (size_t i = 0; i< optimal_order.size(); i++)
-      best_order.emplace_back(correlated[optimal_order[i]]);
+    auto optimal_order = optimizer.Solve(correlated.size(), time_costs);
+    //put the optimal order into the locations array
+    request.options.mutable_locations()->Clear();
+    for (size_t i = 0; i < optimal_order.size(); i++)
+      request.options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
 
-    auto trippaths = path_depart_at(best_order, costing, date_time_type);
-
-    return trippaths;
+    return path_depart_at(*request.options.mutable_locations(), costing);
   }
 
   }

@@ -56,7 +56,7 @@ namespace valhalla {
         //crack open the original request
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::string serialized_options(static_cast<const char*>((++job.cbegin())->data()), (++job.cbegin())->size());
-        request = std::move(valhalla_request_t(request_str, serialized_options));
+        request.parse(request_str, serialized_options);
 
         // Set the interrupt function
         service_worker_t::set_interrupt(interrupt_function);

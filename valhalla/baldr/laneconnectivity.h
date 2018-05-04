@@ -17,7 +17,7 @@ class LaneConnectivityLanes {
  public:
     /**
    * Constructor with arguments.
-   * @param  string   String representation of lane mask
+   * @param lanes String representation of lane mask
    */
   LaneConnectivityLanes(const std::string& lanes);
 
@@ -71,7 +71,7 @@ class LaneConnectivity {
 
   /**
    * Set the directed edge index to which this lane connection applies to.
-   * @param edgeindex   Edge index.
+   * @param idx Edge index.
    */
   void set_to(const uint32_t idx);
 
