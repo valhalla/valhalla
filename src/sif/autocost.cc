@@ -33,10 +33,8 @@ constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
-
-constexpr float kDefaultUseHills                = 0.5f;   // Factor between 0 and 1
-constexpr float kDefaultUsePrimary              = 0.5f;   // Factor between 0 and 1
-constexpr uint32_t kDefaultTopSpeed             = 45;     // Kilometers per hour
+constexpr float kDefaultUseHighways             = 1.0f;   // Factor between 0 and 1
+constexpr float kDefaultUseTolls                = 0.5f;   // Factor between 0 and 1
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -79,19 +77,28 @@ constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeco
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
+constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 
-// Weighting factor based on road class. These apply penalties to higher class
-// roads. These penalties are modulated by the useroads factor - further
-// avoiding higher class roads for those with low propensity for using roads.
-constexpr float kRoadClassFactor[] = {
+constexpr float kHighwayFactor[] = {
     1.0f,   // Motorway
-    0.4f,   // Trunk
-    0.2f,   // Primary
-    0.1f,   // Secondary
-    0.05f,  // Tertiary
-    0.05f,  // Unclassified
+    0.5f,   // Trunk
+    0.0f,   // Primary
+    0.0f,   // Secondary
+    0.0f,   // Tertiary
+    0.0f,   // Unclassified
     0.0f,   // Residential
-    0.5f    // Service, other
+    0.0f    // Service, other
+};
+
+constexpr float kSurfaceFactor[] = {
+    0.0f,   // kPavedSmooth
+    0.0f,   // kPaved
+    0.0f,   // kPaveRough
+    0.1f,   // kCompacted
+    0.2f,   // kDirt
+    0.5f,   // kGravel
+    1.0f    // kPath
 };
 
 }
@@ -278,7 +285,12 @@ class AutoCost : public DynamicCost {
   float alley_penalty_;             // Penalty (seconds) to use a alley
   float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
-  float use_ferry_;
+  float use_ferry_;                 // Preference to use ferries. Is a value from 0 to 1
+  float use_highways_;              // Preference to use highways. Is a value from 0 to 1
+  float highway_factor_;            // Factor applied when road is a motorway or trunk
+  float use_tolls_;                 // Preference to use tolls. Is a value from 0 to 1
+  float toll_factor_;               // Factor applied when road has a toll
+  float surface_factor_;            // How much the surface factors are applied.
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -293,17 +305,24 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
                              1.4f, 1.6f, 1.9f, 2.2f,
                              2.5f, 2.8f, 3.1f, 3.5f } {
 
+  surface_factor_ = 0.5f;
   // Get the vehicle type - enter as string and convert to enum
   std::string type = pt.get<std::string>("type", "car");
   if (type == "motorcycle") {
     type_ = VehicleType::kMotorcycle;
+    surface_factor_ = 1.0f;
   } else if (type == "bus") {
     type_ = VehicleType::kBus;
   } else if (type == "tractor_trailer") {
     type_ = VehicleType::kTractorTrailer;
+  } else if (type == "four_wheel_drive") {
+    type_ = VehicleType::kFourWheelDrive;
+    surface_factor_ = 0.0f;
   } else {
     type_ = VehicleType::kCar;
   }
+
+
 
   maneuver_penalty_ = kManeuverPenaltyRange(
     pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty)
@@ -357,6 +376,23 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     ferry_penalty_ = 0.0f;
     ferry_factor_  = 1.5f - use_ferry_;
   }
+
+  use_highways_ = kUseHighwaysRange(
+    pt.get<float>("use_highways", kDefaultUseHighways)
+  );
+
+  highway_factor_ = 1.0f - use_highways_;
+
+  use_tolls_ = kUseTollsRange(
+    pt.get<float>("use_tolls", kDefaultUseTolls)
+  );
+
+  // Tool factor of 0 would indicate no adjustment to weighting for toll roads.
+  // use_tolls = 1 would reduce weighting slightly (a negative delta) while
+  // use_tolls = 0 would penalize (positive delta to weighting factor).
+  toll_factor_ = use_tolls_ < 0.5f ?
+      (2.0f - 4 * use_tolls_) :     // ranges from 2 to 0
+      (0.5f - use_tolls_) * 0.03f;  // ranges from 0 to -0.15
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
@@ -440,6 +476,12 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
   float factor = (edge->use() == Use::kFerry) ?
         ferry_factor_ : density_factor_[edge->density()];
+
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+  if (edge->toll()) {
+    factor += toll_factor_;
+  }
 
   float sec = (edge->length() * speedfactor_[edge->speed()]);
   return Cost(sec * factor, sec);
