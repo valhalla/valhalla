@@ -273,13 +273,15 @@ public:
                const vs::EdgeLabel& pred,
                const vb::GraphTile*& tile,
                const vb::GraphId& edgeid,
-               const uint32_t current_time) const;
+               const uint64_t current_time,
+               const uint32_t tz_index) const;
   bool AllowedReverse(const vb::DirectedEdge* edge,
                       const vs::EdgeLabel& pred,
                       const vb::DirectedEdge* opp_edge,
                       const vb::GraphTile*& tile,
                       const vb::GraphId& edgeid,
-                      const uint32_t current_time) const;
+                      const uint64_t current_time,
+                      const uint32_t tz_index) const;
   bool Allowed(const vb::NodeInfo* node) const;
   vs::Cost EdgeCost(const vb::DirectedEdge* edge) const;
   const vs::EdgeFilter GetEdgeFilter() const;
@@ -302,6 +304,7 @@ bool DistanceOnlyCost::Allowed(const vb::DirectedEdge* edge,
                                const vs::EdgeLabel& pred,
                                const vb::GraphTile*&,
                                const vb::GraphId&,
+                               const uint64_t,
                                const uint32_t) const {
   // Do not allow U-turns/back-tracking
   return allow_edge_pred(edge) &&
@@ -313,6 +316,7 @@ bool DistanceOnlyCost::AllowedReverse(const vb::DirectedEdge* edge,
                                       const vb::DirectedEdge* opp_edge,
                                       const vb::GraphTile*& tile,
                                       const vb::GraphId& edgeid,
+                                      const uint64_t,
                                       const uint32_t) const {
   // Do not allow U-turns/back-tracking
   return allow_edge_pred(edge) &&

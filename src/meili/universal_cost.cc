@@ -19,7 +19,8 @@ class UniversalCost : public sif::DynamicCost
                const sif::EdgeLabel& pred,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& edgeid,
-               const uint32_t current_time) const override {
+               const uint64_t current_time,
+               const uint32_t tz_index) const override {
     // Disable transit lines
     if (edge->IsTransitLine()) {
       return false;
@@ -36,7 +37,8 @@ class UniversalCost : public sif::DynamicCost
                       const baldr::DirectedEdge* opp_edge,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
-                      const uint32_t current_time) const override {
+                      const uint64_t current_time,
+                      const uint32_t tz_index) const override {
     return true;
   }
 

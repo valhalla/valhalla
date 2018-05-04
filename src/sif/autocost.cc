@@ -144,13 +144,15 @@ class AutoCost : public DynamicCost {
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const;
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -167,6 +169,7 @@ class AutoCost : public DynamicCost {
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -174,7 +177,8 @@ class AutoCost : public DynamicCost {
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const;
+                              const uint64_t current_time,
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -426,9 +430,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const {
-  // TODO - obtain and check the access restrictions.
-
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
@@ -441,6 +444,22 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
+
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), kAutoAccess);
+    for (const auto& restriction : restrictions ) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            IsRestricted(restriction.value(), current_time, tz_index) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            !IsRestricted(restriction.value(), current_time, tz_index) : false;
+      }
+    }
+  }
   return true;
 }
 
@@ -451,9 +470,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& opp_edgeid,
-               const uint32_t current_time) const {
-  // TODO - obtain and check the access restrictions.
-
+               const uint64_t current_time,
+               const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
@@ -463,6 +481,22 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
         IsUserAvoidEdge(opp_edgeid) ||
        (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
+  }
+
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(opp_edgeid.id(), kAutoAccess);
+    for (const auto& restriction : restrictions ) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            IsRestricted(restriction.value(), current_time, tz_index) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            !IsRestricted(restriction.value(), current_time, tz_index) : false;
+      }
+    }
   }
   return true;
 }
@@ -727,13 +761,15 @@ class BusCost : public AutoCost {
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const;
+                       const uint32_t current_time,
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -750,6 +786,7 @@ class BusCost : public AutoCost {
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -757,7 +794,8 @@ class BusCost : public AutoCost {
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const;
+                              const uint32_t current_time,
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -821,7 +859,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
-                      const uint32_t current_time) const {
+                      const uint32_t current_time,
+                      const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -834,6 +873,21 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), kBusAccess);
+    for (const auto& restriction : restrictions ) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            IsRestricted(restriction.value(), current_time, tz_index) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            !IsRestricted(restriction.value(), current_time, tz_index) : false;
+      }
+    }
+  }
   return true;
 }
 
@@ -844,7 +898,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& opp_edgeid,
-                             const uint32_t current_time) const {
+                             const uint32_t current_time,
+                             const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -857,6 +912,23 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
+
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(opp_edgeid.id(), kBusAccess);
+    for (const auto& restriction : restrictions ) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            IsRestricted(restriction.value(), current_time, tz_index) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            !IsRestricted(restriction.value(), current_time, tz_index) : false;
+      }
+    }
+  }
+
   return true;
 }
 
@@ -902,13 +974,15 @@ class HOVCost : public AutoCost {
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const;
+                       const uint32_t current_time,
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -925,13 +999,15 @@ class HOVCost : public AutoCost {
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const;
+                              const uint32_t current_time,
+                              const uint32_t tz_index) const;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
@@ -1001,7 +1077,8 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
-                      const uint32_t current_time) const {
+                      const uint32_t current_time,
+                      const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1016,6 +1093,21 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
        (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), kHOVAccess);
+    for (const auto& restriction : restrictions ) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            IsRestricted(restriction.value(), current_time, tz_index) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            !IsRestricted(restriction.value(), current_time, tz_index) : false;
+      }
+    }
+  }
   return true;
 }
 
@@ -1026,7 +1118,8 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& opp_edgeid,
-                             const uint32_t current_time) const {
+                             const uint32_t current_time,
+                             const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1038,6 +1131,22 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
         IsUserAvoidEdge(opp_edgeid) ||
         (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
+  }
+
+  if (edge->access_restriction()) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(opp_edgeid.id(), kHOVAccess);
+    for (const auto& restriction : restrictions ) {
+      if (restriction.type() == AccessType::kTimedAllowed) {
+        //allowed at this range or allowed all the time
+        return (current_time && restriction.value()) ?
+            IsRestricted(restriction.value(), current_time, tz_index) : true;
+      } else if (restriction.type() == AccessType::kTimedDenied) {
+        //not allowed at this range or restricted all the time
+        return (current_time && restriction.value()) ?
+            !IsRestricted(restriction.value(), current_time, tz_index) : false;
+      }
+    }
   }
   return true;
 }

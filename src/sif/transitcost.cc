@@ -104,13 +104,15 @@ class TransitCost : public DynamicCost {
    * @param  tile           Current tile.
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch).
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const;
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -126,6 +128,7 @@ class TransitCost : public DynamicCost {
    * @param  tile           Current tile.
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch).
+   * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -133,7 +136,8 @@ class TransitCost : public DynamicCost {
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const;
+                              const uint64_t current_time,
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -537,7 +541,8 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
                           const baldr::GraphTile*& tile,
                           const baldr::GraphId& edgeid,
-                          const uint32_t current_time) const {
+                          const uint64_t current_time,
+                          const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
@@ -564,9 +569,8 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& opp_edgeid,
-               const uint32_t current_time) const {
-  // TODO - obtain and check the access restrictions.
-
+               const uint64_t current_time,
+               const uint32_t tz_index) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;

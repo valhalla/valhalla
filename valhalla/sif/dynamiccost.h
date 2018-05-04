@@ -8,6 +8,8 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/timedomain.h>
 
 #include <memory>
 #include <unordered_set>
@@ -128,13 +130,15 @@ class DynamicCost {
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const = 0;
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -151,6 +155,7 @@ class DynamicCost {
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -158,7 +163,8 @@ class DynamicCost {
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const = 0;
+                              const uint64_t current_time,
+                              const uint32_t tz_index) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -230,6 +236,7 @@ class DynamicCost {
    * @param  forward     Forward search or reverse search.
    * @param  current_time Current time (seconds since epoch). A value of 0
    *                     indicates the route is not time dependent.
+   * @param  tz_index    timezone index for the node
    * @return Returns true it there is a complex restriction onto this edge
    *         that matches the mode and the predecessor list for the current
    *         path matches a complex restriction.
@@ -241,7 +248,8 @@ class DynamicCost {
                   const baldr::GraphTile*& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
-                  const uint32_t current_time = 0) const {
+                  const uint64_t current_time = 0,
+                  const uint32_t tz_index = 0) const {
     // Lambda to get the next predecessor EdgeLabel (that is not a transition)
     auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
       // Get the next predecessor - make sure it is valid. Continue to get
@@ -293,11 +301,38 @@ class DynamicCost {
         // Check against the start/end of the complex restriction
         if (match && (( forward && next_pred->edgeid() == cr->from_graphid()) ||
                       (!forward && next_pred->edgeid() == cr->to_graphid()))) {
+
+          if (current_time && cr->has_dt()) {
+            if (baldr::DateTime::is_restricted(cr->dt_type(), cr->begin_hrs(), cr->begin_mins(),
+                                               cr->end_hrs(), cr->end_mins(), cr->dow(),
+                                               cr->begin_week(), cr->begin_month(), cr->begin_day_dow(),
+                                               cr->end_week(), cr->end_month(), cr->end_day_dow(),
+                                               current_time, baldr::DateTime::get_tz_db().from_index(tz_index)))
+              return true;
+            continue;
+          }
           return true;
         }
       }
     }
     return false;
+  }
+
+ /**
+  * Test if an edge should be restricted due to a date time access restriction.
+  * @param  restriction  date and time info for the restriction
+  * @param  current_time Current time (seconds since epoch). A value of 0
+  *                      indicates the route is not time dependent.
+  * @param  tz_index     timezone index for the node
+  */
+  bool IsRestricted(const uint64_t restriction, const uint64_t current_time, const uint32_t tz_index) const {
+
+    baldr::TimeDomain td(restriction);
+    return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(),
+                                          td.end_hrs(), td.end_mins(), td.dow(),
+                                          td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                                          td.end_week(), td.end_month(), td.end_day_dow(),
+                                          current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
   /**
