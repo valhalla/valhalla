@@ -235,14 +235,20 @@ struct graph_callback : public OSMPBF::Callback {
 
     // Throw away driveways if include_driveways_ is false
     Tags::const_iterator driveways;
-    if (!include_driveways_ && (driveways = results.find("use")) != results.end() && 
-         static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
+    try {
+      if (!include_driveways_ && (driveways = results.find("use")) != results.end() &&
+           static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
 
-      // only private driveways.
-      Tags::const_iterator priv;
-      if ((priv = results.find("private")) != results.end() &&
-          priv->second == "true")
-      return;
+        // only private driveways.
+        Tags::const_iterator priv;
+        if ((priv = results.find("private")) != results.end() &&
+            priv->second == "true")
+        return;
+      }
+    } catch (const std::invalid_argument& arg) {
+      LOG_INFO("invalid_argument thrown for way id: " + std::to_string(osmid));
+    } catch (const std::out_of_range& oor) {
+      LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
     }
 
     // Check for ways that loop back on themselves (simple check) and add
