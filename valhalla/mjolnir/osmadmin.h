@@ -2,11 +2,11 @@
 #define VALHALLA_MJOLNIR_OSMADMIN_H
 
 #include <cstdint>
-#include <string>
 #include <list>
+#include <string>
 
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/pointll.h>
 
 using namespace valhalla::midgard;
 
@@ -134,10 +134,9 @@ struct OSMAdmin {
 
   // drive on right side of the road in this country?
   bool drive_on_right_;
-
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_OSMADMIN_H
+#endif // VALHALLA_MJOLNIR_OSMADMIN_H

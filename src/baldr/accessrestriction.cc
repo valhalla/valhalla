@@ -1,5 +1,5 @@
-#include <string.h>
 #include "baldr/accessrestriction.h"
+#include <string.h>
 
 namespace valhalla {
 namespace baldr {
@@ -9,11 +9,8 @@ AccessRestriction::AccessRestriction(const uint32_t edgeindex,
                                      const AccessType type,
                                      const uint32_t modes,
                                      const uint64_t value)
-  : edgeindex_(edgeindex),
-    type_(static_cast<uint32_t>(type)),
-    modes_(modes),
-    spare_(0),
-    value_(value) {
+    : edgeindex_(edgeindex), type_(static_cast<uint32_t>(type)), modes_(modes), spare_(0),
+      value_(value) {
 }
 
 // Get the internal edge Id.
@@ -47,9 +44,9 @@ void AccessRestriction::set_value(const uint64_t v) {
 }
 
 // operator < - for sorting. Sort by route Id.
-bool AccessRestriction::operator < (const AccessRestriction& other) const {
+bool AccessRestriction::operator<(const AccessRestriction& other) const {
   return edgeindex() < other.edgeindex();
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

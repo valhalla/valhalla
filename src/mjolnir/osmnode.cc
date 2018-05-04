@@ -113,6 +113,5 @@ const NodeAttributes& OSMNode::attributes() const {
   return attributes_;
 }
 
-
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

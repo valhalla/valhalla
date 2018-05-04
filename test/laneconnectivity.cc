@@ -12,8 +12,7 @@ namespace {
 void TryTestLaneConnectivity(const std::string& lanes) {
   std::string ls = LaneConnectivityLanes(lanes).to_string();
   if (ls != lanes) {
-    throw std::runtime_error(
-        "Incorrect lane mask for " + lanes + " (" + ls + ")");
+    throw std::runtime_error("Incorrect lane mask for " + lanes + " (" + ls + ")");
   }
 }
 
@@ -22,8 +21,7 @@ void TryTestLaneConnectivityShouldFail(const std::string& lanes) {
     LaneConnectivityLanes(lanes).to_string();
     throw std::runtime_error("Expected error for " + lanes);
   } catch (std::invalid_argument&) {
-  } catch (std::out_of_range&) {
-  }
+  } catch (std::out_of_range&) {}
 }
 
 void TestLaneConnectivity() {
@@ -40,11 +38,12 @@ void TestLaneConnectivity() {
 
 void TestSizeOf() {
   if (sizeof(LaneConnectivity) != 24) {
-    throw std::runtime_error("Invalid sizeof(LaneConnectivity): " + std::to_string(sizeof(LaneConnectivity)));
+    throw std::runtime_error("Invalid sizeof(LaneConnectivity): " +
+                             std::to_string(sizeof(LaneConnectivity)));
   }
 }
 
-}
+} // namespace
 
 int main(void) {
   test::suite suite("laneconnectivity");

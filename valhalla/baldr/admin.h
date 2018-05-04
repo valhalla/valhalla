@@ -17,8 +17,7 @@ constexpr size_t kCountryIso = 2;
  * in the GraphTile text list and the offset is stored within the admin.
  */
 class Admin {
- public:
-
+public:
   /**
    * Constructor.
    * @param  country_offset  Offset to country name in text records.
@@ -26,8 +25,10 @@ class Admin {
    * @param  country_iso     Country ISO string.
    * @param  state_iso       State ISO string.
    */
-  Admin(const uint32_t country_offset, const uint32_t state_offset,
-        const std::string& country_iso, const std::string& state_iso);
+  Admin(const uint32_t country_offset,
+        const uint32_t state_offset,
+        const std::string& country_iso,
+        const std::string& state_iso);
 
   /**
    * Get the country ISO3166-1 code.
@@ -56,15 +57,15 @@ class Admin {
    */
   uint32_t country_offset() const;
 
- protected:
-  uint32_t country_offset_;         // country name offset
-  uint32_t state_offset_;           // state name offset
-  char country_iso_[kCountryIso];   // country ISO3166-1
-  char state_iso_[kStateIso];       // state ISO3166-2
-  char spare_[3];                   // spare for byte alignment
+protected:
+  uint32_t country_offset_;       // country name offset
+  uint32_t state_offset_;         // state name offset
+  char country_iso_[kCountryIso]; // country ISO3166-1
+  char state_iso_[kStateIso];     // state ISO3166-2
+  char spare_[3];                 // spare for byte alignment
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_ADMIN_H_
+#endif // VALHALLA_BALDR_ADMIN_H_

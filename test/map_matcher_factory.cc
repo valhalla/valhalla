@@ -1,23 +1,20 @@
 // -*- mode: c++ -*-
 #include <string>
 
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "sif/costconstants.h"
 
-#include "test.h"
-#include "meili/universal_cost.h"
 #include "meili/map_matcher_factory.h"
-
+#include "meili/universal_cost.h"
+#include "test.h"
 
 using namespace valhalla;
 
 using ptree = boost::property_tree::ptree;
 
-
-void TestMapMatcherFactory()
-{
+void TestMapMatcherFactory() {
   ptree root;
   boost::property_tree::read_json("test/valhalla.json", root);
 
@@ -112,22 +109,16 @@ void TestMapMatcherFactory()
     {
       meili::MapMatcherFactory factory(root);
 
-      test::assert_throw<std::runtime_error>([&factory]() {
-          factory.Create("invalid_mode");
-        }, "invalid_mode shuold be invalid mode");
+      test::assert_throw<std::runtime_error>([&factory]() { factory.Create("invalid_mode"); },
+                                             "invalid_mode shuold be invalid mode");
 
-
-      test::assert_throw<std::runtime_error>([&factory]() {
-          factory.Create("");
-        }, "empty string should be invalid mode");
-
+      test::assert_throw<std::runtime_error>([&factory]() { factory.Create(""); },
+                                             "empty string should be invalid mode");
     }
   }
 }
 
-
-void TestMapMatcher()
-{
+void TestMapMatcher() {
   ptree root;
   boost::property_tree::read_json("test/valhalla.json", root);
 
@@ -147,9 +138,7 @@ void TestMapMatcher()
   delete pedestrian_matcher;
 }
 
-
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
   test::suite suite("map matching");
 
   suite.test(TEST_CASE(TestMapMatcherFactory));

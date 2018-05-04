@@ -15,7 +15,7 @@ namespace sif {
  */
 cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config);
 
-}
-}
+} // namespace sif
+} // namespace valhalla
 
-#endif  // VALHALLA_SIF_PEDESTRIANCOST_H_
+#endif // VALHALLA_SIF_PEDESTRIANCOST_H_

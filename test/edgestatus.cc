@@ -1,7 +1,7 @@
 #include "test.h"
 
-#include "config.h"
 #include "baldr/graphtile.h"
+#include "config.h"
 #include "thor/edgestatus.h"
 
 using namespace std;
@@ -10,8 +10,7 @@ using namespace valhalla::thor;
 
 namespace {
 
-void TryGet(const EdgeStatus& edgestatus, const GraphId& edgeid,
-               const EdgeSet expected) {
+void TryGet(const EdgeStatus& edgestatus, const GraphId& edgeid, const EdgeSet expected) {
   EdgeStatusInfo r = edgestatus.Get(edgeid);
   if (r.set() != expected)
     throw runtime_error("EdgeStatus get test failed");
@@ -19,7 +18,6 @@ void TryGet(const EdgeStatus& edgestatus, const GraphId& edgeid,
 
 struct test_tile : public GraphTile {
   using GraphTile::header_;
-
 };
 
 void TestStatus() {
@@ -68,7 +66,7 @@ void TestStatus() {
   TryGet(edgestatus, GraphId(555, 3, 1), EdgeSet::kUnreached);
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("edgestatus");

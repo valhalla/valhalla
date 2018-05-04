@@ -1,27 +1,27 @@
 #include <cstdint>
+#include <fstream>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <vector>
 #include <unordered_map>
-#include <iostream>
-#include <fstream>
+#include <vector>
 
 #include "config.h"
 
-#include <ostream>
-#include <boost/program_options.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <ostream>
 
-#include "midgard/logging.h"
-#include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
-#include "baldr/tilehierarchy.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/logging.h"
 
 namespace bpo = boost::program_options;
 
@@ -32,60 +32,58 @@ boost::filesystem::path config_file_path;
 std::vector<std::string> input_files;
 
 const uint32_t kMinutesPerHour = 60;
-const uint32_t kMinutesPerDay  = 24 * kMinutesPerHour;
+const uint32_t kMinutesPerDay = 24 * kMinutesPerHour;
 
 /**
  * Structure to define speed along a way
  */
 struct WaySpeed {
-  uint8_t forward;   // Speed in forward direction (kph)
-  uint8_t reverse;   // Speed in reverse direction (kph)
+  uint8_t forward; // Speed in forward direction (kph)
+  uint8_t reverse; // Speed in reverse direction (kph)
 };
 
 // Structure holding an edge Id and forward flag
 struct EdgeAndDirection {
-  bool    forward;
+  bool forward;
   GraphId edgeid;
 
-  EdgeAndDirection(const bool f, const GraphId& id)
-      : forward(f),
-        edgeid(id) {
+  EdgeAndDirection(const bool f, const GraphId& id) : forward(f), edgeid(id) {
   }
 };
 
-bool ParseArguments(int argc, char *argv[]) {
+bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-    "valhalla_build_speeds " VERSION "\n"
-    "\n"
-    " Usage: valhalla_build_speeds [options]\n"
-    "\n"
-    "valhalla_build_speeds is a program that reads speed data associated to OSM ways "
-    "and creates a speed table on the local level tiles."
-    "\n"
-    "\n");
+      "valhalla_build_speeds " VERSION "\n"
+      "\n"
+      " Usage: valhalla_build_speeds [options]\n"
+      "\n"
+      "valhalla_build_speeds is a program that reads speed data associated to OSM ways "
+      "and creates a speed table on the local level tiles."
+      "\n"
+      "\n");
 
-  options.add_options()
-      ("help,h", "Print this help message.")
-      ("version,v", "Print the version of this software.")
-      ("config,c",
-        boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
-        "Path to the json configuration file.")
+  options.add_options()("help,h", "Print this help message.")(
+      "version,v", "Print the version of this software.")(
+      "config,c",
+      boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+      "Path to the json configuration file.")
       // positional arguments
-      ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
+      ("input_files",
+       boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
 
   bpo::positional_options_description pos_options;
   pos_options.add("input_files", 16);
 
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+               vm);
     bpo::notify(vm);
 
-  } catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what()
-      << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-      << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return false;
   }
 
@@ -108,8 +106,8 @@ bool ParseArguments(int argc, char *argv[]) {
   return false;
 }
 
-std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ReadWaysToEdges(
-              const std::string& way_edges_file) {
+std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
+ReadWaysToEdges(const std::string& way_edges_file) {
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_to_edges;
 
   // Open the file
@@ -151,9 +149,9 @@ std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ReadWaysToEdges(
  */
 std::unordered_map<uint64_t, WaySpeed> ReadWaySpeeds(const std::string& tile_dir) {
   std::string way_speeds_file = tile_dir + "/traffic/way_speeds.csv";
-LOG_INFO("Read Way Speeds file: " + way_speeds_file);
+  LOG_INFO("Read Way Speeds file: " + way_speeds_file);
   std::unordered_map<uint64_t, WaySpeed> way_speeds;
-//  way_speeds.reserve(200000);
+  //  way_speeds.reserve(200000);
 
   std::ifstream ways_file;
   ways_file.open(way_speeds_file);
@@ -216,8 +214,7 @@ int main(int argc, char** argv) {
   // Stats
   uint32_t n = 0;
   for (auto way : way_speeds) {
-    if (way_speeds[way.first].forward > 0 ||
-        way_speeds[way.first].reverse > 0) {
+    if (way_speeds[way.first].forward > 0 || way_speeds[way.first].reverse > 0) {
       n++;
     }
   }
@@ -241,7 +238,7 @@ int main(int argc, char** argv) {
   uint32_t stored_speeds = 0;
   GraphReader reader(pt.get_child("mjolnir"));
   for (auto way : way_speeds) {
-    uint32_t wayid   = way.first;
+    uint32_t wayid = way.first;
     const WaySpeed& speeds = way.second;
     uint8_t fwd = speeds.forward;
     uint8_t rev = speeds.reverse;
@@ -259,8 +256,8 @@ int main(int argc, char** argv) {
           // Create a speed list for this tile
           const GraphTile* tile = reader.GetGraphTile(edgeid.Tile_Base());
           if (tile == nullptr) {
-            LOG_ERROR("No tile found for " + std::to_string(edgeid.Tile_Base().tileid()) +
-                              "," + std::to_string(edgeid.Tile_Base().level()));
+            LOG_ERROR("No tile found for " + std::to_string(edgeid.Tile_Base().tileid()) + "," +
+                      std::to_string(edgeid.Tile_Base().level()));
           } else {
             std::vector<uint8_t> speeds(tile->header()->directededgecount());
             tile_speeds[tileid] = speeds;
@@ -287,8 +284,8 @@ int main(int argc, char** argv) {
         n++;
       }
     }
-    LOG_INFO("TileID: " + std::to_string(tile_itr.first) + " speeds = " +
-             std::to_string(n) + " out of " + std::to_string(tile_itr.second.size()));
+    LOG_INFO("TileID: " + std::to_string(tile_itr.first) + " speeds = " + std::to_string(n) +
+             " out of " + std::to_string(tile_itr.second.size()));
 
     std::ofstream outfile;
     std::string fname = tile_dir + "/traffic/" + std::to_string(tile_itr.first) + ".spd";
@@ -299,4 +296,3 @@ int main(int argc, char** argv) {
 
   return EXIT_SUCCESS;
 }
-

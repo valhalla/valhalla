@@ -2,14 +2,14 @@
 #define VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 
 #include <cstdint>
-#include <vector>
+#include <iostream>
 #include <list>
 #include <string>
-#include <iostream>
+#include <vector>
 
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
-#include <valhalla/baldr/graphid.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -20,9 +20,9 @@ namespace mjolnir {
 /**
  * Edge information. Not required in shortest path algorithm and is
  * common among the 2 directions.
-  */
+ */
 class EdgeInfoBuilder {
- public:
+public:
   /**
    * Set the OSM way Id.
    * @param wayid  Way Id.
@@ -46,8 +46,7 @@ class EdgeInfoBuilder {
    * @param  shape  List of lat,lng points describing the
    *                shape of the edge.
    */
-  template <class shape_container_t>
-  void set_shape(const shape_container_t& shape);
+  template <class shape_container_t> void set_shape(const shape_container_t& shape);
 
   /**
    * Set the encoded shape string.
@@ -68,8 +67,7 @@ class EdgeInfoBuilder {
    */
   std::size_t SizeOf() const;
 
- protected:
-
+protected:
   // OSM Way Id
   uint64_t wayid_;
 
@@ -82,7 +80,7 @@ class EdgeInfoBuilder {
   friend std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& id);
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
+#endif // VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_

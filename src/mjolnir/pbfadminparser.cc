@@ -1,17 +1,17 @@
 
 #include "mjolnir/pbfadminparser.h"
-#include "mjolnir/util.h"
-#include "mjolnir/osmpbfparser.h"
-#include "mjolnir/osmadmin.h"
-#include "mjolnir/luatagtransform.h"
-#include "mjolnir/idtable.h"
 #include "admin_lua_proc.h"
+#include "mjolnir/idtable.h"
+#include "mjolnir/luatagtransform.h"
+#include "mjolnir/osmadmin.h"
+#include "mjolnir/osmpbfparser.h"
+#include "mjolnir/util.h"
 
-#include <future>
-#include <utility>
-#include <thread>
-#include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
+#include <future>
+#include <thread>
+#include <utility>
 
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
@@ -30,16 +30,19 @@ const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
 };
 
 struct admin_callback : public OSMPBF::Callback {
- public:
+public:
   admin_callback() = delete;
   admin_callback(const admin_callback&) = delete;
-  virtual ~admin_callback() {}
+  virtual ~admin_callback() {
+  }
   // Construct PBFAdminParser based on properties file and input PBF extract
   admin_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-  : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata), lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)) {
+      : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata),
+        lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)) {
   }
 
-  virtual void node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) override {
+  virtual void
+  node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
     // Check if it is in the list of nodes used by ways
     if (!shape_.get(osmid)) {
       return;
@@ -47,14 +50,16 @@ struct admin_callback : public OSMPBF::Callback {
 
     ++osmdata_.osm_node_count;
 
-    osmdata_.shape_map.emplace(osmid, PointLL(lng,lat));
+    osmdata_.shape_map.emplace(osmid, PointLL(lng, lat));
 
     if (osmdata_.shape_map.size() % 500000 == 0) {
       LOG_INFO("Processed " + std::to_string(osmdata_.shape_map.size()) + " nodes on ways");
     }
   }
 
-  virtual void way_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) override {
+  virtual void way_callback(const uint64_t osmid,
+                            const OSMPBF::Tags& tags,
+                            const std::vector<uint64_t>& nodes) override {
 
     // Check if it is in the list of ways used by relations
     if (!members_.get(osmid)) {
@@ -67,10 +72,12 @@ struct admin_callback : public OSMPBF::Callback {
       shape_.set(node);
     }
 
-    osmdata_.way_map.emplace(osmid,std::list<uint64_t>(nodes.begin(), nodes.end()));
+    osmdata_.way_map.emplace(osmid, std::list<uint64_t>(nodes.begin(), nodes.end()));
   }
 
-  virtual void relation_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) override {
+  virtual void relation_callback(const uint64_t osmid,
+                                 const OSMPBF::Tags& tags,
+                                 const std::vector<OSMPBF::Member>& members) override {
     // Get tags
     auto results = lua_.Transform(OSMType::kRelation, tags);
     if (results.size() == 0)
@@ -125,12 +132,13 @@ struct admin_callback : public OSMPBF::Callback {
   OSMData& osmdata_;
 };
 
-}
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
 
-OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::vector<std::string>& input_files) {
+OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
+                              const std::vector<std::string>& input_files) {
   // Create OSM data. Set the member pointer so that the parsing callback
   // methods can use it.
   OSMData osmdata{};
@@ -138,8 +146,8 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
 
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
-  //hold open all the files so that if something else (like diff application)
-  //needs to mess with them we wont have troubles with inodes changing underneath us
+  // hold open all the files so that if something else (like diff application)
+  // needs to mess with them we wont have troubles with inodes changing underneath us
   std::list<std::ifstream> file_handles;
   for (const auto& input_file : input_files) {
     file_handles.emplace_back(input_file, std::ios::binary);
@@ -150,25 +158,36 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   // Parse each input file for relations
   LOG_INFO("Parsing relations...");
   for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS | OSMPBF::Interest::CHANGESETS), callback);
-  LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) + " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");
+    OSMPBF::Parser::parse(
+        file_handle,
+        static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS | OSMPBF::Interest::CHANGESETS),
+        callback);
+  LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) +
+           " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");
 
   // Parse the ways.
   LOG_INFO("Parsing ways...");
   for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS | OSMPBF::Interest::CHANGESETS), callback);
-  LOG_INFO("Finished with " + std::to_string(osmdata.way_map.size()) + " ways comprised of " + std::to_string(osmdata.node_count) + " nodes");
+    OSMPBF::Parser::parse(
+        file_handle,
+        static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS | OSMPBF::Interest::CHANGESETS),
+        callback);
+  LOG_INFO("Finished with " + std::to_string(osmdata.way_map.size()) + " ways comprised of " +
+           std::to_string(osmdata.node_count) + " nodes");
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
   LOG_INFO("Parsing nodes...");
   for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES | OSMPBF::Interest::CHANGESETS), callback);
+    OSMPBF::Parser::parse(
+        file_handle,
+        static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES | OSMPBF::Interest::CHANGESETS),
+        callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes");
 
   // Return OSM data
   return osmdata;
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

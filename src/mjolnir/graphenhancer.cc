@@ -1,30 +1,40 @@
-#include "mjolnir/admin.h"
 #include "mjolnir/graphenhancer.h"
-#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/admin.h"
 #include "mjolnir/countryaccess.h"
+#include "mjolnir/graphtilebuilder.h"
 
-#include <memory>
-#include <future>
-#include <thread>
-#include <mutex>
-#include <vector>
-#include <list>
-#include <set>
-#include <queue>
-#include <unordered_set>
-#include <unordered_map>
 #include <cinttypes>
+#include <future>
 #include <limits>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <set>
 #include <stdexcept>
+#include <thread>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
-#include <sqlite3.h>
 #include <boost/filesystem/operations.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
+#include <boost/geometry/multi/geometries/multi_polygon.hpp>
+#include <sqlite3.h>
 
+#include "baldr/admininfo.h"
+#include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_factory.h"
+#include "baldr/streetnames_us.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
@@ -32,16 +42,6 @@
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
-#include "baldr/tilehierarchy.h"
-#include "baldr/graphid.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
-#include "baldr/streetnames.h"
-#include "baldr/streetnames_factory.h"
-#include "baldr/streetnames_us.h"
-#include "baldr/admininfo.h"
-#include "baldr/datetime.h"
 #include "mjolnir/osmaccess.h"
 
 using namespace valhalla::midgard;
@@ -64,15 +64,14 @@ constexpr uint32_t kUnreachableIterations = 20;
 constexpr uint32_t kMaxNoThruTries = 256;
 
 // Radius (km) to use for density
-constexpr float kDensityRadius  = 2.0f;
+constexpr float kDensityRadius = 2.0f;
 constexpr float kDensityRadius2 = kDensityRadius * kDensityRadius;
-constexpr float kDensityLatDeg  = (kDensityRadius * kMetersPerKm) /
-                                      kMetersPerDegreeLat;
+constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDegreeLat;
 
 // Factors used to adjust speed assignments
 constexpr float kTurnChannelFactor = 1.25f;
 constexpr float kRampDensityFactor = 0.8f;
-constexpr float kRampFactor        = 0.85f;
+constexpr float kRampFactor = 0.85f;
 
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
@@ -86,7 +85,7 @@ struct enhancer_stats {
   uint32_t pencilucount;
   uint32_t density_counts[16];
   void operator()(const enhancer_stats& other) {
-    if(max_density < other.max_density)
+    if (max_density < other.max_density)
       max_density = other.max_density;
     unreachable += other.unreachable;
     not_thru += other.not_thru;
@@ -108,7 +107,8 @@ struct enhancer_stats {
  * @param  density       Relative road density.
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density,
+void UpdateSpeed(DirectedEdge& directededge,
+                 const uint32_t density,
                  const uint32_t* urban_rc_speed) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
@@ -117,17 +117,14 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density,
     Use use = directededge.use();
     if (use == Use::kTurnChannel) {
       speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
-    } else if ((use == Use::kRamp)
-        && (directededge.speed_type() != SpeedType::kTagged)) {
+    } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
       // If no tagged speed set ramp speed to slightly lower than speed
       // for roads of this classification
       RoadClass rc = directededge.classification();
-      if ((rc == RoadClass::kMotorway)
-          || (rc == RoadClass::kTrunk)
-          || (rc == RoadClass::kPrimary)) {
-        speed = (density > 8) ?
-            static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f) :
-            static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
+      if ((rc == RoadClass::kMotorway) || (rc == RoadClass::kTrunk) ||
+          (rc == RoadClass::kPrimary)) {
+        speed = (density > 8) ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
+                              : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
       } else {
         speed = static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
       }
@@ -146,7 +143,7 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density,
     if (directededge.surface() >= Surface::kPavedRough) {
       uint32_t speed = directededge.speed();
       if (speed >= 50) {
-         directededge.set_speed(speed - 10);
+        directededge.set_speed(speed - 10);
       } else if (speed > 15) {
         directededge.set_speed(speed - 5);
       }
@@ -155,7 +152,7 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density,
     // Set speed on ferries. Base the speed on the length - assumes
     // that longer lengths generally use a faster ferry boat
     if (directededge.use() == Use::kRailFerry) {
-      directededge.set_speed(65);   // 40 MPH
+      directededge.set_speed(65); // 40 MPH
       return;
     } else if (directededge.use() == Use::kFerry) {
       // if duration flag is set do nothing with speed - currently set
@@ -164,11 +161,11 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density,
       if (directededge.leaves_tile()) {
         return;
       } else if (directededge.length() < 2000) {
-        directededge.set_speed(10);  // 5 knots
+        directededge.set_speed(10); // 5 knots
       } else if (directededge.length() < 8000) {
-        directededge.set_speed(20);  // 10 knots
+        directededge.set_speed(20); // 10 knots
       } else {
-        directededge.set_speed(30);  // 15 knots
+        directededge.set_speed(30); // 15 knots
       }
       return;
     }
@@ -197,18 +194,17 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density,
  * @param  directededge  Directed edge to test.
  * @return  Returns true if the edge is found to be unreachable.
  */
-bool IsUnreachable(GraphReader& reader, std::mutex& lock,
-                   DirectedEdge& directededge) {
+bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdge& directededge) {
   // Only check driveable edges. If already on a higher class road consider
   // the edge reachable
   if (!(directededge.forwardaccess() & kAutoAccess) ||
-       directededge.classification() < RoadClass::kTertiary) {
+      directededge.classification() < RoadClass::kTertiary) {
     return false;
   }
 
   // Add the end node to the expand list
-  std::unordered_set<GraphId> visitedset;  // Set of visited nodes
-  std::unordered_set<GraphId> expandset;   // Set of nodes to expand
+  std::unordered_set<GraphId> visitedset; // Set of visited nodes
+  std::unordered_set<GraphId> expandset;  // Set of nodes to expand
   expandset.insert(directededge.endnode());
 
   // Expand until we either find a tertiary or higher classification,
@@ -256,12 +252,13 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock,
 
 // Test if this is a "not thru" edge. These are edges that enter a region that
 // has no exit other than the edge entering the region
-bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
+bool IsNotThruEdge(GraphReader& reader,
+                   std::mutex& lock,
                    const GraphId& startnode,
                    DirectedEdge& directededge) {
   // Add the end node to the expand list
-  std::unordered_set<GraphId> visitedset;  // Set of visited nodes
-  std::unordered_set<GraphId> expandset;   // Set of nodes to expand
+  std::unordered_set<GraphId> visitedset; // Set of visited nodes
+  std::unordered_set<GraphId> expandset;  // Set of nodes to expand
   expandset.insert(directededge.endnode());
 
   // Expand edges until exhausted, the maximum number of expansions occur,
@@ -304,8 +301,7 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
 
       // Return false if we get back to the start node or hit an
       // edge with higher classification
-      if (diredge->classification() < RoadClass::kTertiary ||
-          diredge->endnode() == startnode) {
+      if (diredge->classification() < RoadClass::kTertiary || diredge->endnode() == startnode) {
         return false;
       }
 
@@ -320,7 +316,8 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
 
 // Test if the edge is internal to an intersection.
 bool IsIntersectionInternal(const GraphTile* start_tile,
-                            GraphReader& reader, std::mutex& lock,
+                            GraphReader& reader,
+                            std::mutex& lock,
                             const GraphId& startnode,
                             NodeInfo& startnodeinfo,
                             DirectedEdge& directededge,
@@ -329,8 +326,8 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
   // Also they must be a road use (not footway, cycleway, etc.).
   // TODO - consider whether alleys, cul-de-sacs, and other road uses
   // are candidates to be marked as internal intersection edges.
-  if (directededge.length() > kMaxInternalLength ||
-      directededge.roundabout() || directededge.use() > Use::kCycleway) {
+  if (directededge.length() > kMaxInternalLength || directededge.roundabout() ||
+      directededge.use() > Use::kCycleway) {
     return false;
   }
 
@@ -355,8 +352,7 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
   for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
     // Skip the candidate directed edge and any non-road edges. Skip any edges
     // that are not driveable inbound.
-    if (i == idx || diredge->use() != Use::kRoad ||
-        !(diredge->reverseaccess() & kAutoAccess)) {
+    if (i == idx || diredge->use() != Use::kRoad || !(diredge->reverseaccess() & kAutoAccess)) {
       continue;
     }
 
@@ -394,8 +390,8 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
       auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
       if (!diredge->forward())
         std::reverse(shape.begin(), shape.end());
-      uint32_t hdg = std::round(PointLL::HeadingAlongPolyline(shape,
-           GetOffsetForHeading(diredge->classification(), diredge->use())));
+      uint32_t hdg = std::round(PointLL::HeadingAlongPolyline(
+          shape, GetOffsetForHeading(diredge->classification(), diredge->use())));
 
       // Convert to inbound heading
       heading = ((hdg + 180) % 360);
@@ -421,8 +417,8 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
     auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
     if (!diredge->forward())
       std::reverse(shape.begin(), shape.end());
-    uint32_t to_heading = std::round(PointLL::HeadingAlongPolyline(shape,
-         GetOffsetForHeading(diredge->classification(), diredge->use())));
+    uint32_t to_heading = std::round(PointLL::HeadingAlongPolyline(
+        shape, GetOffsetForHeading(diredge->classification(), diredge->use())));
 
     // Store outgoing turn type for any driveable edges
     uint32_t turndegree = GetTurnDegree(heading, to_heading);
@@ -469,8 +465,11 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
  * @return  Returns the relative road density (0-15) - higher values are
  *          more dense.
  */
-uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
-                    enhancer_stats& stats, const Tiles<PointLL>& tiles,
+uint32_t GetDensity(GraphReader& reader,
+                    std::mutex& lock,
+                    const PointLL& ll,
+                    enhancer_stats& stats,
+                    const Tiles<PointLL>& tiles,
                     uint8_t local_level) {
   // Radius is in km - turn into meters
   float rm = kDensityRadius * kMetersPerKm;
@@ -497,7 +496,7 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
     if (!newtile || newtile->header()->nodecount() == 0)
       continue;
     const auto start_node = newtile->node(0);
-    const auto end_node   = start_node + newtile->header()->nodecount();
+    const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
       // Check if within radius
       if (approximator.DistanceSquared(node->latlng()) < mr2) {
@@ -505,10 +504,8 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
           // Exclude non-roads (parking, walkways, ferries, etc.)
-          if (directededge->use() == Use::kRoad ||
-              directededge->use() == Use::kRamp ||
-              directededge->use() == Use::kTurnChannel ||
-              directededge->use() == Use::kAlley ||
+          if (directededge->use() == Use::kRoad || directededge->use() == Use::kRamp ||
+              directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
               directededge->use() == Use::kEmergencyAccess) {
             roadlengths += directededge->length();
           }
@@ -548,7 +545,8 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
  *
  * @return true if edge transition is a pencil point u-turn, false otherwise.
  */
-bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
+bool IsPencilPointUturn(uint32_t from_index,
+                        uint32_t to_index,
                         const DirectedEdge& directededge,
                         const DirectedEdge* edges,
                         const NodeInfo& node_info,
@@ -562,16 +560,15 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
     // and no intersecting left road exists
     // and the from and to edges have a common base name
     // then it is a left pencil point u-turn
-    if ((((turn_degree > 179) && (turn_degree < 211))
-        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
-            && (turn_degree > 179) && (turn_degree < 226)))
-      && (!(edges[from_index].forwardaccess() & kAutoAccess)
-          && (edges[from_index].reverseaccess() & kAutoAccess))
-      && ((directededge.forwardaccess() & kAutoAccess)
-          && !(directededge.reverseaccess() & kAutoAccess))
-      && directededge.edge_to_right(from_index)
-      && !directededge.edge_to_left(from_index)
-      && node_info.name_consistency(from_index, to_index)) {
+    if ((((turn_degree > 179) && (turn_degree < 211)) ||
+         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
+          (turn_degree > 179) && (turn_degree < 226))) &&
+        (!(edges[from_index].forwardaccess() & kAutoAccess) &&
+         (edges[from_index].reverseaccess() & kAutoAccess)) &&
+        ((directededge.forwardaccess() & kAutoAccess) &&
+         !(directededge.reverseaccess() & kAutoAccess)) &&
+        directededge.edge_to_right(from_index) && !directededge.edge_to_left(from_index) &&
+        node_info.name_consistency(from_index, to_index)) {
       return true;
     }
 
@@ -585,19 +582,17 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
     // and an intersecting left road exists
     // and the from and to edges have a common base name
     // then it is a right pencil point u-turn
-    if ((((turn_degree > 149) && (turn_degree < 181))
-        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
-            && (turn_degree > 134) && (turn_degree < 181)))
-      && (!(edges[from_index].forwardaccess() & kAutoAccess)
-          && (edges[from_index].reverseaccess() & kAutoAccess))
-      && ((directededge.forwardaccess() & kAutoAccess)
-          && !(directededge.reverseaccess() & kAutoAccess))
-      && !directededge.edge_to_right(from_index)
-      && directededge.edge_to_left(from_index)
-      && node_info.name_consistency(from_index, to_index)) {
+    if ((((turn_degree > 149) && (turn_degree < 181)) ||
+         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
+          (turn_degree > 134) && (turn_degree < 181))) &&
+        (!(edges[from_index].forwardaccess() & kAutoAccess) &&
+         (edges[from_index].reverseaccess() & kAutoAccess)) &&
+        ((directededge.forwardaccess() & kAutoAccess) &&
+         !(directededge.reverseaccess() & kAutoAccess)) &&
+        !directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index) &&
+        node_info.name_consistency(from_index, to_index)) {
       return true;
     }
-
   }
 
   return false;
@@ -615,11 +610,12 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
  *
  * @return true if edge transition is a cycleway u-turn, false otherwise.
  */
-bool IsCyclewayUturn(uint32_t from_index, uint32_t to_index,
-                        const DirectedEdge& directededge,
-                        const DirectedEdge* edges,
-                        const NodeInfo& node_info,
-                        uint32_t turn_degree) {
+bool IsCyclewayUturn(uint32_t from_index,
+                     uint32_t to_index,
+                     const DirectedEdge& directededge,
+                     const DirectedEdge* edges,
+                     const NodeInfo& node_info,
+                     uint32_t turn_degree) {
 
   // we only deal with Cycleways
   if (edges[from_index].use() != Use::kCycleway || edges[to_index].use() != Use::kCycleway)
@@ -632,11 +628,10 @@ bool IsCyclewayUturn(uint32_t from_index, uint32_t to_index,
     // and an intersecting right road exists
     // and an intersecting left road exists
     // then it is a cycleway u-turn
-    if ((((turn_degree > 179) && (turn_degree < 211))
-        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
-            && (turn_degree > 179) && (turn_degree < 226)))
-      && directededge.edge_to_right(from_index)
-      && directededge.edge_to_left(from_index)) {
+    if ((((turn_degree > 179) && (turn_degree < 211)) ||
+         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
+          (turn_degree > 179) && (turn_degree < 226))) &&
+        directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index)) {
       return true;
     }
   }
@@ -647,11 +642,10 @@ bool IsCyclewayUturn(uint32_t from_index, uint32_t to_index,
     // and an intersecting right road exists
     // and an intersecting left road exists
     // then it is a right cyclewayt u-turn
-    if ((((turn_degree > 149) && (turn_degree < 181))
-        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
-            && (turn_degree > 134) && (turn_degree < 181)))
-      && directededge.edge_to_right(from_index)
-      && directededge.edge_to_left(from_index)) {
+    if ((((turn_degree > 149) && (turn_degree < 181)) ||
+         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
+          (turn_degree > 134) && (turn_degree < 181))) &&
+        directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index)) {
       return true;
     }
   }
@@ -687,10 +681,13 @@ bool IsCyclewayUturn(uint32_t from_index, uint32_t to_index,
  * @return  Returns stop impact ranging from 0 (no likely impact) to
  *          7 - large impact.
  */
-uint32_t GetStopImpact(uint32_t from, uint32_t to,
+uint32_t GetStopImpact(uint32_t from,
+                       uint32_t to,
                        const DirectedEdge& directededge,
-                       const DirectedEdge* edges, const uint32_t count,
-                       const NodeInfo& nodeinfo, uint32_t turn_degree,
+                       const DirectedEdge* edges,
+                       const uint32_t count,
+                       const NodeInfo& nodeinfo,
+                       uint32_t turn_degree,
                        enhancer_stats& stats) {
 
   ///////////////////////////////////////////////////////////////////////////
@@ -702,15 +699,13 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   }
 
   // Handle Pencil point u-turn
-  if (IsPencilPointUturn(from, to, directededge, edges, nodeinfo,
-                         turn_degree)) {
+  if (IsPencilPointUturn(from, to, directededge, edges, nodeinfo, turn_degree)) {
     stats.pencilucount++;
     return 7;
   }
 
   // Handle Cycleway u-turn
-  if (IsCyclewayUturn(from, to, directededge, edges, nodeinfo,
-                      turn_degree)) {
+  if (IsCyclewayUturn(from, to, directededge, edges, nodeinfo, turn_degree)) {
     return 7;
   }
 
@@ -729,7 +724,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     if (i != to && i != from && (edge->reverseaccess() & kAutoAccess)) {
       if (edge->roundabout()) {
         uint32_t c = static_cast<uint32_t>(edge->classification()) + 2;
-        if (c  < static_cast<uint32_t>(bestrc)) {
+        if (c < static_cast<uint32_t>(bestrc)) {
           bestrc = static_cast<RoadClass>(c);
         }
       } else if (edge->classification() < bestrc) {
@@ -752,8 +747,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // High stop impact from a turn channel onto a turn channel unless
   // the other edge a low class road (walkways often intersect
   // turn channels)
-  if (edges[from].use() == Use::kTurnChannel &&
-      edges[to].use() == Use::kTurnChannel  &&
+  if (edges[from].use() == Use::kTurnChannel && edges[to].use() == Use::kTurnChannel &&
       bestrc < RoadClass::kUnclassified) {
     return 7;
   }
@@ -768,11 +762,9 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved. Exception - sharp turns.
   Turn::Type turn_type = Turn::GetType(turn_degree);
-  bool is_sharp = (turn_type == Turn::Type::kSharpLeft ||
-                   turn_type == Turn::Type::kSharpRight ||
+  bool is_sharp = (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kSharpRight ||
                    turn_type == Turn::Type::kReverse);
-  bool is_slight = (turn_type == Turn::Type::kStraight ||
-                    turn_type == Turn::Type::kSlightRight ||
+  bool is_slight = (turn_type == Turn::Type::kStraight || turn_type == Turn::Type::kSlightRight ||
                     turn_type == Turn::Type::kSlightLeft);
   if (allramps) {
     if (is_sharp) {
@@ -826,20 +818,22 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
  * @param  headings       Headings of directed edges.
  */
 void ProcessEdgeTransitions(const uint32_t idx,
-          DirectedEdge& directededge, const DirectedEdge* edges,
-          const uint32_t ntrans, uint32_t* headings,
-          const NodeInfo& nodeinfo,
-          enhancer_stats& stats) {
+                            DirectedEdge& directededge,
+                            const DirectedEdge* edges,
+                            const uint32_t ntrans,
+                            uint32_t* headings,
+                            const NodeInfo& nodeinfo,
+                            enhancer_stats& stats) {
   for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
     // it is incoming
     uint32_t from_heading = ((headings[i] + 180) % 360);
-    uint32_t turn_degree  = GetTurnDegree(from_heading, headings[idx]);
+    uint32_t turn_degree = GetTurnDegree(from_heading, headings[idx]);
     directededge.set_turntype(i, Turn::GetType(turn_degree));
 
     // Set the edge_to_left and edge_to_right flags
     uint32_t right_count = 0;
-    uint32_t left_count  = 0;
+    uint32_t left_count = 0;
     if (ntrans > 2) {
       for (uint32_t j = 0; j < ntrans; ++j) {
         // Skip the from and to edges
@@ -871,11 +865,10 @@ void ProcessEdgeTransitions(const uint32_t idx,
     // Get stop impact
     // NOTE: stop impact uses the right and left edges so this logic must
     // come after the right/left edge logic
-    uint32_t stopimpact = GetStopImpact(i, idx, directededge, edges, ntrans,
-                                        nodeinfo, turn_degree, stats);
+    uint32_t stopimpact =
+        GetStopImpact(i, idx, directededge, edges, ntrans, nodeinfo, turn_degree, stats);
     directededge.set_stopimpact(i, stopimpact);
   }
-
 }
 
 /**
@@ -894,11 +887,9 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
 
   // Get the directed edges and return when the end node matches
   // the specified node and length matches
-  const DirectedEdge* directededge = endnodetile->directededge(
-              nodeinfo->edge_index());
+  const DirectedEdge* directededge = endnodetile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    if (directededge->endnode() == startnode &&
-        directededge->length() == edge.length()) {
+    if (directededge->endnode() == startnode && directededge->length() == edge.length()) {
       return i;
     }
   }
@@ -908,10 +899,8 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
 bool ConsistentNames(const std::string& country_code,
                      const std::vector<std::string>& names1,
                      const std::vector<std::string>& names2) {
-  std::unique_ptr<StreetNames> street_names1 = StreetNamesFactory::Create(
-      country_code, names1);
-  std::unique_ptr<StreetNames> street_names2 = StreetNamesFactory::Create(
-      country_code, names2);
+  std::unique_ptr<StreetNames> street_names1 = StreetNamesFactory::Create(country_code, names1);
+  std::unique_ptr<StreetNames> street_names2 = StreetNamesFactory::Create(country_code, names2);
 
   // Flag as consistent names when neither has names!
   if (street_names1->empty() && street_names2->empty()) {
@@ -927,21 +916,23 @@ bool ConsistentNames(const std::string& country_code,
 void enhance(const boost::property_tree::ptree& pt,
              const std::string& access_file,
              const boost::property_tree::ptree& hierarchy_properties,
-             std::queue<GraphId>& tilequeue, std::mutex& lock,
+             std::queue<GraphId>& tilequeue,
+             std::mutex& lock,
              std::promise<enhancer_stats>& result) {
 
-  auto less_than = [](const OSMAccess& a, const OSMAccess& b){return a.way_id() < b.way_id();};
+  auto less_than = [](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); };
   sequence<OSMAccess> access_tags(access_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
-  sqlite3 *admin_db_handle = database ? GetDBHandle(*database) : nullptr;
+  sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
   if (!database)
     LOG_WARN("Admin db not found.  Not saving admin information.");
   else if (!admin_db_handle)
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
 
-  std::unordered_map<std::string, std::vector<int>> country_access = GetCountryAccess(admin_db_handle);
+  std::unordered_map<std::string, std::vector<int>> country_access =
+      GetCountryAccess(admin_db_handle);
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -955,7 +946,7 @@ void enhance(const boost::property_tree::ptree& pt,
   // 25 MPH - tertiary
   // 20 MPH - residential and unclassified
   // 15 MPH - service/other
-  uint32_t urban_rc_speed[] = { 89, 73, 57, 49, 40, 35, 35, 25 };
+  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 35, 25};
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
@@ -993,7 +984,7 @@ void enhance(const boost::property_tree::ptree& pt,
     uint32_t ar_before = tilebuilder.header()->access_restriction_count();
     std::vector<AccessRestriction> access_restrictions;
 
-    uint32_t id  = tile_id.tileid();
+    uint32_t id = tile_id.tileid();
     // First pass - update links (set use to ramp or turn channel) and
     // set opposing local index.
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
@@ -1001,9 +992,8 @@ void enhance(const boost::property_tree::ptree& pt,
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
-      for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
-        DirectedEdge& directededge =
-            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+      for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
+        DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         // Get the tile at the end node
         const GraphTile* endnodetile = nullptr;
@@ -1024,8 +1014,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Set the opposing index on the local level
-        directededge.set_opp_local_idx(
-               GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+        directededge.set_opp_local_idx(GetOpposingEdgeIndex(endnodetile, startnode, directededge));
       }
     }
 
@@ -1035,8 +1024,7 @@ void enhance(const boost::property_tree::ptree& pt,
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       // Get relative road density and local density
-      uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(),
-                                    stats, tiles, local_level);
+      uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), stats, tiles, local_level);
       nodeinfo.set_density(density);
 
       uint32_t admin_index = nodeinfo.admin_index();
@@ -1044,7 +1032,8 @@ void enhance(const boost::property_tree::ptree& pt,
       std::string country_code = "";
       if (admin_index != 0)
         country_code = tilebuilder.admins_builder(admin_index).country_iso();
-      else stats.no_country_found++;
+      else
+        stats.no_country_found++;
 
       // Get headings of the edges - set in NodeInfo. Set driveability info
       // on the node as well.
@@ -1056,18 +1045,14 @@ void enhance(const boost::property_tree::ptree& pt,
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
       for (uint32_t j = 0; j < ntrans; j++) {
-        DirectedEdge& directededge =
-            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+        DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
         auto shape = e_offset.shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
-        heading[j] = std::round(
-            PointLL::HeadingAlongPolyline(
-                shape,
-                GetOffsetForHeading(directededge.classification(),
-                                    directededge.use())));
+        heading[j] = std::round(PointLL::HeadingAlongPolyline(
+            shape, GetOffsetForHeading(directededge.classification(), directededge.use())));
 
         // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
         // same heading - should one be "adjusted" so the relative direction
@@ -1077,11 +1062,11 @@ void enhance(const boost::property_tree::ptree& pt,
         // Set traversability for autos
         Traversability traversability;
         if (directededge.forwardaccess() & kAutoAccess) {
-          traversability = (directededge.reverseaccess() & kAutoAccess) ?
-              Traversability::kBoth : Traversability::kForward;
+          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBoth
+                                                                        : Traversability::kForward;
         } else {
-          traversability = (directededge.reverseaccess() & kAutoAccess) ?
-              Traversability::kBackward : Traversability::kNone;
+          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBackward
+                                                                        : Traversability::kNone;
         }
         nodeinfo.set_local_driveability(j, traversability);
       }
@@ -1089,9 +1074,8 @@ void enhance(const boost::property_tree::ptree& pt,
       // Go through directed edges and "enhance" directed edge attributes
       uint32_t driveable_count = 0;
       const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
-      for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
-        DirectedEdge& directededge =
-            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+      for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
+        DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
         std::string end_node_code = "";
@@ -1124,50 +1108,54 @@ void enhance(const boost::property_tree::ptree& pt,
           if (admin_index != 0 && country_iterator != country_access.end() &&
               directededge.use() != Use::kFerry &&
               (directededge.classification() <= RoadClass::kPrimary ||
-                  directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
-                  directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
-                  directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
+               directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
+               directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
+               directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
 
             std::vector<int> access = country_access.at(country_code);
             // leaves tile flag indicates that we have an access record for this edge.
             // leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {
-              sequence<OSMAccess>::iterator access_it = access_tags.find(target,less_than);
+              sequence<OSMAccess>::iterator access_it = access_tags.find(target, less_than);
               if (access_it != access_tags.end())
                 SetCountryAccess(directededge, access, access_it);
-              else LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
-            } else SetCountryAccess(directededge, access, target);
-          // motorroad default.  Only applies to RC <= kPrimary and has no country override.
-          // We just use the defaults which is no bicycles, mopeds and no pedestrians.
-          // leaves tile flag indicates that we have an access record for this edge.
-          // leaves tile flag is updated later to the real value.
-          }else if (country_iterator == country_access.end() &&
-              directededge.classification() <= RoadClass::kPrimary &&
-              directededge.leaves_tile()) {
+              else
+                LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
+            } else
+              SetCountryAccess(directededge, access, target);
+            // motorroad default.  Only applies to RC <= kPrimary and has no country override.
+            // We just use the defaults which is no bicycles, mopeds and no pedestrians.
+            // leaves tile flag indicates that we have an access record for this edge.
+            // leaves tile flag is updated later to the real value.
+          } else if (country_iterator == country_access.end() &&
+                     directededge.classification() <= RoadClass::kPrimary &&
+                     directededge.leaves_tile()) {
 
             OSMAccess target{e_offset.wayid()};
-            sequence<OSMAccess>::iterator access_it = access_tags.find(target,less_than);
+            sequence<OSMAccess>::iterator access_it = access_tags.find(target, less_than);
             if (access_it != access_tags.end()) {
               const OSMAccess& access = access_it;
               if (access.motorroad_tag()) {
                 uint32_t forward = directededge.forwardaccess();
                 uint32_t reverse = directededge.reverseaccess();
 
-                bool f_oneway_vehicle = (((forward & kAutoAccess) && !(reverse & kAutoAccess)) ||
-                    ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
-                    ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
-                    ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
-                    ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
-                    ((forward & kMopedAccess) && !(reverse & kMopedAccess)) ||
-                    ((forward & kBusAccess) && !(reverse & kBusAccess)));
+                bool f_oneway_vehicle =
+                    (((forward & kAutoAccess) && !(reverse & kAutoAccess)) ||
+                     ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
+                     ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
+                     ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
+                     ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
+                     ((forward & kMopedAccess) && !(reverse & kMopedAccess)) ||
+                     ((forward & kBusAccess) && !(reverse & kBusAccess)));
 
-                bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
-                    (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
-                    (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
-                    (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
-                    (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
-                    (!(forward & kMopedAccess) && (reverse & kMopedAccess)) ||
-                    (!(forward & kBusAccess) && (reverse & kBusAccess)));
+                bool r_oneway_vehicle =
+                    ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
+                     (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
+                     (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
+                     (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
+                     (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
+                     (!(forward & kMopedAccess) && (reverse & kMopedAccess)) ||
+                     (!(forward & kBusAccess) && (reverse & kBusAccess)));
 
                 bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
                 bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));
@@ -1175,11 +1163,13 @@ void enhance(const boost::property_tree::ptree& pt,
                 // motorroad defaults remove ped, wheelchair, moped, and bike access.
                 // still check for user tags via access.
                 forward = GetAccess(forward,
-                          (forward & ~(kPedestrianAccess | kWheelchairAccess | kMopedAccess | kBicycleAccess)),
-                          r_oneway_vehicle, r_oneway_bicycle, access);
+                                    (forward & ~(kPedestrianAccess | kWheelchairAccess |
+                                                 kMopedAccess | kBicycleAccess)),
+                                    r_oneway_vehicle, r_oneway_bicycle, access);
                 reverse = GetAccess(reverse,
-                          (reverse & ~(kPedestrianAccess | kWheelchairAccess | kMopedAccess | kBicycleAccess)),
-                          f_oneway_vehicle, f_oneway_bicycle, access);
+                                    (reverse & ~(kPedestrianAccess | kWheelchairAccess |
+                                                 kMopedAccess | kBicycleAccess)),
+                                    f_oneway_vehicle, f_oneway_bicycle, access);
 
                 directededge.set_forwardaccess(forward);
                 directededge.set_reverseaccess(reverse);
@@ -1207,10 +1197,9 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Name continuity - set in NodeInfo.
         for (uint32_t k = (j + 1); k < ntrans; k++) {
-          DirectedEdge& fromedge = tilebuilder.directededge(
-                    nodeinfo.edge_index() + k);
+          DirectedEdge& fromedge = tilebuilder.directededge(nodeinfo.edge_index() + k);
           if (ConsistentNames(country_code, names,
-              tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
+                              tilebuilder.edgeinfo(fromedge.edgeinfo_offset()).GetNames())) {
             nodeinfo.set_name_consistency(j, k, true);
           }
         }
@@ -1218,8 +1207,7 @@ void enhance(const boost::property_tree::ptree& pt,
         // Set edge transitions and unreachable, not_thru, and internal
         // intersection flags.
         if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, &heading[0],
-                                 nodeinfo, stats);
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, &heading[0], nodeinfo, stats);
         }
 
         // Set unreachable (driving) flag
@@ -1239,22 +1227,22 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
-        if (IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo,
-                                    directededge, j)) {
+        if (IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
+                                   j)) {
           directededge.set_internal(true);
           stats.internalcount++;
         }
 
         // Update access restrictions (update weight units)
         if (directededge.access_restriction()) {
-          auto restrictions = tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j, kAllAccess);
+          auto restrictions =
+              tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j, kAllAccess);
 
           // Convert any US weight values from short ton (U.S. customary)
           // to metric and add to the tile's access restriction list
           if (country_code == "US" || country_code == "MM" || country_code == "LR") {
             for (auto& res : restrictions) {
-              if (res.type() == AccessType::kMaxWeight ||
-                  res.type() == AccessType::kMaxAxleLoad) {
+              if (res.type() == AccessType::kMaxWeight || res.type() == AccessType::kMaxAxleLoad) {
                 res.set_value(std::round(res.value() * kTonsShortToMetric));
               }
             }
@@ -1267,8 +1255,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
       // Set the intersection type to false or dead-end (do not override
       // gates or toll-booths).
-      if (nodeinfo.type() != NodeType::kGate &&
-          nodeinfo.type() != NodeType::kTollBooth) {
+      if (nodeinfo.type() != NodeType::kGate && nodeinfo.type() != NodeType::kTollBooth) {
         if (driveable_count == 1) {
           nodeinfo.set_intersection(IntersectionType::kDeadEnd);
         } else if (nodeinfo.edge_count() == 2) {
@@ -1279,9 +1266,11 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Replace access restrictions
     if (ar_before != access_restrictions.size()) {
-      LOG_ERROR("Mismatch in access restriction count before " + std::to_string(ar_before) + ""
-          " and after " + std::to_string(access_restrictions.size()) +
-          " tileid = " + std::to_string(tile_id.tileid()));
+      LOG_ERROR("Mismatch in access restriction count before " + std::to_string(ar_before) +
+                ""
+                " and after " +
+                std::to_string(access_restrictions.size()) +
+                " tileid = " + std::to_string(tile_id.tileid()));
     }
     tilebuilder.AddAccessRestrictions(access_restrictions);
 
@@ -1298,29 +1287,28 @@ void enhance(const boost::property_tree::ptree& pt,
   }
 
   if (admin_db_handle)
-    sqlite3_close (admin_db_handle);
+    sqlite3_close(admin_db_handle);
 
   // Send back the statistics
   result.set_value(stats);
 }
 
-}
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
 
 // Enhance the local level of the graph
-void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
-                            const std::string& access_file) {
+void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt, const std::string& access_file) {
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread> > threads(
-    std::max(static_cast<unsigned int>(1),
-    pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
+  std::vector<std::shared_ptr<std::thread>> threads(
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
 
   // A place to hold the results of those threads, exceptions or otherwise
-  std::list<std::promise<enhancer_stats> > results;
+  std::list<std::promise<enhancer_stats>> results;
 
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tempqueue;
@@ -1340,11 +1328,9 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(enhance,
-                 std::cref(hierarchy_properties),
-                 std::cref(access_file),
-                 std::ref(hierarchy_properties), std::ref(tilequeue),
-                 std::ref(lock), std::ref(results.back())));
+    thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(access_file),
+                                 std::ref(hierarchy_properties), std::ref(tilequeue),
+                                 std::ref(lock), std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
@@ -1359,12 +1345,12 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
     try {
       auto thread_stats = result.get_future().get();
       stats(thread_stats);
-    }
-    catch(std::exception& e) {
-      //TODO: throw further up the chain?
+    } catch (std::exception& e) {
+      // TODO: throw further up the chain?
     }
   }
-  LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " + std::to_string(stats.unreachable));
+  LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " +
+           std::to_string(stats.unreachable));
   LOG_DEBUG("not_thru = " + std::to_string(stats.not_thru));
   LOG_DEBUG("no country found = " + std::to_string(stats.no_country_found));
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
@@ -1376,5 +1362,5 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   }
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

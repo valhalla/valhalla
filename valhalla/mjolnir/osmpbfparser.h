@@ -31,8 +31,8 @@
 #ifndef __OSMPBFPARSER__
 #define __OSMPBFPARSER__
 
-#include <string>
 #include <fstream>
+#include <string>
 
 // this describes the low-level blob storage
 #include <valhalla/proto/fileformat.pb.h>
@@ -43,7 +43,14 @@
 namespace OSMPBF {
 
 // Which callbacks you want to be called
-enum Interest { NONE = 0x0, NODES = 0x01, WAYS = 0x02, RELATIONS = 0x04, CHANGESETS = 0x8, ALL = 0x15 };
+enum Interest {
+  NONE = 0x0,
+  NODES = 0x01,
+  WAYS = 0x02,
+  RELATIONS = 0x04,
+  CHANGESETS = 0x8,
+  ALL = 0x15
+};
 
 // Represents the key/values of an object
 using Tags = std::unordered_map<std::string, std::string>;
@@ -58,25 +65,28 @@ struct Member {
   Member(Member&& other);
 };
 
-//pure virtual interface for consumers to implement
+// pure virtual interface for consumers to implement
 struct Callback {
   virtual ~Callback(){};
-  virtual void node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) = 0;
-  virtual void way_callback(const uint64_t osmid, const Tags& tags, const std::vector<uint64_t>& nodes) = 0;
-  virtual void relation_callback(const uint64_t osmid, const Tags &tags, const std::vector<Member> &members) = 0;
+  virtual void
+  node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) = 0;
+  virtual void
+  way_callback(const uint64_t osmid, const Tags& tags, const std::vector<uint64_t>& nodes) = 0;
+  virtual void
+  relation_callback(const uint64_t osmid, const Tags& tags, const std::vector<Member>& members) = 0;
   virtual void changeset_callback(const uint64_t changeset_id) = 0;
 };
 
-//the parser used to get data out of the osmpbf file
+// the parser used to get data out of the osmpbf file
 class Parser {
- public:
+public:
   Parser() = delete;
-  //parse the pbf file for the things you are interested in
+  // parse the pbf file for the things you are interested in
   static void parse(std::ifstream& file, const Interest interest, Callback& callback);
-  //clean up protobuf library level memory, this will make protobuf unusable after its called
+  // clean up protobuf library level memory, this will make protobuf unusable after its called
   static void free();
 };
 
-}
+} // namespace OSMPBF
 
 #endif //__OSMPBFPARSER__

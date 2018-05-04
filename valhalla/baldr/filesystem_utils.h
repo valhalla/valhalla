@@ -11,8 +11,8 @@ constexpr char path_separator = L'\\';
 constexpr char path_separator = L'/';
 #endif
 
-}
-}
-}
+} // namespace filesystem
+} // namespace baldr
+} // namespace valhalla
 
 #endif /* VALHALLA_BALDR_FILESYSTEM_UTILS_H_ */

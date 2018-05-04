@@ -2,10 +2,10 @@
 #define VALHALLA_MIDGARD_POLYLINE2_H_
 
 #include <cstdint>
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/pointll.h>
 
 #include <tuple>
 
@@ -16,9 +16,8 @@ namespace midgard {
  * 2-D polyline. This is a template class that works with Point2
  * (Euclidean x,y) or PointLL (latitude,longitude).
  */
-template <class coord_t>
-class Polyline2 {
- public:
+template <class coord_t> class Polyline2 {
+public:
   Polyline2();
 
   /**
@@ -53,8 +52,7 @@ class Polyline2 {
    * @param   pts  Polyline vertices.
    * @return  Returns the length of the polyline.
    */
-  template <class container_t>
-  static float Length(const container_t& pts);
+  template <class container_t> static float Length(const container_t& pts);
 
   /**
    * Finds the closest point to the supplied point as well as the distance
@@ -90,8 +88,7 @@ class Polyline2 {
    * @param epsilon     the tolerance used in removing points
    *
    */
-  template <class container_t>
-  static void Generalize(container_t& polyline, float epsilon);
+  template <class container_t> static void Generalize(container_t& polyline, float epsilon);
 
   /**
    * Clip this polyline to the specified bounding box.
@@ -112,7 +109,7 @@ protected:
   std::vector<coord_t> pts_;
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_POLYLINE2_H_
+#endif // VALHALLA_MIDGARD_POLYLINE2_H_

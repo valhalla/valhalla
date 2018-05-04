@@ -1,42 +1,45 @@
-#include <cstdint>
-#include <memory>
-#include <future>
-#include <thread>
-#include <mutex>
-#include <vector>
-#include <list>
-#include <queue>
-#include <unordered_set>
-#include <unordered_map>
 #include <cinttypes>
+#include <cstdint>
+#include <future>
 #include <limits>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 #include "config.h"
 
-#include <sqlite3.h>
-#include <spatialite.h>
-#include <boost/program_options.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/optional.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
+#include <boost/geometry/multi/geometries/multi_polygon.hpp>
+#include <boost/optional.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
-#include "midgard/distanceapproximator.h"
-#include "midgard/pointll.h"
-#include "baldr/tilehierarchy.h"
-#include "baldr/graphid.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
+// sqlite must be included before spatialite
+#include <sqlite3.h>
+
+#include <spatialite.h>
+
 #include "baldr/admininfo.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/constants.h"
+#include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
+#include "midgard/pointll.h"
 #include "midgard/util.h"
 
 namespace bpo = boost::program_options;
@@ -50,9 +53,10 @@ typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
 boost::filesystem::path config_file_path;
 
-std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(
-            sqlite3* db_handle, std::unordered_map<uint32_t,
-            bool>& drive_on_right, const AABB2<PointLL>& aabb) {
+std::unordered_map<uint32_t, multi_polygon_type>
+GetAdminInfo(sqlite3* db_handle,
+             std::unordered_map<uint32_t, bool>& drive_on_right,
+             const AABB2<PointLL>& aabb) {
   // Polys (return)
   std::unordered_map<uint32_t, multi_polygon_type> polys;
 
@@ -70,13 +74,14 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(
   sql += std::to_string(aabb.maxy()) + "));";
 
   sqlite3_stmt* stmt = 0;
-  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(),
-                                    sql.length(), &stmt, 0);
+  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
   if (ret == SQLITE_OK) {
     uint32_t result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) {
       // state/prov not found, try to find country
-      sql = "SELECT rowid, name, "", iso_code, "", drive_on_right, st_astext(geom) from ";
+      sql = "SELECT rowid, name, "
+            ", iso_code, "
+            ", drive_on_right, st_astext(geom) from ";
       sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
       sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
       sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
@@ -104,16 +109,16 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(
       std::string state_iso = "";
 
       if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
-        country_name = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 1)));
+        country_name = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
 
       if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
-        state_name = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 2)));
+        state_name = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
 
       if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
-        country_iso = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 3)));
+        country_iso = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
 
       if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
-        state_iso = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 4)));
+        state_iso = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)));
 
       bool dor = true;
       if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
@@ -121,7 +126,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(
 
       std::string geom = "";
       if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT)
-        geom = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 6)));
+        geom = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6)));
 
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
@@ -141,7 +146,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(
 
 // Benchmark the admin DB access
 void Benchmark(const boost::property_tree::ptree& pt) {
-std::cout << "In Benchmark" << std::endl;
+  std::cout << "In Benchmark" << std::endl;
 
   uint32_t counts[128] = {};
 
@@ -154,8 +159,7 @@ std::cout << "In Benchmark" << std::endl;
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
     std::string sql;
-    uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle,
-                        SQLITE_OPEN_READONLY, nullptr);
+    uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
       LOG_ERROR("cannot open " + *database);
       sqlite3_close(db_handle);
@@ -178,8 +182,7 @@ std::cout << "In Benchmark" << std::endl;
       return;
     }
     LOG_INFO("SpatiaLite loaded as an extension");
-  }
-  else {
+  } else {
     LOG_ERROR("Admin db " + *database + " not found.");
     return;
   }
@@ -191,8 +194,8 @@ std::cout << "In Benchmark" << std::endl;
   auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
 
   // Iterate through the tiles and perform enhancements
-  std::unordered_map<uint32_t,multi_polygon_type> polys;
-  std::unordered_map<uint32_t,bool> drive_on_right;
+  std::unordered_map<uint32_t, multi_polygon_type> polys;
+  std::unordered_map<uint32_t, bool> drive_on_right;
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // Get the admin polys if there is data for tiles that exist
     GraphId tile_id(id, local_level, 0);
@@ -206,40 +209,37 @@ std::cout << "In Benchmark" << std::endl;
   }
   for (uint32_t i = 0; i < 128; i++) {
     if (counts[i] > 0) {
-      LOG_INFO("Tiles with " + std::to_string(i) + " admin polys: " +
-               std::to_string(counts[i]));
+      LOG_INFO("Tiles with " + std::to_string(i) + " admin polys: " + std::to_string(counts[i]));
     }
   }
 }
 
-bool ParseArguments(int argc, char *argv[]) {
+bool ParseArguments(int argc, char* argv[]) {
   std::vector<std::string> input_files;
-  bpo::options_description options(
-      "adminbenchmark " VERSION "\n"
-      "\n"
-      " Usage: adminbenchmark [options] \n"
-      "\n"
-      "adminbenchmark is a program to time the admin queries "
-      "\n"
-      "\n");
+  bpo::options_description options("adminbenchmark " VERSION "\n"
+                                   "\n"
+                                   " Usage: adminbenchmark [options] \n"
+                                   "\n"
+                                   "adminbenchmark is a program to time the admin queries "
+                                   "\n"
+                                   "\n");
 
-  options.add_options()
-              ("help,h", "Print this help message.")
-              ("version,v", "Print the version of this software.")
-              ("config,c",
-                  boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
-                  "Path to the json configuration file.");
+  options.add_options()("help,h", "Print this help message.")(
+      "version,v", "Print the version of this software.")(
+      "config,c",
+      boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+      "Path to the json configuration file.");
 
   bpo::positional_options_description pos_options;
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+               vm);
     bpo::notify(vm);
 
-  } catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what()
-              << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-              << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return false;
   }
 
@@ -266,14 +266,17 @@ int main(int argc, char** argv) {
   if (!ParseArguments(argc, argv))
     return EXIT_FAILURE;
 
-  //Ccheck what type of input we are getting
+  // Ccheck what type of input we are getting
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config_file_path.c_str(), pt);
 
   // Configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("mjolnir.logging");
+  boost::optional<boost::property_tree::ptree&> logging_subtree =
+      pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
+    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                   std::unordered_map<std::string, std::string>>(
+        logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 

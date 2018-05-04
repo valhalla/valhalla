@@ -1,66 +1,69 @@
-#include <string>
 #include "proto/route.pb.h"
+#include <string>
 
 #include "midgard/logging.h"
-#include "tyr/serializers.h"
 #include "test.h"
+#include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace tyr;
 
 namespace {
 
-void emptyJsonTest () {
+void emptyJsonTest() {
   const std::string empty = "{}";
   Route route;
   jsonToProtoRoute(empty, route);
   if (route.has_trip())
-    throw std::runtime_error("Proto Route has_trip() returned true even though there was nothing in the JSON.");
+    throw std::runtime_error(
+        "Proto Route has_trip() returned true even though there was nothing in the JSON.");
 }
 
-void emptyMessageTest () {
+void emptyMessageTest() {
   const std::string emptyTrip = R"({"trip":{}})";
   Route route;
-  jsonToProtoRoute (emptyTrip, route);
+  jsonToProtoRoute(emptyTrip, route);
   if (!route.has_trip()) {
     throw std::runtime_error("Proto Route does not have a trip object.");
   }
 
   Route::Trip trip = route.trip();
   if (trip.locations_size() != 0) {
-    throw std::runtime_error ("Proto trip locations size is: " + std::to_string(trip.locations_size()) + " | Expected size: 0");
+    throw std::runtime_error("Proto trip locations size is: " +
+                             std::to_string(trip.locations_size()) + " | Expected size: 0");
   }
 
   if (trip.has_summary()) {
-    throw std::runtime_error ("Proto trip has summary when there is none");
+    throw std::runtime_error("Proto trip has summary when there is none");
   }
 
   if (trip.legs_size() != 0) {
-    throw std::runtime_error ("Proto trip legs size is: " + std::to_string(trip.legs_size()) + " | Expected size: 0");
+    throw std::runtime_error("Proto trip legs size is: " + std::to_string(trip.legs_size()) +
+                             " | Expected size: 0");
   }
 
   if (trip.has_status_message()) {
-    throw std::runtime_error ("Proto trip has status_message when there is none");
+    throw std::runtime_error("Proto trip has status_message when there is none");
   }
 
   if (trip.has_status()) {
-    throw std::runtime_error ("Proto trip has status when there is none");
+    throw std::runtime_error("Proto trip has status when there is none");
   }
 
   if (trip.has_units()) {
-    throw std::runtime_error ("Proto trip has units when there is none");
+    throw std::runtime_error("Proto trip has units when there is none");
   }
 
   if (trip.has_language()) {
-    throw std::runtime_error ("Proto trip has language when there is none");
+    throw std::runtime_error("Proto trip has language when there is none");
   }
 
   if (trip.has_id()) {
-    throw std::runtime_error ("Proto trip has id when there is none");
+    throw std::runtime_error("Proto trip has id when there is none");
   }
 }
 
-void invalidFields () {
+void invalidFields() {
   const std::string invalidFields =
       R"({"trip":{
             "bad field 1":125,
@@ -73,47 +76,50 @@ void invalidFields () {
   jsonToProtoRoute(invalidFields, route);
 
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
   Route::Trip trip = route.trip();
 
   if (trip.locations_size() != 0) {
-    throw std::runtime_error ("Proto trip locations size is: " + std::to_string(trip.locations_size()) + " | Expected size: 0");
+    throw std::runtime_error("Proto trip locations size is: " +
+                             std::to_string(trip.locations_size()) + " | Expected size: 0");
   }
 
   if (trip.has_summary()) {
-    throw std::runtime_error ("Proto trip has summary when there is none");
+    throw std::runtime_error("Proto trip has summary when there is none");
   }
 
   if (trip.legs_size() != 0) {
-    throw std::runtime_error ("Proto trip legs size is: " + std::to_string(trip.legs_size()) + " | Expected size: 0");
+    throw std::runtime_error("Proto trip legs size is: " + std::to_string(trip.legs_size()) +
+                             " | Expected size: 0");
   }
 
   if (!trip.has_status_message()) {
-    throw std::runtime_error ("Proto trip is missing status message");
+    throw std::runtime_error("Proto trip is missing status message");
   }
   if (trip.status_message() != "abcdef") {
-    throw std::runtime_error ("Status message parsed incorrectly. status_message: " + trip.status_message() +
-        " | Expected: abcdef");
+    throw std::runtime_error("Status message parsed incorrectly. status_message: " +
+                             trip.status_message() + " | Expected: abcdef");
   }
 
   if (trip.has_status()) {
-    throw std::runtime_error ("Proto trip has status when there is none");
+    throw std::runtime_error("Proto trip has status when there is none");
   }
 
   if (!trip.has_units()) {
-    throw std::runtime_error ("Proto trip is missing units");
+    throw std::runtime_error("Proto trip is missing units");
   }
   if (trip.units() != "km") {
-    throw std::runtime_error ("Units parsed incorrectly. units: " + trip.units() + " | Expected: km");
+    throw std::runtime_error("Units parsed incorrectly. units: " + trip.units() +
+                             " | Expected: km");
   }
 
   if (trip.has_language()) {
-    throw std::runtime_error ("Proto trip has language when there is none");
+    throw std::runtime_error("Proto trip has language when there is none");
   }
 
   if (trip.has_id()) {
-    throw std::runtime_error ("Proto trip has id when there is none");
+    throw std::runtime_error("Proto trip has id when there is none");
   }
 }
 
@@ -130,23 +136,24 @@ void testTrip() {
           "status":1
         }})";
   Route route;
-  jsonToProtoRoute (tripTest, route);
+  jsonToProtoRoute(tripTest, route);
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
 
   Route::Trip trip = route.trip();
 
   if (trip.language() != "en-US") {
-    throw std::runtime_error ("language is: " + trip.language() + " | Expected: en-US");
+    throw std::runtime_error("language is: " + trip.language() + " | Expected: en-US");
   }
 
   if (!trip.has_summary()) {
-    throw std::runtime_error ("Missing summary");
+    throw std::runtime_error("Missing summary");
   }
 
   if (trip.locations_size() != 2) {
-    throw std::runtime_error("locations size: " + std::to_string(trip.locations_size()) + " | Expected: 2");
+    throw std::runtime_error("locations size: " + std::to_string(trip.locations_size()) +
+                             " | Expected: 2");
   }
 
   if (trip.units() != "miles") {
@@ -158,12 +165,12 @@ void testTrip() {
   }
 
   if (trip.status_message() != "Found route between points") {
-    throw std::runtime_error ("status message is: " + trip.status_message() +
-        " | Expected: Found route between points");
+    throw std::runtime_error("status message is: " + trip.status_message() +
+                             " | Expected: Found route between points");
   }
 
   if (trip.status() != 1) {
-    throw std::runtime_error ("status is: " + std::to_string(trip.status()) + " | Expected: 0");
+    throw std::runtime_error("status is: " + std::to_string(trip.status()) + " | Expected: 0");
   }
 
   // Test throwing runtime errors
@@ -172,8 +179,8 @@ void testTrip() {
   std::string tripErrorTest =
       R"({trip:20})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw parse error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw parse error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw parse error") {
       throw e;
@@ -183,8 +190,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":20})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw trip error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw trip error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw trip error") {
       throw e;
@@ -194,8 +201,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"language":20}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw language error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw language error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw language error") {
       throw e;
@@ -205,8 +212,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"summary":20}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw summary error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw summary error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw summary error") {
       throw e;
@@ -216,8 +223,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"locations":20}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw locations error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw locations error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw locations error") {
       throw e;
@@ -227,8 +234,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"locations":[20]}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw location error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw location error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw location error") {
       throw e;
@@ -238,8 +245,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"units":20}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw units error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw units error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw units error") {
       throw e;
@@ -249,8 +256,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"legs":20}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw legs error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw legs error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw legs error") {
       throw e;
@@ -260,8 +267,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"legs":[20]}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw leg error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw leg error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw leg error") {
       throw e;
@@ -271,8 +278,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"status_message":20}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw status_message error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw status_message error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw status_message error") {
       throw e;
@@ -282,8 +289,8 @@ void testTrip() {
   tripErrorTest =
       R"({"trip":{"status":"1"}})";
   try {
-    jsonToProtoRoute (tripErrorTest, route);
-    throw std::runtime_error ("Did not throw status error");
+    jsonToProtoRoute(tripErrorTest, route);
+    throw std::runtime_error("Did not throw status error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw status error") {
       throw e;
@@ -310,68 +317,72 @@ void testLocation() {
           "original_index":5
         }]}})";
   Route route;
-  jsonToProtoRoute (locationTest, route);
+  jsonToProtoRoute(locationTest, route);
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
 
   Route::Trip trip = route.trip();
   if (trip.locations_size() != 1) {
-    throw std::runtime_error ("Wrong amount of locations. size: " + std::to_string(trip.locations_size()) +
-                              " | Expected: 1");
+    throw std::runtime_error("Wrong amount of locations. size: " +
+                             std::to_string(trip.locations_size()) + " | Expected: 1");
   }
 
   Route::Location location = trip.locations(0);
   if (location.lat() != 12.24153f) {
-    throw std::runtime_error ("lat is: " + std::to_string(location.lat()) + " | Expected: 12.24153");
+    throw std::runtime_error("lat is: " + std::to_string(location.lat()) + " | Expected: 12.24153");
   }
 
   if (location.lon() != -12.733452f) {
-    throw std::runtime_error ("lon is: " + std::to_string(location.lon()) + " | Expected: -12.733452");
+    throw std::runtime_error("lon is: " + std::to_string(location.lon()) +
+                             " | Expected: -12.733452");
   }
 
   if (location.type() != "break") {
-    throw std::runtime_error ("type is: " + location.type() + " | Expected: break");
+    throw std::runtime_error("type is: " + location.type() + " | Expected: break");
   }
 
   if (location.heading() != 25) {
-    throw std::runtime_error ("heading is: " + std::to_string (location.heading()) + " | Expected: 25");
+    throw std::runtime_error("heading is: " + std::to_string(location.heading()) +
+                             " | Expected: 25");
   }
 
   if (location.name() != "start") {
-    throw std::runtime_error ("name is: " + location.name() + " | Expected: start");
+    throw std::runtime_error("name is: " + location.name() + " | Expected: start");
   }
 
   if (location.street() != "123 Random Street") {
-    throw std::runtime_error ("street is: " + location.street() + " | Expected: 123 Random Street");
+    throw std::runtime_error("street is: " + location.street() + " | Expected: 123 Random Street");
   }
 
   if (location.city() != "Lancaster") {
-    throw std::runtime_error ("city is: " + location.street() + " | Expected: Lancaster");
+    throw std::runtime_error("city is: " + location.street() + " | Expected: Lancaster");
   }
 
   if (location.state() != "PA") {
-    throw std::runtime_error ("state is: " + location.state() + " | Expected: PA");
+    throw std::runtime_error("state is: " + location.state() + " | Expected: PA");
   }
 
   if (location.postal_code() != "12345") {
-    throw std::runtime_error ("postal_code is: " + location.postal_code() + " | Expected: 12345");
+    throw std::runtime_error("postal_code is: " + location.postal_code() + " | Expected: 12345");
   }
 
   if (location.country() != "USA") {
-    throw std::runtime_error ("country is: " + location.country() + " | Expected: USA");
+    throw std::runtime_error("country is: " + location.country() + " | Expected: USA");
   }
 
   if (location.date_time() != "03/09/2017") {
-    throw std::runtime_error ("date_time is: " + location.date_time() + " | Expected: 03/09/2017");
+    throw std::runtime_error("date_time is: " + location.date_time() + " | Expected: 03/09/2017");
   }
 
   if (location.side_of_street() != "right") {
-    throw std::runtime_error ("side_of_street is: " + location.side_of_street() + " | Expected: right");
+    throw std::runtime_error("side_of_street is: " + location.side_of_street() +
+                             " | Expected: right");
   }
 
   if (location.original_index() != 5) {
-    throw std::runtime_error ("original_index is: " + std::to_string(location.original_index()) + " | Expected: 5");
+    throw std::runtime_error("original_index is: " + std::to_string(location.original_index()) +
+                             " | Expected: 5");
   }
 
   // Test throwing runtime errors
@@ -380,8 +391,8 @@ void testLocation() {
   std::string locationErrorTest =
       R"({"trip":{"locations":[{"state":20}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw state error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw state error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw state error") {
       throw e;
@@ -391,8 +402,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"type":20}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw type error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw type error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw type error") {
       throw e;
@@ -402,8 +413,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"side_of_street":20}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw side_of_street error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw side_of_street error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw side_of_street error") {
       throw e;
@@ -413,8 +424,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"lat":"12.24153"}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw lat error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw lat error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw lat error") {
       throw e;
@@ -424,8 +435,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"lon":"12.24153"}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw lon error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw lon error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw lon error") {
       throw e;
@@ -435,8 +446,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"city":1}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw city error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw city error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw city error") {
       throw e;
@@ -446,8 +457,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"street":123}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw street error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw street error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw street error") {
       throw e;
@@ -457,8 +468,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"heading":"25"}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw heading error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw heading error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw heading error") {
       throw e;
@@ -468,8 +479,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"name":20}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw name error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw name error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw name error") {
       throw e;
@@ -479,8 +490,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"postal_code":12345}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw postal_code error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw postal_code error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw postal_code error") {
       throw e;
@@ -490,8 +501,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"country":20}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw country error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw country error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw country error") {
       throw e;
@@ -501,8 +512,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"date_time":20}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw date_time error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw date_time error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw date_time error") {
       throw e;
@@ -512,8 +523,8 @@ void testLocation() {
   locationErrorTest =
       R"({"trip":{"locations":[{"original_index":"5"}]}})";
   try {
-    jsonToProtoRoute (locationErrorTest, route);
-    throw std::runtime_error ("Did not throw original_index error");
+    jsonToProtoRoute(locationErrorTest, route);
+    throw std::runtime_error("Did not throw original_index error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw original_index error") {
       throw e;
@@ -521,7 +532,7 @@ void testLocation() {
   }
 }
 
-void testSummary () {
+void testSummary() {
   const std::string summaryTest =
       R"({"trip":{"summary":{
           "max_lon":-12.733452,
@@ -532,39 +543,44 @@ void testSummary () {
           "min_lon":-13.733452
         }}})";
   Route route;
-  jsonToProtoRoute (summaryTest, route);
+  jsonToProtoRoute(summaryTest, route);
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
 
   Route::Trip trip = route.trip();
   if (!trip.has_summary()) {
-    throw std::runtime_error ("Missing summary");
+    throw std::runtime_error("Missing summary");
   }
 
   Route::Summary summary = trip.summary();
   if (summary.length() != 147.371f) {
-    throw std::runtime_error ("length is: " + std::to_string(summary.length()) + " | Expected: 147.371");
+    throw std::runtime_error("length is: " + std::to_string(summary.length()) +
+                             " | Expected: 147.371");
   }
 
   if (summary.time() != 8435) {
-    throw std::runtime_error ("time is: " + std::to_string(summary.time()) + " | Expected: 8435");
+    throw std::runtime_error("time is: " + std::to_string(summary.time()) + " | Expected: 8435");
   }
 
   if (summary.min_lat() != 11.24153f) {
-    throw std::runtime_error ("min_lat is: " + std::to_string(summary.min_lat()) + " | Expected: 11.24153");
+    throw std::runtime_error("min_lat is: " + std::to_string(summary.min_lat()) +
+                             " | Expected: 11.24153");
   }
 
   if (summary.min_lon() != -13.733452f) {
-    throw std::runtime_error ("min_lon is: " + std::to_string(summary.min_lon()) + " | Expected: -13.733452");
+    throw std::runtime_error("min_lon is: " + std::to_string(summary.min_lon()) +
+                             " | Expected: -13.733452");
   }
 
   if (summary.max_lat() != 12.24153f) {
-    throw std::runtime_error ("max_lat is: " + std::to_string(summary.max_lat()) + " | Expected: 12.24153");
+    throw std::runtime_error("max_lat is: " + std::to_string(summary.max_lat()) +
+                             " | Expected: 12.24153");
   }
 
   if (summary.max_lon() != -12.733452f) {
-    throw std::runtime_error ("max_lon is: " + std::to_string(summary.max_lon()) + " | Expected: -12.733452");
+    throw std::runtime_error("max_lon is: " + std::to_string(summary.max_lon()) +
+                             " | Expected: -12.733452");
   }
 
   // Test throwing runtime errors
@@ -573,8 +589,8 @@ void testSummary () {
   std::string summaryErrorTest =
       R"({"trip":{"summary":{"max_lon":"-12.733452"}}})";
   try {
-    jsonToProtoRoute (summaryErrorTest, route);
-    throw std::runtime_error ("Did not throw max_lon error");
+    jsonToProtoRoute(summaryErrorTest, route);
+    throw std::runtime_error("Did not throw max_lon error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw max_lon error") {
       throw e;
@@ -584,8 +600,8 @@ void testSummary () {
   summaryErrorTest =
       R"({"trip":{"summary":{"max_lat":"-12.733452"}}})";
   try {
-    jsonToProtoRoute (summaryErrorTest, route);
-    throw std::runtime_error ("Did not throw max_lat error");
+    jsonToProtoRoute(summaryErrorTest, route);
+    throw std::runtime_error("Did not throw max_lat error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw max_lat error") {
       throw e;
@@ -595,8 +611,8 @@ void testSummary () {
   summaryErrorTest =
       R"({"trip":{"summary":{"time":"8435"}}})";
   try {
-    jsonToProtoRoute (summaryErrorTest, route);
-    throw std::runtime_error ("Did not throw time error");
+    jsonToProtoRoute(summaryErrorTest, route);
+    throw std::runtime_error("Did not throw time error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw time error") {
       throw e;
@@ -606,8 +622,8 @@ void testSummary () {
   summaryErrorTest =
       R"({"trip":{"summary":{"length":"147.371"}}})";
   try {
-    jsonToProtoRoute (summaryErrorTest, route);
-    throw std::runtime_error ("Did not throw length error");
+    jsonToProtoRoute(summaryErrorTest, route);
+    throw std::runtime_error("Did not throw length error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw length error") {
       throw e;
@@ -617,8 +633,8 @@ void testSummary () {
   summaryErrorTest =
       R"({"trip":{"summary":{"min_lat":"11.24153"}}})";
   try {
-    jsonToProtoRoute (summaryErrorTest, route);
-    throw std::runtime_error ("Did not throw min_lat error");
+    jsonToProtoRoute(summaryErrorTest, route);
+    throw std::runtime_error("Did not throw min_lat error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw min_lat error") {
       throw e;
@@ -628,8 +644,8 @@ void testSummary () {
   summaryErrorTest =
       R"({"trip":{"summary":{"min_lat":"11.24153"}}})";
   try {
-    jsonToProtoRoute (summaryErrorTest, route);
-    throw std::runtime_error ("Did not throw min_lat error");
+    jsonToProtoRoute(summaryErrorTest, route);
+    throw std::runtime_error("Did not throw min_lat error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw min_lat error") {
       throw e;
@@ -639,8 +655,8 @@ void testSummary () {
   summaryErrorTest =
       R"({"trip":{"summary":{"min_lon":"11.24153"}}})";
   try {
-    jsonToProtoRoute (summaryErrorTest, route);
-    throw std::runtime_error ("Did not throw min_lon error");
+    jsonToProtoRoute(summaryErrorTest, route);
+    throw std::runtime_error("Did not throw min_lon error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw min_lon error") {
       throw e;
@@ -648,7 +664,7 @@ void testSummary () {
   }
 }
 
-void testLeg () {
+void testLeg() {
   const std::string legTest =
       R"({"trip":{"legs":[{
           "shape":"q{ewkA|bliqC|DlJ",
@@ -656,9 +672,9 @@ void testLeg () {
           "summary":{}
         }]}})";
   Route route;
-  jsonToProtoRoute (legTest, route);
+  jsonToProtoRoute(legTest, route);
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
 
   Route::Trip trip = route.trip();
@@ -668,15 +684,16 @@ void testLeg () {
 
   Route::Leg leg = trip.legs(0);
   if (!leg.has_summary()) {
-    throw std::runtime_error ("Missing summary");
+    throw std::runtime_error("Missing summary");
   }
 
   if (leg.maneuvers_size() != 2) {
-    throw std::runtime_error ("maneuver size: " + std::to_string(leg.maneuvers_size()) + " | Expected: 2");
+    throw std::runtime_error("maneuver size: " + std::to_string(leg.maneuvers_size()) +
+                             " | Expected: 2");
   }
 
   if (leg.shape() != "q{ewkA|bliqC|DlJ") {
-    throw std::runtime_error ("shape: " + leg.shape() + " | Expected: q{ewkA|bliqC|DlJ");
+    throw std::runtime_error("shape: " + leg.shape() + " | Expected: q{ewkA|bliqC|DlJ");
   }
 
   // Test throwing runtime errors
@@ -685,8 +702,8 @@ void testLeg () {
   std::string legErrorTest =
       R"({"trip":{"legs":[{"shape":20}]}})";
   try {
-    jsonToProtoRoute (legErrorTest, route);
-    throw std::runtime_error ("Did not throw shape error");
+    jsonToProtoRoute(legErrorTest, route);
+    throw std::runtime_error("Did not throw shape error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw shape error") {
       throw e;
@@ -696,8 +713,8 @@ void testLeg () {
   legErrorTest =
       R"({"trip":{"legs":[{"maneuvers":20}]}})";
   try {
-    jsonToProtoRoute (legErrorTest, route);
-    throw std::runtime_error ("Did not throw maneuvers error");
+    jsonToProtoRoute(legErrorTest, route);
+    throw std::runtime_error("Did not throw maneuvers error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw maneuvers error") {
       throw e;
@@ -707,8 +724,8 @@ void testLeg () {
   legErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[20]}]}})";
   try {
-    jsonToProtoRoute (legErrorTest, route);
-    throw std::runtime_error ("Did not throw maneuver error");
+    jsonToProtoRoute(legErrorTest, route);
+    throw std::runtime_error("Did not throw maneuver error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw maneuver error") {
       throw e;
@@ -718,8 +735,8 @@ void testLeg () {
   legErrorTest =
       R"({"trip":{"legs":[{"summary":20}]}})";
   try {
-    jsonToProtoRoute (legErrorTest, route);
-    throw std::runtime_error ("Did not throw summary error");
+    jsonToProtoRoute(legErrorTest, route);
+    throw std::runtime_error("Did not throw summary error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw summary error") {
       throw e;
@@ -727,7 +744,7 @@ void testLeg () {
   }
 }
 
-void testManeuver () {
+void testManeuver() {
   const std::string maneuverTest =
       R"({"trip":{"legs":[{"maneuvers":[{
           "travel_type":"car",
@@ -757,9 +774,9 @@ void testManeuver () {
           "verbal_multi_cue":true
         }]}]}})";
   Route route;
-  jsonToProtoRoute (maneuverTest, route);
+  jsonToProtoRoute(maneuverTest, route);
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
 
   Route::Trip trip = route.trip();
@@ -769,133 +786,148 @@ void testManeuver () {
 
   Route::Leg leg = trip.legs(0);
   if (leg.maneuvers_size() != 1) {
-    throw std::runtime_error ("maneuver size: " + std::to_string(leg.maneuvers_size()) + " | Expected: 1");
+    throw std::runtime_error("maneuver size: " + std::to_string(leg.maneuvers_size()) +
+                             " | Expected: 1");
   }
 
   Route::Maneuver maneuver = leg.maneuvers(0);
   if (maneuver.type() != 20) {
-    throw std::runtime_error ("type is: " + std::to_string(maneuver.type()) + " | Expected: 20");
+    throw std::runtime_error("type is: " + std::to_string(maneuver.type()) + " | Expected: 20");
   }
 
   if (maneuver.instruction() != "Take exit 1 on the right.") {
-    throw std::runtime_error ("instruction is: " + maneuver.instruction() +
-                              " | Expected: Take exit 1 on the right.");
+    throw std::runtime_error("instruction is: " + maneuver.instruction() +
+                             " | Expected: Take exit 1 on the right.");
   }
 
   if (maneuver.street_names_size() != 2) {
-    throw std::runtime_error ("street_names size: " + std::to_string(maneuver.street_names_size()) + " | Expected: 2");
+    throw std::runtime_error("street_names size: " + std::to_string(maneuver.street_names_size()) +
+                             " | Expected: 2");
   }
   if (maneuver.street_names(0) != "street 1") {
-    throw std::runtime_error ("street_name 0 is: " + maneuver.street_names(0) + " | Expected: street 1");
+    throw std::runtime_error("street_name 0 is: " + maneuver.street_names(0) +
+                             " | Expected: street 1");
   }
   if (maneuver.street_names(1) != "street 2") {
-    throw std::runtime_error ("street_name 0 is: " + maneuver.street_names(1) + " | Expected: street 2");
+    throw std::runtime_error("street_name 0 is: " + maneuver.street_names(1) +
+                             " | Expected: street 2");
   }
 
   if (maneuver.length() != 0.266f) {
-    throw std::runtime_error ("length is: " + std::to_string(maneuver.length()) + " | Expected: 0.266");
+    throw std::runtime_error("length is: " + std::to_string(maneuver.length()) +
+                             " | Expected: 0.266");
   }
 
   if (maneuver.time() != 33) {
-    throw std::runtime_error ("time is: " + std::to_string(maneuver.time()) + " | Expected: 33");
+    throw std::runtime_error("time is: " + std::to_string(maneuver.time()) + " | Expected: 33");
   }
 
   if (maneuver.begin_cardinal_direction() != "north") {
-    throw std::runtime_error ("begin_cardinal_direction is: " + maneuver.begin_cardinal_direction() + " | Expected: north");
+    throw std::runtime_error("begin_cardinal_direction is: " + maneuver.begin_cardinal_direction() +
+                             " | Expected: north");
   }
 
   if (maneuver.begin_heading() != 7) {
-    throw std::runtime_error ("begin_heading is: " + std::to_string(maneuver.begin_heading()) + " | Expected: 7");
+    throw std::runtime_error("begin_heading is: " + std::to_string(maneuver.begin_heading()) +
+                             " | Expected: 7");
   }
 
   if (maneuver.begin_shape_index() != 2086) {
-    throw std::runtime_error ("begin_shape_index is: " + std::to_string(maneuver.begin_shape_index()) + " | Expected: 2086");
+    throw std::runtime_error("begin_shape_index is: " +
+                             std::to_string(maneuver.begin_shape_index()) + " | Expected: 2086");
   }
 
   if (maneuver.end_shape_index() != 2111) {
-    throw std::runtime_error ("end_shape_index is: " + std::to_string(maneuver.end_shape_index()) + " | Expected: 2111");
+    throw std::runtime_error("end_shape_index is: " + std::to_string(maneuver.end_shape_index()) +
+                             " | Expected: 2111");
   }
 
   if (!maneuver.toll()) {
-    throw std::runtime_error ("toll failed to parse");
+    throw std::runtime_error("toll failed to parse");
   }
 
   if (!maneuver.rough()) {
-    throw std::runtime_error ("rough failed to parse");
+    throw std::runtime_error("rough failed to parse");
   }
 
   if (maneuver.verbal_transition_alert_instruction() != "Take exit 1 on the right.") {
-    throw std::runtime_error ("verbal_transition_alert_instruction is: " + maneuver.verbal_transition_alert_instruction() +
-                              " | Expected: Take exit 1 on the right.");
+    throw std::runtime_error("verbal_transition_alert_instruction is: " +
+                             maneuver.verbal_transition_alert_instruction() +
+                             " | Expected: Take exit 1 on the right.");
   }
 
   if (maneuver.verbal_pre_transition_instruction() != "Take exit 1 on the right.") {
-    throw std::runtime_error ("verbal_pre_transition_instruction is: " + maneuver.verbal_pre_transition_instruction() +
-                              " | Expected: Take exit 1 on the right.");
+    throw std::runtime_error(
+        "verbal_pre_transition_instruction is: " + maneuver.verbal_pre_transition_instruction() +
+        " | Expected: Take exit 1 on the right.");
   }
 
   if (maneuver.verbal_post_transition_instruction() != "end") {
-    throw std::runtime_error ("verbal_post_transition_instruction is: " + maneuver.verbal_post_transition_instruction() +
-                              " | Expected: end");
+    throw std::runtime_error("verbal_post_transition_instruction is: " +
+                             maneuver.verbal_post_transition_instruction() + " | Expected: end");
   }
 
   if (maneuver.begin_street_names_size() != 2) {
-    throw std::runtime_error ("begin_street_names size: " + std::to_string(maneuver.begin_street_names_size()) +
-                              " | Expected: 2");
+    throw std::runtime_error("begin_street_names size: " +
+                             std::to_string(maneuver.begin_street_names_size()) + " | Expected: 2");
   }
   if (maneuver.begin_street_names(0) != "begin 1") {
-    throw std::runtime_error ("street_name 0 is: " + maneuver.begin_street_names(0) + " | Expected: begin 1");
+    throw std::runtime_error("street_name 0 is: " + maneuver.begin_street_names(0) +
+                             " | Expected: begin 1");
   }
   if (maneuver.begin_street_names(1) != "begin 2") {
-    throw std::runtime_error ("street_name 0 is: " + maneuver.begin_street_names(1) + " | Expected: begin 2");
+    throw std::runtime_error("street_name 0 is: " + maneuver.begin_street_names(1) +
+                             " | Expected: begin 2");
   }
 
   if (!maneuver.has_sign()) {
-    throw std::runtime_error ("sign missing");
+    throw std::runtime_error("sign missing");
   }
 
   if (maneuver.roundabout_exit_count() != 2) {
-    throw std::runtime_error ("roundabout_exit_count is: " + std::to_string(maneuver.roundabout_exit_count()) +
-        " | Expected: 2");
+    throw std::runtime_error("roundabout_exit_count is: " +
+                             std::to_string(maneuver.roundabout_exit_count()) + " | Expected: 2");
   }
 
   if (maneuver.roundabout_exit_count() != 2) {
-    throw std::runtime_error ("roundabout_exit_count is: " + std::to_string(maneuver.roundabout_exit_count()) +
-        " | Expected: 2");
+    throw std::runtime_error("roundabout_exit_count is: " +
+                             std::to_string(maneuver.roundabout_exit_count()) + " | Expected: 2");
   }
 
   if (maneuver.depart_instruction() != "leave") {
-    throw std::runtime_error ("depart_instruction is: " + maneuver.depart_instruction() + " | Expected: leave");
+    throw std::runtime_error("depart_instruction is: " + maneuver.depart_instruction() +
+                             " | Expected: leave");
   }
 
   if (maneuver.verbal_depart_instruction() != "leave now") {
-    throw std::runtime_error ("verbal_depart_instruction is: " + maneuver.verbal_depart_instruction() +
-                              " | Expected: leave now");
+    throw std::runtime_error("verbal_depart_instruction is: " +
+                             maneuver.verbal_depart_instruction() + " | Expected: leave now");
   }
 
   if (maneuver.arrive_instruction() != "arrived") {
-    throw std::runtime_error ("arrive_instruction is: " + maneuver.arrive_instruction() + " | Expected: arrived");
+    throw std::runtime_error("arrive_instruction is: " + maneuver.arrive_instruction() +
+                             " | Expected: arrived");
   }
 
   if (maneuver.verbal_arrive_instruction() != "arrived at spot") {
-    throw std::runtime_error ("verbal_arrive_instruction is: " + maneuver.verbal_arrive_instruction() +
-                              " | Expected: arrived at spot");
+    throw std::runtime_error("verbal_arrive_instruction is: " +
+                             maneuver.verbal_arrive_instruction() + " | Expected: arrived at spot");
   }
 
   if (!maneuver.has_transit_info()) {
-    throw std::runtime_error ("transit_info missing");
+    throw std::runtime_error("transit_info missing");
   }
 
   if (!maneuver.verbal_multi_cue()) {
-    throw std::runtime_error ("verbal_multi_cue failed to parse");
+    throw std::runtime_error("verbal_multi_cue failed to parse");
   }
 
   if (maneuver.travel_mode() != "drive") {
-    throw std::runtime_error ("travel_mode is: " + maneuver.travel_mode() + " | Expected: drive");
+    throw std::runtime_error("travel_mode is: " + maneuver.travel_mode() + " | Expected: drive");
   }
 
   if (maneuver.travel_type() != "car") {
-    throw std::runtime_error ("travel_type is: " + maneuver.travel_type() + " | Expected: car");
+    throw std::runtime_error("travel_type is: " + maneuver.travel_type() + " | Expected: car");
   }
 
   // Test throwing runtime errors
@@ -904,8 +936,8 @@ void testManeuver () {
   std::string maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"travel_type":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw travel_type error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw travel_type error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw travel_type error") {
       throw e;
@@ -915,8 +947,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"travel_mode":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw travel_mode error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw travel_mode error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw travel_mode error") {
       throw e;
@@ -926,8 +958,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"verbal_pre_transition_instruction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw verbal_pre_transition_instruction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw verbal_pre_transition_instruction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw verbal_pre_transition_instruction error") {
       throw e;
@@ -937,8 +969,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"verbal_transition_alert_instruction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw verbal_transition_alert_instruction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw verbal_transition_alert_instruction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw verbal_transition_alert_instruction error") {
       throw e;
@@ -948,8 +980,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"toll":"true"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw toll error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw toll error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw toll error") {
       throw e;
@@ -959,8 +991,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"instruction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw instruction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw instruction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw instruction error") {
       throw e;
@@ -970,8 +1002,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"end_shape_index":"2111"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw end_shape_index error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw end_shape_index error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw end_shape_index error") {
       throw e;
@@ -981,8 +1013,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"type":"20"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw type error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw type error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw type error") {
       throw e;
@@ -992,8 +1024,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"time":"33"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw time error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw time error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw time error") {
       throw e;
@@ -1003,8 +1035,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"begin_shape_index":"2086"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw begin_shape_index error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw begin_shape_index error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw begin_shape_index error") {
       throw e;
@@ -1014,8 +1046,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"length":"0.266"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw length error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw length error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw length error") {
       throw e;
@@ -1025,8 +1057,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw sign error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw sign error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw sign error") {
       throw e;
@@ -1036,8 +1068,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"street_names":"street"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw street_names error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw street_names error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw street_names error") {
       throw e;
@@ -1047,8 +1079,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"street_names":[20]}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw street_name error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw street_name error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw street_name error") {
       throw e;
@@ -1058,8 +1090,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"begin_cardinal_direction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw begin_cardinal_direction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw begin_cardinal_direction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw begin_cardinal_direction error") {
       throw e;
@@ -1069,8 +1101,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"begin_heading":"7"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw begin_heading error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw begin_heading error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw begin_heading error") {
       throw e;
@@ -1080,8 +1112,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"rough":"true"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw rough error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw rough error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw rough error") {
       throw e;
@@ -1091,8 +1123,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"verbal_post_transition_instruction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw verbal_post_transition_instruction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw verbal_post_transition_instruction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw verbal_post_transition_instruction error") {
       throw e;
@@ -1102,8 +1134,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"begin_street_names":"begin"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw begin_street_names error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw begin_street_names error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw begin_street_names error") {
       throw e;
@@ -1113,8 +1145,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"begin_street_names":[20]}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw begin_street_name error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw begin_street_name error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw begin_street_name error") {
       throw e;
@@ -1124,8 +1156,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"roundabout_exit_count":"2"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw roundabout_exit_count error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw roundabout_exit_count error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw roundabout_exit_count error") {
       throw e;
@@ -1135,8 +1167,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"depart_instruction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw depart_instruction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw depart_instruction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw depart_instruction error") {
       throw e;
@@ -1146,8 +1178,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"verbal_depart_instruction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw verbal_depart_instruction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw verbal_depart_instruction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw verbal_depart_instruction error") {
       throw e;
@@ -1157,8 +1189,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"arrive_instruction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw arrive_instruction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw arrive_instruction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw arrive_instruction error") {
       throw e;
@@ -1168,8 +1200,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"verbal_arrive_instruction":20}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw verbal_arrive_instruction error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw verbal_arrive_instruction error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw verbal_arrive_instruction error") {
       throw e;
@@ -1179,8 +1211,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":"hello"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw transit_info error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw transit_info error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw transit_info error") {
       throw e;
@@ -1190,8 +1222,8 @@ void testManeuver () {
   maneuverErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"verbal_multi_cue":"true"}]}]}})";
   try {
-    jsonToProtoRoute (maneuverErrorTest, route);
-    throw std::runtime_error ("Did not throw verbal_multi_cue error");
+    jsonToProtoRoute(maneuverErrorTest, route);
+    throw std::runtime_error("Did not throw verbal_multi_cue error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw verbal_multi_cue error") {
       throw e;
@@ -1199,7 +1231,7 @@ void testManeuver () {
   }
 }
 
-void testTransitInfo () {
+void testTransitInfo() {
   const std::string transitInfoTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{
           "onestop_id":"id",
@@ -1215,9 +1247,9 @@ void testTransitInfo () {
           "transit_stops":[{},{}]
         }}]}]}})";
   Route route;
-  jsonToProtoRoute (transitInfoTest, route);
+  jsonToProtoRoute(transitInfoTest, route);
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
 
   Route::Trip trip = route.trip();
@@ -1227,58 +1259,65 @@ void testTransitInfo () {
 
   Route::Leg leg = trip.legs(0);
   if (leg.maneuvers_size() != 1) {
-    throw std::runtime_error ("maneuver size: " + std::to_string(leg.maneuvers_size()) + " | Expected: 1");
+    throw std::runtime_error("maneuver size: " + std::to_string(leg.maneuvers_size()) +
+                             " | Expected: 1");
   }
 
   Route::Maneuver maneuver = leg.maneuvers(0);
   if (!maneuver.has_transit_info()) {
-    throw std::runtime_error ("transit_info missing");
+    throw std::runtime_error("transit_info missing");
   }
 
   Route::TransitInfo transit_info = maneuver.transit_info();
   if (transit_info.onestop_id() != "id") {
-    throw std::runtime_error ("onestop_id is: " + transit_info.onestop_id() + " | Expected: id");
+    throw std::runtime_error("onestop_id is: " + transit_info.onestop_id() + " | Expected: id");
   }
 
   if (transit_info.short_name() != "bus") {
-    throw std::runtime_error ("short_name is: " + transit_info.short_name() + " | Expected: bus");
+    throw std::runtime_error("short_name is: " + transit_info.short_name() + " | Expected: bus");
   }
 
   if (transit_info.long_name() != "buusss") {
-    throw std::runtime_error ("long_name is: " + transit_info.long_name() + " | Expected: buusss");
+    throw std::runtime_error("long_name is: " + transit_info.long_name() + " | Expected: buusss");
   }
 
   if (transit_info.headsign() != "go") {
-    throw std::runtime_error ("headsign is: " + transit_info.headsign() + " | Expected: go");
+    throw std::runtime_error("headsign is: " + transit_info.headsign() + " | Expected: go");
   }
 
   if (transit_info.color() != 255) {
-    throw std::runtime_error ("color is: " + std::to_string(transit_info.color()) + " | Expected: 255");
+    throw std::runtime_error("color is: " + std::to_string(transit_info.color()) +
+                             " | Expected: 255");
   }
 
   if (transit_info.text_color() != 133) {
-    throw std::runtime_error ("text_color is: " + std::to_string(transit_info.text_color()) + " | Expected: 133");
+    throw std::runtime_error("text_color is: " + std::to_string(transit_info.text_color()) +
+                             " | Expected: 133");
   }
 
   if (transit_info.description() != "goin away") {
-    throw std::runtime_error ("description is: " + transit_info.description() + " | Expected: goin away");
+    throw std::runtime_error("description is: " + transit_info.description() +
+                             " | Expected: goin away");
   }
 
   if (transit_info.operator_onestop_id() != "id2") {
-    throw std::runtime_error ("operator_onestop_id is: " + transit_info.operator_onestop_id() + " | Expected: id2");
+    throw std::runtime_error("operator_onestop_id is: " + transit_info.operator_onestop_id() +
+                             " | Expected: id2");
   }
 
   if (transit_info.operator_name() != "bob") {
-    throw std::runtime_error ("operator_name is: " + transit_info.operator_name() + " | Expected: bob");
+    throw std::runtime_error("operator_name is: " + transit_info.operator_name() +
+                             " | Expected: bob");
   }
 
   if (transit_info.operator_url() != "www.com") {
-    throw std::runtime_error ("operator_url is: " + transit_info.operator_url() + " | Expected: www.com");
+    throw std::runtime_error("operator_url is: " + transit_info.operator_url() +
+                             " | Expected: www.com");
   }
 
   if (transit_info.transit_stops_size() != 2) {
-    throw std::runtime_error ("transit_stops size: " + std::to_string(transit_info.transit_stops_size()) +
-                              " | Expected: 2");
+    throw std::runtime_error("transit_stops size: " +
+                             std::to_string(transit_info.transit_stops_size()) + " | Expected: 2");
   }
 
   // Test throwing runtime errors
@@ -1287,8 +1326,8 @@ void testTransitInfo () {
   std::string transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"onestop_id":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw onestop_id error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw onestop_id error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw onestop_id error") {
       throw e;
@@ -1298,8 +1337,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"short_name":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw short_name error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw short_name error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw short_name error") {
       throw e;
@@ -1309,8 +1348,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"long_name":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw long_name error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw long_name error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw long_name error") {
       throw e;
@@ -1320,8 +1359,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"headsign":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw headsign error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw headsign error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw headsign error") {
       throw e;
@@ -1331,8 +1370,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"color":"255"}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw color error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw color error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw color error") {
       throw e;
@@ -1342,8 +1381,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"text_color":"133"}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw text_color error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw text_color error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw text_color error") {
       throw e;
@@ -1353,8 +1392,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"description":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw description error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw description error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw description error") {
       throw e;
@@ -1364,8 +1403,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"operator_onestop_id":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw operator_onestop_id error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw operator_onestop_id error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw operator_onestop_id error") {
       throw e;
@@ -1375,8 +1414,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"operator_name":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw operator_name error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw operator_name error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw operator_name error") {
       throw e;
@@ -1386,8 +1425,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"operator_url":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw operator_url error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw operator_url error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw operator_url error") {
       throw e;
@@ -1397,8 +1436,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":20}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw transit_stops error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw transit_stops error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw transit_stops error") {
       throw e;
@@ -1408,8 +1447,8 @@ void testTransitInfo () {
   transitInfoErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[20]}}]}]}})";
   try {
-    jsonToProtoRoute (transitInfoErrorTest, route);
-    throw std::runtime_error ("Did not throw transit_stop error");
+    jsonToProtoRoute(transitInfoErrorTest, route);
+    throw std::runtime_error("Did not throw transit_stop error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw transit_stop error") {
       throw e;
@@ -1431,9 +1470,9 @@ void testTransitStop() {
           "lon":19.12
         }]}}]}]}})";
   Route route;
-  jsonToProtoRoute (transitStopTest, route);
+  jsonToProtoRoute(transitStopTest, route);
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
 
   Route::Trip trip = route.trip();
@@ -1443,57 +1482,60 @@ void testTransitStop() {
 
   Route::Leg leg = trip.legs(0);
   if (leg.maneuvers_size() != 1) {
-    throw std::runtime_error ("maneuver size: " + std::to_string(leg.maneuvers_size()) + " | Expected: 1");
+    throw std::runtime_error("maneuver size: " + std::to_string(leg.maneuvers_size()) +
+                             " | Expected: 1");
   }
 
   Route::Maneuver maneuver = leg.maneuvers(0);
   if (!maneuver.has_transit_info()) {
-    throw std::runtime_error ("transit_info missing");
+    throw std::runtime_error("transit_info missing");
   }
 
   Route::TransitInfo transit_info = maneuver.transit_info();
   if (transit_info.transit_stops_size() != 1) {
-    throw std::runtime_error ("transit_stops size: " + std::to_string(transit_info.transit_stops_size()) +
-                              " | Expected: 1");
+    throw std::runtime_error("transit_stops size: " +
+                             std::to_string(transit_info.transit_stops_size()) + " | Expected: 1");
   }
 
   Route::TransitStop transit_stop = transit_info.transit_stops(0);
   if (transit_stop.type() != "simple stop") {
-    throw std::runtime_error ("type is: " + transit_stop.type() + " | Expected: simple stop");
+    throw std::runtime_error("type is: " + transit_stop.type() + " | Expected: simple stop");
   }
 
   if (transit_stop.onestop_id() != "id") {
-    throw std::runtime_error ("onestop_id is: " + transit_stop.onestop_id() + " | Expected: id");
+    throw std::runtime_error("onestop_id is: " + transit_stop.onestop_id() + " | Expected: id");
   }
 
   if (transit_stop.name() != "bus stop") {
-    throw std::runtime_error ("name is: " + transit_stop.name() + " | Expected: bus stop");
+    throw std::runtime_error("name is: " + transit_stop.name() + " | Expected: bus stop");
   }
 
   if (transit_stop.arrival_date_time() != "2017-06-12T08:49") {
-    throw std::runtime_error ("arrival_date_time is: " + transit_stop.arrival_date_time() +
-                              " | Expected: 2017-06-12T08:49");
+    throw std::runtime_error("arrival_date_time is: " + transit_stop.arrival_date_time() +
+                             " | Expected: 2017-06-12T08:49");
   }
 
   if (transit_stop.departure_date_time() != "2017-06-12T07:49") {
-    throw std::runtime_error ("departure_date_time is: " + transit_stop.departure_date_time() +
-                              " | Expected: 2017-06-12T07:49");
+    throw std::runtime_error("departure_date_time is: " + transit_stop.departure_date_time() +
+                             " | Expected: 2017-06-12T07:49");
   }
 
   if (!transit_stop.is_parent_stop()) {
-    throw std::runtime_error ("is_parent_stop failed to parse");
+    throw std::runtime_error("is_parent_stop failed to parse");
   }
 
   if (!transit_stop.assumed_schedule()) {
-    throw std::runtime_error ("assumed_schedule failed to parse");
+    throw std::runtime_error("assumed_schedule failed to parse");
   }
 
   if (transit_stop.lat() != 13.892f) {
-    throw std::runtime_error ("lat is: " + std::to_string(transit_stop.lat()) + " | Expected: 13.892");
+    throw std::runtime_error("lat is: " + std::to_string(transit_stop.lat()) +
+                             " | Expected: 13.892");
   }
 
   if (transit_stop.lon() != 19.12f) {
-    throw std::runtime_error ("lon is: " + std::to_string(transit_stop.lon()) + " | Expected: 19.12");
+    throw std::runtime_error("lon is: " + std::to_string(transit_stop.lon()) +
+                             " | Expected: 19.12");
   }
 
   // Test throwing runtime errors
@@ -1502,8 +1544,8 @@ void testTransitStop() {
   std::string transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"type":20}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw type error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw type error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw type error") {
       throw e;
@@ -1513,8 +1555,8 @@ void testTransitStop() {
   transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"onestop_id":20}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw onestop_id error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw onestop_id error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw onestop_id error") {
       throw e;
@@ -1524,8 +1566,8 @@ void testTransitStop() {
   transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"name":20}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw name error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw name error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw name error") {
       throw e;
@@ -1535,8 +1577,8 @@ void testTransitStop() {
   transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"arrival_date_time":20}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw arrival_date_time error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw arrival_date_time error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw arrival_date_time error") {
       throw e;
@@ -1546,8 +1588,8 @@ void testTransitStop() {
   transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"departure_date_time":20}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw departure_date_time error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw departure_date_time error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw departure_date_time error") {
       throw e;
@@ -1557,8 +1599,8 @@ void testTransitStop() {
   transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"is_parent_stop":"true"}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw is_parent_stop error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw is_parent_stop error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw is_parent_stop error") {
       throw e;
@@ -1568,8 +1610,8 @@ void testTransitStop() {
   transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"assumed_schedule":"true"}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw assumed_schedule error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw assumed_schedule error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw assumed_schedule error") {
       throw e;
@@ -1579,8 +1621,8 @@ void testTransitStop() {
   transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"lat":"13.892"}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw lat error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw lat error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw lat error") {
       throw e;
@@ -1590,8 +1632,8 @@ void testTransitStop() {
   transitStopErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"transit_info":{"transit_stops":[{"lon":"13.892"}]}}]}]}})";
   try {
-    jsonToProtoRoute (transitStopErrorTest, route);
-    throw std::runtime_error ("Did not throw lon error");
+    jsonToProtoRoute(transitStopErrorTest, route);
+    throw std::runtime_error("Did not throw lon error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw lon error") {
       throw e;
@@ -1608,9 +1650,9 @@ void testSignElements() {
           "exit_name_elements":[{"consecutive_count":2,"text":"Town"},{}]
         }}]}]}})";
   Route route;
-  jsonToProtoRoute (signTest, route);
+  jsonToProtoRoute(signTest, route);
   if (!route.has_trip()) {
-    throw std::runtime_error ("Proto route has no trip when it should");
+    throw std::runtime_error("Proto route has no trip when it should");
   }
 
   Route::Trip trip = route.trip();
@@ -1620,42 +1662,44 @@ void testSignElements() {
 
   Route::Leg leg = trip.legs(0);
   if (leg.maneuvers_size() != 1) {
-    throw std::runtime_error ("maneuver size: " + std::to_string(leg.maneuvers_size()) + " | Expected: 1");
+    throw std::runtime_error("maneuver size: " + std::to_string(leg.maneuvers_size()) +
+                             " | Expected: 1");
   }
 
   Route::Maneuver maneuver = leg.maneuvers(0);
   if (!maneuver.has_sign()) {
-    throw std::runtime_error ("sign missing");
+    throw std::runtime_error("sign missing");
   }
 
   Route::Maneuver::Sign sign = maneuver.sign();
-  if(sign.exit_number_elements_size() != 2) {
-    throw std::runtime_error ("exit_number_elements size: " + std::to_string(sign.exit_number_elements_size()) +
-                              " | Expected: 2");
+  if (sign.exit_number_elements_size() != 2) {
+    throw std::runtime_error("exit_number_elements size: " +
+                             std::to_string(sign.exit_number_elements_size()) + " | Expected: 2");
   }
 
-  if(sign.exit_branch_elements_size() != 2) {
-    throw std::runtime_error ("exit_branch_elements size: " + std::to_string(sign.exit_branch_elements_size()) +
-                              " | Expected: 2");
+  if (sign.exit_branch_elements_size() != 2) {
+    throw std::runtime_error("exit_branch_elements size: " +
+                             std::to_string(sign.exit_branch_elements_size()) + " | Expected: 2");
   }
 
-  if(sign.exit_toward_elements_size() != 2) {
-    throw std::runtime_error ("exit_toward_elements size: " + std::to_string(sign.exit_toward_elements_size()) +
-                              " | Expected: 2");
+  if (sign.exit_toward_elements_size() != 2) {
+    throw std::runtime_error("exit_toward_elements size: " +
+                             std::to_string(sign.exit_toward_elements_size()) + " | Expected: 2");
   }
 
-  if(sign.exit_name_elements_size() != 2) {
-    throw std::runtime_error ("exit_name_elements size: " + std::to_string(sign.exit_name_elements_size()) +
-                              " | Expected: 2");
+  if (sign.exit_name_elements_size() != 2) {
+    throw std::runtime_error("exit_name_elements size: " +
+                             std::to_string(sign.exit_name_elements_size()) + " | Expected: 2");
   }
 
   Route::Maneuver::Sign::Element element = sign.exit_name_elements(0);
   if (element.text() != "Town") {
-    throw std::runtime_error ("text is: " + element.text() + " | Expected: Town");
+    throw std::runtime_error("text is: " + element.text() + " | Expected: Town");
   }
 
   if (element.consecutive_count() != 2) {
-    throw std::runtime_error ("consecutive_count is: " + std::to_string(element.consecutive_count()) + " | Expected: 2");
+    throw std::runtime_error(
+        "consecutive_count is: " + std::to_string(element.consecutive_count()) + " | Expected: 2");
   }
 
   // Test throwing runtime errors
@@ -1664,8 +1708,8 @@ void testSignElements() {
   std::string signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_number_elements":20}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw exit_number_elements error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw exit_number_elements error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw exit_number_elements error") {
       throw e;
@@ -1675,8 +1719,8 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_number_elements":[20]}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw exit_number_element error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw exit_number_element error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw exit_number_element error") {
       throw e;
@@ -1686,8 +1730,8 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_toward_elements":20}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw exit_toward_elements error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw exit_toward_elements error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw exit_toward_elements error") {
       throw e;
@@ -1697,8 +1741,8 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_toward_elements":[20]}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw exit_toward_element error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw exit_toward_element error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw exit_toward_element error") {
       throw e;
@@ -1708,8 +1752,8 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_branch_elements":20}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw exit_branch_elements error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw exit_branch_elements error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw exit_branch_elements error") {
       throw e;
@@ -1719,8 +1763,8 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_branch_elements":[20]}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw exit_branch_element error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw exit_branch_element error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw exit_branch_element error") {
       throw e;
@@ -1730,8 +1774,8 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_name_elements":20}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw exit_name_elements error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw exit_name_elements error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw exit_name_elements error") {
       throw e;
@@ -1741,8 +1785,8 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_name_elements":[20]}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw exit_name_element error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw exit_name_element error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw exit_name_element error") {
       throw e;
@@ -1752,8 +1796,8 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_name_elements":[{"consecutive_count":"2"}]}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw consecutive_count error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw consecutive_count error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw consecutive_count error") {
       throw e;
@@ -1763,17 +1807,16 @@ void testSignElements() {
   signElementsErrorTest =
       R"({"trip":{"legs":[{"maneuvers":[{"sign":{"exit_name_elements":[{"text":20}]}}]}]}})";
   try {
-    jsonToProtoRoute (signElementsErrorTest, route);
-    throw std::runtime_error ("Did not throw text error");
+    jsonToProtoRoute(signElementsErrorTest, route);
+    throw std::runtime_error("Did not throw text error");
   } catch (const std::runtime_error& e) {
     if (std::string(e.what()) == "Did not throw text error") {
       throw e;
     }
   }
-
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("serailizers");

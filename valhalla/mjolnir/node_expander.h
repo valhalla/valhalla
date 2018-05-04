@@ -1,12 +1,12 @@
 #ifndef VALHALLA_MJOLNIR_NODE_EXPANDER_H_
 #define VALHALLA_MJOLNIR_NODE_EXPANDER_H_
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
-#include <valhalla/midgard/sequence.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/midgard/sequence.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
 
@@ -32,28 +32,28 @@ struct Edge {
 
   // Attributes needed to sort the edges
   struct EdgeAttributes {
-    uint64_t llcount          : 16;
-    uint64_t importance       : 3;
+    uint64_t llcount : 16;
+    uint64_t importance : 3;
     uint64_t driveableforward : 1;
     uint64_t driveablereverse : 1;
-    uint64_t traffic_signal   : 1;
-    uint64_t forward_signal   : 1;
-    uint64_t backward_signal  : 1;
-    uint64_t link             : 1;
-    uint64_t reclass_link     : 1;
-    uint64_t has_names        : 1;
-    uint64_t driveforward     : 1;   // For sorting in collect_node_edges
-                                     //  - set based on source node
-    uint64_t shortlink        : 1;   // true if this is a link edge and is
-                                     //   short enough it may be internal to
-                                     //   an intersection
-    uint64_t driveable_ferry  : 1;
-    uint64_t reclass_ferry    : 1;   // Has edge been reclassified due to
-                                     // ferry connection
-    uint64_t turn_channel     : 1;   // Link edge should be a turn channel
-    uint64_t way_begin        : 1;   // True if first edge of way
-    uint64_t way_end          : 1;   // True if last edge of way
-    uint64_t spare            : 30;
+    uint64_t traffic_signal : 1;
+    uint64_t forward_signal : 1;
+    uint64_t backward_signal : 1;
+    uint64_t link : 1;
+    uint64_t reclass_link : 1;
+    uint64_t has_names : 1;
+    uint64_t driveforward : 1; // For sorting in collect_node_edges
+                               //  - set based on source node
+    uint64_t shortlink : 1;    // true if this is a link edge and is
+                               //   short enough it may be internal to
+                               //   an intersection
+    uint64_t driveable_ferry : 1;
+    uint64_t reclass_ferry : 1; // Has edge been reclassified due to
+                                // ferry connection
+    uint64_t turn_channel : 1;  // Link edge should be a turn channel
+    uint64_t way_begin : 1;     // True if first edge of way
+    uint64_t way_end : 1;       // True if last edge of way
+    uint64_t spare : 30;
   };
   EdgeAttributes attributes;
 
@@ -70,8 +70,7 @@ struct Edge {
    * @param wayindex     Index into list of OSM ways
    * @param ll           Lat,lng at the start of the edge.
    */
-  static Edge make_edge(const uint32_t wayindex,
-       const uint32_t llindex, const OSMWay& way) {
+  static Edge make_edge(const uint32_t wayindex, const uint32_t llindex, const OSMWay& way) {
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
@@ -84,16 +83,13 @@ struct Edge {
       e.attributes.driveablereverse = way.auto_backward();
     }
     e.attributes.link = way.link();
-    e.attributes.driveable_ferry = (way.ferry() || way.rail()) &&
-                         (way.auto_forward() || way.auto_backward());
+    e.attributes.driveable_ferry =
+        (way.ferry() || way.rail()) && (way.auto_forward() || way.auto_backward());
     e.attributes.reclass_link = false;
     e.attributes.reclass_ferry = false;
-    e.attributes.has_names = (way.name_index_ != 0
-                           || way.name_en_index_ != 0
-                           || way.alt_name_index_ != 0
-                           || way.official_name_index_ != 0
-                           || way.ref_index_ != 0
-                           || way.int_ref_index_ != 0);
+    e.attributes.has_names =
+        (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
+         way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
     e.attributes.turn_channel = way.turn_channel();
     return e;
   }
@@ -103,16 +99,15 @@ struct Edge {
    * presence of names.
    * (TODO - end of simple restriction?)
    */
-  bool operator < (const Edge& other) const {
+  bool operator<(const Edge& other) const {
     // Is this a loop?
-    if (targetnode_ == other.targetnode_ &&
-        sourcenode_ == other.sourcenode_ &&
+    if (targetnode_ == other.targetnode_ && sourcenode_ == other.sourcenode_ &&
         sourcenode_ == targetnode_) {
       return false;
     }
 
     // Sort by driveability (forward, importance, has_names)
-    bool d  = attributes.driveforward;
+    bool d = attributes.driveforward;
     bool od = other.attributes.driveforward;
     if (d == od) {
       if (attributes.importance == other.attributes.importance) {
@@ -135,20 +130,20 @@ struct Edge {
  * Node within the graph
  */
 struct Node {
-  //the underlying osm node and attributes
+  // the underlying osm node and attributes
   OSMNode node;
-  //the graph edge that this node starts
+  // the graph edge that this node starts
   uint32_t start_of;
-  //the graph edge that this node ends
+  // the graph edge that this node ends
   uint32_t end_of;
-  //the graphid of the node
+  // the graphid of the node
   baldr::GraphId graph_id;
 
   bool is_start() const {
-    return start_of != - 1;
+    return start_of != -1;
   }
   bool is_end() const {
-    return end_of != - 1;
+    return end_of != -1;
   }
 };
 
@@ -159,16 +154,12 @@ struct node_bundle : Node {
   size_t non_link_count;
   size_t driveforward_count;
 
-  //TODO: to enable two directed edges per loop edge turn this into an
+  // TODO: to enable two directed edges per loop edge turn this into an
   // unordered_multimap or just a list of pairs
   std::map<Edge, size_t> node_edges;
 
   node_bundle(const Node& other)
-      : Node(other),
-        node_count(0),
-        link_count(0),
-        non_link_count(0),
-        driveforward_count(0) {
+      : Node(other), node_count(0), link_count(0), non_link_count(0), driveforward_count(0) {
   }
 };
 
@@ -179,6 +170,6 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
                                sequence<Node>& nodes,
                                sequence<Edge>& edges);
 
-}
-}
-#endif  // VALHALLA_MJOLNIR_NODE_EXPANDER_H_
+} // namespace mjolnir
+} // namespace valhalla
+#endif // VALHALLA_MJOLNIR_NODE_EXPANDER_H_

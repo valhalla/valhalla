@@ -13,7 +13,7 @@ namespace sif {
  */
 cost_ptr_t CreateTransitCost(const boost::property_tree::ptree& config);
 
-}
-}
+} // namespace sif
+} // namespace valhalla
 
-#endif  // VALHALLA_SIF_TRANSITCOST_H_
+#endif // VALHALLA_SIF_TRANSITCOST_H_

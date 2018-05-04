@@ -2,23 +2,23 @@
 #define VALHALLA_THOR_MULTIMODAL_H_
 
 #include <cstdint>
-#include <vector>
 #include <map>
+#include <memory>
 #include <unordered_map>
 #include <utility>
-#include <memory>
+#include <vector>
 
+#include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/double_bucket_queue.h>
+#include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
+#include <valhalla/thor/astar.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathinfo.h>
-#include <valhalla/thor/astar.h>
-#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace thor {
@@ -28,7 +28,7 @@ namespace thor {
  * transit (bus, subway, light-rail, etc.).
  */
 class MultiModalPathAlgorithm : public PathAlgorithm {
- public:
+public:
   /**
    * Constructor.
    */
@@ -51,22 +51,23 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    *          each edge).
    */
   std::vector<PathInfo> GetBestPath(odin::Location& origin,
-           odin::Location& dest, baldr::GraphReader& graphreader,
-           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-           const sif::TravelMode mode);
+                                    odin::Location& dest,
+                                    baldr::GraphReader& graphreader,
+                                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                                    const sif::TravelMode mode);
 
   /**
    * Clear the temporary information generated during path construction.
    */
   void Clear();
 
- protected:
+protected:
   // Current walking distance.
   uint32_t walking_distance_;
 
-  uint32_t max_label_count_;    // Max label count to allow
-  sif::TravelMode mode_;        // Current travel mode
-  uint8_t travel_type_;         // Current travel type
+  uint32_t max_label_count_; // Max label count to allow
+  sif::TravelMode mode_;     // Current travel mode
+  uint8_t travel_type_;      // Current travel type
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;
@@ -92,7 +93,8 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    * @param  destll  Lat,lng of the destination.
    * @param  costing Dynamic costing method.
    */
-  void Init(const PointLL& origll, const PointLL& destll,
+  void Init(const PointLL& origll,
+            const PointLL& destll,
             const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
@@ -127,21 +129,22 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    * or bikeshare locations are within walking distance.
    */
   bool CanReachDestination(const odin::Location& destination,
-           baldr::GraphReader& graphreader, const sif::TravelMode dest_mode,
-           const std::shared_ptr<sif::DynamicCost>& costing);
+                           baldr::GraphReader& graphreader,
+                           const sif::TravelMode dest_mode,
+                           const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
-    * Form the path from the adjacency list. Recovers the path from the
-    * destination backwards towards the origin (using predecessor information)
-    * @param   dest  Index in the edge labels of the destination edge.
-    * @return  Returns the path info, a list of GraphIds representing the
-    *          directed edges along the path - ordered from origin to
-    *          destination - along with travel modes and elapsed time.
-    */
-   std::vector<PathInfo> FormPath(const uint32_t dest);
+   * Form the path from the adjacency list. Recovers the path from the
+   * destination backwards towards the origin (using predecessor information)
+   * @param   dest  Index in the edge labels of the destination edge.
+   * @return  Returns the path info, a list of GraphIds representing the
+   *          directed edges along the path - ordered from origin to
+   *          destination - along with travel modes and elapsed time.
+   */
+  std::vector<PathInfo> FormPath(const uint32_t dest);
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_MULTIMODAL_H_
+#endif // VALHALLA_THOR_MULTIMODAL_H_

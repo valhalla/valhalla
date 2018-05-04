@@ -3,7 +3,6 @@
 #include "midgard/util.h"
 #include "test.h"
 
-
 using namespace std;
 using namespace valhalla::midgard;
 
@@ -11,7 +10,7 @@ namespace {
 
 void TestCtorDefault() {
   Vector2 target;
-  Vector2 expected { 0.0f, 0.0f };
+  Vector2 expected{0.0f, 0.0f};
   if (!(expected == target))
     throw runtime_error("CtorDefault test failed");
 }
@@ -38,18 +37,15 @@ void TestCtorFloatFloat() {
   TryCtorFloatFloat(-8.0f, 6.0f, Vector2(-8.0f, 6.0f));
 }
 
-void TryCtorPoint2Point2(const Point2& from, const Point2& to,
-                         const Vector2& expected) {
+void TryCtorPoint2Point2(const Point2& from, const Point2& to, const Vector2& expected) {
   Vector2 result(from, to);
   if (!(expected == result))
     throw runtime_error("CtorPoint2Point2 test failed");
 }
 
 void TestCtorPoint2Point2() {
-  TryCtorPoint2Point2(Point2(4.0f, 0.0f), Point2(3.0f, 3.0f),
-                      Vector2(-1.0f, 3.0f));
-  TryCtorPoint2Point2(Point2(4.0f, 2.0f), Point2(4.0f, -2.0f),
-                      Vector2(0.0f, -4.0f));
+  TryCtorPoint2Point2(Point2(4.0f, 0.0f), Point2(3.0f, 3.0f), Vector2(-1.0f, 3.0f));
+  TryCtorPoint2Point2(Point2(4.0f, 2.0f), Point2(4.0f, -2.0f), Vector2(0.0f, -4.0f));
 }
 
 void TryCtorVector2(const Vector2& v, const Vector2& expected) {
@@ -102,7 +98,7 @@ void TrySet_x(Vector2& v, const float expected) {
 }
 
 void TestSet_x() {
-  Vector2 v { 1.0f, 1.0f };
+  Vector2 v{1.0f, 1.0f};
   TrySet_x(v, 3.0f);
   TrySet_x(v, -8.0f);
 }
@@ -114,7 +110,7 @@ void TrySet_y(Vector2& v, const float expected) {
 }
 
 void TestSet_y() {
-  Vector2 v { 1.0f, 1.0f };
+  Vector2 v{1.0f, 1.0f};
   TrySet_y(v, 3.0f);
   TrySet_y(v, -8.0f);
 }
@@ -143,8 +139,7 @@ void TestSetPoint2() {
   TrySetPoint2(Point2(-8.0f, 6.0f), Vector2(-8.0f, 6.0f));
 }
 
-void TrySetPoint2Point2(const Point2& from, const Point2& to,
-                        const Vector2& expected) {
+void TrySetPoint2Point2(const Point2& from, const Point2& to, const Vector2& expected) {
   Vector2 result;
   result.Set(from, to);
   if (!(expected == result))
@@ -152,14 +147,11 @@ void TrySetPoint2Point2(const Point2& from, const Point2& to,
 }
 
 void TestSetPoint2Point2() {
-  TrySetPoint2Point2(Point2(4.0f, 0.0f), Point2(3.0f, 3.0f),
-                     Vector2(-1.0f, 3.0f));
-  TrySetPoint2Point2(Point2(4.0f, 2.0f), Point2(4.0f, -2.0f),
-                     Vector2(0.0f, -4.0f));
+  TrySetPoint2Point2(Point2(4.0f, 0.0f), Point2(3.0f, 3.0f), Vector2(-1.0f, 3.0f));
+  TrySetPoint2Point2(Point2(4.0f, 2.0f), Point2(4.0f, -2.0f), Vector2(0.0f, -4.0f));
 }
 
-void TryOpAddition(const Vector2& v, const Vector2& w,
-                   const Vector2& expected) {
+void TryOpAddition(const Vector2& v, const Vector2& w, const Vector2& expected) {
   Vector2 result = v + w;
   if (!(expected == result))
     throw runtime_error("OpAddition test failed");
@@ -167,54 +159,47 @@ void TryOpAddition(const Vector2& v, const Vector2& w,
 
 void TestOpAddition() {
   TryOpAddition(Vector2(4.0f, -2.0f), Vector2(3.0f, 3.0f), Vector2(7.0f, 1.0f));
-  TryOpAddition(Vector2(4.0f, 2.0f), Vector2(-2.0f, -2.0f),
-                Vector2(2.0f, 0.0f));
+  TryOpAddition(Vector2(4.0f, 2.0f), Vector2(-2.0f, -2.0f), Vector2(2.0f, 0.0f));
 }
 
-void TryOpAdditionAssignment(Vector2& v, const Vector2& w,
-                             const Vector2& expected) {
+void TryOpAdditionAssignment(Vector2& v, const Vector2& w, const Vector2& expected) {
   v += w;
   if (!(expected == v))
     throw runtime_error("OpAdditionAssignment test failed");
 }
 
 void TestOpAdditionAssignment() {
-  Vector2 v1 { 4.0f, -2.0f };
+  Vector2 v1{4.0f, -2.0f};
   TryOpAdditionAssignment(v1, Vector2(3.0f, 3.0f), Vector2(7.0f, 1.0f));
-  Vector2 v2 { 4.0f, 2.0f };
+  Vector2 v2{4.0f, 2.0f};
   TryOpAdditionAssignment(v2, Vector2(-2.0f, -2.0f), Vector2(2.0f, 0.0f));
 }
 
-void TryOpSubtraction(const Vector2& v, const Vector2& w,
-                      const Vector2& expected) {
+void TryOpSubtraction(const Vector2& v, const Vector2& w, const Vector2& expected) {
   Vector2 result = v - w;
   if (!(expected == result))
     throw runtime_error("OpSubtraction test failed");
 }
 
 void TestOpSubtraction() {
-  TryOpSubtraction(Vector2(4.0f, -2.0f), Vector2(3.0f, 3.0f),
-                   Vector2(1.0f, -5.0f));
-  TryOpSubtraction(Vector2(4.0f, 2.0f), Vector2(-2.0f, -2.0f),
-                   Vector2(6.0f, 4.0f));
+  TryOpSubtraction(Vector2(4.0f, -2.0f), Vector2(3.0f, 3.0f), Vector2(1.0f, -5.0f));
+  TryOpSubtraction(Vector2(4.0f, 2.0f), Vector2(-2.0f, -2.0f), Vector2(6.0f, 4.0f));
 }
 
-void TryOpSubtractionAssignment(Vector2& v, const Vector2& w,
-                                const Vector2& expected) {
+void TryOpSubtractionAssignment(Vector2& v, const Vector2& w, const Vector2& expected) {
   v -= w;
   if (!(expected == v))
     throw runtime_error("OpSubtractionAssignment test failed");
 }
 
 void TestOpSubtractionAssignment() {
-  Vector2 v1 { 4.0f, -2.0f };
+  Vector2 v1{4.0f, -2.0f};
   TryOpSubtractionAssignment(v1, Vector2(3.0f, 3.0f), Vector2(1.0f, -5.0f));
-  Vector2 v2 { 4.0f, 2.0f };
+  Vector2 v2{4.0f, 2.0f};
   TryOpSubtractionAssignment(v2, Vector2(-2.0f, -2.0f), Vector2(6.0f, 4.0f));
 }
 
-void TryOpMultiplication(const Vector2& v, const float scalar,
-                         const Vector2& expected) {
+void TryOpMultiplication(const Vector2& v, const float scalar, const Vector2& expected) {
   Vector2 result = v * scalar;
   if (!(expected == result))
     throw runtime_error("OpMultiplication test failed");
@@ -229,17 +214,16 @@ void TestOpMultiplication() {
   TryOpMultiplication(Vector2(-4.0f, 2.0f), -2.0f, Vector2(8.0f, -4.0f));
 }
 
-void TryOpMultiplicationAssignment(Vector2& v, const float scalar,
-                                   const Vector2& expected) {
+void TryOpMultiplicationAssignment(Vector2& v, const float scalar, const Vector2& expected) {
   v *= scalar;
   if (!(expected == v))
     throw runtime_error("OpMultiplicationAssignment test failed");
 }
 
 void TestOpMultiplicationAssignment() {
-  Vector2 v1 { 4.0f, -2.0f };
+  Vector2 v1{4.0f, -2.0f};
   TryOpMultiplicationAssignment(v1, 3.0f, Vector2(12.0f, -6.0f));
-  Vector2 v2 { -4.0f, 2.0f };
+  Vector2 v2{-4.0f, 2.0f};
   TryOpMultiplicationAssignment(v2, -2.0f, Vector2(8.0f, -4.0f));
 }
 
@@ -334,8 +318,7 @@ void TestComponent() {
   TryComponent(Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f), 2.0f);
 }
 
-void TryProjection(const Vector2& a, const Vector2& b,
-                   const Vector2& expected) {
+void TryProjection(const Vector2& a, const Vector2& b, const Vector2& expected) {
   Vector2 result = a.Projection(b);
   if (!(expected == result))
     throw runtime_error("Projection test failed");
@@ -344,8 +327,7 @@ void TryProjection(const Vector2& a, const Vector2& b,
 void TestProjection() {
   TryProjection(Vector2(3.0f, 4.0f), Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f));
   TryProjection(Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f), Vector2(6.0f, 8.0f));
-  TryProjection(Vector2(2.0f, 1.0f), Vector2(-3.0f, 4.0f),
-                Vector2(6.0f / 25.0f, -8.0f / 25.0f));
+  TryProjection(Vector2(2.0f, 1.0f), Vector2(-3.0f, 4.0f), Vector2(6.0f / 25.0f, -8.0f / 25.0f));
 }
 
 void TryAngleBetween(const Vector2& a, const Vector2& b, float expected) {
@@ -366,15 +348,15 @@ void TryReflect(const Vector2& a, const Vector2& b, const Vector2& expected) {
 }
 
 void TestReflect() {
-  Vector2 n1 { 0.0f, 2.0f };
+  Vector2 n1{0.0f, 2.0f};
   n1.Normalize();
   TryReflect(Vector2(4.0f, -2.0f), n1, Vector2(4.0f, 2.0f));
-  Vector2 n2 { -3.0f, 0.0f };
+  Vector2 n2{-3.0f, 0.0f};
   n2.Normalize();
   TryReflect(Vector2(3.0f, -4.0f), n2, Vector2(-3.0f, -4.0f));
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("vector2");

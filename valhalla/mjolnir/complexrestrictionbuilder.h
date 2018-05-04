@@ -2,10 +2,10 @@
 #define VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 
 #include <cstdint>
-#include <vector>
+#include <iostream>
 #include <list>
 #include <string>
-#include <iostream>
+#include <vector>
 
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -22,7 +22,7 @@ namespace mjolnir {
  * via edge GraphIds. Includes a method to serialize the structure.
  */
 class ComplexRestrictionBuilder : public baldr::ComplexRestriction {
- public:
+public:
   /**
    * Set the from edge graph id.
    * @param  from_id  from graph id.
@@ -44,8 +44,7 @@ class ComplexRestrictionBuilder : public baldr::ComplexRestriction {
    * @param  count Number of vias
    */
   void set_via_count(const uint64_t count) {
-    via_count_ = (count > kMaxViasPerRestriction) ?
-        kMaxViasPerRestriction : count;
+    via_count_ = (count > kMaxViasPerRestriction) ? kMaxViasPerRestriction : count;
   }
 
   /**
@@ -91,7 +90,7 @@ class ComplexRestrictionBuilder : public baldr::ComplexRestriction {
    * Set the begin month for the restriction.
    * @param  begin_month  begin month for this restriction.
    */
-  void set_begin_month(const uint64_t begin_month){
+  void set_begin_month(const uint64_t begin_month) {
     begin_month_ = begin_month;
   }
 
@@ -107,7 +106,7 @@ class ComplexRestrictionBuilder : public baldr::ComplexRestriction {
    * Set the begin hours for the restriction.
    * @param  begin_hrs  begin hours for this restriction.
    */
-  void set_begin_hrs(const uint64_t begin_hrs){
+  void set_begin_hrs(const uint64_t begin_hrs) {
     begin_hrs_ = begin_hrs;
   }
 
@@ -182,17 +181,16 @@ class ComplexRestrictionBuilder : public baldr::ComplexRestriction {
    * @return  Returns true or false if equal or not.
    *
    */
-  bool operator == (const ComplexRestrictionBuilder& other) const;
+  bool operator==(const ComplexRestrictionBuilder& other) const;
 
- protected:
-
+protected:
   // via list
   std::vector<GraphId> via_list_;
 
   friend std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb);
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
+#endif // VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_

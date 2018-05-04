@@ -45,31 +45,27 @@ protected:
 struct edge_tracker {
   typedef std::unordered_map<GraphId, uint64_t> edge_index_t;
 
-  template <typename TileSet>
-  static edge_tracker create(TileSet &tiles, GraphReader &reader);
+  template <typename TileSet> static edge_tracker create(TileSet& tiles, GraphReader& reader);
 
-  bool get(const GraphId &edge_id) const;
-  void set(const GraphId &edge_id);
+  bool get(const GraphId& edge_id) const;
+  void set(const GraphId& edge_id);
 
   edge_index_t m_edges_in_tiles;
-  //this is how we know what i've touched and what we havent
+  // this is how we know what i've touched and what we havent
   bitset_t m_edge_set;
 
 private:
-  edge_tracker(edge_index_t &&edges, size_t n)
-    : m_edges_in_tiles(std::move(edges))
-    , m_edge_set(n)
-    {}
+  edge_tracker(edge_index_t&& edges, size_t n) : m_edges_in_tiles(std::move(edges)), m_edge_set(n) {
+  }
 };
 
-template <typename TileSet>
-edge_tracker edge_tracker::create(TileSet &tiles, GraphReader &reader) {
-  //keep the global number of edges encountered at the point we encounter each tile
-  //this allows an edge to have a sequential global id and makes storing it very small
+template <typename TileSet> edge_tracker edge_tracker::create(TileSet& tiles, GraphReader& reader) {
+  // keep the global number of edges encountered at the point we encounter each tile
+  // this allows an edge to have a sequential global id and makes storing it very small
   uint64_t edge_count = 0;
   edge_tracker::edge_index_t edges_in_tiles;
   for (GraphId tile_id : tiles) {
-    //TODO: just read the header, parsing the whole thing isnt worth it at this point
+    // TODO: just read the header, parsing the whole thing isnt worth it at this point
     edges_in_tiles.emplace(tile_id, edge_count);
     const auto* tile = reader.GetGraphTile(tile_id);
     edge_count += tile->header()->directededgecount();
@@ -82,7 +78,7 @@ edge_tracker edge_tracker::create(TileSet &tiles, GraphReader &reader) {
   return edge_tracker(std::move(edges_in_tiles), edge_count);
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_EDGE_TRACKER_H_
+#endif // VALHALLA_BALDR_EDGE_TRACKER_H_
