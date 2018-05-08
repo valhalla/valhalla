@@ -13,7 +13,7 @@ namespace {
 // the max edge cost in the adjacency set?
 int GetThreshold(const TravelMode mode, const int n) {
   return (mode == TravelMode::kDrive) ?
-      n + std::min(8500, std::max(100, n / 3)) :
+      n + std::min(8500, std::max(200, n / 3)) :
       n + 500;
 }
 
