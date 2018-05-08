@@ -13,6 +13,7 @@
 #include "baldr/timedomain.h"
 #include "baldr/graphconstants.h"
 #include "baldr/reutil.h"
+#include "midgard/logging.h"
 
 #include "date_time_zonespec.h"
 
@@ -1551,6 +1552,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     LOG_INFO("invalid_argument thrown for condition " + str);
   } catch (const std::out_of_range& oor) {
     LOG_INFO("out_of_range thrown for condition: " + str);
+  } catch (const std::runtime_error& oor) {
+    //TODO deal with these.  For now toss.
+    //LOG_INFO("runtime_error thrown for condition: " + str);
   }
   return time_domains;
 }
