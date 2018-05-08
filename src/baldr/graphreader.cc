@@ -1,6 +1,7 @@
 #include "baldr/graphreader.h"
 
 #include <string>
+#include <thread>
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
@@ -11,6 +12,7 @@
 
 #include "baldr/connectivity_map.h"
 #include "baldr/filesystem_utils.h"
+#include "baldr/curler.h"
 
 using namespace valhalla::baldr;
 
@@ -23,36 +25,239 @@ namespace {
 namespace valhalla {
 namespace baldr {
 
-struct GraphReader::tile_extract_t : public midgard::tar {
-  tile_extract_t(const boost::property_tree::ptree& pt):tar(pt.get<std::string>("tile_extract","")) {
-    //if you really meant to load it
-    if(pt.get_optional<std::string>("tile_extract")) {
-      //map files to graph ids
-      for(auto& c : contents) {
-        try {
-          auto id = GraphTile::GetTileId(c.first);
-          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-        }
-        catch(...){}
-      }
-      //couldn't load it
-      if(tiles.empty()) {
-        LOG_WARN("Tile extract could not be loaded");
-      }//loaded ok but with possibly bad blocks
-      else {
-        LOG_INFO("Tile extract successfully loaded");
-        if(corrupt_blocks)
-          LOG_WARN("Tile extract had " + std::to_string(corrupt_blocks) + " corrupt blocks");
-      }
-    }
+class GraphReader::tile_source_t
+{
+public:
+  tile_source_t(const std::shared_ptr<tile_source_t> &next) : next_(next){
   }
-  // TODO: dont remove constness, and actually make graphtile read only?
-  std::unordered_map<uint64_t, std::pair<char*, size_t> > tiles;
+
+  virtual ~tile_source_t(){
+  }
+
+  virtual size_t getAverageTileSize(){
+    return AVERAGE_TILE_SIZE;
+  }
+
+  virtual bool DoesTileExist(const GraphId& base){
+    return next_ ? next_->DoesTileExist(base) : false;
+  }
+
+  virtual std::pair<GraphTile, uint32_t> GetGraphTile(const GraphId& graphid){
+    return next_ ? next_->GetGraphTile(graphid) : std::make_pair(GraphTile(), (uint32_t)0);
+  }
+
+  virtual void FillTileSet(std::unordered_set<GraphId> &result){
+    if(next_)
+      next_->FillTileSet(result);
+  }
+
+  virtual void FillTileSet(std::unordered_set<GraphId> &result, const uint8_t level) {
+    if(next_)
+      next_->FillTileSet(result, level);
+  }
+
+private:
+  std::shared_ptr<tile_source_t> next_;
 };
 
-std::shared_ptr<const GraphReader::tile_extract_t> GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
-  static std::shared_ptr<const GraphReader::tile_extract_t> tile_extract(new GraphReader::tile_extract_t(pt));
-  return tile_extract;
+class GraphReader::tile_source_extract_t : public GraphReader::tile_source_t {
+public:
+  tile_source_extract_t(const std::shared_ptr<tile_source_t> &next, const std::string &tile_extract_path) :
+      tile_source_t(std::move(next)),
+      tar_(tile_extract_path){
+    for(auto& c : tar_.contents) {
+      try {
+        auto id = GraphTile::GetTileId(c.first);
+        tiles_[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+      }
+      catch(...){}
+    }
+    if(tiles_.empty()) {
+      LOG_WARN("Tile extract could not be loaded");
+    }//loaded ok but with possibly bad blocks
+    else {
+      LOG_INFO("Tile extract successfully loaded");
+      if(tar_.corrupt_blocks)
+        LOG_WARN("Tile extract had " + std::to_string(tar_.corrupt_blocks) + " corrupt blocks");
+    }
+  }
+
+  virtual ~tile_source_extract_t(){
+  }
+
+  virtual size_t getAverageTileSize(){
+    return AVERAGE_MM_TILE_SIZE;
+  }
+
+  virtual bool DoesTileExist(const GraphId& graphid){
+    return tiles_.find(graphid) != tiles_.cend() ? true : tile_source_t::DoesTileExist(graphid);
+  }
+
+  virtual void FillTileSet(std::unordered_set<GraphId> &result){
+    for(const auto& t : tiles_)
+      result.emplace(t.first);
+    tile_source_t::FillTileSet(result);
+  }
+
+  virtual void FillTileSet(std::unordered_set<GraphId> &result, const uint8_t level){
+    for(const auto& t : tiles_)
+      if(GraphId(t.first).level() == level)
+        result.emplace(t.first);
+    tile_source_t::FillTileSet(result, level);
+  }
+
+  virtual std::pair<GraphTile, uint32_t> GetGraphTile(const GraphId& base){
+    auto t = tiles_.find(base);
+    if(t == tiles_.cend())
+      return tile_source_t::GetGraphTile(base);
+    GraphTile tile(base, t->second.first, t->second.second);
+    if (!tile.header())
+      return tile_source_t::GetGraphTile(base);
+    return std::make_pair(tile, t->second.second);
+  }
+
+  const std::unordered_map<uint64_t, std::pair<char*, size_t> > &getTiles(){
+    return tiles_;
+  }
+private:
+  midgard::tar tar_;
+  std::unordered_map<uint64_t, std::pair<char*, size_t> > tiles_;
+};
+
+class GraphReader::tile_source_files_t : public GraphReader::tile_source_t
+{
+public:
+  tile_source_files_t(const std::shared_ptr<tile_source_t> &next, const std::string &tile_dir):
+      tile_source_t(std::move(next)),tile_dir_(tile_dir) {
+  }
+
+  virtual bool DoesTileExist(const GraphId& graphid){
+    std::string file_location = tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(graphid.Tile_Base());
+    struct stat buffer;
+    return stat(file_location.c_str(), &buffer) == 0 || stat((file_location + ".gz").c_str(), &buffer) == 0;
+  }
+
+  virtual void FillTileSet(std::unordered_set<GraphId> &result){
+    //Check files only when other sources have no tiles
+    if(result.size() == 0)
+    {
+      for(uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
+        //crack open this level of tiles directory
+        boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator + std::to_string(level) + filesystem::path_separator);
+        if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+          //iterate over all the files in there
+          for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+            if (!boost::filesystem::is_directory(i->path())) {
+              //add it if it can be parsed as a valid tile file name
+              try { result.emplace(GraphTile::GetTileId(i->path().string())); }
+              catch (...) { }
+            }
+          }
+        }
+      }
+    }
+    tile_source_t::FillTileSet(result);
+  }
+
+  virtual void FillTileSet(std::unordered_set<GraphId> &result, const uint8_t level) {
+    //Check files only when other sources have no tiles
+    if(result.size() == 0)
+    {
+      boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator + std::to_string(level) + filesystem::path_separator);
+      if (boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+        // iterate over all the files in the directory and turn into GraphIds
+        for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+          if (!boost::filesystem::is_directory(i->path())) {
+            //add it if it can be parsed as a valid tile file name
+            try { result.emplace(GraphTile::GetTileId(i->path().string())); }
+            catch (...) { }
+          }
+        }
+      }
+    }
+    tile_source_t::FillTileSet(result, level);
+  }
+
+  virtual std::pair<GraphTile, uint32_t> GetGraphTile(const GraphId& base){
+    GraphTile tile(tile_dir_, base);
+    if (!tile.header())
+      return tile_source_t::GetGraphTile(base);
+    return std::make_pair(tile, tile.header()->end_offset());
+  }
+
+private:
+  std::string tile_dir_;
+};
+
+class GraphReader::tile_source_curl_t : public GraphReader::tile_source_t
+{
+public:
+  tile_source_curl_t(const std::shared_ptr<tile_source_t> &next, const std::string &tile_url):
+      tile_source_t(std::move(next)),tile_url_(tile_url) {
+
+  }
+
+  virtual ~tile_source_curl_t(){
+  }
+
+  virtual std::pair<GraphTile, uint32_t> GetGraphTile(const GraphId& base){
+    if(_404s.find(base) != _404s.end())
+      return tile_source_t::GetGraphTile(base);
+    
+    GraphTile tile(tile_url_, base, curler_);
+    if(!tile.header()) {
+      _404s.insert(base);
+      return tile_source_t::GetGraphTile(base);
+    }
+    return std::make_pair(tile, tile.header()->end_offset());
+  }
+
+private:
+  std::string tile_url_;
+  curler_t curler_;
+  std::unordered_set<GraphId> _404s;
+};
+
+std::shared_ptr<GraphReader::tile_source_t> GraphReader::get_source_instance(const boost::property_tree::ptree& pt)
+{
+  static std::once_flag once_flag;
+  static std::shared_ptr<tile_source_t> instance;
+  std::call_once(once_flag, [&]{
+
+    auto tile_url = pt.get_optional<std::string>("tile_url");
+    if(tile_url)
+    {
+      instance = std::make_shared<tile_source_curl_t>(instance ,tile_url.get());
+    }
+
+    auto tile_dir =  pt.get_optional<std::string>("tile_dir");
+    if(tile_dir)
+    {
+      instance = std::make_shared<tile_source_files_t>(instance ,tile_dir.get());
+    }
+
+    auto tile_extracts = pt.get_child_optional("tile_extracts");
+    if(tile_extracts)
+    {
+      for(auto it = tile_extracts.get().rbegin(); it != tile_extracts.get().rend(); ++it)
+      {
+        auto tile_source_extract = std::make_shared<tile_source_extract_t>(instance, it->second.get_value<std::string>());
+        //Does something readed from tar ?
+        if(tile_source_extract->getTiles().size())
+          instance = tile_source_extract;
+      }
+    }
+
+    auto tile_extract = pt.get_optional<std::string>("tile_extract");
+    if(tile_extract)
+    {
+      auto tile_source_extract = std::make_shared<tile_source_extract_t>(instance, tile_extract.get());
+      //Does something readed from tar ?
+      if(tile_source_extract->getTiles().size())
+        instance = tile_source_extract;
+    }
+  });
+  return instance;
 }
 
 // Constructor.
@@ -172,13 +377,12 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt)
-    : tile_url_(pt.get<std::string>("tile_url", "")),
+    : cache_(TileCacheFactory::createTileCache(pt)),
       tile_dir_(pt.get<std::string>("tile_dir")),
-      tile_extract_(get_extract_instance(pt)),
-      cache_(TileCacheFactory::createTileCache(pt)) {
+      tile_source_(get_source_instance(pt)) {
   // Reserve cache (based on whether using individual tile files or shared,
   // mmap'd file
-  cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
+  cache_->Reserve(tile_source_->getAverageTileSize());
 }
 
 // Method to test if tile exists
@@ -186,31 +390,18 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
     return false;
   }
-  //if you are using an extract only check that
-  if(!tile_extract_->tiles.empty())
-    return tile_extract_->tiles.find(graphid) != tile_extract_->tiles.cend();
-  //otherwise check memory or disk
+  //check tiles cahced in memory or disk
   if(cache_->Contains(graphid))
     return true;
-  std::string file_location = tile_dir_ + filesystem::path_separator +
-            GraphTile::FileSuffix(graphid.Tile_Base());
-  struct stat buffer;
-  return stat(file_location.c_str(), &buffer) == 0 || stat((file_location + ".gz").c_str(), &buffer) == 0;
+
+  return tile_source_->DoesTileExist(graphid);
 }
 
 bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid) {
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
     return false;
   }
-  //if you are using an extract only check that
-  auto extract = get_extract_instance(pt);
-  if(!extract->tiles.empty())
-    return extract->tiles.find(graphid) != extract->tiles.cend();
-  //otherwise check the disk
-  std::string file_location = pt.get<std::string>("tile_dir") + filesystem::path_separator +
-            GraphTile::FileSuffix(graphid.Tile_Base());
-  struct stat buffer;
-  return stat(file_location.c_str(), &buffer) == 0 || stat((file_location + ".gz").c_str(), &buffer) == 0;
+  return get_source_instance(pt)->DoesTileExist(graphid);
 }
 
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
@@ -229,41 +420,11 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return cached;
   }
 
-  // Try getting it from the memmapped tar extract
-  if (!tile_extract_->tiles.empty()) {
-    // Do we have this tile
-    auto t = tile_extract_->tiles.find(base);
-    if(t == tile_extract_->tiles.cend())
-      return nullptr;
-
-    // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second);
-    if (!tile.header())
-      return nullptr;
-
-    // Keep a copy in the cache and return it
-    size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
-    auto inserted = cache_->Put(base, tile, size);
-    return inserted;
-  }// Try getting it from flat file
-  else {
-    // This reads the tile from disk
-    GraphTile tile(tile_dir_, base);
-    if (!tile.header()) {
-      if(tile_url_.empty() || _404s.find(base) != _404s.end())
-        return nullptr;
-      tile = GraphTile(tile_url_, base, curler);
-      if(!tile.header()) {
-        _404s.insert(base);
-        return nullptr;
-      }
-    }
-
-    // Keep a copy in the cache and return it
-    size_t size = tile.header()->end_offset();
-    auto inserted = cache_->Put(base, tile, size);
-    return inserted;
-  }
+  //Load tile from source.
+  auto p = tile_source_->GetGraphTile(base);
+  if (!p.first.header())
+    return nullptr;
+  return cache_->Put(base, p.first, p.second);
 }
 
 // Convenience method to get an opposing directed edge graph Id.
@@ -470,58 +631,16 @@ std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* t
 
 // Note: this will grab all road tiles and transit tiles.
 std::unordered_set<GraphId> GraphReader::GetTileSet() const {
-  //either mmap'd tiles
-  std::unordered_set<GraphId> tiles;
-  if(tile_extract_->tiles.size()) {
-    for(const auto& t : tile_extract_->tiles)
-      tiles.emplace(t.first);
-  }//or individually on disk
-  else {
-    //for each level
-    for(uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
-      //crack open this level of tiles directory
-      boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator + std::to_string(level) + filesystem::path_separator);
-      if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
-        //iterate over all the files in there
-        for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-          if (!boost::filesystem::is_directory(i->path())) {
-            //add it if it can be parsed as a valid tile file name
-            try { tiles.emplace(GraphTile::GetTileId(i->path().string())); }
-            catch (...) { }
-          }
-        }
-      }
-    }
-  }
-
-  //give them back
-  return tiles;
+  std::unordered_set<GraphId> rv;
+  tile_source_->FillTileSet(rv);
+  return rv;
 }
 
 // Get the set of tiles for a specified level
 std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
-  //either mmap'd tiles
-  std::unordered_set<GraphId> tiles;
-  if(tile_extract_->tiles.size()) {
-    for(const auto& t : tile_extract_->tiles)
-      if(static_cast<GraphId>(t.first).level() == level)
-        tiles.emplace(t.first);
-  }//or individually on disk
-  else {
-    //crack open this level of tiles directory
-    boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator + std::to_string(level) + filesystem::path_separator);
-    if (boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
-      // iterate over all the files in the directory and turn into GraphIds
-      for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-        if (!boost::filesystem::is_directory(i->path())) {
-          //add it if it can be parsed as a valid tile file name
-          try { tiles.emplace(GraphTile::GetTileId(i->path().string())); }
-          catch (...) { }
-        }
-      }
-    }
-  }
-  return tiles;
+  std::unordered_set<GraphId> rv;
+  tile_source_->FillTileSet(rv, level);
+  return rv;
 }
 
 }
