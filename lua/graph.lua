@@ -300,7 +300,8 @@ cycleway = {
 ["share_busway"] = "true",
 ["allowed"] = "true",
 ["private"] = "true",
-["cyclestreet"] = "true"
+["cyclestreet"] = "true",
+["crossing"] = "true"
 }
 
 bike_reverse = {

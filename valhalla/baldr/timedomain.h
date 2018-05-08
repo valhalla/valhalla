@@ -2,7 +2,6 @@
 #define VALHALLA_BALDR_TIMEDOMAIN_H_
 
 #include <valhalla/baldr/graphconstants.h>
-#include "midgard/logging.h"
 #include <vector>
 
 namespace valhalla {
@@ -48,7 +47,7 @@ union TimeDomain {
     */
    void set_dow(const uint8_t dow) {
      if (dow > kMaxDateRangeDowMask) {
-       LOG_WARN("Exceeding max dow value. Skipping");
+       throw std::runtime_error("Exceeding max dow value. Skipping");
      } else {
        daterange.dow = dow;
      }
@@ -62,7 +61,7 @@ union TimeDomain {
      if (begin_hrs == 24) {
        daterange.begin_hrs = 0;
      } else if (begin_hrs > kMaxDateRangeHrs) {
-       LOG_WARN("Exceeding max begin hrs value. Skipping");
+       throw std::runtime_error("Exceeding max begin hrs value. Skipping");
      } else {
        daterange.begin_hrs = begin_hrs;
      }
@@ -76,7 +75,7 @@ union TimeDomain {
      if (begin_mins == 60) {
        daterange.begin_mins = 0;
      } else if (begin_mins > kMaxDateRangeMins) {
-       LOG_WARN("Exceeding max begin mins value. Skipping");
+       throw std::runtime_error("Exceeding max begin mins value. Skipping");
      } else {
        daterange.begin_mins = begin_mins;
      }
@@ -88,7 +87,7 @@ union TimeDomain {
     */
    void set_begin_month(const uint8_t begin_month) {
      if (begin_month > kMaxDateRangeMonth) {
-       LOG_WARN("Exceeding max begin month value. Skipping");
+       throw std::runtime_error("Exceeding max begin month value. Skipping");
      } else {
        daterange.begin_month = begin_month;
      }
@@ -101,9 +100,9 @@ union TimeDomain {
     */
    void set_begin_day_dow(const uint8_t begin_day_dow) {
      if (daterange.type == kYMD && begin_day_dow > kMaxDateRangeDay) {
-       LOG_WARN("Exceeding max begin day value. Skipping");
+       throw std::runtime_error("Exceeding max begin day value. Skipping");
      } else if (daterange.type == kNthDow && begin_day_dow > kMaxDateRangeDow) {
-       LOG_WARN("Exceeding max begin dow value. Skipping");
+       throw std::runtime_error("Exceeding max begin dow value. Skipping");
      } else {
        daterange.begin_day_dow = begin_day_dow;
      }
@@ -116,7 +115,7 @@ union TimeDomain {
     */
    void set_begin_week(const uint8_t begin_week) {
      if (begin_week > kMaxDateRangeWeek) {
-       LOG_WARN("Exceeding max begin week value. Skipping");
+       throw std::runtime_error("Exceeding max begin week value. Skipping");
      } else {
        daterange.begin_week = begin_week;
      }
@@ -130,7 +129,7 @@ union TimeDomain {
      if (end_hrs == 24) {
        daterange.end_hrs = 0;
      } else if (end_hrs > kMaxDateRangeHrs) {
-       LOG_WARN("Exceeding max end hrs value. Skipping");
+       throw std::runtime_error("Exceeding max end hrs value. Skipping");
      } else {
        daterange.end_hrs = end_hrs;
      }
@@ -144,7 +143,7 @@ union TimeDomain {
      if (end_mins == 60) {
        daterange.end_mins = 0;
      } else if (end_mins > kMaxDateRangeMins) {
-       LOG_WARN("Exceeding max end mins value. Skipping");
+       throw std::runtime_error("Exceeding max end mins value. Skipping");
      } else {
        daterange.end_mins = end_mins;
      }
@@ -156,7 +155,7 @@ union TimeDomain {
     */
    void set_end_month(const uint8_t end_month) {
      if (end_month > kMaxDateRangeMonth) {
-       LOG_WARN("Exceeding max end month value. Skipping");
+       throw std::runtime_error("Exceeding max end month value. Skipping");
      } else {
        daterange.end_month = end_month;
      }
@@ -169,9 +168,9 @@ union TimeDomain {
     */
    void set_end_day_dow(const uint8_t end_day_dow) {
      if (daterange.type == kYMD && end_day_dow > kMaxDateRangeDay) {
-       LOG_WARN("Exceeding max end day value. Skipping");
+       throw std::runtime_error("Exceeding max end day value. Skipping");
      } else if (daterange.type == kNthDow && end_day_dow > kMaxDateRangeDow) {
-       LOG_WARN("Exceeding max end dow value. Skipping");
+       throw std::runtime_error("Exceeding max end dow value. Skipping");
      } else {
        daterange.end_day_dow = end_day_dow;
      }
@@ -184,7 +183,7 @@ union TimeDomain {
     */
    void set_end_week(const uint8_t end_week) {
      if (end_week > kMaxDateRangeWeek) {
-       LOG_WARN("Exceeding max end week value. Skipping");
+       throw std::runtime_error("Exceeding max end week value. Skipping");
      } else {
        daterange.end_week = end_week;
      }
