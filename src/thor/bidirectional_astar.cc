@@ -13,7 +13,7 @@ namespace {
 // the max edge cost in the adjacency set?
 int GetThreshold(const TravelMode mode, const int n) {
   return (mode == TravelMode::kDrive) ?
-      n + std::min(8500, std::max(100, n / 3)) :
+      n + std::min(8500, std::max(200, n / 3)) :
       n + 500;
 }
 
@@ -148,7 +148,7 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // or if a complex restriction prevents transition onto this edge.
     if (es->set() == EdgeSet::kPermanent ||
         (shortcuts & directededge->superseded()) ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
          costing_->Restricted(directededge, pred, edgelabels_forward_, tile,
                                      edgeid, true)) {
       continue;
@@ -261,7 +261,7 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0) ||
+    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
          costing_->Restricted(directededge, pred, edgelabels_reverse_, tile,
                                      edgeid, false)) {
       continue;

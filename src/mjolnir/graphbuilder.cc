@@ -272,13 +272,10 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
   std::vector<OSMRestriction> trs;
   for (auto r = res.first; r != res.second; ++r) {
     if (r->second.via() == node.node.osmid) {
-      if (r->second.day_on() != DOW::kNone) {
-        stats.timedrestrictions++;
-      } else {
         trs.push_back(r->second);
-      }
     }
   }
+
   if (trs.empty()) {
     return 0;
   }
@@ -345,13 +342,13 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
     return 0;
   }
 
-  // TODO - support modes (for now is just truck), days of week,
-  // 64 bit values (with different meanings based on restriction type).
-  uint32_t modes = kTruckAccess;
+  uint32_t modes = 0;
   for (auto r = res.first; r != res.second; ++r) {
-    AccessRestriction access_restriction(edgeid, r->second.type(), modes,
+    AccessRestriction access_restriction(edgeid, r->second.type(),
+                                         r->second.modes(),
                                          r->second.value());
     graphtile.AddAccessRestriction(access_restriction);
+    modes |= r->second.modes();
   }
   return modes;
 }
@@ -793,7 +790,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
-          if (directededge.forwardaccess() & kTruckAccess) {
+          if (directededge.forwardaccess()){
             uint32_t ar_modes = AddAccessRestrictions(idx, w.way_id(),
                                       osmdata, graphtile);
             if (ar_modes) {

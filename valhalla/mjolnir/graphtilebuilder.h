@@ -135,13 +135,18 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  lc  Lane connectivity information.
    */
   void AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc);
+
   /**
-   * Update all of the complex restrictions.
-   * @param  complex_restriction_builder  list of complex restrictions.
-   * @param  forward                      do we update the reverse or forward list
+   * Add forward complex restriction.
+   * @param  res  Complex restriction.
    */
-  void UpdateComplexRestrictions(const std::list<ComplexRestrictionBuilder>& complex_restriction_builder,
-                                 const bool forward);
+  void AddForwardComplexRestriction(const ComplexRestrictionBuilder& res);
+
+  /**
+   * Add reverse complex restriction.
+   * @param  res  Complex restriction.
+   */
+  void AddReverseComplexRestriction(const ComplexRestrictionBuilder& res);
 
   /**
    *
@@ -412,12 +417,6 @@ class GraphTileBuilder : public baldr::GraphTile {
         std::make_tuple(edgeindex, nodeb, nodea);
   }
 
-  // Write all forward complex restriction items to specified stream
-  void SerializeComplexRestrictionsForwardToOstream(std::ostream& out) const;
-
-  // Write all reverse complex restriction items to specified stream
-  void SerializeComplexRestrictionsReverseToOstream(std::ostream& out) const;
-
   // Write all edgeinfo items to specified stream
   void SerializeEdgeInfosToOstream(std::ostream& out) const;
 
@@ -465,15 +464,11 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Admin info offset
   std::unordered_map<std::string,size_t> admin_info_offset_map_;
 
-  // forward complex list offset
-  uint32_t complex_restriction_forward_list_offset_ = 0;
   // The forward complex restriction list
-  std::list<ComplexRestrictionBuilder> complex_restriction_forward_builder_;
+  std::vector<ComplexRestrictionBuilder> complex_restriction_forward_builder_;
 
-  // reverse complex list offset
-  uint32_t complex_restriction_reverse_list_offset_ = 0;
   // The reverse complex restriction list
-  std::list<ComplexRestrictionBuilder> complex_restriction_reverse_builder_;
+  std::vector<ComplexRestrictionBuilder> complex_restriction_reverse_builder_;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;

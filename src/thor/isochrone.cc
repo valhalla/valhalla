@@ -244,7 +244,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader, const GraphId& node,
     if (directededge->is_shortcut() ||
         es->set() == EdgeSet::kPermanent ||
       !(directededge->forwardaccess() & access_mode_) ||
-      !costing_->Allowed(directededge, pred, tile, edgeid, 0) ||
+      !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
        costing_->Restricted(directededge, pred, edgelabels_, tile,
                              edgeid, true)) {
       continue;
@@ -385,7 +385,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
 
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0) ||
+    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
          costing_->Restricted(directededge, pred, bdedgelabels_, tile,
                                      edgeid, false)) {
       continue;
@@ -657,7 +657,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
       blockid = 0;
       if (directededge->IsTransitLine()) {
         // Check if transit costing allows this edge
-        if (!tc->Allowed(directededge, pred, tile, edgeid, 0)) {
+        if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
           continue;
         }
 
@@ -733,7 +733,7 @@ std::shared_ptr<const GriddedData<PointLL> > Isochrone::ComputeMultiModal(
         // is allowed. If mode is pedestrian this will validate walking
         // distance has not been exceeded.
         if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(
-                directededge, pred, tile, edgeid, 0)) {
+                directededge, pred, tile, edgeid, 0, 0)) {
           continue;
         }
 

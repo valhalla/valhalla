@@ -123,7 +123,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
       // this directed edge) or if no access is allowed to this edge (based
       // on costing method)
       if (es->set() == EdgeSet::kPermanent ||
-         !costing_->Allowed(directededge, pred, tile, edgeid, 0)) {
+         !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
         continue;
       }
 

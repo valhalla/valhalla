@@ -12,6 +12,7 @@
 #include <thread>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/range/algorithm/remove_if.hpp>
 
 #include "baldr/tilehierarchy.h"
 #include "baldr/complexrestriction.h"
@@ -206,6 +207,7 @@ struct graph_callback : public OSMPBF::Callback {
 
   virtual void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) override {
 
+
     // Do not add ways with < 2 nodes. Log error or add to a problem list
     // TODO - find out if we do need these, why they exist...
     if (nodes.size() < 2) {
@@ -233,9 +235,20 @@ struct graph_callback : public OSMPBF::Callback {
 
     // Throw away driveways if include_driveways_ is false
     Tags::const_iterator driveways;
-    if (!include_driveways_ && (driveways = results.find("use")) != results.end() && 
-         static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
-      return;
+    try {
+      if (!include_driveways_ && (driveways = results.find("use")) != results.end() &&
+           static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
+
+        // only private driveways.
+        Tags::const_iterator priv;
+        if ((priv = results.find("private")) != results.end() &&
+            priv->second == "true")
+        return;
+      }
+    } catch (const std::invalid_argument& arg) {
+      LOG_INFO("invalid_argument thrown for way id: " + std::to_string(osmid));
+    } catch (const std::out_of_range& oor) {
+      LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
     }
 
     // Check for ways that loop back on themselves (simple check) and add
@@ -601,62 +614,112 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "truck_route") {
         w.set_truck_route(tag.second == "true" ? true : false);
       }
+
+      //motor_vehicle:conditional=no @ (16:30-07:00)
+      else if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional" ||
+            tag.first == "bicycle:conditional" ||
+            tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
+            tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
+            tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
+            tag.first == "taxi:conditional" || tag.first == "bus:conditional" ||
+            tag.first == "hov:conditional" || tag.first == "emergency:conditional") {
+
+        std::vector<std::string> tokens = GetTagTokens(tag.second,'@');
+        std::string tmp = tokens.at(0);
+        boost::algorithm::trim(tmp);
+
+        AccessType type = AccessType::kTimedDenied;
+        if (tmp == "no")
+          type = AccessType::kTimedDenied;
+        else if (tmp == "yes" || tmp == "private" ||
+            tmp == "delivery" || tmp == "designated") {
+          type = AccessType::kTimedAllowed;
+        }
+
+        if (tokens.size() == 2 && tmp.size()) {
+
+          uint16_t mode = 0;
+          if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional")
+            mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
+                kHOVAccess | kMopedAccess);
+          else if (tag.first == "bicycle:conditional")
+            mode = kBicycleAccess;
+          else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional")
+            mode = (kPedestrianAccess | kWheelchairAccess);
+          else if (tag.first == "hgv:conditional")
+            mode = kTruckAccess;
+          else if (tag.first == "moped:conditional" || tag.first == "mofa:conditional")
+            mode = kMopedAccess;
+          else if (tag.first == "psv:conditional")
+            mode = (kTaxiAccess | kBusAccess);
+          else if (tag.first == "taxi:conditional")
+            mode = kTaxiAccess;
+          else if (tag.first == "bus:conditional")
+            mode = kBusAccess;
+          else if (tag.first == "hov:conditional")
+            mode = kHOVAccess;
+          else if (tag.first == "emergency:conditional")
+            mode = kEmergencyAccess;
+
+          std::string tmp = tokens.at(1);
+          boost::algorithm::trim(tmp);
+          std::vector<std::string> conditions = GetTagTokens(tmp,';');
+
+          for (const auto& condition : conditions) {
+            std::vector<uint64_t> values = DateTime::get_time_range(condition);
+
+            for (const auto& v : values) {
+              OSMAccessRestriction restriction;
+              restriction.set_type(static_cast<AccessType>(type));
+              restriction.set_modes(mode);
+              restriction.set_value(v);
+              osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
+            }
+          }
+        }
+      }
+
       else if (tag.first == "hazmat") {
         OSMAccessRestriction restriction;
         restriction.set_type(AccessType::kHazmat);
         restriction.set_value(tag.second == "true" ? true : false);
+        restriction.set_modes(kTruckAccess);
         osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxheight") {
-        try {
-          OSMAccessRestriction restriction;
-          restriction.set_type(AccessType::kMaxHeight);
-          restriction.set_value(std::stof(tag.second)*100);
-          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxHeight);
+        restriction.set_value(std::stof(tag.second)*100);
+        restriction.set_modes(kTruckAccess);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxwidth") {
-        try {
-          OSMAccessRestriction restriction;
-          restriction.set_type(AccessType::kMaxWidth);
-          restriction.set_value(std::stof(tag.second)*100);
-          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxWidth);
+        restriction.set_value(std::stof(tag.second)*100);
+        restriction.set_modes(kTruckAccess);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxlength") {
-        try {
-          OSMAccessRestriction restriction;
-          restriction.set_type(AccessType::kMaxLength);
-          restriction.set_value(std::stof(tag.second)*100);
-          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxLength);
+        restriction.set_value(std::stof(tag.second)*100);
+        restriction.set_modes(kTruckAccess);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxweight") {
-        try {
-          OSMAccessRestriction restriction;
-          restriction.set_type(AccessType::kMaxWeight);
-          restriction.set_value(std::stof(tag.second)*100);
-          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxWeight);
+        restriction.set_value(std::stof(tag.second)*100);
+        restriction.set_modes(kTruckAccess);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
       else if (tag.first == "maxaxleload") {
-        try {
-          OSMAccessRestriction restriction;
-          restriction.set_type(AccessType::kMaxAxleLoad);
-          restriction.set_value(std::stof(tag.second)*100);
-          osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
-        }
-        catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxAxleLoad);
+        restriction.set_value(std::stof(tag.second)*100);
+        restriction.set_modes(kTruckAccess);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid, restriction));
       }
 
       else if (tag.first == "default_speed") {
@@ -1031,13 +1094,17 @@ struct graph_callback : public OSMPBF::Callback {
     uint64_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
+    bool isConditional = false, has_multiple_times = false;
     uint32_t bike_network_mask = 0;
 
     std::string network, ref, name, except;
     std::string from_lanes, from, to_lanes, to;
+    std::string condition;
+    std::string hour_start, hour_end, day_start, day_end;
     uint32_t modes = 0;
 
     for (const auto& tag : results) {
+
       if (tag.first == "type") {
         if (tag.second == "restriction")
           isRestriction = true;
@@ -1051,6 +1118,10 @@ struct graph_callback : public OSMPBF::Callback {
           isRoad = true;
         else if (tag.second == "bicycle" || tag.second == "mtb")
           isBicycle = true;
+      }
+      else if (tag.first == "restriction:conditional") {
+        isConditional = true;
+        condition = tag.second;
       }
       else if (tag.first == "network") {
         network = tag.second;//US:US
@@ -1110,43 +1181,36 @@ struct graph_callback : public OSMPBF::Callback {
       }
       //sample with date time.  1168738
       else if (tag.first == "hour_on") {
-
-        std::size_t found = tag.second.find(":");
-        if (found == std::string::npos)
+        //invalid data
+        if (tag.second.find(":") == std::string::npos)
           return;
 
-        std::stringstream stream(tag.second);
-        uint32_t hour, min;
+        //hour_on = 06:00;16:00
+        if (tag.second.find(";") != std::string::npos)
+          has_multiple_times = true;
 
-        stream >> hour;
-        stream.ignore();
-        stream >> min;
-
-        restriction.set_hour_on(hour);
-        restriction.set_minute_on(min);
+        isConditional = true;
+        hour_start = tag.second;
       }
-      else if  (tag.first == "hour_off") {
-
-        std::size_t found = tag.second.find(":");
-        if (found == std::string::npos)
+      else if (tag.first == "hour_off") {
+        //invalid data
+        if (tag.second.find(":") == std::string::npos)
           return;
 
-        std::stringstream stream(tag.second);
-        uint32_t hour, min;
+        //hour_on = 06:00;16:00
+        if (tag.second.find(";") != std::string::npos)
+          has_multiple_times = true;
 
-        stream >> hour;
-        stream.ignore();
-        stream >> min;
-
-        restriction.set_hour_off(hour);
-        restriction.set_minute_off(min);
-
+        isConditional = true;
+        hour_end = tag.second;
       }
       else if  (tag.first == "day_on") {
-        restriction.set_day_on((DOW) std::stoi(tag.second));
+        isConditional = true;
+        day_start = tag.second;
       }
       else if  (tag.first == "day_off") {
-        restriction.set_day_off((DOW) std::stoi(tag.second));
+        isConditional = true;
+        day_end = tag.second;
       }
       else if (tag.first == "bike_network_mask") {
         bike_network_mask = std::stoi(tag.second);
@@ -1163,7 +1227,7 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "from") {
         from = tag.second;
       }
-    }
+    }//for (const auto& tag : results)
 
     if (isBicycle && isRoute && !network.empty())
     {
@@ -1304,13 +1368,66 @@ struct graph_callback : public OSMPBF::Callback {
         // or
         // restriction = x with except tags; change to a complex
         // restriction with modes.
-        if (vias.size() == 0 && (isTypeRestriction ||
+        if (vias.size() == 0 &&
+            (isTypeRestriction || isConditional ||
             (!isTypeRestriction && except.size())))  {
 
           restriction.set_via(0);
           vias.push_back(restriction.to());
           osmdata_.via_set.insert(restriction.to());
-        }
+
+          if (isConditional) {
+            restriction.set_modes(modes);
+            //simple restriction, but is a timed restriction
+            //change to complex and set date and time info
+            if (condition.empty()) {
+              condition = day_start + "-";
+              condition += day_end;
+              //do we have multiple times entered?
+              if (!has_multiple_times) {
+                //no we do not...add the hours to the condition
+                condition += " " + hour_start + "-";
+                condition += hour_end;
+              }
+              //yes multiple times
+              //06:00;17:00
+              //11:00;20:00
+              else {
+                std::vector<std::string> hour_on = GetTagTokens(hour_start,';');
+                std::vector<std::string> hour_off = GetTagTokens(hour_end,';');
+
+                if (hour_on.size() > 1 && hour_on.size() == hour_off.size()) {
+                  std::string hours;
+                  //convert to the format of 07:30-09:30,17:30-19:30
+                  for (uint32_t i = 0; i < hour_on.size(); i++) {
+                    if (!hours.empty())
+                      hours += ",";
+                    hours += hour_on.at(i) + "-";
+                    hours += hour_off.at(i);
+                  }
+                  condition += " " + hours;
+                } else return;//should not make it here; has to be bad data.
+              }//else
+            }//if (condition.empty())
+
+            std::vector<std::string> conditions = GetTagTokens(condition,';');
+
+            if (conditions.size()) {
+              restriction.set_from(from_way_id);
+              restriction.set_vias(vias);
+              osmdata_.end_map.insert(EndMap::value_type(restriction.to(), from_way_id));
+            } else return;//bad data
+
+            for (const auto& c : conditions) {
+              std::vector<uint64_t> values = DateTime::get_time_range(c);
+              for (const auto& v : values) {//could have multiple time domains
+                restriction.set_time_domain(v);
+                complex_restrictions_->push_back(restriction);
+              }
+            }
+            return;
+          }//if (isConditional)
+        } //end turning into complex restriction
 
         restriction.set_modes(modes);
 
@@ -1321,7 +1438,7 @@ struct graph_callback : public OSMPBF::Callback {
           osmdata_.end_map.insert(EndMap::value_type(restriction.to(), from_way_id));
           complex_restrictions_->push_back(restriction);
         }
-        else
+        else // simple restriction
           osmdata_.restrictions.insert(RestrictionsMultiMap::value_type(from_way_id, restriction));
       }
     }

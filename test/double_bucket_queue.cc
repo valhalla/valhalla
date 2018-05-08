@@ -37,6 +37,23 @@ void TryAddRemove(const std::vector<uint32_t>& costs,
   }
 }
 
+void TestInvalidConstruction() {
+  std::vector<float> edgelabels;
+  const auto edgecost = [&edgelabels](const uint32_t label) {
+    return edgelabels[label];
+  };
+  try {
+    // Test invalid bucket size
+    DoubleBucketQueue adjlist(0, 10000, 0, edgecost);
+    throw runtime_error("Invalid bucket size not caught");
+  } catch (...) { }
+  try {
+    // Test invalid range
+    DoubleBucketQueue adjlist(0, 0.0f, 1, edgecost);
+    throw runtime_error("Invalid cost range not caught");
+  } catch (...) { }
+}
+
 void TestAddRemove() {
   std::vector<uint32_t> costs = { 67, 325, 25, 466, 1000, 100005, 758, 167,
                                   258, 16442, 278, 111111000 };
@@ -191,7 +208,9 @@ void TestSimulation()
 }
 
 int main() {
-  test::suite suite("adjacencylist");
+  test::suite suite("double_bucket_queue");
+
+  suite.test(TEST_CASE(TestInvalidConstruction));
 
   suite.test(TEST_CASE(TestAddRemove));
 

@@ -206,7 +206,7 @@ class GraphTile {
    * @return  Returns the vector of complex restrictions in the order requested
    *          based on the id and modes.
    */
-  std::vector<ComplexRestriction> GetRestrictions(const bool forward,
+  std::vector<ComplexRestriction*> GetRestrictions(const bool forward,
                                                   const GraphId id,
                                                   const uint64_t modes) const;
 

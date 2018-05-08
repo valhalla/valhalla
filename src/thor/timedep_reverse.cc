@@ -11,9 +11,8 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
+// TODO - compute initial label count based on estimated route length
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
-
-// TODO - need to override the Init method!
 
 // Default constructor
 TimeDepReverse::TimeDepReverse()
@@ -83,7 +82,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                    const uint32_t pred_idx,
                    const DirectedEdge* opp_pred_edge,
                    const bool from_transition,
-                   uint32_t localtime, const odin::Location& destination,
+                   uint64_t localtime, const odin::Location& destination,
                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -96,10 +95,10 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     return;
   }
 
-  // Adjust for time zone (if different from timezone at the start/destination).
+  // Adjust for time zone (if different from timezone at the destination).
   if (nodeinfo->timezone() != dest_tz_index_) {
-    // What is the difference in timezone offsets?
-    localtime += 0; // TODO
+    DateTime::timezone_diff(false, localtime, DateTime::get_tz_db().from_index(nodeinfo->timezone()),
+                            DateTime::get_tz_db().from_index(dest_tz_index_));
   }
 
   // Expand from end node.
@@ -149,9 +148,10 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
     // Skip this edge if no access is allowed (based on costing method)
     // or if a complex restriction prevents transition onto this edge.
-    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0) ||
+    if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, localtime,
+                                  nodeinfo->timezone()) ||
          costing_->Restricted(directededge, pred, edgelabels_rev_, tile,
-                                     edgeid, false, localtime)) {
+                              edgeid, false, localtime, nodeinfo->timezone())) {
       continue;
     }
 
@@ -263,10 +263,9 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
-  // Set route start time (seconds from midnight), date, and day of week.
-  // TODO - get the timezone at the start.
-  uint32_t start_time = DateTime::seconds_from_midnight(destination.date_time());
-
+  // Set route start time (seconds from epoch)
+  uint64_t start_time = DateTime::seconds_since_epoch(destination.date_time(),
+                                                      DateTime::get_tz_db().from_index(dest_tz_index_));
   // Find shortest path
   uint32_t nc = 0;       // Count of iterations with no convergence
                          // towards destination
@@ -339,7 +338,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
 
     // Set local time (subtract elapsed time along the path from the start
     // time). TODO: adjust for time zone if different than starting tz
-    uint32_t localtime = start_time - pred.cost().secs;
+    uint64_t localtime = start_time - (double)pred.cost().secs;
 
     // Get the opposing predecessor directed edge. Need to make sure we get
     // the correct one if a transition occurred
@@ -519,14 +518,13 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader,
   // Get the transition cost at the last edge of the reverse path
   float tc = edgelabels_rev_[dest].transition_secs();
 
-  // From the reverse path from the destination (true origin). Use opposing
+  // Form the reverse path from the destination (true origin) using opposing
   // edges.
   float secs = 0.0f;
   std::vector<PathInfo> path;
-  uint32_t edgelabel_index = edgelabels_rev_[dest].predecessor();
+  uint32_t edgelabel_index = dest;
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_rev_[edgelabel_index];
-    GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
 
     // Get elapsed time on the edge, then add the transition cost at
     // prior edge.
@@ -537,7 +535,7 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader,
       secs += edgelabel.cost().secs - edgelabels_rev_[predidx].cost().secs;
     }
     secs += tc;
-    path.emplace_back(edgelabel.mode(), secs, oppedge, 0);
+    path.emplace_back(edgelabel.mode(), secs, edgelabel.opp_edgeid(), 0);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

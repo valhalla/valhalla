@@ -260,13 +260,31 @@ class AABB2 {
    * bounding box.
    * @param  r2  Bounding bounding box to "combine" with this bounding box.
    */
-  void Expand(const AABB2& r2);
+  void Expand(const AABB2& r2) {
+    if (r2.minx() < minx_)
+      minx_ = r2.minx();
+    if (r2.miny() < miny_)
+      miny_ = r2.miny();
+    if (r2.maxx() > maxx_)
+      maxx_ = r2.maxx();
+    if (r2.maxy() > maxy_)
+      maxy_ = r2.maxy();
+  }
 
   /**
    * Expands (if necessary) the bounding box to include the specified point.
    * @param  point  Point to "add" to this bounding box.
    */
-  void Expand(const coord_t& point);
+  void Expand(const coord_t& point) {
+    if (point.x() < minx_)
+      minx_ = point.x();
+    if (point.y() < miny_)
+      miny_ = point.y();
+    if (point.x() > maxx_)
+      maxx_ = point.x();
+    if (point.y() > maxy_)
+      maxy_ = point.y();
+  }
 
  protected:
   // Edge to clip against
@@ -311,14 +329,30 @@ class AABB2 {
    * @return  Returns true if the point is inside with respect to the edge,
    *          false if it is outside.
    */
-  bool Inside(const ClipEdge edge, const coord_t& v) const;
+  bool Inside(const ClipEdge edge, const coord_t& v) const {
+    switch (edge) {
+      case kLeft:
+        return (v.x() > minx_);
+      case kRight:
+        return (v.x() < maxx_);
+      case kBottom:
+        return (v.y() > miny_);
+      default:
+      case kTop:
+        return (v.y() < maxy_);
+    }
+  }
 
   /**
    * Adds a vertex to the output vector if not equal to the prior.
    * @param  pt    Vertex to add.
    * @param  vout  Vertex list.
    */
-  void Add(const coord_t& pt, std::vector<coord_t>& vout) const;
+  void Add(const coord_t& pt, std::vector<coord_t>& vout) const {
+    if (vout.size() == 0 || vout.back() != pt) {
+      vout.push_back(pt);
+    }
+  }
 };
 
 }
