@@ -227,7 +227,7 @@ namespace DateTime {
    * @param   end_month     end month
    * @param   end_day_dow   if kNthDow, then which dow to end the restriction.
    *                        if kYMD then it is the day of the month
-   * @param   date_time     should be in the format of 2015-05-06T08:00
+   * @param   current_time  seconds since epoch
    * @param   time_zone     timezone for the date_time
    * @return true or false
    */
@@ -236,7 +236,7 @@ namespace DateTime {
                      const uint8_t end_hrs, const uint8_t end_mins, const uint8_t dow,
                      const uint8_t begin_week, const uint8_t begin_month, const uint8_t begin_day_dow,
                      const uint8_t end_week, const uint8_t end_month, const uint8_t end_day_dow,
-                     const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone);
+                     const uint64_t current_time, const boost::local_time::time_zone_ptr& time_zone);
 
   /**
    * get the dow mask from user inputed string.  try to handle most inputs

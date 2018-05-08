@@ -616,7 +616,8 @@ struct graph_callback : public OSMPBF::Callback {
       }
 
       //motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag.first == "motorcar:conditional" || tag.first == "bicycle:conditional" ||
+      else if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional" ||
+            tag.first == "bicycle:conditional" ||
             tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
             tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
             tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
@@ -638,7 +639,7 @@ struct graph_callback : public OSMPBF::Callback {
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag.first == "motorcar:conditional")
+          if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional")
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                 kHOVAccess | kMopedAccess);
           else if (tag.first == "bicycle:conditional")

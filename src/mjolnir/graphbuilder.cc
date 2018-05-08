@@ -790,7 +790,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
-          if (directededge.forwardaccess() & kTruckAccess) {
+          if (directededge.forwardaccess()){
             uint32_t ar_modes = AddAccessRestrictions(idx, w.way_id(),
                                       osmdata, graphtile);
             if (ar_modes) {

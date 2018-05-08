@@ -150,7 +150,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
               const Label& pred_edgelabel,
               const baldr::GraphTile* tile) {
   return !pred_edgelabel.edgeid().Is_Valid() || edgeid == pred_edgelabel.edgeid() ||
-                costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0);
+                costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0);
 }
 
 /**

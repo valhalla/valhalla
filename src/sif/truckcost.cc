@@ -140,13 +140,15 @@ class TruckCost : public DynamicCost {
    * @param  edgeid         GraphId of the directed edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const;
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -163,6 +165,7 @@ class TruckCost : public DynamicCost {
    * @param  edgeid         GraphId of the opposing edge.
    * @param  current_time   Current time (seconds since epoch). A value of 0
    *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
@@ -170,7 +173,8 @@ class TruckCost : public DynamicCost {
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time) const;
+                              const uint64_t current_time,
+                              const uint32_t tz_index) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -384,7 +388,8 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time) const {
+                       const uint64_t current_time,
+                       const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kTruckAccess) ||
@@ -401,13 +406,17 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
         tile->GetAccessRestrictions(edgeid.id(), kTruckAccess);
 
     for (const auto& restriction : restrictions ) {
-      // TODO:  Need to handle restrictions that take place only at certain
-      // times.  Currently, we only support kAllDaysOfWeek;
       switch (restriction.type()) {
         case AccessType::kTimedAllowed:
+          //allowed at this range or allowed all the time
+          return (current_time && restriction.value()) ?
+              IsRestricted(restriction.value(), current_time, tz_index) : true;
+          break;
         case AccessType::kTimedDenied:
-          return false;
-        break;
+          //not allowed at this range or restricted all the time
+          return (current_time && restriction.value()) ?
+              !IsRestricted(restriction.value(), current_time, tz_index) : false;
+          break;
         case AccessType::kHazmat:
           if (hazmat_ != restriction.value())
             return false;
@@ -448,7 +457,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
                const baldr::GraphTile*& tile,
                const baldr::GraphId& opp_edgeid,
-               const uint32_t current_time) const {
+               const uint64_t current_time,
+               const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kTruckAccess) ||
@@ -465,15 +475,18 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
           tile->GetAccessRestrictions(opp_edgeid.id(), kTruckAccess);
 
     for (const auto& restriction : restrictions ) {
-      // TODO:  Need to handle restictions that take place only at certain
-      // times.  Currently, we only support kAllDaysOfWeek;
       if (restriction.modes() & kTruckAccess) {
-
         switch (restriction.type()) {
           case AccessType::kTimedAllowed:
+            //allowed at this range or allowed all the time
+            return (current_time && restriction.value()) ?
+                IsRestricted(restriction.value(), current_time, tz_index) : true;
+            break;
           case AccessType::kTimedDenied:
-            return false;
-          break;
+            //not allowed at this range or restricted all the time
+            return (current_time && restriction.value()) ?
+                !IsRestricted(restriction.value(), current_time, tz_index) : false;
+            break;
           case AccessType::kHazmat:
             if (hazmat_ != restriction.value())
               return false;
@@ -863,4 +876,3 @@ int main() {
 }
 
 #endif
-

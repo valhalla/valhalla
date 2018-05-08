@@ -42,7 +42,8 @@ namespace {
           const EdgeLabel& pred,
           const GraphTile*& tile,
           const GraphId& edgeid,
-          const uint32_t current_time) const {
+          const uint64_t current_time,
+          const uint32_t tz_index) const {
       if (!(edge->forwardaccess() & kAutoAccess) ||
           (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
           (pred.restrictions() & (1 << edge->localedgeidx())) ||
@@ -59,7 +60,8 @@ namespace {
           const DirectedEdge* opp_edge,
           const GraphTile*& tile,
           const GraphId& opp_edgeid,
-          const uint32_t current_time) const {
+          const uint64_t current_time,
+          const uint32_t tz_index) const {
       if (!(opp_edge->forwardaccess() & kAutoAccess) ||
            (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
            (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||

@@ -404,6 +404,7 @@ uint64_t seconds_since_epoch(const std::string& date_time,
     boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
     boost::posix_time::time_duration diff = local_date_time.utc_time() - time_epoch;
 
+
     return diff.total_seconds();
 
   } catch (std::exception& e){}
@@ -816,38 +817,20 @@ bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin
                    const uint8_t end_hrs, const uint8_t end_mins, const uint8_t dow,
                    const uint8_t begin_week, const uint8_t begin_month, const uint8_t begin_day_dow,
                    const uint8_t end_week, const uint8_t end_month, const uint8_t end_day_dow,
-                   const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone) {
+                   const uint64_t current_time, const boost::local_time::time_zone_ptr& time_zone) {
   bool dow_in_range = true;
   bool dt_in_range = false;
 
   try {
-
     boost::gregorian::date begin_date, end_date;
     boost::posix_time::time_duration b_td = boost::posix_time::hours(0),
         e_td = boost::posix_time::hours(23) + boost::posix_time::minutes(59);
 
-    boost::gregorian::date d;
-    boost::posix_time::time_duration td;
-    std::size_t found = date_time.find("T"); // YYYY-MM-DDTHH:MM
-    if (found != std::string::npos) {
-      std::string dt = date_time;
-      dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
-      d = boost::gregorian::date_from_iso_string(dt);
-      td = boost::posix_time::duration_from_string(date_time.substr(found+1));
-    }
-    else if (date_time.find("-") != std::string::npos) { // YYYY-MM-DD
-      std::string dt = date_time;
-      dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
-      d = boost::gregorian::date_from_iso_string(dt);
-      td = boost::posix_time::duration_from_string("0000");
-
-    } else { // YYYYMMDD
-      //No time on date.  Make it midnight.
-      d = boost::gregorian::date_from_iso_string(date_time);
-      td = boost::posix_time::duration_from_string("0000");
-    }
-
-    boost::local_time::local_date_time in_local_time = get_ldt(d,td,time_zone);
+    const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
+    boost::posix_time::ptime origin_pt = time_epoch + boost::posix_time::seconds(current_time);
+    boost::local_time::local_date_time in_local_time(origin_pt,time_zone);
+    boost::gregorian::date d = in_local_time.date();
+    boost::posix_time::time_duration td = in_local_time.local_time().time_of_day();
 
     // we have dow
     if (dow) {
@@ -974,7 +957,10 @@ bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin
       if (begin_hrs || begin_mins || end_hrs || end_mins) {
         b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
         e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
-        dt_in_range = (b_td <= td && td <= e_td);
+
+        if (begin_hrs > end_hrs) // 19:00 - 06:00
+          dt_in_range = !(e_td <= td && td <= b_td);
+        else dt_in_range = (b_td <= td && td <= e_td);
       }
       return (dow_in_range && dt_in_range);
 
@@ -991,7 +977,13 @@ bool is_restricted(const bool type, const uint8_t begin_hrs, const uint8_t begin
     dt_in_range = (b_in_local_time.date() <= in_local_time.date() &&
         in_local_time.date() <= e_in_local_time.date());
 
-    dt_in_range = (dt_in_range && (b_td <= td && td <= e_td));
+    bool time_in_range = false;
+
+    if (begin_hrs > end_hrs) // 19:00 - 06:00
+      time_in_range = !(e_td <= td && td <= b_td);
+    else time_in_range = (b_td <= td && td <= e_td);
+
+    dt_in_range = (dt_in_range && time_in_range);
   } catch (std::exception& e){}
   return (dow_in_range && dt_in_range);
 }
