@@ -10,6 +10,8 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "midgard/openlr.h"
 
+#include "baldr/location_referencer.h"
+
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -54,8 +56,11 @@ std::string to_string(const vb::GraphId &i) {
 }
 } // namespace std
 
-namespace {
+namespace valhalla {
+namespace baldr {
 
+
+namespace {
 // Distance tolerance (meters) for node searching. This value allows some
 // tolerance to account for data edits.
 constexpr float kNodeDistanceTolerance = 20.0;
@@ -72,35 +77,11 @@ constexpr uint32_t kLengthTolerance = 15;
 // Bearing tolerance in degrees
 constexpr uint16_t kBearingTolerance = 15;
 
-enum class MatchType : uint8_t {
-  kWalk = 0,
-  kShortestPath = 1
-};
 
-// Matched edge
-struct EdgeMatch {
-  GraphId edgeid;
-  uint32_t length;
-  float start_pct;
-  float end_pct;
-};
 
 // Candidate edges for the start and end. Includes the path edge plus
 // distance from segment start/end
-struct CandidateEdge {
-  vb::PathLocation::PathEdge edge;
-  float distance;
 
-  CandidateEdge()
-    : edge({}, 0.0f, {}, 1.0f),
-      distance(0.0f) {
-  }
-
-  CandidateEdge(const vb::PathLocation::PathEdge& e, const float d)
-      : edge(e),
-        distance(d) {
-  }
-};
 
 uint16_t bearing(const std::vector<vm::PointLL> &shape) {
   // OpenLR says to use 20m along the edge, but we could use the
@@ -151,62 +132,8 @@ uint32_t match_score(const float length_diff, const float origin_diff,
 }
 
 // Edge association
-using leftovers_t = std::vector<std::pair<vb::GraphId, vb::TrafficChunk > >;
-using chunk_t = std::unordered_map<vb::GraphId, std::vector<vb::TrafficChunk> >;
-using chunks_t = std::vector<std::pair<vb::GraphId, std::vector<vb::TrafficChunk > > >;
-struct edge_association {
-  explicit edge_association(const bpt::ptree &pt);
 
-  // Associate a tile of OSMLR to Valhalla edges
-  void add_tile(const std::string& file_name);
 
-  // Get the "leftovers" - these are edge-segment associations where the
-  // edges are not in the same tile as the OSMLR segment.
-  const leftovers_t& leftovers() const { return m_leftover_associations; }
-
-  // Get the chunks. These are edges that associate to more than 1 OSMLR
-  // segment.
-  const chunk_t& chunks() const { return traffic_chunks; }
-
-  std::unordered_map<uint32_t, uint32_t> success_count() const { return success_count_; }
-  std::unordered_map<uint32_t, uint32_t> failure_count() const { return failure_count_; }
-  std::unordered_map<uint32_t, uint32_t> walk_count() const { return walk_count_; }
-  std::unordered_map<uint32_t, uint32_t> path_count() const { return path_count_; }
-
-private:
-  std::vector<CandidateEdge> candidate_edges(bool origin,
-                        const valhalla::midgard::PointLL &lrp,
-                        const double bearing,
-                        const uint8_t level);
-  bool match_segment(vb::GraphId segment_id, const valhalla::midgard::OpenLR::TwoPointLinearReference &locRef,
-                     MatchType& match_type);
-  std::vector<EdgeMatch> match_edges(const valhalla::midgard::OpenLR::TwoPointLinearReference &locRef,
-                    const vb::GraphId& segment_id,
-                    const uint32_t segment_length, MatchType& match_type);
-  std::vector<EdgeMatch> walk(const vb::GraphId& segment_id,
-                    const uint32_t segment_length,
-                    const valhalla::midgard::OpenLR::TwoPointLinearReference &locRef);
-  vm::PointLL lookup_end_coord(const vb::GraphId& edge_id);
-  vm::PointLL lookup_start_coord(const vb::GraphId& edge_id);
-
-  vb::GraphReader m_reader;
-  vs::TravelMode m_travel_mode;
-  std::shared_ptr<vt::AStarPathAlgorithm> m_path_algo;
-  std::shared_ptr<vs::DynamicCost> m_costing;
-  std::shared_ptr<vj::GraphTileBuilder> m_tile_builder;
-
-  // Statistics
-  std::unordered_map<uint32_t, uint32_t> success_count_;
-  std::unordered_map<uint32_t, uint32_t> failure_count_;
-  std::unordered_map<uint32_t, uint32_t> walk_count_;
-  std::unordered_map<uint32_t, uint32_t> path_count_;
-
-  // Chunks - saved for later
-  chunk_t traffic_chunks;
-
-  // simple associations saved for later
-  leftovers_t m_leftover_associations;
-};
 
 // Use this method to determine whether an edge should be allowed along the
 // merged path. This method should match the predicate used to create OSMLR
@@ -494,8 +421,8 @@ vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb:
 }
 
 // Edge association constructor
-edge_association::edge_association(const bpt::ptree &pt)
-  : m_reader(pt.get_child("mjolnir")),
+edge_association::edge_association(baldr::GraphReader &graphreader)
+  : m_reader{graphreader},
     m_travel_mode(vs::TravelMode::kDrive),
     m_path_algo(new vt::AStarPathAlgorithm()),
     m_costing(new DistanceOnlyCost(m_travel_mode)) {
@@ -642,21 +569,13 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
   return best_path;
 }
 
-// Match the OSMLR segment to Valhalla edges.
-std::vector<EdgeMatch> edge_association::match_edges(const valhalla::midgard::OpenLR::TwoPointLinearReference& locRef,
-                            const vb::GraphId& segment_id,
-                            const uint32_t segment_length, MatchType& match_type) {
+std::vector<EdgeMatch> edge_association::match_edges(const valhalla::midgard::OpenLR::TwoPointLinearReference& locRef)
+{
   // Try to match edges by walking a path from the first LRP to the last LRP
   // in the OSMLR segment. This uses a strategy similar to how OSMLR segments
   // are created
-  std::vector<EdgeMatch> edges = walk(segment_id, segment_length, locRef);
-  if (edges.size()) {
-    match_type = MatchType::kWalk;
-    return edges;
-  }
-
-  // Do not fall back to A* at this time
-  return std::vector<EdgeMatch>();
+  std::vector<EdgeMatch> edges;
+  const uint32_t segment_length = locRef.getLength();
 
   // TODO - do we need to fallback to A*?
   // Seeing issues when falling back to A* - if a highway tag changes such
@@ -680,12 +599,12 @@ std::vector<EdgeMatch> edge_association::match_edges(const valhalla::midgard::Op
 
   // check all the interim points of the location reference
   auto origin_coord = locRef.getFirstCoordinate();
-  auto origin = loki_search_single(vb::Location(origin_coord), m_reader, segment_id.level());
+  auto origin = loki_search_single(vb::Location(origin_coord), m_reader, 0); // TODO: figure out level
   {
     auto lrp = locRef.getFirstCoordinate(); // TODO: figure out how to bind to temporary here
     auto coord = lrp;
     auto next_coord = locRef.getLastCoordinate();
-    auto dest = loki_search_single(location_for_lrp(locRef.getLastCoordinate(), locRef.getLastBearing()), m_reader, segment_id.level());
+    auto dest = loki_search_single(location_for_lrp(locRef.getLastCoordinate(), locRef.getLastBearing()), m_reader, 0); // TODO figure out level
     if (dest.path_edges_size() == 0) {
       LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) +
                 ". Segment cannot be matched, discarding.");
@@ -724,399 +643,17 @@ std::vector<EdgeMatch> edge_association::match_edges(const valhalla::midgard::Op
     // use dest as next origin
     std::swap(origin, dest);
   }
-  match_type = MatchType::kShortestPath;
   return edges;
-}
-
-vm::PointLL edge_association::lookup_end_coord(const vb::GraphId& edge_id) {
-  auto *tile = m_reader.GetGraphTile(edge_id);
-  auto *edge = tile->directededge(edge_id);
-  auto node_id = edge->endnode();
-  auto *node_tile = tile;
-  if (edge_id.Tile_Base() != node_id.Tile_Base()) {
-    node_tile = m_reader.GetGraphTile(node_id);
-  }
-  auto *node = node_tile->node(node_id);
-  return node->latlng();
-}
-
-vm::PointLL edge_association::lookup_start_coord(const vb::GraphId& edge_id) {
-  auto *tile = m_reader.GetGraphTile(edge_id);
-  auto *edge = tile->directededge(edge_id);
-  auto opp_index = edge->opp_index();
-  auto node_id = edge->endnode();
-  auto *node_tile = tile;
-  if (edge_id.Tile_Base() != node_id.Tile_Base()) {
-    node_tile = m_reader.GetGraphTile(node_id);
-  }
-  auto *node = node_tile->node(node_id);
-  return lookup_end_coord(node_id.Tile_Base() + uint64_t(node->edge_index() + opp_index));
-}
-
-bool edge_association::match_segment(vb::GraphId segment_id, const valhalla::midgard::OpenLR::TwoPointLinearReference &locRef,
-                                     MatchType& match_type) {
-  // Get the total length of the OSMLR segment
-  uint32_t segment_length = locRef.getLength();
-
-  auto edges = match_edges(locRef, segment_id, segment_length, match_type);
-  if (edges.empty()) {
-    /*
-    TODO: Re-enable debugging
-    size_t n = segment.lrps_size();
-    if (segment.lrps(0).at_node() && segment.lrps(n-1).at_node()) {
-      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) + " value = " +
-                    std::to_string(segment_id.value));
-    } else {
-      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) + " value = " +
-              std::to_string(segment_id.value));
-    }
-    */
-    return false;
-  }
-
-  // Walk the matched edges. Any full edges get associated to the segment.
-  // Partial edges get saved for later
-  for (size_t i = 0; i < edges.size(); ++i) {
-    // Form association for this edge. First edge "starts"
-    // the traffic segment and the last edge ends the segment.
-    const auto& edge = edges[i];
-    vb::TrafficChunk assoc(segment_id, edge.start_pct, edge.end_pct, i == 0, i == (edges.size() - 1));
-    // Full edge.
-    if (edge.start_pct == 0.0f && edge.end_pct == 1.0f) {
-      // Store the local segment and leave the non local for later
-      if(m_tile_builder->id() == edge.edgeid.Tile_Base())
-        m_tile_builder->AddTrafficSegment(edge.edgeid, assoc);
-      else
-        m_leftover_associations.emplace_back(std::make_pair(edge.edgeid, std::move(assoc)));
-    }// Add the temporary chunk information for this edge to the map
-    else
-      traffic_chunks[edge.edgeid].emplace_back(std::move(assoc));
-  }
-  return true;
-}
-
-void edge_association::add_tile(const std::string& file_name) {
-  // Return if this tile does not exist in the Valhalla tile set
-  auto base_id = vb::GraphTile::GetTileId(file_name);
-  if (!m_reader.DoesTileExist(base_id)) {
-    return;
-  }
-
-/*
-  // Read the OSMLR tile
-  pbf::Tile tile;
-  {
-    std::ifstream in(file_name);
-    if (!tile.ParseFromIstream(&in)) {
-      throw std::runtime_error("Unable to parse traffic segment file.");
-    }
-  }
-  */
-
-  // Get a tile builder ready for this tile
-  m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.tile_dir(),
-                       base_id, false));
-  m_tile_builder->InitializeTrafficSegments();
-
-  // Match the segments in this OSMLR tile
-  std::cout.precision(16);
-  uint64_t entry_id = 0;
-  MatchType match_type = MatchType::kWalk;
-
-  /*
-
-  TODO: actually loop over some descriptors
-
-  for (auto &entry : tile.entries()) {
-    if (!entry.has_marker()) {
-      assert(entry.has_segment());
-      auto &segment = entry.segment();
-      if (match_segment(base_id + entry_id, segment, match_type)) {
-        success_count_[base_id.level()] += 1;
-        if (match_type == MatchType::kWalk) {
-          walk_count_[base_id.level()] += 1;
-        } else {
-          path_count_[base_id.level()] += 1;
-        }
-      } else {
-        failure_count_[base_id.level()] += 1;
-      }
-    }
-    entry_id += 1;
-  }
-  */
-
-  // Finish this tile
-  m_tile_builder->UpdateTrafficSegments(false);
-  m_reader.Clear();
-}
-
-// Add OSMLR segment associations to each tile in the list. Any "local"
-// associations where the edge is within the same tile as the OSMLR segment
-// are written to the tile.
-void add_local_associations(const bpt::ptree &pt, std::deque<std::string>& osmlr_tiles, std::mutex& lock,
-  std::promise<edge_association>& association) {
-
-  //this holds the extra data before we serialize it to the extra section
-  //of a tile.
-  edge_association e(pt);
-
-  while(true) {
-    //get a file to work with
-    std::string osmlr_filename;
-    lock.lock();
-    if(osmlr_tiles.size()) {
-      osmlr_filename = std::move(osmlr_tiles.front());
-      osmlr_tiles.pop_front();
-    }
-    lock.unlock();
-    if(osmlr_filename.empty())
-      break;
-
-    //get the local associations
-    e.add_tile(osmlr_filename);
-  }
-
-  //pass it back
-  association.set_value(std::move(e));
-}
-
-void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId, leftovers_t>& leftovers,
-                               std::mutex& lock) {
-
-  // Get the tile dir
-  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-
-  while(true) {
-    // Get leftovers from a tile
-    leftovers_t associations;
-    lock.lock();
-    if (leftovers.size()) {
-      associations = std::move(leftovers.begin()->second);
-      leftovers.erase(leftovers.begin());
-    }
-    lock.unlock();
-    if(associations.empty())
-      break;
-
-    // Write leftovers
-    vj::GraphTileBuilder tile_builder(tile_dir, associations.front().first.Tile_Base(), false);
-    tile_builder.InitializeTrafficSegments();
-    tile_builder.InitializeTrafficChunks();
-    for(const auto& association : associations)
-      tile_builder.AddTrafficSegment(association.first, association.second);
-    tile_builder.UpdateTrafficSegments(false);
-  }
-}
-
-void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>& chunks,
-                               std::mutex& lock) {
-  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  while(true) {
-    // Get chunks
-    lock.lock();
-    std::vector<std::pair<vb::GraphId, std::vector<vb::TrafficChunk>>> associated_chunks;
-    if (chunks.size()) {
-      associated_chunks = std::move(chunks.begin()->second);
-      chunks.erase(chunks.begin());
-    }
-    lock.unlock();
-    if(associated_chunks.empty())
-      break;
-
-    // Write chunks
-    vj::GraphTileBuilder tile_builder(tile_dir, associated_chunks.front().first.Tile_Base(), false);
-    tile_builder.InitializeTrafficSegments();
-    tile_builder.InitializeTrafficChunks();
-    for(const auto& chunk : associated_chunks) {
-      tile_builder.AddTrafficSegments(chunk.first, chunk.second);
-    }
-
-    // Since this is the last time UpdateTrafficSegments is called we set
-    // the flag indicating the DirectedEdge traffic flags are set.
-    tile_builder.UpdateTrafficSegments(true);
-  }
 }
 
 } // anonymous namespace
 
-int main(int argc, char** argv) {
-  std::string config, tile_dir;
-  unsigned int num_threads = 1;
+LocationReferencer::LocationReferencer(baldr::GraphReader& graphreader) : association(graphreader) {}
 
-  bpo::options_description options("valhalla_associate_segments " VERSION "\n"
-                                   "\n"
-                                   " Usage: valhalla_associate_segments [options]\n"
-                                   "\n"
-                                   "osmlr associates traffic segment descriptors with a valhalla graph. "
-                                   "\n"
-                                   "\n");
-
-  options.add_options()
-    ("help,h", "Print this help message.")
-    ("version,v", "Print the version of this software.")
-    ("osmlr-tile-dir,t", bpo::value<std::string>(&tile_dir), "Location of traffic segment tiles.")
-    ("concurrency,j", bpo::value<unsigned int>(&num_threads), "Number of threads to use.")
-    // positional arguments
-    ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
-
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
-  bpo::variables_map vm;
-  try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
-    bpo::notify(vm);
-  }
-  catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what()
-              << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-              << "\n";
-    return EXIT_FAILURE;
-  }
-
-  if (vm.count("help") || !vm.count("config")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "valhalla_associate_segments " << VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (!vm.count("osmlr-tile-dir")) {
-    std::cout << "You must provide a tile directory to read OSMLR tiles from.\n";
-    return EXIT_FAILURE;
-  }
-
-  //queue up all the work we'll be doing
-  std::deque<std::string> osmlr_tiles;
-  auto itr = bfs::recursive_directory_iterator(tile_dir);
-  auto end = bfs::recursive_directory_iterator();
-  for (; itr != end; ++itr) {
-    auto dir_entry = *itr;
-    if (bfs::is_regular_file(dir_entry)) {
-      auto ext = dir_entry.path().extension();
-      if (ext == ".osmlr") {
-        osmlr_tiles.emplace_back(dir_entry.path().string());
-      }
-    }
-  }
-
-  // Shuffle the list to minimize the chance of adjacent tiles being access
-  // by different threads at the same time
-  std::random_shuffle(osmlr_tiles.begin(), osmlr_tiles.end());
-
-  //configure logging
-  vm::logging::Configure({{"type","std_err"},{"color","true"}});
-
-  //parse the config
-  bpt::ptree pt;
-  bpt::read_json(config.c_str(), pt);
-
-  //fire off some threads to do the work
-  LOG_INFO("Associating local traffic segments with " + std::to_string(num_threads) + " threads");
-  std::vector<std::shared_ptr<std::thread> > threads(num_threads);
-  std::list<std::promise<edge_association> > results;
-  std::mutex lock;
-  for (auto& thread : threads) {
-    results.emplace_back();
-    thread.reset(new std::thread(add_local_associations, std::cref(pt), std::ref(osmlr_tiles),
-                                 std::ref(lock), std::ref(results.back())));
-  }
-
-  //wait for it to finish
-  for (auto& thread : threads)
-    thread->join();
-  LOG_INFO("Finished");
-
-  // Gather statistics, chunks, and leftovers (associations in a different tile)
-  std::unordered_map<uint32_t, uint32_t> success_count;
-  std::unordered_map<uint32_t, uint32_t> failure_count;
-  std::unordered_map<uint32_t, uint32_t> walk_count;
-  std::unordered_map<uint32_t, uint32_t> path_count;
-  uint32_t leftover_count = 0;
-  uint32_t chunk_count = 0;
-  std::unordered_map<vb::GraphId, leftovers_t> leftovers;
-  std::unordered_map<vb::GraphId, chunks_t> chunks;
-  for (auto& result : results) {
-    auto associations = result.get_future().get();
-
-    for( const auto& x : associations.success_count() )
-      success_count[x.first] += x.second;
-
-    for( const auto& x : associations.failure_count() )
-      failure_count[x.first] += x.second;
-
-    for( const auto& x : associations.walk_count() )
-      walk_count[x.first] += x.second;
-
-    for( const auto& x : associations.path_count() )
-      path_count[x.first] += x.second;
-
-    // Leftovers
-    for(const auto& association : associations.leftovers()) {
-      auto leftover = leftovers.insert({association.first.Tile_Base(), {}}).first;
-      leftover->second.push_back(association);
-    }
-    leftover_count += associations.leftovers().size();
-
-    // Temporary chunks
-    using single_chunk_t = std::pair<vb::GraphId, std::vector<vb::TrafficChunk>>;
-    for (const auto& association : associations.chunks()) {
-      vb::GraphId tileid = association.first.Tile_Base();
-      single_chunk_t c = std::make_pair(association.first, association.second);
-      if (chunks.find(tileid) == chunks.end()) {
-        chunks[tileid] = { c };
-      } else {
-        chunks[tileid].push_back(c);
-      }
-    }
-    chunk_count += associations.chunks().size();
-  }
-
-  for( const auto& x : success_count )
-    LOG_INFO("Success = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
-
-  for( const auto& x : failure_count )
-    LOG_INFO("Failure = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
-
-  for( const auto& x : walk_count )
-    LOG_INFO("Walk = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
-
-  for( const auto& x : path_count )
-    LOG_INFO("Path = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
-
-  LOG_INFO("Leftovers = " + std::to_string(leftover_count) +
-           " Chunks = " + std::to_string(chunk_count));
-
-  LOG_INFO("Associating neighbouring traffic segments with " + std::to_string(num_threads) + " threads");
-
-  // Write all the leftovers
-  for (auto& thread : threads) {
-    results.emplace_back();
-    thread.reset(new std::thread(add_leftover_associations, std::cref(pt), std::ref(leftovers),
-                                 std::ref(lock)));
-  }
-
-  //wait for it to finish
-  for (auto& thread : threads)
-    thread->join();
-
-  // Write all the chunks
-  LOG_INFO("Adding chunks (edge associations to multiple segments) " + std::to_string(num_threads) + " threads");
-  for (auto& thread : threads) {
-    results.emplace_back();
-    thread.reset(new std::thread(add_chunks, std::cref(pt), std::ref(chunks), std::ref(lock)));
-  }
-
-  //wait for it to finish
-  for (auto& thread : threads)
-    thread->join();
-  LOG_INFO("Finished");
-
-  LOG_INFO("Finished");
-
-  return EXIT_SUCCESS;
+std::vector<EdgeMatch> LocationReferencer::match(const midgard::OpenLR::TwoPointLinearReference &locref)
+{
+  return association.match_edges(locref);
 }
+
+} // namespace baldr
+} // namespace valhalla
