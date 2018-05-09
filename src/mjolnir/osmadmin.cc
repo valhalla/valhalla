@@ -88,5 +88,5 @@ bool OSMAdmin::drive_on_right() const {
   return drive_on_right_;
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

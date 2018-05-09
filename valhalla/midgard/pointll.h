@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MIDGARD_POINTLL_H_
 #define VALHALLA_MIDGARD_POINTLL_H_
 
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/constants.h>
-#include <tuple>
 #include <cmath>
 #include <limits>
+#include <tuple>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/point2.h>
 
 namespace valhalla {
 namespace midgard {
@@ -17,7 +17,7 @@ namespace midgard {
  * is LONGITUDE first, LATITUDE second.
  */
 class PointLL : public Point2 {
- public:
+public:
   /**
    * Use the constructors provided by pair
    */
@@ -26,17 +26,15 @@ class PointLL : public Point2 {
   /**
    * Default constructor.  Sets longitude and latitude to INVALID.
    */
-  PointLL()
-    : Point2(INVALID, INVALID) {
+  PointLL() : Point2(INVALID, INVALID) {
   }
-   
+
   /**
    * Parent constructor. Forwards to parent.
    */
-  PointLL(const Point2 &p)
-    : Point2(p) {
+  PointLL(const Point2& p) : Point2(p) {
   }
-   
+
   /**
    * Get the longitude in degrees.
    * @return  Returns longitude in degrees.
@@ -79,7 +77,7 @@ class PointLL : public Point2 {
    * @return Returns the point along the segment.
    */
   PointLL along_segment(const PointLL& end, const float pct) const {
-    return { x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
+    return {x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
   }
 
   /**
@@ -131,9 +129,10 @@ class PointLL : public Point2 {
    *                   Distance in meters of the closest point,
    *                   Index of the segment of the polyline which contains the closest point >
    */
-  std::tuple<PointLL, float, int> ClosestPoint(
-      const std::vector<PointLL>& pts, size_t begin_index = 0,
-      float dist_cutoff = std::numeric_limits<float>::infinity()) const;
+  std::tuple<PointLL, float, int>
+  ClosestPoint(const std::vector<PointLL>& pts,
+               size_t begin_index = 0,
+               float dist_cutoff = std::numeric_limits<float>::infinity()) const;
 
   /**
    * Calculate the heading from the start index within a polyline of lng,lat
@@ -144,9 +143,9 @@ class PointLL : public Point2 {
    * @param  idx1  End index within the polyline
    */
   static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
-                                    const float dist, const uint32_t idx0,
+                                    const float dist,
+                                    const uint32_t idx0,
                                     const uint32_t idx1);
-
 
   /**
    * Calculate the heading from the start of a polyline of lng,lat points to a
@@ -154,8 +153,7 @@ class PointLL : public Point2 {
    * @param  pts   Polyline - list of lng,lat points.
    * @param  dist  Distance in meters from start to find heading to.
    */
-  static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
-                                    const float dist) {
+  static float HeadingAlongPolyline(const std::vector<PointLL>& pts, const float dist) {
     return HeadingAlongPolyline(pts, dist, 0, pts.size() - 1);
   }
 
@@ -169,7 +167,8 @@ class PointLL : public Point2 {
    * @param  idx1  End index within the polyline
    */
   static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
-                                      const float dist, const uint32_t idx0,
+                                      const float dist,
+                                      const uint32_t idx0,
                                       const uint32_t idx1);
 
   /**
@@ -179,8 +178,7 @@ class PointLL : public Point2 {
    * @param  dist  Distance in meters from end. A point that distance is
    *               used to find the heading to the end point.
    */
-  static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
-                                      const float dist) {
+  static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts, const float dist) {
     return HeadingAtEndOfPolyline(pts, dist, 0, pts.size() - 1);
   }
 
@@ -191,8 +189,7 @@ class PointLL : public Point2 {
    * @return  Returns true if this point is left of the segment.
    */
   virtual float IsLeft(const PointLL& p1, const PointLL& p2) const {
-    return (p2.x() - p1.x()) * (   y() - p1.y()) -
-              (x() - p1.x()) * (p2.y() - p1.y());
+    return (p2.x() - p1.x()) * (y() - p1.y()) - (x() - p1.x()) * (p2.y() - p1.y());
   }
 
   /**
@@ -202,8 +199,7 @@ class PointLL : public Point2 {
    *                  Only the first and last vertices may be duplicated.
    * @return  Returns true if the point is within the polygon, false if not.
    */
-  template <class container_t>
-  bool WithinPolygon(const container_t& poly) const;
+  template <class container_t> bool WithinPolygon(const container_t& poly) const;
 
   /**
    * Handy for templated functions that use both Point2 or PointLL to know whether or not
@@ -234,23 +230,23 @@ class PointLL : public Point2 {
    */
   PointLL Project(const PointLL& u, const PointLL& v, float lon_scale) const;
 
- private:
+private:
   static constexpr float INVALID = 0xBADBADBAD;
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
 namespace std {
-  template <> struct hash<valhalla::midgard::PointLL> {
-    size_t operator()(const valhalla::midgard::PointLL& p) const {
-      uint64_t h;
-      char* b = static_cast<char*>(static_cast<void*>(&h));
-      std::memcpy(b, &p.first, 4);
-      std::memcpy(b + 4, &p.second, 4);
-      return std::hash<uint64_t>()(h);
-    }
-  };
-}
+template <> struct hash<valhalla::midgard::PointLL> {
+  size_t operator()(const valhalla::midgard::PointLL& p) const {
+    uint64_t h;
+    char* b = static_cast<char*>(static_cast<void*>(&h));
+    std::memcpy(b, &p.first, 4);
+    std::memcpy(b + 4, &p.second, 4);
+    return std::hash<uint64_t>()(h);
+  }
+};
+} // namespace std
 
-#endif  // VALHALLA_MIDGARD_POINTLL_H_
+#endif // VALHALLA_MIDGARD_POINTLL_H_

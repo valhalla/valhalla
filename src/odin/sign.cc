@@ -5,9 +5,7 @@ namespace valhalla {
 namespace odin {
 
 // Constructor
-Sign::Sign(const std::string& text)
-    : text_(text),
-      consecutive_count_(0) {
+Sign::Sign(const std::string& text) : text_(text), consecutive_count_(0) {
 }
 
 const std::string& Sign::text() const {
@@ -34,10 +32,9 @@ std::string Sign::ToParameterString() const {
   return str;
 }
 
-bool Sign::operator ==(const Sign& rhs) const {
-  return ((consecutive_count_ == rhs.consecutive_count_)
-      && (text_ == rhs.text_));
+bool Sign::operator==(const Sign& rhs) const {
+  return ((consecutive_count_ == rhs.consecutive_count_) && (text_ == rhs.text_));
 }
 
-}
-}
+} // namespace odin
+} // namespace valhalla

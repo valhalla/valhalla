@@ -11,15 +11,13 @@ namespace baldr {
  * Encapsulates the sign type and the associated text.
  */
 class SignInfo {
- public:
+public:
   /**
    * Constructor.
    * @param  type   Sign type.
    * @param  text   Text string.
    */
-  SignInfo(const Sign::Type& type, const std::string& text)
-     : type_(type),
-       text_(text) {
+  SignInfo(const Sign::Type& type, const std::string& text) : type_(type), text_(text) {
   }
 
   /**
@@ -38,12 +36,12 @@ class SignInfo {
     return text_;
   }
 
- protected:
+protected:
   Sign::Type type_;
   std::string text_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_SIGNINFO_H_
+#endif // VALHALLA_BALDR_SIGNINFO_H_

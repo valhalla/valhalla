@@ -1,15 +1,15 @@
+#include <boost/program_options.hpp>
 #include <cstdint>
 #include <iostream>
-#include <string>
-#include <vector>
 #include <queue>
 #include <random>
-#include <boost/program_options.hpp>
+#include <string>
+#include <vector>
 
-#include "midgard/util.h"
-#include "midgard/logging.h"
-#include "sif/edgelabel.h"
 #include "config.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
+#include "sif/edgelabel.h"
 
 #include "baldr/double_bucket_queue.h"
 
@@ -26,8 +26,7 @@ namespace bpo = boost::program_options;
  * priority_queue with the custom approximate double bucket sorting used
  * in adjacencylist.cc.
  */
-int Benchmark(const uint32_t n, const float maxcost,
-              const float bucketsize) {
+int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
   // Create a set of random costs
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -56,8 +55,8 @@ int Benchmark(const uint32_t n, const float maxcost,
     count++;
   }
   uint32_t ms = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("Priority Queue: Added and removed " + std::to_string(count) +
-           " edgelabels in " + std::to_string(ms) + " ms");
+  LOG_INFO("Priority Queue: Added and removed " + std::to_string(count) + " edgelabels in " +
+           std::to_string(ms) + " ms");
 
   // Didn't alter the sort order of priority queue, so reverse the vector
   std::reverse(ordered_cost1.begin(), ordered_cost1.end());
@@ -97,8 +96,8 @@ int Benchmark(const uint32_t n, const float maxcost,
     count++;
   }
   ms = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("Bucketed Adj. List: Added and removed " + std::to_string(count) +
-           " edgelabels in " + std::to_string(ms) + " ms");
+  LOG_INFO("Bucketed Adj. List: Added and removed " + std::to_string(count) + " edgelabels in " +
+           std::to_string(ms) + " ms");
 
   // Verify order
   for (uint32_t i = 0; i < count; i++) {
@@ -110,31 +109,29 @@ int Benchmark(const uint32_t n, const float maxcost,
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 
   bpo::options_description options(
-  "valhalla " VERSION "\n"
-  "\n"
-  " Usage: adjlistbenchmark [options]\n"
-  "\n"
-  "adjlistbenchmark is benchmark comparing performance of an STL priority_queue"
-  "to the approximate double bucket adjacency list class supplied with Valhalla."
-  "\n"
-  "\n");
+      "valhalla " VERSION "\n"
+      "\n"
+      " Usage: adjlistbenchmark [options]\n"
+      "\n"
+      "adjlistbenchmark is benchmark comparing performance of an STL priority_queue"
+      "to the approximate double bucket adjacency list class supplied with Valhalla."
+      "\n"
+      "\n");
 
-  options.add_options()
-    ("help,h", "Print this help message.")
-    ("version,v", "Print the version of this software.")
-    ;
+  options.add_options()("help,h", "Print this help message.")(
+      "version,v", "Print the version of this software.");
 
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc,argv)
-      .options(options).run(), vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
     bpo::notify(vm);
 
-  } catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 

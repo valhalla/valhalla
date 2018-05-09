@@ -1,10 +1,10 @@
 #ifndef VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
 #define VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
 
-#include <vector>
+#include <locale>
 #include <string>
 #include <unordered_map>
-#include <locale>
+#include <vector>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -52,9 +52,11 @@ constexpr auto kExitFerryVerbalKey = "instructions.exit_ferry_verbal";
 constexpr auto kTransitConnectionStartKey = "instructions.transit_connection_start";
 constexpr auto kTransitConnectionStartVerbalKey = "instructions.transit_connection_start_verbal";
 constexpr auto kTransitConnectionTransferKey = "instructions.transit_connection_transfer";
-constexpr auto kTransitConnectionTransferVerbalKey = "instructions.transit_connection_transfer_verbal";
+constexpr auto kTransitConnectionTransferVerbalKey =
+    "instructions.transit_connection_transfer_verbal";
 constexpr auto kTransitConnectionDestinationKey = "instructions.transit_connection_destination";
-constexpr auto kTransitConnectionDestinationVerbalKey = "instructions.transit_connection_destination_verbal";
+constexpr auto kTransitConnectionDestinationVerbalKey =
+    "instructions.transit_connection_destination_verbal";
 constexpr auto kDepartKey = "instructions.depart";
 constexpr auto kDepartVerbalKey = "instructions.depart_verbal";
 constexpr auto kArriveKey = "instructions.arrive";
@@ -65,8 +67,10 @@ constexpr auto kTransitRemainOnKey = "instructions.transit_remain_on";
 constexpr auto kTransitRemainOnVerbalKey = "instructions.transit_remain_on_verbal";
 constexpr auto kTransitTransferKey = "instructions.transit_transfer";
 constexpr auto kTransitTransferVerbalKey = "instructions.transit_transfer_verbal";
-constexpr auto kPostTransitConnectionDestinationKey = "instructions.post_transit_connection_destination";
-constexpr auto kPostTransitConnectionDestinationVerbalKey = "instructions.post_transit_connection_destination_verbal";
+constexpr auto kPostTransitConnectionDestinationKey =
+    "instructions.post_transit_connection_destination";
+constexpr auto kPostTransitConnectionDestinationVerbalKey =
+    "instructions.post_transit_connection_destination_verbal";
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kPostTransitTransitionVerbalKey = "instructions.post_transition_transit_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
@@ -143,7 +147,7 @@ constexpr auto kTransitHeadSignTag = "<TRANSIT_HEADSIGN>";
 constexpr auto kTransitPlatformCountTag = "<TRANSIT_STOP_COUNT>";
 constexpr auto kTransitPlatformCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 
-}
+} // namespace
 
 namespace valhalla {
 namespace odin {
@@ -219,12 +223,11 @@ struct PostTransitionTransitVerbalSubset : PhraseSet {
   std::unordered_map<std::string, std::string> transit_stop_count_labels;
 };
 
-
 /**
  * A class that stores the localized narrative instructions.
  */
 class NarrativeDictionary {
- public:
+public:
   NarrativeDictionary(const std::string language_tag,
                       const boost::property_tree::ptree& narrative_pt);
 
@@ -364,164 +367,157 @@ class NarrativeDictionary {
    */
   const std::string& GetLanguageTag() const;
 
- protected:
-
+protected:
   /**
-    * Loads this dictionary object with the localized narrative instructions
-    * contained in the specified property tree.
-    *
-    * @param  narrative_pt  The narrative property tree with the localized
-    *                       narrative instructions.
-    */
+   * Loads this dictionary object with the localized narrative instructions
+   * contained in the specified property tree.
+   *
+   * @param  narrative_pt  The narrative property tree with the localized
+   *                       narrative instructions.
+   */
   void Load(const boost::property_tree::ptree& narrative_pt);
 
   /**
-    * Loads the phrases with the localized narrative instructions
-    * contained in the specified property tree.
-    *
-    * @param  phrase_handle  The 'phrase' structure to populate.
-    * @param  phrase_pt  The 'phrase' property tree.
-    */
+   * Loads the phrases with the localized narrative instructions
+   * contained in the specified property tree.
+   *
+   * @param  phrase_handle  The 'phrase' structure to populate.
+   * @param  phrase_pt  The 'phrase' property tree.
+   */
   void Load(PhraseSet& phrase_handle, const boost::property_tree::ptree& phrase_pt);
 
   /**
-    * Loads the specified 'start' instruction subset with the localized narrative
-    * instructions contained in the specified property tree.
-    *
-    * @param  start_handle  The 'start' structure to populate.
-    * @param  start_subset_pt  The 'start' property tree.
-    */
-  void Load(StartSubset& start_handle,
-            const boost::property_tree::ptree& start_subset_pt);
+   * Loads the specified 'start' instruction subset with the localized narrative
+   * instructions contained in the specified property tree.
+   *
+   * @param  start_handle  The 'start' structure to populate.
+   * @param  start_subset_pt  The 'start' property tree.
+   */
+  void Load(StartSubset& start_handle, const boost::property_tree::ptree& start_subset_pt);
   /**
-    * Loads the specified 'start verbal' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  start_verbal_handle  The 'start verbal' structure to populate.
-    * @param  start_verbal_subset_pt  The 'start verbal' property tree.
-    */
+   * Loads the specified 'start verbal' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  start_verbal_handle  The 'start verbal' structure to populate.
+   * @param  start_verbal_subset_pt  The 'start verbal' property tree.
+   */
   void Load(StartVerbalSubset& start_verbal_handle,
             const boost::property_tree::ptree& start_verbal_subset_pt);
 
   /**
-    * Loads the specified 'destination' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  destination_handle  The 'destination' structure to populate.
-    * @param  destination_subset_pt  The 'destination' property tree.
-    */
+   * Loads the specified 'destination' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  destination_handle  The 'destination' structure to populate.
+   * @param  destination_subset_pt  The 'destination' property tree.
+   */
   void Load(DestinationSubset& destination_handle,
             const boost::property_tree::ptree& destination_subset_pt);
 
   /**
-    * Loads the specified 'continue' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  continue_handle  The 'continue' structure to populate.
-    * @param  continue_subset_pt  The 'continue' property tree.
-    */
-  void Load(ContinueSubset& continue_handle,
-            const boost::property_tree::ptree& continue_subset_pt);
+   * Loads the specified 'continue' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  continue_handle  The 'continue' structure to populate.
+   * @param  continue_subset_pt  The 'continue' property tree.
+   */
+  void Load(ContinueSubset& continue_handle, const boost::property_tree::ptree& continue_subset_pt);
 
   /**
-    * Loads the specified 'continue verbal' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  continue_verbal_handle  The 'continue verbal' structure to populate.
-    * @param  continue_verbal_subset_pt  The 'continue verbal' property tree.
-    */
+   * Loads the specified 'continue verbal' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  continue_verbal_handle  The 'continue verbal' structure to populate.
+   * @param  continue_verbal_subset_pt  The 'continue verbal' property tree.
+   */
   void Load(ContinueVerbalSubset& continue_verbal_handle,
             const boost::property_tree::ptree& continue_verbal_subset_pt);
 
   /**
-    * Loads the specified 'turn' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  turn_handle  The 'turn' structure to populate.
-    * @param  turn_subset_pt  The 'turn' property tree.
-    */
-  void Load(TurnSubset& turn_handle,
-            const boost::property_tree::ptree& turn_subset_pt);
+   * Loads the specified 'turn' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  turn_handle  The 'turn' structure to populate.
+   * @param  turn_subset_pt  The 'turn' property tree.
+   */
+  void Load(TurnSubset& turn_handle, const boost::property_tree::ptree& turn_subset_pt);
 
   /**
-    * Loads the specified 'ramp' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  ramp_handle  The 'ramp' structure to populate.
-    * @param  ramp_subset_pt  The 'ramp' property tree.
-    */
-  void Load(RampSubset& ramp_handle,
-            const boost::property_tree::ptree& ramp_subset_pt);
+   * Loads the specified 'ramp' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  ramp_handle  The 'ramp' structure to populate.
+   * @param  ramp_subset_pt  The 'ramp' property tree.
+   */
+  void Load(RampSubset& ramp_handle, const boost::property_tree::ptree& ramp_subset_pt);
 
   /**
-    * Loads the specified 'keep' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  keep_handle  The 'keep' structure to populate.
-    * @param  keep_subset_pt  The 'keep' property tree.
-    */
-  void Load(KeepSubset& keep_handle,
-            const boost::property_tree::ptree& keep_subset_pt);
+   * Loads the specified 'keep' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  keep_handle  The 'keep' structure to populate.
+   * @param  keep_subset_pt  The 'keep' property tree.
+   */
+  void Load(KeepSubset& keep_handle, const boost::property_tree::ptree& keep_subset_pt);
 
   /**
-    * Loads the specified 'enter_roundabout' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  enter_roundabout_handle  The 'enter_roundabout' structure to populate.
-    * @param  enter_roundabout_subset_pt  The 'enter_roundabout' property tree.
-    */
+   * Loads the specified 'enter_roundabout' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  enter_roundabout_handle  The 'enter_roundabout' structure to populate.
+   * @param  enter_roundabout_subset_pt  The 'enter_roundabout' property tree.
+   */
   void Load(EnterRoundaboutSubset& enter_roundabout_handle,
             const boost::property_tree::ptree& enter_roundabout_subset_pt);
 
   /**
-    * Loads the specified 'enter_ferry' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  enter_ferry_handle  The 'enter_ferry' structure to populate.
-    * @param  enter_ferry_subset_pt  The 'enter_ferry' property tree.
-    */
+   * Loads the specified 'enter_ferry' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  enter_ferry_handle  The 'enter_ferry' structure to populate.
+   * @param  enter_ferry_subset_pt  The 'enter_ferry' property tree.
+   */
   void Load(EnterFerrySubset& enter_ferry_handle,
             const boost::property_tree::ptree& enter_ferry_subset_pt);
 
   /**
-    * Loads the specified 'transit_connection' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  transit_connection_handle  The 'transit_connection' structure to populate.
-    * @param  transit_connection_subset_pt  The 'transit_connection' property tree.
-    */
+   * Loads the specified 'transit_connection' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  transit_connection_handle  The 'transit_connection' structure to populate.
+   * @param  transit_connection_subset_pt  The 'transit_connection' property tree.
+   */
   void Load(TransitConnectionSubset& transit_connection_handle,
             const boost::property_tree::ptree& transit_connection_subset_pt);
 
   /**
-    * Loads the specified 'transit' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  transit_handle  The 'transit' structure to populate.
-    * @param  transit_subset_pt  The 'transit' property tree.
-    */
-  void Load(TransitSubset& transit_handle,
-            const boost::property_tree::ptree& transit_subset_pt);
+   * Loads the specified 'transit' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  transit_handle  The 'transit' structure to populate.
+   * @param  transit_subset_pt  The 'transit' property tree.
+   */
+  void Load(TransitSubset& transit_handle, const boost::property_tree::ptree& transit_subset_pt);
 
   /**
-    * Loads the specified 'transit_stop' instruction subset with the localized
-    * narrative instructions contained in the specified property tree.
-    *
-    * @param  transit_stop_handle  The 'transit_stop' structure to populate.
-    * @param  transit_stop_subset_pt  The 'transit_stop' property tree.
-    */
+   * Loads the specified 'transit_stop' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  transit_stop_handle  The 'transit_stop' structure to populate.
+   * @param  transit_stop_subset_pt  The 'transit_stop' property tree.
+   */
   void Load(TransitStopSubset& transit_stop_handle,
             const boost::property_tree::ptree& transit_stop_subset_pt);
 
   /**
-    * Loads the specified 'post transition verbal' instruction subset with the
-    * localized narrative instructions contained in the specified property tree.
-    *
-    * @param  post_transition_verbal_handle  The 'post transition verbal'
-    *                                        structure to populate.
-    * @param  post_transition_verbal_subset_pt  The 'post transition verbal'
-    *                                           property tree.
-    */
+   * Loads the specified 'post transition verbal' instruction subset with the
+   * localized narrative instructions contained in the specified property tree.
+   *
+   * @param  post_transition_verbal_handle  The 'post transition verbal'
+   *                                        structure to populate.
+   * @param  post_transition_verbal_subset_pt  The 'post transition verbal'
+   *                                           property tree.
+   */
   void Load(PostTransitionVerbalSubset& post_transition_verbal_handle,
             const boost::property_tree::ptree& post_transition_verbal_subset_pt);
 
@@ -534,19 +530,17 @@ class NarrativeDictionary {
    * @param  post_transition_transit_verbal_subset_pt  The 'post transition_transit verbal'
    *                                                   property tree.
    */
-  void Load(
-      PostTransitionTransitVerbalSubset& post_transition_transit_verbal_handle,
-      const boost::property_tree::ptree& post_transition_transit_verbal_subset_pt);
+  void Load(PostTransitionTransitVerbalSubset& post_transition_transit_verbal_handle,
+            const boost::property_tree::ptree& post_transition_transit_verbal_subset_pt);
 
   // Locale
   std::locale locale;
 
   // Language tag
   std::string language_tag;
-
 };
 
-}
-}
+} // namespace odin
+} // namespace valhalla
 
-#endif  // VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
+#endif // VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_

@@ -13,7 +13,7 @@ namespace mjolnir {
  * multimap keyed by the Id of the "from" way of the restriction.
  */
 class OSMAccessRestriction {
- public:
+public:
   /**
    * Constructor
    */
@@ -55,18 +55,17 @@ class OSMAccessRestriction {
    */
   void set_modes(uint16_t modes);
 
- protected:
-
+protected:
   uint64_t value_;
 
   struct Attributes {
-    uint16_t type_        : 4;
-    uint16_t modes_       : 12;
+    uint16_t type_ : 4;
+    uint16_t modes_ : 12;
   };
   Attributes attributes_;
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_OSMACCESSRESTRICTION_H
+#endif // VALHALLA_MJOLNIR_OSMACCESSRESTRICTION_H

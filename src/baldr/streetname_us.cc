@@ -8,12 +8,12 @@
 namespace valhalla {
 namespace baldr {
 
-const std::vector<std::string> StreetNameUs::pre_dirs_ { "North ", "East ",
-    "South ", "West ", "Northeast ", "Southeast ", "Southwest ", "Northwest " };
-const std::vector<std::string> StreetNameUs::post_dirs_ { " North", " East",
-    " South", " West", " Northeast", " Southeast", " Southwest", " Northwest" };
-const std::vector<std::string> StreetNameUs::post_cardinal_dirs_ { " North",
-    " East", " South", " West" };
+const std::vector<std::string> StreetNameUs::pre_dirs_{
+    "North ", "East ", "South ", "West ", "Northeast ", "Southeast ", "Southwest ", "Northwest "};
+const std::vector<std::string> StreetNameUs::post_dirs_{
+    " North", " East", " South", " West", " Northeast", " Southeast", " Southwest", " Northwest"};
+const std::vector<std::string> StreetNameUs::post_cardinal_dirs_{" North", " East", " South",
+                                                                 " West"};
 
 StreetNameUs::StreetNameUs(const std::string& value) : StreetName(value) {
 }
@@ -46,13 +46,12 @@ std::string StreetNameUs::GetBaseName() const {
   std::string pre_dir = GetPreDir();
   std::string post_dir = GetPostDir();
 
-  return value_.substr(pre_dir.size(),
-                       (value_.size() - pre_dir.size() - post_dir.size()));
+  return value_.substr(pre_dir.size(), (value_.size() - pre_dir.size() - post_dir.size()));
 }
 
 bool StreetNameUs::HasSameBaseName(const StreetName& rhs) const {
   return (GetBaseName() == rhs.GetBaseName());
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

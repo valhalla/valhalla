@@ -1,19 +1,21 @@
-#include <string.h>
 #include "baldr/transitroute.h"
+#include <string.h>
 
 namespace valhalla {
 namespace baldr {
 
 // Constructor with arguments
-TransitRoute::TransitRoute(const TransitType route_type, uint32_t one_stop_offset,
-                            const uint32_t op_by_onestop_id_offset, const uint32_t op_by_name_offset,
-                            const uint32_t op_by_website_offset, const uint32_t route_color,
-                            const uint32_t route_text_color, const uint32_t short_name_offset,
-                            const uint32_t long_name_offset, const uint32_t desc_offset)
-    : spare1_(0),
-      spare2_(0),
-      spare3_(0),
-      spare4_(0) {
+TransitRoute::TransitRoute(const TransitType route_type,
+                           uint32_t one_stop_offset,
+                           const uint32_t op_by_onestop_id_offset,
+                           const uint32_t op_by_name_offset,
+                           const uint32_t op_by_website_offset,
+                           const uint32_t route_color,
+                           const uint32_t route_text_color,
+                           const uint32_t short_name_offset,
+                           const uint32_t long_name_offset,
+                           const uint32_t desc_offset)
+    : spare1_(0), spare2_(0), spare3_(0), spare4_(0) {
 
   route_type_ = static_cast<uint32_t>(route_type);
   route_color_ = route_color;
@@ -105,5 +107,5 @@ uint32_t TransitRoute::desc_offset() const {
   return desc_offset_;
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

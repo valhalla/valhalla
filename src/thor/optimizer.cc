@@ -7,18 +7,17 @@ namespace thor {
 // Optimize the tour through a set of locations given the cost matrix
 // among all locations. The first location (origin) and last location
 // (destination) remain fixed in the tour.
-std::vector<uint32_t> Optimizer::Solve(const uint32_t count,
-                                       const std::vector<float>& costs) {
+std::vector<uint32_t> Optimizer::Solve(const uint32_t count, const std::vector<float>& costs) {
   // Handle trivial cases.
   count_ = count;
   if (count == 2) {
-    return { 0, 1 };
+    return {0, 1};
   } else if (count_ == 3) {
-    return { 0, 1, 2 };
+    return {0, 1, 2};
   } else if (count == 4) {
     // Only one possible way to alter the path.
-    std::vector<uint32_t> tour1 = { 0, 1, 2, 3 };
-    std::vector<uint32_t> tour2 = { 0, 2, 1, 3 };
+    std::vector<uint32_t> tour1 = {0, 1, 2, 3};
+    std::vector<uint32_t> tour2 = {0, 2, 1, 3};
     return (TourCost(costs, tour1) < TourCost(costs, tour2)) ? tour1 : tour2;
   }
 
@@ -36,8 +35,8 @@ std::vector<uint32_t> Optimizer::Solve(const uint32_t count,
   // Perform simulated annealing. Set a run limit per annealing step and a
   // success limit to break out early if enough successes are found.
   ntry_ = 0;
-  attempts_  = 400 * count_;
-  successes_ = 40  * count_;
+  attempts_ = 400 * count_;
+  successes_ = 40 * count_;
   for (uint32_t i = 0; i < 100; i++) {
     // Break if no successes were found during this annealing step.
     if (Anneal(costs, temperature) == 0)
@@ -49,7 +48,7 @@ std::vector<uint32_t> Optimizer::Solve(const uint32_t count,
 
   // Return the best tour
   LOG_DEBUG("Best tour cost = " + std::to_string(best_cost_) +
-           " ntries = " + std::to_string(ntry_));
+            " ntries = " + std::to_string(ntry_));
   return best_tour_;
 }
 
@@ -132,36 +131,36 @@ TourAlteration Optimizer::GetTourAlteration() {
   // Randomly select the alteration type and return the
   // tour alteration (indexes and type).
   AlterationType t = (r01() < 0.5f) ? kReverse : kRotate;
-  return { loc[0], loc[1], loc[2], t };
+  return {loc[0], loc[1], loc[2], t};
 }
 
 float Optimizer::TemperatureDifference(const std::vector<float>& costs,
-                    const TourAlteration& alteration) {
+                                       const TourAlteration& alteration) {
   float c = 0;
   uint32_t start = alteration.start;
   uint32_t end = alteration.end;
   if (alteration.alt == kRotate) {
     // Subtract costs of connections that are broken
     uint32_t mid = alteration.mid;
-    c -= Cost(costs, tour_[start-1], tour_[start]);
-    c -= Cost(costs, tour_[end], tour_[end+1]);
-    c -= Cost(costs, tour_[mid-1], tour_[mid]);
+    c -= Cost(costs, tour_[start - 1], tour_[start]);
+    c -= Cost(costs, tour_[end], tour_[end + 1]);
+    c -= Cost(costs, tour_[mid - 1], tour_[mid]);
 
     // Add costs for the new connections
-    c += Cost(costs, tour_[start-1], tour_[mid]);
+    c += Cost(costs, tour_[start - 1], tour_[mid]);
     c += Cost(costs, tour_[end], tour_[start]);
-    c += Cost(costs, tour_[mid-1], tour_[end+1]);
+    c += Cost(costs, tour_[mid - 1], tour_[end + 1]);
   } else {
     // Reverse tour locations between a start and an end index.
     // Subtract costs between successive locations from start-1 to end+1
-    for (uint32_t i = start - 1, j = i+1; i <= end; i++, j++) {
+    for (uint32_t i = start - 1, j = i + 1; i <= end; i++, j++) {
       c -= Cost(costs, tour_[i], tour_[j]);
     }
 
     // Add costs for the new connections and the reversed order
-    c += Cost(costs, tour_[start-1], tour_[end]);
-    c += Cost(costs, tour_[start], tour_[end+1]);
-    for (uint32_t i = end, j = i-1; i > start; i--, j--) {
+    c += Cost(costs, tour_[start - 1], tour_[end]);
+    c += Cost(costs, tour_[start], tour_[end + 1]);
+    for (uint32_t i = end, j = i - 1; i > start; i--, j--) {
       c += Cost(costs, tour_[i], tour_[j]);
     }
   }
@@ -173,10 +172,10 @@ float Optimizer::TourCost(const std::vector<float>& costs,
                           const std::vector<uint32_t>& tour) const {
   float c = 0;
   for (uint32_t i = 0; i < count_ - 1; i++) {
-    c += costs[(tour[i] * count_) + tour[i+1]];
+    c += costs[(tour[i] * count_) + tour[i + 1]];
   }
   return c;
 }
 
-}
-}
+} // namespace thor
+} // namespace valhalla

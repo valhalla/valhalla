@@ -1,9 +1,9 @@
 #ifndef VALHALLA_MJOLNIR_LINK_CLASSIFICATION_H_
 #define VALHALLA_MJOLNIR_LINK_CLASSIFICATION_H_
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace valhalla {
 namespace mjolnir {
@@ -15,6 +15,6 @@ void ReclassifyLinks(const std::string& ways_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
                      const std::string& way_nodes_file);
-}
-}
-#endif  // VALHALLA_MJOLNIR_LINK_CLASSIFICATION_H_
+} // namespace mjolnir
+} // namespace valhalla
+#endif // VALHALLA_MJOLNIR_LINK_CLASSIFICATION_H_

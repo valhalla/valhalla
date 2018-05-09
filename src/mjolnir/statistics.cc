@@ -1,162 +1,209 @@
 #include <cstdint>
 
-#include "statistics.h"
-#include "mjolnir/graphvalidator.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/graphvalidator.h"
+#include "statistics.h"
 
-#include <ostream>
-#include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <sqlite3.h>
-#include <spatialite.h>
-#include <sstream>
-#include <iostream>
 #include <fstream>
-#include <string>
-#include <vector>
+#include <iostream>
 #include <map>
-#include <unordered_set>
+#include <ostream>
+#include <spatialite.h>
+#include <sqlite3.h>
+#include <sstream>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/json.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
-#include "baldr/tilehierarchy.h"
-#include "baldr/graphid.h"
-#include "baldr/graphconstants.h"
-#include "baldr/json.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
-  // merges contents of sets and maps that do not have overlapping keys
-  template <class T> T merge(T &a, T b) {
-    T tmp(a);
-    tmp.insert(b.begin(), b.end());
-    return tmp;
-  }
-
-  // accumulates counts into a new map for maps that have counts associated with its keys
-  template <class T> T merge_counts(T &a, T b) {
-    T tmp(a);
-    for (auto it = b.begin(); it != b.end(); it++) {
-      tmp[it->first] += it->second;
-    }
-    return tmp;
-  }
+// merges contents of sets and maps that do not have overlapping keys
+template <class T> T merge(T& a, T b) {
+  T tmp(a);
+  tmp.insert(b.begin(), b.end());
+  return tmp;
 }
+
+// accumulates counts into a new map for maps that have counts associated with its keys
+template <class T> T merge_counts(T& a, T b) {
+  T tmp(a);
+  for (auto it = b.begin(); it != b.end(); it++) {
+    tmp[it->first] += it->second;
+  }
+  return tmp;
+}
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
 
 statistics::statistics()
-  : tile_lengths(), country_lengths(), tile_int_edges(),country_int_edges(),
-    tile_one_way(), country_one_way(), tile_speed_info(), country_speed_info(),
-    tile_named(), country_named(), tile_truck_route(), country_truck_route(),
-    tile_hazmat(), country_hazmat(), tile_height(), country_height(),
-    tile_width(), country_width(), tile_length(), country_length(),
-    tile_weight(), country_weight(), tile_axle_load(), country_axle_load(),
-    tile_exit_signs(), tile_fork_signs(), ctry_exit_signs(), ctry_fork_signs(),
-    tile_exit_count(), tile_fork_count(), ctry_exit_count(), ctry_fork_count(),
-    tile_areas(), tile_geometries(),iso_codes(), tile_ids() { }
+    : tile_lengths(), country_lengths(), tile_int_edges(), country_int_edges(), tile_one_way(),
+      country_one_way(), tile_speed_info(), country_speed_info(), tile_named(), country_named(),
+      tile_truck_route(), country_truck_route(), tile_hazmat(), country_hazmat(), tile_height(),
+      country_height(), tile_width(), country_width(), tile_length(), country_length(),
+      tile_weight(), country_weight(), tile_axle_load(), country_axle_load(), tile_exit_signs(),
+      tile_fork_signs(), ctry_exit_signs(), ctry_fork_signs(), tile_exit_count(), tile_fork_count(),
+      ctry_exit_count(), ctry_fork_count(), tile_areas(), tile_geometries(), iso_codes(),
+      tile_ids() {
+}
 
-void statistics::add_tile_road(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
+void statistics::add_tile_road(const uint64_t& tile_id,
+                               const RoadClass& rclass,
+                               const float length) {
   tile_ids.insert(tile_id);
   tile_lengths[tile_id][rclass] += length;
 }
 
-void statistics::add_country_road(const std::string& ctry_code, const RoadClass& rclass, const float length) {
+void statistics::add_country_road(const std::string& ctry_code,
+                                  const RoadClass& rclass,
+                                  const float length) {
   iso_codes.insert(ctry_code);
   country_lengths[ctry_code][rclass] += length;
 }
 
-void statistics::add_tile_int_edge(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count) {
+void statistics::add_tile_int_edge(const uint64_t& tile_id,
+                                   const RoadClass& rclass,
+                                   const size_t& count) {
   tile_int_edges[tile_id][rclass] += count;
 }
 
-void statistics::add_country_int_edge(const std::string& ctry_code, const RoadClass& rclass, const size_t& count) {
+void statistics::add_country_int_edge(const std::string& ctry_code,
+                                      const RoadClass& rclass,
+                                      const size_t& count) {
   country_int_edges[ctry_code][rclass] += count;
 }
 
-void statistics::add_tile_one_way(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
+void statistics::add_tile_one_way(const uint64_t& tile_id,
+                                  const RoadClass& rclass,
+                                  const float length) {
   tile_one_way[tile_id][rclass] += length;
 }
 
-void statistics::add_country_one_way(const std::string& ctry_code, const RoadClass& rclass, const float length) {
+void statistics::add_country_one_way(const std::string& ctry_code,
+                                     const RoadClass& rclass,
+                                     const float length) {
   country_one_way[ctry_code][rclass] += length;
 }
 
-void statistics::add_tile_speed_info(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
+void statistics::add_tile_speed_info(const uint64_t& tile_id,
+                                     const RoadClass& rclass,
+                                     const float length) {
   tile_speed_info[tile_id][rclass] += length;
 }
 
-void statistics::add_country_speed_info(const std::string& ctry_code, const RoadClass& rclass, const float length) {
+void statistics::add_country_speed_info(const std::string& ctry_code,
+                                        const RoadClass& rclass,
+                                        const float length) {
   country_speed_info[ctry_code][rclass] += length;
 }
 
-void statistics::add_tile_named(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
+void statistics::add_tile_named(const uint64_t& tile_id,
+                                const RoadClass& rclass,
+                                const float length) {
   tile_named[tile_id][rclass] += length;
 }
 
-void statistics::add_country_named(const std::string& ctry_code, const RoadClass& rclass, const float length) {
+void statistics::add_country_named(const std::string& ctry_code,
+                                   const RoadClass& rclass,
+                                   const float length) {
   country_named[ctry_code][rclass] += length;
 }
 
-void statistics::add_tile_hazmat(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
+void statistics::add_tile_hazmat(const uint64_t& tile_id,
+                                 const RoadClass& rclass,
+                                 const float length) {
   tile_hazmat[tile_id][rclass] += length;
 }
 
-void statistics::add_country_hazmat(const std::string& ctry_code, const RoadClass& rclass, const float length) {
+void statistics::add_country_hazmat(const std::string& ctry_code,
+                                    const RoadClass& rclass,
+                                    const float length) {
   country_hazmat[ctry_code][rclass] += length;
 }
 
-void statistics::add_tile_truck_route(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
+void statistics::add_tile_truck_route(const uint64_t& tile_id,
+                                      const RoadClass& rclass,
+                                      const float length) {
   tile_truck_route[tile_id][rclass] += length;
 }
 
-void statistics::add_country_truck_route(const std::string& ctry_code, const RoadClass& rclass, const float length) {
+void statistics::add_country_truck_route(const std::string& ctry_code,
+                                         const RoadClass& rclass,
+                                         const float length) {
   country_truck_route[ctry_code][rclass] += length;
 }
 
-void statistics::add_tile_height(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
+void statistics::add_tile_height(const uint64_t& tile_id,
+                                 const RoadClass& rclass,
+                                 const size_t& count) {
   tile_height[tile_id][rclass] += count;
 }
 
-void statistics::add_country_height(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
+void statistics::add_country_height(const std::string& ctry_code,
+                                    const RoadClass& rclass,
+                                    const size_t& count) {
   country_height[ctry_code][rclass] += count;
 }
 
-void statistics::add_tile_width(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
+void statistics::add_tile_width(const uint64_t& tile_id,
+                                const RoadClass& rclass,
+                                const size_t& count) {
   tile_width[tile_id][rclass] += count;
-
 }
-void statistics::add_country_width(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
+void statistics::add_country_width(const std::string& ctry_code,
+                                   const RoadClass& rclass,
+                                   const size_t& count) {
   country_width[ctry_code][rclass] += count;
 }
 
-void statistics::add_tile_length(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
+void statistics::add_tile_length(const uint64_t& tile_id,
+                                 const RoadClass& rclass,
+                                 const size_t& count) {
   tile_length[tile_id][rclass] += count;
 }
 
-void statistics::add_country_length(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
+void statistics::add_country_length(const std::string& ctry_code,
+                                    const RoadClass& rclass,
+                                    const size_t& count) {
   country_length[ctry_code][rclass] += count;
 }
 
-void statistics::add_tile_weight(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
+void statistics::add_tile_weight(const uint64_t& tile_id,
+                                 const RoadClass& rclass,
+                                 const size_t& count) {
   tile_weight[tile_id][rclass] += count;
 }
 
-void statistics::add_country_weight(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
+void statistics::add_country_weight(const std::string& ctry_code,
+                                    const RoadClass& rclass,
+                                    const size_t& count) {
   country_weight[ctry_code][rclass] += count;
 }
 
-void statistics::add_tile_axle_load(const uint64_t& tile_id, const RoadClass& rclass, const size_t& count){
+void statistics::add_tile_axle_load(const uint64_t& tile_id,
+                                    const RoadClass& rclass,
+                                    const size_t& count) {
   tile_axle_load[tile_id][rclass] += count;
 }
 
-void statistics::add_country_axle_load(const std::string& ctry_code, const RoadClass& rclass, const size_t& count){
+void statistics::add_country_axle_load(const std::string& ctry_code,
+                                       const RoadClass& rclass,
+                                       const size_t& count) {
   country_axle_load[ctry_code][rclass] += count;
 }
 
@@ -188,67 +235,175 @@ void statistics::add_tile_geom(const uint64_t& tile_id, const AABB2<PointLL> geo
   tile_geometries[tile_id] = geom;
 }
 
-const std::unordered_set<uint64_t>& statistics::get_ids() const { return tile_ids; }
+const std::unordered_set<uint64_t>& statistics::get_ids() const {
+  return tile_ids;
+}
 
-const std::unordered_set<std::string>& statistics::get_isos() const { return iso_codes; }
+const std::unordered_set<std::string>& statistics::get_isos() const {
+  return iso_codes;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_tile_lengths() const { return tile_lengths; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_country_lengths() const { return country_lengths; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_tile_lengths() const {
+  return tile_lengths;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_country_lengths() const {
+  return country_lengths;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher> >& statistics::get_tile_int_edges() const { return tile_int_edges; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher> >& statistics::get_country_int_edges() const { return country_int_edges; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_tile_int_edges() const {
+  return tile_int_edges;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_country_int_edges() const {
+  return country_int_edges;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_tile_one_way() const { return tile_one_way; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_country_one_way() const { return country_one_way; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_tile_one_way() const {
+  return tile_one_way;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_country_one_way() const {
+  return country_one_way;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_tile_speed_info () const { return tile_speed_info; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_country_speed_info() const { return country_speed_info; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_tile_speed_info() const {
+  return tile_speed_info;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_country_speed_info() const {
+  return country_speed_info;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_tile_named() const { return tile_named; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher> >& statistics::get_country_named() const { return country_named; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_tile_named() const {
+  return tile_named;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_country_named() const {
+  return country_named;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>& statistics::get_tile_hazmat() const { return tile_hazmat; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>& statistics::get_country_hazmat() const { return country_hazmat; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_tile_hazmat() const {
+  return tile_hazmat;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_country_hazmat() const {
+  return country_hazmat;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>& statistics::get_tile_truck_route() const { return tile_truck_route; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>& statistics::get_country_truck_route() const { return country_truck_route; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_tile_truck_route() const {
+  return tile_truck_route;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+statistics::get_country_truck_route() const {
+  return country_truck_route;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_height() const { return tile_height; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_height() const { return country_height; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_tile_height() const {
+  return tile_height;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_country_height() const {
+  return country_height;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_width() const { return tile_width; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_width() const { return country_width; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_tile_width() const {
+  return tile_width;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_country_width() const {
+  return country_width;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_length() const { return tile_length; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_length() const { return country_length; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_tile_length() const {
+  return tile_length;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_country_length() const {
+  return country_length;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_weight() const { return tile_weight; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_weight() const { return country_weight; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_tile_weight() const {
+  return tile_weight;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_country_weight() const {
+  return country_weight;
+}
 
-const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_tile_axle_load() const { return tile_axle_load; }
-const std::unordered_map<std::string, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>& statistics::get_country_axle_load() const { return country_axle_load; }
+const std::unordered_map<uint64_t, std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_tile_axle_load() const {
+  return tile_axle_load;
+}
+const std::unordered_map<std::string,
+                         std::unordered_map<RoadClass, size_t, statistics::rclassHasher>>&
+statistics::get_country_axle_load() const {
+  return country_axle_load;
+}
 
-const std::unordered_map<uint64_t, float>& statistics::get_tile_areas() const { return tile_areas; }
+const std::unordered_map<uint64_t, float>& statistics::get_tile_areas() const {
+  return tile_areas;
+}
 
-const std::unordered_map<uint64_t, AABB2<PointLL>>& statistics::get_tile_geometries() const { return tile_geometries; }
+const std::unordered_map<uint64_t, AABB2<PointLL>>& statistics::get_tile_geometries() const {
+  return tile_geometries;
+}
 
-const std::unordered_map<uint64_t, size_t>& statistics::get_tile_fork_info() const { return tile_fork_signs; }
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_fork_info() const {
+  return tile_fork_signs;
+}
 
-const std::unordered_map<uint64_t, size_t>& statistics::get_tile_exit_info() const { return tile_exit_signs; }
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_exit_info() const {
+  return tile_exit_signs;
+}
 
-const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_info() const { return ctry_fork_signs; }
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_info() const {
+  return ctry_fork_signs;
+}
 
-const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_info() const { return ctry_exit_signs; }
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_info() const {
+  return ctry_exit_signs;
+}
 
-const std::unordered_map<uint64_t, size_t>& statistics::get_tile_fork_count() const { return tile_fork_count; }
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_fork_count() const {
+  return tile_fork_count;
+}
 
-const std::unordered_map<uint64_t, size_t>& statistics::get_tile_exit_count() const { return tile_exit_count; }
+const std::unordered_map<uint64_t, size_t>& statistics::get_tile_exit_count() const {
+  return tile_exit_count;
+}
 
-const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_count() const { return ctry_fork_count; }
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_fork_count() const {
+  return ctry_fork_count;
+}
 
-const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_count() const { return ctry_exit_count; }
+const std::unordered_map<std::string, size_t>& statistics::get_ctry_exit_count() const {
+  return ctry_exit_count;
+}
 
-void statistics::add (const statistics& stats) {
+void statistics::add(const statistics& stats) {
   // Combine ids and isos
   tile_ids = merge(tile_ids, stats.get_ids());
   iso_codes = merge(iso_codes, stats.get_isos());
@@ -298,103 +453,81 @@ void statistics::add (const statistics& stats) {
 
   // Combine roulette data
   roulette_data.Add(stats.roulette_data);
-
 }
 
+statistics::RouletteData::RouletteData() : shape_bb(), way_IDs(), way_shapes(), unroutable_nodes() {
+}
 
-statistics::RouletteData::RouletteData ()
-  : shape_bb(), way_IDs(), way_shapes(), unroutable_nodes() { }
-
-void statistics::RouletteData::AddTask (const AABB2<PointLL>& bb, const uint64_t id, const std::vector<PointLL>& shape) {
+void statistics::RouletteData::AddTask(const AABB2<PointLL>& bb,
+                                       const uint64_t id,
+                                       const std::vector<PointLL>& shape) {
   auto result = way_IDs.insert(id);
   if (result.second)
     shape_bb.insert({id, bb});
-    way_shapes.insert({id, shape});
+  way_shapes.insert({id, shape});
 }
 
 void statistics::RouletteData::AddNode(const PointLL& p) {
   unroutable_nodes.insert(p);
 }
 
-void statistics::RouletteData::Add (const RouletteData& rd) {
+void statistics::RouletteData::Add(const RouletteData& rd) {
   way_IDs = merge(way_IDs, rd.way_IDs);
   way_shapes = merge(way_shapes, rd.way_shapes);
   shape_bb = merge(shape_bb, rd.shape_bb);
   unroutable_nodes = merge(unroutable_nodes, rd.unroutable_nodes);
 }
 
-void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree& pt) const {
+void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& pt) const {
   // build a task list for each collected wayid
   json::ArrayPtr tasks = json::array({});
   for (auto& id : way_IDs) {
     // build shape array before the rest of the json
-    json::ArrayPtr coords = json::array({
-      json::array({json::fp_t{way_shapes.at(id)[0].lng(), 5}, json::fp_t{way_shapes.at(id)[0].lat(), 5}})
-    });
+    json::ArrayPtr coords = json::array({json::array(
+        {json::fp_t{way_shapes.at(id)[0].lng(), 5}, json::fp_t{way_shapes.at(id)[0].lat(), 5}})});
     for (size_t i = 1; i < way_shapes.at(id).size(); ++i) {
       const auto& way_point = way_shapes.at(id)[i];
-      coords->emplace_back(json::array({json::fp_t{way_point.lng(), 5}, json::fp_t{way_point.lat(), 5}}));
+      coords->emplace_back(
+          json::array({json::fp_t{way_point.lng(), 5}, json::fp_t{way_point.lat(), 5}}));
     }
     // build each task into the json array
-    tasks->emplace_back(
-        json::map
-         ({
-          {"geometry", json::map
-          ({
-           {"coordinates", coords},
-           {"type", std::string("LineString")}
-          })},
-          {"properties", json::map
-           ({
-            {"osmid", id},
-            {"type", std::string("Loop")}
-           })},
-          {"type", std::string("Feature")},
-          {"instruction", std::string("This one way road loops back on itself. Edit it so that the road is properly accessible")}
-         })
-        );
+    tasks->emplace_back(json::map(
+        {{"geometry", json::map({{"coordinates", coords}, {"type", std::string("LineString")}})},
+         {"properties", json::map({{"osmid", id}, {"type", std::string("Loop")}})},
+         {"type", std::string("Feature")},
+         {"instruction", std::string("This one way road loops back on itself. Edit it so that the "
+                                     "road is properly accessible")}}));
   }
   // Add all unroutable nodes to the json array
   auto hasher = std::hash<PointLL>();
   for (auto it = unroutable_nodes.cbegin(); it != unroutable_nodes.cend(); it++) {
-    tasks->emplace_back(
-        json::map
-         ({
-          {"geometry", json::map
-          ({
-           {"coordinates", json::array
-            ({{json::fp_t{it->lng(), 5}}, {json::fp_t{it->lat(), 5}}})
-           },
-           {"type", std::string("Point")}
-          })},
-          {"properties", json::map
-           ({
-            {"type", std::string("Node")},
-            {"key", static_cast<uint64_t>(hasher(*it))}
-           })},
-          {"type", std::string("Feature")},
-          {"instruction", std::string("This node is either unreachable or unleavable. Edit the surrounding roads so that the node can be accessed properly")}
-         })
-        );
+    tasks->emplace_back(json::map(
+        {{"geometry", json::map({{"coordinates", json::array({{json::fp_t{it->lng(), 5}},
+                                                              {json::fp_t{it->lat(), 5}}})},
+                                 {"type", std::string("Point")}})},
+         {"properties",
+          json::map({{"type", std::string("Node")}, {"key", static_cast<uint64_t>(hasher(*it))}})},
+         {"type", std::string("Feature")},
+         {"instruction",
+          std::string("This node is either unreachable or unleavable. Edit the surrounding roads "
+                      "so that the node can be accessed properly")}}));
   }
   // Put the tasks' json into the feature collection
-  json::MapPtr geo_json = json::map
-    ({
-     {"type", std::string("FeatureCollection")},
-     {"features", tasks},
-     {"properties", json::map
-       ({
-        {"instructions", json::map
-         ({
-          {"Loop", std::string("This one way road loops back on itself. Edit it so that the road is properly accessible")},
-          {"Node", std::string("This node is either unreachable or unleavable. Edit the surrounding roads so that the node can be accessed properly")}
-         })}
-       })
-     }
-    });
+  json::MapPtr geo_json = json::map(
+      {{"type", std::string("FeatureCollection")},
+       {"features", tasks},
+       {"properties",
+        json::map(
+            {{"instructions",
+              json::map({{"Loop", std::string("This one way road loops back on itself. Edit it so "
+                                              "that the road is properly accessible")},
+                         {"Node",
+                          std::string(
+                              "This node is either unreachable or unleavable. Edit the surrounding "
+                              "roads so that the node can be accessed properly")}})}})}});
   // write out to a file
   if (boost::filesystem::exists("maproulette_tasks.geojson"))
-      boost::filesystem::remove("maproulette_tasks.geojson");
+    boost::filesystem::remove("maproulette_tasks.geojson");
   std::ofstream file;
   file.open("maproulette_tasks.geojson");
   file << *geo_json << std::endl;
@@ -402,5 +535,5 @@ void statistics::RouletteData::GenerateTasks (const boost::property_tree::ptree&
   LOG_INFO("MapRoulette tasks saved to maproulette_tasks.geojson");
   LOG_INFO(std::to_string(tasks->size()) + " tasks generated");
 }
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

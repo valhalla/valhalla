@@ -5,8 +5,7 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-OSMAccessRestriction::OSMAccessRestriction()
-    : attributes_{} {
+OSMAccessRestriction::OSMAccessRestriction() : attributes_{} {
 }
 
 OSMAccessRestriction::~OSMAccessRestriction() {
@@ -42,5 +41,5 @@ uint16_t OSMAccessRestriction::modes() const {
   return attributes_.modes_;
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

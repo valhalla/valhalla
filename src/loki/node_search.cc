@@ -1,8 +1,8 @@
-#include <cmath>
 #include "loki/node_search.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/tiles.h"
-#include "baldr/tilehierarchy.h"
+#include <cmath>
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
@@ -10,11 +10,11 @@ namespace vb = valhalla::baldr;
 namespace {
 
 struct tile_cache {
-  tile_cache(vb::GraphReader &reader)
-    : m_reader(reader), m_last_tile_id(), m_tile(nullptr),
-      m_nodes(nullptr), m_edges(nullptr) {}
+  tile_cache(vb::GraphReader& reader)
+      : m_reader(reader), m_last_tile_id(), m_tile(nullptr), m_nodes(nullptr), m_edges(nullptr) {
+  }
 
-  inline tile_cache &operator()(vb::GraphId id) {
+  inline tile_cache& operator()(vb::GraphId id) {
     const auto id_base = id.Tile_Base();
     if (m_last_tile_id != id_base) {
       lookup(id_base);
@@ -22,15 +22,15 @@ struct tile_cache {
     return *this;
   }
 
-  inline const vb::GraphTile *tile() {
+  inline const vb::GraphTile* tile() {
     return m_tile;
   }
 
-  inline const vb::NodeInfo &node(vb::GraphId id) {
+  inline const vb::NodeInfo& node(vb::GraphId id) {
     return m_nodes[id.id()];
   }
 
-  inline const vb::DirectedEdge &edge(vb::GraphId id) {
+  inline const vb::DirectedEdge& edge(vb::GraphId id) {
     return m_edges[id.id()];
   }
 
@@ -65,17 +65,15 @@ private:
     }
   }
 
-  vb::GraphReader &m_reader;
+  vb::GraphReader& m_reader;
   vb::GraphId m_last_tile_id;
-  const vb::GraphTile *m_tile;
-  const vb::NodeInfo *m_nodes;
-  const vb::DirectedEdge *m_edges;
+  const vb::GraphTile* m_tile;
+  const vb::NodeInfo* m_nodes;
+  const vb::DirectedEdge* m_edges;
 };
 
 // find the bin which contains pt and return its bounding box
-vm::AABB2<vm::PointLL> bin_bbox(
-  const vm::Tiles<vm::PointLL> &tiles,
-  const vm::PointLL &pt) {
+vm::AABB2<vm::PointLL> bin_bbox(const vm::Tiles<vm::PointLL>& tiles, const vm::PointLL& pt) {
 
   const auto tile_id = tiles.TileId(pt);
   const auto tile_box = tiles.TileBounds(tile_id);
@@ -87,10 +85,8 @@ vm::AABB2<vm::PointLL> bin_bbox(
   int32_t sub_col = (pt.y() - tile_box.miny()) * col_delta;
 
   return vm::AABB2<vm::PointLL>(
-    tile_box.minx() + sub_row * row_delta,
-    tile_box.miny() + sub_col * col_delta,
-    tile_box.minx() + (sub_row + 1) * row_delta,
-    tile_box.miny() + (sub_col + 1) * col_delta);
+      tile_box.minx() + sub_row * row_delta, tile_box.miny() + sub_col * col_delta,
+      tile_box.minx() + (sub_row + 1) * row_delta, tile_box.miny() + (sub_col + 1) * col_delta);
 }
 
 // return a set of bounding boxes which have been expanded as necessary to make
@@ -99,9 +95,9 @@ vm::AABB2<vm::PointLL> bin_bbox(
 //
 // multiple bounding boxes can be returned if the input box is close to the
 // anti-meridian.
-std::vector<vm::AABB2<vm::PointLL> > expand_bbox_across_boundaries(
-  const vm::AABB2<vm::PointLL> &bbox,
-  const vm::Tiles<vm::PointLL> &tiles) {
+std::vector<vm::AABB2<vm::PointLL>>
+expand_bbox_across_boundaries(const vm::AABB2<vm::PointLL>& bbox,
+                              const vm::Tiles<vm::PointLL>& tiles) {
 
   // use a tolerance to ensure that, for all tiles, the lat/lng used for the
   // bounding box is is distinct from the one used for the tile / bin
@@ -138,7 +134,7 @@ std::vector<vm::AABB2<vm::PointLL> > expand_bbox_across_boundaries(
     maxy = 90.0f;
   }
 
-  std::vector<vm::AABB2<vm::PointLL> > boxes;
+  std::vector<vm::AABB2<vm::PointLL>> boxes;
 
   // if the longitude extents wrap across +/-180, then either merge them if
   // they overlap, or create a second bounding box if they do not.
@@ -166,17 +162,16 @@ std::vector<vm::AABB2<vm::PointLL> > expand_bbox_across_boundaries(
 
 // for each bounding box in boxes, calculate the intersection and merge all the
 // results together, then return it.
-std::unordered_map<int32_t, std::unordered_set<uint16_t> >
-merge_intersections(
-  const std::vector<vm::AABB2<vm::PointLL> > &boxes,
-  const vm::Tiles<vm::PointLL> &tiles) {
+std::unordered_map<int32_t, std::unordered_set<uint16_t>>
+merge_intersections(const std::vector<vm::AABB2<vm::PointLL>>& boxes,
+                    const vm::Tiles<vm::PointLL>& tiles) {
 
-  std::unordered_map<int32_t, std::unordered_set<uint16_t> > result;
+  std::unordered_map<int32_t, std::unordered_set<uint16_t>> result;
 
-  for (const auto &box : boxes) {
+  for (const auto& box : boxes) {
     auto intersection = tiles.Intersect(box);
 
-    for (const auto &entry : intersection) {
+    for (const auto& entry : intersection) {
       result[entry.first].insert(entry.second.begin(), entry.second.end());
     }
   }
@@ -185,11 +180,11 @@ merge_intersections(
 }
 
 struct filtered_nodes {
-  explicit filtered_nodes(const vm::AABB2<vm::PointLL> &b,
-                          std::vector<vb::GraphId> &nodes)
-    : m_box(b), m_nodes(nodes) {}
+  explicit filtered_nodes(const vm::AABB2<vm::PointLL>& b, std::vector<vb::GraphId>& nodes)
+      : m_box(b), m_nodes(nodes) {
+  }
 
-  inline void push_back(vb::GraphId id, const vb::NodeInfo &info) {
+  inline void push_back(vb::GraphId id, const vb::NodeInfo& info) {
     if (m_box.Contains(info.latlng())) {
       m_nodes.push_back(id);
     }
@@ -197,19 +192,18 @@ struct filtered_nodes {
 
 private:
   vm::AABB2<vm::PointLL> m_box;
-  std::vector<vb::GraphId> &m_nodes;
+  std::vector<vb::GraphId>& m_nodes;
 };
 
 // functor to sort GraphId objects by level, tile then id within the tile.
 struct sort_by_tile {
-  sort_by_tile() {}
+  sort_by_tile() {
+  }
 
   inline bool operator()(vb::GraphId a, vb::GraphId b) const {
     return ((a.level() < b.level()) ||
             ((a.level() == b.level()) &&
-             ((a.tileid() < b.tileid()) ||
-              ((a.tileid() == b.tileid()) &&
-               (a.id() < b.id())))));
+             ((a.tileid() < b.tileid()) || ((a.tileid() == b.tileid()) && (a.id() < b.id())))));
   }
 };
 
@@ -218,17 +212,16 @@ struct sort_pair_by_tile {
   typedef std::pair<vb::GraphId, uint32_t> value_type;
   static const sort_by_tile sort_tile;
 
-  inline bool operator()(const value_type &a, const value_type &b) {
-    return (sort_tile(a.first, b.first) ||
-            ((a.first == b.first) && (a.second < b.second)));
+  inline bool operator()(const value_type& a, const value_type& b) {
+    return (sort_tile(a.first, b.first) || ((a.first == b.first) && (a.second < b.second)));
   }
 };
 
 const sort_by_tile sort_pair_by_tile::sort_tile;
 
 struct node_collector {
-  node_collector(tile_cache &cache, filtered_nodes &nodes)
-    : m_cache(cache), m_nodes(nodes) {}
+  node_collector(tile_cache& cache, filtered_nodes& nodes) : m_cache(cache), m_nodes(nodes) {
+  }
 
   void add_edge(vb::GraphId edge_id) {
     const auto tile_id = m_cache.tile_id();
@@ -236,7 +229,7 @@ struct node_collector {
     if (edge_id.Tile_Base() == tile_id) {
       // we want _both_ nodes attached to this edge. the end node is easy
       // because the ID is available from the edge itself.
-      const auto &edge = m_cache.edge(edge_id);
+      const auto& edge = m_cache.edge(edge_id);
       const auto endnode_id = edge.endnode();
 
       // however, the start node - even though we know it must be in the
@@ -258,13 +251,13 @@ struct node_collector {
     const auto tile_id = m_cache.tile_id();
 
     if (node_id.Tile_Base() == tile_id) {
-      const auto &node = m_cache.node(node_id);
+      const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
       m_nodes.push_back(node_id, node);
 
       if (opp_index < node.edge_count()) {
-        //assert(opp_index < node.edge_count());
+        // assert(opp_index < node.edge_count());
         // add the node at the other end of the opposite - which would be the
         // start node of the original edge.
         auto opp_id = tile_id + uint64_t(node.edge_index() + opp_index);
@@ -284,7 +277,7 @@ struct node_collector {
     const auto tile_id = m_cache.tile_id();
 
     if (node_id.Tile_Base() == tile_id) {
-      const auto &node = m_cache.node(node_id);
+      const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
       m_nodes.push_back(node_id, node);
@@ -307,7 +300,7 @@ struct node_collector {
 
   void finish_opposite_edges() {
     std::sort(m_opposite_edges.begin(), m_opposite_edges.end(), sort_pair_by_tile());
-    for (const auto &entry : m_opposite_edges) {
+    for (const auto& entry : m_opposite_edges) {
       if (m_cache(entry.first).exists()) {
         add_node_with_opposite(entry.first, entry.second);
       }
@@ -332,14 +325,13 @@ struct node_collector {
   }
 
 private:
-
   // object which caches access to tiles. therefore it's much more efficient to
   // access objects grouped by (level, tile).
-  tile_cache &m_cache;
+  tile_cache& m_cache;
 
   // a bounding-box filtered list of nodes. we append nodes to this, and when
   // the algorithm finishes, this list can be made unique.
-  filtered_nodes &m_nodes;
+  filtered_nodes& m_nodes;
 
   // keep a set of (hopefully rare) "tweeners", which are edges which cross
   // from one tile into another. to find their end-node, we need to load up
@@ -354,7 +346,7 @@ private:
   // TODO: could be really naughty here and stuff the opposite index into the
   // extra unused field of the GraphId... but that might cause real headaches
   // down the road.
-  std::vector<std::pair<vb::GraphId, uint32_t> > m_opposite_edges;
+  std::vector<std::pair<vb::GraphId, uint32_t>> m_opposite_edges;
 
   // keep a set of (rarest of them all) nodes which are in a different tile from
   // their opposite edge, which is in a different tile from the original node.
@@ -366,8 +358,8 @@ private:
 namespace valhalla {
 namespace loki {
 
-std::vector<baldr::GraphId>
-nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
+std::vector<baldr::GraphId> nodes_in_bbox(const vm::AABB2<vm::PointLL>& bbox,
+                                          baldr::GraphReader& reader) {
   std::vector<vb::GraphId> nodes;
 
   auto tiles = vb::TileHierarchy::levels().rbegin()->second.tiles;
@@ -393,11 +385,11 @@ nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
   // number of sequential passes through the set of tiles.
   node_collector collector(cache, filtered);
 
-  for (const auto &entry : intersections) {
+  for (const auto& entry : intersections) {
     vb::GraphId tile_id(entry.first, bin_level, 0);
     // tile might not exist - the Tiles::Intersect routine returns all tiles
     // which might intersect, regardless of whether any of them exist.
-    auto &tile = cache(tile_id);
+    auto& tile = cache(tile_id);
     if (!tile.exists()) {
       continue;
     }
@@ -424,5 +416,5 @@ nodes_in_bbox(const vm::AABB2<vm::PointLL> &bbox, baldr::GraphReader& reader) {
   return nodes;
 }
 
-}
-}
+} // namespace loki
+} // namespace valhalla

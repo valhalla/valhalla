@@ -2,13 +2,13 @@
 #define VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
+#include <valhalla/mjolnir/dataquality.h>
 #include <valhalla/mjolnir/node_expander.h>
 #include <valhalla/mjolnir/osmdata.h>
-#include <valhalla/mjolnir/dataquality.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -39,9 +39,7 @@ struct NodeLabel {
   uint32_t pred_node_index;
 
   NodeLabel(const float c, const uint32_t n, const uint32_t p)
-      :  cost(c),
-         node_index(n),
-         pred_node_index(p) {
+      : cost(c), node_index(n), pred_node_index(p) {
   }
 };
 
@@ -49,13 +47,9 @@ struct NodeLabel {
 struct NodeStatusInfo {
   uint32_t set;
   uint32_t index;
-  NodeStatusInfo()
-      : set(kUnreached),
-        index(0) {
+  NodeStatusInfo() : set(kUnreached), index(0) {
   }
-  NodeStatusInfo(const uint32_t s, const uint32_t idx)
-      : set(s),
-        index(idx){
+  NodeStatusInfo(const uint32_t s, const uint32_t idx) : set(s), index(idx) {
   }
 };
 
@@ -77,15 +71,18 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
                       sequence<OSMWayNode>& way_nodes,
                       sequence<Edge>& edges,
                       sequence<Node>& nodes,
-                      const bool inbound, const uint32_t rc);
+                      const bool inbound,
+                      const uint32_t rc);
 
 /**
  * Check if the ferry included in this node bundle is short. Must be
  * just one edge and length < 2 km. This prevents forming connections
  * to what are most likely river crossing ferries.
  */
-bool ShortFerry(const uint32_t node_index, node_bundle& bundle,
-                sequence<Edge>& edges, sequence<Node>& nodes,
+bool ShortFerry(const uint32_t node_index,
+                node_bundle& bundle,
+                sequence<Edge>& edges,
+                sequence<Node>& nodes,
                 sequence<OSMWay>& ways,
                 sequence<OSMWayNode>& way_nodes);
 
@@ -97,8 +94,9 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
                                 const std::string& edges_file,
-                                const uint32_t rc, DataQuality& stats);
+                                const uint32_t rc,
+                                DataQuality& stats);
 
-}
-}
-#endif  // VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
+} // namespace mjolnir
+} // namespace valhalla
+#endif // VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_

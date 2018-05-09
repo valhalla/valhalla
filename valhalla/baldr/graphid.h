@@ -5,8 +5,8 @@
 #include <functional>
 #include <iostream>
 
-#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/json.h>
 
 namespace valhalla {
 namespace baldr {
@@ -30,7 +30,7 @@ constexpr uint64_t kIdIncrement = 1 << 25;
  * point.
  */
 struct GraphId {
- public:
+public:
   // Single 64 bit value representing the graph id.
   // Bit fields within the Id include:
   //      3  bits for hierarchy level
@@ -41,8 +41,7 @@ struct GraphId {
   /**
    * Default constructor
    */
-  GraphId()
-      : value(kInvalidGraphId) {
+  GraphId() : value(kInvalidGraphId) {
   }
 
   /**
@@ -69,8 +68,7 @@ struct GraphId {
    * Constructor
    * @param value all the various bits rolled into one
    */
-  explicit GraphId(const uint64_t value)
-      : value(value) {
+  explicit GraphId(const uint64_t value) : value(value) {
   }
 
   /**
@@ -151,7 +149,7 @@ struct GraphId {
   /**
    * Post increments the id.
    */
-  GraphId operator ++(int) {
+  GraphId operator++(int) {
     GraphId t = *this;
     value += kIdIncrement;
     return t;
@@ -160,7 +158,7 @@ struct GraphId {
   /**
    * Pre increments the id.
    */
-  GraphId& operator ++() {
+  GraphId& operator++() {
     value += kIdIncrement;
     return *this;
   }
@@ -177,17 +175,17 @@ struct GraphId {
    * @param  rhs  Right hand side graph Id for comparison.
    * @return  Returns true if this GraphId is less than the right hand side.
    */
-  bool operator <(const GraphId& rhs) const{
+  bool operator<(const GraphId& rhs) const {
     return value < rhs.value;
   }
 
   // Operator EqualTo.
-  bool operator ==(const GraphId& rhs) const {
+  bool operator==(const GraphId& rhs) const {
     return value == rhs.value;
   }
 
   // Operator not equal
-  bool operator !=(const GraphId& rhs) const {
+  bool operator!=(const GraphId& rhs) const {
     return value != rhs.value;
   }
 
@@ -200,18 +198,16 @@ struct GraphId {
   friend std::ostream& operator<<(std::ostream& os, const GraphId& id);
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
 // Extend the standard namespace to know how to hash graphids
 namespace std {
-  template <>
-  struct hash<valhalla::baldr::GraphId> {
-    inline std::size_t operator()(const valhalla::baldr::GraphId& k) const {
-      return static_cast<size_t>(k.value);
-    }
-  };
-}
-
+template <> struct hash<valhalla::baldr::GraphId> {
+  inline std::size_t operator()(const valhalla::baldr::GraphId& k) const {
+    return static_cast<size_t>(k.value);
+  }
+};
+} // namespace std
 
 #endif // VALHALLA_BALDR_GRAPHID_H_

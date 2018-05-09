@@ -34,7 +34,7 @@ void OSMRestriction::set_vias(const std::vector<uint64_t>& vias) {
     return;
   }
 
-  for (unsigned i=0; i < vias.size(); ++i) {
+  for (unsigned i = 0; i < vias.size(); ++i) {
     vias_[i] = vias[i];
   }
 }
@@ -77,9 +77,9 @@ void OSMRestriction::set_from(uint64_t from) {
 }
 
 // Get the from way id
- uint64_t OSMRestriction::from() const {
-   return from_;
- }
+uint64_t OSMRestriction::from() const {
+  return from_;
+}
 
 // Set the to way id
 void OSMRestriction::set_to(uint64_t to) {
@@ -87,19 +87,19 @@ void OSMRestriction::set_to(uint64_t to) {
 }
 
 // Get the to way id
- uint64_t OSMRestriction::to() const {
-   return to_;
- }
-
- // Set the time domain
- void OSMRestriction::set_time_domain(uint64_t time_domain) {
-   time_domain_ = time_domain;
- }
-
- // Get the time domain
-  uint64_t OSMRestriction::time_domain() const {
-    return time_domain_;
-  }
-
+uint64_t OSMRestriction::to() const {
+  return to_;
 }
+
+// Set the time domain
+void OSMRestriction::set_time_domain(uint64_t time_domain) {
+  time_domain_ = time_domain;
 }
+
+// Get the time domain
+uint64_t OSMRestriction::time_domain() const {
+  return time_domain_;
+}
+
+} // namespace mjolnir
+} // namespace valhalla

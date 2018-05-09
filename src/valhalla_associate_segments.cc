@@ -1,27 +1,27 @@
-#include <cstdint>
-#include <cmath>
-#include "midgard/logging.h"
 #include "baldr/graphreader.h"
 #include "baldr/merge.h"
-#include "loki/search.h"
 #include "loki/node_search.h"
-#include "thor/pathalgorithm.h"
-#include "thor/astar.h"
+#include "loki/search.h"
+#include "midgard/logging.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "thor/astar.h"
+#include "thor/pathalgorithm.h"
+#include <cmath>
+#include <cstdint>
 
-#include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
-#include <deque>
 #include <algorithm>
-#include <thread>
-#include <mutex>
+#include <deque>
 #include <future>
+#include <mutex>
+#include <thread>
 
 #include "config.h"
 #include "segment.pb.h"
@@ -42,14 +42,14 @@ namespace bpt = boost::property_tree;
 namespace bfs = boost::filesystem;
 
 namespace std {
-std::string to_string(const vm::PointLL &p) {
+std::string to_string(const vm::PointLL& p) {
   std::ostringstream out;
   out.precision(16);
   out << "PointLL(" << p.lat() << ", " << p.lng() << ")";
   return out.str();
 }
 
-std::string to_string(const vb::GraphId &i) {
+std::string to_string(const vb::GraphId& i) {
   std::ostringstream out;
   out << "OSMLR GraphId(" << i.tileid() << ", " << i.level() << ", " << i.id() << ")";
   return out.str();
@@ -74,10 +74,7 @@ constexpr uint32_t kLengthTolerance = 15;
 // Bearing tolerance in degrees
 constexpr uint16_t kBearingTolerance = 15;
 
-enum class MatchType : uint8_t {
-  kWalk = 0,
-  kShortestPath = 1
-};
+enum class MatchType : uint8_t { kWalk = 0, kShortestPath = 1 };
 
 // Matched edge
 struct EdgeMatch {
@@ -93,29 +90,24 @@ struct CandidateEdge {
   vb::PathLocation::PathEdge edge;
   float distance;
 
-  CandidateEdge()
-    : edge({}, 0.0f, {}, 1.0f),
-      distance(0.0f) {
+  CandidateEdge() : edge({}, 0.0f, {}, 1.0f), distance(0.0f) {
   }
 
-  CandidateEdge(const vb::PathLocation::PathEdge& e, const float d)
-      : edge(e),
-        distance(d) {
+  CandidateEdge(const vb::PathLocation::PathEdge& e, const float d) : edge(e), distance(d) {
   }
 };
 
-uint16_t bearing(const std::vector<vm::PointLL> &shape) {
+uint16_t bearing(const std::vector<vm::PointLL>& shape) {
   // OpenLR says to use 20m along the edge, but we could use the
   // GetOffsetForHeading function, which adapts it to the road class.
-  float heading = shape.size() >= 2 ?
-      vm::PointLL::HeadingAlongPolyline(shape, 20) : 0.0f;
+  float heading = shape.size() >= 2 ? vm::PointLL::HeadingAlongPolyline(shape, 20) : 0.0f;
   assert(heading >= 0.0);
   assert(heading < 360.0);
   return uint16_t(std::round(heading));
 }
 
-uint16_t bearing(const vb::GraphTile *tile, vb::GraphId edge_id, float dist) {
-  const auto *edge = tile->directededge(edge_id);
+uint16_t bearing(const vb::GraphTile* tile, vb::GraphId edge_id, float dist) {
+  const auto* edge = tile->directededge(edge_id);
   std::vector<vm::PointLL> shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
   if (!edge->forward()) {
     std::reverse(shape.begin(), shape.end());
@@ -147,46 +139,55 @@ inline uint32_t abs_u32_diff(const uint32_t a, const uint32_t b) {
 
 // Attempt to provide a match score - how close is the match in total length,
 // distance of the start and end of the path from the segment start and end.
-uint32_t match_score(const float length_diff, const float origin_diff,
-                     const float dest_diff) {
+uint32_t match_score(const float length_diff, const float origin_diff, const float dest_diff) {
   return length_diff * length_diff + origin_diff * origin_diff + dest_diff * dest_diff;
 }
 
 // Edge association
-using leftovers_t = std::vector<std::pair<vb::GraphId, vb::TrafficChunk > >;
-using chunk_t = std::unordered_map<vb::GraphId, std::vector<vb::TrafficChunk> >;
-using chunks_t = std::vector<std::pair<vb::GraphId, std::vector<vb::TrafficChunk > > >;
+using leftovers_t = std::vector<std::pair<vb::GraphId, vb::TrafficChunk>>;
+using chunk_t = std::unordered_map<vb::GraphId, std::vector<vb::TrafficChunk>>;
+using chunks_t = std::vector<std::pair<vb::GraphId, std::vector<vb::TrafficChunk>>>;
 struct edge_association {
-  explicit edge_association(const bpt::ptree &pt);
+  explicit edge_association(const bpt::ptree& pt);
 
   // Associate a tile of OSMLR to Valhalla edges
   void add_tile(const std::string& file_name);
 
   // Get the "leftovers" - these are edge-segment associations where the
   // edges are not in the same tile as the OSMLR segment.
-  const leftovers_t& leftovers() const { return m_leftover_associations; }
+  const leftovers_t& leftovers() const {
+    return m_leftover_associations;
+  }
 
   // Get the chunks. These are edges that associate to more than 1 OSMLR
   // segment.
-  const chunk_t& chunks() const { return traffic_chunks; }
+  const chunk_t& chunks() const {
+    return traffic_chunks;
+  }
 
-  std::unordered_map<uint32_t, uint32_t> success_count() const { return success_count_; }
-  std::unordered_map<uint32_t, uint32_t> failure_count() const { return failure_count_; }
-  std::unordered_map<uint32_t, uint32_t> walk_count() const { return walk_count_; }
-  std::unordered_map<uint32_t, uint32_t> path_count() const { return path_count_; }
+  std::unordered_map<uint32_t, uint32_t> success_count() const {
+    return success_count_;
+  }
+  std::unordered_map<uint32_t, uint32_t> failure_count() const {
+    return failure_count_;
+  }
+  std::unordered_map<uint32_t, uint32_t> walk_count() const {
+    return walk_count_;
+  }
+  std::unordered_map<uint32_t, uint32_t> path_count() const {
+    return path_count_;
+  }
 
 private:
-  std::vector<CandidateEdge> candidate_edges(bool origin,
-                        const pbf::Segment::LocationReference &lrp,
-                        const uint8_t level);
-  bool match_segment(vb::GraphId segment_id, const pbf::Segment &segment,
-                     MatchType& match_type);
-  std::vector<EdgeMatch> match_edges(const pbf::Segment &segment,
-                    const vb::GraphId& segment_id,
-                    const uint32_t segment_length, MatchType& match_type);
-  std::vector<EdgeMatch> walk(const vb::GraphId& segment_id,
-                    const uint32_t segment_length,
-                    const pbf::Segment& segment);
+  std::vector<CandidateEdge>
+  candidate_edges(bool origin, const pbf::Segment::LocationReference& lrp, const uint8_t level);
+  bool match_segment(vb::GraphId segment_id, const pbf::Segment& segment, MatchType& match_type);
+  std::vector<EdgeMatch> match_edges(const pbf::Segment& segment,
+                                     const vb::GraphId& segment_id,
+                                     const uint32_t segment_length,
+                                     MatchType& match_type);
+  std::vector<EdgeMatch>
+  walk(const vb::GraphId& segment_id, const uint32_t segment_length, const pbf::Segment& segment);
   vm::PointLL lookup_end_coord(const vb::GraphId& edge_id);
   vm::PointLL lookup_start_coord(const vb::GraphId& edge_id);
 
@@ -212,12 +213,11 @@ private:
 // Use this method to determine whether an edge should be allowed along the
 // merged path. This method should match the predicate used to create OSMLR
 // segments.
-bool allow_edge_pred(const vb::DirectedEdge *edge) {
+bool allow_edge_pred(const vb::DirectedEdge* edge) {
   return (!edge->trans_up() && !edge->trans_down() && !edge->is_shortcut() &&
-           edge->classification() != vb::RoadClass::kServiceOther &&
-          (edge->use() == vb::Use::kRoad || edge->use() == vb::Use::kRamp) &&
-          !edge->roundabout() && !edge->internal() &&
-          (edge->forwardaccess() & vb::kVehicularAccess) != 0);
+          edge->classification() != vb::RoadClass::kServiceOther &&
+          (edge->use() == vb::Use::kRoad || edge->use() == vb::Use::kRamp) && !edge->roundabout() &&
+          !edge->internal() && (edge->forwardaccess() & vb::kVehicularAccess) != 0);
 }
 
 enum class FormOfWay {
@@ -231,7 +231,7 @@ enum class FormOfWay {
   kOther = 7
 };
 
-FormOfWay form_of_way(const vb::DirectedEdge *e) {
+FormOfWay form_of_way(const vb::DirectedEdge* e) {
   // Check if oneway. Assumes forward access is allowed. Edge is oneway if
   // no reverse vehicular access is allowed
   bool oneway = (e->reverseaccess() & vb::kVehicularAccess) == 0;
@@ -290,7 +290,7 @@ public:
 };
 
 DistanceOnlyCost::DistanceOnlyCost(vs::TravelMode travel_mode)
-  : DynamicCost(bpt::ptree(), travel_mode) {
+    : DynamicCost(bpt::ptree(), travel_mode) {
 }
 
 DistanceOnlyCost::~DistanceOnlyCost() {
@@ -307,8 +307,7 @@ bool DistanceOnlyCost::Allowed(const vb::DirectedEdge* edge,
                                const uint64_t,
                                const uint32_t) const {
   // Do not allow U-turns/back-tracking
-  return allow_edge_pred(edge) &&
-        (pred.opp_local_idx() != edge->localedgeidx());
+  return allow_edge_pred(edge) && (pred.opp_local_idx() != edge->localedgeidx());
 }
 
 bool DistanceOnlyCost::AllowedReverse(const vb::DirectedEdge* edge,
@@ -319,8 +318,7 @@ bool DistanceOnlyCost::AllowedReverse(const vb::DirectedEdge* edge,
                                       const uint64_t,
                                       const uint32_t) const {
   // Do not allow U-turns/back-tracking
-  return allow_edge_pred(edge) &&
-        (pred.opp_local_idx() != edge->localedgeidx());
+  return allow_edge_pred(edge) && (pred.opp_local_idx() != edge->localedgeidx());
 }
 
 bool DistanceOnlyCost::Allowed(const vb::NodeInfo*) const {
@@ -333,47 +331,43 @@ vs::Cost DistanceOnlyCost::EdgeCost(const vb::DirectedEdge* edge) const {
 }
 
 const vs::EdgeFilter DistanceOnlyCost::GetEdgeFilter() const {
-  return [](const vb::DirectedEdge *edge) -> float {
-    return allow_edge_pred(edge) ? 1.0f : 0.0f;
-  };
+  return [](const vb::DirectedEdge* edge) -> float { return allow_edge_pred(edge) ? 1.0f : 0.0f; };
 }
 
 const vs::NodeFilter DistanceOnlyCost::GetNodeFilter() const {
-  return [](const vb::NodeInfo *) -> bool {
-    return false;
-  };
+  return [](const vb::NodeInfo*) -> bool { return false; };
 }
 
 float DistanceOnlyCost::AStarCostFactor() const {
   return 1.0f;
 }
 
-inline vm::PointLL coord_for_lrp(const pbf::Segment::LocationReference &lrp) {
-  return { static_cast<double>(lrp.coord().lng()) * 0.0000001,
-           static_cast<double>(lrp.coord().lat()) * 0.0000001 };
+inline vm::PointLL coord_for_lrp(const pbf::Segment::LocationReference& lrp) {
+  return {static_cast<double>(lrp.coord().lng()) * 0.0000001,
+          static_cast<double>(lrp.coord().lat()) * 0.0000001};
 }
 
-vb::Location location_for_lrp(const pbf::Segment::LocationReference &lrp) {
-  vb::Location location({ static_cast<double>(lrp.coord().lng()) * 0.0000001,
-                          static_cast<double>(lrp.coord().lat()) * 0.0000001 });
-  if(lrp.has_bear())
+vb::Location location_for_lrp(const pbf::Segment::LocationReference& lrp) {
+  vb::Location location({static_cast<double>(lrp.coord().lng()) * 0.0000001,
+                         static_cast<double>(lrp.coord().lat()) * 0.0000001});
+  if (lrp.has_bear())
     location.heading_ = lrp.bear();
   return location;
 }
 
-vo::Location loki_search_single(const vb::Location &loc, vb::GraphReader &reader, uint8_t level) {
-  //we dont want non real edges but also we want the edges to be on the right level
-  //also right now only driveable edges please
+vo::Location loki_search_single(const vb::Location& loc, vb::GraphReader& reader, uint8_t level) {
+  // we dont want non real edges but also we want the edges to be on the right level
+  // also right now only driveable edges please
   auto edge_filter = [level](const DirectedEdge* edge) -> float {
     return (edge->endnode().level() == level && allow_edge_pred(edge)) ? 1.0f : 0.0f;
   };
 
-  //we only have one location so we only get one result
+  // we only have one location so we only get one result
   std::vector<vb::Location> locs{loc};
   locs.back().radius_ = kEdgeDistanceTolerance;
   vb::PathLocation path_loc(loc);
   auto results = vl::Search(locs, reader, edge_filter, vl::PassThroughNodeFilter);
-  if(results.size())
+  if (results.size())
     path_loc = std::move(results.begin()->second);
 
   vo::Location l;
@@ -383,12 +377,10 @@ vo::Location loki_search_single(const vb::Location &loc, vb::GraphReader &reader
 }
 
 struct last_tile_cache {
-  last_tile_cache(vb::GraphReader &reader)
-      : m_reader(reader),
-        m_last_tile(nullptr) {
+  last_tile_cache(vb::GraphReader& reader) : m_reader(reader), m_last_tile(nullptr) {
   }
 
-  inline const vb::GraphTile *get(vb::GraphId id) {
+  inline const vb::GraphTile* get(vb::GraphId id) {
     if (id.Tile_Base() != m_last_id) {
       m_last_id = id.Tile_Base();
       m_last_tile = m_reader.GetGraphTile(m_last_id);
@@ -397,16 +389,15 @@ struct last_tile_cache {
   }
 
 private:
-  vb::GraphReader &m_reader;
+  vb::GraphReader& m_reader;
   vb::GraphId m_last_id;
-  const vb::GraphTile *m_last_tile;
+  const vb::GraphTile* m_last_tile;
 };
 
 // Find nodes on the specified level that are within a specified distance
 // from the lat,lon location
-std::vector<vb::GraphId> find_nearby_nodes(vb::GraphReader& reader,
-                              const vm::PointLL& pt,
-                              const uint8_t level) {
+std::vector<vb::GraphId>
+find_nearby_nodes(vb::GraphReader& reader, const vm::PointLL& pt, const uint8_t level) {
   // Create a bounding box and find nodes within the bounding box
   float meters_per_lng = vm::DistanceApproximator::MetersPerLngDegree(pt.lat());
   float delta_lng = kNodeDistanceTolerance / meters_per_lng;
@@ -427,9 +418,9 @@ std::vector<vb::GraphId> find_nearby_nodes(vb::GraphReader& reader,
 
 // Add edges from each node
 std::vector<CandidateEdge> GetEdgesFromNodes(vb::GraphReader& reader,
-                                    const std::vector<vb::GraphId>& nodes,
-                                    const PointLL& seg_coord,
-                                    const bool origin) {
+                                             const std::vector<vb::GraphId>& nodes,
+                                             const PointLL& seg_coord,
+                                             const bool origin) {
   last_tile_cache cache(reader);
   uint32_t count, edge_index;
   PointLL dmy;
@@ -441,9 +432,9 @@ std::vector<CandidateEdge> GetEdgesFromNodes(vb::GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
       // Skip non-regular edges - must be a road or ramp
-      if (directededge->trans_up() || directededge->trans_down() ||
-          directededge->is_shortcut() || directededge->roundabout() ||
-         (directededge->use() != vb::Use::kRoad && directededge->use() != vb::Use::kRamp) ||
+      if (directededge->trans_up() || directededge->trans_down() || directededge->is_shortcut() ||
+          directededge->roundabout() ||
+          (directededge->use() != vb::Use::kRoad && directededge->use() != vb::Use::kRamp) ||
           directededge->internal()) {
         continue;
       }
@@ -468,7 +459,9 @@ std::vector<CandidateEdge> GetEdgesFromNodes(vb::GraphReader& reader,
 // Walk from the specified edge to the next one where there is only one choice.
 // If there are more choices then just return invalid to signify stopping.
 // This is trying to mimic OSMLR generation logic.
-vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb::GraphTile*& tile,
+vb::GraphId next_edge(const GraphId& edge_id,
+                      vb::GraphReader& reader,
+                      const vb::GraphTile*& tile,
                       uint32_t& edge_length) {
   if (tile->id() != edge_id.Tile_Base())
     tile = reader.GetGraphTile(edge_id);
@@ -483,7 +476,7 @@ vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb:
   // Get child edges of this node
   vb::GraphId next;
   const auto* child_edge = tile->directededge(node->edge_index());
-  for(int i = 0; i < node->edge_count(); ++i, child_edge++) {
+  for (int i = 0; i < node->edge_count(); ++i, child_edge++) {
     // Skip U-turns and edges that are not allowed
     if (i != edge->opp_index() && allow_edge_pred(child_edge)) {
       // Return invalid GraphId if more than 1 candidate edge exists
@@ -499,17 +492,16 @@ vb::GraphId next_edge(const GraphId& edge_id, vb::GraphReader& reader, const vb:
 }
 
 // Edge association constructor
-edge_association::edge_association(const bpt::ptree &pt)
-  : m_reader(pt.get_child("mjolnir")),
-    m_travel_mode(vs::TravelMode::kDrive),
-    m_path_algo(new vt::AStarPathAlgorithm()),
-    m_costing(new DistanceOnlyCost(m_travel_mode)) {
+edge_association::edge_association(const bpt::ptree& pt)
+    : m_reader(pt.get_child("mjolnir")), m_travel_mode(vs::TravelMode::kDrive),
+      m_path_algo(new vt::AStarPathAlgorithm()), m_costing(new DistanceOnlyCost(m_travel_mode)) {
 }
 
 // Get a list of candidate edges for the location.
-std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
-                      const pbf::Segment::LocationReference &lrp,
-                      const uint8_t level) {
+std::vector<CandidateEdge>
+edge_association::candidate_edges(bool origin,
+                                  const pbf::Segment::LocationReference& lrp,
+                                  const uint8_t level) {
   auto ll = coord_for_lrp(lrp);
   std::vector<CandidateEdge> edges;
   if (lrp.at_node()) {
@@ -520,17 +512,18 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
     // Use edge search with loki
     auto loc = loki_search_single(vb::Location(ll), m_reader, level);
     for (const auto& edge : loc.path_edges()) {
-      PathLocation::PathEdge e(GraphId(edge.graph_id()), edge.percent_along(), PointLL{edge.ll().lng(), edge.ll().lat()}, edge.distance());
-      edges.emplace_back(std::move(e), 0.0f);  // TODO??
+      PathLocation::PathEdge e(GraphId(edge.graph_id()), edge.percent_along(),
+                               PointLL{edge.ll().lng(), edge.ll().lat()}, edge.distance());
+      edges.emplace_back(std::move(e), 0.0f); // TODO??
     }
     if (origin) {
       // Remove inbound edges to an origin node
       edges.erase(std::remove_if(edges.begin(), edges.end(),
-         [](const CandidateEdge& e){return e.edge.end_node();}));
+                                 [](const CandidateEdge& e) { return e.edge.end_node(); }));
     } else {
       // remove outbound edges to a destination node
       edges.erase(std::remove_if(edges.begin(), edges.end(),
-         [](const CandidateEdge& e){return e.edge.begin_node();}));
+                                 [](const CandidateEdge& e) { return e.edge.begin_node(); }));
     }
   }
   return edges;
@@ -538,12 +531,12 @@ std::vector<CandidateEdge> edge_association::candidate_edges(bool origin,
 
 // Walk a path between origin and destination edges.
 std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
-                            const uint32_t segment_length,
-                            const pbf::Segment& segment) {
+                                              const uint32_t segment_length,
+                                              const pbf::Segment& segment) {
   // Get the candidate origin and destination edges
   size_t n = segment.lrps_size();
   auto origin_edges = candidate_edges(true, segment.lrps(0), segment_id.level());
-  auto destination_edges = candidate_edges(false, segment.lrps(n-1), segment_id.level());
+  auto destination_edges = candidate_edges(false, segment.lrps(n - 1), segment_id.level());
 
   // Create a map of candidate destination edges for faster lookup
   std::unordered_map<GraphId, CandidateEdge> dest_edges;
@@ -589,13 +582,15 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
 
     // Walk a path from this origin edge.
     std::vector<EdgeMatch> edges;
-    edges.emplace_back(EdgeMatch{origin_edge.edge.id, edge->length(), origin_edge.edge.percent_along, 1.0f});
+    edges.emplace_back(
+        EdgeMatch{origin_edge.edge.id, edge->length(), origin_edge.edge.percent_along, 1.0f});
 
     // Check if the origin edge matches a destination edge
     auto dest = dest_edges.find(origin_edge.edge.id);
     if (dest != dest_edges.end()) {
       // Check if this path is a better match
-      uint32_t walked_length = edge->length() * (dest->second.edge.percent_along - origin_edge.edge.percent_along);
+      uint32_t walked_length =
+          edge->length() * (dest->second.edge.percent_along - origin_edge.edge.percent_along);
       uint32_t d = abs_u32_diff(walked_length, segment_length);
       if (d < kLengthTolerance) {
         uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
@@ -627,7 +622,8 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
           uint32_t score = match_score(d, origin_edge.distance, dest->second.distance);
           if (score < best_score) {
             best_path = edges;
-            best_path.emplace_back(EdgeMatch{edgeid, edge_length, 0.0f, dest->second.edge.percent_along});
+            best_path.emplace_back(
+                EdgeMatch{edgeid, edge_length, 0.0f, dest->second.edge.percent_along});
             best_score = score;
           }
         }
@@ -647,8 +643,9 @@ std::vector<EdgeMatch> edge_association::walk(const vb::GraphId& segment_id,
 
 // Match the OSMLR segment to Valhalla edges.
 std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment,
-                            const vb::GraphId& segment_id,
-                            const uint32_t segment_length, MatchType& match_type) {
+                                                     const vb::GraphId& segment_id,
+                                                     const uint32_t segment_length,
+                                                     MatchType& match_type) {
   const size_t size = segment.lrps_size();
   assert(size >= 2);
 
@@ -673,22 +670,23 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
   // filtering.
 
   // Fall back to A* shortest path to form the path edges
-  if (segment.lrps(0).at_node() && segment.lrps(size-1).at_node()) {
-    LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) + " value = " +
-                  std::to_string(segment_id.value));
+  if (segment.lrps(0).at_node() && segment.lrps(size - 1).at_node()) {
+    LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) +
+              " value = " + std::to_string(segment_id.value));
   } else {
     LOG_DEBUG("Fall back to A* - LRPs are not at nodes: " + std::to_string(segment_id) +
-             " value = " + std::to_string(segment_id.value));
+              " value = " + std::to_string(segment_id.value));
   }
 
   // check all the interim points of the location reference
   auto origin_coord = coord_for_lrp(segment.lrps(0));
   auto origin = loki_search_single(vb::Location(origin_coord), m_reader, segment_id.level());
   for (size_t i = 0; i < size - 1; ++i) {
-    auto &lrp = segment.lrps(i);
+    auto& lrp = segment.lrps(i);
     auto coord = coord_for_lrp(lrp);
-    auto next_coord = coord_for_lrp(segment.lrps(i+1));
-    auto dest = loki_search_single(location_for_lrp(segment.lrps(i+1)), m_reader, segment_id.level());
+    auto next_coord = coord_for_lrp(segment.lrps(i + 1));
+    auto dest =
+        loki_search_single(location_for_lrp(segment.lrps(i + 1)), m_reader, segment_id.level());
     if (dest.path_edges_size() == 0) {
       LOG_DEBUG("Unable to find edge near point " + std::to_string(next_coord) +
                 ". Segment cannot be matched, discarding.");
@@ -718,10 +716,11 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
 
     // Add edges to the matched path.
     // TODO - remove duplicate instances of the edge ID in the path info.
-    for (const auto &info : path) {
+    for (const auto& info : path) {
       const GraphTile* tile = m_reader.GetGraphTile(info.edgeid);
       const DirectedEdge* edge = tile->directededge(info.edgeid);
-      edges.emplace_back(EdgeMatch{info.edgeid, edge->length(), 0.0f, 1.0f});  // TODO - set first and last edge full_edge flag
+      edges.emplace_back(EdgeMatch{info.edgeid, edge->length(), 0.0f,
+                                   1.0f}); // TODO - set first and last edge full_edge flag
     }
 
     // use dest as next origin
@@ -732,31 +731,32 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
 }
 
 vm::PointLL edge_association::lookup_end_coord(const vb::GraphId& edge_id) {
-  auto *tile = m_reader.GetGraphTile(edge_id);
-  auto *edge = tile->directededge(edge_id);
+  auto* tile = m_reader.GetGraphTile(edge_id);
+  auto* edge = tile->directededge(edge_id);
   auto node_id = edge->endnode();
-  auto *node_tile = tile;
+  auto* node_tile = tile;
   if (edge_id.Tile_Base() != node_id.Tile_Base()) {
     node_tile = m_reader.GetGraphTile(node_id);
   }
-  auto *node = node_tile->node(node_id);
+  auto* node = node_tile->node(node_id);
   return node->latlng();
 }
 
 vm::PointLL edge_association::lookup_start_coord(const vb::GraphId& edge_id) {
-  auto *tile = m_reader.GetGraphTile(edge_id);
-  auto *edge = tile->directededge(edge_id);
+  auto* tile = m_reader.GetGraphTile(edge_id);
+  auto* edge = tile->directededge(edge_id);
   auto opp_index = edge->opp_index();
   auto node_id = edge->endnode();
-  auto *node_tile = tile;
+  auto* node_tile = tile;
   if (edge_id.Tile_Base() != node_id.Tile_Base()) {
     node_tile = m_reader.GetGraphTile(node_id);
   }
-  auto *node = node_tile->node(node_id);
+  auto* node = node_tile->node(node_id);
   return lookup_end_coord(node_id.Tile_Base() + uint64_t(node->edge_index() + opp_index));
 }
 
-bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment &segment,
+bool edge_association::match_segment(vb::GraphId segment_id,
+                                     const pbf::Segment& segment,
                                      MatchType& match_type) {
   // Get the total length of the OSMLR segment
   uint32_t segment_length = 0;
@@ -767,12 +767,12 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
   auto edges = match_edges(segment, segment_id, segment_length, match_type);
   if (edges.empty()) {
     size_t n = segment.lrps_size();
-    if (segment.lrps(0).at_node() && segment.lrps(n-1).at_node()) {
-      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) + " value = " +
-                    std::to_string(segment_id.value));
+    if (segment.lrps(0).at_node() && segment.lrps(n - 1).at_node()) {
+      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) +
+                " value = " + std::to_string(segment_id.value));
     } else {
-      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) + " value = " +
-              std::to_string(segment_id.value));
+      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) +
+                " value = " + std::to_string(segment_id.value));
     }
     return false;
   }
@@ -783,15 +783,16 @@ bool edge_association::match_segment(vb::GraphId segment_id, const pbf::Segment 
     // Form association for this edge. First edge "starts"
     // the traffic segment and the last edge ends the segment.
     const auto& edge = edges[i];
-    vb::TrafficChunk assoc(segment_id, edge.start_pct, edge.end_pct, i == 0, i == (edges.size() - 1));
+    vb::TrafficChunk assoc(segment_id, edge.start_pct, edge.end_pct, i == 0,
+                           i == (edges.size() - 1));
     // Full edge.
     if (edge.start_pct == 0.0f && edge.end_pct == 1.0f) {
       // Store the local segment and leave the non local for later
-      if(m_tile_builder->id() == edge.edgeid.Tile_Base())
+      if (m_tile_builder->id() == edge.edgeid.Tile_Base())
         m_tile_builder->AddTrafficSegment(edge.edgeid, assoc);
       else
         m_leftover_associations.emplace_back(std::make_pair(edge.edgeid, std::move(assoc)));
-    }// Add the temporary chunk information for this edge to the map
+    } // Add the temporary chunk information for this edge to the map
     else
       traffic_chunks[edge.edgeid].emplace_back(std::move(assoc));
   }
@@ -815,18 +816,17 @@ void edge_association::add_tile(const std::string& file_name) {
   }
 
   // Get a tile builder ready for this tile
-  m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.tile_dir(),
-                       base_id, false));
+  m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.tile_dir(), base_id, false));
   m_tile_builder->InitializeTrafficSegments();
 
   // Match the segments in this OSMLR tile
   std::cout.precision(16);
   uint64_t entry_id = 0;
   MatchType match_type = MatchType::kWalk;
-  for (auto &entry : tile.entries()) {
+  for (auto& entry : tile.entries()) {
     if (!entry.has_marker()) {
       assert(entry.has_segment());
-      auto &segment = entry.segment();
+      auto& segment = entry.segment();
       if (match_segment(base_id + entry_id, segment, match_type)) {
         success_count_[base_id.level()] += 1;
         if (match_type == MatchType::kWalk) {
@@ -849,40 +849,43 @@ void edge_association::add_tile(const std::string& file_name) {
 // Add OSMLR segment associations to each tile in the list. Any "local"
 // associations where the edge is within the same tile as the OSMLR segment
 // are written to the tile.
-void add_local_associations(const bpt::ptree &pt, std::deque<std::string>& osmlr_tiles, std::mutex& lock,
-  std::promise<edge_association>& association) {
+void add_local_associations(const bpt::ptree& pt,
+                            std::deque<std::string>& osmlr_tiles,
+                            std::mutex& lock,
+                            std::promise<edge_association>& association) {
 
-  //this holds the extra data before we serialize it to the extra section
-  //of a tile.
+  // this holds the extra data before we serialize it to the extra section
+  // of a tile.
   edge_association e(pt);
 
-  while(true) {
-    //get a file to work with
+  while (true) {
+    // get a file to work with
     std::string osmlr_filename;
     lock.lock();
-    if(osmlr_tiles.size()) {
+    if (osmlr_tiles.size()) {
       osmlr_filename = std::move(osmlr_tiles.front());
       osmlr_tiles.pop_front();
     }
     lock.unlock();
-    if(osmlr_filename.empty())
+    if (osmlr_filename.empty())
       break;
 
-    //get the local associations
+    // get the local associations
     e.add_tile(osmlr_filename);
   }
 
-  //pass it back
+  // pass it back
   association.set_value(std::move(e));
 }
 
-void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId, leftovers_t>& leftovers,
+void add_leftover_associations(const bpt::ptree& pt,
+                               std::unordered_map<GraphId, leftovers_t>& leftovers,
                                std::mutex& lock) {
 
   // Get the tile dir
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
 
-  while(true) {
+  while (true) {
     // Get leftovers from a tile
     leftovers_t associations;
     lock.lock();
@@ -891,23 +894,24 @@ void add_leftover_associations(const bpt::ptree &pt, std::unordered_map<GraphId,
       leftovers.erase(leftovers.begin());
     }
     lock.unlock();
-    if(associations.empty())
+    if (associations.empty())
       break;
 
     // Write leftovers
     vj::GraphTileBuilder tile_builder(tile_dir, associations.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
     tile_builder.InitializeTrafficChunks();
-    for(const auto& association : associations)
+    for (const auto& association : associations)
       tile_builder.AddTrafficSegment(association.first, association.second);
     tile_builder.UpdateTrafficSegments(false);
   }
 }
 
-void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>& chunks,
-                               std::mutex& lock) {
+void add_chunks(const bpt::ptree& pt,
+                std::unordered_map<vb::GraphId, chunks_t>& chunks,
+                std::mutex& lock) {
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  while(true) {
+  while (true) {
     // Get chunks
     lock.lock();
     std::vector<std::pair<vb::GraphId, std::vector<vb::TrafficChunk>>> associated_chunks;
@@ -916,14 +920,14 @@ void add_chunks(const bpt::ptree &pt, std::unordered_map<vb::GraphId, chunks_t>&
       chunks.erase(chunks.begin());
     }
     lock.unlock();
-    if(associated_chunks.empty())
+    if (associated_chunks.empty())
       break;
 
     // Write chunks
     vj::GraphTileBuilder tile_builder(tile_dir, associated_chunks.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
     tile_builder.InitializeTrafficChunks();
-    for(const auto& chunk : associated_chunks) {
+    for (const auto& chunk : associated_chunks) {
       tile_builder.AddTrafficSegments(chunk.first, chunk.second);
     }
 
@@ -939,34 +943,32 @@ int main(int argc, char** argv) {
   std::string config, tile_dir;
   unsigned int num_threads = 1;
 
-  bpo::options_description options("valhalla_associate_segments " VERSION "\n"
-                                   "\n"
-                                   " Usage: valhalla_associate_segments [options]\n"
-                                   "\n"
-                                   "osmlr associates traffic segment descriptors with a valhalla graph. "
-                                   "\n"
-                                   "\n");
+  bpo::options_description options(
+      "valhalla_associate_segments " VERSION "\n"
+      "\n"
+      " Usage: valhalla_associate_segments [options]\n"
+      "\n"
+      "osmlr associates traffic segment descriptors with a valhalla graph. "
+      "\n"
+      "\n");
 
-  options.add_options()
-    ("help,h", "Print this help message.")
-    ("version,v", "Print the version of this software.")
-    ("osmlr-tile-dir,t", bpo::value<std::string>(&tile_dir), "Location of traffic segment tiles.")
-    ("concurrency,j", bpo::value<unsigned int>(&num_threads), "Number of threads to use.")
-    // positional arguments
-    ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
-
+  options.add_options()("help,h", "Print this help message.")(
+      "version,v", "Print the version of this software.")(
+      "osmlr-tile-dir,t", bpo::value<std::string>(&tile_dir), "Location of traffic segment tiles.")(
+      "concurrency,j", bpo::value<unsigned int>(&num_threads), "Number of threads to use.")
+      // positional arguments
+      ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+               vm);
     bpo::notify(vm);
-  }
-  catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what()
-              << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-              << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
@@ -985,7 +987,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  //queue up all the work we'll be doing
+  // queue up all the work we'll be doing
   std::deque<std::string> osmlr_tiles;
   auto itr = bfs::recursive_directory_iterator(tile_dir);
   auto end = bfs::recursive_directory_iterator();
@@ -1003,17 +1005,17 @@ int main(int argc, char** argv) {
   // by different threads at the same time
   std::random_shuffle(osmlr_tiles.begin(), osmlr_tiles.end());
 
-  //configure logging
-  vm::logging::Configure({{"type","std_err"},{"color","true"}});
+  // configure logging
+  vm::logging::Configure({{"type", "std_err"}, {"color", "true"}});
 
-  //parse the config
+  // parse the config
   bpt::ptree pt;
   bpt::read_json(config.c_str(), pt);
 
-  //fire off some threads to do the work
+  // fire off some threads to do the work
   LOG_INFO("Associating local traffic segments with " + std::to_string(num_threads) + " threads");
-  std::vector<std::shared_ptr<std::thread> > threads(num_threads);
-  std::list<std::promise<edge_association> > results;
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
+  std::list<std::promise<edge_association>> results;
   std::mutex lock;
   for (auto& thread : threads) {
     results.emplace_back();
@@ -1021,7 +1023,7 @@ int main(int argc, char** argv) {
                                  std::ref(lock), std::ref(results.back())));
   }
 
-  //wait for it to finish
+  // wait for it to finish
   for (auto& thread : threads)
     thread->join();
   LOG_INFO("Finished");
@@ -1038,20 +1040,20 @@ int main(int argc, char** argv) {
   for (auto& result : results) {
     auto associations = result.get_future().get();
 
-    for( const auto& x : associations.success_count() )
+    for (const auto& x : associations.success_count())
       success_count[x.first] += x.second;
 
-    for( const auto& x : associations.failure_count() )
+    for (const auto& x : associations.failure_count())
       failure_count[x.first] += x.second;
 
-    for( const auto& x : associations.walk_count() )
+    for (const auto& x : associations.walk_count())
       walk_count[x.first] += x.second;
 
-    for( const auto& x : associations.path_count() )
+    for (const auto& x : associations.path_count())
       path_count[x.first] += x.second;
 
     // Leftovers
-    for(const auto& association : associations.leftovers()) {
+    for (const auto& association : associations.leftovers()) {
       auto leftover = leftovers.insert({association.first.Tile_Base(), {}}).first;
       leftover->second.push_back(association);
     }
@@ -1063,7 +1065,7 @@ int main(int argc, char** argv) {
       vb::GraphId tileid = association.first.Tile_Base();
       single_chunk_t c = std::make_pair(association.first, association.second);
       if (chunks.find(tileid) == chunks.end()) {
-        chunks[tileid] = { c };
+        chunks[tileid] = {c};
       } else {
         chunks[tileid].push_back(c);
       }
@@ -1071,22 +1073,23 @@ int main(int argc, char** argv) {
     chunk_count += associations.chunks().size();
   }
 
-  for( const auto& x : success_count )
+  for (const auto& x : success_count)
     LOG_INFO("Success = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
 
-  for( const auto& x : failure_count )
+  for (const auto& x : failure_count)
     LOG_INFO("Failure = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
 
-  for( const auto& x : walk_count )
+  for (const auto& x : walk_count)
     LOG_INFO("Walk = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
 
-  for( const auto& x : path_count )
+  for (const auto& x : path_count)
     LOG_INFO("Path = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
 
   LOG_INFO("Leftovers = " + std::to_string(leftover_count) +
            " Chunks = " + std::to_string(chunk_count));
 
-  LOG_INFO("Associating neighbouring traffic segments with " + std::to_string(num_threads) + " threads");
+  LOG_INFO("Associating neighbouring traffic segments with " + std::to_string(num_threads) +
+           " threads");
 
   // Write all the leftovers
   for (auto& thread : threads) {
@@ -1095,18 +1098,19 @@ int main(int argc, char** argv) {
                                  std::ref(lock)));
   }
 
-  //wait for it to finish
+  // wait for it to finish
   for (auto& thread : threads)
     thread->join();
 
   // Write all the chunks
-  LOG_INFO("Adding chunks (edge associations to multiple segments) " + std::to_string(num_threads) + " threads");
+  LOG_INFO("Adding chunks (edge associations to multiple segments) " + std::to_string(num_threads) +
+           " threads");
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(add_chunks, std::cref(pt), std::ref(chunks), std::ref(lock)));
   }
 
-  //wait for it to finish
+  // wait for it to finish
   for (auto& thread : threads)
     thread->join();
   LOG_INFO("Finished");

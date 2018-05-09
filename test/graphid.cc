@@ -40,17 +40,17 @@ void TestValues() {
 
 void TestInvalidValues() {
   try {
-    GraphId badlevel(111, kMaxGraphHierarchy+1, 222);
+    GraphId badlevel(111, kMaxGraphHierarchy + 1, 222);
     throw runtime_error("Invalid level not caught");
-  } catch(...) {}
+  } catch (...) {}
   try {
-    GraphId badtile(kMaxGraphTileId+1, 0, 222);
+    GraphId badtile(kMaxGraphTileId + 1, 0, 222);
     throw runtime_error("Invalid tileId not caught");
-  } catch(...) {}
+  } catch (...) {}
   try {
     GraphId badid(111, 1, kMaxGraphId);
     throw runtime_error("Invalid id not caught");
-  } catch(...) {}
+  } catch (...) {}
 }
 
 void TestCtorDefault() {
@@ -59,8 +59,10 @@ void TestCtorDefault() {
     throw runtime_error("CtorDefault test failed, should be invalid id");
 }
 
-void TryCtorUintUintUint(const unsigned int tileid, const unsigned int level,
-                         const unsigned int id, const GraphId& expected) {
+void TryCtorUintUintUint(const unsigned int tileid,
+                         const unsigned int level,
+                         const unsigned int id,
+                         const GraphId& expected) {
   GraphId result(tileid, level, id);
   if (!(expected == result))
     throw runtime_error("CtorUintUintUint test failed");
@@ -113,11 +115,11 @@ void TestGet_id() {
 }
 
 void TestIsValid() {
-  GraphId id(1,2,3);
-  if(!id.Is_Valid())
+  GraphId id(1, 2, 3);
+  if (!id.Is_Valid())
     throw runtime_error("Id should have been valid but was not");
   id = GraphId();
-  if(id.Is_Valid())
+  if (id.Is_Valid())
     throw runtime_error("Default constructor should never return valid graphid");
 }
 
@@ -130,11 +132,11 @@ void TryOpPostIncrement(GraphId& gid, const unsigned int expected) {
 }
 
 void TestOpPostIncrement() {
-  GraphId graphid1 { 10, 5, 0 };
+  GraphId graphid1{10, 5, 0};
   TryOpPostIncrement(graphid1, 1);
-  GraphId graphid2 { 10, 5, 1 };
+  GraphId graphid2{10, 5, 1};
   TryOpPostIncrement(graphid2, 2);
-  GraphId graphid3 { 5, 1, 50 };
+  GraphId graphid3{5, 1, 50};
   TryOpPostIncrement(graphid3, 51);
 }
 
@@ -163,7 +165,7 @@ void TestOpEqualTo() {
   TryOpEqualTo(GraphId(5, 1, 50), GraphId(5, 1, 50));
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("graphid");

@@ -1,25 +1,25 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <sstream>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <map>
-#include <utility>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "midgard/pointll.h"
-#include "midgard/logging.h"
-#include "midgard/encoded.h"
-#include "midgard/sequence.h"
 #include "baldr/filesystem_utils.h"
-#include "baldr/tilehierarchy.h"
-#include "baldr/graphid.h"
 #include "baldr/graphconstants.h"
-#include "baldr/graphtile.h"
+#include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/sequence.h"
 
 #include <boost/format.hpp>
 #include <ostream>
@@ -46,19 +46,19 @@ struct OldToNewNodes {
   GraphId local_node;    // New, associated node on local level
   uint32_t density;      // Density at the node (for edge density)
 
-  OldToNewNodes(const GraphId& node, const GraphId& highway,
-                const GraphId& arterial, const GraphId& local,
+  OldToNewNodes(const GraphId& node,
+                const GraphId& highway,
+                const GraphId& arterial,
+                const GraphId& local,
                 const uint32_t d)
-      : node_id(node),
-        highway_node(highway),
-        arterial_node(arterial),
-        local_node(local),
+      : node_id(node), highway_node(highway), arterial_node(arterial), local_node(local),
         density(d) {
   }
 };
 
 // Add a downward transition edge if the node is valid.
-bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder,
+bool AddDownwardTransition(const GraphId& node,
+                           GraphTileBuilder* tilebuilder,
                            const bool has_elevation) {
   if (node.Is_Valid()) {
     DirectedEdge downwardedge;
@@ -76,7 +76,8 @@ bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder,
 }
 
 // Add an upward transition edge if the node is valid.
-bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder,
+bool AddUpwardTransition(const GraphId& node,
+                         GraphTileBuilder* tilebuilder,
                          const bool has_elevation) {
   if (node.Is_Valid()) {
     DirectedEdge upwardedge;
@@ -96,30 +97,28 @@ bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder,
 void SortSequences() {
   // Sort the new nodes. Sort so highway level is first
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
-  new_to_old.sort(
-    [](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b){
-      if (a.first.level() == b.first.level()) {
-        if (a.first.tileid() == b.first.tileid()) {
-          return a.first.id() < b.first.id();
-        }
-        return a.first.tileid() < b.first.tileid();
+  new_to_old.sort([](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b) {
+    if (a.first.level() == b.first.level()) {
+      if (a.first.tileid() == b.first.tileid()) {
+        return a.first.id() < b.first.id();
       }
-      return a.first.level() < b.first.level();
+      return a.first.tileid() < b.first.tileid();
     }
-  );
+    return a.first.level() < b.first.level();
+  });
 
   // Sort old to new by node Id
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
-  old_to_new.sort([](const OldToNewNodes& a, const OldToNewNodes& b)
-                  {return a.node_id < b.node_id;});
+  old_to_new.sort(
+      [](const OldToNewNodes& a, const OldToNewNodes& b) { return a.node_id < b.node_id; });
 }
 
 // Convencience method to find the node association.
 OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& node) {
   GraphId dmy;
   OldToNewNodes target(node, dmy, dmy, dmy, 0);
-  auto iter = old_to_new.find(target, [](const OldToNewNodes& a, const OldToNewNodes& b)
-                              { return a.node_id < b.node_id;});
+  auto iter = old_to_new.find(
+      target, [](const OldToNewNodes& a, const OldToNewNodes& b) { return a.node_id < b.node_id; });
   if (iter == old_to_new.end()) {
     throw std::runtime_error("Didn't find node!");
   } else {
@@ -136,8 +135,8 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
 
   // lambda to indicate whether a directed edge should be included
-  auto include_edge = [&old_to_new](const DirectedEdge* directededge,
-        const GraphId& base_node, const uint8_t current_level) {
+  auto include_edge = [&old_to_new](const DirectedEdge* directededge, const GraphId& base_node,
+                                    const uint8_t current_level) {
     if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
         directededge->use() == Use::kPlatformConnection) {
@@ -254,8 +253,7 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
 
       // Set the edge density  to the average of the relative density at the
       // end nodes.
-      uint32_t edge_density = (density2 == 32) ? density1 :
-                (density1 + density2) / 2;
+      uint32_t edge_density = (density2 == 32) ? density1 : (density1 + density2) / 2;
       newedge.set_density(edge_density);
 
       // Set opposing edge indexes to 0 (gets set in graph validator).
@@ -276,9 +274,8 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       if (directededge->access_restriction()) {
         auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {
-          tilebuilder->AddAccessRestriction(
-              AccessRestriction(tilebuilder->directededges().size(),
-                 res.type(), res.modes(), res.value()));
+          tilebuilder->AddAccessRestriction(AccessRestriction(
+              tilebuilder->directededges().size(), res.type(), res.modes(), res.value()));
         }
       }
 
@@ -302,9 +299,9 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       auto edgeinfo = tile->edgeinfo(idx);
       std::string encoded_shape = edgeinfo.encoded_shape();
       uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
-      uint32_t edge_info_offset = tilebuilder->AddEdgeInfo(w, nodea, nodeb,
-                    edgeinfo.wayid(), encoded_shape,
-                    tile->GetNames(idx), tile->GetTypes(idx), added);
+      uint32_t edge_info_offset =
+          tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), encoded_shape,
+                                   tile->GetNames(idx), tile->GetTypes(idx), added);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge
@@ -454,13 +451,12 @@ bool CreateNodeAssociations(GraphReader& reader) {
 
       // Associate the old node to the new node(s). Entries in the tuple
       // that are invalid nodes indicate no node exists in the new level.
-      OldToNewNodes assoc(basenode, highway_node, arterial_node,
-                           local_node, nodeinfo->density());
+      OldToNewNodes assoc(basenode, highway_node, arterial_node, local_node, nodeinfo->density());
       old_to_new.push_back(assoc);
     }
 
     // Check if we need to clear the tile cache
-    if(reader.OverCommitted()) {
+    if (reader.OverCommitted()) {
       reader.Clear();
     }
   }
@@ -493,11 +489,11 @@ void UpdateTransitConnections(GraphReader& reader) {
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       NodeInfo nodeinfo = tilebuilder.node(i);
       uint32_t idx = nodeinfo.edge_index();
-       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++, idx++) {
-         DirectedEdge directededge = tilebuilder.directededge(idx);
+      for (uint32_t j = 0; j < nodeinfo.edge_count(); j++, idx++) {
+        DirectedEdge directededge = tilebuilder.directededge(idx);
 
         // Update the end node of any transit connection edge
-         if (directededge.use() == Use::kTransitConnection) {
+        if (directededge.use() == Use::kTransitConnection) {
           // Get the updated end node
           auto f = find_nodes(old_to_new, directededge.endnode());
           GraphId new_end_node;
@@ -513,12 +509,12 @@ void UpdateTransitConnections(GraphReader& reader) {
           directededge.set_endnode(new_end_node);
         }
 
-         // Add the directed edge to the local list
-         directededges.emplace_back(std::move(directededge));
-       }
+        // Add the directed edge to the local list
+        directededges.emplace_back(std::move(directededge));
+      }
 
-       // Add the node to the local list
-       nodes.emplace_back(std::move(nodeinfo));
+      // Add the node to the local list
+      nodes.emplace_back(std::move(nodeinfo));
     }
     tilebuilder.Update(nodes, directededges);
   }
@@ -541,18 +537,18 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir) {
     }
   }
   for (auto itr = tile_map.begin(); itr != tile_map.end(); itr++) {
-    if (!itr->second ) {
+    if (!itr->second) {
       // Remove the file
       GraphId empty_tile = itr->first;
-      std::string file_location = tile_dir + filesystem::path_separator +
-          GraphTile::FileSuffix(empty_tile.Tile_Base());
+      std::string file_location =
+          tile_dir + filesystem::path_separator + GraphTile::FileSuffix(empty_tile.Tile_Base());
       remove(file_location.c_str());
       LOG_DEBUG("Remove file: " + file_location);
     }
   }
 }
 
-}
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
@@ -589,12 +585,13 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (transit_dir && boost::filesystem::exists(*transit_dir) && boost::filesystem::is_directory(*transit_dir)) {
+  if (transit_dir && boost::filesystem::exists(*transit_dir) &&
+      boost::filesystem::is_directory(*transit_dir)) {
     UpdateTransitConnections(reader);
   }
 
   LOG_INFO("Done HierarchyBuilder");
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

@@ -2,9 +2,9 @@
 #define VALHALLA_MJOLNIR_OSMRESTRICTION_H
 
 #include <cstdint>
+#include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/complexrestriction.h>
 
 #include <vector>
 
@@ -100,26 +100,29 @@ struct OSMRestriction {
   /**
    * overloaded < operator - used to sort
    */
-  bool operator < (const OSMRestriction& o)const{
+  bool operator<(const OSMRestriction& o) const {
     if (from() == o.from()) {
       if (to() == o.to()) {
         if (std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0) {
           if (modes() == o.modes()) {
             return (time_domain() < o.time_domain());
-          } else return modes() < o.modes();
-        } else return vias() < o.vias();
-      } else return to() < o.to();
-    } else return from() < o.from();
+          } else
+            return modes() < o.modes();
+        } else
+          return vias() < o.vias();
+      } else
+        return to() < o.to();
+    } else
+      return from() < o.from();
   }
 
   /**
    * overloaded == operator - used to compare complex restrictions
    */
-  bool operator == (const OSMRestriction& o) const {
+  bool operator==(const OSMRestriction& o) const {
     return (from() == o.from() && to() == o.to() &&
-        std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0 &&
-        modes() == o.modes() &&
-        time_domain() == o.time_domain());
+            std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0 && modes() == o.modes() &&
+            time_domain() == o.time_domain());
   }
 
   // from is a way - uses OSM way Id.
@@ -128,7 +131,8 @@ struct OSMRestriction {
   // Via is a node. When parsing OSM this is stored as an OSM node Id.
   // It later gets changed into a GraphId.
   union ViaNode {
-    ViaNode() {}
+    ViaNode() {
+    }
     baldr::GraphId id;
     uint64_t osmid;
   };
@@ -145,15 +149,14 @@ struct OSMRestriction {
 
   // Type and time information of the restriction.
   struct Attributes {
-    uint32_t type_        :  4;
-    uint32_t modes_       : 12;
-    uint32_t spare_       : 16;
+    uint32_t type_ : 4;
+    uint32_t modes_ : 12;
+    uint32_t spare_ : 16;
   };
   Attributes attributes_;
-
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_OSMRESTRICTION_H
+#endif // VALHALLA_MJOLNIR_OSMRESTRICTION_H

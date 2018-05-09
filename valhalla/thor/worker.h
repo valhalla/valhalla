@@ -2,31 +2,31 @@
 #define __VALHALLA_THOR_SERVICE_H__
 
 #include <cstdint>
-#include <vector>
 #include <tuple>
+#include <vector>
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/worker.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/location.h>
+#include <valhalla/meili/map_matcher_factory.h>
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/astar.h>
+#include <valhalla/thor/attributes_controller.h>
+#include <valhalla/thor/bidirectional_astar.h>
+#include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/match_result.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/timedep.h>
 #include <valhalla/thor/trippathbuilder.h>
-#include <valhalla/thor/attributes_controller.h>
-#include <valhalla/thor/isochrone.h>
-#include <valhalla/meili/map_matcher_factory.h>
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/trippath.pb.h>
 #include <valhalla/tyr/actor.h>
+#include <valhalla/worker.h>
 
 namespace valhalla {
 namespace thor {
@@ -35,23 +35,17 @@ namespace thor {
 void run_service(const boost::property_tree::ptree& config);
 #endif
 
-class thor_worker_t : public service_worker_t{
- public:
-  enum SHAPE_MATCH {
-    EDGE_WALK = 0,
-    MAP_SNAP = 1,
-    WALK_OR_SNAP = 2
-  };
-  enum SOURCE_TO_TARGET_ALGORITHM {
-    SELECT_OPTIMAL = 0,
-    COST_MATRIX = 1,
-    TIME_DISTANCE_MATRIX = 2
-  };
+class thor_worker_t : public service_worker_t {
+public:
+  enum SHAPE_MATCH { EDGE_WALK = 0, MAP_SNAP = 1, WALK_OR_SNAP = 2 };
+  enum SOURCE_TO_TARGET_ALGORITHM { SELECT_OPTIMAL = 0, COST_MATRIX = 1, TIME_DISTANCE_MATRIX = 2 };
   static const std::unordered_map<std::string, SHAPE_MATCH> STRING_TO_MATCH;
   thor_worker_t(const boost::property_tree::ptree& config);
   virtual ~thor_worker_t();
 #ifdef HAVE_HTTP
-  virtual worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info, const std::function<void ()>& interrupt) override;
+  virtual worker_t::result_t work(const std::list<zmq::message_t>& job,
+                                  void* request_info,
+                                  const std::function<void()>& interrupt) override;
 #endif
   virtual void cleanup() override;
 
@@ -62,24 +56,29 @@ class thor_worker_t : public service_worker_t{
   odin::TripPath trace_route(valhalla_request_t& request);
   std::string trace_attributes(valhalla_request_t& request);
 
- protected:
-
-  std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm, odin::Location& origin,
-      odin::Location& destination, const std::string& costing);
+protected:
+  std::vector<thor::PathInfo> get_path(PathAlgorithm* path_algorithm,
+                                       odin::Location& origin,
+                                       odin::Location& destination,
+                                       const std::string& costing);
   void log_admin(const odin::TripPath&);
-  valhalla::sif::cost_ptr_t get_costing(
-      const rapidjson::Document& request, const std::string& costing);
-  thor::PathAlgorithm* get_path_algorithm(
-      const std::string& routetype, const odin::Location& origin,
-      const odin::Location& destination);
+  valhalla::sif::cost_ptr_t get_costing(const rapidjson::Document& request,
+                                        const std::string& costing);
+  thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
+                                          const odin::Location& origin,
+                                          const odin::Location& destination);
   odin::TripPath route_match(valhalla_request_t& request, const AttributesController& controller);
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>> map_match(
-      valhalla_request_t& request, const AttributesController& controller, uint32_t best_paths = 1);
+  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>
+  map_match(valhalla_request_t& request,
+            const AttributesController& controller,
+            uint32_t best_paths = 1);
 
-  std::list<odin::TripPath> path_arrive_by(
-      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing);
-  std::list<odin::TripPath> path_depart_at(
-      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated, const std::string &costing);
+  std::list<odin::TripPath>
+  path_arrive_by(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
+                 const std::string& costing);
+  std::list<odin::TripPath>
+  path_depart_at(google::protobuf::RepeatedPtrField<valhalla::odin::Location>& correlated,
+                 const std::string& costing);
 
   void parse_locations(valhalla_request_t& request);
   void parse_measurements(const valhalla_request_t& request);
@@ -105,10 +104,11 @@ class thor_worker_t : public service_worker_t{
   valhalla::meili::MapMatcherFactory matcher_factory;
   valhalla::baldr::GraphReader& reader;
   std::unordered_set<std::string> trace_customizable;
-  boost::property_tree::ptree trace_config;;
+  boost::property_tree::ptree trace_config;
+  ;
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
 #endif //__VALHALLA_THOR_SERVICE_H__

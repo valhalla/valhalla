@@ -1,32 +1,31 @@
-#include "midgard/point2.h"
-#include "midgard/pointll.h"
-#include "midgard/tiles.h"
 #include "midgard/gridded_data.h"
 #include "midgard/logging.h"
+#include "midgard/point2.h"
+#include "midgard/pointll.h"
 #include "midgard/polyline2.h"
+#include "midgard/tiles.h"
 #include "midgard/util.h"
 
-#include <sstream>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <sstream>
 
 namespace valhalla {
 namespace midgard {
 
 // Constructor.
 template <class coord_t>
-GriddedData<coord_t>::GriddedData(const AABB2<coord_t>& bounds, const float tilesize,
-            const float value)
-    : Tiles<coord_t>(bounds, tilesize),
-      max_value_(value) {
+GriddedData<coord_t>::GriddedData(const AABB2<coord_t>& bounds,
+                                  const float tilesize,
+                                  const float value)
+    : Tiles<coord_t>(bounds, tilesize), max_value_(value) {
   // Resize the data vector and fill with the value
   data_.resize(this->nrows_ * this->ncolumns_);
   std::fill(data_.begin(), data_.end(), value);
 }
 
 // Set the value at a specified coordinate.
-template <class coord_t>
-bool GriddedData<coord_t>::Set(const coord_t& pt, const float value) {
+template <class coord_t> bool GriddedData<coord_t>::Set(const coord_t& pt, const float value) {
   auto cell_id = this->TileId(pt);
   if (cell_id >= 0 && cell_id < data_.size()) {
     data_[cell_id] = value;
@@ -40,8 +39,8 @@ template <class coord_t>
 bool GriddedData<coord_t>::SetIfLessThan(const coord_t& pt, const float value) {
   int32_t cell_id = this->TileId(pt);
   if (cell_id >= 0 && cell_id < data_.size() && value < data_[cell_id]) {
-      data_[cell_id] = value;
-      return true;
+    data_[cell_id] = value;
+    return true;
   }
   return false;
 }
@@ -50,15 +49,14 @@ bool GriddedData<coord_t>::SetIfLessThan(const coord_t& pt, const float value) {
 template <class coord_t>
 bool GriddedData<coord_t>::SetIfLessThan(const int tile_id, const float value) {
   if (tile_id >= 0 && tile_id < data_.size() && value < data_[tile_id]) {
-      data_[tile_id] = value;
-      return true;
+    data_[tile_id] = value;
+    return true;
   }
   return false;
 }
 
 // Get the array of times
-template <class coord_t>
-const std::vector<float>& GriddedData<coord_t>::data() const {
+template <class coord_t> const std::vector<float>& GriddedData<coord_t>::data() const {
   return data_;
 }
 
@@ -67,14 +65,17 @@ const std::vector<float>& GriddedData<coord_t>::data() const {
 // Derivation from the C code version of CONREC by Paul Bourke:
 // http://paulbourke.net/papers/conrec/
 template <class coord_t>
-typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_intervals,
-  const bool rings_only, const float denoise, const float generalize) const {
-  //TODO: sort and validate contour range
+typename GriddedData<coord_t>::contours_t
+GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_intervals,
+                                       const bool rings_only,
+                                       const float denoise,
+                                       const float generalize) const {
+  // TODO: sort and validate contour range
 
   // Values at tile corners and center (0 element is center)
   int sh[5];
-  typename coord_t::first_type s[5];               // Values at the tile corners and center
-  coord_t tile_corners[5];    // coord_t at tile corners and center
+  typename coord_t::first_type s[5]; // Values at the tile corners and center
+  coord_t tile_corners[5];           // coord_t at tile corners and center
 
   // Find the intersection along a tile edge
   auto intersect = [&tile_corners, &s](int p1, int p2) {
@@ -83,21 +84,20 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
                    (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
   };
 
-  //we need something to hold each iso-line, bigger ones first
-  contours_t contours([](float a, float b){return a > b;});
-  for(auto v : contour_intervals) contours[v].emplace_back();
-  //and something to find them quickly
+  // we need something to hold each iso-line, bigger ones first
+  contours_t contours([](float a, float b) { return a > b; });
+  for (auto v : contour_intervals)
+    contours[v].emplace_back();
+  // and something to find them quickly
   using contour_lookup_t = std::unordered_map<coord_t, typename feature_t::iterator>;
   std::unordered_map<float, contour_lookup_t> lookup(contour_intervals.size());
-  //TODO: preallocate the lookups for each interval
+  // TODO: preallocate the lookups for each interval
 
-  int tile_inc[4] = { 0, 1, this->ncolumns_ + 1, this->ncolumns_ };
+  int tile_inc[4] = {0, 1, this->ncolumns_ + 1, this->ncolumns_};
   int case_value;
-  int case_table[3][3][3] = {
-     { {0,0,8},{0,2,5},{7,6,9} },
-     { {0,3,4},{1,3,1},{4,3,0} },
-     { {9,6,7},{5,2,0},{8,0,0} }
-   };
+  int case_table[3][3][3] = {{{0, 0, 8}, {0, 2, 5}, {7, 6, 9}},
+                             {{0, 3, 4}, {1, 3, 1}, {4, 3, 0}},
+                             {{9, 6, 7}, {5, 2, 0}, {8, 0, 0}}};
 
   // For each cell, skipping the outer rim since its out of bounds
   for (int row = 1; row < this->nrows_ - 1; ++row) {
@@ -107,12 +107,12 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
       auto cell2 = data_[tileid + this->ncolumns_];     // TileId(col,   row+1)];
       auto cell3 = data_[tileid + 1];                   // TileId(col+1, row)];
       auto cell4 = data_[tileid + this->ncolumns_ + 1]; // TileId(col+1, row+1)];
-      auto dmin  = std::min(std::min(cell1, cell2), std::min(cell3, cell4));
-      auto dmax  = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
+      auto dmin = std::min(std::min(cell1, cell2), std::min(cell3, cell4));
+      auto dmax = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
       // Continue if outside the range of contour values
       if (dmax < contour_intervals.front() || dmin > contour_intervals.back())
-         continue;
+        continue;
 
       for (auto contour : contour_intervals) {
         if (contour < dmin || contour > dmax) {
@@ -120,7 +120,7 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
         }
         for (int m = 4; m >= 0; m--) {
           if (m > 0) {
-            int newtileid = tileid + tile_inc[m-1];
+            int newtileid = tileid + tile_inc[m - 1];
             // Make sure the tile corner value is not set to the max_value
             // (messes up the intersect method). Set a value slightly above
             // the contour (e.g. 1 minute higher).
@@ -128,7 +128,7 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
             s[m] = (data_[newtileid] < max_value_) ? data_[newtileid] - contour : 1.0f;
             tile_corners[m] = this->Base(newtileid);
           } else {
-            s[0]  = 0.25 * (s[1] + s[2] + s[3] + s[4]);
+            s[0] = 0.25 * (s[1] + s[2] + s[3] + s[4]);
             tile_corners[0] = this->Center(tileid);
           }
           if (s[m] > 0.0f)
@@ -169,66 +169,66 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
           int m1 = m;
           int m2 = 0;
           int m3 = (m != 4) ? m + 1 : 1;
-          if ((case_value = case_table[sh[m1]+1][sh[m2]+1][sh[m3]+1]) == 0) {
+          if ((case_value = case_table[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1]) == 0) {
             continue;
           }
 
           switch (case_value) {
-          case 1:              // Line between vertices 1 and 2
-            pt1 = tile_corners[m1];
-            pt2 = tile_corners[m2];
-            break;
-          case 2:              // Line between vertices 2 and 3
-            pt1 = tile_corners[m2];
-            pt2 = tile_corners[m3];
-            break;
-          case 3:              // Line between vertices 3 and 1
-            pt1 = tile_corners[m3];
-            pt2 = tile_corners[m1];
-            break;
-          case 4:              // Line between vertex 1 and side 2-3
-            pt1 = tile_corners[m1];
-            pt2 = intersect(m2, m3);
-            break;
-          case 5:              // Line between vertex 2 and side 3-1
-            pt1 = tile_corners[m2];
-            pt2 = intersect(m3, m1);
-            break;
-          case 6:              // Line between vertex 3 and side 1-2
-            pt1 = tile_corners[m3];
-            pt2 = intersect(m1, m2);
-            break;
-          case 7:              // Line between sides 1-2 and 2-3
-            pt1 = intersect(m1, m2);
-            pt2 = intersect(m2, m3);
-          break;
-          case 8:              // Line between sides 2-3 and 3-1
-            pt1 = intersect(m2, m3);
-            pt2 = intersect(m3, m1);
-            break;
-          case 9:              // Line between sides 3-1 and 1-2
-            pt1 = intersect(m3, m1);
-            pt2 = intersect(m1, m2);
-            break;
-          default:
-            break;
+            case 1: // Line between vertices 1 and 2
+              pt1 = tile_corners[m1];
+              pt2 = tile_corners[m2];
+              break;
+            case 2: // Line between vertices 2 and 3
+              pt1 = tile_corners[m2];
+              pt2 = tile_corners[m3];
+              break;
+            case 3: // Line between vertices 3 and 1
+              pt1 = tile_corners[m3];
+              pt2 = tile_corners[m1];
+              break;
+            case 4: // Line between vertex 1 and side 2-3
+              pt1 = tile_corners[m1];
+              pt2 = intersect(m2, m3);
+              break;
+            case 5: // Line between vertex 2 and side 3-1
+              pt1 = tile_corners[m2];
+              pt2 = intersect(m3, m1);
+              break;
+            case 6: // Line between vertex 3 and side 1-2
+              pt1 = tile_corners[m3];
+              pt2 = intersect(m1, m2);
+              break;
+            case 7: // Line between sides 1-2 and 2-3
+              pt1 = intersect(m1, m2);
+              pt2 = intersect(m2, m3);
+              break;
+            case 8: // Line between sides 2-3 and 3-1
+              pt1 = intersect(m2, m3);
+              pt2 = intersect(m3, m1);
+              break;
+            case 9: // Line between sides 3-1 and 1-2
+              pt1 = intersect(m3, m1);
+              pt2 = intersect(m1, m2);
+              break;
+            default:
+              break;
           }
 
-          //this isnt a segment..
-          if(pt1 == pt2)
+          // this isnt a segment..
+          if (pt1 == pt2)
             continue;
 
-          //see if we have anything to connect this segment to
+          // see if we have anything to connect this segment to
           typename contour_lookup_t::iterator rec_a = lookup[contour].find(pt1);
           typename contour_lookup_t::iterator rec_b = lookup[contour].find(pt2);
-          if(rec_b != lookup[contour].end()) {
+          if (rec_b != lookup[contour].end()) {
             std::swap(pt1, pt2);
             std::swap(rec_a, rec_b);
           }
 
-          //we want to merge two records
-          if(rec_b != lookup[contour].end()) {
-            //get the segments in question and remove their lookup info
+          // we want to merge two records
+          if (rec_b != lookup[contour].end()) {
+            // get the segments in question and remove their lookup info
             auto segment_a = rec_a->second;
             bool head_a = rec_a->first == segment_a->front();
             auto segment_b = rec_b->second;
@@ -236,63 +236,64 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
             lookup[contour].erase(rec_a);
             lookup[contour].erase(rec_b);
 
-            //this segment is now a ring
-            if(segment_a == segment_b) {
+            // this segment is now a ring
+            if (segment_a == segment_b) {
               segment_a->push_back(segment_a->front());
               continue;
             }
 
-            //erase the other lookups
-            lookup[contour].erase(lookup[contour].find(pt1 == segment_a->front() ? segment_a->back() : segment_a->front()));
-            lookup[contour].erase(lookup[contour].find(pt2 == segment_b->front() ? segment_b->back() : segment_b->front()));
+            // erase the other lookups
+            lookup[contour].erase(lookup[contour].find(
+                pt1 == segment_a->front() ? segment_a->back() : segment_a->front()));
+            lookup[contour].erase(lookup[contour].find(
+                pt2 == segment_b->front() ? segment_b->back() : segment_b->front()));
 
-            //add b to a
-            if(!head_a && head_b) {
+            // add b to a
+            if (!head_a && head_b) {
               segment_a->splice(segment_a->end(), *segment_b);
               contours[contour].front().erase(segment_b);
-            }//add a to b
-            else if(!head_b && head_a) {
+            } // add a to b
+            else if (!head_b && head_a) {
               segment_b->splice(segment_b->end(), *segment_a);
               contours[contour].front().erase(segment_a);
               segment_a = segment_b;
-            }//flip a and add b
-            else if(head_a && head_b) {
+            } // flip a and add b
+            else if (head_a && head_b) {
               segment_a->reverse();
               segment_a->splice(segment_a->end(), *segment_b);
               contours[contour].front().erase(segment_b);
-            }//flip b and add to a
-            else if(!head_a && !head_b) {
+            } // flip b and add to a
+            else if (!head_a && !head_b) {
               segment_b->reverse();
               segment_a->splice(segment_a->end(), *segment_b);
               contours[contour].front().erase(segment_b);
             }
 
-            //update the look up
+            // update the look up
             lookup[contour].emplace(segment_a->front(), segment_a);
             lookup[contour].emplace(segment_a->back(), segment_a);
-          }//ap/prepend to an existing one
-          else if(rec_a != lookup[contour].end()) {
-            //it goes on the front
-            if(rec_a->second->front() == pt1)
+          } // ap/prepend to an existing one
+          else if (rec_a != lookup[contour].end()) {
+            // it goes on the front
+            if (rec_a->second->front() == pt1)
               rec_a->second->push_front(pt2);
-            //it goes on the back
+            // it goes on the back
             else
               rec_a->second->push_back(pt2);
 
-            //update the lookup table
+            // update the lookup table
             lookup[contour].emplace(pt2, rec_a->second);
             lookup[contour].erase(rec_a);
-          }//this is an orphan segment for now
+          } // this is an orphan segment for now
           else {
             contours[contour].front().push_front(contour_t{pt1, pt2});
             lookup[contour].emplace(pt1, contours[contour].front().begin());
             lookup[contour].emplace(pt2, contours[contour].front().begin());
           }
-
         }
       } // Each contour
-    } // Each tile col
-  } // Each tile row
+    }   // Each tile col
+  }     // Each tile row
 
   // If the generalization value equals kOptimalGeneralization then set
   // the generalization factor to 1/4 of the grid size
@@ -301,36 +302,44 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
     gen_factor = this->tilesize_ * 0.125f * kMetersPerDegreeLat;
   }
 
-  //some info about the area the image covers
+  // some info about the area the image covers
   auto c = this->TileBounds().Center();
   auto h = this->tilesize_ / 2;
-  //for each contour
-  for(auto& collection : contours) {
+  // for each contour
+  for (auto& collection : contours) {
     auto& contour = collection.second.front();
-    //they only wanted rings
-    if(rings_only)
-      contour.remove_if([](const contour_t& line){return line.front() != line.back();});
-    //sort them by area (maybe length would be sufficient?) biggest first
+    // they only wanted rings
+    if (rings_only)
+      contour.remove_if([](const contour_t& line) { return line.front() != line.back(); });
+    // sort them by area (maybe length would be sufficient?) biggest first
     std::unordered_map<const contour_t*, typename coord_t::first_type> cache(contour.size());
-    std::for_each(contour.cbegin(), contour.cend(), [&cache](const contour_t& c){cache[&c] = polygon_area(c);});
-    contour.sort([&cache](const contour_t& a, const contour_t& b) {return std::abs(cache[&a]) > std::abs(cache[&b]);});
-    //they only want the most significant ones!
-    if(denoise > 0.f)
-      contour.remove_if([&cache, &contour, denoise](const contour_t& c){return std::abs(cache[&c]/cache[&contour.front()]) < denoise;});
-    //clean up the lines
-    for(auto& line : contour) {
-      //TODO: generalizing makes self intersections which makes other libraries unhappy
-      if(gen_factor > 0.f)
+    std::for_each(contour.cbegin(), contour.cend(),
+                  [&cache](const contour_t& c) { cache[&c] = polygon_area(c); });
+    contour.sort([&cache](const contour_t& a, const contour_t& b) {
+      return std::abs(cache[&a]) > std::abs(cache[&b]);
+    });
+    // they only want the most significant ones!
+    if (denoise > 0.f)
+      contour.remove_if([&cache, &contour, denoise](const contour_t& c) {
+        return std::abs(cache[&c] / cache[&contour.front()]) < denoise;
+      });
+    // clean up the lines
+    for (auto& line : contour) {
+      // TODO: generalizing makes self intersections which makes other libraries unhappy
+      if (gen_factor > 0.f)
         Polyline2<coord_t>::Generalize(line, gen_factor);
-      //if this ends up as an inner we'll undo this later
-      if(cache[&line] > 0)
+      // if this ends up as an inner we'll undo this later
+      if (cache[&line] > 0)
         line.reverse();
-      //sampling the bottom left corner means everything is skewed, so unskew it
-      for(auto& coord : line) { coord.first += h; coord.second += h; }
+      // sampling the bottom left corner means everything is skewed, so unskew it
+      for (auto& coord : line) {
+        coord.first += h;
+        coord.second += h;
+      }
     }
-    //if they just wanted linestrings we need only one per feature
-    if(!rings_only) {
-      for(auto& linestring : contour)
+    // if they just wanted linestrings we need only one per feature
+    if (!rings_only) {
+      for (auto& linestring : contour)
         collection.second.push_back({std::move(linestring)});
       collection.second.pop_front();
     }
@@ -343,5 +352,5 @@ typename GriddedData<coord_t>::contours_t GriddedData<coord_t>::GenerateContours
 template class GriddedData<Point2>;
 template class GriddedData<PointLL>;
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
