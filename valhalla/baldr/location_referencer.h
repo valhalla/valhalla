@@ -21,6 +21,23 @@ struct EdgeMatch {
 
 namespace {
 
+// Distance tolerance (meters) for node searching. This value allows some
+// tolerance to account for data edits.
+constexpr float kNodeDistanceTolerance = 20.0;
+
+// Distance tolerance (meters) for searching along an edge. This value allows
+// some tolerance to account for data edits.
+constexpr uint32_t kEdgeDistanceTolerance = 20.0;
+
+// 10 meter length matching tolerance.
+// TODO - should this be based on segment length so that short segments have
+// less tolerance?
+constexpr uint32_t kLengthToleranceMetres = 50;
+
+// Bearing tolerance in degrees
+constexpr uint16_t kBearingTolerance = 6; // std::ceil(11.25/2);
+
+
 enum class MatchType : uint8_t {
   kWalk = 0,
   kShortestPath = 1
