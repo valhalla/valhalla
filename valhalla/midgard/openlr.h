@@ -153,11 +153,11 @@ struct TwoPointLinearReference  {
     unsigned getLastFRC() const { return last_frc; }
     void setLastFRC(unsigned frc_) { last_frc = frc_; }
 
-    void setFirstBearing(double bearing_) { first_bearing = static_cast<uint8_t>(bearing_ / 360. * 255.); }
-    double getFirstBearing() const { return first_bearing * 360./255.; }
+    void setFirstBearing(double bearing_) { first_bearing = static_cast<uint8_t>(std::floor(bearing_ / 11.25)); }
+    double getFirstBearing() const { return first_bearing * 11.25 + 11.25/2; }
 
-    void setLastBearing(double bearing_) { last_bearing = static_cast<uint8_t>(bearing_ / 360. * 255.); }
-    double getLastBearing() const { return last_bearing * 360./255.; }
+    void setLastBearing(double bearing_) { last_bearing = static_cast<uint8_t>(std::floor(bearing_ / 11.25)); }
+    double getLastBearing() const { return last_bearing * 11.25 + 11.25/2; }
 
     void setLength(double length) { dist_to_next = length / 58.6; }
     double getLength() const { return dist_to_next * 58.6; }
@@ -168,7 +168,6 @@ struct TwoPointLinearReference  {
 
         assert(sizeof(TwoPointLinearReference) <= binary.size());
 
-        // TODO: fixme - quick hack to convert bytes to object
         TwoPointLinearReference *tmp = reinterpret_cast<TwoPointLinearReference *>(const_cast<char *>(binary.data()));
         return *tmp; // Be sure to return a copy
     }
