@@ -18,66 +18,23 @@ struct EdgeMatch {
   float end_pct;
 };
 
-
 namespace {
 
-// Distance tolerance (meters) for node searching. This value allows some
-// tolerance to account for data edits.
-constexpr float kNodeDistanceTolerance = 20.0;
-
-// Distance tolerance (meters) for searching along an edge. This value allows
-// some tolerance to account for data edits.
+// Maximum distance to edge for nearest-neighbour search
 constexpr uint32_t kEdgeDistanceTolerance = 20.0;
 
-// 10 meter length matching tolerance.
-// TODO - should this be based on segment length so that short segments have
-// less tolerance?
-constexpr uint32_t kLengthToleranceMetres = 50;
+// OpenLR limits distance between coordinates to 15000m in the spec
+// The binary format stores distances between points as a single byte
+// with reduced precision of 15000m/256 ~= 58.6m.  Values stored
+// in the descriptor are std::floor(length/58.6).
+// Returned matches therefore could be +/- 58.6 in length and still
+// be correct due to precision limitations
+constexpr double kLengthToleranceMetres = 58.6;  // std::round(15000/256)
 
-// Bearing tolerance in degrees
-constexpr uint16_t kBearingTolerance = 6; // std::ceil(11.25/2);
+// Bearings are stored as 5 bits referring to a segment.  Each segment
+// is thus 360/2^5 ~= 11.25 degrees
+constexpr double kSegmentSize = 11.25/2;
 
-
-enum class MatchType : uint8_t {
-  kWalk = 0,
-  kShortestPath = 1
-};
-
-struct CandidateEdge {
-  PathLocation::PathEdge edge;
-  float distance;
-
-  CandidateEdge()
-    : edge({}, 0.0f, {}, 1.0f),
-      distance(0.0f) {
-  }
-
-  CandidateEdge(const PathLocation::PathEdge& e, const float d)
-      : edge(e),
-        distance(d) {
-  }
-};
-
-struct edge_association {
-  explicit edge_association(baldr::GraphReader &graphreader);
-
-  std::vector<EdgeMatch> match_edges(const midgard::OpenLR::TwoPointLinearReference &locRef);
-
-private:
-  std::vector<CandidateEdge> candidate_edges(bool origin,
-                        const midgard::PointLL &lrp,
-                        const double bearing,
-                        const uint8_t level);
-  std::vector<EdgeMatch> walk(const baldr::GraphId& segment_id,
-                    const uint32_t segment_length,
-                    const midgard::OpenLR::TwoPointLinearReference &locRef);
-
-  baldr::GraphReader &m_reader;
-  sif::TravelMode m_travel_mode;
-  std::shared_ptr<thor::AStarPathAlgorithm> m_path_algo;
-  std::shared_ptr<sif::DynamicCost> m_costing;
-
-};
 }
 
 struct LocationReferencer {
@@ -87,7 +44,10 @@ struct LocationReferencer {
   std::vector<EdgeMatch> match(const midgard::OpenLR::TwoPointLinearReference &locref);
 
 private:
-  edge_association association;
+  baldr::GraphReader &m_reader;
+  sif::TravelMode m_travel_mode;
+  std::shared_ptr<thor::AStarPathAlgorithm> m_path_algo;
+  std::shared_ptr<sif::DynamicCost> m_costing;
 };
 
 } // namespace baldr
