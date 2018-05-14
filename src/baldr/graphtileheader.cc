@@ -197,6 +197,11 @@ void GraphTileHeader::set_edge_elevation_offset(const uint32_t offset) {
   edge_elevation_offset_ = offset;
 }
 
+// Sets the offset to the predicted traffic data.
+void GraphTileHeader::set_predicted_traffic_offset(const uint32_t offset) {
+  predicted_traffic_offset_ = offset;
+}
+
 // Gets the offset to the end of the tile.
 uint32_t GraphTileHeader::end_offset() const {
   return empty_slots_[0];

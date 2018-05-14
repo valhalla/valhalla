@@ -14,7 +14,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 13;
+constexpr size_t kEmptySlots = 12;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -401,6 +401,22 @@ class GraphTileHeader {
   }
 
   /**
+   * Gets the flag indicating whether this tile includes predicted traffic data.
+   * @return  Returns true if this tile includes predicted traffic data.
+   */
+  bool has_predicted_traffic() const {
+    return has_predicted_traffic_;
+  }
+
+  /**
+   * Sets flag indicating whether this tile includes predicted traffic data.
+   * @param  traffic  True if this tile includes predicted traffic data.
+   */
+  void set_has_predicted_traffic(const bool traffic) {
+    has_predicted_traffic_ = traffic;
+  }
+
+  /**
    * Gets the offset to the traffic segment Ids.
    * @return  Returns the number of bytes to offset to the traffic segment Ids.
    */
@@ -459,6 +475,20 @@ class GraphTileHeader {
   void set_edge_elevation_offset(const uint32_t offset);
 
   /**
+   * Gets the offset to the predicted traffic data.
+   * @return  Returns the number of bytes to offset to the the predicted traffic data.
+   */
+  uint32_t predicted_traffic_offset() const {
+    return predicted_traffic_offset_;
+  }
+
+  /**
+   * Sets the offset to the predicted traffic data.
+   * @param offset Offset in bytes to the start of the predicted traffic data.
+   */
+  void set_predicted_traffic_offset(const uint32_t offset);
+
+  /**
    * Get the offset to the end of the tile
    * @return the number of bytes in the tile, unless the last slot is used
    */
@@ -495,10 +525,11 @@ class GraphTileHeader {
 
   // Number of transit transfers and number of traffic segment Ids (
   // generally the same as the number of directed edges but can be 0)
-  uint64_t transfercount_      : 16;
-  uint64_t traffic_id_count_   : 24;
-  uint64_t has_edge_elevation_ : 1;
-  uint64_t spare2_             : 23;
+  uint64_t transfercount_         : 16;
+  uint64_t traffic_id_count_      : 24;
+  uint64_t has_edge_elevation_    : 1;
+  uint64_t has_predicted_traffic_ : 1;
+  uint64_t spare2_                : 22;
 
   // Date the tile was created. Days since pivot date.
   uint32_t date_created_;
@@ -531,6 +562,9 @@ class GraphTileHeader {
 
   // Offset to the beginning of the edge elevation data.
   uint32_t edge_elevation_offset_;
+
+  // Offset to the beginning of the predicted traffic data.
+  uint32_t predicted_traffic_offset_;
 
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,
