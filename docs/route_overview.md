@@ -33,7 +33,7 @@ The route narrative/guidance generating code is located in the *odin* directory.
   - *Odin* inspects the trip path nodes and edges in reverse order to form an initial list of maneuvers or steps
   - *Odin* collapses the initial maneuver list to form a concise list of maneuvers
   - *Odin* adds text and verbal instructions to form trip directions
-![Generating Guidance Process](TBD)
+![](images/GeneratingGuidanceProcess.png)
 
 
 
