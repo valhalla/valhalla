@@ -2,7 +2,7 @@
 This document provides a brief overview of Valhalla route computation.
 
 
-![](https://d2mxuefqeaa7sj.cloudfront.net/s_568FBFAEE47ABB8D57ECF6090112E373D7F57275F167E8DDEB144FF6334C8FA4_1516117292846_ValhallaRouteDiagram.png)
+![](images/route_diagram.png)
 
 ## Request Parsing
   Parse incoming request (JSON) to validate inputs. Converts (most) of the incoming request to protocol buffer objects to pass through the individual stages. The exception is currently some costing options for which parsing is deferred until needed within the costing module itself.
