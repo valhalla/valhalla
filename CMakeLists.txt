@@ -12,6 +12,8 @@ project(valhalla LANGUAGES CXX C)
 
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
+option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
+
 set(boost_components
   date_time
   filesystem
@@ -41,9 +43,15 @@ find_package(SpatiaLite)
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-# List of core library sources and headers
-set(valhalla_hdrs)
-set(valhalla_srcs)
+if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+    message(STATUS "Using ccache to speed up incremental builds")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    set(ENV{CCACHE_CPP2} "true")
+  endif()
+endif()
 
 find_program(XXD xxd)
 if (NOT XXD)
