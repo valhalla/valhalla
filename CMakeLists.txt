@@ -24,7 +24,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   list(APPEND boost_components zlib)
 endif()
 find_package(Boost 1.51 REQUIRED COMPONENTS ${boost_components})
-include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIR})
@@ -63,24 +62,24 @@ add_custom_command(OUTPUT date_time_zonespec.h
   COMMAND ${XXD} -i -s +${zonespec_bytes_count} date_time/zonespec.csv ${CMAKE_BINARY_DIR}/date_time_zonespec.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
+  DEPENDS date_time/zonespec.csv
   VERBATIM)
-list(APPEND valhalla_hdrs ${CMAKE_BINARY_DIR}/date_time_zonespec.h)
 
 message(STATUS "Configuring lua/graph.lua to generate graph_lua_proc.h")
 add_custom_command(OUTPUT graph_lua_proc.h
   COMMAND ${XXD} -i lua/graph.lua ${CMAKE_BINARY_DIR}/graph_lua_proc.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling lua/graph.lua to graph_lua_proc.h"
+  DEPENDS lua/graph.lua
   VERBATIM)
-list(APPEND valhalla_hdrs ${CMAKE_BINARY_DIR}/graph_lua_proc.h)
 
 message(STATUS "Configuring lua/admin.lua to generate admin_lua_proc.h")
 add_custom_command(OUTPUT admin_lua_proc.h
   COMMAND ${XXD} -i lua/admin.lua ${CMAKE_BINARY_DIR}/admin_lua_proc.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
+  DEPENDS lua/admin.lua
   VERBATIM)
-list(APPEND valhalla_hdrs ${CMAKE_BINARY_DIR}/admin_lua_proc.h)
 
 message(STATUS "Configuring locales/*.json to generate locales.h")
 # Portable implementation of locales/make_locales.sh
@@ -101,7 +100,6 @@ foreach(json ${locale_jsons})
   file(APPEND ${locales_h} "  {\"${locale_key}\", {${locale_var}, ${locale_var} + ${locale_var}_len}},\n")
 endforeach()
 file(APPEND ${locales_h} "};")
-list(APPEND valhalla_hdrs ${locales_h})
 
 find_package(Protobuf REQUIRED)
 
@@ -151,7 +149,7 @@ if (SPATIALITE_FOUND)
 endif()
 
 message(STATUS "Configuring valhalla library target")
-list(APPEND valhalla_hdrs
+set(valhalla_hdrs
   ${CMAKE_SOURCE_DIR}/valhalla/valhalla.h
   ${CMAKE_SOURCE_DIR}/valhalla/exception.h
   ${CMAKE_SOURCE_DIR}/valhalla/worker.h
@@ -284,9 +282,11 @@ list(APPEND valhalla_hdrs
   ${CMAKE_SOURCE_DIR}/valhalla/thor/timedistancematrix.h
   ${CMAKE_SOURCE_DIR}/valhalla/tyr/serializers.h
   ${CMAKE_SOURCE_DIR}/valhalla/tyr/navigator.h
-  ${CMAKE_SOURCE_DIR}/valhalla/tyr/actor.h)
+  ${CMAKE_SOURCE_DIR}/valhalla/tyr/actor.h
+  ${CMAKE_BINARY_DIR}/date_time_zonespec.h
+  ${CMAKE_BINARY_DIR}/locales.h)
 
-list(APPEND valhalla_srcs
+set(valhalla_srcs
   ${CMAKE_SOURCE_DIR}/src/worker.cc
   ${CMAKE_SOURCE_DIR}/src/midgard/linesegment2.cc
   ${CMAKE_SOURCE_DIR}/src/midgard/tiles.cc
@@ -435,7 +435,9 @@ set(valhalla_data_tools_hdrs
   ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/shortcutbuilder.h
   ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/transitbuilder.h
   ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/util.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/validatetransit.h)
+  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/validatetransit.h
+  ${CMAKE_BINARY_DIR}/graph_lua_proc.h
+  ${CMAKE_BINARY_DIR}/admin_lua_proc.h)
 
 set(valhalla_data_tools_srcs
   ${CMAKE_SOURCE_DIR}/src/mjolnir/admin.cc
@@ -467,9 +469,7 @@ set(valhalla_data_tools_srcs
   ${CMAKE_SOURCE_DIR}/src/mjolnir/shortcutbuilder.cc
   ${CMAKE_SOURCE_DIR}/src/mjolnir/transitbuilder.cc
   ${CMAKE_SOURCE_DIR}/src/mjolnir/util.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/validatetransit.cc
-  ${CMAKE_BINARY_DIR}/graph_lua_proc.h
-  ${CMAKE_BINARY_DIR}/admin_lua_proc.h)
+  ${CMAKE_SOURCE_DIR}/src/mjolnir/validatetransit.cc)
 
 add_library(valhalla
   ${valhalla_srcs}
@@ -479,7 +479,16 @@ add_library(valhalla
   ${protobuff_srcs}
   ${protobuff_hdrs})
 
-target_link_libraries(valhalla protobuf::libprotobuf)
+target_link_libraries(valhalla
+  protobuf::libprotobuf
+  Boost::date_time
+  Boost::filesystem
+  Boost::iostreams
+  Boost::program_options
+  Boost::regex
+  Boost::system
+  Boost::thread
+  ${CURL_LIBRARIES})
 
 target_include_directories(valhalla PRIVATE
   ${_include_directories}
@@ -499,8 +508,6 @@ foreach(program ${valhalla_data_tools})
   target_compile_definitions(${program} PRIVATE ${_compile_definitions})
   target_link_libraries(${program}
     valhalla
-    ${Boost_LIBRARIES}
-    ${CURL_LIBRARIES}
     ${LUA_LIBRARIES}
     ${LZ4_LIBRARY}
     ${MAYBE_SPATIALITE_LIBRARY}
@@ -514,13 +521,7 @@ set(valhalla_programs valhalla_run_route valhalla_run_isochrone)
 foreach(program ${valhalla_programs})
   message(STATUS "Configuring ${program} executable target")
   add_executable(${program} ${CMAKE_SOURCE_DIR}/src/${program}.cc)
-  target_include_directories(${program}
-    PRIVATE
-    ${_include_directories}
-    ${CMAKE_SOURCE_DIR}/rapidjson/include)
+  target_include_directories(${program} PRIVATE ${_include_directories})
   target_compile_definitions(${program} PRIVATE ${_compile_definitions})
-  target_link_libraries(${program}
-    valhalla
-    ${Boost_LIBRARIES}
-    ${CURL_LIBRARIES})
+  target_link_libraries(${program} valhalla)
 endforeach()
