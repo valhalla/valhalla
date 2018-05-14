@@ -14,10 +14,11 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileheader.h>
-#include <valhalla/baldr/admin.h>
+
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -389,10 +390,21 @@ class GraphTileBuilder : public baldr::GraphTile {
   void UpdateTrafficSegments(const bool update_dir_edges);
 
   /**
-    * Gets the current list of edge elevation (builders).
-    * @return  Returns the edge elevation builders.
-    */
-   std::vector<EdgeElevation>& edge_elevations();
+   * Updates a tile with predictive traffic data.
+   */
+  void UpdatePedictedTraffic();
+
+  /**
+   * Gets the current list of edge elevation (builders).
+   * @return  Returns the edge elevation builders.
+   */
+  std::vector<EdgeElevation>& edge_elevations();
+
+  /**
+   * Gets the current list of predicted trafffic (builders).
+   * @return  Returns the predicted traffic builders.
+   */
+  std::vector<PredictedTraffic>& predicted_traffic();
 
  protected:
 
@@ -495,6 +507,9 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // List of edge elevation records. Index with directed edge Id.
   std::vector<EdgeElevation> edge_elevation_builder_;
+
+  // List of predicted traffic records. Index with directed edge Id.
+  std::vector<PredictedTraffic> predicted_traffic_builder_;
 
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;

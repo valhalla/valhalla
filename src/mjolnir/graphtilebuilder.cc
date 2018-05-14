@@ -170,6 +170,16 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     std::copy(edge_elevation_, edge_elevation_ + n,
         std::back_inserter(edge_elevation_builder_));
   }
+
+  // predicted traffic
+  if (header_->has_predicted_traffic()) {
+    // Edge elevation count is the same as the directed edge count
+    n = header_->directededgecount();
+    predicted_traffic_builder_.reserve(n);
+    std::copy(predicted_traffic_, predicted_traffic_ + n,
+        std::back_inserter(predicted_traffic_builder_));
+  }
+
 }
 
 // Output the tile to file. Stores as binary data.
@@ -314,9 +324,22 @@ void GraphTileBuilder::StoreTileData() {
                          edge_elevation_builder_.size() * sizeof(EdgeElevation));
     }
 
+    // Write the predicted traffic data. Make sure that if it exists it has
+    // the same count as directed edges.
+    header_builder_.set_predicted_traffic_offset(header_builder_.edge_elevation_offset() +
+       (edge_elevation_builder_.size() * sizeof(EdgeElevation)));
+    if (predicted_traffic_builder_.size() > 0) {
+      if (predicted_traffic_builder_.size() != directededges_builder_.size()) {
+        LOG_ERROR("Edge elevation count is not equal to directed edge count!");
+      }
+      header_builder_.set_has_predicted_traffic(true);
+      in_mem.write(reinterpret_cast<const char*>(predicted_traffic_builder_.data()),
+                   predicted_traffic_builder_.size() * sizeof(PredictedTraffic));
+    }
+
     // Set the end offset
-    header_builder_.set_end_offset(header_builder_.edge_elevation_offset() +
-      (edge_elevation_builder_.size() * sizeof(EdgeElevation)));
+    header_builder_.set_end_offset(header_builder_.predicted_traffic_offset() +
+      (predicted_traffic_builder_.size() * sizeof(PredictedTraffic)));
 
     // Sanity check for the end offset
     uint32_t curr = static_cast<uint32_t>(in_mem.tellp()) +
@@ -821,6 +844,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
+  header.set_predicted_traffic_offset(header.predicted_traffic_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   //rewrite the tile
   boost::filesystem::path filename = tile_dir + filesystem::path_separator + GraphTile::FileSuffix(header.graphid());
@@ -943,6 +967,7 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
   uint32_t shift = new_segments * sizeof(TrafficAssociation) + new_chunks * sizeof(TrafficChunk);
   header_builder_.set_lane_connectivity_offset(header_builder_.lane_connectivity_offset() + shift);
   header_builder_.set_edge_elevation_offset(header_builder_.edge_elevation_offset() + shift);
+  header_builder_.set_predicted_traffic_offset(header_builder_.predicted_traffic_offset() + shift);
   header_builder_.set_end_offset(header_builder_.end_offset() + shift);
 
   // Get the name of the file
@@ -1008,9 +1033,53 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
   }
 }
 
+/**
+ * Updates a tile with predictive traffic data.  Since the data is after the
+ * elevation data; write everything out up to the beginning of the predicted
+ * traffic data offset and then write it out the predicted traffic data.
+ */
+void GraphTileBuilder::UpdatePedictedTraffic() {
+
+  // Get the name of the file
+  boost::filesystem::path filename = tile_dir_ + filesystem::path_separator
+      + GraphTile::FileSuffix(header_builder_.graphid());
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open file and truncate
+  std::stringstream in_mem;
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+    // Write a new header
+    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
+
+    // Copy the tile contents from nodes to the beginning of predicted traffic
+    file.write(reinterpret_cast<const char*>(nodes_),
+               header_->predicted_traffic_offset() - sizeof(GraphTileHeader));
+
+    // Append the traffic segment list
+    file.write(reinterpret_cast<const char*>(predicted_traffic_builder_.data()),
+               predicted_traffic_builder_.size() * sizeof(PredictedTraffic));
+
+    // shift the end offset
+    header_builder_.set_end_offset(header_builder_.predicted_traffic_offset() +
+      (predicted_traffic_builder_.size() * sizeof(PredictedTraffic)));
+
+    // Close the file
+    file.close();
+  }
+}
+
 // Gets the current list of directed edge (builders).
 std::vector<EdgeElevation>& GraphTileBuilder::edge_elevations() {
   return edge_elevation_builder_;
+}
+
+// Gets the current list of predicted traffic (builders).
+std::vector<PredictedTraffic>& GraphTileBuilder::predicted_traffic() {
+  return predicted_traffic_builder_;
 }
 
 }
