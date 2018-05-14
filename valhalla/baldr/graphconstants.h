@@ -126,6 +126,9 @@ constexpr uint8_t kMaxBicycleNetwork = 15;
 // Maximum offset to edge information
 constexpr uint32_t kMaxEdgeInfoOffset = 33554431;   // 2^25 bytes
 
+// Maximum offset to compressed traffic information
+constexpr uint32_t kMaxCompressedOffset = 16777215; // 2^24 bytes
+
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
 
