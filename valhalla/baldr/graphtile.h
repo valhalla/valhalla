@@ -20,6 +20,7 @@
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/curler.h>
+#include <valhalla/baldr/predicted_traffic.h>
 
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
@@ -414,6 +415,21 @@ class GraphTile {
     }
   }
 
+  /**
+   * Get a pointer to a predicted traffic data for the specified edge.
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a pointer to the predicted data for the edge.
+   *          Returns nullptr if no predicted data exists.
+   */
+  const PredictedTraffic* predicted_traffic(const GraphId& edge) const  {
+    if (header_->has_predicted_traffic() &&
+        edge.id() < header_->directededgecount()) {
+      return &predicted_traffic_[edge.id()];
+    } else {
+      return nullptr;
+    }
+  }
+
  protected:
 
   // Graph tile memory, this must be shared so that we can put it into cache
@@ -504,6 +520,9 @@ class GraphTile {
 
   // Edge elevation data
   EdgeElevation* edge_elevation_;
+
+  //  Predicted Traffic data
+  PredictedTraffic* predicted_traffic_;
 
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, GraphId> stop_one_stops;
