@@ -35,9 +35,6 @@ include_directories(${LZ4_INCLUDE_DIR})
 find_package(Lua REQUIRED)
 include_directories(${LUA_INCLUDE_DIR})
 
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-
 find_package(SQLite3 REQUIRED)
 
 find_package(SpatiaLite)
@@ -106,50 +103,22 @@ endforeach()
 file(APPEND ${locales_h} "};")
 list(APPEND valhalla_hdrs ${locales_h})
 
-# Generate non-optional protobuffs
-set(protobuff_hdrs)
-set(protobuff_srcs)
+find_package(Protobuf REQUIRED)
 
-set(protos
-  directions_options
-  navigator
-  route
-  tripcommon
-  tripdirections
-  trippath)
+protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
+  proto/directions_options.proto
+  proto/navigator.proto
+  proto/route.proto
+  proto/tripcommon.proto
+  proto/tripdirections.proto
+  proto/trippath.proto
 
-# Note, since we call protobuf_generate_cpp with single .proto,
-# single pair of source and header is expected.
-foreach(proto_name ${protos})
-  set(proto proto/${proto_name}.proto)
-  message(STATUS "Configuring ${proto} to generate:")
-  protobuf_generate_cpp(proto_src proto_hdr ${proto})
-  set_source_files_properties("${proto_src}" "${proto_hdr}" PROPERTIES GENERATED TRUE)
-  message(STATUS "  ${proto_src}")
-  message(STATUS "  ${proto_hdr}")
-  list(APPEND protobuff_hdrs ${proto_hdr})
-  list(APPEND protobuff_srcs ${proto_src})
-endforeach()
-
-# Generate data tools protobuffs
-set(protos_data_tools
-  fileformat
-  osmformat
-  segment
-  tile
-  transit
-  transit_fetch)
-
-foreach(proto_name ${protos_data_tools})
-  set(proto proto/${proto_name}.proto)
-  message(STATUS "Configuring ${proto} to generate:")
-  protobuf_generate_cpp(proto_src proto_hdr ${proto})
-  set_source_files_properties("${proto_src}" "${proto_hdr}" PROPERTIES GENERATED TRUE)
-  message(STATUS "  ${proto_src}")
-  message(STATUS "  ${proto_hdr}")
-  list(APPEND protobuff_hdrs ${proto_hdr})
-  list(APPEND protobuff_srcs ${proto_src})
-endforeach()
+  proto/fileformat.proto
+  proto/osmformat.proto
+  proto/segment.proto
+  proto/tile.proto
+  proto/transit.proto
+  proto/transit_fetch.proto)
 
 message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/valhalla.h")
 configure_file(${CMAKE_SOURCE_DIR}/valhalla/valhalla.h.in ${CMAKE_BINARY_DIR}/valhalla/valhalla.h @ONLY)
@@ -165,6 +134,7 @@ set(_include_directories
   ${CMAKE_SOURCE_DIR}/valhalla
   ${SQLITE3_INCLUDE_DIR})
 if (SPATIALITE_FOUND)
+  set(MAYBE_SPATIALITE_LIBRARY ${SPATIALITE_LIBRARY})
   list(APPEND _include_directories ${SPATIALITE_INCLUDE_DIR})
 endif()
 
@@ -179,16 +149,6 @@ list(APPEND _compile_definitions "CURL_STATICLIB")
 if (SPATIALITE_FOUND)
   list(APPEND _compile_definitions "HAVE_SPATIALITE")
 endif()
-
-message(STATUS "Configuring valhalla_protobuf object library target")
-add_library(valhalla_protobuf STATIC ${protobuff_srcs} ${protobuff_hdrs})
-# Post-build copying of protobuff-generated headers where valhalla library sources will find them
-set(generated_protobuff_hdrs ${protobuff_hdrs})
-foreach(protobuff_hdr ${generated_protobuff_hdrs})
-  add_custom_command(TARGET valhalla_protobuf POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/valhalla/proto
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${protobuff_hdr} ${CMAKE_BINARY_DIR}/valhalla/proto)
-endforeach()
 
 message(STATUS "Configuring valhalla library target")
 list(APPEND valhalla_hdrs
@@ -334,7 +294,6 @@ list(APPEND valhalla_srcs
   ${CMAKE_SOURCE_DIR}/src/midgard/polyline2.cc
   ${CMAKE_SOURCE_DIR}/src/midgard/obb2.cc
   ${CMAKE_SOURCE_DIR}/src/midgard/pointll.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/vector2.cc
   ${CMAKE_SOURCE_DIR}/src/midgard/aabb2.cc
   ${CMAKE_SOURCE_DIR}/src/midgard/point2.cc
   ${CMAKE_SOURCE_DIR}/src/midgard/util.cc
@@ -342,12 +301,9 @@ list(APPEND valhalla_srcs
   ${CMAKE_SOURCE_DIR}/src/midgard/logging.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/accessrestriction.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/admin.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/admininfo.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/complexrestriction.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/connectivity_map.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/datetime.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/directededge.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/double_bucket_queue.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/edge_elevation.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/edgeinfo.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/graphid.cc
@@ -359,8 +315,6 @@ list(APPEND valhalla_srcs
   ${CMAKE_SOURCE_DIR}/src/baldr/nodeinfo.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/location.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/pathlocation.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/sign.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/signinfo.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/tilehierarchy.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/turn.cc
   ${CMAKE_SOURCE_DIR}/src/baldr/streetname.cc
@@ -517,7 +471,7 @@ set(valhalla_data_tools_srcs
   ${CMAKE_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_BINARY_DIR}/admin_lua_proc.h)
 
-add_library(valhalla STATIC
+add_library(valhalla
   ${valhalla_srcs}
   ${valhalla_hdrs}
   ${valhalla_data_tools_srcs}
@@ -525,7 +479,7 @@ add_library(valhalla STATIC
   ${protobuff_srcs}
   ${protobuff_hdrs})
 
-add_dependencies(valhalla valhalla_protobuf)
+target_link_libraries(valhalla protobuf::libprotobuf)
 
 target_include_directories(valhalla PRIVATE
   ${_include_directories}
@@ -549,7 +503,7 @@ foreach(program ${valhalla_data_tools})
     ${CURL_LIBRARIES}
     ${LUA_LIBRARIES}
     ${LZ4_LIBRARY}
-    ${Protobuf_LIBRARIES}
+    ${MAYBE_SPATIALITE_LIBRARY}
     ${SQLITE3_LIBRARY}
     ${ZLIB_LIBRARY})
 endforeach()
@@ -568,6 +522,5 @@ foreach(program ${valhalla_programs})
   target_link_libraries(${program}
     valhalla
     ${Boost_LIBRARIES}
-    ${CURL_LIBRARIES}
-    ${Protobuf_LIBRARIES})
+    ${CURL_LIBRARIES})
 endforeach()
