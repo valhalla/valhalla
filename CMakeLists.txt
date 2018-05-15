@@ -10,9 +10,12 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
+include(FindPkgConfig)
+
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
+option(ENABLE_HTTP "Enable HTTP" ON)
 
 set(boost_components
   date_time
@@ -52,6 +55,18 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
   endif()
 endif()
 
+add_library(libprime_server INTERFACE IMPORTED)
+if(ENABLE_HTTP)
+  pkg_check_modules(libprime_server libprime_server>=0.6.3)
+  if(libprime_server_FOUND)
+    set_target_properties(libprime_server PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
+      INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
+  endif()
+endif()
+
+
 find_program(XXD xxd)
 if (NOT XXD)
   message(FATAL_ERROR "xxd executable not found")
@@ -61,8 +76,7 @@ add_custom_command(OUTPUT date_time_zonespec.h
   COMMAND ${XXD} -i -s `head -1 date_time/zonespec.csv | wc -c` date_time/zonespec.csv ${CMAKE_BINARY_DIR}/date_time_zonespec.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
-  DEPENDS date_time/zonespec.csv
-  VERBATIM)
+  DEPENDS date_time/zonespec.csv)
 
 message(STATUS "Configuring lua/graph.lua to generate graph_lua_proc.h")
 add_custom_command(OUTPUT graph_lua_proc.h
@@ -346,6 +360,7 @@ set(valhalla_srcs
   ${CMAKE_SOURCE_DIR}/src/skadi/util.cc
   ${CMAKE_SOURCE_DIR}/src/loki/search.cc
   ${CMAKE_SOURCE_DIR}/src/loki/worker.cc
+  ${CMAKE_SOURCE_DIR}/src/loki/height_action.cc
   ${CMAKE_SOURCE_DIR}/src/loki/locate_action.cc
   ${CMAKE_SOURCE_DIR}/src/loki/route_action.cc
   ${CMAKE_SOURCE_DIR}/src/loki/matrix_action.cc
@@ -375,6 +390,8 @@ set(valhalla_srcs
   ${CMAKE_SOURCE_DIR}/src/thor/trippathbuilder.cc
   ${CMAKE_SOURCE_DIR}/src/thor/attributes_controller.cc
   ${CMAKE_SOURCE_DIR}/src/thor/route_matcher.cc
+  ${CMAKE_SOURCE_DIR}/src/thor/timedep_forward.cc
+  ${CMAKE_SOURCE_DIR}/src/thor/timedep_reverse.cc
   ${CMAKE_SOURCE_DIR}/src/thor/trafficalgorithm.cc
   ${CMAKE_SOURCE_DIR}/src/thor/timedistancematrix.cc
   ${CMAKE_SOURCE_DIR}/src/thor/worker.cc
@@ -472,6 +489,7 @@ add_library(valhalla
   ${protobuff_hdrs})
 
 target_link_libraries(valhalla
+  libprime_server
   protobuf::libprotobuf
   Boost::date_time
   Boost::filesystem
@@ -517,3 +535,9 @@ foreach(program ${valhalla_programs})
   target_compile_definitions(${program} PRIVATE ${_compile_definitions})
   target_link_libraries(${program} valhalla)
 endforeach()
+
+
+add_executable(valhalla_service ${CMAKE_SOURCE_DIR}/src/valhalla_service.cc)
+target_include_directories(valhalla_service PRIVATE ${_include_directories})
+target_compile_definitions(valhalla_service PRIVATE ${_compile_definitions})
+target_link_libraries(valhalla_service valhalla ${LZ4_LIBRARY} ZLIB::ZLIB)
