@@ -16,7 +16,10 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_HTTP "Enable HTTP" ON)
+option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
+option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" OFF)
+
 
 ## Configure imported libraries
 set(boost_components
@@ -45,10 +48,11 @@ set_target_properties(Lua::Lua PROPERTIES
   INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
   INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
 
+find_package(ZLIB REQUIRED)
 find_package(LZ4 REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(SpatiaLite)
-find_package(ZLIB REQUIRED)
+find_package(GEOS)
 
 add_library(libprime_server INTERFACE IMPORTED)
 if(ENABLE_HTTP)
@@ -70,6 +74,7 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
     set(ENV{CCACHE_CPP2} "true")
   endif()
 endif()
+
 
 ## Custom commands for generated files
 find_program(XXD xxd)
@@ -113,6 +118,7 @@ add_custom_command(OUTPUT valhalla/locales.h
   DEPENDS ${locale_jsons}
   VERBATIM)
 
+
 ## Protobuf
 find_package(Protobuf REQUIRED)
 
@@ -131,19 +137,13 @@ protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
   proto/transit.proto
   proto/transit_fetch.proto)
 
+
+## libvalhalla
 message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/valhalla.h")
 configure_file(${CMAKE_SOURCE_DIR}/valhalla/valhalla.h.in ${CMAKE_BINARY_DIR}/valhalla/valhalla.h @ONLY)
 
 message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/config.h")
 configure_file(${CMAKE_SOURCE_DIR}/valhalla/config.h.cmake ${CMAKE_BINARY_DIR}/valhalla/config.h @ONLY)
-
-# Common compile definitions
-set(_compile_definitions)
-if (MSVC)
-  list(APPEND _compile_definitions "VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI")
-endif()
-list(APPEND _compile_definitions "BOOST_NO_CXX11_SCOPED_ENUMS")
-list(APPEND _compile_definitions "BOOST_SPIRIT_THREADSAFE")
 
 message(STATUS "Configuring valhalla library target")
 set(valhalla_hdrs
@@ -496,38 +496,74 @@ target_include_directories(valhalla
   PUBLIC
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/valhalla
+    ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/valhalla
   PRIVATE
     ${CMAKE_SOURCE_DIR}/rapidjson/include)
 
-set(valhalla_compile_definitions ${_compile_definitions})
-list(APPEND valhalla_compile_definitions "RAPIDJSON_HAS_STDSTRING")
+# Common compile definitions
+set(valhalla_compile_definitions "BOOST_NO_CXX11_SCOPED_ENUMS;RAPIDJSON_HAS_STDSTRING")
+if (MSVC)
+  list(APPEND valhalla_compile_definitions "VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI")
+endif()
+
 target_compile_definitions(valhalla PRIVATE ${valhalla_compile_definitions})
 
-# valhalla data tools
 
-set(valhalla_data_tools valhalla_build_tiles)
-foreach(program ${valhalla_data_tools})
-  message(STATUS "Configuring ${program} executable target")
-  add_executable(${program} ${CMAKE_SOURCE_DIR}/src/mjolnir/${program}.cc)
-  target_link_libraries(${program}
-    valhalla
-    Boost::program_options)
-endforeach()
+## Executable targets
+function(get_source_path PATH NAME)
+  if(EXISTS ${CMAKE_SOURCE_DIR}/src/${NAME}.cc)
+    set(${PATH} ${CMAKE_SOURCE_DIR}/src/${NAME}.cc PARENT_SCOPE)
+  elseif(EXISTS ${CMAKE_SOURCE_DIR}/src/meili/${NAME}.cc)
+    set(${PATH} ${CMAKE_SOURCE_DIR}/src/meili/${NAME}.cc PARENT_SCOPE)
+  elseif(EXISTS ${CMAKE_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
+    set(${PATH} ${CMAKE_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
+  else()
+    message(ERROR "no source path for ${NAME}")
+  endif()
+endfunction()
 
-# valhalla programs
+## Valhalla programs
+set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
+  valhalla_run_isochrone valhalla_run_route valhalla_benchmark_adjacency_list valhalla_run_matrix
+  valhalla_path_comparison valhalla_export_edges valhalla_pack_elevation)
 
-set(valhalla_programs valhalla_run_route valhalla_run_isochrone)
+## Valhalla data tools
+set(valhalla_data_tools valhalla_ways_to_edges valhalla_validate_transit
+  valhalla_benchmark_admins	valhalla_build_connectivity	valhalla_build_tiles
+  valhalla_build_admins valhalla_build_transit valhalla_fetch_transit valhalla_query_transit
+  valhalla_build_speeds  valhalla_associate_segments)
+
+## Valhalla services
+set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker valhalla_thor_worker)
+
 foreach(program ${valhalla_programs})
-  message(STATUS "Configuring ${program} executable target")
-  add_executable(${program} ${CMAKE_SOURCE_DIR}/src/${program}.cc)
+  get_source_path(path ${program})
+  add_executable(${program} ${path})
   target_link_libraries(${program} Boost::program_options valhalla)
 endforeach()
 
-add_executable(valhalla_service ${CMAKE_SOURCE_DIR}/src/valhalla_service.cc)
-target_include_directories(valhalla_service PRIVATE ${_include_directories})
-target_compile_definitions(valhalla_service PRIVATE ${_compile_definitions})
-target_link_libraries(valhalla_service Boost::program_options valhalla)
+if(ENABLE_DATA_TOOLS)
+  foreach(program ${valhalla_data_tools})
+    get_source_path(path ${program})
+    add_executable(${program} ${path})
+    target_link_libraries(${program} valhalla GEOS::GEOS Boost::program_options)
+  endforeach()
+
+  add_executable(valhalla_build_statistics
+    src/mjolnir/valhalla_build_statistics.cc
+    src/mjolnir/statistics.cc
+    src/mjolnir/statistics_database.cc)
+  target_link_libraries(valhalla_build_statistics valhalla Boost::program_options)
+endif()
+
+if(ENABLE_SERVICES)
+  foreach(program ${valhalla_services})
+    add_executable(${program} ${CMAKE_SOURCE_DIR}/src/${program}.cc)
+    target_link_libraries(${program} valhalla Boost::program_options)
+  endforeach()
+endif()
+
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
@@ -545,7 +581,9 @@ if(ENABLE_PYTHON_BINDINGS)
     POSITION_INDEPENDENT_CODE ON)
 endif()
 
+
 ## Tests TODO: move to own namespace
+## FAIL: astar narrativebuilder util_odin
 set(tests aabb2 actor admin astar attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
   enhancedtrippath factory graphid graphreader graphtile gridded_data grid_range_query grid_traversal
@@ -555,12 +593,30 @@ set(tests aabb2 actor admin astar attributes_controller datetime directededge
   streetnames_us streetname_us tilehierarchy tiles traffic_matcher  turn util_midgard
   util_odin util_skadi vector2 verbal_text_formatter verbal_text_formatter_us verbal_text_formatter_us_co
   verbal_text_formatter_us_tx viterbi_search)
+
+if(ENABLE_DATA_TOOLS)
+  list(APPEND tests mapmatch utrecht edgeinfobuilder uniquenames idtable graphbuilder graphparser
+	  names refs signinfo countryaccess graphtilebuilder search node_search matrix)
+endif()
+
+if(ENABLE_SERVICES)
+  list(APPEND tests skadi_service loki_service thor_service)
+endif()
+
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL	test/${test}.cc test/test.cc)
   set_target_properties(${test} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY unit_tests)
   target_link_libraries(${test} valhalla)
 endforeach()
+
+set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
+
+add_custom_command(OUTPUT test/data/utrecht_tiles/0/003/196.gph
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMENT "Building Utrecht Tiles..."
+  DEPENDS valhalla_build_tiles)
 
 set(cost_tests autocost bicyclecost motorscootercost pedestriancost transitcost truckcost)
 foreach(test ${cost_tests})
@@ -575,5 +631,6 @@ endforeach()
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
 
 string(REGEX REPLACE "([^;]+)" "COMMAND;${CMAKE_BINARY_DIR}/unit_tests/\\1" test_commands "${tests};${cost_tests}")
-message("${test_commands}")
-add_custom_target(check WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ${test_commands})
+add_custom_target(check ${test_commands}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  DEPENDS tests test/data/utrecht_tiles/0/003/196.gph)
