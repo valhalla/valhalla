@@ -41,6 +41,7 @@ namespace {
     {"bus", 43200.0f},
     {"hov", 43200.0f},
     {"motor_scooter", 14400.0f},
+    {"motorcycle", 14400.0f},
     {"multimodal", 7200.0f},
     {"pedestrian", 7200.0f},
     {"transit", 14400.0f},
@@ -72,6 +73,7 @@ namespace valhalla {
       factory.Register("bicycle", sif::CreateBicycleCost);
       factory.Register("hov", sif::CreateHOVCost);
       factory.Register("motor_scooter", sif::CreateMotorScooterCost);
+      factory.Register("motorcycle", sif::CreateMotorcycleCost);
       factory.Register("pedestrian", sif::CreatePedestrianCost);
       factory.Register("transit", sif::CreateTransitCost);
       factory.Register("truck", sif::CreateTruckCost);
