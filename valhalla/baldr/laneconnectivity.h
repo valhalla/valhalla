@@ -2,6 +2,8 @@
 #define VALHALLA_BALDR_LANECONNECTIVITY_H_
 
 #include <cstdint>
+#include <string>
+
 namespace valhalla {
 namespace baldr {
 
