@@ -11,8 +11,11 @@
 
 #include "config.h"
 
-#include <spatialite.h>
+// sqlite must be included before spatialite
 #include <sqlite3.h>
+
+#include <spatialite.h>
+
 /* Need to know which geos version we have to work out which headers to include */
 #include <geos/version.h>
 
