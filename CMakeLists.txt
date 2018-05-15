@@ -16,7 +16,9 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_HTTP "Enable HTTP" ON)
+option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" OFF)
 
+## Configure imported libraries
 set(boost_components
   date_time
   filesystem
@@ -31,29 +33,22 @@ endif()
 find_package(Boost 1.51 REQUIRED COMPONENTS ${boost_components})
 
 find_package(CURL REQUIRED)
-include_directories(${CURL_INCLUDE_DIR})
-
-find_package(LZ4 REQUIRED)
-include_directories(${LZ4_INCLUDE_DIR})
+add_library(CURL::CURL INTERFACE IMPORTED)
+set_target_properties(CURL::CURL PROPERTIES
+  INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+  INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
+  INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
 
 find_package(Lua REQUIRED)
-include_directories(${LUA_INCLUDE_DIR})
+add_library(Lua::Lua INTERFACE IMPORTED)
+set_target_properties(Lua::Lua PROPERTIES
+  INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
+  INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
 
+find_package(LZ4 REQUIRED)
 find_package(SQLite3 REQUIRED)
-
 find_package(SpatiaLite)
-
 find_package(ZLIB REQUIRED)
-
-if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
-  find_program(CCACHE_FOUND ccache)
-  if(CCACHE_FOUND)
-    message(STATUS "Using ccache to speed up incremental builds")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-    set(ENV{CCACHE_CPP2} "true")
-  endif()
-endif()
 
 add_library(libprime_server INTERFACE IMPORTED)
 if(ENABLE_HTTP)
@@ -66,29 +61,39 @@ if(ENABLE_HTTP)
   endif()
 endif()
 
+if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+    message(STATUS "Using ccache to speed up incremental builds")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    set(ENV{CCACHE_CPP2} "true")
+  endif()
+endif()
 
+## Custom commands for generated files
 find_program(XXD xxd)
 if (NOT XXD)
   message(FATAL_ERROR "xxd executable not found")
 endif()
 
-add_custom_command(OUTPUT date_time_zonespec.h
-  COMMAND ${XXD} -i -s `head -1 date_time/zonespec.csv | wc -c` date_time/zonespec.csv ${CMAKE_BINARY_DIR}/date_time_zonespec.h
+add_custom_command(OUTPUT valhalla/date_time_zonespec.h
+  COMMAND ${XXD} -i -s `head -1 date_time/zonespec.csv | wc -c` date_time/zonespec.csv ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
   DEPENDS date_time/zonespec.csv)
 
 message(STATUS "Configuring lua/graph.lua to generate graph_lua_proc.h")
-add_custom_command(OUTPUT graph_lua_proc.h
-  COMMAND ${XXD} -i lua/graph.lua ${CMAKE_BINARY_DIR}/graph_lua_proc.h
+add_custom_command(OUTPUT valhalla/graph_lua_proc.h
+  COMMAND ${XXD} -i lua/graph.lua ${CMAKE_BINARY_DIR}/valhalla/graph_lua_proc.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling lua/graph.lua to graph_lua_proc.h"
   DEPENDS lua/graph.lua
   VERBATIM)
 
 message(STATUS "Configuring lua/admin.lua to generate admin_lua_proc.h")
-add_custom_command(OUTPUT admin_lua_proc.h
-  COMMAND ${XXD} -i lua/admin.lua ${CMAKE_BINARY_DIR}/admin_lua_proc.h
+add_custom_command(OUTPUT valhalla/admin_lua_proc.h
+  COMMAND ${XXD} -i lua/admin.lua ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
   DEPENDS lua/admin.lua
@@ -96,17 +101,19 @@ add_custom_command(OUTPUT admin_lua_proc.h
 
 message(STATUS "Configuring locales/*.json to generate locales.h")
 file(GLOB locale_jsons ${CMAKE_SOURCE_DIR}/locales *.json)
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/locales.h
-  COMMAND echo "#include <unordered_map>\\n" > ${CMAKE_BINARY_DIR}/locales.h
-  COMMAND find . -name *.json -exec ${XXD} -i {} \; >> ${CMAKE_BINARY_DIR}/locales.h
-  COMMAND echo "const std::unordered_map<std::string, std::string> locales_json = {" >> ${CMAKE_BINARY_DIR}/locales.h
-  COMMAND find . -name *.json -printf "%f\\n" | sed s/.json// | sed s@[./-]@_@g  | awk "{ printf \"    {\\\"%s\\\", {__%s_json, __%s_json + __%s_json_len}},\\n\", $1, $1, $1, $1 }"  >> ${CMAKE_BINARY_DIR}/locales.h
-  COMMAND echo "};\\n" >> ${CMAKE_BINARY_DIR}/locales.h
+set(_locales_h ${CMAKE_BINARY_DIR}/valhalla/locales.h)
+add_custom_command(OUTPUT valhalla/locales.h
+  COMMAND echo "#include <unordered_map>\\n" > ${_locales_h}
+  COMMAND find . -name *.json -exec ${XXD} -i {} \; >> ${_locales_h}
+  COMMAND echo "const std::unordered_map<std::string, std::string> locales_json = {" >> ${_locales_h}
+  COMMAND find . -name *.json -printf "%f\\n" | sed s/.json// | sed s@[./-]@_@g  | awk "{ printf \"    {\\\"%s\\\", {__%s_json, __%s_json + __%s_json_len}},\\n\", $1, $1, $1, $1 }"  >> ${_locales_h}
+  COMMAND echo "};\\n" >> ${_locales_h}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/locales
   COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
   DEPENDS ${locale_jsons}
   VERBATIM)
 
+## Protobuf
 find_package(Protobuf REQUIRED)
 
 protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
@@ -128,19 +135,7 @@ message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/valhalla.h")
 configure_file(${CMAKE_SOURCE_DIR}/valhalla/valhalla.h.in ${CMAKE_BINARY_DIR}/valhalla/valhalla.h @ONLY)
 
 message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/config.h")
-configure_file(${CMAKE_SOURCE_DIR}/valhalla/config.h.cmake config.h @ONLY)
-
-# Common includes
-set(_include_directories
-  ${CMAKE_BINARY_DIR}
-  ${CMAKE_BINARY_DIR}/valhalla
-  ${CMAKE_SOURCE_DIR}
-  ${CMAKE_SOURCE_DIR}/valhalla
-  ${SQLITE3_INCLUDE_DIR})
-if (SPATIALITE_FOUND)
-  set(MAYBE_SPATIALITE_LIBRARY ${SPATIALITE_LIBRARY})
-  list(APPEND _include_directories ${SPATIALITE_INCLUDE_DIR})
-endif()
+configure_file(${CMAKE_SOURCE_DIR}/valhalla/config.h.cmake ${CMAKE_BINARY_DIR}/valhalla/config.h @ONLY)
 
 # Common compile definitions
 set(_compile_definitions)
@@ -149,10 +144,6 @@ if (MSVC)
 endif()
 list(APPEND _compile_definitions "BOOST_NO_CXX11_SCOPED_ENUMS")
 list(APPEND _compile_definitions "BOOST_SPIRIT_THREADSAFE")
-list(APPEND _compile_definitions "CURL_STATICLIB")
-if (SPATIALITE_FOUND)
-  list(APPEND _compile_definitions "HAVE_SPATIALITE")
-endif()
 
 message(STATUS "Configuring valhalla library target")
 set(valhalla_hdrs
@@ -289,8 +280,8 @@ set(valhalla_hdrs
   ${CMAKE_SOURCE_DIR}/valhalla/tyr/serializers.h
   ${CMAKE_SOURCE_DIR}/valhalla/tyr/navigator.h
   ${CMAKE_SOURCE_DIR}/valhalla/tyr/actor.h
-  ${CMAKE_BINARY_DIR}/date_time_zonespec.h
-  ${CMAKE_BINARY_DIR}/locales.h)
+  ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h
+  ${CMAKE_BINARY_DIR}/valhalla/locales.h)
 
 set(valhalla_srcs
   ${CMAKE_SOURCE_DIR}/src/worker.cc
@@ -445,8 +436,8 @@ set(valhalla_data_tools_hdrs
   ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/transitbuilder.h
   ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/util.h
   ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/validatetransit.h
-  ${CMAKE_BINARY_DIR}/graph_lua_proc.h
-  ${CMAKE_BINARY_DIR}/admin_lua_proc.h)
+  ${CMAKE_BINARY_DIR}/valhalla/graph_lua_proc.h
+  ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h)
 
 set(valhalla_data_tools_srcs
   ${CMAKE_SOURCE_DIR}/src/mjolnir/admin.cc
@@ -491,18 +482,23 @@ add_library(valhalla
 target_link_libraries(valhalla
   libprime_server
   protobuf::libprotobuf
-  Boost::date_time
   Boost::filesystem
   Boost::iostreams
-  Boost::program_options
-  Boost::regex
-  Boost::system
   Boost::thread
-  ${CURL_LIBRARIES})
+  Spatialite::Spatialite
+  SQLite3::SQLite3
+  Lua::Lua
+  CURL::CURL
+  LZ4::LZ4
+  ZLIB::ZLIB)
 
-target_include_directories(valhalla PRIVATE
-  ${_include_directories}
-  ${CMAKE_SOURCE_DIR}/rapidjson/include)
+target_include_directories(valhalla
+  PUBLIC
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/valhalla
+    ${CMAKE_BINARY_DIR}/valhalla
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/rapidjson/include)
 
 set(valhalla_compile_definitions ${_compile_definitions})
 list(APPEND valhalla_compile_definitions "RAPIDJSON_HAS_STDSTRING")
@@ -514,15 +510,9 @@ set(valhalla_data_tools valhalla_build_tiles)
 foreach(program ${valhalla_data_tools})
   message(STATUS "Configuring ${program} executable target")
   add_executable(${program} ${CMAKE_SOURCE_DIR}/src/mjolnir/${program}.cc)
-  target_include_directories(${program} PRIVATE ${_include_directories})
-  target_compile_definitions(${program} PRIVATE ${_compile_definitions})
   target_link_libraries(${program}
     valhalla
-    ${LUA_LIBRARIES}
-    ${LZ4_LIBRARY}
-    ${MAYBE_SPATIALITE_LIBRARY}
-    ${SQLITE3_LIBRARY}
-    ZLIB::ZLIB)
+    Boost::program_options)
 endforeach()
 
 # valhalla programs
@@ -531,13 +521,59 @@ set(valhalla_programs valhalla_run_route valhalla_run_isochrone)
 foreach(program ${valhalla_programs})
   message(STATUS "Configuring ${program} executable target")
   add_executable(${program} ${CMAKE_SOURCE_DIR}/src/${program}.cc)
-  target_include_directories(${program} PRIVATE ${_include_directories})
-  target_compile_definitions(${program} PRIVATE ${_compile_definitions})
-  target_link_libraries(${program} valhalla)
+  target_link_libraries(${program} Boost::program_options valhalla)
 endforeach()
-
 
 add_executable(valhalla_service ${CMAKE_SOURCE_DIR}/src/valhalla_service.cc)
 target_include_directories(valhalla_service PRIVATE ${_include_directories})
 target_compile_definitions(valhalla_service PRIVATE ${_compile_definitions})
-target_link_libraries(valhalla_service valhalla ${LZ4_LIBRARY} ZLIB::ZLIB)
+target_link_libraries(valhalla_service Boost::program_options valhalla)
+
+## Python bindings
+if(ENABLE_PYTHON_BINDINGS)
+  find_package(PythonInterp)
+  find_package(PythonLibs)
+  set(_Boost_PYTHON${PYTHON_VERSION_MAJOR}_HEADERS "boost/python.hpp")
+  find_package(Boost COMPONENTS python${PYTHON_VERSION_MAJOR})
+  python_add_module(python_valhalla src/bindings/python/python.cc)
+  set_target_properties(python_valhalla PROPERTIES
+    OUTPUT_NAME valhalla
+    LINK_LIBRARIES ${PYTHON_LIBRARIES}
+    INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
+  target_link_libraries(python_valhalla valhalla Boost::python${PYTHON_VERSION_MAJOR})
+  set_target_properties(valhalla PROPERTIES
+    POSITION_INDEPENDENT_CODE ON)
+endif()
+
+## Tests TODO: move to own namespace
+set(tests aabb2 actor admin astar attributes_controller datetime directededge
+  distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
+  enhancedtrippath factory graphid graphreader graphtile gridded_data grid_range_query grid_traversal
+  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
+  narrativebuilder narrative_dictionary navigator nodeinfo obb2 optimizer  point2 pointll
+  polyline2 queue routing sample sequence serializers sign signs streetname streetnames streetnames_factory
+  streetnames_us streetname_us tilehierarchy tiles traffic_matcher  turn util_midgard
+  util_odin util_skadi vector2 verbal_text_formatter verbal_text_formatter_us verbal_text_formatter_us_co
+  verbal_text_formatter_us_tx viterbi_search)
+foreach(test ${tests})
+  add_executable(${test} EXCLUDE_FROM_ALL	test/${test}.cc test/test.cc)
+  set_target_properties(${test} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY unit_tests)
+  target_link_libraries(${test} valhalla)
+endforeach()
+
+set(cost_tests autocost bicyclecost motorscootercost pedestriancost transitcost truckcost)
+foreach(test ${cost_tests})
+  add_executable(${test} EXCLUDE_FROM_ALL	src/sif/${test}.cc test/test.cc)
+  set_target_properties(${test} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY unit_tests
+    COMPILE_DEFINITIONS INLINE_TEST)
+  target_link_libraries(${test} valhalla)
+  add_test(check-${test} COMMAND ${test})
+endforeach()
+
+add_custom_target(tests DEPENDS ${tests} ${cost_tests})
+
+string(REGEX REPLACE "([^;]+)" "COMMAND;${CMAKE_BINARY_DIR}/unit_tests/\\1" test_commands "${tests};${cost_tests}")
+message("${test_commands}")
+add_custom_target(check WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ${test_commands})
