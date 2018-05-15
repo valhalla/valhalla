@@ -41,7 +41,6 @@ find_package(SQLite3 REQUIRED)
 find_package(SpatiaLite)
 
 find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
 
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
@@ -58,16 +57,8 @@ if (NOT XXD)
   message(FATAL_ERROR "xxd executable not found")
 endif()
 
-message(STATUS "Configuring date_time/zonespec.csv to date_time_zonespec.h")
-execute_process(COMMAND head -n 1 ${CMAKE_SOURCE_DIR}/date_time/zonespec.csv
-  COMMAND wc -c
-  RESULT_VARIABLE zonespec_result
-  OUTPUT_VARIABLE zonespec_bytes_count
-  ERROR_VARIABLE zonespec_error)
-string(STRIP ${zonespec_bytes_count} zonespec_bytes_count)
-
 add_custom_command(OUTPUT date_time_zonespec.h
-  COMMAND ${XXD} -i -s +${zonespec_bytes_count} date_time/zonespec.csv ${CMAKE_BINARY_DIR}/date_time_zonespec.h
+  COMMAND ${XXD} -i -s `head -1 date_time/zonespec.csv | wc -c` date_time/zonespec.csv ${CMAKE_BINARY_DIR}/date_time_zonespec.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
   DEPENDS date_time/zonespec.csv
@@ -90,24 +81,17 @@ add_custom_command(OUTPUT admin_lua_proc.h
   VERBATIM)
 
 message(STATUS "Configuring locales/*.json to generate locales.h")
-# Portable implementation of locales/make_locales.sh
-set(locales_h ${CMAKE_BINARY_DIR}/locales.h)
-file(GLOB locale_jsons RELATIVE ${CMAKE_SOURCE_DIR}/locales ${CMAKE_SOURCE_DIR}/locales/*.json)
-file(WRITE ${locales_h} "#include <unordered_map>\n")
-foreach(json ${locale_jsons})
-  execute_process(COMMAND ${XXD} -i ${json}
-    OUTPUT_VARIABLE json_code
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/locales)
-    file(APPEND ${locales_h} "${json_code}\n") # quotes prevent CMake eat semi-colons!
-endforeach()
-file(APPEND ${locales_h} "const std::unordered_map<std::string, std::string> locales_json = {\n")
-foreach(json ${locale_jsons})
-  get_filename_component(locale_key ${json} NAME_WE)
-  get_filename_component(locale_var ${json} NAME)
-  string(REGEX REPLACE "[-.]" "_" locale_var ${locale_var})
-  file(APPEND ${locales_h} "  {\"${locale_key}\", {${locale_var}, ${locale_var} + ${locale_var}_len}},\n")
-endforeach()
-file(APPEND ${locales_h} "};")
+file(GLOB locale_jsons ${CMAKE_SOURCE_DIR}/locales *.json)
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/locales.h
+  COMMAND echo "#include <unordered_map>\\n" > ${CMAKE_BINARY_DIR}/locales.h
+  COMMAND find . -name *.json -exec ${XXD} -i {} \; >> ${CMAKE_BINARY_DIR}/locales.h
+  COMMAND echo "const std::unordered_map<std::string, std::string> locales_json = {" >> ${CMAKE_BINARY_DIR}/locales.h
+  COMMAND find . -name *.json -printf "%f\\n" | sed s/.json// | sed s@[./-]@_@g  | awk "{ printf \"    {\\\"%s\\\", {__%s_json, __%s_json + __%s_json_len}},\\n\", $1, $1, $1, $1 }"  >> ${CMAKE_BINARY_DIR}/locales.h
+  COMMAND echo "};\\n" >> ${CMAKE_BINARY_DIR}/locales.h
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/locales
+  COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
+  DEPENDS ${locale_jsons}
+  VERBATIM)
 
 find_package(Protobuf REQUIRED)
 
@@ -520,7 +504,7 @@ foreach(program ${valhalla_data_tools})
     ${LZ4_LIBRARY}
     ${MAYBE_SPATIALITE_LIBRARY}
     ${SQLITE3_LIBRARY}
-    ${ZLIB_LIBRARY})
+    ZLIB::ZLIB)
 endforeach()
 
 # valhalla programs
