@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
 
 namespace valhalla {
 namespace thor {
