@@ -19,7 +19,8 @@ option(ENABLE_HTTP "Enable HTTP" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" OFF)
-
+option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
+option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
 ## Configure imported libraries
 set(boost_components
@@ -73,6 +74,12 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     set(ENV{CCACHE_CPP2} "true")
   endif()
+endif()
+
+if (ENABLE_SANITIZER)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
 endif()
 
 
@@ -583,7 +590,6 @@ endif()
 
 
 ## Tests TODO: move to own namespace
-## FAIL: astar narrativebuilder util_odin
 set(tests aabb2 actor admin astar attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
   enhancedtrippath factory graphid graphreader graphtile gridded_data grid_range_query grid_traversal
@@ -595,12 +601,12 @@ set(tests aabb2 actor admin astar attributes_controller datetime directededge
   verbal_text_formatter_us_tx viterbi_search)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests mapmatch utrecht edgeinfobuilder uniquenames idtable graphbuilder graphparser
-	  names refs signinfo countryaccess graphtilebuilder search node_search matrix)
+  list(APPEND tests countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder
+    idtable mapmatch matrix names node_search refs search signinfo uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)
-  list(APPEND tests skadi_service loki_service thor_service)
+  list(APPEND tests loki_service skadi_service thor_service)
 endif()
 
 foreach(test ${tests})
@@ -610,14 +616,6 @@ foreach(test ${tests})
   target_link_libraries(${test} valhalla)
 endforeach()
 
-set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
-
-add_custom_command(OUTPUT test/data/utrecht_tiles/0/003/196.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMENT "Building Utrecht Tiles..."
-  DEPENDS valhalla_build_tiles)
-
 set(cost_tests autocost bicyclecost motorscootercost pedestriancost transitcost truckcost)
 foreach(test ${cost_tests})
   add_executable(${test} EXCLUDE_FROM_ALL	src/sif/${test}.cc test/test.cc)
@@ -625,12 +623,52 @@ foreach(test ${cost_tests})
     RUNTIME_OUTPUT_DIRECTORY unit_tests
     COMPILE_DEFINITIONS INLINE_TEST)
   target_link_libraries(${test} valhalla)
-  add_test(check-${test} COMMAND ${test})
 endforeach()
 
+# Test-specific data, properties and dependencies
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMENT "Building Utrecht Tiles..."
+  DEPENDS valhalla_build_tiles ${CMAKE_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
+add_custom_target(utrecht_tiles DEPENDS ${CMAKE_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph)
+
+set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
+
+if(ENABLE_DATA_TOOLS)
+  add_dependencies(mapmatch utrecht_tiles)
+endif()
+
+# Test run targets
+foreach(test ${tests} ${cost_tests})
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/unit_tests/${test}.log
+    COMMAND ${CMAKE_COMMAND} -E env LOCPATH=locales ${CMAKE_BINARY_DIR}/unit_tests/${test} | tee ${CMAKE_BINARY_DIR}/unit_tests/${test}.log
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    DEPENDS ${test})
+  add_custom_target(run-${test} DEPENDS ${CMAKE_BINARY_DIR}/unit_tests/${test}.log)
+endforeach()
+
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
+add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
 
-string(REGEX REPLACE "([^;]+)" "COMMAND;${CMAKE_BINARY_DIR}/unit_tests/\\1" test_commands "${tests};${cost_tests}")
-add_custom_target(check ${test_commands}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  DEPENDS tests test/data/utrecht_tiles/0/003/196.gph)
+## Coverage report
+if(ENABLE_COVERAGE)
+  if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
+    message(ERROR "ENABLE_COVERAGE=ON only make sense with a Debug build")
+  endif()
+  message(STATUS "Enabling coverage")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ftest-coverage -fprofile-arcs")
+  target_link_libraries(valhalla gcov)
+
+  # TODO: add configuration of gcov tools
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/coverage.info
+    COMMAND lcov --directory ${CMAKE_BINARY_DIR} --base-directory ${CMAKE_SOURCE_DIR} --no-external --capture --output-file ${CMAKE_BINARY_DIR}/coverage.info --no-checksum
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS check)
+
+  add_custom_target(coverage
+    COMMAND genhtml --prefix ${CMAKE_BINARY_DIR} --output-directory ${CMAKE_BINARY_DIR}/coverage --title "Test Coverage" --legend --show-details coverage.info
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS ${CMAKE_BINARY_DIR}/coverage.info)
+endif()
