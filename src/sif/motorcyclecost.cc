@@ -30,9 +30,10 @@ constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
-
+constexpr float kDefaultUseHighways             = 1.0f;   // Factor between 0 and 1
 constexpr float kDefaultUseHills                = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUsePrimary              = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUseTrails               = 0.0f;   // Factor between 0 and 1
 constexpr uint32_t kDefaultTopSpeed             = 45;     // Kilometers per hour
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
@@ -72,8 +73,10 @@ constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeco
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
+constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 constexpr ranged_default_t<uint32_t> kTopSpeedRange{0, kDefaultTopSpeed, kMaxSpeedKph};
 
 // Additional penalty to avoid destination only
@@ -95,6 +98,17 @@ constexpr float kRoadClassFactor[] = {
 };
 
 constexpr uint32_t kMaxGradeFactor = 15;
+
+constexpr float kHighwayFactor[] = {
+    1.0f,   // Motorway
+    0.5f,   // Trunk
+    0.0f,   // Primary
+    0.0f,   // Secondary
+    0.0f,   // Tertiary
+    0.0f,   // Unclassified
+    0.0f,   // Residential
+    0.0f    // Service, other
+};
 
 // Avoid hills "strength". How much do we want to avoid a hill. Combines
 // with the usehills factor (1.0 - usehills = avoidhills factor) to create
@@ -291,7 +305,7 @@ class MotorcycleCost : public DynamicCost {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->IsTransition() || edge->is_shortcut() ||
-         !(edge->forwardaccess() & kMopedAccess) ||
+         !(edge->forwardaccess() & kAutoAccess) ||
          edge->surface() > kMinimumMotorcycleSurface)
         return 0.0f;
       else {
@@ -309,7 +323,7 @@ class MotorcycleCost : public DynamicCost {
   virtual const NodeFilter GetNodeFilter() const {
     //throw back a lambda that checks the access for this type of costing
     return [](const baldr::NodeInfo* node){
-      return !(node->access() & kMopedAccess);
+      return !(node->access() & kAutoAccess);
     };
   }
 
@@ -328,6 +342,9 @@ class MotorcycleCost : public DynamicCost {
   float country_crossing_cost_;     // Cost (seconds) to go across a country border
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
   float use_ferry_;
+  float use_highways_;              // Preference to use highways. Is a value from 0 to 1
+  float highway_factor_;            // Factor applied when road is a motorway or trunk
+  float use_trails_;                // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -396,6 +413,16 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
     ferry_factor_  = 1.5f - use_ferry_;
   }
 
+  use_highways_ = kUseHighwaysRange(
+      pt.get<float>("use_highways", kDefaultUseHighways)
+    );
+
+    highway_factor_ = 1.0f - use_highways_;
+
+  use_trails_ = kUseTrailsRange(
+      pt.get<float>("use_trails", kDefaultUseTrails)
+    );
+
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
@@ -444,7 +471,7 @@ bool MotorcycleCost::AllowMultiPass() const {
 
 // Get the access mode for motorcycle
 uint32_t MotorcycleCost::access_mode() const {
-  return kMopedAccess;
+  return kAutoAccess;
 }
 
 // Check if access is allowed on the specified edge.
@@ -456,7 +483,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                      const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(edge->forwardaccess() & kMopedAccess) ||
+  if (!(edge->forwardaccess() & kAutoAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        IsUserAvoidEdge(edgeid) ||
@@ -465,7 +492,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
   }
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), kMopedAccess);
+        tile->GetAccessRestrictions(edgeid.id(), kAutoAccess);
     for (const auto& restriction : restrictions ) {
       if (restriction.type() == AccessType::kTimedAllowed) {
         //allowed at this range or allowed all the time
@@ -494,7 +521,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kMopedAccess) ||
+  if (!(opp_edge->forwardaccess() & kAutoAccess) ||
        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         IsUserAvoidEdge(opp_edgeid) ||
@@ -504,7 +531,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(opp_edgeid.id(), kMopedAccess);
+        tile->GetAccessRestrictions(opp_edgeid.id(), kAutoAccess);
     for (const auto& restriction : restrictions ) {
       if (restriction.type() == AccessType::kTimedAllowed) {
         //allowed at this range or allowed all the time
@@ -524,7 +551,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 // Check if access is allowed at the specified node.
 bool MotorcycleCost::Allowed(const baldr::NodeInfo* node) const  {
-  return (node->access() & kMopedAccess);
+  return (node->access() & kAutoAccess);
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
