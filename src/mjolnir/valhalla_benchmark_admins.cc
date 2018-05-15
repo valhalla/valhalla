@@ -23,8 +23,11 @@
 #include <boost/program_options.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <spatialite.h>
+
+// sqlite must be included before spatialite
 #include <sqlite3.h>
+
+#include <spatialite.h>
 
 #include "baldr/admininfo.h"
 #include "baldr/graphconstants.h"
