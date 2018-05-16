@@ -31,10 +31,8 @@ constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry                = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUseHighways             = 1.0f;   // Factor between 0 and 1
-constexpr float kDefaultUseHills                = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUsePrimary              = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUseTrails               = 0.0f;   // Factor between 0 and 1
-constexpr uint32_t kDefaultTopSpeed             = 45;     // Kilometers per hour
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
 
@@ -74,10 +72,8 @@ constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCr
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
-constexpr ranged_default_t<float> kUseHillsRange{0, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
-constexpr ranged_default_t<uint32_t> kTopSpeedRange{0, kDefaultTopSpeed, kMaxSpeedKph};
 
 // Additional penalty to avoid destination only
 constexpr float kDestinationOnlyFactor = 0.2f;
@@ -110,53 +106,15 @@ constexpr float kHighwayFactor[] = {
     0.0f    // Service, other
 };
 
-// Avoid hills "strength". How much do we want to avoid a hill. Combines
-// with the usehills factor (1.0 - usehills = avoidhills factor) to create
-// a weighting penalty per weighted grade factor. This indicates how strongly
-// edges with the specified grade are weighted. Note that speed also is
-// influenced by grade, so these weights help further avoid hills.
-constexpr float kAvoidHillsStrength[] = {
-    1.0f,      // -10%  - Very steep downhill
-    0.8f,      // -8%
-    0.5f,      // -6.5%
-    0.2f,      // -5%   - Moderately steep downhill
-    0.1f,      // -3%
-    0.0f,      // -1.5%
-    0.05f,     // 0%    - Flat
-    0.1f,      // 1.5%
-    0.3f,      // 3%
-    0.8f,      // 5%
-    2.0f,      // 6.5%
-    3.0f,      // 8%    - Moderately steep uphill
-    4.5f,      // 10%
-    6.0f,      // 11.5%
-    8.0f,     // 13%
-    10.0f      // 15%   - Very steep uphill
+constexpr float kSurfaceFactor[] = {
+    0.0f,   // kPavedSmooth
+    0.0f,   // kPaved
+    0.0f,   // kPaveRough
+    0.1f,   // kCompacted
+    0.2f,   // kDirt
+    0.5f,   // kGravel
+    1.0f    // kPath
 };
-
-constexpr float kGradeBasedSpeedFactor[] = {
-  1.25f,      // -10%  - 45
-  1.2f,     // -8%   - 40.5
-  1.15f,      // -6.5% - 36
-  1.1f,      // -5%   - 30.6
-  1.05f,      // -3%   - 25
-  1.0f,      // -1.5% - 21.6
-  1.0f,      // 0%    - 18
-  1.0f,     // 1.5%  - 17
-  0.95f,     // 3%    - 15
-  0.75f,     // 5%    - 13.5
-  0.6f,     // 6.5%  - 12
-  0.5f,     // 8%    - 10
-  0.45f,      // 10%   - 9
-  0.4f,     // 11.5% - 8
-  0.35f,      // 13%   - 7
-  0.25f       // 15%   - 5.5
-};
-
-constexpr float kSurfaceSpeedFactors[] =
-        { 1.0f, 1.0f, 0.9f, 0.6f, 0.1f, 0.0f, 0.0f, 0.0f };
-
-}
 
 /**
  * Derived class providing dynamic edge costing for "direct" auto routes. This
@@ -330,6 +288,7 @@ class MotorcycleCost : public DynamicCost {
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
  public:
+  VehicleType type_;                // Vehicle type: car (default), motorcycle, etc
   float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16];        // Density factor
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
@@ -344,15 +303,12 @@ class MotorcycleCost : public DynamicCost {
   float use_ferry_;
   float use_highways_;              // Preference to use highways. Is a value from 0 to 1
   float highway_factor_;            // Factor applied when road is a motorway or trunk
+  float surface_factor_;            // How much the surface factors are applied
   float use_trails_;                // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 
-  uint32_t top_speed_;  // Top speed the motorcycle can go. Used to avoid roads
-                        // with higher speeds than it
-
-  float use_hills_;     // Scale from 0 (avoid hills) to 1 (don't avoid hills)
   float use_primary_;   // Scale from 0 (avoid primary roads) to 1 (don't avoid primary roads)
   float road_factor_;   // Road factor based on use_primary_
 
@@ -369,6 +325,24 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
                              1.0f, 1.1f, 1.2f, 1.3f,
                              1.4f, 1.6f, 1.9f, 2.2f,
                              2.5f, 2.8f, 3.1f, 3.5f } {
+
+  surface_factor_ = 0.5f;
+  // Get the vehicle type - enter as string and convert to enum
+  std::string type = pt.get<std::string>("type", "car");
+  if (type == "motorcycle") {
+    type_ = VehicleType::kMotorcycle;
+    surface_factor_ = 1.0f;
+  } else if (type == "bus") {
+    type_ = VehicleType::kBus;
+  } else if (type == "tractor_trailer") {
+    type_ = VehicleType::kTractorTrailer;
+  } else if (type == "four_wheel_drive") {
+    type_ = VehicleType::kFourWheelDrive;
+    surface_factor_ = 0.0f;
+  } else {
+    type_ = VehicleType::kCar;
+  }
+
   maneuver_penalty_ = kManeuverPenaltyRange(
     pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty)
   );
@@ -434,19 +408,6 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
     density_factor_[d] = 0.85f + (d * 0.018f);
   }
 
-  top_speed_ = kTopSpeedRange (
-    pt.get<float>("top_speed", kDefaultTopSpeed)
-  );
-
-  use_hills_ = kUseHillsRange (
-      pt.get<float>("use_hills", kDefaultUseHills)
-  );
-
-  float avoid_hills = (1.0f - use_hills_);
-  for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
-    grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
-  }
-
   use_primary_ = kUsePrimaryRange (
       pt.get<float>("use_primary", kDefaultUsePrimary));
 
@@ -456,7 +417,7 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   road_factor_ = (use_primary_ >= 0.5f) ?
                  1.5f - use_primary_ :
                  3.0f - use_primary_ * 5.0f;
-
+}
 }
 
 // Destructor
@@ -561,22 +522,18 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return {sec * ferry_factor_, sec };
   }
 
-  uint32_t motorcycle_speed = (std::min(top_speed_, edge->speed ()) *
-      kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
-      kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
+  float factor = (edge->use() == Use::kFerry) ?
+        ferry_factor_ : density_factor_[edge->density()];
 
-  float speed_penalty = (edge->speed() > top_speed_) ? (edge->speed() - top_speed_) * 0.05f : 0.0f;
-  float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
-      (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
-      grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
-      speed_penalty;
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
 
   if (edge->destonly())
   {
     factor += kDestinationOnlyFactor;
   }
 
-  float sec = (edge->length() * speedfactor_[motorcycle_speed]);
+  float sec = (edge->length() * speedfactor_[edge->speed()]);
   return {sec * factor, sec};
 }
 
@@ -820,26 +777,6 @@ void testMotorcycleCostParams() {
     if (ctorTester->use_ferry_ < kUseFerryRange.min ||
         ctorTester->use_ferry_ > kUseFerryRange.max) {
       throw std::runtime_error ("use_ferry_ is not within it's range");
-    }
-  }
-
-  // top_speed_
-  iDistributor.reset(make_int_distributor_from_range(kTopSpeedRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("top_speed", (*iDistributor)(generator)));
-    if (ctorTester->top_speed_ < kTopSpeedRange.min ||
-        ctorTester->top_speed_ > kTopSpeedRange.max) {
-      throw std::runtime_error ("top_speed_ is not within it's range");
-    }
-  }
-
-  // use_hills_
-  fDistributor.reset(make_real_distributor_from_range(kUseHillsRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("use_hills", (*fDistributor)(generator)));
-    if (ctorTester->use_hills_ < kUseHillsRange.min ||
-        ctorTester->use_hills_ > kUseHillsRange.max) {
-      throw std::runtime_error ("use_hills_ is not within it's range");
     }
   }
 
