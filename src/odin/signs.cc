@@ -3,6 +3,8 @@
 
 #include "odin/signs.h"
 
+#include <utility>
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -23,7 +25,7 @@ const std::string Signs::GetExitNumberString(uint32_t max_count,
                                              bool limit_by_consecutive_count,
                                              std::string delim,
                                              const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count, delim,
+  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count, std::move(delim),
                       verbal_formatter);
 }
 
@@ -39,7 +41,7 @@ const std::string Signs::GetExitBranchString(uint32_t max_count,
                                              bool limit_by_consecutive_count,
                                              std::string delim,
                                              const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count, delim,
+  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count, std::move(delim),
                       verbal_formatter);
 }
 
@@ -55,7 +57,7 @@ const std::string Signs::GetExitTowardString(uint32_t max_count,
                                              bool limit_by_consecutive_count,
                                              std::string delim,
                                              const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count, delim,
+  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count, std::move(delim),
                       verbal_formatter);
 }
 
@@ -71,7 +73,7 @@ const std::string Signs::GetExitNameString(uint32_t max_count,
                                            bool limit_by_consecutive_count,
                                            std::string delim,
                                            const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count, delim,
+  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count, std::move(delim),
                       verbal_formatter);
 }
 
@@ -135,7 +137,7 @@ std::string Signs::ToParameterString() const {
 const std::string Signs::ListToString(const std::vector<Sign>& signs,
                                       uint32_t max_count,
                                       bool limit_by_consecutive_count,
-                                      std::string delim,
+                                      const std::string& delim,
                                       const VerbalTextFormatter* verbal_formatter) const {
   std::string sign_string;
   uint32_t count = 0;

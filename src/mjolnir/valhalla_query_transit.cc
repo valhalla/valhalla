@@ -221,12 +221,12 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
   }
 }
 
-void LogSchedule(const std::string transit_dir,
+void LogSchedule(const std::string& transit_dir,
                  GraphId& originid,
                  const GraphId& destid,
                  const uint32_t tripid,
-                 const std::string time,
-                 Transit transit,
+                 const std::string& time,
+                 const Transit& transit,
                  std::string& file,
                  const uint8_t local_level) {
 
@@ -400,7 +400,7 @@ int main(int argc, char* argv[]) {
     return true;
   }
 
-  for (auto arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng", "conf"}) {
+  for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng", "conf"}) {
     if (vm.count(arg) == 0) {
       std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";

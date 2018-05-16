@@ -73,11 +73,11 @@ std::string get_testing_date_time() {
 // get a formatted date.
 boost::gregorian::date get_formatted_date(const std::string& date) {
   boost::gregorian::date d;
-  if (date.find("T") != std::string::npos) {
+  if (date.find('T') != std::string::npos) {
     std::string dt = date;
     dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
     d = boost::gregorian::date_from_iso_string(dt);
-  } else if (date.find("-") != std::string::npos) {
+  } else if (date.find('-') != std::string::npos) {
     std::string dt = date;
     dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
     d = boost::gregorian::from_undelimited_string(dt);
@@ -274,7 +274,7 @@ std::string iso_date_time(const uint8_t dow_mask,
 
   std::string iso_date_time;
   std::stringstream ss("");
-  if (time.empty() || time.find(":") == std::string::npos || !time_zone) {
+  if (time.empty() || time.find(':') == std::string::npos || !time_zone) {
     return iso_date_time;
   }
 
@@ -359,7 +359,7 @@ std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone) {
     ss_time << pt.time_of_day();
     std::string time = ss_time.str();
 
-    std::size_t found = time.find_last_of(":"); // remove seconds.
+    std::size_t found = time.find_last_of(':'); // remove seconds.
     if (found != std::string::npos) {
       time = time.substr(0, found);
     }
@@ -400,13 +400,13 @@ uint64_t seconds_since_epoch(const std::string& date_time,
     boost::gregorian::date date;
     boost::posix_time::time_duration td;
 
-    std::size_t found = date_time.find("T"); // YYYY-MM-DDTHH:MM
+    std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
     if (found != std::string::npos) {
       std::string dt = date_time;
       dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
       date = boost::gregorian::date_from_iso_string(dt);
       td = boost::posix_time::duration_from_string(date_time.substr(found + 1));
-    } else if (date_time.find("-") != std::string::npos) { // YYYY-MM-DD
+    } else if (date_time.find('-') != std::string::npos) { // YYYY-MM-DD
       std::string dt = date_time;
       dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
       date = boost::gregorian::date_from_iso_string(dt);
@@ -545,7 +545,7 @@ std::string seconds_to_date(const uint64_t seconds, const boost::local_time::tim
     ss_time << pt.time_of_day();
     std::string time = ss_time.str();
 
-    std::size_t found = time.find_last_of(":"); // remove seconds.
+    std::size_t found = time.find_last_of(':'); // remove seconds.
     if (found != std::string::npos) {
       time = time.substr(0, found);
     }
@@ -558,14 +558,14 @@ std::string seconds_to_date(const uint64_t seconds, const boost::local_time::tim
     }
 
     // positive tz
-    if (ss_time.str().find("+") == std::string::npos &&
-        ss_time.str().find("-") == std::string::npos) {
+    if (ss_time.str().find('+') == std::string::npos &&
+        ss_time.str().find('-') == std::string::npos) {
       iso_date = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
     } else {
       iso_date = to_iso_extended_string(date) + "T" + time + ss_time.str();
     }
 
-    found = iso_date.find_last_of(":"); // remove seconds.
+    found = iso_date.find_last_of(':'); // remove seconds.
     if (found != std::string::npos) {
       iso_date = iso_date.substr(0, found);
     }
@@ -664,7 +664,7 @@ void seconds_to_date(const bool is_depart_at,
     ss_time << origin_pt.time_of_day();
     std::string time = ss_time.str();
 
-    std::size_t found = time.find_last_of(":"); // remove seconds.
+    std::size_t found = time.find_last_of(':'); // remove seconds.
     if (found != std::string::npos) {
       time = time.substr(0, found);
     }
@@ -677,14 +677,14 @@ void seconds_to_date(const bool is_depart_at,
     }
 
     // positive tz
-    if (ss_time.str().find("+") == std::string::npos &&
-        ss_time.str().find("-") == std::string::npos) {
+    if (ss_time.str().find('+') == std::string::npos &&
+        ss_time.str().find('-') == std::string::npos) {
       iso_origin = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
     } else {
       iso_origin = to_iso_extended_string(date) + "T" + time + ss_time.str();
     }
 
-    found = iso_origin.find_last_of(":"); // remove seconds.
+    found = iso_origin.find_last_of(':'); // remove seconds.
     if (found != std::string::npos) {
       iso_origin = iso_origin.substr(0, found);
     }
@@ -695,7 +695,7 @@ void seconds_to_date(const bool is_depart_at,
     ss_time << dest_pt.time_of_day();
     time = ss_time.str();
 
-    found = time.find_last_of(":"); // remove seconds.
+    found = time.find_last_of(':'); // remove seconds.
     if (found != std::string::npos) {
       time = time.substr(0, found);
     }
@@ -708,14 +708,14 @@ void seconds_to_date(const bool is_depart_at,
     }
 
     // positive tz
-    if (ss_time.str().find("+") == std::string::npos &&
-        ss_time.str().find("-") == std::string::npos) {
+    if (ss_time.str().find('+') == std::string::npos &&
+        ss_time.str().find('-') == std::string::npos) {
       iso_dest = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
     } else {
       iso_dest = to_iso_extended_string(date) + "T" + time + ss_time.str();
     }
 
-    found = iso_dest.find_last_of(":"); // remove seconds.
+    found = iso_dest.find_last_of(':'); // remove seconds.
     if (found != std::string::npos) {
       iso_dest = iso_dest.substr(0, found);
     }
@@ -769,7 +769,7 @@ uint32_t seconds_from_midnight(const std::string& date_time) {
   // https://developers.google.com/transit/gtfs/reference#stop_times_fields
 
   boost::posix_time::time_duration td;
-  std::size_t found = date_time.find("T"); // YYYY-MM-DDTHH:MM
+  std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos) {
     td = boost::posix_time::duration_from_string(date_time.substr(found + 1));
   } else {
@@ -787,12 +787,12 @@ std::string get_duration(const std::string& date_time,
   std::string formatted_date_time;
   boost::posix_time::ptime start;
   boost::gregorian::date date;
-  if (date_time.find("T") != std::string::npos) {
+  if (date_time.find('T') != std::string::npos) {
     std::string dt = date_time;
     dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
     start = boost::posix_time::from_iso_string(dt);
     date = boost::gregorian::date_from_iso_string(dt);
-  } else if (date_time.find("-") != std::string::npos) {
+  } else if (date_time.find('-') != std::string::npos) {
     std::string dt = date_time;
     dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
     start = boost::posix_time::from_iso_string(dt + "T0000");
@@ -812,7 +812,7 @@ std::string get_duration(const std::string& date_time,
 
   boost::local_time::local_date_time dt(end, tz);
 
-  std::size_t found = formatted_date_time.find_last_of(":"); // remove seconds.
+  std::size_t found = formatted_date_time.find_last_of(':'); // remove seconds.
   if (found != std::string::npos) {
     formatted_date_time = formatted_date_time.substr(0, found);
   }
@@ -822,7 +822,7 @@ std::string get_duration(const std::string& date_time,
   if (dt.is_dst()) {
     ss << tz->dst_offset() + tz->base_utc_offset();
     // positive tz
-    if (ss.str().find("+") == std::string::npos && ss.str().find("-") == std::string::npos) {
+    if (ss.str().find('+') == std::string::npos && ss.str().find('-') == std::string::npos) {
       ss.str("");
       ss << "+" << tz->dst_offset() + tz->base_utc_offset();
     }
@@ -830,7 +830,7 @@ std::string get_duration(const std::string& date_time,
   } else {
     ss << tz->base_utc_offset();
     // positive tz
-    if (ss.str().find("+") == std::string::npos && ss.str().find("-") == std::string::npos) {
+    if (ss.str().find('+') == std::string::npos && ss.str().find('-') == std::string::npos) {
       ss.str("");
       ss << "+" << tz->base_utc_offset();
     }
@@ -839,7 +839,7 @@ std::string get_duration(const std::string& date_time,
 
   formatted_date_time += ss.str();
 
-  found = formatted_date_time.find_last_of(":"); // remove seconds.
+  found = formatted_date_time.find_last_of(':'); // remove seconds.
   if (found != std::string::npos) {
     formatted_date_time = formatted_date_time.substr(0, found);
   }
@@ -874,7 +874,7 @@ bool is_iso_local(const std::string& date_time) {
     ss.str(date_time);
     is_ok = static_cast<bool>(ss >> pt);
 
-    std::size_t found = date_time.find("T"); // YYYY-MM-DDTHH:MM
+    std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
     std::string time = date_time.substr(found + 1);
     uint32_t hour = std::stoi(time.substr(0, 2));
     uint32_t min = std::stoi(time.substr(3));
@@ -1343,7 +1343,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           if (on_off.size() == 2) {
 
             // process the hour on
-            std::size_t found = on_off.at(0).find(":");
+            std::size_t found = on_off.at(0).find(':');
             if (found == std::string::npos) {
               return time_domains;
             }
@@ -1359,7 +1359,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
             timedomain.set_begin_mins(min);
 
             // process the hour off
-            found = on_off.at(1).find(":");
+            found = on_off.at(1).find(':');
             if (found == std::string::npos) {
               return time_domains;
             }
@@ -1614,7 +1614,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           if (on_off.size() == 2) {
 
             // process the hour on
-            std::size_t found = on_off.at(0).find(":");
+            std::size_t found = on_off.at(0).find(':');
             if (found == std::string::npos) {
               return time_domains;
             }
@@ -1630,7 +1630,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
             timedomain.set_begin_mins(min);
 
             // process the hour off
-            found = on_off.at(1).find(":");
+            found = on_off.at(1).find(':');
             if (found == std::string::npos) {
               return time_domains;
             }

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <utility>
 #include <valhalla/baldr/edgetracker.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -85,10 +86,10 @@ template <typename TileSet>
 void merge(TileSet& tiles,
            GraphReader& reader,
            std::function<bool(const DirectedEdge*)> edge_merge_pred,
-           std::function<bool(const DirectedEdge*)> edge_allowed_pred,
-           std::function<void(const path&)> func) {
+           const std::function<bool(const DirectedEdge*)>& edge_allowed_pred,
+           const std::function<void(const path&)>& func) {
   edge_tracker tracker = edge_tracker::create(tiles, reader);
-  detail::edge_collapser e(reader, tracker, edge_merge_pred, edge_allowed_pred, func);
+  detail::edge_collapser e(reader, tracker, std::move(edge_merge_pred), edge_allowed_pred, func);
 
   // Iterate over tiles. Merge edges at nodes where the edges can be collapsed.
   for (GraphId tile_id : tiles) {

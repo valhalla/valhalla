@@ -196,7 +196,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       }
       if (edge.traffic_segment().size() > 0) {
         auto segments_array = json::array({});
-        for (auto segment : edge.traffic_segment()) {
+        for (const auto& segment : edge.traffic_segment()) {
           json::MapPtr segmap =
               json::map({{"segment_id", segment.segment_id()},
                          {"begin_percent", json::fp_t{segment.begin_percent(), 3}},
@@ -396,7 +396,7 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
 }
 
 void append_trace_info(
-    json::MapPtr json,
+    const json::MapPtr& json,
     const AttributesController& controller,
     const DirectionsOptions& directions_options,
     const std::tuple<float, float, std::vector<thor::MatchResult>, TripPath>& map_match_result) {

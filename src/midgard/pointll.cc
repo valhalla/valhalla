@@ -143,7 +143,8 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
 
   // If there is one point to process we are done
   if (process_size == 1) {
-    return std::make_tuple(pts[begin_index], sqrt(DistanceSquared(pts[begin_index])), begin_index);
+    return std::make_tuple(pts[begin_index], std::sqrt(DistanceSquared(pts[begin_index])),
+                           begin_index);
   }
 
   // Longitude (x) is scaled by the cos of the latitude so that distances are
@@ -195,7 +196,7 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
       break;
     }
   }
-  return std::make_tuple(std::move(closest), sqrt(mindistsqr), closest_segment);
+  return std::make_tuple(std::move(closest), std::sqrt(mindistsqr), closest_segment);
 }
 
 // Calculate the heading from the start index within a polyline of lat,lng

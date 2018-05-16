@@ -22,7 +22,7 @@ StreetNames::~StreetNames() {
 }
 
 std::string StreetNames::ToString(uint32_t max_count,
-                                  std::string delim,
+                                  const std::string& delim,
                                   const VerbalTextFormatter* verbal_formatter) const {
   std::string name_string;
   uint32_t count = 0;

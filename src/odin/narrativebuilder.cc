@@ -3636,7 +3636,7 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& n
   instruction.reserve(kInstructionInitialCapacity);
 
   // Set current verbal cue
-  std::string current_verbal_cue = maneuver->verbal_pre_transition_instruction();
+  const std::string& current_verbal_cue = maneuver->verbal_pre_transition_instruction();
 
   // Set next verbal cue
   std::string next_verbal_cue = next_maneuver.HasVerbalTransitionAlertInstruction()

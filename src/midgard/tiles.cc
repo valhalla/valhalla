@@ -162,8 +162,8 @@ Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds,
   tilebounds_ = bounds;
   tilesize_ = tilesize;
   subdivision_size_ = tilesize_ / nsubdivisions_;
-  ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) / tilesize_));
-  nrows_ = static_cast<int32_t>(ceil((bounds.maxy() - bounds.miny()) / tilesize_));
+  ncolumns_ = static_cast<int32_t>(std::ceil((bounds.maxx() - bounds.minx()) / tilesize_));
+  nrows_ = static_cast<int32_t>(std::ceil((bounds.maxy() - bounds.miny()) / tilesize_));
 }
 
 // Shift the tilebounds
@@ -266,7 +266,7 @@ void Tiles<coord_t>::TileOffsets(const int32_t initial_tileid,
 // Get the number of tiles in the tiling system.
 template <class coord_t> uint32_t Tiles<coord_t>::TileCount() const {
   float nrows = (tilebounds_.maxy() - tilebounds_.miny()) / tilesize_;
-  return ncolumns_ * static_cast<int32_t>(ceil(nrows));
+  return ncolumns_ * static_cast<int32_t>(std::ceil(nrows));
 }
 
 // Get the neighboring tileid to the right/east.

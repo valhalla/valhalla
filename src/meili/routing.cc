@@ -158,7 +158,7 @@ uint32_t LabelSet::pop() {
  */
 inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const baldr::GraphId& edgeid,
-                          const sif::cost_ptr_t costing,
+                          const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
                           const baldr::GraphTile* tile) {
   return !pred_edgelabel.edgeid().Is_Valid() || edgeid == pred_edgelabel.edgeid() ||
@@ -171,9 +171,9 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
 void set_origin(baldr::GraphReader& reader,
                 const std::vector<baldr::PathLocation>& destinations,
                 uint16_t origin_idx,
-                labelset_ptr_t labelset,
+                const labelset_ptr_t& labelset,
                 const sif::TravelMode travelmode,
-                sif::cost_ptr_t costing,
+                const sif::cost_ptr_t& costing,
                 const Label* edgelabel) {
   // Push dummy labels (invalid edgeid, zero cost, no predecessor) to
   // the queue for the initial expansion later. These dummy labels

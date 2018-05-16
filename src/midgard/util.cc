@@ -94,7 +94,7 @@ template std::vector<Point2> trim_front<std::vector<Point2>>(std::vector<Point2>
 template std::list<PointLL> trim_front<std::list<PointLL>>(std::list<PointLL>&, const float);
 template std::list<Point2> trim_front<std::list<Point2>>(std::list<Point2>&, const float);
 
-memory_status::memory_status(const std::unordered_set<std::string> interest) {
+memory_status::memory_status(const std::unordered_set<std::string>& interest) {
   // grab the vm stats from the file
   std::ifstream file("/proc/self/status");
   std::string line;

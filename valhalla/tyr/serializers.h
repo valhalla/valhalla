@@ -61,7 +61,7 @@ serializeIsochrones(const valhalla_request_t& request,
  */
 std::string serializeHeight(const valhalla_request_t& request,
                             const std::vector<double>& heights,
-                            std::vector<float> ranges = {});
+                            const std::vector<float>& ranges = {});
 
 /**
  * Turn some correlated points on the graph into info about those locations

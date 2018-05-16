@@ -71,7 +71,7 @@ protected:
   const std::string ListToString(const std::vector<Sign>& signs,
                                  uint32_t max_count = 0,
                                  bool limit_by_consecutive_count = false,
-                                 std::string delim = "/",
+                                 const std::string& delim = "/",
                                  const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
   const std::string ListToParameterString(const std::vector<Sign>& signs) const;

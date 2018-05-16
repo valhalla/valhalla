@@ -10,7 +10,7 @@
 namespace {
 
 boost::property_tree::ptree parse_json(const std::string& json,
-                                       const std::unordered_set<std::string> customizable,
+                                       const std::unordered_set<std::string>& customizable,
                                        boost::property_tree::ptree& match_config) {
   boost::property_tree::ptree request;
   try {
@@ -463,7 +463,7 @@ TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t
 }
 
 std::vector<meili::Measurement>
-TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree request,
+TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree& request,
                                           float default_accuracy,
                                           float default_search_radius) {
   // check for required parameters

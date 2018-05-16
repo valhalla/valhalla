@@ -67,7 +67,7 @@ namespace tyr {
 */
 std::string serializeHeight(const valhalla_request_t& request,
                             const std::vector<double>& heights,
-                            std::vector<float> ranges) {
+                            const std::vector<float>& ranges) {
   auto json = json::map({});
 
   // get the distances between the postings

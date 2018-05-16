@@ -46,7 +46,7 @@ std::string GetFormattedTime(uint32_t secs) {
 // Returns the costing method (created from the dynamic cost factory).
 // Get the costing options. Merge in any request costing options that
 // override those in the config.
-valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
+valhalla::sif::cost_ptr_t get_costing(const CostFactory<DynamicCost>& factory,
                                       boost::property_tree::ptree& request,
                                       const std::string& costing) {
   std::string method_options = "costing_options." + costing;
@@ -89,6 +89,7 @@ void LogResults(const std::string& matrixtype,
     // Optimize the path
     auto t10 = std::chrono::high_resolution_clock::now();
     std::vector<float> costs;
+    costs.reserve(res.size());
     for (auto& td : res) {
       costs.push_back(static_cast<float>(td.time));
     }

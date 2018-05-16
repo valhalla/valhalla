@@ -677,7 +677,7 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   return result;
 }
 
-worker_t::result_t to_response(baldr::json::ArrayPtr array,
+worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
                                http_request_info_t& request_info,
                                const valhalla_request_t& request) {
   std::ostringstream stream;
@@ -698,7 +698,7 @@ worker_t::result_t to_response(baldr::json::ArrayPtr array,
   return result;
 }
 
-worker_t::result_t to_response(baldr::json::MapPtr map,
+worker_t::result_t to_response(const baldr::json::MapPtr& map,
                                http_request_info_t& request_info,
                                const valhalla_request_t& request) {
   std::ostringstream stream;

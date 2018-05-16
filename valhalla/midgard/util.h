@@ -303,7 +303,8 @@ template <class T> bool similar(const T a, const T b, const double similarity = 
  */
 struct memory_status {
   memory_status() = delete;
-  memory_status(const std::unordered_set<std::string> interest = std::unordered_set<std::string>{});
+  memory_status(
+      const std::unordered_set<std::string>& interest = std::unordered_set<std::string>{});
 
   std::unordered_map<std::string, std::pair<double, std::string>> metrics;
 

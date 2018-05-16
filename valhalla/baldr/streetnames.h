@@ -22,7 +22,7 @@ public:
   virtual ~StreetNames();
 
   std::string ToString(uint32_t max_count = 0,
-                       std::string delim = "/",
+                       const std::string& delim = "/",
                        const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
   std::string ToParameterString() const;

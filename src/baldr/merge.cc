@@ -3,6 +3,7 @@
 #include "baldr/tilehierarchy.h"
 
 #include <boost/range/adaptor/map.hpp>
+#include <utility>
 
 namespace bra = boost::adaptors;
 
@@ -98,8 +99,8 @@ edge_collapser::edge_collapser(GraphReader& reader,
                                std::function<bool(const DirectedEdge*)> edge_merge_pred,
                                std::function<bool(const DirectedEdge*)> edge_allowed_pred,
                                std::function<void(const path&)> func)
-    : m_reader(reader), m_tracker(tracker), m_edge_merge_predicate(edge_merge_pred),
-      m_edge_allowed_predicate(edge_allowed_pred), m_func(func) {
+    : m_reader(reader), m_tracker(tracker), m_edge_merge_predicate(std::move(edge_merge_pred)),
+      m_edge_allowed_predicate(std::move(edge_allowed_pred)), m_func(std::move(func)) {
 }
 
 // returns the pair of nodes reachable from the given @node_id where they

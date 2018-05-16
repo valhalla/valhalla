@@ -87,7 +87,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                     std::mutex& lock,
                     const std::unordered_set<GraphId>& tiles,
                     const std::vector<OSMConnectionEdge>& connection_edges,
-                    const std::unordered_map<GraphId, Traversability> egress_traversability) {
+                    const std::unordered_map<GraphId, Traversability>& egress_traversability) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
   // Move existing nodes and directed edge builder vectors and clear the lists
@@ -467,7 +467,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
 
-  PointLL stop_ll = transit_node->latlng();
+  const PointLL& stop_ll = transit_node->latlng();
   uint64_t wayid = transit_node->connecting_wayid();
 
   float mindist = 10000000.0f;

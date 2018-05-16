@@ -252,7 +252,7 @@ void Navigator::InitializeShapeLengthTime() {
         // Update the total remaining values
         total_remaining_leg_length += length;
         total_remaining_leg_time +=
-            static_cast<uint32_t>(round(length / maneuver_speeds_.at(maneuver_speed_index)));
+            static_cast<uint32_t>(std::round(length / maneuver_speeds_.at(maneuver_speed_index)));
 
         remaining_leg_values_[i] = {total_remaining_leg_length, total_remaining_leg_time};
       }
@@ -399,7 +399,7 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
   float remaining_leg_length = (remaining_leg_values_.at(remaining_index).first + partial_length);
   uint32_t remaining_leg_time =
       (remaining_leg_values_.at(remaining_index).second +
-       static_cast<uint32_t>(round(partial_length / maneuver_speeds_.at(maneuver_index_))));
+       static_cast<uint32_t>(std::round(partial_length / maneuver_speeds_.at(maneuver_index_))));
 
   // Populate navigation status
   route_state_ = NavigationStatus_RouteState_kTracking;
@@ -511,9 +511,9 @@ uint32_t Navigator::GetSpentManeuverTime(const FixLocation& fix_location,
   // Use speed if user is moving to calculate spent maneuver time
   if (speed > kMinSpeedThreshold) {
     return static_cast<uint32_t>(
-        round(UnitsToMeters(remaining_leg_values_.at(maneuver_begin_shape_index).first -
-                            nav_status.remaining_leg_length()) /
-              speed));
+        std::round(UnitsToMeters(remaining_leg_values_.at(maneuver_begin_shape_index).first -
+                                 nav_status.remaining_leg_length()) /
+                   speed));
   }
 
   return (remaining_leg_values_.at(maneuver_begin_shape_index).second -
@@ -531,7 +531,7 @@ uint32_t Navigator::GetRemainingManeuverTime(const FixLocation& fix_location,
   // Use speed if user is moving to calculate remaining maneuver time
   if (speed > kMinSpeedThreshold) {
     return static_cast<uint32_t>(
-        round(UnitsToMeters(nav_status.remaining_maneuver_length()) / speed));
+        std::round(UnitsToMeters(nav_status.remaining_maneuver_length()) / speed));
   }
 
   return nav_status.remaining_maneuver_time();
@@ -549,9 +549,10 @@ uint32_t Navigator::GetPreTransitionThreshold(size_t instruction_index) const {
     adjustment_factor = 0.75f;
   }
 
-  return (kPreTransitionBaseThreshold +
-          (static_cast<uint32_t>(round(GetWordCount(maneuver.verbal_pre_transition_instruction()) /
-                                       kWordsPerSecond * adjustment_factor))));
+  return (
+      kPreTransitionBaseThreshold +
+      (static_cast<uint32_t>(std::round(GetWordCount(maneuver.verbal_pre_transition_instruction()) /
+                                        kWordsPerSecond * adjustment_factor))));
 }
 
 bool Navigator::IsAlertCloseToPre(const FixLocation& fix_location,
@@ -562,8 +563,8 @@ bool Navigator::IsAlertCloseToPre(const FixLocation& fix_location,
   // TODO handle the transition alert pre-phrase of "In 500 feet..."
   int remaining_time_after_alert =
       (GetRemainingManeuverTime(fix_location, nav_status) -
-       (static_cast<uint32_t>(
-           round(GetWordCount(maneuver.verbal_transition_alert_instruction()) / kWordsPerSecond))) -
+       (static_cast<uint32_t>(std::round(
+           GetWordCount(maneuver.verbal_transition_alert_instruction()) / kWordsPerSecond))) -
        kAlertPreTimeDelta);
 
   return (remaining_time_after_alert < GetPreTransitionThreshold(instruction_index));

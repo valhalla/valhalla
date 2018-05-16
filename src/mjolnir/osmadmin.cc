@@ -19,7 +19,7 @@ uint64_t OSMAdmin::admin_id() const {
 }
 
 // Set the ways list.
-void OSMAdmin::set_ways(const std::list<uint64_t> ways) {
+void OSMAdmin::set_ways(const std::list<uint64_t>& ways) {
   ways_ = ways;
 }
 

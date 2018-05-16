@@ -34,7 +34,7 @@ struct OSMAdmin {
    * Set the ways list.
    * @param  ways   Ways for this admin.
    */
-  void set_ways(const std::list<uint64_t> ways);
+  void set_ways(const std::list<uint64_t>& ways);
 
   /**
    * Get the ways for this admin.

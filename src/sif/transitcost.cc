@@ -420,7 +420,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 
   // do we have stop work to do?
   if (stop_exclude_onestops_.size() || stop_include_onestops_.size()) {
-    const std::unordered_map<std::string, GraphId> stop_onestops = tile->GetStopOneStops();
+    const std::unordered_map<std::string, GraphId>& stop_onestops = tile->GetStopOneStops();
 
     // avoid these operators
     if (stop_onestops.size()) {
@@ -444,7 +444,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 
   // do we have operator work to do?
   if (oper_exclude_onestops_.size() || oper_include_onestops_.size()) {
-    const std::unordered_map<std::string, std::list<GraphId>> oper_onestops =
+    const std::unordered_map<std::string, std::list<GraphId>>& oper_onestops =
         tile->GetOperatorOneStops();
 
     // avoid these operators
@@ -474,7 +474,7 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
   // do we have route work to do?
   if (route_exclude_onestops_.size() || route_include_onestops_.size()) {
 
-    const std::unordered_map<std::string, std::list<GraphId>> route_onestops =
+    const std::unordered_map<std::string, std::list<GraphId>>& route_onestops =
         tile->GetRouteOneStops();
 
     // avoid these routes
