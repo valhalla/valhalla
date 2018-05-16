@@ -11,6 +11,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
+include(GNUInstallDirs)
 
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -21,6 +22,9 @@ option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" OFF)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## Configure imported libraries
 set(boost_components
@@ -116,42 +120,25 @@ file(GLOB locale_jsons ${CMAKE_SOURCE_DIR}/locales *.json)
 set(_locales_h ${CMAKE_BINARY_DIR}/valhalla/locales.h)
 add_custom_command(OUTPUT valhalla/locales.h
   COMMAND echo "#include <unordered_map>\\n" > ${_locales_h}
-  COMMAND find . -name *.json -exec ${XXD} -i {} \; >> ${_locales_h}
+  COMMAND find . -name "*.json" -exec ${XXD} -i {} \; >> ${_locales_h}
   COMMAND echo "const std::unordered_map<std::string, std::string> locales_json = {" >> ${_locales_h}
-  COMMAND find . -name *.json -printf "%f\\n" | sed s/.json// | sed s@[./-]@_@g  | awk "{ printf \"    {\\\"%s\\\", {__%s_json, __%s_json + __%s_json_len}},\\n\", $1, $1, $1, $1 }"  >> ${_locales_h}
+  COMMAND find . -name "*.json" -printf "%f\\n" | sed s/.json// | sed "p;s@[./-]@_@g" | xargs -n 2 | awk "{ printf \"    {\\\"%s\\\", {__%s_json, __%s_json + __%s_json_len}},\\n\", $1, $2, $2, $2 }"  >> ${_locales_h}
   COMMAND echo "};\\n" >> ${_locales_h}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/locales
   COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
   DEPENDS ${locale_jsons}
   VERBATIM)
 
-
-## Protobuf
-find_package(Protobuf REQUIRED)
-
-protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
-  proto/directions_options.proto
-  proto/navigator.proto
-  proto/route.proto
-  proto/tripcommon.proto
-  proto/tripdirections.proto
-  proto/trippath.proto
-
-  proto/fileformat.proto
-  proto/osmformat.proto
-  proto/segment.proto
-  proto/tile.proto
-  proto/transit.proto
-  proto/transit_fetch.proto)
-
-
 ## libvalhalla
+add_subdirectory(proto ${CMAKE_BINARY_DIR}/valhalla/proto)
+
 message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/valhalla.h")
 configure_file(${CMAKE_SOURCE_DIR}/valhalla/valhalla.h.in ${CMAKE_BINARY_DIR}/valhalla/valhalla.h @ONLY)
 
 message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/config.h")
 configure_file(${CMAKE_SOURCE_DIR}/valhalla/config.h.cmake ${CMAKE_BINARY_DIR}/valhalla/config.h @ONLY)
 
+# TODO: split file lists in submodules
 message(STATUS "Configuring valhalla library target")
 set(valhalla_hdrs
   ${CMAKE_SOURCE_DIR}/valhalla/valhalla.h
@@ -482,13 +469,11 @@ add_library(valhalla
   ${valhalla_srcs}
   ${valhalla_hdrs}
   ${valhalla_data_tools_srcs}
-  ${valhalla_data_tools_hdrs}
-  ${protobuff_srcs}
-  ${protobuff_hdrs})
+  ${valhalla_data_tools_hdrs})
 
 target_link_libraries(valhalla
+  valhalla::protobuf
   libprime_server
-  protobuf::libprotobuf
   Boost::filesystem
   Boost::iostreams
   Boost::thread
@@ -515,7 +500,18 @@ if (MSVC)
 endif()
 
 target_compile_definitions(valhalla PRIVATE ${valhalla_compile_definitions})
-
+set_target_properties(valhalla PROPERTIES
+  VERSION   2.4.9
+  SOVERSION 2
+  PUBLIC_HEADER "valhalla/valhalla.h") # TODO: public headers lists
+install(TARGETS valhalla
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla)
+# TODO: pkg-config
+# configure_file(libvalhalla.pc.in libvalhalla.pc @ONLY) TODO
+#install(FILES ${CMAKE_BINARY_DIR}/libvalhalla.pc
+#    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
 
 ## Executable targets
 function(get_source_path PATH NAME)
@@ -548,6 +544,7 @@ foreach(program ${valhalla_programs})
   get_source_path(path ${program})
   add_executable(${program} ${path})
   target_link_libraries(${program} Boost::program_options valhalla)
+  install(TARGETS ${program} DESTINATION bin)
 endforeach()
 
 if(ENABLE_DATA_TOOLS)
@@ -555,6 +552,7 @@ if(ENABLE_DATA_TOOLS)
     get_source_path(path ${program})
     add_executable(${program} ${path})
     target_link_libraries(${program} valhalla GEOS::GEOS Boost::program_options)
+    install(TARGETS ${program} DESTINATION bin)
   endforeach()
 
   add_executable(valhalla_build_statistics
@@ -562,12 +560,14 @@ if(ENABLE_DATA_TOOLS)
     src/mjolnir/statistics.cc
     src/mjolnir/statistics_database.cc)
   target_link_libraries(valhalla_build_statistics valhalla Boost::program_options)
+  install(TARGETS valhalla_build_statistics DESTINATION bin)
 endif()
 
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} ${CMAKE_SOURCE_DIR}/src/${program}.cc)
     target_link_libraries(${program} valhalla Boost::program_options)
+    install(TARGETS ${program} DESTINATION bin)
   endforeach()
 endif()
 
@@ -642,9 +642,10 @@ endif()
 # Test run targets
 foreach(test ${tests} ${cost_tests})
   add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/unit_tests/${test}.log
-    COMMAND ${CMAKE_COMMAND} -E env LOCPATH=locales ${CMAKE_BINARY_DIR}/unit_tests/${test} | tee ${CMAKE_BINARY_DIR}/unit_tests/${test}.log
+    COMMAND LOCPATH=locales /bin/bash -c -o pipefail "${CMAKE_BINARY_DIR}/unit_tests/${test} | tee ${CMAKE_BINARY_DIR}/unit_tests/${test}.log"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    DEPENDS ${test})
+    DEPENDS ${test}
+    VERBATIM)
   add_custom_target(run-${test} DEPENDS ${CMAKE_BINARY_DIR}/unit_tests/${test}.log)
 endforeach()
 
@@ -672,3 +673,5 @@ if(ENABLE_COVERAGE)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS ${CMAKE_BINARY_DIR}/coverage.info)
 endif()
+
+# TODO: add packaging via CPack
