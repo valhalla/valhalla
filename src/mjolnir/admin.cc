@@ -4,7 +4,9 @@
 #include <unordered_map>
 #include <boost/filesystem/operations.hpp>
 #include <sqlite3.h>
+#ifdef HAVE_SPATIALITE
 #include <spatialite.h>
+#endif
 
 namespace valhalla {
 namespace mjolnir {
@@ -14,6 +16,7 @@ sqlite3 * GetDBHandle(const std::string& database) {
 
   // Initialize the admin DB (if it exists)
   sqlite3 *db_handle = nullptr;
+#ifdef HAVE_SPATIALITE
   if (!database.empty() && boost::filesystem::exists(database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
@@ -42,6 +45,7 @@ sqlite3 * GetDBHandle(const std::string& database) {
       sqlite3_close(db_handle);
     }
   }
+#endif
   return db_handle;
 }
 
