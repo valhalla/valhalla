@@ -24,8 +24,8 @@
 #include <thread>
 
 #include "config.h"
-#include "segment.pb.h"
-#include "tile.pb.h"
+#include <valhalla/proto/segment.pb.h>
+#include <valhalla/proto/tile.pb.h>
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
