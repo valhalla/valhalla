@@ -39,17 +39,13 @@ public:
    * Get the set of levels in this hierarchy.
    * @return set of TileLevel objects.
    */
-  static const std::map<uint8_t, TileLevel>& levels() {
-    return levels_;
-  }
+  static const std::map<uint8_t, TileLevel>& levels();
 
   /**
    * Get the transit level in this hierarchy.
    * @return the transit TileLevel object.
    */
-  static const TileLevel& GetTransitLevel() {
-    return transit_level_;
-  }
+  static const TileLevel& GetTransitLevel();
 
   /**
    * Returns the GraphId of the requested tile based on a lat,lng and a level.
@@ -87,10 +83,6 @@ public:
    * @return  Returns the max. level.
    */
   static uint8_t get_max_level();
-
-private:
-  static std::map<uint8_t, TileLevel> levels_;
-  static TileLevel transit_level_;
 };
 
 } // namespace baldr

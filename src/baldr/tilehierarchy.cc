@@ -6,34 +6,42 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
-// Static tile levels
-std::map<uint8_t, TileLevel> TileHierarchy::levels_ =
-    {{2, TileLevel{2, stringToRoadClass.find("ServiceOther")->second, "local",
-                   midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                    .25,
-                                                    static_cast<unsigned short>(kBinsDim)}}},
-     {1, TileLevel{1, stringToRoadClass.find("Tertiary")->second, "arterial",
-                   midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                    1,
-                                                    static_cast<unsigned short>(kBinsDim)}}},
-     {0, TileLevel{0, stringToRoadClass.find("Primary")->second, "highway",
-                   midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                    4,
-                                                    static_cast<unsigned short>(kBinsDim)}}}};
+const std::map<uint8_t, TileLevel>& TileHierarchy::levels() {
+  // Static tile levels
+  static const std::map<uint8_t, TileLevel> levels_ =
+      {{2, TileLevel{2, stringToRoadClass("ServiceOther"), "local",
+                     midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                      .25,
+                                                      static_cast<unsigned short>(kBinsDim)}}},
+       {1, TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
+                     midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                      1,
+                                                      static_cast<unsigned short>(kBinsDim)}}},
+       {0, TileLevel{0, stringToRoadClass("Primary"), "highway",
+                     midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                      4,
+                                                      static_cast<unsigned short>(kBinsDim)}}}};
 
-// Should we make a class lower than service other for transit?
-TileLevel TileHierarchy::transit_level_ =
-    {3, stringToRoadClass.find("ServiceOther")->second, "transit",
-     midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                      .25,
-                                      static_cast<unsigned short>(kBinsDim)}};
+  return levels_;
+}
+
+const TileLevel& TileHierarchy::GetTransitLevel() {
+  // Should we make a class lower than service other for transit?
+  static const TileLevel transit_level_ =
+      {3, stringToRoadClass("ServiceOther"), "transit",
+       midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                        .25,
+                                        static_cast<unsigned short>(kBinsDim)}};
+
+  return transit_level_;
+}
 
 // Returns the GraphId of the requested tile based on a lat,lng and a level.
 // If the level is not supported an invalid id will be returned.
 GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const uint8_t level) {
   GraphId id;
   const auto& tl = levels().find(level);
-  if (tl != levels_.end()) {
+  if (tl != levels().end()) {
     auto tile_id = tl->second.tiles.TileId(pointll);
     if (tile_id >= 0) {
       id = {static_cast<uint32_t>(tile_id), level, 0};
@@ -55,7 +63,7 @@ uint8_t TileHierarchy::get_level(const RoadClass roadclass) {
 
 // Get the max hierarchy level.
 uint8_t TileHierarchy::get_max_level() {
-  return transit_level_.level;
+  return GetTransitLevel().level;
 }
 
 // Returns all the GraphIds of the tiles which intersect the given bounding
