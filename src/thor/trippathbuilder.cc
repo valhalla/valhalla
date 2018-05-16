@@ -943,7 +943,7 @@ TripPath TripPathBuilder::Build(
               origin.date_time(), (transit_departure->departure_time() - origin_sec_from_mid),
               DateTime::get_tz_db().from_index(node->timezone()));
 
-          std::size_t found = dt.find_last_of(" "); // remove tz abbrev.
+          std::size_t found = dt.find_last_of(' '); // remove tz abbrev.
           if (found != std::string::npos) {
             dt = dt.substr(0, found);
           }
@@ -962,7 +962,7 @@ TripPath TripPathBuilder::Build(
                   origin_sec_from_mid,
               DateTime::get_tz_db().from_index(node->timezone()));
 
-          found = arrival_time.find_last_of(" "); // remove tz abbrev.
+          found = arrival_time.find_last_of(' '); // remove tz abbrev.
           if (found != std::string::npos) {
             arrival_time = arrival_time.substr(0, found);
           }

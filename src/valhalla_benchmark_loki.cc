@@ -132,7 +132,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   // argument checking and verification
-  for (auto arg : std::vector<std::string>{"config", "input_files"}) {
+  for (const auto& arg : std::vector<std::string>{"config", "input_files"}) {
     if (vm.count(arg) == 0) {
       std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";

@@ -38,10 +38,10 @@ struct valhalla_request_t {
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                  http_request_info_t& request_info,
                                  const valhalla_request_t& options);
-worker_t::result_t to_response(baldr::json::ArrayPtr array,
+worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
                                http_request_info_t& request_info,
                                const valhalla_request_t& options);
-worker_t::result_t to_response(baldr::json::MapPtr map,
+worker_t::result_t to_response(const baldr::json::MapPtr& map,
                                http_request_info_t& request_info,
                                const valhalla_request_t& options);
 worker_t::result_t to_response_json(const std::string& json,

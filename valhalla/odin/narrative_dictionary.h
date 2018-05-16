@@ -228,7 +228,7 @@ struct PostTransitionTransitVerbalSubset : PhraseSet {
  */
 class NarrativeDictionary {
 public:
-  NarrativeDictionary(const std::string language_tag,
+  NarrativeDictionary(const std::string& language_tag,
                       const boost::property_tree::ptree& narrative_pt);
 
   // Start

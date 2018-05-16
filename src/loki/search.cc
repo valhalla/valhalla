@@ -212,7 +212,7 @@ struct projector_t {
       float distance;
       std::tie(tile_index, bin_index, distance) = binner();
       if (distance > SEARCH_CUTOFF || (reachable.size() && distance > location.radius_ &&
-                                       distance > sqrt(reachable.back().sq_distance))) {
+                                       distance > std::sqrt(reachable.back().sq_distance))) {
         cur_tile = nullptr;
         break;
       }

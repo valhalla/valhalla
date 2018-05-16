@@ -9,6 +9,7 @@
 #include <queue>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "baldr/connectivity_map.h"
@@ -64,7 +65,7 @@ public:
   }
 
   void setSuccess(std::string s) {
-    success = s;
+    success = std::move(s);
   }
   void incPasses(void) {
     ++passes;
@@ -176,7 +177,7 @@ TripPath PathTest(GraphReader& reader,
         Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
     std::vector<PathLocation> path_location;
     valhalla::odin::DirectionsOptions directions_options;
-    for (auto loc : locations) {
+    for (const auto& loc : locations) {
       path_location.push_back(projections.at(loc));
       PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(),
                           reader);
@@ -400,7 +401,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
 // Returns the costing method (created from the dynamic cost factory).
 // Get the costing options. Merge in any request costing options that
 // override those in the config.
-valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
+valhalla::sif::cost_ptr_t get_costing(const CostFactory<DynamicCost>& factory,
                                       boost::property_tree::ptree& request,
                                       const std::string& costing) {
   std::string method_options = "costing_options." + costing;
@@ -501,7 +502,7 @@ int main(int argc, char* argv[]) {
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
   if (vm.count("json") == 0) {
-    for (auto arg : std::vector<std::string>{"origin", "destination", "type", "config"}) {
+    for (const auto& arg : std::vector<std::string>{"origin", "destination", "type", "config"}) {
       if (vm.count(arg) == 0) {
         std::cerr << "The <" << arg
                   << "> argument was not provided, but is mandatory when json is not provided\n\n";
@@ -628,7 +629,7 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
   const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_location;
-  for (auto loc : locations) {
+  for (const auto& loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
       // TODO: get transit level for transit costing

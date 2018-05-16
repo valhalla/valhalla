@@ -346,7 +346,7 @@ void statistics::insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
     ++index;
     // Individual Road Class Lengths
     for (auto rclass : rclasses) {
-      std::string roadStr = roadClassToString.at(rclass);
+      const std::string& roadStr = roadClassToString.at(rclass);
       sqlite3_bind_double(stmt, index, tile_lengths[tileid][rclass]);
       ++index;
     }
@@ -407,7 +407,7 @@ void statistics::insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
       sqlite3_bind_int(stmt, index, tileid);
       ++index;
       // Roadway type
-      auto type = roadClassToString.at(rclass);
+      const auto& type = roadClassToString.at(rclass);
       sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
       ++index;
       // One Way data
@@ -467,7 +467,7 @@ void statistics::insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
       sqlite3_bind_int(stmt, index, tileid);
       ++index;
       // Roadway type
-      auto type = roadClassToString.at(rclass);
+      const auto& type = roadClassToString.at(rclass);
       sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
       ++index;
       // Hazmat
@@ -532,7 +532,7 @@ void statistics::insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 
   // Fill DB with the country statistics
-  for (auto country : iso_codes) {
+  for (const auto& country : iso_codes) {
     uint8_t index = 1;
     sqlite3_reset(stmt);
     sqlite3_clear_bindings(stmt);
@@ -541,7 +541,7 @@ void statistics::insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
     ++index;
     // Individual Road Class Lengths
     for (auto rclass : rclasses) {
-      std::string roadStr = roadClassToString.at(rclass);
+      const std::string& roadStr = roadClassToString.at(rclass);
       sqlite3_bind_double(stmt, index, country_lengths[country][rclass]);
       ++index;
     }
@@ -580,7 +580,7 @@ void statistics::insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 
   // Fill the roadclass stats for countries
-  for (auto country : iso_codes) {
+  for (const auto& country : iso_codes) {
     for (auto rclass : rclasses) {
       uint8_t index = 1;
       sqlite3_reset(stmt);
@@ -589,7 +589,7 @@ void statistics::insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
       sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
       ++index;
       // Roadway type
-      auto type = roadClassToString.at(rclass);
+      const auto& type = roadClassToString.at(rclass);
       sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
       ++index;
       // One Way data
@@ -640,7 +640,7 @@ void statistics::insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 
   // Fill the truck roadclass stats for countries
-  for (auto country : iso_codes) {
+  for (const auto& country : iso_codes) {
     for (auto rclass : rclasses) {
       uint8_t index = 1;
       sqlite3_reset(stmt);
@@ -649,7 +649,7 @@ void statistics::insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
       sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
       ++index;
       // Roadway type
-      auto type = roadClassToString.at(rclass);
+      const auto& type = roadClassToString.at(rclass);
       sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
       ++index;
       // Hazmat

@@ -32,7 +32,7 @@ using namespace valhalla::midgard;
 namespace bpo = boost::program_options;
 
 void print_edge(GraphReader& reader,
-                cost_ptr_t costing,
+                const cost_ptr_t& costing,
                 const GraphId& current_id,
                 GraphId& pred_id,
                 Cost& edge_total,
@@ -109,6 +109,7 @@ void walk_edges(const std::string& shape,
   }
 
   std::vector<Measurement> measurements;
+  measurements.reserve(shape_pts.size());
   for (const auto& ll : shape_pts) {
     measurements.emplace_back(Measurement{ll, 10, 10});
   }
@@ -121,7 +122,7 @@ void walk_edges(const std::string& shape,
   const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_location;
   valhalla::odin::DirectionsOptions directions_options;
-  for (auto loc : locations) {
+  for (const auto& loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
       PathLocation::toPBF(path_location.back(), directions_options.mutable_locations()->Add(),
@@ -282,6 +283,7 @@ int main(int argc, char* argv[]) {
     std::cout << "                                 PATH " << i << std::endl;
     std::cout << "==========================================================================\n\n";
     std::vector<Measurement> measurements;
+    measurements.reserve(path.size());
     for (const auto& location : path) {
       measurements.emplace_back(Measurement{{location.latlng_.lng(), location.latlng_.lat()},
                                             matcher->config().get<float>("gps_accuracy") + 10,

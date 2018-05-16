@@ -42,7 +42,7 @@ namespace bpo = boost::program_options;
 // Returns the costing method (created from the dynamic cost factory).
 // Get the costing options. Merge in any request costing options that
 // override those in the config.
-valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
+valhalla::sif::cost_ptr_t get_costing(const CostFactory<DynamicCost>& factory,
                                       boost::property_tree::ptree& request,
                                       const std::string& costing) {
   std::string method_options = "costing_options." + costing;
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
   if (vm.count("json") == 0) {
-    for (auto arg : std::vector<std::string>{"origin", "type", "config"}) {
+    for (const auto& arg : std::vector<std::string>{"origin", "type", "config"}) {
       if (vm.count(arg) == 0) {
         std::cerr << "The <" << arg
                   << "> argument was not provided, but is mandatory when json is not provided\n\n";
@@ -278,7 +278,7 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
   const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
   std::vector<PathLocation> path_location;
-  for (auto loc : locations) {
+  for (const auto& loc : locations) {
     try {
       path_location.push_back(projections.at(loc));
     } catch (...) { exit(EXIT_FAILURE); }
@@ -287,7 +287,7 @@ int main(int argc, char* argv[]) {
   // Find avoid locations
   std::vector<GraphId> avoid_edges;
   const auto avoids = Search(avoid_locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
-  for (auto loc : avoid_locations) {
+  for (const auto& loc : avoid_locations) {
     for (auto& e : avoids.at(loc).edges) {
       avoid_edges.push_back(e.id);
     }

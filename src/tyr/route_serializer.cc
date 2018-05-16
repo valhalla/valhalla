@@ -282,7 +282,7 @@ json::ArrayPtr intersections(const valhalla::odin::TripDirections::Maneuver& man
     std::vector<IntersectionEdges> edges;
     if (i > 0 && !arrive) {
       for (uint32_t n = 0; n < node.intersecting_edge().size(); n++) {
-        auto intersecting_edge = node.intersecting_edge(n);
+        const auto& intersecting_edge = node.intersecting_edge(n);
 
         // TODO - how to get info on whether routing is allowed on this edge
         // (based on mode?).
@@ -378,7 +378,7 @@ std::string exits(const valhalla::odin::TripDirections::Maneuver& maneuver) {
   // Iterate through the signs for this maneuver
   uint32_t i = 0;
   std::string exits;
-  const auto sign = maneuver.sign();
+  const auto& sign = maneuver.sign();
   for (const auto& number : maneuver.sign().exit_number_elements()) {
     if (!exits.empty()) {
       exits += "; ";
@@ -393,7 +393,7 @@ std::string exits(const valhalla::odin::TripDirections::Maneuver& maneuver) {
 std::string destinations(const valhalla::odin::TripDirections::Maneuver& maneuver) {
   // Iterate through the signs for this maneuver
   std::string dest;
-  const auto sign = maneuver.sign();
+  const auto& sign = maneuver.sign();
   uint32_t i = 0;
   for (const auto& branch : maneuver.sign().exit_branch_elements()) {
     if (i == 0 && !dest.empty()) {
@@ -804,7 +804,7 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
 
       // Record street name and distance.. TODO - need to also worry about order
       if (maneuver.street_name().size() > 0) {
-        std::string name = maneuver.street_name(0);
+        const std::string& name = maneuver.street_name(0);
         auto man = maneuvers.find(name);
         if (man == maneuvers.end()) {
           maneuvers[name] = distance;

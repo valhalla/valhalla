@@ -431,7 +431,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   try {
 
-    for (const auto admin : osmdata.admins_) {
+    for (const auto& admin : osmdata.admins_) {
 
       std::unique_ptr<Geometry> geom;
       std::unique_ptr<std::vector<Geometry*>> lines(new std::vector<Geometry*>);
@@ -610,7 +610,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
-  for (const auto access : kCountryAccess) {
+  for (const auto& access : kCountryAccess) {
 
     const std::vector<int> column_values = access.second;
 

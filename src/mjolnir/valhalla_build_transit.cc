@@ -574,7 +574,7 @@ bool get_stop_pairs(Transit& tile,
     // origin
     auto origin_id = pair_pt.second.get<std::string>("origin_onestop_id");
 
-    if (origin_id.find("<") == std::string::npos) {
+    if (origin_id.find('<') == std::string::npos) {
       pair->set_origin_onestop_id(origin_id + "<");
     } else {
       pair->set_origin_onestop_id(origin_id);
@@ -590,7 +590,7 @@ bool get_stop_pairs(Transit& tile,
     // destination
     auto destination_id = pair_pt.second.get<std::string>("destination_onestop_id");
 
-    if (destination_id.find("<") == std::string::npos) {
+    if (destination_id.find('<') == std::string::npos) {
       pair->set_destination_onestop_id(destination_id + "<");
     } else {
       pair->set_destination_onestop_id(destination_id);
@@ -1467,8 +1467,8 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
                             const float dest_dist_traveled,
                             const std::vector<PointLL>& trip_shape,
                             const std::vector<float>& distances,
-                            const std::string origin_id,
-                            const std::string dest_id) {
+                            const std::string& origin_id,
+                            const std::string& dest_id) {
 
   std::list<PointLL> shape;
   if (shapeid != 0 && trip_shape.size() && stop_ll != endstop_ll &&
@@ -1593,8 +1593,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::unordered_set<GraphId>& all_tiles,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
                 const std::unordered_map<GraphId, uint16_t>& stop_access,
-                const std::unordered_map<uint32_t, Shape> shape_data,
-                const std::vector<float> distances,
+                const std::unordered_map<uint32_t, Shape>& shape_data,
+                const std::vector<float>& distances,
                 const std::vector<uint32_t>& route_types,
                 std::vector<OneStopTest>& onestoptests,
                 bool tile_within_one_tz,
@@ -1635,7 +1635,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     GraphId platform_pbf_id = stop_edges.second.origin_pbf_graphid;
     uint32_t platform_index = platform_pbf_id.id();
     const Transit_Node& platform = transit.nodes(platform_index);
-    std::string origin_id = platform.onestop_id();
+    const std::string& origin_id = platform.onestop_id();
     if (GraphId(platform.graphid()) != platform_pbf_id) {
       LOG_ERROR("Platform key not equal!");
     }

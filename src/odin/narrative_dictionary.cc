@@ -35,7 +35,7 @@ std::unordered_map<K, V> as_unordered_map(boost::property_tree::ptree const& pt,
 namespace valhalla {
 namespace odin {
 
-NarrativeDictionary::NarrativeDictionary(const std::string language_tag,
+NarrativeDictionary::NarrativeDictionary(const std::string& language_tag,
                                          const boost::property_tree::ptree& narrative_pt) {
   this->language_tag = language_tag;
   Load(narrative_pt);

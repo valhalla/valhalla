@@ -75,16 +75,16 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
 // Get the time from the inputed date.
 // date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_time(const std::string& date_time, const std::locale& locale) {
-  if (date_time.find("T") == std::string::npos) {
+  if (date_time.find('T') == std::string::npos) {
     return "";
   }
 
   std::string datetime;
-  std::size_t found = date_time.find_last_of("+"); // remove tz offset
+  std::size_t found = date_time.find_last_of('+'); // remove tz offset
   if (found != std::string::npos) {
     datetime = date_time.substr(0, found);
   } else {
-    found = date_time.find_last_of("-"); // remove tz offset
+    found = date_time.find_last_of('-'); // remove tz offset
     if (found != std::string::npos) {
       datetime = date_time.substr(0, found);
     } else {
@@ -114,7 +114,7 @@ std::string get_localized_time(const std::string& date_time, const std::locale& 
 
     // seconds is too granular so we try to remove
     if (time.find("PM") == std::string::npos && time.find("AM") == std::string::npos) {
-      size_t found = time.find_last_of(":");
+      size_t found = time.find_last_of(':');
       if (found != std::string::npos) {
         time = time.substr(0, found);
       } else {
@@ -138,16 +138,16 @@ std::string get_localized_time(const std::string& date_time, const std::locale& 
 // Get the date from the inputed date.
 // date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_date(const std::string& date_time, const std::locale& locale) {
-  if (date_time.find("T") == std::string::npos) {
+  if (date_time.find('T') == std::string::npos) {
     return "";
   }
 
   std::string datetime;
-  std::size_t found = date_time.find_last_of("+"); // remove tz offset
+  std::size_t found = date_time.find_last_of('+'); // remove tz offset
   if (found != std::string::npos) {
     datetime = date_time.substr(0, found);
   } else {
-    found = date_time.find_last_of("-"); // remove tz offset
+    found = date_time.find_last_of('-'); // remove tz offset
     if (found != std::string::npos) {
       datetime = date_time.substr(0, found);
     } else {

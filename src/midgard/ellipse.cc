@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "valhalla/midgard/ellipse.h"
 
 namespace valhalla {
@@ -20,8 +22,8 @@ Ellipse<coord_t>::Ellipse(const coord_t& p1, const coord_t& p2, float angle) {
   s = sinf(angleRad);
 
   // Find the half lengths of the semi-major and semi-minor axes
-  float dx = fabs(p2.x() - p1.x()) * 0.5;
-  float dy = fabs(p2.y() - p1.y()) * 0.5;
+  float dx = std::fabs(p2.x() - p1.x()) * 0.5;
+  float dy = std::fabs(p2.y() - p1.y()) * 0.5;
   if (dx >= dy) {
     a = dx;
     b = dy;
@@ -79,7 +81,7 @@ Ellipse<coord_t>::Intersect(const LineSegment2<coord_t>& seg, coord_t& pt0, coor
     // 2 distinct real-valued roots. Solve for the roots and see if
     // they fall along the line segment
     uint32_t n = 0;
-    float q = sqrt(d);
+    float q = std::sqrt(d);
     float t = (-q1 - q) / (2 * q2);
     if (0 <= t && t <= 1) {
       // Intersection occurs along line segment
