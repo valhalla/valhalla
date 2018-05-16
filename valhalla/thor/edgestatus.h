@@ -3,31 +3,30 @@
 
 #include <unordered_map>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
 
 namespace valhalla {
 namespace thor {
 
 // Edge label status
 enum class EdgeSet : uint8_t {
-  kUnreached = 0,   // Unreached - not yet encountered in search
-  kPermanent = 1,   // Permanent - shortest path to this edge has been found
-  kTemporary = 2    // Temporary - edge has been encountered but there could
-                    //   still be a shorter path to this edge. This edge will
-                    //   be "adjacent" to an edge that is permanently labeled.
+  kUnreached = 0, // Unreached - not yet encountered in search
+  kPermanent = 1, // Permanent - shortest path to this edge has been found
+  kTemporary = 2  // Temporary - edge has been encountered but there could
+                  //   still be a shorter path to this edge. This edge will
+                  //   be "adjacent" to an edge that is permanently labeled.
 };
 
 // Store the edge label status and its index in the EdgeLabels list
 struct EdgeStatusInfo {
   uint32_t index_ : 28;
-  uint32_t set_   : 4;
+  uint32_t set_ : 4;
 
-  EdgeStatusInfo()
-    : index_(0),
-      set_(0) {
+  EdgeStatusInfo() : index_(0), set_(0) {
   }
 
   EdgeStatusInfo(const EdgeSet set, const uint32_t index) {
-    set_   = static_cast<uint32_t>(set);
+    set_ = static_cast<uint32_t>(set);
     index_ = index;
   }
 
@@ -48,7 +47,7 @@ struct EdgeStatusInfo {
  * edges. This reduces the number of map lookups.
  */
 class EdgeStatus {
- public:
+public:
   /**
    * Destructor. Delete any allocated EdgeStatusInfo arrays.
    */
@@ -62,7 +61,7 @@ class EdgeStatus {
   void clear() {
     // Delete any allocated arrays for tiles within the map.
     for (auto iter : edgestatus_) {
-      delete [] iter.second;
+      delete[] iter.second;
     }
     edgestatus_.clear();
   }
@@ -74,17 +73,19 @@ class EdgeStatus {
    * @param  index    Index of the edge label.
    * @param  tile     Graph tile of the directed edge.
    */
-  void Set(const baldr::GraphId& edgeid, const EdgeSet set,
-           const uint32_t index, const baldr::GraphTile* tile) {
+  void Set(const baldr::GraphId& edgeid,
+           const EdgeSet set,
+           const uint32_t index,
+           const baldr::GraphTile* tile) {
     auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
-      p->second[edgeid.id()] = { set, index };
+      p->second[edgeid.id()] = {set, index};
     } else {
       // Tile is not in the map. Add an array of EdgeStatusInfo, sized to
       // the number of directed edges in the specified tile.
       auto inserted = edgestatus_.emplace(edgeid.tile_value(),
-          new EdgeStatusInfo[tile->header()->directededgecount()]);
-      inserted.first->second[edgeid.id()] = { set, index };
+                                          new EdgeStatusInfo[tile->header()->directededgecount()]);
+      inserted.first->second[edgeid.id()] = {set, index};
     }
   }
 
@@ -129,19 +130,19 @@ class EdgeStatus {
       // Tile is not in the map. Add an array of EdgeStatusInfo, sized to
       // the number of directed edges in the specified tile.
       auto inserted = edgestatus_.emplace(edgeid.tile_value(),
-          new EdgeStatusInfo[tile->header()->directededgecount()]);
+                                          new EdgeStatusInfo[tile->header()->directededgecount()]);
       return &(inserted.first->second)[edgeid.id()];
     }
   }
 
- private:
+private:
   // Edge status - keys are the tile Ids (level and tile Id) and the
   // values are dynamically allocated arrays of EdgeStatusInfo (sized
   // based on the directed edge count within the tile).
   std::unordered_map<uint32_t, EdgeStatusInfo*> edgestatus_;
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_EDGESTATUS_H_
+#endif // VALHALLA_THOR_EDGESTATUS_H_

@@ -1,9 +1,9 @@
-#include "thor/worker.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
+#include "thor/worker.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
@@ -15,70 +15,73 @@ using namespace valhalla::thor;
 
 namespace {
 
-  constexpr double kMilePerMeter = 0.000621371;
-
+constexpr double kMilePerMeter = 0.000621371;
 }
 
 namespace valhalla {
-  namespace thor {
+namespace thor {
 
-    constexpr uint32_t kCostMatrixThreshold = 5;
+constexpr uint32_t kCostMatrixThreshold = 5;
 
-    std::string thor_worker_t::matrix(valhalla_request_t& request) {
-      parse_locations(request);
-      auto costing = parse_costing(request);
+std::string thor_worker_t::matrix(valhalla_request_t& request) {
+  parse_locations(request);
+  auto costing = parse_costing(request);
 
-      if (!request.options.do_not_track())
-        valhalla::midgard::logging::Log("matrix_type::" + odin::DirectionsOptions::Action_Name(request.options.action()), " [ANALYTICS] ");
+  if (!request.options.do_not_track()) {
+    valhalla::midgard::logging::Log(
+        "matrix_type::" + odin::DirectionsOptions::Action_Name(request.options.action()),
+        " [ANALYTICS] ");
+  }
 
-      // Parse out units; if none specified, use kilometers
-      double distance_scale = kKmPerMeter;
-      if (request.options.units() == odin::DirectionsOptions::miles)
-        distance_scale = kMilePerMeter;
+  // Parse out units; if none specified, use kilometers
+  double distance_scale = kKmPerMeter;
+  if (request.options.units() == odin::DirectionsOptions::miles) {
+    distance_scale = kMilePerMeter;
+  }
 
-      json::MapPtr json;
-      //do the real work
-      std::vector<TimeDistance> time_distances;
-      auto costmatrix = [&]() {
-        thor::CostMatrix matrix;
-        return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, mode_costing,
-                                    mode, max_matrix_distance.find(costing)->second);
-      };
-      auto timedistancematrix = [&]() {
-        thor::TimeDistanceMatrix matrix;
-        return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader, mode_costing,
-                                    mode, max_matrix_distance.find(costing)->second);
-      };
-      switch (source_to_target_algorithm) {
-        case SELECT_OPTIMAL:
-          //TODO - Do further performance testing to pick the best algorithm for the job
-          switch (mode) {
-            case TravelMode::kPedestrian:
-            case TravelMode::kBicycle:
-              // Use CostMatrix if number of sources and number of targets
-              // exceeds some threshold
-              if (request.options.sources().size() > kCostMatrixThreshold &&
-                  request.options.targets().size() > kCostMatrixThreshold) {
-                time_distances = costmatrix();
-              } else {
-                time_distances = timedistancematrix();
-              }
-              break;
-            case TravelMode::kPublicTransit:
-              time_distances = timedistancematrix();
-              break;
-            default:
-              time_distances = costmatrix();
+  json::MapPtr json;
+  // do the real work
+  std::vector<TimeDistance> time_distances;
+  auto costmatrix = [&]() {
+    thor::CostMatrix matrix;
+    return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
+                                 mode_costing, mode, max_matrix_distance.find(costing)->second);
+  };
+  auto timedistancematrix = [&]() {
+    thor::TimeDistanceMatrix matrix;
+    return matrix.SourceToTarget(request.options.sources(), request.options.targets(), reader,
+                                 mode_costing, mode, max_matrix_distance.find(costing)->second);
+  };
+  switch (source_to_target_algorithm) {
+    case SELECT_OPTIMAL:
+      // TODO - Do further performance testing to pick the best algorithm for the job
+      switch (mode) {
+        case TravelMode::kPedestrian:
+        case TravelMode::kBicycle:
+          // Use CostMatrix if number of sources and number of targets
+          // exceeds some threshold
+          if (request.options.sources().size() > kCostMatrixThreshold &&
+              request.options.targets().size() > kCostMatrixThreshold) {
+            time_distances = costmatrix();
+          } else {
+            time_distances = timedistancematrix();
           }
           break;
-        case COST_MATRIX:
-          time_distances = costmatrix();
-          break;
-        case TIME_DISTANCE_MATRIX:
+        case TravelMode::kPublicTransit:
           time_distances = timedistancematrix();
           break;
+        default:
+          time_distances = costmatrix();
       }
-      return tyr::serializeMatrix(request, time_distances, distance_scale);
-    }
+      break;
+    case COST_MATRIX:
+      time_distances = costmatrix();
+      break;
+    case TIME_DISTANCE_MATRIX:
+      time_distances = timedistancematrix();
+      break;
   }
+  return tyr::serializeMatrix(request, time_distances, distance_scale);
 }
+} // namespace thor
+} // namespace valhalla

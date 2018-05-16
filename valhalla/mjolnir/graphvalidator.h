@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHOPTIMIZER_H
 #define VALHALLA_MJOLNIR_GRAPHOPTIMIZER_H
 
-#include <cstdint>
 #include <boost/property_tree/ptree.hpp>
+#include <cstdint>
 
 namespace valhalla {
 namespace mjolnir {
@@ -13,14 +13,14 @@ namespace mjolnir {
  * TODO - generate statistics, quality measures.
  */
 class GraphValidator {
- public:
+public:
   /**
    * Validate the graph tiles.
    */
   static void Validate(const boost::property_tree::ptree& pt);
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_GRAPHOPTIMIZER_H
+#endif // VALHALLA_MJOLNIR_GRAPHOPTIMIZER_H

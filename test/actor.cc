@@ -2,8 +2,8 @@
 
 #include <stdexcept>
 
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "tyr/actor.h"
 
@@ -11,16 +11,17 @@ using namespace valhalla;
 
 namespace {
 
-  boost::property_tree::ptree json_to_pt(const std::string& json) {
-    std::stringstream ss; ss << json;
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_json(ss, pt);
-    return pt;
-  }
+boost::property_tree::ptree json_to_pt(const std::string& json) {
+  std::stringstream ss;
+  ss << json;
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(ss, pt);
+  return pt;
+}
 
-  boost::property_tree::ptree make_conf() {
-    //fake up config against pine grove traffic extract
-    return json_to_pt(R"({
+boost::property_tree::ptree make_conf() {
+  // fake up config against pine grove traffic extract
+  return json_to_pt(R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "loki":{
         "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available"],
@@ -50,64 +51,66 @@ namespace {
         "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
       }
     })");
-  }
-
-  void test_actor() {
-    auto conf = make_conf();
-    tyr::actor_t actor(conf);
-
-    actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
-      {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
-    actor.cleanup();
-    auto route_json = actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
-          {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
-    actor.cleanup();
-    auto route = json_to_pt(route_json);
-    route_json.find("Tulpehocken");
-
-    actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
-      {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
-    actor.cleanup();
-    auto attributes_json = actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
-      {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
-    actor.cleanup();
-    auto attributes = json_to_pt(attributes_json);
-    attributes_json.find("Tulpehocken");
-
-    actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
-      {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
-    actor.cleanup();
-    auto transit_json = actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
-      {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
-    actor.cleanup();
-    auto transit = json_to_pt(transit_json);
-    transit_json.find(std::to_string(false));
-
-    //TODO: test the rest of them
-
-  }
-
-  void test_interrupt() {
-    auto conf = make_conf();
-    tyr::actor_t actor(conf);
-    struct test_exception_t {};
-
-    try {
-      actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
-        {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})", []()->void{throw test_exception_t{};});
-      throw std::logic_error("this should have thrown already");
-    } catch (const test_exception_t& e) { }
-
-    try {
-      actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
-        {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})", []()->void{throw test_exception_t{};});
-      throw std::logic_error("this should have thrown already");
-    } catch (const test_exception_t& e) { }
-
-    //TODO: test the rest of them
-  }
-
 }
+
+void test_actor() {
+  auto conf = make_conf();
+  tyr::actor_t actor(conf);
+
+  actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+      {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
+  actor.cleanup();
+  auto route_json = actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+          {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
+  actor.cleanup();
+  auto route = json_to_pt(route_json);
+  route_json.find("Tulpehocken");
+
+  actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
+      {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
+  actor.cleanup();
+  auto attributes_json = actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
+      {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
+  actor.cleanup();
+  auto attributes = json_to_pt(attributes_json);
+  attributes_json.find("Tulpehocken");
+
+  actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
+      {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
+  actor.cleanup();
+  auto transit_json =
+      actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
+      {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
+  actor.cleanup();
+  auto transit = json_to_pt(transit_json);
+  transit_json.find(std::to_string(false));
+
+  // TODO: test the rest of them
+}
+
+void test_interrupt() {
+  auto conf = make_conf();
+  tyr::actor_t actor(conf);
+  struct test_exception_t {};
+
+  try {
+    actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+        {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})",
+                []() -> void { throw test_exception_t{}; });
+    throw std::logic_error("this should have thrown already");
+  } catch (const test_exception_t& e) {}
+
+  try {
+    actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
+        {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})",
+                           []() -> void { throw test_exception_t{}; });
+    throw std::logic_error("this should have thrown already");
+  } catch (const test_exception_t& e) {}
+
+  // TODO: test the rest of them
+}
+
+} // namespace
 
 int main() {
   test::suite suite("actor");

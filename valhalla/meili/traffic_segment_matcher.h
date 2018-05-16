@@ -1,15 +1,15 @@
 #ifndef MMP_TRAFFIC_SEGMENT_MATCHER_H_
 #define MMP_TRAFFIC_SEGMENT_MATCHER_H_
 
+#include <boost/property_tree/ptree.hpp>
 #include <cstdint>
-#include <string>
-#include <vector>
 #include <list>
 #include <sstream>
-#include <boost/property_tree/ptree.hpp>
+#include <string>
+#include <vector>
 
-#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/map_matcher_factory.h>
@@ -43,8 +43,7 @@ struct traffic_segment_t {
  * then forms the traffic segments associated to those edges.
  */
 class TrafficSegmentMatcher {
- public:
-
+public:
   /**
    * Constructor.
    * @param  config  Boost property tree - config information.
@@ -54,7 +53,7 @@ class TrafficSegmentMatcher {
   /**
    * Do-nothing-destructor
    */
-  virtual ~TrafficSegmentMatcher() {};
+  virtual ~TrafficSegmentMatcher(){};
 
   /**
    * Matches the GPS trace to Valhalla edges and then associates those
@@ -70,8 +69,9 @@ class TrafficSegmentMatcher {
    * @param  request request with data {"trace":[{"lat":0,"lon":0,time:0},...]}
    * @return the list of measurements from the json trace
    */
-  static std::vector<Measurement> parse_measurements(const boost::property_tree::ptree request,
-    float default_accuracy, float default_search_radius);
+  static std::vector<Measurement> parse_measurements(const boost::property_tree::ptree& request,
+                                                     float default_accuracy,
+                                                     float default_search_radius);
 
   /**
    * Jsonifies a vector of traffic segments
@@ -80,7 +80,7 @@ class TrafficSegmentMatcher {
    */
   static std::string serialize(const std::vector<traffic_segment_t>& traffic_segments);
 
- protected:
+protected:
   /**
    * Updates the matching results include the begin and end points of the edges on the path
    * in doing so it interpolates the times at those points and gives back a distance along
@@ -90,8 +90,10 @@ class TrafficSegmentMatcher {
    * @param  matcher the matcher used to generate the match
    * @return the interpolation points one for each match result and node of each path edge
    */
-  virtual std::list<std::vector<interpolation_t> > interpolate_matches(const std::vector<MatchResult>& matches,
-    std::vector<EdgeSegment>& edges, const std::shared_ptr<MapMatcher>& matcher) const;
+  virtual std::list<std::vector<interpolation_t>>
+  interpolate_matches(const std::vector<MatchResult>& matches,
+                      std::vector<EdgeSegment>& edges,
+                      const std::shared_ptr<MapMatcher>& matcher) const;
 
   /**
    * Compute queue length. Determine where (and if) speed drops below the
@@ -107,18 +109,20 @@ class TrafficSegmentMatcher {
                            const float threshold) const;
 
   /**
-   * Turns updated matching results with their distances into a list of segments with interpolated times
+   * Turns updated matching results with their distances into a list of segments with interpolated
+   * times
    * @param interpolations the interpolation points
    * @param reader the graph reader with which we can get access to the segments for a given edge
    * @return the vector of traffic segments along the matched path
    */
-  virtual std::vector<traffic_segment_t> form_segments(const std::list<std::vector<interpolation_t> >& interpolations,
-    baldr::GraphReader& reader) const;
+  virtual std::vector<traffic_segment_t>
+  form_segments(const std::list<std::vector<interpolation_t>>& interpolations,
+                baldr::GraphReader& reader) const;
 
   valhalla::meili::MapMatcherFactory matcher_factory;
   std::unordered_set<std::string> customizable;
 };
 
-}
-}
+} // namespace meili
+} // namespace valhalla
 #endif // MMP_TRAFFIC_SEGMENT_MATCHER_H_

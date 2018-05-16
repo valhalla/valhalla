@@ -3,11 +3,11 @@
 
 #include <list>
 
-#include <valhalla/proto/trippath.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/enhancedtrippath.h>
+#include <valhalla/odin/maneuver.h>
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -17,7 +17,7 @@ namespace odin {
  * and trip path.
  */
 class DirectionsBuilder {
- public:
+public:
   DirectionsBuilder();
 
   /**
@@ -31,11 +31,9 @@ class DirectionsBuilder {
    *                           language.
    * @param trip_path The trip path - list of nodes, edges, attributes and shape.
    */
-  TripDirections Build(const DirectionsOptions& directions_options,
-                       TripPath& trip_path);
+  TripDirections Build(const DirectionsOptions& directions_options, TripPath& trip_path);
 
- protected:
-
+protected:
   /**
    * Update the heading of ~0 length edges.
    *
@@ -53,14 +51,12 @@ class DirectionsBuilder {
    *                  to populate the trip directions.
    * @returns the trip directions.
    */
-  TripDirections PopulateTripDirections(
-      const DirectionsOptions& directions_options, EnhancedTripPath* etp,
-      std::list<Maneuver>& maneuvers);
-
+  TripDirections PopulateTripDirections(const DirectionsOptions& directions_options,
+                                        EnhancedTripPath* etp,
+                                        std::list<Maneuver>& maneuvers);
 };
 
-}
-}
+} // namespace odin
+} // namespace valhalla
 
-#endif  // VALHALLA_ODIN_DIRECTIONSBUILDER_H_
-
+#endif // VALHALLA_ODIN_DIRECTIONSBUILDER_H_

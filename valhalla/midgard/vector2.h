@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MIDGARD_VECTOR2_H_
 #define VALHALLA_MIDGARD_VECTOR2_H_
 
-#include <stdarg.h>
 #include <math.h>
+#include <stdarg.h>
 
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/point2.h>
@@ -15,13 +15,11 @@ namespace midgard {
  * @author  David W. Nesbitt
  */
 class Vector2 {
- public:
+public:
   /**
    * Default constructor
    */
-  Vector2()
-   : x_(0.0f),
-     y_(0.0f) {
+  Vector2() : x_(0.0f), y_(0.0f) {
   }
 
   /**
@@ -29,9 +27,7 @@ class Vector2 {
    * origin to the point.
    * @param   p  Point.
    */
-  Vector2(const Point2& p)
-    : x_(p.x()),
-      y_(p.y()) {
+  Vector2(const Point2& p) : x_(p.x()), y_(p.y()) {
   }
 
   /**
@@ -39,9 +35,7 @@ class Vector2 {
    * @param   x   x component of the vector.
    * @param   y   y component of the vector.
    */
-  Vector2(const float x, const float y)
-    : x_(x),
-      y_(y) {
+  Vector2(const float x, const float y) : x_(x), y_(y) {
   }
 
   /**
@@ -49,18 +43,14 @@ class Vector2 {
    * @param   from  Point at origin of the vector.
    * @param   to    Point at end of vector
    */
-  Vector2(const Point2& from, const Point2& to)
-    : x_(to.x() - from.x()),
-      y_(to.y() - from.y()) {
+  Vector2(const Point2& from, const Point2& to) : x_(to.x() - from.x()), y_(to.y() - from.y()) {
   }
 
   /**
    * Copy constructor.
    * @param   w  Vector to copy to the new vector.
    */
-  Vector2(const Vector2& w)
-    : x_(w.x()),
-      y_(w.y()) {
+  Vector2(const Vector2& w) : x_(w.x()), y_(w.y()) {
   }
 
   /**
@@ -68,7 +58,7 @@ class Vector2 {
    * @param   w  Vector to copy to the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator =(const Vector2& w) {
+  Vector2& operator=(const Vector2& w) {
     x_ = w.x();
     y_ = w.y();
     return *this;
@@ -142,7 +132,7 @@ class Vector2 {
    * @param   w  Vector to add to the current vector.
    * @return   Returns the resulting vector.
    */
-  Vector2 operator +(const Vector2& w) const {
+  Vector2 operator+(const Vector2& w) const {
     return Vector2(x_ + w.x(), y_ + w.y());
   }
 
@@ -151,7 +141,7 @@ class Vector2 {
    * @param   w  Vector to add to the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator +=(const Vector2& w) {
+  Vector2& operator+=(const Vector2& w) {
     x_ += w.x();
     y_ += w.y();
     return *this;
@@ -163,7 +153,7 @@ class Vector2 {
    * @param   w  Vector to subtract from the current vector.
    * @return   Returns the resulting vector.
    */
-  Vector2 operator -(const Vector2& w) const {
+  Vector2 operator-(const Vector2& w) const {
     return Vector2(x_ - w.x(), y_ - w.y());
   }
 
@@ -172,7 +162,7 @@ class Vector2 {
    * @param   w  Vector to subtract from the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator -=(const Vector2& w) {
+  Vector2& operator-=(const Vector2& w) {
     x_ -= w.x();
     y_ -= w.y();
     return *this;
@@ -184,7 +174,7 @@ class Vector2 {
    * @param   scalar   Scalar to muliply the vector with.
    * @return  Returns the resulting vector
    */
-  Vector2 operator *(const float scalar) const {
+  Vector2 operator*(const float scalar) const {
     return Vector2(x_ * scalar, y_ * scalar);
   }
 
@@ -193,7 +183,7 @@ class Vector2 {
    * @param   scalar   Scalar to muliply the vector with.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator *=(const float scalar) {
+  Vector2& operator*=(const float scalar) {
     x_ *= scalar;
     y_ *= scalar;
     return *this;
@@ -205,7 +195,7 @@ class Vector2 {
    * @return  Returns true if vector w equals the current vector,
    *          false otherwise.
    */
-  bool operator ==(const Vector2& w) const {
+  bool operator==(const Vector2& w) const {
     return (x_ == w.x() && y_ == w.y());
   }
 
@@ -314,7 +304,7 @@ class Vector2 {
     return (d - (normal * (2.0f * (d.Dot(normal)))));
   }
 
- private:
+private:
   // x,y coordinate of the point
   float x_;
   float y_;
@@ -327,9 +317,9 @@ class Vector2 {
  * @param   v  Vector to be multiplied with the scalar
  * @return  Returns the resulting vector
  */
-Vector2 operator *(float s, const Vector2 &v);
+Vector2 operator*(float s, const Vector2& v);
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_VECTOR2_H_
+#endif // VALHALLA_MIDGARD_VECTOR2_H_

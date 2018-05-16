@@ -2,22 +2,22 @@
 #define VALHALLA_THOR_ASTAR_H_
 
 #include <cstdint>
-#include <vector>
 #include <map>
+#include <memory>
 #include <unordered_map>
 #include <utility>
-#include <memory>
+#include <vector>
 
+#include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/pathinfo.h>
 #include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
 namespace thor {
@@ -32,7 +32,7 @@ namespace thor {
  * are also used for time-dependent paths.
  */
 class AStarPathAlgorithm : public PathAlgorithm {
- public:
+public:
   /**
    * Constructor.
    */
@@ -55,9 +55,10 @@ class AStarPathAlgorithm : public PathAlgorithm {
    *          each edge).
    */
   virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-          odin::Location& dest, baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+                                            odin::Location& dest,
+                                            baldr::GraphReader& graphreader,
+                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                                            const sif::TravelMode mode);
 
   /**
    * Clear the temporary information generated during path construction.
@@ -73,10 +74,10 @@ class AStarPathAlgorithm : public PathAlgorithm {
     max_label_count_ = max_count;
   }
 
- protected:
-  uint32_t max_label_count_;    // Max label count to allow
-  sif::TravelMode mode_;        // Current travel mode
-  uint8_t travel_type_;         // Current travel type
+protected:
+  uint32_t max_label_count_; // Max label count to allow
+  sif::TravelMode mode_;     // Current travel mode
+  uint8_t travel_type_;      // Current travel type
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;
@@ -131,8 +132,10 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @param   dest        Location information of the destination.
    */
   void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node, const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx, const bool from_transition,
+                     const baldr::GraphId& node,
+                     const sif::EdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const bool from_transition,
                      const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
@@ -142,9 +145,8 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
-  virtual void SetOrigin(baldr::GraphReader& graphreader,
-                 odin::Location& origin,
-                 const odin::Location& dest);
+  virtual void
+  SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin, const odin::Location& dest);
 
   /**
    * Set the destination edge(s).
@@ -152,8 +154,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  virtual uint32_t SetDestination(baldr::GraphReader& graphreader,
-                          const odin::Location& dest);
+  virtual uint32_t SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the
@@ -166,7 +167,7 @@ class AStarPathAlgorithm : public PathAlgorithm {
   virtual std::vector<PathInfo> FormPath(const uint32_t dest);
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_ASTAR_H_
+#endif // VALHALLA_THOR_ASTAR_H_

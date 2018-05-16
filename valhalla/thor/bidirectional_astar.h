@@ -2,19 +2,19 @@
 #define VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 
 #include <cstdint>
-#include <vector>
 #include <map>
+#include <memory>
 #include <unordered_map>
 #include <utility>
-#include <memory>
+#include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
+#include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
-#include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/thor/pathalgorithm.h>
 
 namespace valhalla {
 namespace thor {
@@ -33,7 +33,7 @@ struct CandidateConnection {
  * Bidirectional A* algorithm. Method for finding least-cost path.
  */
 class BidirectionalAStar : public PathAlgorithm {
- public:
+public:
   /**
    * Constructor.
    */
@@ -56,16 +56,17 @@ class BidirectionalAStar : public PathAlgorithm {
    *          each edge).
    */
   std::vector<PathInfo> GetBestPath(odin::Location& origin,
-           odin::Location& dest, baldr::GraphReader& graphreader,
-           const std::shared_ptr<sif::DynamicCost>* mode_costing,
-           const sif::TravelMode mode);
+                                    odin::Location& dest,
+                                    baldr::GraphReader& graphreader,
+                                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                                    const sif::TravelMode mode);
 
   /**
    * Clear the temporary information generated during path construction.
    */
   void Clear();
 
- protected:
+protected:
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -115,32 +116,34 @@ class BidirectionalAStar : public PathAlgorithm {
    * Expand from the node along the forward search path.
    */
   void ExpandForward(baldr::GraphReader& graphreader,
-           const baldr::GraphId& node, const sif::BDEdgeLabel& pred,
-           const uint32_t pred_idx, const bool from_transition);
+                     const baldr::GraphId& node,
+                     const sif::BDEdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const bool from_transition);
 
   /**
    * Expand from the node along the reverse search path.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
-           const baldr::GraphId& node, const sif::BDEdgeLabel& pred,
-           const uint32_t pred_idx, const baldr::DirectedEdge* opp_pred_edge,
-           const bool from_transition);
+                     const baldr::GraphId& node,
+                     const sif::BDEdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const baldr::DirectedEdge* opp_pred_edge,
+                     const bool from_transition);
 
   /**
    * Add edges at the origin to the forward adjacency list.
    * @param  graphreader  Graph tile reader.
    * @param  origin       Location information of the destination
    */
-  void SetOrigin(baldr::GraphReader& graphreader,
-                 odin::Location& origin);
+  void SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin);
 
   /**
    * Add destination edges to the reverse path adjacency list.
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination
    */
-  void SetDestination(baldr::GraphReader& graphreader,
-                       const odin::Location& dest);
+  void SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
 
   /**
    * The edge on the forward search connects to a reached edge on the reverse
@@ -158,20 +161,20 @@ class BidirectionalAStar : public PathAlgorithm {
    */
   void SetReverseConnection(const sif::BDEdgeLabel& pred);
 
-   /**
-    * Form the path from the adjacency lists. Recovers the path from the
-    * where the paths meet back towards the origin then reverses this path.
-    * The path from where the paths meet to the destination is then appended
-    * using the opposing edges (so the path is traversed forward).
-    * @param   graphreader  Graph tile reader (for getting opposing edges).
-    * @return  Returns the path info, a list of GraphIds representing the
-    *          directed edges along the path - ordered from origin to
-    *          destination - along with travel modes and elapsed time.
-    */
+  /**
+   * Form the path from the adjacency lists. Recovers the path from the
+   * where the paths meet back towards the origin then reverses this path.
+   * The path from where the paths meet to the destination is then appended
+   * using the opposing edges (so the path is traversed forward).
+   * @param   graphreader  Graph tile reader (for getting opposing edges).
+   * @return  Returns the path info, a list of GraphIds representing the
+   *          directed edges along the path - ordered from origin to
+   *          destination - along with travel modes and elapsed time.
+   */
   std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader);
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
+#endif // VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_

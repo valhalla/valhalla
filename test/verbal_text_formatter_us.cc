@@ -1,6 +1,6 @@
-#include "test.h"
-#include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
+#include "baldr/verbal_text_formatter.h"
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -9,25 +9,24 @@ namespace {
 
 // Sub class to test protected methods
 class VerbalTextFormatterUsTest : public VerbalTextFormatterUs {
- public:
-  VerbalTextFormatterUsTest(const std::string& country_code,
-                          const std::string& state_code)
+public:
+  VerbalTextFormatterUsTest(const std::string& country_code, const std::string& state_code)
       : VerbalTextFormatterUs(country_code, state_code) {
   }
 
-  std::string FormInterstateTts(const std::string& source) const{
+  std::string FormInterstateTts(const std::string& source) const {
     return VerbalTextFormatterUs::FormInterstateTts(source);
   }
 
-  std::string FormUsHighwayTts(const std::string& source) const{
+  std::string FormUsHighwayTts(const std::string& source) const {
     return VerbalTextFormatterUs::FormUsHighwayTts(source);
   }
 
-  std::string ProcessStatesTts(const std::string& source) const{
+  std::string ProcessStatesTts(const std::string& source) const {
     return VerbalTextFormatterUs::ProcessStatesTts(source);
   }
 
-  std::string ProcessCountysTts(const std::string& source) const{
+  std::string ProcessCountysTts(const std::string& source) const {
     return VerbalTextFormatterUs::ProcessCountysTts(source);
   }
 
@@ -43,18 +42,17 @@ class VerbalTextFormatterUsTest : public VerbalTextFormatterUs {
     return VerbalTextFormatterUs::FormNumberSplitTts(source);
   }
 
-  std::string FormLeadingOhTts(const std::string& source) const{
+  std::string FormLeadingOhTts(const std::string& source) const {
     return VerbalTextFormatterUs::FormLeadingOhTts(source);
   }
-
 };
 
 void TryFormInterstateTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "PA");
   string tts = formatter_test.FormInterstateTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormInterstateTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormInterstateTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -77,8 +75,8 @@ void TryFormUsHighwayTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "PA");
   string tts = formatter_test.FormUsHighwayTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormUsHighwayTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormUsHighwayTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -95,8 +93,8 @@ void TryProcessStatesTts(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "");
   string tts = formatter_test.ProcessStatesTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect ProcessStatesTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect ProcessStatesTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -161,15 +159,14 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("WV 7", "West Virginia 7");
   TryProcessStatesTts("WI 30", "Wisconsin 30");
   TryProcessStatesTts("WY 212", "Wyoming 212");
-
 }
 
 void TryProcessCountysTts(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "");
   string tts = formatter_test.ProcessCountysTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect ProcessCountysTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect ProcessCountysTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -200,15 +197,14 @@ void TestProcessCountysTts() {
   TryProcessCountysTts("Co 200", "County Road 200");
   TryProcessCountysTts("Co 200A", "County Road 200A");
   TryProcessCountysTts("Co 200BAD", "Co 200BAD");
-
 }
 
 void TryFormThousandTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "PA");
   string tts = formatter_test.ProcessThousandTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormThousandTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormThousandTts - EXPECTED: " + expected + "  |  FORMED: " +
+                             tts);
   }
 }
 
@@ -236,8 +232,8 @@ void TryFormHundredTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "MD");
   string tts = formatter_test.ProcessHundredTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormHundredTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormHundredTts - EXPECTED: " + expected + "  |  FORMED: " +
+                             tts);
   }
 }
 
@@ -265,8 +261,8 @@ void TryFormNumberSplitTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "PA");
   string tts = formatter_test.FormNumberSplitTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormNumberSplitTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormNumberSplitTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -309,8 +305,8 @@ void TryFormLeadingOhTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "PA");
   string tts = formatter_test.FormLeadingOhTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormLeadingOhTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormLeadingOhTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -328,8 +324,7 @@ void TryFormat(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "PA");
   string tts = formatter_test.Format(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 
@@ -413,7 +408,7 @@ void TestFormat() {
   TryFormat("T609", "T6 o9");
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("verbal_text_formatter_us");

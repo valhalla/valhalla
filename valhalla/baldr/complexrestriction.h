@@ -2,15 +2,15 @@
 #define VALHALLA_BALDR_COMPLEXRESTRICTION_H_
 
 #include <cstdint>
-#include <vector>
-#include <string>
-#include <ostream>
 #include <iostream>
+#include <ostream>
+#include <string>
+#include <vector>
 
-#include <valhalla/midgard/util.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
-#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/util.h>
 
 using namespace valhalla::midgard;
 
@@ -29,7 +29,7 @@ constexpr size_t kMaxViasPerRestriction = 31;
  * A list of GraphIds follows immediately after the structure.
  */
 class ComplexRestriction {
- public:
+public:
   /**
    * Get the restriction's from graph id
    * @return  Returns the from graph id
@@ -99,7 +99,7 @@ class ComplexRestriction {
    * Get the begin week for the restriction.
    * @return  Returns the begin week for this restriction.
    */
-  uint64_t begin_week() const{
+  uint64_t begin_week() const {
     return begin_week_;
   }
 
@@ -185,39 +185,38 @@ class ComplexRestriction {
     return (sizeof(ComplexRestriction)) + (via_count_ * sizeof(GraphId));
   }
 
- protected:
-
+protected:
   // From graph Id plus begin date time information (if applicable)
-  uint64_t from_graphid_    : 46;  // From Graph Id
-  uint64_t has_dt_          : 1;   // bit indicating if we have dt time information
-  uint64_t begin_day_dow_   : 5;   // begin day or dow enum i.e. 1st Sunday
-  uint64_t begin_month_     : 4;   // begin month
-  uint64_t begin_week_      : 3;   // which begin week does this start.  i.e. 1st week in Oct
-  uint64_t begin_hrs_       : 5;   // begin hours
+  uint64_t from_graphid_ : 46; // From Graph Id
+  uint64_t has_dt_ : 1;        // bit indicating if we have dt time information
+  uint64_t begin_day_dow_ : 5; // begin day or dow enum i.e. 1st Sunday
+  uint64_t begin_month_ : 4;   // begin month
+  uint64_t begin_week_ : 3;    // which begin week does this start.  i.e. 1st week in Oct
+  uint64_t begin_hrs_ : 5;     // begin hours
 
   // To graph Id plus end date time information (if applicable)
-  uint64_t to_graphid_      : 46;  // To graph Id
-  uint64_t dt_type_         : 1;   // type of date time restriction: YMD = 0 or nth dow = 1
-  uint64_t end_day_dow_     : 5;   // end day or dow enum i.e. last Sunday
-  uint64_t end_month_       : 4;   // end month
-  uint64_t end_week_        : 3;   // which end week does this end.  i.e. last week in Oct
-  uint64_t end_hrs_         : 5;   // end hours
+  uint64_t to_graphid_ : 46; // To graph Id
+  uint64_t dt_type_ : 1;     // type of date time restriction: YMD = 0 or nth dow = 1
+  uint64_t end_day_dow_ : 5; // end day or dow enum i.e. last Sunday
+  uint64_t end_month_ : 4;   // end month
+  uint64_t end_week_ : 3;    // which end week does this end.  i.e. last week in Oct
+  uint64_t end_hrs_ : 5;     // end hours
 
   // Restriction data
-  uint64_t type_            :  4;  // Restriction type
-  uint64_t modes_           : 12;  // Mode(s) this access restriction applies to
-  uint64_t via_count_       :  5;  // size of via list.
-  uint64_t dow_             :  7;  // day of week for this restriction
-  uint64_t begin_mins_      :  6;  // begin minutes
-  uint64_t end_mins_        :  6;  // end minutes
-  uint64_t spare_           : 24;
+  uint64_t type_ : 4;       // Restriction type
+  uint64_t modes_ : 12;     // Mode(s) this access restriction applies to
+  uint64_t via_count_ : 5;  // size of via list.
+  uint64_t dow_ : 7;        // day of week for this restriction
+  uint64_t begin_mins_ : 6; // begin minutes
+  uint64_t end_mins_ : 6;   // end minutes
+  uint64_t spare_ : 24;
 
   // List of vias follows the structure immediately on disk
   // TODO - perhaps use spare to store offset to a separate list?
   // TODO - Maybe but need to consider the fact that we may add more date time data.
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_COMPLEXRESTRICTION_H_
+#endif // VALHALLA_BALDR_COMPLEXRESTRICTION_H_

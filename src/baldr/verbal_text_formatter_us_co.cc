@@ -10,15 +10,14 @@ namespace valhalla {
 namespace baldr {
 
 VerbalTextFormatterUsCo::VerbalTextFormatterUsCo(const std::string& country_code,
-                                             const std::string& state_code)
+                                                 const std::string& state_code)
     : VerbalTextFormatterUs(country_code, state_code) {
 }
 
 VerbalTextFormatterUsCo::~VerbalTextFormatterUsCo() {
 }
 
-std::string VerbalTextFormatterUsCo::ProcessStatesTts(
-    const std::string& source) const {
+std::string VerbalTextFormatterUsCo::ProcessStatesTts(const std::string& source) const {
 
   std::string tts;
   if (FormStateTts(source, kColoradoRegex, kColoradoOutPattern, tts)) {
@@ -28,5 +27,5 @@ std::string VerbalTextFormatterUsCo::ProcessStatesTts(
   return VerbalTextFormatterUs::ProcessStatesTts(source);
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

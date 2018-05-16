@@ -13,7 +13,7 @@ namespace baldr {
  * unique schedule validity entries within a tile is kept in this record.
  */
 class TransitSchedule {
- public:
+public:
   /**
    * Constructor with arguments
    * @param  days     Bit field indicating the days (from tile creation
@@ -23,8 +23,7 @@ class TransitSchedule {
    * @param  end_day  End day (from tile creation date) for this schedule
    *                  entry.
    */
-  TransitSchedule(const uint64_t days, const uint32_t dow,
-                  const uint32_t end_day);
+  TransitSchedule(const uint64_t days, const uint32_t dow, const uint32_t end_day);
 
   /**
    * Gets the days that this departure is valid. Supports 64 days from tile
@@ -55,23 +54,22 @@ class TransitSchedule {
    * @param  date_before_tile  Is the date prior to the tile creation date.
    * @return Returns true if the departure is valid, false otherwise.
    */
-  bool IsValid(const uint32_t day, const uint32_t dow,
-               bool date_before_tile) const;
+  bool IsValid(const uint32_t day, const uint32_t dow, bool date_before_tile) const;
 
   // For sorting so we can make unique list of schedule records per tile
-  bool operator < (const TransitSchedule& other) const;
+  bool operator<(const TransitSchedule& other) const;
 
- protected:
-  uint64_t days_;          // Days this departure is active relative to the
-                           // tile's creation date. Stores bit field with 1's
-                           // meaning the departure applies to the day.
+protected:
+  uint64_t days_; // Days this departure is active relative to the
+                  // tile's creation date. Stores bit field with 1's
+                  // meaning the departure applies to the day.
 
-  uint64_t days_of_week_ : 7;  // Days of the week. Bit mask.
-  uint64_t end_day_      : 6;  // End day (what is our end day in the days_).
-  uint64_t spare_        : 51;
+  uint64_t days_of_week_ : 7; // Days of the week. Bit mask.
+  uint64_t end_day_ : 6;      // End day (what is our end day in the days_).
+  uint64_t spare_ : 51;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_TRANSITSCHEDULE_H_
+#endif // VALHALLA_BALDR_TRANSITSCHEDULE_H_

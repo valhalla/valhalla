@@ -1,10 +1,10 @@
 #ifndef VALHALLA_THOR_OPTIMIZER_H_
 #define VALHALLA_THOR_OPTIMIZER_H_
 
-#include <cstdint>
-#include <vector>
 #include <algorithm>
+#include <cstdint>
 #include <random>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -38,7 +38,6 @@ struct TourAlteration {
  */
 class Optimizer {
 public:
-
   /**
    * Optimize the tour through a set of locations given the cost matrix
    * among all locations. The first location (origin) and last location
@@ -48,8 +47,7 @@ public:
    * @return Returns the tour as an updated order of locations visited to
    *         complete the tour.
    */
-  std::vector<uint32_t> Solve(const uint32_t count,
-                              const std::vector<float>& costs);
+  std::vector<uint32_t> Solve(const uint32_t count, const std::vector<float>& costs);
 
   /**
    * Seed the random number generator. This is used by tests to create a
@@ -63,15 +61,15 @@ public:
 protected:
   // Random number generation: 0 <= r < 1
   std::mt19937_64 random_generator_;
-  std::uniform_real_distribution<float> uniform_distribution_ { 0.0, 1.0 };
+  std::uniform_real_distribution<float> uniform_distribution_{0.0, 1.0};
 
-  uint32_t ntry_;                    // # of attempts (for debugging)
-  uint32_t count_;                   // # of locations
-  uint32_t attempts_;                // # of attempts per annealing cycle
-  uint32_t successes_;               // # of success per annealing cycle
-  float best_cost_;                  // Current best cost
-  std::vector<uint32_t> tour_;       // Current tour (order of locations)
-  std::vector<uint32_t> best_tour_;  // Best tour so far
+  uint32_t ntry_;                   // # of attempts (for debugging)
+  uint32_t count_;                  // # of locations
+  uint32_t attempts_;               // # of attempts per annealing cycle
+  uint32_t successes_;              // # of success per annealing cycle
+  float best_cost_;                 // Current best cost
+  std::vector<uint32_t> tour_;      // Current tour (order of locations)
+  std::vector<uint32_t> best_tour_; // Best tour so far
 
   /*
    * Perform the annealing process.
@@ -94,8 +92,7 @@ protected:
    * @param  alteration  Tour alteration.
    * @return Returns the cost difference.
    */
-  float TemperatureDifference(const std::vector<float>& costs,
-                              const TourAlteration& alteration);
+  float TemperatureDifference(const std::vector<float>& costs, const TourAlteration& alteration);
 
   /**
    * Create a random initial tour. The first and last locations must remain
@@ -109,8 +106,7 @@ protected:
    * @param  tour   Order that locations are traversed.
    * @return Returns the total cost for the tour.
    */
-  float TourCost(const std::vector<float>& costs,
-                 const std::vector<uint32_t>& tour) const;
+  float TourCost(const std::vector<float>& costs, const std::vector<uint32_t>& tour) const;
 
   // ------------------------ Convenience methods (inline) ---------------- //
 
@@ -121,8 +117,7 @@ protected:
    * @param  loc2   Location index 1.
    * @return Returns the cost between the 2 locations.
    */
-  float Cost(const std::vector<float>& costs, const uint32_t loc1,
-             const uint32_t loc2) const {
+  float Cost(const std::vector<float>& costs, const uint32_t loc1, const uint32_t loc2) const {
     return costs[(loc1 * count_) + loc2];
   }
 
@@ -144,7 +139,7 @@ protected:
   }
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_OPTIMIZER_H_
+#endif // VALHALLA_THOR_OPTIMIZER_H_

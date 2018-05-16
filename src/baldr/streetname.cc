@@ -7,8 +7,7 @@
 namespace valhalla {
 namespace baldr {
 
-StreetName::StreetName(const std::string& value)
-    : value_(value) {
+StreetName::StreetName(const std::string& value) : value_(value) {
 }
 
 StreetName::~StreetName() {
@@ -18,7 +17,7 @@ const std::string& StreetName::value() const {
   return value_;
 }
 
-bool StreetName::operator ==(const StreetName& rhs) const {
+bool StreetName::operator==(const StreetName& rhs) const {
   return (value_ == rhs.value_);
 }
 
@@ -46,13 +45,12 @@ std::string StreetName::GetBaseName() const {
   std::string pre_dir = GetPreDir();
   std::string post_dir = GetPostDir();
 
-  return value_.substr(pre_dir.size(),
-                       (value_.size() - pre_dir.size() - post_dir.size()));
+  return value_.substr(pre_dir.size(), (value_.size() - pre_dir.size() - post_dir.size()));
 }
 
 bool StreetName::HasSameBaseName(const StreetName& rhs) const {
   return (GetBaseName() == rhs.GetBaseName());
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

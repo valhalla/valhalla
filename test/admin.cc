@@ -1,8 +1,8 @@
 #include "test.h"
 
-#include <vector>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <vector>
 
 #include "baldr/admin.h"
 #include <memory>
@@ -14,7 +14,7 @@ namespace {
 
 void TestWriteRead() {
   // Make an admin record
-  Admin ai(5, 6,"US", "PA");
+  Admin ai(5, 6, "US", "PA");
 
   if (ai.country_offset() != 5)
     throw runtime_error("Admin country_offset incorrect.");
@@ -28,18 +28,18 @@ void TestWriteRead() {
   if (ai.state_iso() != "PA")
     throw runtime_error("Admin state_iso incorrect.");
 
-  Admin aiStateISO(5, 6,"GB", "WLS");
+  Admin aiStateISO(5, 6, "GB", "WLS");
 
   if (aiStateISO.state_iso() != "WLS")
     throw runtime_error("Admin 3 char state_iso incorrect.");
 
-  Admin aiEmptyStrings(5, 6,"", "");
+  Admin aiEmptyStrings(5, 6, "", "");
 
   if (aiEmptyStrings.country_iso() != "" && aiEmptyStrings.state_iso() != "")
     throw runtime_error("Admin empty strings test failed.");
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("admin");

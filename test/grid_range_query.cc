@@ -1,20 +1,17 @@
 // -*- mode: c++ -*-
 
-#include "midgard/pointll.h"
 #include "midgard/linesegment2.h"
+#include "midgard/pointll.h"
 
-#include "test.h"
 #include "meili/grid_range_query.h"
+#include "test.h"
 
 using namespace valhalla;
-
 
 using BoundingBox = midgard::AABB2<midgard::PointLL>;
 using LineSegment = midgard::LineSegment2<midgard::PointLL>;
 
-
-void TestAddLineSegment()
-{
+void TestAddLineSegment() {
   BoundingBox bbox(0, 0, 100, 100);
   meili::GridRangeQuery<int, midgard::PointLL> grid(bbox, 1.f, 1.f);
 
@@ -51,29 +48,23 @@ void TestAddLineSegment()
   }
 }
 
-
-void TestQuery()
-{
+void TestQuery() {
   const BoundingBox bbox(0, 0, 100, 100);
   meili::GridRangeQuery<int, midgard::PointLL> grid(bbox, 1.f, 1.f);
 
   grid.AddLineSegment(0, LineSegment({2.5, 3.5}, {10, 3.5}));
 
   auto items = grid.Query(BoundingBox(2, 2, 5, 5));
-  test::assert_bool(items.size() == 1 && items.find(0) != items.end(),
-                    "query should get item 0");
+  test::assert_bool(items.size() == 1 && items.find(0) != items.end(), "query should get item 0");
 
   items = grid.Query(BoundingBox(10, 10, 20, 20));
   test::assert_bool(items.empty(), "query should get nothing");
 
   items = grid.Query(BoundingBox(2, 3, 2.5, 3.5));
-  test::assert_bool(items.size() == 1 && items.find(0) != items.end(),
-                    "quewry should get item 0");
+  test::assert_bool(items.size() == 1 && items.find(0) != items.end(), "quewry should get item 0");
 }
 
-
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
   test::suite suite("grid range query");
 
   suite.test(TEST_CASE(TestAddLineSegment));

@@ -2,10 +2,10 @@
 #define VALHALLA_MIDGARD_AABB2_H_
 
 #include <cstdint>
-#include <vector>
+#include <valhalla/midgard/linesegment2.h>
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/linesegment2.h>
+#include <vector>
 
 namespace valhalla {
 namespace midgard {
@@ -18,20 +18,15 @@ namespace midgard {
  * TODO: merge clipper2 class into this one, its basically a thin scaffold around
  * this class anyway and has some useful intersection stuff
  */
-template <class coord_t>
-class AABB2 {
- public:
+template <class coord_t> class AABB2 {
+public:
   using x_t = typename coord_t::first_type;
   using y_t = typename coord_t::second_type;
 
   /**
    * Default constructor. Sets all min,max values to 0.
    */
-  AABB2()
-    : minx_(0.0f),
-      miny_(0.0f),
-      maxx_(0.0f),
-      maxy_(0.0f) {
+  AABB2() : minx_(0.0f), miny_(0.0f), maxx_(0.0f), maxy_(0.0f) {
   }
 
   /**
@@ -53,13 +48,9 @@ class AABB2 {
    * @param   maxx    Maximum x of the bounding box.
    * @param   maxy    Maximum y of the bounding box.
    */
-  AABB2(const x_t minx, const y_t miny,
-        const x_t maxx, const y_t maxy)
-    : minx_(minx),
-      miny_(miny),
-      maxx_(maxx),
-      maxy_(maxy) {
- }
+  AABB2(const x_t minx, const y_t miny, const x_t maxx, const y_t maxy)
+      : minx_(minx), miny_(miny), maxx_(maxx), maxy_(maxy) {
+  }
 
   /**
    * Construct an AABB given a list of points.
@@ -74,9 +65,8 @@ class AABB2 {
    * @param   r2  Bounding box to compare to.
    * @return  Returns true if the 2 bounding boxes are equal.
    */
-  bool operator ==(const AABB2& r2) const {
-    return (minx_ == r2.minx() && maxx_ == r2.maxx() &&
-            miny_ == r2.miny() && maxy_ == r2.maxy());
+  bool operator==(const AABB2& r2) const {
+    return (minx_ == r2.minx() && maxx_ == r2.maxx() && miny_ == r2.miny() && maxy_ == r2.maxy());
   }
 
   /**
@@ -107,7 +97,7 @@ class AABB2 {
    * Get the maximum y
    * @return  Returns maximum y.
    */
-  y_t maxy() const{
+  y_t maxy() const {
     return maxy_;
   }
 
@@ -166,8 +156,7 @@ class AABB2 {
    *          x or y edge are considered to be outside.
    */
   bool Contains(const coord_t& pt) const {
-    return (pt.x() >= minx_ && pt.y() >= miny_ &&
-            pt.x() <  maxx_ && pt.y() <  maxy_);
+    return (pt.x() >= minx_ && pt.y() >= miny_ && pt.x() < maxx_ && pt.y() < maxy_);
   }
 
   /**
@@ -199,10 +188,8 @@ class AABB2 {
    */
   bool Intersects(const AABB2& r2) const {
 
-    return !((r2.minx() < minx_ && r2.maxx() < minx_) ||
-             (r2.miny() < miny_ && r2.maxy() < miny_) ||
-             (r2.minx() > maxx_ && r2.maxx() > maxx_) ||
-             (r2.miny() > maxy_ && r2.maxy() > maxy_));
+    return !((r2.minx() < minx_ && r2.maxx() < minx_) || (r2.miny() < miny_ && r2.maxy() < miny_) ||
+             (r2.minx() > maxx_ && r2.maxx() > maxx_) || (r2.miny() > maxy_ && r2.maxy() > maxy_));
   }
 
   /**
@@ -261,14 +248,18 @@ class AABB2 {
    * @param  r2  Bounding bounding box to "combine" with this bounding box.
    */
   void Expand(const AABB2& r2) {
-    if (r2.minx() < minx_)
+    if (r2.minx() < minx_) {
       minx_ = r2.minx();
-    if (r2.miny() < miny_)
+    }
+    if (r2.miny() < miny_) {
       miny_ = r2.miny();
-    if (r2.maxx() > maxx_)
+    }
+    if (r2.maxx() > maxx_) {
       maxx_ = r2.maxx();
-    if (r2.maxy() > maxy_)
+    }
+    if (r2.maxy() > maxy_) {
       maxy_ = r2.maxy();
+    }
   }
 
   /**
@@ -276,17 +267,21 @@ class AABB2 {
    * @param  point  Point to "add" to this bounding box.
    */
   void Expand(const coord_t& point) {
-    if (point.x() < minx_)
+    if (point.x() < minx_) {
       minx_ = point.x();
-    if (point.y() < miny_)
+    }
+    if (point.y() < miny_) {
       miny_ = point.y();
-    if (point.x() > maxx_)
+    }
+    if (point.x() > maxx_) {
       maxx_ = point.x();
-    if (point.y() > maxy_)
+    }
+    if (point.y() > maxy_) {
       maxy_ = point.y();
+    }
   }
 
- protected:
+protected:
   // Edge to clip against
   enum ClipEdge { kLeft, kRight, kBottom, kTop };
 
@@ -306,8 +301,10 @@ class AABB2 {
    * @return  Returns the number of vertices after clipping. The list
    *          of vertices is in vout.
    */
-  uint32_t ClipAgainstEdge(const ClipEdge edge, const bool closed,
-            const std::vector<coord_t>& vin, std::vector<coord_t>& vout) const;
+  uint32_t ClipAgainstEdge(const ClipEdge edge,
+                           const bool closed,
+                           const std::vector<coord_t>& vin,
+                           std::vector<coord_t>& vout) const;
 
   /**
    * Finds the intersection of the segment from insidept to outsidept with the
@@ -318,8 +315,8 @@ class AABB2 {
    * @param  outsidept Vertex outside with respect to the edge.
    * @return  Returns the intersection of the segment with the edge.
    */
-  coord_t ClipIntersection(const ClipEdge edge, const coord_t& insidept,
-                          const coord_t& outsidept) const;
+  coord_t
+  ClipIntersection(const ClipEdge edge, const coord_t& insidept, const coord_t& outsidept) const;
 
   /**
    * Tests if the vertex is inside the rectangular boundary with respect to
@@ -355,7 +352,7 @@ class AABB2 {
   }
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_AABB2_H_
+#endif // VALHALLA_MIDGARD_AABB2_H_

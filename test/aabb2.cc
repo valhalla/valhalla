@@ -29,7 +29,7 @@ void TryIntersectsBb(const AABB2<Point2>& a, const AABB2<Point2>& b) {
 
 void TestIntersectsBb() {
   TryIntersectsBb(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f),
-                AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
+                  AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
 void TryContainsBb(const AABB2<Point2>& a, const AABB2<Point2>& b) {
@@ -42,8 +42,7 @@ void TestContainsBb() {
                 AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
-void TryIntesectsLn(const AABB2<Point2>& box, const Point2& a,
-                    const Point2& b, bool expected) {
+void TryIntesectsLn(const AABB2<Point2>& box, const Point2& a, const Point2& b, bool expected) {
   if (box.Intersects(a, b) != expected)
     throw runtime_error("Intersects line test failed");
 }
@@ -92,7 +91,7 @@ void TryEquality(const AABB2<Point2>& a, const AABB2<Point2>& b) {
 
 void TestEquality() {
   TryEquality(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f),
-                AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
+              AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
 void TryExpand(AABB2<Point2> a, const AABB2<Point2>& b) {
@@ -119,11 +118,9 @@ void TryExpandPointMax(AABB2<Point2> a, const Point2& p) {
 }
 
 void TestExpandPoint() {
-  TryExpandPointMin(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f),
-            Point2(39.8f, -76.8f));
+  TryExpandPointMin(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f), Point2(39.8f, -76.8f));
 
-  TryExpandPointMax(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f),
-            Point2(40.8f, -76.1f));
+  TryExpandPointMax(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f), Point2(40.8f, -76.1f));
 }
 
 void TryPtConstructor(const AABB2<Point2>& a) {
@@ -136,8 +133,11 @@ void TestPtConstructor() {
   TryPtConstructor(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
-void TryMinMaxValues(const AABB2<Point2>& a, float minx_res, float maxx_res,
-                     float miny_res, float maxy_res) {
+void TryMinMaxValues(const AABB2<Point2>& a,
+                     float minx_res,
+                     float maxx_res,
+                     float miny_res,
+                     float maxy_res) {
   if (fabs(a.minx() - minx_res) > kEpsilon)
     throw runtime_error("Min x value test failed");
 
@@ -152,8 +152,8 @@ void TryMinMaxValues(const AABB2<Point2>& a, float minx_res, float maxx_res,
 }
 
 void TestMinMaxValues() {
-  TryMinMaxValues(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f),
-                  39.8249f, 40.2559f, -76.8013f, -75.8997f);
+  TryMinMaxValues(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f), 39.8249f, 40.2559f,
+                  -76.8013f, -75.8997f);
 }
 
 void TryTestWidth(const AABB2<Point2>& a, float res) {
@@ -198,81 +198,81 @@ void TestVector() {
 }
 
 void TestIntersectsCircle() {
-  auto check = [](bool a, bool b){
-    if(a != b)
+  auto check = [](bool a, bool b) {
+    if (a != b)
       throw std::logic_error(a ? "Circle DOES intersect" : "Circle DOESNT intersect");
   };
 
   AABB2<Point2> box(-1, -1, 1, 1);
-  check(box.Intersects({0,     0},    1),   true);
-  check(box.Intersects({0,     0},    100), true);
-  check(box.Intersects({2,     1},    1),   true);
-  check(box.Intersects({-2,   -1},    1),   true);
-  check(box.Intersects({-1.5, -1.5},  0.1), false);
-  check(box.Intersects({0,     5},    4.1), true);
-  check(box.Intersects({2,    -2},    1.415), true);
-  check(box.Intersects({-2,    2},    1.413), false);
+  check(box.Intersects({0, 0}, 1), true);
+  check(box.Intersects({0, 0}, 100), true);
+  check(box.Intersects({2, 1}, 1), true);
+  check(box.Intersects({-2, -1}, 1), true);
+  check(box.Intersects({-1.5, -1.5}, 0.1), false);
+  check(box.Intersects({0, 5}, 4.1), true);
+  check(box.Intersects({2, -2}, 1.415), true);
+  check(box.Intersects({-2, 2}, 1.413), false);
 }
 
 void TestIntersect() {
   // Test if bounding boxes intersect
   AABB2<Point2> box(-1, -1, 1, 1);
   Point2 a, b;
-  if(!box.Intersect((a={0,0}), (b={1,1})) || a != Point2{0,0} || b != Point2{1,1})
+  if (!box.Intersect((a = {0, 0}), (b = {1, 1})) || a != Point2{0, 0} || b != Point2{1, 1})
     throw std::logic_error("Wrong intersection");
-  if(!box.Intersect((a={-2,0}), (b={2,0})) || a != Point2{-1,0} || b != Point2{1,0})
+  if (!box.Intersect((a = {-2, 0}), (b = {2, 0})) || a != Point2{-1, 0} || b != Point2{1, 0})
     throw std::logic_error("Wrong intersection");
-  if(!box.Intersect((a={-2,-2}), (b={2,2})) || a != Point2{-1,-1} || b != Point2{1,1})
+  if (!box.Intersect((a = {-2, -2}), (b = {2, 2})) || a != Point2{-1, -1} || b != Point2{1, 1})
     throw std::logic_error("Wrong intersection");
-  if(!box.Intersect((a={-2,-2}), (b={0,0})) || a != Point2{-1,-1} || b != Point2{0,0})
+  if (!box.Intersect((a = {-2, -2}), (b = {0, 0})) || a != Point2{-1, -1} || b != Point2{0, 0})
     throw std::logic_error("Wrong intersection");
-  if(!box.Intersect((a={0,0}), (b={2,2})) || a != Point2{0,0} || b != Point2{1,1})
+  if (!box.Intersect((a = {0, 0}), (b = {2, 2})) || a != Point2{0, 0} || b != Point2{1, 1})
     throw std::logic_error("Wrong intersection");
-  if(!box.Intersect((a={-1,1}), (b={1,-1})) || a != Point2{-1,1} || b != Point2{1,-1})
+  if (!box.Intersect((a = {-1, 1}), (b = {1, -1})) || a != Point2{-1, 1} || b != Point2{1, -1})
     throw std::logic_error("Wrong intersection");
-  if(!box.Intersect((a={0,2}), (b={2,0})) || a != Point2{1,1} || b != Point2{1,1})
+  if (!box.Intersect((a = {0, 2}), (b = {2, 0})) || a != Point2{1, 1} || b != Point2{1, 1})
     throw std::logic_error("Wrong intersection");
 
   LineSegment2<Point2> ab(a, b);
-  if(!box.Intersects(ab))
+  if (!box.Intersects(ab))
     throw std::logic_error("LineSegment intersects test failed");
 
-  if(box.Intersect((a={-2,-2}), (b={-1,-1.001})))
+  if (box.Intersect((a = {-2, -2}), (b = {-1, -1.001})))
     throw std::logic_error("Wrong intersection");
-  if(box.Intersect((a={0,2.1}), (b={2.1,0})))
+  if (box.Intersect((a = {0, 2.1}), (b = {2.1, 0})))
     throw std::logic_error("Wrong intersection");
-  if(box.Intersect((a={0,1.1}), (b={1,1.1})))
+  if (box.Intersect((a = {0, 1.1}), (b = {1, 1.1})))
     throw std::logic_error("Wrong intersection");
-  if(box.Intersect((a={1.1,0}), (b={1,1.1})))
+  if (box.Intersect((a = {1.1, 0}), (b = {1, 1.1})))
     throw std::logic_error("Wrong intersection");
 
   // Test intersection of bounding boxes
   // Case 1 - no intersection
-  AABB2<Point2> intersect1 = box.Intersection({2,2,3,3});
-  if (intersect1.minx() != 0.0f || intersect1.miny() != 0.0f ||
-      intersect1.maxx() != 0.0f || intersect1.maxy() != 0.0f)
+  AABB2<Point2> intersect1 = box.Intersection({2, 2, 3, 3});
+  if (intersect1.minx() != 0.0f || intersect1.miny() != 0.0f || intersect1.maxx() != 0.0f ||
+      intersect1.maxy() != 0.0f)
     throw std::logic_error("Wrong intersection 1");
 
   // Case 2 intersection.
-  AABB2<Point2> intersect2 = box.Intersection({0,0,3,3});
-  if (intersect2.minx() != 0.0f || intersect2.miny() != 0.0f ||
-      intersect2.maxx() != 1.0f || intersect2.maxy() != 1.0f)
+  AABB2<Point2> intersect2 = box.Intersection({0, 0, 3, 3});
+  if (intersect2.minx() != 0.0f || intersect2.miny() != 0.0f || intersect2.maxx() != 1.0f ||
+      intersect2.maxy() != 1.0f)
     throw std::logic_error("Wrong intersection 2");
 
   // Case 3 - other bounding box contains this box
-  AABB2<Point2> intersect3 = box.Intersection({-3,-3,3,3});
-  if (intersect3.minx() != -1.0f || intersect3.miny() != -1.0f ||
-      intersect3.maxx() !=  1.0f || intersect3.maxy() !=  1.0f)
+  AABB2<Point2> intersect3 = box.Intersection({-3, -3, 3, 3});
+  if (intersect3.minx() != -1.0f || intersect3.miny() != -1.0f || intersect3.maxx() != 1.0f ||
+      intersect3.maxy() != 1.0f)
     throw std::logic_error("Wrong intersection 3");
 
   // Case 4 - box contains other bounding box
-  AABB2<Point2> intersect4 = box.Intersection({-0.5f,-0.5f,0.5f,0.5f});
-  if (intersect4.minx() != -0.5f || intersect4.miny() != -0.5f ||
-      intersect4.maxx() !=  0.5f || intersect4.maxy() !=  0.5f)
+  AABB2<Point2> intersect4 = box.Intersection({-0.5f, -0.5f, 0.5f, 0.5f});
+  if (intersect4.minx() != -0.5f || intersect4.miny() != -0.5f || intersect4.maxx() != 0.5f ||
+      intersect4.maxy() != 0.5f)
     throw std::logic_error("Wrong intersection 4");
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("aabb2");
@@ -292,28 +292,28 @@ int main() {
   // Tests if a specified point is within the bounding box.
   suite.test(TEST_CASE(TestContainsPt));
 
-  //Test equality operator.
+  // Test equality operator.
   suite.test(TEST_CASE(TestEquality));
 
-  //Test expand bounding box.
+  // Test expand bounding box.
   suite.test(TEST_CASE(TestExpand));
 
-  //Test expand bounding box by a point.
+  // Test expand bounding box by a point.
   suite.test(TEST_CASE(TestExpandPoint));
 
-  //Test minimum and maximum point constructor.
+  // Test minimum and maximum point constructor.
   suite.test(TEST_CASE(TestPtConstructor));
 
-  //Test minimum and maximum values.
+  // Test minimum and maximum values.
   suite.test(TEST_CASE(TestMinMaxValues));
 
-  //Test width.
+  // Test width.
   suite.test(TEST_CASE(TestWidth));
 
-  //Test height.
+  // Test height.
   suite.test(TEST_CASE(TestHeight));
 
-  //Test vector.
+  // Test vector.
   suite.test(TEST_CASE(TestVector));
 
   suite.test(TEST_CASE(TestIntersectsCircle));

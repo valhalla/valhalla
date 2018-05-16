@@ -1,8 +1,8 @@
-#include <vector>
+#include "exception.h"
+#include "midgard/logging.h"
 #include <algorithm>
 #include <exception>
-#include "midgard/logging.h"
-#include "exception.h"
+#include <vector>
 
 #include "thor/map_matcher.h"
 
@@ -14,12 +14,13 @@ namespace thor {
 
 // Form the path from the map-matching results. This path gets sent to
 // TripPathBuilder.
-std::vector<PathInfo> MapMatcher::FormPath(
-    meili::MapMatcher* matcher, const std::vector<meili::MatchResult>& results,
-    const std::vector<meili::EdgeSegment>& edge_segments,
-    const std::shared_ptr<sif::DynamicCost>* mode_costing,
-    const sif::TravelMode mode,
-    std::vector<std::pair<GraphId, GraphId>>& disconnected_edges) {
+std::vector<PathInfo>
+MapMatcher::FormPath(meili::MapMatcher* matcher,
+                     const std::vector<meili::MatchResult>& results,
+                     const std::vector<meili::EdgeSegment>& edge_segments,
+                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                     const sif::TravelMode mode,
+                     std::vector<std::pair<GraphId, GraphId>>& disconnected_edges) {
   // Set the mode and costing
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   // Iterate through the matched path. Form PathInfo - populate elapsed time
@@ -56,26 +57,23 @@ std::vector<PathInfo> MapMatcher::FormPath(
     // TODO: slight difference in time between route and trace_route
     if (nodeinfo) {
       // Get transition cost
-      elapsed_time += costing->TransitionCost(directededge, nodeinfo, pred)
-              .secs;
+      elapsed_time += costing->TransitionCost(directededge, nodeinfo, pred).secs;
 
       // Get time along the edge, handling partial distance along
       // the first and last edge
-      elapsed_time += costing->EdgeCost(directededge).secs
-          * (edge_segment.target - edge_segment.source);
+      elapsed_time +=
+          costing->EdgeCost(directededge).secs * (edge_segment.target - edge_segment.source);
     } else {
       // Get time along the edge, handling partial distance along
       // the first and last edge
-      elapsed_time += costing->EdgeCost(directededge).secs
-              * (edge_segment.target - edge_segment.source);
+      elapsed_time +=
+          costing->EdgeCost(directededge).secs * (edge_segment.target - edge_segment.source);
     }
-
 
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
     prior_edge = edge_id;
     prior_node = directededge->endnode();
-    const GraphTile* end_tile = matcher->graphreader().GetGraphTile(
-        prior_node);
+    const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
 
     // Create a predecessor EdgeLabel (for transition costing)
@@ -83,11 +81,10 @@ std::vector<PathInfo> MapMatcher::FormPath(
 
     // Add to the PathInfo
     path.emplace_back(mode, elapsed_time, edge_id, 0);
-
   }
 
   return path;
 }
 
-}
-}
+} // namespace thor
+} // namespace valhalla

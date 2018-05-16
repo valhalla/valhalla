@@ -1,5 +1,5 @@
-#include <cstdint>
 #include "test.h"
+#include <cstdint>
 
 #include "baldr/turn.h"
 
@@ -12,9 +12,8 @@ namespace {
 
 void TryGetType(uint32_t turn_degree, Turn::Type expected) {
   if (Turn::GetType(turn_degree) != expected) {
-    throw std::runtime_error(
-        std::string("Incorrect turn type for turn degree=")
-            + std::to_string(turn_degree));
+    throw std::runtime_error(std::string("Incorrect turn type for turn degree=") +
+                             std::to_string(turn_degree));
   }
 }
 
@@ -77,10 +76,9 @@ void TestGetType() {
   TryGetType(333, Turn::Type::kSlightLeft);
   // Slight left upper bound
   TryGetType(349, Turn::Type::kSlightLeft);
-
 }
 
-}
+} // namespace
 
 int main(void) {
   test::suite suite("turn");

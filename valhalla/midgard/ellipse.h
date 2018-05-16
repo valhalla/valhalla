@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <math.h>
 
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
@@ -19,9 +19,8 @@ namespace midgard {
  * ellipse. Template class to work with Point2 (Euclidean x,y) or PointLL
  * (latitude,longitude).
  */
-template <class coord_t>
-class Ellipse {
- public:
+template <class coord_t> class Ellipse {
+public:
   /**
    * Default constructor.
    */
@@ -43,8 +42,7 @@ class Ellipse {
    * @param    pt1      OUT - second intersection point (if it exists)
    * @return   Returns the number of intersection points (0, 1, or 2).
    */
-  uint32_t Intersect(const LineSegment2<coord_t>& seg, coord_t& pt0,
-                     coord_t& pt1) const;
+  uint32_t Intersect(const LineSegment2<coord_t>& seg, coord_t& pt0, coord_t& pt1) const;
 
   /**
    * Does the specified axis-aligned bounding box (rectangle) intersect
@@ -66,20 +64,18 @@ class Ellipse {
    */
   bool Contains(const coord_t& pt) const;
 
- private:
+private:
   coord_t center_;
-  float a;                  // Half length of major axis
-  float b;                  // Half length of minor axis
+  float a; // Half length of major axis
+  float b; // Half length of minor axis
   float k1_;
   float k2_;
   float k3_;
-  float s;                  // sine of rotation angle
-  float c;                  // cosine of rotation angle
+  float s; // sine of rotation angle
+  float c; // cosine of rotation angle
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_ELLIPSE_H_
-
-
+#endif // VALHALLA_MIDGARD_ELLIPSE_H_

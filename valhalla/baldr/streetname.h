@@ -1,21 +1,21 @@
 #ifndef VALHALLA_BALDR_STREETNAME_H_
 #define VALHALLA_BALDR_STREETNAME_H_
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace valhalla {
 namespace baldr {
 
 class StreetName {
- public:
+public:
   StreetName(const std::string& value);
 
   virtual ~StreetName();
 
   const std::string& value() const;
 
-  bool operator ==(const StreetName& rhs) const;
+  bool operator==(const StreetName& rhs) const;
 
   bool StartsWith(const std::string& prefix) const;
 
@@ -31,12 +31,11 @@ class StreetName {
 
   virtual bool HasSameBaseName(const StreetName& rhs) const;
 
- protected:
+protected:
   std::string value_;
-
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_STREETNAME_H_
+#endif // VALHALLA_BALDR_STREETNAME_H_

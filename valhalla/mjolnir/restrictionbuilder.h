@@ -1,10 +1,10 @@
 #ifndef VALHALLA_MJOLNIR_RESTRICTIONBUILDER_H
 #define VALHALLA_MJOLNIR_RESTRICTIONBUILDER_H
 
-#include <cstdint>
 #include <boost/property_tree/ptree.hpp>
-#include <unordered_set>
+#include <cstdint>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace valhalla {
 namespace mjolnir {
@@ -13,8 +13,7 @@ namespace mjolnir {
  * Class used to enhance graph tile information at the local level.
  */
 class RestrictionBuilder {
- public:
-
+public:
   /**
    * Enhance the local level graph tile information.
    * @param pt                        property tree containing the hierarchy configuration
@@ -24,10 +23,9 @@ class RestrictionBuilder {
   static void Build(const boost::property_tree::ptree& pt,
                     const std::string& complex_restriction_file,
                     const std::unordered_multimap<uint64_t, uint64_t>& end_map);
-
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_RESTRICTIONBUILDER_H
+#endif // VALHALLA_MJOLNIR_RESTRICTIONBUILDER_H
