@@ -163,10 +163,12 @@ DirectionsBuilder::PopulateTripDirections(const DirectionsOptions& directions_op
     trip_maneuver->set_begin_heading(maneuver.begin_heading());
     trip_maneuver->set_begin_shape_index(maneuver.begin_shape_index());
     trip_maneuver->set_end_shape_index(maneuver.end_shape_index());
-    if (maneuver.portions_toll())
+    if (maneuver.portions_toll()) {
       trip_maneuver->set_portions_toll(maneuver.portions_toll());
-    if (maneuver.portions_unpaved())
+    }
+    if (maneuver.portions_unpaved()) {
       trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
+    }
 
     if (maneuver.HasVerbalTransitionAlertInstruction()) {
       trip_maneuver->set_verbal_transition_alert_instruction(
@@ -287,8 +289,9 @@ DirectionsBuilder::PopulateTripDirections(const DirectionsOptions& directions_op
     }
 
     // Verbal multi-cue
-    if (maneuver.verbal_multi_cue())
+    if (maneuver.verbal_multi_cue()) {
       trip_maneuver->set_verbal_multi_cue(maneuver.verbal_multi_cue());
+    }
 
     // Travel mode
     trip_maneuver->set_travel_mode(translate_travel_mode.find(maneuver.travel_mode())->second);

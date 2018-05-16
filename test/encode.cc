@@ -37,8 +37,8 @@ std::string to_string(const container_t& points) {
 void do_polyline_pair(const container_t& points, const std::string& encoded) {
   auto enc_answer = encode<container_t>(points);
   if (enc_answer != encoded)
-    throw std::runtime_error("Simple polyline encoding failed. Expected: " + encoded +
-                             " Got: " + enc_answer);
+    throw std::runtime_error("Simple polyline encoding failed. Expected: " + encoded + " Got: " +
+                             enc_answer);
   auto dec_answer = decode<container_t>(encoded);
   if (!appx_equal(dec_answer, points))
     throw std::runtime_error("Simple polyline decoding failed. Expected: " + to_string(points) +

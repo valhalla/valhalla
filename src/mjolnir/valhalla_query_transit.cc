@@ -45,8 +45,9 @@ Transit read_pbf(const std::string& file_name) {
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
   cs.SetTotalBytesLimit(limit, limit);
   Transit transit;
-  if (!transit.ParseFromCodedStream(&cs))
+  if (!transit.ParseFromCodedStream(&cs)) {
     throw std::runtime_error("Couldn't load " + file_name);
+  }
   return transit;
 }
 
@@ -85,10 +86,11 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
         Transit spp;
         {
           // already loaded
-          if (ext == ".pbf")
+          if (ext == ".pbf") {
             spp = transit;
-          else
+          } else {
             spp = read_pbf(fname);
+          }
         }
 
         if (spp.stop_pairs_size() == 0) {
@@ -131,50 +133,57 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
               switch (counter) {
                 case 0:
                   if (service_day) {
-                    if (!dow.empty())
+                    if (!dow.empty()) {
                       dow += ", ";
+                    }
                     dow += "Sunday";
                   }
                   break;
                 case 1:
                   if (service_day) {
-                    if (!dow.empty())
+                    if (!dow.empty()) {
                       dow += ", ";
+                    }
                     dow += "Monday";
                   }
                   break;
                 case 2:
                   if (service_day) {
-                    if (!dow.empty())
+                    if (!dow.empty()) {
                       dow += ", ";
+                    }
                     dow += "Tuesday";
                   }
                   break;
                 case 3:
                   if (service_day) {
-                    if (!dow.empty())
+                    if (!dow.empty()) {
                       dow += ", ";
+                    }
                     dow += "Wednesday";
                   }
                   break;
                 case 4:
                   if (service_day) {
-                    if (!dow.empty())
+                    if (!dow.empty()) {
                       dow += ", ";
+                    }
                     dow += "Thursday";
                   }
                   break;
                 case 5:
                   if (service_day) {
-                    if (!dow.empty())
+                    if (!dow.empty()) {
                       dow += ", ";
+                    }
                     dow += "Friday";
                   }
                   break;
                 case 6:
                   if (service_day) {
-                    if (!dow.empty())
+                    if (!dow.empty()) {
                       dow += ", ";
+                    }
                     dow += "Saturday";
                   }
                   break;
@@ -185,8 +194,9 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
             std::string added_dates;
             for (const auto& day : sp.service_added_dates()) {
 
-              if (!added_dates.empty())
+              if (!added_dates.empty()) {
                 added_dates += ", ";
+              }
               boost::gregorian::date adddate(
                   boost::gregorian::gregorian_calendar::from_julian_day_number(day));
               added_dates += to_iso_extended_string(adddate);
@@ -199,11 +209,11 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
                 boost::gregorian::gregorian_calendar::from_julian_day_number(
                     sp.service_end_date()));
 
-            LOG_INFO(" Route: " + std::to_string(sp.route_index()) +
-                     " Trip: " + std::to_string(sp.trip_id()) + " Dep Time: " + ss.str() +
-                     " DOW: " + dow + " Added dates: " + added_dates +
-                     " Start Date: " + to_iso_extended_string(start_date) +
-                     " End Date: " + to_iso_extended_string(end_date));
+            LOG_INFO(" Route: " + std::to_string(sp.route_index()) + " Trip: " +
+                     std::to_string(sp.trip_id()) + " Dep Time: " + ss.str() + " DOW: " + dow +
+                     " Added dates: " + added_dates + " Start Date: " +
+                     to_iso_extended_string(start_date) + " End Date: " +
+                     to_iso_extended_string(end_date));
           }
         }
       }
@@ -240,10 +250,11 @@ void LogSchedule(const std::string transit_dir,
         Transit spp;
         {
           // already loaded
-          if (ext == ".pbf")
+          if (ext == ".pbf") {
             spp = transit;
-          else
+          } else {
             spp = read_pbf(fname);
+          }
         }
 
         if (spp.stop_pairs_size() == 0) {

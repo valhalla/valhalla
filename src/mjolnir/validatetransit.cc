@@ -61,10 +61,11 @@ bool WalkTransitLines(const GraphId& n_graphId,
   uint32_t day = 0;
   uint32_t time_added = 0;
   bool date_before_tile = false;
-  if (date < date_created)
+  if (date < date_created) {
     date_before_tile = true;
-  else
+  } else {
     day = date - date_created;
+  }
 
   bool bDone = false;
 
@@ -102,8 +103,9 @@ bool WalkTransitLines(const GraphId& n_graphId,
           currentNode = de->endnode();
 
           // if (tripid == 0) then this is the first pass.
-          if (tripid == 0)
+          if (tripid == 0) {
             tripid = departure->tripid();
+          }
 
           // get the new tile if needed.
           if (endnodetile->id() != currentNode.Tile_Base()) {
@@ -176,8 +178,9 @@ void validate(const boost::property_tree::ptree& pt,
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
-    if (reader_transit_level.OverCommitted())
+    if (reader_transit_level.OverCommitted()) {
       reader_transit_level.Clear();
+    }
     GraphId tile_id = tile_start->Tile_Base();
 
     lock.lock();
@@ -228,8 +231,9 @@ void validate(const boost::property_tree::ptree& pt,
             }
           }
 
-          if (bfound)
+          if (bfound) {
             continue;
+          }
 
           const TransitStop* transit_stop = transit_tile->GetTransitStop(nodeinfo.stop_index());
           GraphId currentNode = GraphId(transit_tile->id().tileid(), transit_tile->id().level(), i);
@@ -272,9 +276,9 @@ void validate(const boost::property_tree::ptree& pt,
       }
     }
 
-    if (bfound)
+    if (bfound) {
       continue;
-    else { // only report a failure one time.  A station has multiple platforms and we could of
+    } else { // only report a failure one time.  A station has multiple platforms and we could of
       // walked the transit lines of the wrong platform.
       if (failures.find(p->first + p->second) == failures.end()) {
         failure_count++;
@@ -323,8 +327,9 @@ std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
         }
         field_num++;
       }
-      if (onestoptest.date_time.empty())
+      if (onestoptest.date_time.empty()) {
         onestoptest.date_time = default_date_time;
+      }
 
       onestoptests.emplace_back(std::move(onestoptest));
     }
@@ -416,10 +421,11 @@ void ParseLogFile(const std::string& filename) {
                 tranisit_route = value;
                 route = true;
               } else if (transit == "transit_stopid") {
-                if (route && origin.empty())
+                if (route && origin.empty()) {
                   origin = value;
-                else
+                } else {
                   dest = value;
+                }
               }
             } else if (type == "[INFO]") {
               origin = "";
@@ -490,8 +496,9 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     local_pt.get_child("mjolnir").erase("tile_dir");
     local_pt.add("mjolnir.tile_dir", std::string(*transit_dir));
 
-  } else
+  } else {
     all_tiles = tiles; // we called validate from valhalla_build_transit and tiles is not empty.
+  }
 
   if (!all_tiles.size()) {
     LOG_INFO("No transit tiles found. Transit will not be validated.");

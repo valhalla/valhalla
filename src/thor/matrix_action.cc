@@ -27,15 +27,17 @@ std::string thor_worker_t::matrix(valhalla_request_t& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
 
-  if (!request.options.do_not_track())
+  if (!request.options.do_not_track()) {
     valhalla::midgard::logging::Log(
         "matrix_type::" + odin::DirectionsOptions::Action_Name(request.options.action()),
         " [ANALYTICS] ");
+  }
 
   // Parse out units; if none specified, use kilometers
   double distance_scale = kKmPerMeter;
-  if (request.options.units() == odin::DirectionsOptions::miles)
+  if (request.options.units() == odin::DirectionsOptions::miles) {
     distance_scale = kMilePerMeter;
+  }
 
   json::MapPtr json;
   // do the real work

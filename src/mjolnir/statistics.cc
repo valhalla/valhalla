@@ -462,8 +462,9 @@ void statistics::RouletteData::AddTask(const AABB2<PointLL>& bb,
                                        const uint64_t id,
                                        const std::vector<PointLL>& shape) {
   auto result = way_IDs.insert(id);
-  if (result.second)
+  if (result.second) {
     shape_bb.insert({id, bb});
+  }
   way_shapes.insert({id, shape});
 }
 
@@ -526,8 +527,9 @@ void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& 
                               "This node is either unreachable or unleavable. Edit the surrounding "
                               "roads so that the node can be accessed properly")}})}})}});
   // write out to a file
-  if (boost::filesystem::exists("maproulette_tasks.geojson"))
+  if (boost::filesystem::exists("maproulette_tasks.geojson")) {
     boost::filesystem::remove("maproulette_tasks.geojson");
+  }
   std::ofstream file;
   file.open("maproulette_tasks.geojson");
   file << *geo_json << std::endl;

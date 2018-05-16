@@ -266,8 +266,9 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 rapidjson::Document from_string(const std::string& json, const std::exception& e) {
   rapidjson::Document d;
   d.Parse(json.c_str());
-  if (d.HasParseError())
+  if (d.HasParseError()) {
     throw e;
+  }
   return d;
 }
 
@@ -286,15 +287,18 @@ void parse_locations(const rapidjson::Document& doc,
         location->set_original_index(locations->size() - 1);
 
         auto lat = rapidjson::get_optional<float>(r_loc, "/lat");
-        if (!lat)
+        if (!lat) {
           throw std::runtime_error{"lat is missing"};
+        };
 
-        if (*lat < -90.0f || *lat > 90.0f)
+        if (*lat < -90.0f || *lat > 90.0f) {
           throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+        }
 
         auto lon = rapidjson::get_optional<float>(r_loc, "/lon");
-        if (!lon)
+        if (!lon) {
           throw std::runtime_error{"lon is missing"};
+        };
 
         lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
         location->mutable_ll()->set_lat(*lat);
@@ -306,66 +310,85 @@ void parse_locations(const rapidjson::Document& doc,
         }
 
         auto name = rapidjson::get_optional<std::string>(r_loc, "/name");
-        if (name)
+        if (name) {
           location->set_name(*name);
+        }
         auto street = rapidjson::get_optional<std::string>(r_loc, "/street");
-        if (street)
+        if (street) {
           location->set_street(*street);
+        }
         auto city = rapidjson::get_optional<std::string>(r_loc, "/city");
-        if (city)
+        if (city) {
           location->set_city(*city);
+        }
         auto state = rapidjson::get_optional<std::string>(r_loc, "/state");
-        if (state)
+        if (state) {
           location->set_state(*state);
+        }
         auto zip = rapidjson::get_optional<std::string>(r_loc, "/postal_code");
-        if (zip)
+        if (zip) {
           location->set_postal_code(*zip);
+        }
         auto country = rapidjson::get_optional<std::string>(r_loc, "/country");
-        if (country)
+        if (country) {
           location->set_country(*country);
+        }
         auto phone = rapidjson::get_optional<std::string>(r_loc, "/phone");
-        if (phone)
+        if (phone) {
           location->set_phone(*phone);
+        }
         auto url = rapidjson::get_optional<std::string>(r_loc, "/url");
-        if (url)
+        if (url) {
           location->set_url(*url);
+        }
 
         auto date_time = rapidjson::get_optional<std::string>(r_loc, "/date_time");
-        if (date_time)
+        if (date_time) {
           location->set_date_time(*date_time);
+        }
         auto heading = rapidjson::get_optional<int>(r_loc, "/heading");
-        if (heading)
+        if (heading) {
           location->set_heading(*heading);
+        }
         auto heading_tolerance = rapidjson::get_optional<int>(r_loc, "/heading_tolerance");
-        if (heading_tolerance)
+        if (heading_tolerance) {
           location->set_heading_tolerance(*heading_tolerance);
+        }
         auto node_snap_tolerance = rapidjson::get_optional<float>(r_loc, "/node_snap_tolerance");
-        if (node_snap_tolerance)
+        if (node_snap_tolerance) {
           location->set_node_snap_tolerance(*node_snap_tolerance);
+        }
         auto way_id = rapidjson::get_optional<uint64_t>(r_loc, "/way_id");
-        if (way_id)
+        if (way_id) {
           location->set_way_id(*way_id);
+        }
         auto minimum_reachability =
             rapidjson::get_optional<unsigned int>(r_loc, "/minimum_reachability");
-        if (minimum_reachability)
+        if (minimum_reachability) {
           location->set_minimum_reachability(*minimum_reachability);
+        }
         auto radius = rapidjson::get_optional<unsigned int>(r_loc, "/radius");
-        if (radius)
+        if (radius) {
           location->set_radius(*radius);
+        }
         auto accuracy = rapidjson::get_optional<unsigned int>(r_loc, "/accuracy");
-        if (accuracy)
+        if (accuracy) {
           location->set_accuracy(*accuracy);
+        }
         auto time = rapidjson::get_optional<unsigned int>(r_loc, "/time");
-        if (time)
+        if (time) {
           location->set_time(*time);
+        }
         auto rank_candidates = rapidjson::get_optional<bool>(r_loc, "/rank_candidates");
-        if (rank_candidates)
+        if (rank_candidates) {
           location->set_rank_candidates(*rank_candidates);
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
-    if (track)
+    if (track) {
       midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
                             " [ANALYTICS] ");
+    }
   }
 }
 
@@ -379,8 +402,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   if (deprecated) {
     for (const auto& key : {"/units", "/narrative", "/format", "/language"}) {
       auto child = rapidjson::get_child_optional(*deprecated, key);
-      if (child)
+      if (child) {
         doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
+      }
     }
     // delete directions_options if it existed
     doc.RemoveMember("directions_options");
@@ -388,32 +412,38 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
 
   auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
   odin::DirectionsOptions::Format format;
-  if (fmt && odin::DirectionsOptions::Format_Parse(*fmt, &format))
+  if (fmt && odin::DirectionsOptions::Format_Parse(*fmt, &format)) {
     options.set_format(format);
+  }
 
   auto id = rapidjson::get_optional<std::string>(doc, "/id");
-  if (id)
+  if (id) {
     options.set_id(*id);
+  }
 
   auto jsonp = rapidjson::get_optional<std::string>(doc, "/jsonp");
-  if (jsonp)
+  if (jsonp) {
     options.set_jsonp(*jsonp);
+  }
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
   if (units) {
-    if ((*units == "miles") || (*units == "mi"))
+    if ((*units == "miles") || (*units == "mi")) {
       options.set_units(odin::DirectionsOptions::miles);
-    else
+    } else {
       options.set_units(odin::DirectionsOptions::kilometers);
+    }
   }
 
   auto language = rapidjson::get_optional<std::string>(doc, "/language");
-  if (language && odin::get_locales().find(*language) != odin::get_locales().end())
+  if (language && odin::get_locales().find(*language) != odin::get_locales().end()) {
     options.set_language(*language);
+  }
 
   auto narrative = rapidjson::get_optional<bool>(doc, "/narrative");
-  if (narrative)
+  if (narrative) {
     options.set_narrative(*narrative);
+  }
 
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
@@ -424,8 +454,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       sll->mutable_ll()->set_lat(ll.lat());
       sll->mutable_ll()->set_lng(ll.lng());
     }
-  } else
+  } else {
     parse_locations(doc, options.mutable_shape(), "shape", 134, false);
+  }
 
   // TODO: remove this?
   options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
@@ -439,12 +470,13 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   if (costing_str) {
     // try the string directly, some strings are keywords so add an underscore
     odin::DirectionsOptions::Costing costing;
-    if (odin::DirectionsOptions::Costing_Parse(*costing_str, &costing))
+    if (odin::DirectionsOptions::Costing_Parse(*costing_str, &costing)) {
       options.set_costing(costing);
-    else if (odin::DirectionsOptions::Costing_Parse(*costing_str + '_', &costing))
+    } else if (odin::DirectionsOptions::Costing_Parse(*costing_str + '_', &costing)) {
       options.set_costing(costing);
-    else
+    } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
+    };
   }
 
   // TODO: costing options
@@ -467,8 +499,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_date_time_type(static_cast<odin::DirectionsOptions::DateTimeType>(*date_time_type));
   } // not specified but you want transit, then we default to current
   else if (options.has_costing() && (options.costing() == odin::DirectionsOptions::multimodal ||
-                                     options.costing() == odin::DirectionsOptions::transit))
+                                     options.costing() == odin::DirectionsOptions::transit)) {
     options.set_date_time_type(odin::DirectionsOptions::current);
+  }
 
   // time value
   if (options.has_date_time_type()) {
@@ -479,22 +512,27 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
         options.mutable_locations(0)->set_date_time("current");
         break;
       case odin::DirectionsOptions::depart_at:
-        if (!date_time_value)
+        if (!date_time_value) {
           throw valhalla_exception_t{160};
-        if (!baldr::DateTime::is_iso_local(*date_time_value))
+        };
+        if (!baldr::DateTime::is_iso_local(*date_time_value)) {
           throw valhalla_exception_t{162};
+        };
         options.set_date_time(*date_time_value);
         options.mutable_locations(0)->set_date_time(*date_time_value);
         break;
       case odin::DirectionsOptions::arrive_by:
         // not yet for transit
         if (options.costing() == odin::DirectionsOptions::multimodal ||
-            options.costing() == odin::DirectionsOptions::transit)
+            options.costing() == odin::DirectionsOptions::transit) {
           throw valhalla_exception_t{141};
-        if (!date_time_value)
+        };
+        if (!date_time_value) {
           throw valhalla_exception_t{161};
-        if (!baldr::DateTime::is_iso_local(*date_time_value))
+        };
+        if (!baldr::DateTime::is_iso_local(*date_time_value)) {
           throw valhalla_exception_t{162};
+        };
         options.set_date_time(*date_time_value);
         options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
         break;
@@ -505,8 +543,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
 
   // get some parameters
   auto resample_distance = rapidjson::get_optional<double>(doc, "/resample_distance");
-  if (resample_distance)
+  if (resample_distance) {
     options.set_resample_distance(*resample_distance);
+  }
 
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
@@ -536,29 +575,33 @@ void valhalla_request_t::parse(const std::string& request, const std::string& se
 void valhalla_request_t::parse(const http_request_t& request) {
 
   // block all but get and post
-  if (request.method != method_t::POST && request.method != method_t::GET)
+  if (request.method != method_t::POST && request.method != method_t::GET) {
     throw valhalla_exception_t{101};
+  };
 
   auto& allocator = document.GetAllocator();
   // parse the input
   const auto& json = request.query.find("json");
-  if (json != request.query.end() && json->second.size() && json->second.front().size())
+  if (json != request.query.end() && json->second.size() && json->second.front().size()) {
     document.Parse(json->second.front().c_str());
-  // no json parameter, check the body
-  else if (!request.body.empty())
+    // no json parameter, check the body
+  } else if (!request.body.empty()) {
     document.Parse(request.body.c_str());
-  // no json at all
-  else
+    // no json at all
+  } else {
     document.SetObject();
+  }
   // if parsing failed
-  if (document.HasParseError())
+  if (document.HasParseError()) {
     throw valhalla_exception_t{100};
+  };
 
   // throw the query params into the rapidjson doc
   for (const auto& kv : request.query) {
     // skip json or empty entries
-    if (kv.first == "json" || kv.first.empty() || kv.second.empty() || kv.second.front().empty())
+    if (kv.first == "json" || kv.first.empty() || kv.second.empty() || kv.second.front().empty()) {
       continue;
+    }
 
     // turn single value entries into single key value
     if (kv.second.size() == 1) {
@@ -577,8 +620,9 @@ void valhalla_request_t::parse(const http_request_t& request) {
   // set the action
   odin::DirectionsOptions::Action action;
   if (!request.path.empty() &&
-      odin::DirectionsOptions::Action_Parse(request.path.substr(1), &action))
+      odin::DirectionsOptions::Action_Parse(request.path.substr(1), &action)) {
     options.set_action(action);
+  }
 
   // disable analytics
   auto do_not_track = request.headers.find("DNT");
@@ -607,8 +651,9 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
   // overwrite with osrm error response
   if (request.options.format() == odin::DirectionsOptions::osrm) {
     auto found = OSRM_ERRORS_CODES.find(exception.code);
-    if (found == OSRM_ERRORS_CODES.cend())
+    if (found == OSRM_ERRORS_CODES.cend()) {
       found = OSRM_ERRORS_CODES.find(199);
+    }
     body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << found->second
          << (request.options.has_jsonp() ? ")" : "");
   } // valhalla error response
@@ -637,11 +682,13 @@ worker_t::result_t to_response(baldr::json::ArrayPtr array,
                                const valhalla_request_t& request) {
   std::ostringstream stream;
   // jsonp callback if need be
-  if (request.options.has_jsonp())
+  if (request.options.has_jsonp()) {
     stream << request.options.jsonp() << '(';
+  }
   stream << *array;
-  if (request.options.has_jsonp())
+  if (request.options.has_jsonp()) {
     stream << ')';
+  }
 
   worker_t::result_t result{false};
   http_response_t response(200, "OK", stream.str(),
@@ -656,11 +703,13 @@ worker_t::result_t to_response(baldr::json::MapPtr map,
                                const valhalla_request_t& request) {
   std::ostringstream stream;
   // jsonp callback if need be
-  if (request.options.has_jsonp())
+  if (request.options.has_jsonp()) {
     stream << request.options.jsonp() << '(';
+  }
   stream << *map;
-  if (request.options.has_jsonp())
+  if (request.options.has_jsonp()) {
     stream << ')';
+  }
 
   worker_t::result_t result{false};
   http_response_t response(200, "OK", stream.str(),
@@ -675,11 +724,13 @@ worker_t::result_t to_response_json(const std::string& json,
                                     const valhalla_request_t& request) {
   std::ostringstream stream;
   // jsonp callback if need be
-  if (request.options.has_jsonp())
+  if (request.options.has_jsonp()) {
     stream << request.options.jsonp() << '(';
+  }
   stream << json;
-  if (request.options.has_jsonp())
+  if (request.options.has_jsonp()) {
     stream << ')';
+  }
 
   worker_t::result_t result{false};
   http_response_t response(200, "OK", stream.str(),

@@ -29,15 +29,17 @@ template <class coord_t> void AABB2<coord_t>::Create(const std::vector<coord_t>&
   p++;
   for (; p < pts.end(); p++) {
     x_t x = p->x();
-    if (x < minx_)
+    if (x < minx_) {
       minx_ = x;
-    else if (x > maxx_)
+    } else if (x > maxx_) {
       maxx_ = x;
+    }
     y_t y = p->y();
-    if (y < miny_)
+    if (y < miny_) {
       miny_ = y;
-    else if (y > maxy_)
+    } else if (y > maxy_) {
       maxy_ = y;
+    }
   }
 }
 
@@ -55,15 +57,17 @@ template <class coord_t> AABB2<coord_t> AABB2<coord_t>::Intersection(const AABB2
 // Tests whether the segment intersects the bounding box.
 template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& a, const coord_t& b) const {
   // Trivial case - either point within the bounding box
-  if (Contains(a) || Contains(b))
+  if (Contains(a) || Contains(b)) {
     return true;
+  }
 
   // Trivial rejection - both points outside any one bounding edge
   if ((a.x() < minx_ && b.x() < minx_) || // Both left
       (a.y() < miny_ && b.y() < miny_) || // Both below
       (a.x() > maxx_ && b.x() > maxx_) || // Both right
-      (a.y() > maxy_ && b.y() > maxy_))   // Both above
+      (a.y() > maxy_ && b.y() > maxy_)) { // Both above
     return false;
+  }
 
   // For LineSegment from a to b check which half plane each corner lies
   // in. If there is a change (different sign returned from the IsLeft
@@ -80,14 +84,16 @@ template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& a, const
 
 template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& c, float r) const {
   // Trivial case - center of circle is within the bounding box
-  if (Contains(c))
+  if (Contains(c)) {
     return true;
+  }
 
   // Trivial rejection - if the center is more than radius away from
   // from any box edge (in the direction perpendicular to the edge
   // and away from the box center) it cannot intersect
-  if (c.first < minx_ - r || c.second < miny_ - r || c.first > maxx_ + r || c.second > maxy_ + r)
+  if (c.first < minx_ - r || c.second < miny_ - r || c.first > maxx_ + r || c.second > maxy_ + r) {
     return false;
+  }
 
   // If closest point on the box to the center is within radius
   // of the center then we intersected. We just project the center
@@ -106,25 +112,30 @@ template <class coord_t> bool AABB2<coord_t>::Intersect(coord_t& u, coord_t& v) 
   // which do we need to move
   bool need_u = u.first < minx_ || u.first > maxx_ || u.second < miny_ || u.second > maxy_;
   bool need_v = v.first < minx_ || v.first > maxx_ || v.second < miny_ || v.second > maxy_;
-  if (!(need_u || need_v))
+  if (!(need_u || need_v)) {
     return true;
+  }
   // find intercepts with each box edge
   std::list<coord_t> intersections;
   x_t x;
   y_t y;
   // intersect with each edge keeping it if its on this box and on the segment uv
   if (!std::isnan(x = y_intercept(u, v, miny_)) && x >= minx_ && x <= maxx_ &&
-      between(x, u.first, v.first))
+      between(x, u.first, v.first)) {
     intersections.emplace_back(x, miny_);
+  }
   if (!std::isnan(x = y_intercept(u, v, maxy_)) && x >= minx_ && x <= maxx_ &&
-      between(x, u.first, v.first))
+      between(x, u.first, v.first)) {
     intersections.emplace_back(x, maxy_);
+  }
   if (!std::isnan(y = x_intercept(u, v, maxx_)) && y >= miny_ && y <= maxy_ &&
-      between(y, u.second, v.second))
+      between(y, u.second, v.second)) {
     intersections.emplace_back(maxx_, y);
+  }
   if (!std::isnan(y = x_intercept(u, v, minx_)) && y >= miny_ && y <= maxy_ &&
-      between(y, u.second, v.second))
+      between(y, u.second, v.second)) {
     intersections.emplace_back(minx_, y);
+  }
   // pick the best one for each that needs it
   float u_dist = std::numeric_limits<float>::infinity(),
         v_dist = std::numeric_limits<float>::infinity(), d;

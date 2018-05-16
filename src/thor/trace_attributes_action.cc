@@ -89,17 +89,18 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   filter_attributes(request, controller);
   auto shape_match = STRING_TO_MATCH.find(
       rapidjson::get<std::string>(request.document, "/shape_match", "walk_or_snap"));
-  if (shape_match == STRING_TO_MATCH.cend())
+  if (shape_match == STRING_TO_MATCH.cend()) {
     throw valhalla_exception_t{445};
-  else {
+  } else {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     switch (shape_match->second) {
       case EDGE_WALK:
         try {
           trip_path = route_match(request, controller);
-          if (trip_path.node().size() == 0)
+          if (trip_path.node().size() == 0) {
             throw std::exception{};
+          };
           map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
         } catch (const std::exception& e) {
           throw valhalla_exception_t{
@@ -143,8 +144,9 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   }
 
   if (map_match_results.empty() ||
-      std::get<kTripPathIndex>(map_match_results.at(0)).node().size() == 0)
+      std::get<kTripPathIndex>(map_match_results.at(0)).node().size() == 0) {
     throw valhalla_exception_t{442};
+  };
   return tyr::serializeTraceAttributes(request, controller, map_match_results);
 }
 } // namespace thor

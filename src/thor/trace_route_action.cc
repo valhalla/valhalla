@@ -67,17 +67,18 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
    */
   auto shape_match = STRING_TO_MATCH.find(
       rapidjson::get<std::string>(request.document, "/shape_match", "walk_or_snap"));
-  if (shape_match == STRING_TO_MATCH.cend())
+  if (shape_match == STRING_TO_MATCH.cend()) {
     throw valhalla_exception_t{445};
-  else {
+  } else {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
     switch (shape_match->second) {
       case EDGE_WALK:
         try {
           trip_path = route_match(request, controller);
-          if (trip_path.node().size() == 0)
+          if (trip_path.node().size() == 0) {
             throw;
+          }
         } catch (...) {
           throw valhalla_exception_t{
               443, shape_match->first +
@@ -90,8 +91,9 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
       case MAP_SNAP:
         try {
           auto map_match_results = map_match(request, controller);
-          if (!map_match_results.empty())
+          if (!map_match_results.empty()) {
             trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
+          }
         } catch (...) { throw valhalla_exception_t{442}; }
         break;
       // If we think that we have the exact shape but there ends up being no Valhalla route match,
@@ -105,15 +107,17 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
                    " algorithm failed to find exact route match; Falling back to map_match...");
           try {
             auto map_match_results = map_match(request, controller);
-            if (!map_match_results.empty())
+            if (!map_match_results.empty()) {
               trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
+            }
           } catch (...) { throw valhalla_exception_t{442}; }
         }
         break;
     }
 
-    if (!request.options.do_not_track())
+    if (!request.options.do_not_track()) {
       log_admin(trip_path);
+    }
   }
 
   return trip_path;
@@ -156,8 +160,9 @@ thor_worker_t::map_match(valhalla_request_t& request,
   matcher->set_interrupt(interrupt);
   // Create the vector of matched path results
   std::vector<meili::MatchResults> offline_results;
-  if (trace.size() > 0)
+  if (trace.size() > 0) {
     offline_results = matcher->OfflineMatch(trace, best_paths);
+  }
 
   // Process each score/match result
   for (const auto& result : offline_results) {
@@ -175,8 +180,9 @@ thor_worker_t::map_match(valhalla_request_t& request,
 
     // Throw exception if not trace attributes action and disconnected path
     if (request.options.action() == odin::DirectionsOptions::trace_route &&
-        disconnected_edges.size())
+        disconnected_edges.size()) {
       throw valhalla_exception_t{442};
+    };
 
     // OSRM map matching format has both the match points and the route, fill out the match points
     // here Note that we only support trace_route as OSRM format so best_paths == 1
@@ -186,23 +192,28 @@ thor_worker_t::map_match(valhalla_request_t& request,
       for (int i = 0; i < match_results.size(); ++i) {
         // Get the match
         const auto& match = match_results[i];
-        if (!match.edgeid.Is_Valid())
+        if (!match.edgeid.Is_Valid()) {
           continue;
+        }
 
         // Make one path edge from it
         reader.GetGraphTile(match.edgeid, tile);
         auto* pe = request.options.mutable_shape(i)->mutable_path_edges()->Add();
         pe->mutable_ll()->set_lat(match.lnglat.lat());
         pe->mutable_ll()->set_lng(match.lnglat.lng());
-        for (const auto& n : reader.edgeinfo(match.edgeid).GetNames())
+        for (const auto& n : reader.edgeinfo(match.edgeid).GetNames()) {
           pe->mutable_names()->Add()->assign(n);
+        }
 
         // signal how many edge candidates there were at this stateid by adding empty path edges
-        if (!match.HasState())
+        if (!match.HasState()) {
           continue;
+        }
         for (int j = 0;
-             j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1; ++j)
+             j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1;
+             ++j) {
           request.options.mutable_shape(i)->mutable_path_edges()->Add();
+        }
       }
     }
 
@@ -375,7 +386,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
 
       // Print geojson footer
       printf("]}\n");
-      ////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 #endif
     }
 
@@ -452,11 +463,10 @@ thor_worker_t::map_match(valhalla_request_t& request,
       throw valhalla_exception_t{442};
     }
     // Keep the result
-    map_match_results.emplace_back(map_match_results.empty()
-                                       ? 1.0f
-                                       : std::get<kRawScoreIndex>(map_match_results.front()) /
-                                             result.score,
-                                   result.score, enhanced_match_results, trip_path);
+    map_match_results.emplace_back(
+        map_match_results.empty() ? 1.0f : std::get<kRawScoreIndex>(map_match_results.front()) /
+                                               result.score,
+        result.score, enhanced_match_results, trip_path);
   }
 
   return map_match_results;

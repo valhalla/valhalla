@@ -41,11 +41,13 @@ inline typename std::enable_if<!std::is_arithmetic<T>::value, boost::optional<T>
 get_optional(V&& v, const char* source) {
   // if we dont have this key bail
   auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
-  if (!ptr)
+  if (!ptr) {
     return boost::none;
+  }
   // if its the exact right type give it back
-  if (ptr->template Is<T>())
+  if (ptr->template Is<T>()) {
     return ptr->template Get<T>();
+  }
   // give up
   return boost::none;
 }
@@ -56,11 +58,13 @@ inline typename std::enable_if<std::is_arithmetic<T>::value, boost::optional<T>>
 get_optional(V&& v, const char* source) {
   // if we dont have this key bail
   auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
-  if (!ptr)
+  if (!ptr) {
     return boost::none;
+  }
   // if its the exact right type give it back
-  if (ptr->template Is<T>())
+  if (ptr->template Is<T>()) {
     return ptr->template Get<T>();
+  }
   // try to convert from a string
   if (ptr->IsString()) {
     try {
@@ -69,47 +73,57 @@ get_optional(V&& v, const char* source) {
   }
   // numbers are strict in rapidjson but we don't want that strictness because it aborts the program
   // (wtf?)
-  if (ptr->IsBool())
+  if (ptr->IsBool()) {
     return static_cast<T>(ptr->GetBool());
-  if (ptr->IsInt())
+  }
+  if (ptr->IsInt()) {
     return static_cast<T>(ptr->GetInt());
-  if (ptr->IsUint())
+  }
+  if (ptr->IsUint()) {
     return static_cast<T>(ptr->GetUint());
-  if (ptr->IsInt64())
+  }
+  if (ptr->IsInt64()) {
     return static_cast<T>(ptr->GetInt64());
-  if (ptr->IsUint64())
+  }
+  if (ptr->IsUint64()) {
     return static_cast<T>(ptr->GetUint64());
-  if (ptr->IsDouble())
+  }
+  if (ptr->IsDouble()) {
     return static_cast<T>(ptr->GetDouble());
+  }
   // give up
   return boost::none;
 }
 
 template <typename T, typename V> inline T get(V&& v, const char* source, const T& t) {
   auto value = get_optional<T>(v, source);
-  if (!value)
+  if (!value) {
     return t;
+  }
   return *value;
 }
 
 template <typename T, typename V> inline T get(V&& v, const char* source) {
   auto value = get_optional<T>(v, source);
-  if (!value)
+  if (!value) {
     throw std::runtime_error(std::string("No member: ") + source);
+  }
   return *value;
 }
 
 template <typename V> inline const rapidjson::Value& get_child(const V& v, const char* source) {
   const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
-  if (!ptr)
+  if (!ptr) {
     throw std::runtime_error(std::string("No child: ") + source);
+  }
   return *ptr;
 }
 
 template <typename V> inline rapidjson::Value& get_child(V&& v, const char* source) {
   rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
-  if (!ptr)
+  if (!ptr) {
     throw std::runtime_error(std::string("No child: ") + source);
+  }
   return *ptr;
 }
 
@@ -117,8 +131,9 @@ template <typename V>
 inline boost::optional<const rapidjson::Value&> get_child_optional(const V& v, const char* source) {
   boost::optional<const rapidjson::Value&> c;
   const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
-  if (ptr)
+  if (ptr) {
     c.reset(*ptr);
+  }
   return c;
 }
 
@@ -126,8 +141,9 @@ template <typename V>
 inline boost::optional<rapidjson::Value&> get_child_optional(V&& v, const char* source) {
   boost::optional<rapidjson::Value&> c;
   rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
-  if (ptr)
+  if (ptr) {
     c.reset(*ptr);
+  }
   return c;
 }
 

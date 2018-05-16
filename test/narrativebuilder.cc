@@ -278,9 +278,9 @@ void TryBuild(const DirectionsOptions& directions_options,
 
     // Check maneuver instruction
     if (man->instruction() != expected_man->instruction()) {
-      throw std::runtime_error(
-          "Incorrect maneuver instruction - expected: " + expected_man->instruction() +
-          "  |  produced: " + man->instruction());
+      throw std::runtime_error("Incorrect maneuver instruction - expected: " +
+                               expected_man->instruction() + "  |  produced: " +
+                               man->instruction());
     }
 
     // Check maneuver verbal_transition_alert_instruction
@@ -288,8 +288,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         expected_man->verbal_transition_alert_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_transition_alert_instruction - expected: " +
-          expected_man->verbal_transition_alert_instruction() +
-          "  |  produced: " + man->verbal_transition_alert_instruction());
+          expected_man->verbal_transition_alert_instruction() + "  |  produced: " +
+          man->verbal_transition_alert_instruction());
     }
 
     // Check maneuver verbal_pre_transition_instruction
@@ -305,36 +305,36 @@ void TryBuild(const DirectionsOptions& directions_options,
         expected_man->verbal_post_transition_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_post_transition_instruction - expected: " +
-          expected_man->verbal_post_transition_instruction() +
-          "  |  produced: " + man->verbal_post_transition_instruction());
+          expected_man->verbal_post_transition_instruction() + "  |  produced: " +
+          man->verbal_post_transition_instruction());
     }
 
     // Check maneuver depart_instruction
     if (man->depart_instruction() != expected_man->depart_instruction()) {
       throw std::runtime_error("Incorrect maneuver depart_instruction - expected: " +
-                               expected_man->depart_instruction() +
-                               "  |  produced: " + man->depart_instruction());
+                               expected_man->depart_instruction() + "  |  produced: " +
+                               man->depart_instruction());
     }
 
     // Check maneuver verbal_depart_instruction
     if (man->verbal_depart_instruction() != expected_man->verbal_depart_instruction()) {
       throw std::runtime_error("Incorrect maneuver verbal_depart_instruction - expected: " +
-                               expected_man->verbal_depart_instruction() +
-                               "  |  produced: " + man->verbal_depart_instruction());
+                               expected_man->verbal_depart_instruction() + "  |  produced: " +
+                               man->verbal_depart_instruction());
     }
 
     // Check maneuver arrive_instruction
     if (man->arrive_instruction() != expected_man->arrive_instruction()) {
       throw std::runtime_error("Incorrect maneuver arrive_instruction - expected: " +
-                               expected_man->arrive_instruction() +
-                               "  |  produced: " + man->arrive_instruction());
+                               expected_man->arrive_instruction() + "  |  produced: " +
+                               man->arrive_instruction());
     }
 
     // Check maneuver verbal_arrive_instruction
     if (man->verbal_arrive_instruction() != expected_man->verbal_arrive_instruction()) {
       throw std::runtime_error("Incorrect maneuver verbal_arrive_instruction - expected: " +
-                               expected_man->verbal_arrive_instruction() +
-                               "  |  produced: " + man->verbal_arrive_instruction());
+                               expected_man->verbal_arrive_instruction() + "  |  produced: " +
+                               man->verbal_arrive_instruction());
     }
   }
 }
@@ -906,12 +906,11 @@ void PopulateRampStraightManeuverList_3(std::list<Maneuver>& maneuvers,
   PopulateManeuver(maneuver, country_code, state_code, TripDirections_Maneuver_Type_kRampStraight,
                    {}, {}, {}, "", 0.374000, 37, 340, Maneuver::RelativeDirection::kKeepStraight,
                    TripDirections_Maneuver_CardinalDirection_kNorthEast, 60, 57, 9, 10, 88, 92, 1,
-                   0, 0, 0, 0, 0, 0, 0, 0, {},
-                   {{"US 322 East", "1"},
-                    {"US 422 East", "1"},
-                    {"US 522 East", "1"},
-                    {"US 622 East", "1"},
-                    {"US 722 East", "1"}},
+                   0, 0, 0, 0, 0, 0, 0, 0, {}, {{"US 322 East", "1"},
+                                                {"US 422 East", "1"},
+                                                {"US 522 East", "1"},
+                                                {"US 622 East", "1"},
+                                                {"US 722 East", "1"}},
                    {{"Hershey", "1"},
                     {"Palmdale", "1"},
                     {"Palmyra", "1"},
@@ -1152,12 +1151,11 @@ void PopulateExitManeuverList_7(std::list<Maneuver>& maneuvers,
                    {"US 322 West"}, {}, {}, "", 0.561000, 23, 2,
                    Maneuver::RelativeDirection::kKeepRight,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278, 42, 43, 260, 264, 1,
-                   0, 0, 0, 0, 0, 0, 0, 0, {{"67 B-A", "0"}},
-                   {{"US 322 West", "2"},
-                    {"US 22 West", "1"},
-                    {"US 22 East", "0"},
-                    {"PA 230 East", "0"},
-                    {"Cameron Street", "0"}},
+                   0, 0, 0, 0, 0, 0, 0, 0, {{"67 B-A", "0"}}, {{"US 322 West", "2"},
+                                                               {"US 22 West", "1"},
+                                                               {"US 22 East", "0"},
+                                                               {"PA 230 East", "0"},
+                                                               {"Cameron Street", "0"}},
                    {{"Lewistown", "1"}, {"State College", "1"}, {"Harrisburg", "0"}}, {}, 0, 0, 0,
                    0, 1, 0, "", "", "", 0, 0, 0, 0, 23, 0);
 }
@@ -1865,10 +1863,9 @@ void PopulateTransitManeuverList_0_train(std::list<Maneuver>& maneuvers,
                    0);
 
   PopulateTransitInfo(maneuver.mutable_transit_info(), "r-dr5r-r", 0, 84452, "", "", "", 16567306,
-                      0,
-                      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, "
-                      "Brooklyn, at all times except late nights. During late nights, trains "
-                      "operate only in Brooklyn between 36 St and 95 St/4 Av.",
+                      0, "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, "
+                         "Brooklyn, at all times except late nights. During late nights, trains "
+                         "operate only in Brooklyn between 36 St and 95 St/4 Av.",
                       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
@@ -2137,10 +2134,9 @@ void PopulateTransitTransferManeuverList_0_no_name(std::list<Maneuver>& maneuver
       0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
 
   PopulateTransitInfo(maneuver.mutable_transit_info(), "r-dr5r-r", 0, 84452, "", "", "", 16567306,
-                      0,
-                      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, "
-                      "Brooklyn, at all times except late nights. During late nights, trains "
-                      "operate only in Brooklyn between 36 St and 95 St/4 Av.",
+                      0, "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, "
+                         "Brooklyn, at all times except late nights. During late nights, trains "
+                         "operate only in Brooklyn between 36 St and 95 St/4 Av.",
                       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
@@ -2245,10 +2241,9 @@ void PopulateTransitRemainOnManeuverList_0_no_name(std::list<Maneuver>& maneuver
       0, {}, {}, {}, {}, 0, 0, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0, 1570, 0);
 
   PopulateTransitInfo(maneuver.mutable_transit_info(), "r-dr5r-r", 0, 84452, "", "", "", 16567306,
-                      0,
-                      "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, "
-                      "Brooklyn, at all times except late nights. During late nights, trains "
-                      "operate only in Brooklyn between 36 St and 95 St/4 Av.",
+                      0, "Trains operate local between Forest Hills-71 Av, Queens, and 95 St/4 Av, "
+                         "Brooklyn, at all times except late nights. During late nights, trains "
+                         "operate only in Brooklyn between 36 St and 95 St/4 Av.",
                       "o-dr5r-nyct", "MTA New York City Transit", "http://web.mta.info/");
 
   // Insert the transit stops in reverse order (end to begin of line)
@@ -7174,17 +7169,15 @@ void TestFormRampStraightInstruction() {
   NarrativeBuilderTest nbt(directions_options, dictionary);
 
   // phrase_id = 0
-  TryFormRampStraightInstruction(nbt,
-                                 CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {}, {}, {}),
+  TryFormRampStraightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                                                         Maneuver::RelativeDirection::kKeepStraight,
+                                                         {}, {}, {}, {}),
                                  "Stay straight to take the ramp.");
 
   // phrase_id = 1
-  TryFormRampStraightInstruction(nbt,
-                                 CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {"I 95 South"}, {}, {}),
+  TryFormRampStraightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                                                         Maneuver::RelativeDirection::kKeepStraight,
+                                                         {}, {"I 95 South"}, {}, {}),
                                  "Stay straight to take the I 95 South ramp.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
@@ -7195,10 +7188,9 @@ void TestFormRampStraightInstruction() {
                                  "Stay straight to take the I 95 South ramp.");
 
   // phrase_id = 2
-  TryFormRampStraightInstruction(nbt,
-                                 CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {}, {"Baltimore"}, {}),
+  TryFormRampStraightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                                                         Maneuver::RelativeDirection::kKeepStraight,
+                                                         {}, {}, {"Baltimore"}, {}),
                                  "Stay straight to take the ramp toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
@@ -7209,25 +7201,22 @@ void TestFormRampStraightInstruction() {
                                  "Stay straight to take the ramp toward Baltimore.");
 
   // phrase_id = 3
-  TryFormRampStraightInstruction(nbt,
-                                 CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormRampStraightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                                                         Maneuver::RelativeDirection::kKeepStraight,
+                                                         {}, {"I 95 South"}, {"Baltimore"}, {}),
                                  "Stay straight to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward exists
-  TryFormRampStraightInstruction(nbt,
-                                 CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {"I 95 South"}, {"Baltimore"},
-                                                    {"Gettysburg Pike"}),
+  TryFormRampStraightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                                                         Maneuver::RelativeDirection::kKeepStraight,
+                                                         {}, {"I 95 South"}, {"Baltimore"},
+                                                         {"Gettysburg Pike"}),
                                  "Stay straight to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 4
-  TryFormRampStraightInstruction(nbt,
-                                 CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
-                                                    Maneuver::RelativeDirection::kKeepStraight, {},
-                                                    {}, {}, {"Gettysburg Pike"}),
+  TryFormRampStraightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                                                         Maneuver::RelativeDirection::kKeepStraight,
+                                                         {}, {}, {}, {"Gettysburg Pike"}),
                                  "Stay straight to take the Gettysburg Pike ramp.");
 }
 
@@ -7249,96 +7238,83 @@ void TestFormRampRightInstruction() {
   NarrativeBuilderTest nbt(directions_options, dictionary);
 
   // phrase_id = 0
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {}, {}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {}, {}, {}),
                               "Take the ramp on the right.");
 
   // phrase_id = 1
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
-                                                 {"I 95 South"}, {}, {}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {"I 95 South"}, {}, {}),
                               "Take the I 95 South ramp on the right.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
-                                                 {"I 95 South"}, {}, {"Gettysburg Pike"}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {"I 95 South"}, {}, {"Gettysburg Pike"}),
                               "Take the I 95 South ramp on the right.");
 
   // phrase_id = 2
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {"Baltimore"}, {}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {}, {"Baltimore"}, {}),
                               "Take the ramp on the right toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {"Baltimore"}, {"Gettysburg Pike"}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {}, {"Baltimore"}, {"Gettysburg Pike"}),
                               "Take the ramp on the right toward Baltimore.");
 
   // phrase_id = 3
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
-                                                 {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {"I 95 South"}, {"Baltimore"}, {}),
                               "Take the I 95 South ramp on the right toward Baltimore.");
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward
   // exists
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
-                                                 {"I 95 South"}, {"Baltimore"},
-                                                 {"Gettysburg Pike"}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {"I 95 South"}, {"Baltimore"},
+                                                      {"Gettysburg Pike"}),
                               "Take the I 95 South ramp on the right toward Baltimore.");
 
   // phrase_id = 4
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {}, {"Gettysburg Pike"}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {}, {}, {"Gettysburg Pike"}),
                               "Take the Gettysburg Pike ramp on the right.");
 
   // phrase_id = 5
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {}, {}, {},
-                                                 {}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kRight, {}, {},
+                                                      {}, {}),
                               "Turn right to take the ramp.");
 
   // phrase_id = 6
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {},
-                                                 {"I 95 South"}, {}, {}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kRight, {},
+                                                      {"I 95 South"}, {}, {}),
                               "Turn right to take the I 95 South ramp.");
 
   // phrase_id = 7
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {}, {},
-                                                 {"Baltimore"}, {}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kRight, {}, {},
+                                                      {"Baltimore"}, {}),
                               "Turn right to take the ramp toward Baltimore.");
 
   // phrase_id = 8
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {},
-                                                 {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kRight, {},
+                                                      {"I 95 South"}, {"Baltimore"}, {}),
                               "Turn right to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 9
-  TryFormRampRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
-                                                 Maneuver::RelativeDirection::kRight, {}, {}, {},
-                                                 {"Gettysburg Pike"}),
+  TryFormRampRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
+                                                      Maneuver::RelativeDirection::kRight, {}, {},
+                                                      {}, {"Gettysburg Pike"}),
                               "Turn right to take the Gettysburg Pike ramp.");
 }
 
@@ -7360,45 +7336,39 @@ void TestFormRampLeftInstruction() {
   NarrativeBuilderTest nbt(directions_options, dictionary);
 
   // phrase_id = 0
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {}, {},
-                                                {}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                     {}, {}),
                              "Take the ramp on the left.");
 
   // phrase_id = 1
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
-                                                {"I 95 South"}, {}, {}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {},
+                                                     {"I 95 South"}, {}, {}),
                              "Take the I 95 South ramp on the left.");
 
   // phrase_id = 1; Test that exit name is not used when a branch exists
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
-                                                {"I 95 South"}, {}, {"Gettysburg Pike"}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {},
+                                                     {"I 95 South"}, {}, {"Gettysburg Pike"}),
                              "Take the I 95 South ramp on the left.");
 
   // phrase_id = 2
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {},
-                                                {"Baltimore"}, {}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                     {"Baltimore"}, {}),
                              "Take the ramp on the left toward Baltimore.");
 
   // phrase_id = 2; Test that exit name is not used when a toward exists
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {},
-                                                {"Baltimore"}, {"Gettysburg Pike"}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                     {"Baltimore"}, {"Gettysburg Pike"}),
                              "Take the ramp on the left toward Baltimore.");
 
   // phrase_id = 3
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
-                                                {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {},
+                                                     {"I 95 South"}, {"Baltimore"}, {}),
                              "Take the I 95 South ramp on the left toward Baltimore.");
 
   // phrase_id = 3; Test that exit name is not used when a branch or toward
@@ -7410,10 +7380,9 @@ void TestFormRampLeftInstruction() {
                              "Take the I 95 South ramp on the left toward Baltimore.");
 
   // phrase_id = 4
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {}, {},
-                                                {"Gettysburg Pike"}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                     {}, {"Gettysburg Pike"}),
                              "Take the Gettysburg Pike ramp on the left.");
 
   // phrase_id = 5
@@ -7423,31 +7392,27 @@ void TestFormRampLeftInstruction() {
                              "Turn left to take the ramp.");
 
   // phrase_id = 6
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {},
-                                                {"I 95 South"}, {}, {}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kLeft, {},
+                                                     {"I 95 South"}, {}, {}),
                              "Turn left to take the I 95 South ramp.");
 
   // phrase_id = 7
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {}, {},
-                                                {"Baltimore"}, {}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kLeft, {}, {},
+                                                     {"Baltimore"}, {}),
                              "Turn left to take the ramp toward Baltimore.");
 
   // phrase_id = 8
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {},
-                                                {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kLeft, {},
+                                                     {"I 95 South"}, {"Baltimore"}, {}),
                              "Turn left to take the I 95 South ramp toward Baltimore.");
 
   // phrase_id = 9
-  TryFormRampLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
-                                                Maneuver::RelativeDirection::kLeft, {}, {}, {},
-                                                {"Gettysburg Pike"}),
+  TryFormRampLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                                                     Maneuver::RelativeDirection::kLeft, {}, {}, {},
+                                                     {"Gettysburg Pike"}),
                              "Turn left to take the Gettysburg Pike ramp.");
 }
 
@@ -7469,96 +7434,83 @@ void TestFormExitRightInstruction() {
   NarrativeBuilderTest nbt(directions_options, dictionary);
 
   // phrase_id = 0
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {}, {}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {}, {}, {}),
                               "Take the exit on the right.");
 
   // phrase_id = 1
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {"67A"},
-                                                 {}, {}, {}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight,
+                                                      {"67A"}, {}, {}, {}),
                               "Take exit 67A on the right.");
 
   // phrase_id = 1; Test that name is ignored when number is present
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {"67A"},
-                                                 {}, {}, {"Gettysburg Pike"}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight,
+                                                      {"67A"}, {}, {}, {"Gettysburg Pike"}),
                               "Take exit 67A on the right.");
 
   // phrase_id = 2
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
-                                                 {"I 95 South"}, {}, {}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {"I 95 South"}, {}, {}),
                               "Take the I 95 South exit on the right.");
 
   // phrase_id = 3
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {"67A"},
-                                                 {"I 95 South"}, {}, {}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight,
+                                                      {"67A"}, {"I 95 South"}, {}, {}),
                               "Take exit 67A on the right onto I 95 South.");
 
   // phrase_id = 4
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {"Baltimore"}, {}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {}, {"Baltimore"}, {}),
                               "Take the exit on the right toward Baltimore.");
 
   // phrase_id = 5
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {"67A"},
-                                                 {}, {"Baltimore"}, {}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight,
+                                                      {"67A"}, {}, {"Baltimore"}, {}),
                               "Take exit 67A on the right toward Baltimore.");
 
   // phrase_id = 6
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
-                                                 {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {"I 95 South"}, {"Baltimore"}, {}),
                               "Take the I 95 South exit on the right toward Baltimore.");
 
   // phrase_id = 7
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {"67A"},
-                                                 {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight,
+                                                      {"67A"}, {"I 95 South"}, {"Baltimore"}, {}),
                               "Take exit 67A on the right onto I 95 South toward Baltimore.");
 
   // phrase_id = 8
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {}, {},
-                                                 {}, {"Gettysburg Pike"}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {}, {}, {"Gettysburg Pike"}),
                               "Take the Gettysburg Pike exit on the right.");
 
   // phrase_id = 10
-  TryFormExitRightInstruction(nbt,
-                              CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                                                 Maneuver::RelativeDirection::kKeepRight, {},
-                                                 {"US 15"}, {}, {"Gettysburg Pike"}),
+  TryFormExitRightInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                                                      Maneuver::RelativeDirection::kKeepRight, {},
+                                                      {"US 15"}, {}, {"Gettysburg Pike"}),
                               "Take the Gettysburg Pike exit on the right onto US 15.");
 
   // phrase_id = 12
   TryFormExitRightInstruction(
-      nbt,
-      CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                         Maneuver::RelativeDirection::kKeepRight, {}, {},
-                         {"Harrisburg", "Gettysburg"}, {"Gettysburg Pike"}),
+      nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                              Maneuver::RelativeDirection::kKeepRight, {}, {},
+                              {"Harrisburg", "Gettysburg"}, {"Gettysburg Pike"}),
       "Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg.");
 
   // phrase_id = 14
   TryFormExitRightInstruction(
-      nbt,
-      CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
-                         Maneuver::RelativeDirection::kKeepRight, {}, {"US 15"},
-                         {"Harrisburg", "Gettysburg"}, {"Gettysburg Pike"}),
+      nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight,
+                              Maneuver::RelativeDirection::kKeepRight, {}, {"US 15"},
+                              {"Harrisburg", "Gettysburg"}, {"Gettysburg Pike"}),
       "Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg.");
 }
 
@@ -7580,96 +7532,83 @@ void TestFormExitLeftInstruction() {
   NarrativeBuilderTest nbt(directions_options, dictionary);
 
   // phrase_id = 0
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {}, {},
-                                                {}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                     {}, {}),
                              "Take the exit on the left.");
 
   // phrase_id = 1
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {"67A"}, {},
-                                                {}, {}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft,
+                                                     {"67A"}, {}, {}, {}),
                              "Take exit 67A on the left.");
 
   // phrase_id = 1; Test that name is ignored when number is present
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {"67A"}, {},
-                                                {}, {"Gettysburg Pike"}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft,
+                                                     {"67A"}, {}, {}, {"Gettysburg Pike"}),
                              "Take exit 67A on the left.");
 
   // phrase_id = 2
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
-                                                {"I 95 South"}, {}, {}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {},
+                                                     {"I 95 South"}, {}, {}),
                              "Take the I 95 South exit on the left.");
 
   // phrase_id = 3
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {"67A"},
-                                                {"I 95 South"}, {}, {}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft,
+                                                     {"67A"}, {"I 95 South"}, {}, {}),
                              "Take exit 67A on the left onto I 95 South.");
 
   // phrase_id = 4
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {},
-                                                {"Baltimore"}, {}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                     {"Baltimore"}, {}),
                              "Take the exit on the left toward Baltimore.");
 
   // phrase_id = 5
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {"67A"}, {},
-                                                {"Baltimore"}, {}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft,
+                                                     {"67A"}, {}, {"Baltimore"}, {}),
                              "Take exit 67A on the left toward Baltimore.");
 
   // phrase_id = 6
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
-                                                {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {},
+                                                     {"I 95 South"}, {"Baltimore"}, {}),
                              "Take the I 95 South exit on the left toward Baltimore.");
 
   // phrase_id = 7
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {"67A"},
-                                                {"I 95 South"}, {"Baltimore"}, {}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft,
+                                                     {"67A"}, {"I 95 South"}, {"Baltimore"}, {}),
                              "Take exit 67A on the left onto I 95 South toward Baltimore.");
 
   // phrase_id = 8
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {}, {}, {},
-                                                {"Gettysburg Pike"}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                                                     {}, {"Gettysburg Pike"}),
                              "Take the Gettysburg Pike exit on the left.");
 
   // phrase_id = 10
-  TryFormExitLeftInstruction(nbt,
-                             CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                                                Maneuver::RelativeDirection::kKeepLeft, {},
-                                                {"US 15"}, {}, {"Gettysburg Pike"}),
+  TryFormExitLeftInstruction(nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                                                     Maneuver::RelativeDirection::kKeepLeft, {},
+                                                     {"US 15"}, {}, {"Gettysburg Pike"}),
                              "Take the Gettysburg Pike exit on the left onto US 15.");
 
   // phrase_id = 12
   TryFormExitLeftInstruction(
-      nbt,
-      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                         Maneuver::RelativeDirection::kKeepLeft, {}, {},
-                         {"Harrisburg", "Gettysburg"}, {"Gettysburg Pike"}),
+      nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                              Maneuver::RelativeDirection::kKeepLeft, {}, {},
+                              {"Harrisburg", "Gettysburg"}, {"Gettysburg Pike"}),
       "Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg.");
 
   // phrase_id = 14
   TryFormExitLeftInstruction(
-      nbt,
-      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
-                         Maneuver::RelativeDirection::kKeepLeft, {}, {"US 15"},
-                         {"Harrisburg", "Gettysburg"}, {"Gettysburg Pike"}),
+      nbt, CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft,
+                              Maneuver::RelativeDirection::kKeepLeft, {}, {"US 15"},
+                              {"Harrisburg", "Gettysburg"}, {"Gettysburg Pike"}),
       "Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg.");
 }
 

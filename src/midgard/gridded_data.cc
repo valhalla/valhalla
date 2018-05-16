@@ -86,8 +86,9 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
 
   // we need something to hold each iso-line, bigger ones first
   contours_t contours([](float a, float b) { return a > b; });
-  for (auto v : contour_intervals)
+  for (auto v : contour_intervals) {
     contours[v].emplace_back();
+  }
   // and something to find them quickly
   using contour_lookup_t = std::unordered_map<coord_t, typename feature_t::iterator>;
   std::unordered_map<float, contour_lookup_t> lookup(contour_intervals.size());
@@ -111,8 +112,9 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
       auto dmax = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
       // Continue if outside the range of contour values
-      if (dmax < contour_intervals.front() || dmin > contour_intervals.back())
+      if (dmax < contour_intervals.front() || dmin > contour_intervals.back()) {
         continue;
+      }
 
       for (auto contour : contour_intervals) {
         if (contour < dmin || contour > dmax) {
@@ -131,12 +133,13 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
             s[0] = 0.25 * (s[1] + s[2] + s[3] + s[4]);
             tile_corners[0] = this->Center(tileid);
           }
-          if (s[m] > 0.0f)
+          if (s[m] > 0.0f) {
             sh[m] = 1;
-          else if (s[m] < 0.0f)
+          } else if (s[m] < 0.0f) {
             sh[m] = -1;
-          else
+          } else {
             sh[m] = 0;
+          }
         }
 
         /*
@@ -215,8 +218,9 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
           }
 
           // this isnt a segment..
-          if (pt1 == pt2)
+          if (pt1 == pt2) {
             continue;
+          }
 
           // see if we have anything to connect this segment to
           typename contour_lookup_t::iterator rec_a = lookup[contour].find(pt1);
@@ -275,11 +279,12 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
           } // ap/prepend to an existing one
           else if (rec_a != lookup[contour].end()) {
             // it goes on the front
-            if (rec_a->second->front() == pt1)
+            if (rec_a->second->front() == pt1) {
               rec_a->second->push_front(pt2);
-            // it goes on the back
-            else
+              // it goes on the back
+            } else {
               rec_a->second->push_back(pt2);
+            }
 
             // update the lookup table
             lookup[contour].emplace(pt2, rec_a->second);
@@ -309,8 +314,9 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
   for (auto& collection : contours) {
     auto& contour = collection.second.front();
     // they only wanted rings
-    if (rings_only)
+    if (rings_only) {
       contour.remove_if([](const contour_t& line) { return line.front() != line.back(); });
+    }
     // sort them by area (maybe length would be sufficient?) biggest first
     std::unordered_map<const contour_t*, typename coord_t::first_type> cache(contour.size());
     std::for_each(contour.cbegin(), contour.cend(),
@@ -319,18 +325,21 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
       return std::abs(cache[&a]) > std::abs(cache[&b]);
     });
     // they only want the most significant ones!
-    if (denoise > 0.f)
+    if (denoise > 0.f) {
       contour.remove_if([&cache, &contour, denoise](const contour_t& c) {
         return std::abs(cache[&c] / cache[&contour.front()]) < denoise;
       });
+    }
     // clean up the lines
     for (auto& line : contour) {
       // TODO: generalizing makes self intersections which makes other libraries unhappy
-      if (gen_factor > 0.f)
+      if (gen_factor > 0.f) {
         Polyline2<coord_t>::Generalize(line, gen_factor);
+      }
       // if this ends up as an inner we'll undo this later
-      if (cache[&line] > 0)
+      if (cache[&line] > 0) {
         line.reverse();
+      }
       // sampling the bottom left corner means everything is skewed, so unskew it
       for (auto& coord : line) {
         coord.first += h;
@@ -339,8 +348,9 @@ GriddedData<coord_t>::GenerateContours(const std::vector<float>& contour_interva
     }
     // if they just wanted linestrings we need only one per feature
     if (!rings_only) {
-      for (auto& linestring : contour)
+      for (auto& linestring : contour) {
         collection.second.push_back({std::move(linestring)});
+      }
       collection.second.pop_front();
     }
   }

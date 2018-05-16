@@ -73,10 +73,11 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path))
+    if (boost::filesystem::is_regular_file(config_file_path)) {
       return true;
-    else
+    } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+    }
   }
 
   return false;
@@ -84,8 +85,9 @@ bool ParseArguments(int argc, char* argv[]) {
 
 int main(int argc, char** argv) {
 
-  if (!ParseArguments(argc, argv))
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
+  }
 
   // check what type of input we are getting
   boost::property_tree::ptree pt;
@@ -116,8 +118,9 @@ int main(int argc, char** argv) {
       std::sort(onestoptests.begin(), onestoptests.end());
       // Validate transit
       std::unordered_set<valhalla::baldr::GraphId> all_tiles;
-      if (!ValidateTransit::Validate(pt, all_tiles, onestoptests))
+      if (!ValidateTransit::Validate(pt, all_tiles, onestoptests)) {
         return EXIT_FAILURE;
+      }
     } else if (build_validate == "build") {
       // test file is usually the results of running transit_prod_routes.tmpl tests
       testfile = std::string(std::string(argv[4]));

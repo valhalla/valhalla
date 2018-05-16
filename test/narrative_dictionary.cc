@@ -296,8 +296,8 @@ void validate(const std::vector<std::string>& test_target,
   for (auto test_target_item = test_target.begin(), expected_item = expected.begin();
        test_target_item != test_target.end(); ++test_target_item, ++expected_item) {
     if ((*test_target_item) != (*expected_item)) {
-      throw std::runtime_error("Invalid entry: " + (*test_target_item) +
-                               "  |  expected: " + (*expected_item));
+      throw std::runtime_error("Invalid entry: " + (*test_target_item) + "  |  expected: " +
+                               (*expected_item));
     }
   }
 }
@@ -308,8 +308,8 @@ void validate(const std::unordered_map<std::string, std::string>& test_target,
   for (const auto& expected_phrase : expected) {
     const auto& test_target_item = test_target.at(expected_phrase.first);
     if (test_target_item != expected_phrase.second) {
-      throw std::runtime_error("Invalid entry: " + test_target_item +
-                               "  |  expected: " + expected_phrase.second);
+      throw std::runtime_error("Invalid entry: " + test_target_item + "  |  expected: " +
+                               expected_phrase.second);
     }
   }
 }

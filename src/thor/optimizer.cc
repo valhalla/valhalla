@@ -39,16 +39,17 @@ std::vector<uint32_t> Optimizer::Solve(const uint32_t count, const std::vector<f
   successes_ = 40 * count_;
   for (uint32_t i = 0; i < 100; i++) {
     // Break if no successes were found during this annealing step.
-    if (Anneal(costs, temperature) == 0)
+    if (Anneal(costs, temperature) == 0) {
       break;
+    }
 
     // Reduce temperature
     temperature *= kCoolingRate;
   }
 
   // Return the best tour
-  LOG_DEBUG("Best tour cost = " + std::to_string(best_cost_) +
-            " ntries = " + std::to_string(ntry_));
+  LOG_DEBUG("Best tour cost = " + std::to_string(best_cost_) + " ntries = " +
+            std::to_string(ntry_));
   return best_tour_;
 }
 
@@ -92,8 +93,9 @@ uint32_t Optimizer::Anneal(const std::vector<float>& costs, float temperature) {
         best_tour_ = tour_;
       }
     }
-    if (success_count >= successes_)
+    if (success_count >= successes_) {
       break;
+    }
   }
   return success_count;
 }

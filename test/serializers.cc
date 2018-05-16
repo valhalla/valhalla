@@ -857,9 +857,9 @@ void testManeuver() {
   }
 
   if (maneuver.verbal_pre_transition_instruction() != "Take exit 1 on the right.") {
-    throw std::runtime_error(
-        "verbal_pre_transition_instruction is: " + maneuver.verbal_pre_transition_instruction() +
-        " | Expected: Take exit 1 on the right.");
+    throw std::runtime_error("verbal_pre_transition_instruction is: " +
+                             maneuver.verbal_pre_transition_instruction() +
+                             " | Expected: Take exit 1 on the right.");
   }
 
   if (maneuver.verbal_post_transition_instruction() != "end") {
@@ -1698,8 +1698,8 @@ void testSignElements() {
   }
 
   if (element.consecutive_count() != 2) {
-    throw std::runtime_error(
-        "consecutive_count is: " + std::to_string(element.consecutive_count()) + " | Expected: 2");
+    throw std::runtime_error("consecutive_count is: " +
+                             std::to_string(element.consecutive_count()) + " | Expected: 2");
   }
 
   // Test throwing runtime errors

@@ -11,8 +11,9 @@ namespace valhalla {
 namespace loki {
 
 void loki_worker_t::init_transit_available(valhalla_request_t& request) {
-  if (request.options.locations_size() < 1)
+  if (request.options.locations_size() < 1) {
     throw valhalla_exception_t{120};
+  };
 }
 
 std::string loki_worker_t::transit_available(valhalla_request_t& request) {
@@ -34,8 +35,9 @@ std::string loki_worker_t::transit_available(valhalla_request_t& request) {
       for (auto id : tilelist) {
         // transit is level hierarchy level 3
         auto color = connectivity_map->get_color(GraphId(id, 3, 0));
-        if (color != 0)
+        if (color != 0) {
           found.emplace(location);
+        }
       }
     }
   } catch (const std::exception&) { throw valhalla_exception_t{170}; }

@@ -130,8 +130,9 @@ json::MapPtr serialize(const valhalla_request_t& request,
   json->emplace("targets", json::array({locations(request.options.targets())}));
   json->emplace("sources", json::array({locations(request.options.sources())}));
 
-  if (request.options.has_id())
+  if (request.options.has_id()) {
     json->emplace("id", request.options.id());
+  }
   return json;
 }
 } // namespace valhalla_serializers

@@ -41,8 +41,9 @@ struct GraphReader::tile_extract_t : public midgard::tar {
       } // loaded ok but with possibly bad blocks
       else {
         LOG_INFO("Tile extract successfully loaded");
-        if (corrupt_blocks)
+        if (corrupt_blocks) {
           LOG_WARN("Tile extract had " + std::to_string(corrupt_blocks) + " corrupt blocks");
+        }
       }
     }
   }
@@ -148,8 +149,9 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
   // wrap tile cache with thread-safe version
   if (pt.get<bool>("global_synchronized_cache", false)) {
-    if (!globalTileCache_)
+    if (!globalTileCache_) {
       globalTileCache_.reset(new SimpleTileCache(max_cache_size));
+    }
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
   }
 
@@ -172,11 +174,13 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
     return false;
   }
   // if you are using an extract only check that
-  if (!tile_extract_->tiles.empty())
+  if (!tile_extract_->tiles.empty()) {
     return tile_extract_->tiles.find(graphid) != tile_extract_->tiles.cend();
+  }
   // otherwise check memory or disk
-  if (cache_->Contains(graphid))
+  if (cache_->Contains(graphid)) {
     return true;
+  }
   std::string file_location =
       tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
@@ -190,8 +194,9 @@ bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const Gra
   }
   // if you are using an extract only check that
   auto extract = get_extract_instance(pt);
-  if (!extract->tiles.empty())
+  if (!extract->tiles.empty()) {
     return extract->tiles.find(graphid) != extract->tiles.cend();
+  }
   // otherwise check the disk
   std::string file_location = pt.get<std::string>("tile_dir") + filesystem::path_separator +
                               GraphTile::FileSuffix(graphid.Tile_Base());
@@ -220,13 +225,15 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   if (!tile_extract_->tiles.empty()) {
     // Do we have this tile
     auto t = tile_extract_->tiles.find(base);
-    if (t == tile_extract_->tiles.cend())
+    if (t == tile_extract_->tiles.cend()) {
       return nullptr;
+    }
 
     // This initializes the tile from mmap
     GraphTile tile(base, t->second.first, t->second.second);
-    if (!tile.header())
+    if (!tile.header()) {
       return nullptr;
+    }
 
     // Keep a copy in the cache and return it
     size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
@@ -237,8 +244,9 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     // This reads the tile from disk
     GraphTile tile(tile_dir_, base);
     if (!tile.header()) {
-      if (tile_url_.empty() || _404s.find(base) != _404s.end())
+      if (tile_url_.empty() || _404s.find(base) != _404s.end()) {
         return nullptr;
+      }
       tile = GraphTile(tile_url_, base, curler);
       if (!tile.header()) {
         _404s.insert(base);
@@ -257,17 +265,20 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile) {
   // If you cant get the tile you get an invalid id
   tile = GetGraphTile(edgeid);
-  if (!tile)
+  if (!tile) {
     return {};
+  };
   // For now return an invalid Id if this is a transit edge
   const auto* directededge = tile->directededge(edgeid);
-  if (directededge->IsTransitLine())
+  if (directededge->IsTransitLine()) {
     return {};
+  };
 
   // If edge leaves the tile get the end node's tile
   GraphId id = directededge->endnode();
-  if (!GetGraphTile(id, tile))
+  if (!GetGraphTile(id, tile)) {
     return {};
+  };
 
   // Get the opposing edge
   id.set_id(tile->node(id)->edge_index() + directededge->opp_index());
@@ -455,8 +466,9 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   // either mmap'd tiles
   std::unordered_set<GraphId> tiles;
   if (tile_extract_->tiles.size()) {
-    for (const auto& t : tile_extract_->tiles)
+    for (const auto& t : tile_extract_->tiles) {
       tiles.emplace(t.first);
+    }
   } // or individually on disk
   else {
     // for each level
@@ -487,11 +499,12 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
   // either mmap'd tiles
   std::unordered_set<GraphId> tiles;
   if (tile_extract_->tiles.size()) {
-    for (const auto& t : tile_extract_->tiles)
-      if (static_cast<GraphId>(t.first).level() == level)
+    for (const auto& t : tile_extract_->tiles) {
+      if (static_cast<GraphId>(t.first).level() == level) {
         tiles.emplace(t.first);
-  } // or individually on disk
-  else {
+      }
+    } // or individually on disk
+  } else {
     // crack open this level of tiles directory
     boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator +
                                      std::to_string(level) + filesystem::path_separator);

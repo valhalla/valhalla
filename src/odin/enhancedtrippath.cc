@@ -25,10 +25,11 @@ EnhancedTripPath_Node* EnhancedTripPath::GetEnhancedNode(const int node_index) {
 
 EnhancedTripPath_Edge* EnhancedTripPath::GetPrevEdge(const int node_index, int delta) {
   int index = node_index - delta;
-  if (IsValidNodeIndex(index))
+  if (IsValidNodeIndex(index)) {
     return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge());
-  else
+  } else {
     return nullptr;
+  }
 }
 
 EnhancedTripPath_Edge* EnhancedTripPath::GetCurrEdge(const int node_index) {
@@ -37,27 +38,31 @@ EnhancedTripPath_Edge* EnhancedTripPath::GetCurrEdge(const int node_index) {
 
 EnhancedTripPath_Edge* EnhancedTripPath::GetNextEdge(const int node_index, int delta) {
   int index = node_index + delta;
-  if (IsValidNodeIndex(index) && !IsLastNodeIndex(index))
+  if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
     return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge());
-  else
+  } else {
     return nullptr;
+  }
 }
 
 bool EnhancedTripPath::IsValidNodeIndex(int node_index) const {
-  if ((node_index >= 0) && (node_index < node_size()))
+  if ((node_index >= 0) && (node_index < node_size())) {
     return true;
+  }
   return false;
 }
 
 bool EnhancedTripPath::IsFirstNodeIndex(int node_index) const {
-  if (node_index == 0)
+  if (node_index == 0) {
     return true;
+  }
   return false;
 }
 
 bool EnhancedTripPath::IsLastNodeIndex(int node_index) const {
-  if (IsValidNodeIndex(node_index) && (node_index == (node_size() - 1)))
+  if (IsValidNodeIndex(node_index) && (node_index == (node_size() - 1))) {
     return true;
+  }
   return false;
 }
 
@@ -664,10 +669,11 @@ std::string EnhancedTripPath_Edge::ListToString(
 
   bool is_first = true;
   for (const auto& item : string_list) {
-    if (is_first)
+    if (is_first) {
       is_first = false;
-    else
+    } else {
       str += "/";
+    }
     str += item;
   }
   return str;
@@ -680,10 +686,11 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
   str += "{ ";
   bool is_first = true;
   for (const auto& item : string_list) {
-    if (is_first)
+    if (is_first) {
       is_first = false;
-    else
+    } else {
       str += ", ";
+    }
     str += "\"";
     str += item;
     str += "\"";
@@ -700,12 +707,13 @@ bool EnhancedTripPath_IntersectingEdge::IsTraversable(const TripPath_TravelMode 
   TripPath_Traversability t;
 
   // Set traversability based on travel mode
-  if (travel_mode == TripPath_TravelMode_kDrive)
+  if (travel_mode == TripPath_TravelMode_kDrive) {
     t = driveability();
-  else if (travel_mode == TripPath_TravelMode_kBicycle)
+  } else if (travel_mode == TripPath_TravelMode_kBicycle) {
     t = cyclability();
-  else
+  } else {
     t = walkability();
+  }
 
   if (t != TripPath_Traversability_kNone) {
     return true;
@@ -718,12 +726,13 @@ bool EnhancedTripPath_IntersectingEdge::IsTraversableOutbound(
   TripPath_Traversability t;
 
   // Set traversability based on travel mode
-  if (travel_mode == TripPath_TravelMode_kDrive)
+  if (travel_mode == TripPath_TravelMode_kDrive) {
     t = driveability();
-  else if (travel_mode == TripPath_TravelMode_kBicycle)
+  } else if (travel_mode == TripPath_TravelMode_kBicycle) {
     t = cyclability();
-  else
+  } else {
     t = walkability();
+  }
 
   if ((t == TripPath_Traversability_kForward) || (t == TripPath_Traversability_kBoth)) {
     return true;
@@ -783,8 +792,9 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   xedge_counts.clear();
 
   // No turn - just return
-  if (intersecting_edge_size() == 0)
+  if (intersecting_edge_size() == 0) {
     return;
+  }
 
   uint32_t path_turn_degree = GetTurnDegree(from_heading, edge().begin_heading());
   for (int i = 0; i < intersecting_edge_size(); ++i) {

@@ -31,8 +31,9 @@ uint32_t UniqueNames::index(const std::string& name) {
 
 // Get the name given the index
 const std::string& UniqueNames::name(const uint32_t index) const {
-  if (index < (uint32_t)indexes_.size())
+  if (index < (uint32_t)indexes_.size()) {
     return indexes_[index]->first;
+  }
 
   // Return the empty string in the index 0 location
   return indexes_[0]->first;

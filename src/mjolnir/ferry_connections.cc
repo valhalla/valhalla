@@ -112,8 +112,9 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       // Skip any ferry edge and any edge that includes the start node index
       const auto& edge = expandededge.first;
       if (edge.attributes.driveable_ferry || edge.sourcenode_ == start_node_idx ||
-          edge.targetnode_ == start_node_idx)
+          edge.targetnode_ == start_node_idx) {
         continue;
+      }
 
       // Skip non-driveable edges (based on inbound flag)
       const OSMWay w = *ways[edge.wayindex_];

@@ -1627,12 +1627,11 @@ void TestCountAndSortExitSigns() {
   PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kExitRight, {"US 322 West"}, {}, {}, "",
                    0.348589, 21, 2, Maneuver::RelativeDirection::kKeepRight,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278, 1, 2, 2, 6, 1, 0, 0,
-                   0, 0, 0, 0, 0, 0, {{"67A-B", "0"}},
-                   {{"US 22 East", "0"},
-                    {"PA 230 East", "0"},
-                    {"US 22 West", "0"},
-                    {"US 322 West", "0"},
-                    {"Cameron Street", "0"}},
+                   0, 0, 0, 0, 0, 0, {{"67A-B", "0"}}, {{"US 22 East", "0"},
+                                                        {"PA 230 East", "0"},
+                                                        {"US 22 West", "0"},
+                                                        {"US 322 West", "0"},
+                                                        {"Cameron Street", "0"}},
                    {{"Harrisburg", "0"}, {"Lewistown", "0"}, {"State College", "0"}}, {}, 0, 0, 0);
 
   maneuvers.emplace_back();
@@ -1674,12 +1673,11 @@ void TestCountAndSortExitSigns() {
   PopulateManeuver(expected_maneuver2, TripDirections_Maneuver_Type_kExitRight, {"US 322 West"}, {},
                    {}, "", 0.348589, 21, 2, Maneuver::RelativeDirection::kKeepRight,
                    TripDirections_Maneuver_CardinalDirection_kWest, 272, 278, 1, 2, 2, 6, 1, 0, 0,
-                   0, 0, 0, 0, 0, 0, {{"67A-B", "0"}},
-                   {{"US 322 West", "2"},
-                    {"US 22 West", "1"},
-                    {"US 22 East", "0"},
-                    {"PA 230 East", "0"},
-                    {"Cameron Street", "0"}},
+                   0, 0, 0, 0, 0, 0, {{"67A-B", "0"}}, {{"US 322 West", "2"},
+                                                        {"US 22 West", "1"},
+                                                        {"US 22 East", "0"},
+                                                        {"PA 230 East", "0"},
+                                                        {"Cameron Street", "0"}},
                    {{"Lewistown", "1"}, {"State College", "1"}, {"Harrisburg", "0"}}, {}, 0, 0, 0);
 
   expected_maneuvers.emplace_back();

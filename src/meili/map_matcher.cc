@@ -258,9 +258,11 @@ std::vector<MatchResult> FindMatchResults(const MapMatcher& mapmatcher,
 struct path_t {
   path_t(const std::vector<EdgeSegment>& segments) {
     edges.reserve(segments.size());
-    for (const auto& segment : segments)
-      if (edges.empty() || edges.back() != segment.edgeid)
+    for (const auto& segment : segments) {
+      if (edges.empty() || edges.back() != segment.edgeid) {
         edges.push_back(segment.edgeid);
+      }
+    }
     e1 = segments.empty() || segments.front().source < 1.0f ? edges.cbegin() : edges.cbegin() + 1;
     e2 = segments.empty() || segments.back().target > 0.0f ? edges.cend() : edges.cend() - 1;
   }
@@ -268,9 +270,11 @@ struct path_t {
     return std::search(e1, e2, p.e1, p.e2) == e2 && std::search(p.e1, p.e2, e1, e2) == p.e2;
   }
   bool crosses(const baldr::PathLocation& candidate) const {
-    for (const auto& edge : candidate.edges)
-      if (std::find(edges.cbegin(), edges.cend(), edge.id) != edges.cend())
+    for (const auto& edge : candidate.edges) {
+      if (std::find(edges.cbegin(), edges.cend(), edge.id) != edges.cend()) {
         return true;
+      }
+    }
     return false;
   }
   std::vector<uint64_t> edges;
@@ -328,8 +332,9 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
     for (const auto& right_candidate : container_.column(time + 1)) {
       std::vector<EdgeSegment> edges;
       if (!ts_.IsRemoved(right_candidate.stateid()) &&
-          MergeRoute(edges, left_used_candidate, right_candidate))
+          MergeRoute(edges, left_used_candidate, right_candidate)) {
         paths_from_winner.emplace(right_candidate.stateid(), std::move(edges));
+      }
     }
     /*
         std::cout << std::endl << "Paths from left winner:" << std::endl;
@@ -345,12 +350,14 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
     for (const auto& left_unused_candidate : container_.column(time)) {
       // We cant remove candidates that were used in the result or already removed
       if (left_used_candidate.stateid() == left_unused_candidate.stateid() ||
-          ts_.IsRemoved(left_unused_candidate.stateid()))
+          ts_.IsRemoved(left_unused_candidate.stateid())) {
         continue;
+      }
 
       // If we didnt compute the paths from this loser we need to do it now
-      if (!left_unused_candidate.routed())
+      if (!left_unused_candidate.routed()) {
         vs_.transition_cost_model()(left_unused_candidate.stateid(), StateId(time + 1, 0));
+      }
 
       // For each candidate in the right state
       bool found_unique = false;
@@ -365,8 +372,9 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
         // If there is no route its not really unique since we dont need discontinuities
         std::vector<EdgeSegment> edges;
         if (ts_.IsRemoved(right_candidate.stateid()) ||
-            !MergeRoute(edges, left_unused_candidate, right_candidate))
+            !MergeRoute(edges, left_unused_candidate, right_candidate)) {
           continue;
+        }
 
         // This subpath is unique if: there is no path from the winner
         // or its node to node (no edges) and not on winner path or they dont overlap
@@ -383,8 +391,9 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
       }
 
       // We didnt find any unique paths for this left candidate so we need to mark it has useless
-      if (!found_unique)
+      if (!found_unique) {
         redundancies.emplace(left_unused_candidate.stateid());
+      }
     }
 
     /*
@@ -408,7 +417,8 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
       // For each right candidate
       redundancies.clear();
       for (const auto& right_candidate : container_.column(time + 1)) {
-        // If its not the winner and there are no uniques for this right candidate we can remove it
+        // If its not the winner and there are no uniques for this right candidate we can remove
+        // it
         if (right_candidate.stateid() != right_state_id &&
             right_uniques.find(right_candidate.stateid()) == right_uniques.cend()) {
           redundancies.emplace(right_candidate.stateid());
@@ -455,7 +465,8 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
 
         // If this is redundant if its empty (because we dont want discontinuities in subsequent
 results
-        // or the first subpath starts the original path or the last subpath ends the original path
+        // or the first subpath starts the original path or the last subpath ends the original
+path
 or
         // the intermediate subpath is contained within the original path
         if(sub_path.edges.empty() ||
@@ -632,8 +643,8 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   }
 
   if (!(0 < best_paths.size() && best_paths.size() <= k)) {
-    throw std::logic_error("got " + std::to_string(best_paths.size()) +
-                           " paths but k = " + std::to_string(k));
+    throw std::logic_error("got " + std::to_string(best_paths.size()) + " paths but k = " +
+                           std::to_string(k));
   }
 
   // Give back anywhere from 1 to k results

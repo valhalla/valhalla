@@ -248,9 +248,9 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kTruckAccess))
+      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kTruckAccess)) {
         return 0.0f;
-      else {
+      } else {
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }
@@ -296,9 +296,9 @@ public:
 
 // Constructor
 TruckCost::TruckCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
-                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
-                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(pt, TravelMode::kDrive),
+      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
+                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
   type_ = VehicleType::kTractorTrailer;
   maneuver_penalty_ =
       kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
@@ -391,28 +391,34 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                      : false;
           break;
         case AccessType::kHazmat:
-          if (hazmat_ != restriction.value())
+          if (hazmat_ != restriction.value()) {
             return false;
+          }
           break;
         case AccessType::kMaxAxleLoad:
-          if (axle_load_ > static_cast<float>(restriction.value() * 0.01))
+          if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
             return false;
+          }
           break;
         case AccessType::kMaxHeight:
-          if (height_ > static_cast<float>(restriction.value() * 0.01))
+          if (height_ > static_cast<float>(restriction.value() * 0.01)) {
             return false;
+          }
           break;
         case AccessType::kMaxLength:
-          if (length_ > static_cast<float>(restriction.value() * 0.01))
+          if (length_ > static_cast<float>(restriction.value() * 0.01)) {
             return false;
+          }
           break;
         case AccessType::kMaxWeight:
-          if (weight_ > static_cast<float>(restriction.value() * 0.01))
+          if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
             return false;
+          }
           break;
         case AccessType::kMaxWidth:
-          if (width_ > static_cast<float>(restriction.value() * 0.01))
+          if (width_ > static_cast<float>(restriction.value() * 0.01)) {
             return false;
+          }
           break;
         default:
           break;
@@ -462,28 +468,34 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                        : false;
             break;
           case AccessType::kHazmat:
-            if (hazmat_ != restriction.value())
+            if (hazmat_ != restriction.value()) {
               return false;
+            }
             break;
           case AccessType::kMaxAxleLoad:
-            if (axle_load_ > static_cast<float>(restriction.value() * 0.01))
+            if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
               return false;
+            }
             break;
           case AccessType::kMaxHeight:
-            if (height_ > static_cast<float>(restriction.value() * 0.01))
+            if (height_ > static_cast<float>(restriction.value() * 0.01)) {
               return false;
+            }
             break;
           case AccessType::kMaxLength:
-            if (length_ > static_cast<float>(restriction.value() * 0.01))
+            if (length_ > static_cast<float>(restriction.value() * 0.01)) {
               return false;
+            }
             break;
           case AccessType::kMaxWeight:
-            if (weight_ > static_cast<float>(restriction.value() * 0.01))
+            if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
               return false;
+            }
             break;
           case AccessType::kMaxWidth:
-            if (width_ > static_cast<float>(restriction.value() * 0.01))
+            if (width_ > static_cast<float>(restriction.value() * 0.01)) {
               return false;
+            }
             break;
           default:
             break;
@@ -509,10 +521,11 @@ Cost TruckCost::EdgeCost(const DirectedEdge* edge) const {
   }
 
   float sec = 0.0f;
-  if (edge->truck_speed() > 0)
+  if (edge->truck_speed() > 0) {
     sec = (edge->length() * speedfactor_[edge->truck_speed()]);
-  else
+  } else {
     sec = (edge->length() * speedfactor_[edge->speed()]);
+  }
 
   return {sec * factor, sec};
 }
@@ -554,8 +567,9 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
 
   if (edge->classification() == RoadClass::kResidential ||
-      edge->classification() == RoadClass::kServiceOther)
+      edge->classification() == RoadClass::kServiceOther) {
     penalty += low_class_penalty_;
+  }
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -613,8 +627,9 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   }
 
   if (edge->classification() == RoadClass::kResidential ||
-      edge->classification() == RoadClass::kServiceOther)
+      edge->classification() == RoadClass::kServiceOther) {
     penalty += low_class_penalty_;
+  }
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {

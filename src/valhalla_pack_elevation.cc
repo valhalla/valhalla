@@ -24,14 +24,16 @@ long file_size(const std::string& file_name) {
 
 std::vector<char> read_file(const std::string& file_name, long size) {
   int fd = open(file_name.c_str(), O_RDONLY);
-  if (fd == -1)
+  if (fd == -1) {
     throw std::runtime_error("Could not open: " + file_name);
+  }
 #ifndef __APPLE__
   posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
 #endif
   std::vector<char> in(size);
-  if (read(fd, in.data(), size) != size)
+  if (read(fd, in.data(), size) != size) {
     throw std::runtime_error("Could not open: " + file_name);
+  }
   close(fd);
   return in;
 }
@@ -70,8 +72,9 @@ std::vector<char> lzip(const std::vector<char>& in, int compression_level, algor
     default:
       throw std::runtime_error("Wrong compression type");
   }
-  if (compressed_size <= 0)
+  if (compressed_size <= 0) {
     throw std::runtime_error("Compression failed: " + std::to_string(compressed_size));
+  }
   out.resize(compressed_size);
 
   return out;
@@ -90,11 +93,13 @@ std::vector<char> gunzip(std::vector<char>& in) {
   };
 
   // decompress the file
-  if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK)
+  if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {
     throw std::runtime_error("gzip decompression init failed");
+  }
   auto e = inflate(&stream, Z_FINISH);
-  if (e != Z_STREAM_END || stream.total_out != HGT_BYTES)
+  if (e != Z_STREAM_END || stream.total_out != HGT_BYTES) {
     throw std::runtime_error("Corrupt gzip elevation data");
+  }
   inflateEnd(&stream);
   return out;
 }
@@ -118,9 +123,10 @@ std::vector<char> lunzip(const std::vector<char>& in, algorithm_t algorithm) {
       break;
     case algorithm_t::FRAME:
       hint = LZ4F_createDecompressionContext(&context, LZ4F_VERSION);
-      if (LZ4F_isError(hint))
+      if (LZ4F_isError(hint)) {
         throw std::runtime_error("Decompression initialization failed " +
                                  std::string(LZ4F_getErrorName(hint)));
+      }
 
       /*
       //cant get the info to tell us how much to reserve in total so we'll just have it known for
@@ -132,9 +138,10 @@ std::vector<char> lunzip(const std::vector<char>& in, algorithm_t algorithm) {
       // decompress
       do {
         hint = LZ4F_decompress(context, out.data(), &out_size, in_ptr, &in_size, nullptr);
-        if (LZ4F_isError(hint))
+        if (LZ4F_isError(hint)) {
           throw std::runtime_error("Decompression of frame failed " +
                                    std::string(LZ4F_getErrorName(hint)));
+        }
         in_ptr += in_size;
         in_size = in_end - in_ptr;
       } while (hint && in_size);
@@ -145,15 +152,17 @@ std::vector<char> lunzip(const std::vector<char>& in, algorithm_t algorithm) {
       throw std::runtime_error("Wrong decompression algorithm");
   }
 
-  if (decompressed_size < 0)
+  if (decompressed_size < 0) {
     throw std::runtime_error("Deompression failed: " + std::to_string(decompressed_size));
+  }
 
   return out;
 }
 
 int main(int argc, char** argv) {
-  if (argc < 2)
+  if (argc < 2) {
     return 0;
+  }
   // TODO: add arguments to this
 
   std::string file_name(argv[1]);

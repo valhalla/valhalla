@@ -1,5 +1,5 @@
-#include "midgard/logging.h"
 #include "odin/util.h"
+#include "midgard/logging.h"
 #include "test.h"
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/regex.hpp>
@@ -176,8 +176,8 @@ void test_supported_locales() {
           continue; // Skip the other checks
         }
         if (sub.second.size() != other_sub->size())
-          throw std::runtime_error("Wrong number of elements in " + locale.first +
-                                   "::" + instruction.first + "." + sub.first);
+          throw std::runtime_error("Wrong number of elements in " + locale.first + "::" +
+                                   instruction.first + "." + sub.first);
         // check the keys
         std::set<std::string> keys, other_keys;
         for (const auto& kv : sub.second)
@@ -198,8 +198,8 @@ void test_supported_locales() {
         if (boost::regex_search(str, m, e))
           for (const auto& tag : m)
             if (other_phrase.find(tag.str()) == std::string::npos)
-              throw std::runtime_error("Couldn't find " + tag.str() + " in " + locale.first +
-                                       "::" + instruction.first + ".phrases." + phrase.first);
+              throw std::runtime_error("Couldn't find " + tag.str() + " in " + locale.first + "::" +
+                                       instruction.first + ".phrases." + phrase.first);
       }
     }
   }

@@ -190,8 +190,9 @@ bool MergeRoute(std::vector<EdgeSegment>& route, const State& source, const Stat
   const auto route_rbegin = source.RouteBegin(target), route_rend = source.RouteEnd();
 
   // No route, discontinuity
-  if (route_rbegin == route_rend)
+  if (route_rbegin == route_rend) {
     return false;
+  }
 
   std::vector<EdgeSegment> segments;
 

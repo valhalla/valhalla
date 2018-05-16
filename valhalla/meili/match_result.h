@@ -66,7 +66,8 @@ struct MatchResults {
     if (f == e2) {
       f = std::find(p.e1, p.e2, *e1);
       // if this path started inside of p, and whats left of p is smaller than this path, search for
-      // it in this path if whats left of this path is larger than p, search for p within this larger
+      // it in this path if whats left of this path is larger than p, search for p within this
+      // larger
       return f != p.e2 && p.e2 - f < e1 - e2 ? std::equal(f, p.e2, e1) : std::equal(e1, e2, f);
     }
     // p started inside of this path, if whats left of this path is smaller than p, search for it in

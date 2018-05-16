@@ -53,11 +53,13 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
   float mindist = std::numeric_limits<float>::max();
 
   // If there are no points we are done
-  if (pts.size() == 0)
+  if (pts.size() == 0) {
     return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
+  }
   // If there is one point we are done
-  if (pts.size() == 1)
+  if (pts.size() == 1) {
     return std::make_tuple(pts.front(), sqrt(DistanceSquared(pts.front())), 0);
+  }
 
   // Iterate through the pts
   bool beyond_end = true; // Need to test past the end point?
@@ -75,8 +77,9 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
 
     // Construct vector v1 - represents the segment.  Skip 0 length segments
     v1.Set(p0, p1);
-    if (v1.x() == 0.0f && v1.y() == 0.0f)
+    if (v1.x() == 0.0f && v1.y() == 0.0f) {
       continue;
+    }
 
     // Vector v2 from the segment origin to the target point
     v2.Set(p0, *this);
@@ -103,9 +106,9 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
     // If component >= 1.0 the segment end is the closest point. A future
     // polyline segment will be closer.  If last segment we need to check
     // distance to the endpoint.  Set flag so this happens.
-    if (comp >= 1.0f)
+    if (comp >= 1.0f) {
       beyond_end = true;
-    else {
+    } else {
       // Closest point is along the segment.  The closest point is found
       // by adding the projection of v2 onto v1 to the origin point.
       // The squared distance from this point to the target is then found.

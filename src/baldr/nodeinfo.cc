@@ -38,8 +38,9 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
     // TODO: so much to do but posix tz has pretty much all the info
     m->emplace("time_zone_posix", tz->to_posix_string());
     m->emplace("standard_time_zone_name", tz->std_zone_name());
-    if (tz->has_dst())
+    if (tz->has_dst()) {
       m->emplace("daylight_savings_time_zone_name", tz->dst_zone_name());
+    }
   }
 
   return m;
@@ -287,8 +288,9 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"type", to_string(static_cast<NodeType>(type_))},
   });
-  if (is_transit())
+  if (is_transit()) {
     m->emplace("stop_index", static_cast<uint64_t>(stop_.stop_index));
+  }
   return m;
 }
 

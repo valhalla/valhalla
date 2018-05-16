@@ -131,8 +131,8 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
 
   // Output exit counts for each class
   for (uint32_t rc = 0; rc < kMaxClassification; rc++) {
-    LOG_INFO("Class: " + std::to_string(rc) +
-             " exit count = " + std::to_string(exit_nodes[rc].size()));
+    LOG_INFO("Class: " + std::to_string(rc) + " exit count = " +
+             std::to_string(exit_nodes[rc].size()));
   }
   return exit_nodes;
 }
@@ -268,7 +268,7 @@ void ReclassifyLinks(const std::string& ways_file,
   // end node to the link tree. Possibly adds the end node to the expandset.
   // Where no expansion occurs a leaf node is identified.
   auto expand = [&expandset, &nodes, &edges, &visitedset, &leaves](
-                    const Edge& edge, const uint32_t link_edge_index, LinkTreeNode* tree_node) {
+      const Edge& edge, const uint32_t link_edge_index, LinkTreeNode* tree_node) {
     // Find end node of this link edge
     auto end_node = edge.sourcenode_ == tree_node->node_index ? nodes[edge.targetnode_]
                                                               : nodes[edge.sourcenode_];
@@ -397,8 +397,8 @@ void ReclassifyLinks(const std::string& ways_file,
       tc_count += counts.second;
     }
   }
-  LOG_INFO("Finished with " + std::to_string(count) + " reclassified. " +
-           " Turn channel count = " + std::to_string(tc_count));
+  LOG_INFO("Finished with " + std::to_string(count) + " reclassified. " + " Turn channel count = " +
+           std::to_string(tc_count));
 }
 
 } // namespace mjolnir

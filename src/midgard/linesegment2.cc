@@ -77,20 +77,23 @@ bool LineSegment2<coord_t>::Intersect(const LineSegment2<coord_t>& segment,
 
   // Check if denominator will be 0 (lines are parallel)
   float dtb = dp.Dot(b);
-  if (dtb == 0.0f)
+  if (dtb == 0.0f) {
     return false;
+  }
 
   // Solve for the parameter t
   Vector2 c = segment.a() - a_;
   float t = dp.Dot(c) / dtb;
-  if (t < 0.0f || t > 1.0f)
+  if (t < 0.0f || t > 1.0f) {
     return false;
+  }
 
   // Solve for the parameter u
   Vector2 bp = b.GetPerpendicular();
   float u = bp.Dot(c) / dtb;
-  if (u < 0.0f || u > 1.0f)
+  if (u < 0.0f || u > 1.0f) {
     return false;
+  }
 
   // An intersect occurs.  Set the intersect point and return true
   intersect = a_ + b * t;

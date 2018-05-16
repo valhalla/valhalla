@@ -41,8 +41,9 @@ std::string geojson(const job_t& job) {
     json.push_back(',');
     json.append(std::to_string(l.latlng_.lat()));
     json.push_back('}');
-    if (&l != &job.back())
+    if (&l != &job.back()) {
       json.push_back(',');
+    }
   }
   json.push_back('}');
   return json;
@@ -54,14 +55,18 @@ struct result_t {
   job_t job;
   bool cached;
   bool operator<(const result_t& other) const {
-    if (cached < other.cached)
+    if (cached < other.cached) {
       return true;
-    if (time < other.time)
+    }
+    if (time < other.time) {
       return true;
-    if (pass < other.pass)
+    }
+    if (pass < other.pass) {
       return true;
-    if (job.size() < other.job.size())
+    }
+    if (job.size() < other.job.size()) {
       return true;
+    }
     return job.front().latlng_ < other.job.front().latlng_;
   }
   bool operator==(const result_t& other) const {
@@ -181,8 +186,9 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 
 int main(int argc, char** argv) {
 
-  if (!ParseArguments(argc, argv))
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
+  }
 
   // check what type of input we are getting
   boost::property_tree::ptree pt;
@@ -215,18 +221,21 @@ int main(int argc, char** argv) {
       line.clear();
     }
   }
-  if (!job.empty())
+  if (!job.empty()) {
     jobs.emplace_back(std::move(job));
+  }
 
   // start up the threads
   std::list<std::thread> pool;
   std::vector<std::promise<results_t>> pool_results(threads);
-  for (size_t i = 0; i < threads; ++i)
+  for (size_t i = 0; i < threads; ++i) {
     pool.emplace_back(work, std::cref(pt), std::ref(pool_results[i]));
+  }
 
   // let the threads finish up
-  for (auto& thread : pool)
+  for (auto& thread : pool) {
     thread.join();
+  }
 
   // grab all the results
   results_t results;
@@ -259,10 +268,12 @@ int main(int argc, char** argv) {
           first = result;
           last = result;
         } else {
-          if (result.time < first.time)
+          if (result.time < first.time) {
             first = result;
-          if (result.time > last.time)
+          }
+          if (result.time > last.time) {
             last = result;
+          }
         }
         count++;
       }
@@ -288,10 +299,11 @@ int main(int argc, char** argv) {
       if (std::get<1>(stat_type) == result.pass && std::get<2>(stat_type) == result.cached) {
         auto ms = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(result.time)
                       .count();
-        if (ms < median - std_deviation)
+        if (ms < median - std_deviation) {
           faster++;
-        else if (ms > median + std_deviation)
+        } else if (ms > median + std_deviation) {
           slower++;
+        }
       }
     }
 

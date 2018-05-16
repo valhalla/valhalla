@@ -181,10 +181,11 @@ const std::string Signs::ListToParameterString(const std::vector<Sign>& signs) c
   bool is_first = true;
   sign_string += "{ ";
   for (auto& sign : signs) {
-    if (is_first)
+    if (is_first) {
       is_first = false;
-    else
+    } else {
       sign_string += delim;
+    }
     sign_string += sign.ToParameterString();
   }
   sign_string += " }";

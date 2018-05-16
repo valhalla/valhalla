@@ -28,10 +28,11 @@ std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& req
                        ? path_arrive_by(*request.options.mutable_locations(), costing)
                        : path_depart_at(*request.options.mutable_locations(), costing);
 
-  if (!request.options.do_not_track())
-    for (const auto& tp : trippaths)
+  if (!request.options.do_not_track()) {
+    for (const auto& tp : trippaths) {
       log_admin(tp);
-
+    }
+  }
   return trippaths;
 }
 
@@ -94,8 +95,9 @@ std::vector<thor::PathInfo> thor_worker_t::get_path(PathAlgorithm* path_algorith
   }
 
   // All or nothing
-  if (path.empty())
+  if (path.empty()) {
     throw valhalla_exception_t{442};
+  }
   return path;
 }
 
@@ -118,8 +120,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
     while (!path.empty() && destination->path_edges_size() > 1) {
-      if (destination->path_edges().rbegin()->graph_id() == path.front().edgeid)
+      if (destination->path_edges().rbegin()->graph_id() == path.front().edgeid) {
         destination->mutable_path_edges()->SwapElements(0, destination->path_edges_size() - 1);
+      }
       destination->mutable_path_edges()->RemoveLast();
     }
 
@@ -132,8 +135,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_arrive_by(
       auto offset = path.back().elapsed_time;
       std::for_each(temp_path.begin(), temp_path.end(),
                     [offset](PathInfo& i) { i.elapsed_time += offset; });
-      if (path.back().edgeid == temp_path.front().edgeid)
+      if (path.back().edgeid == temp_path.front().edgeid) {
         path.pop_back();
+      }
       path.insert(path.end(), temp_path.begin(), temp_path.end());
     }
 
@@ -183,8 +187,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
     while (!path.empty() && origin->path_edges_size() > 1) {
-      if (origin->path_edges().rbegin()->graph_id() == path.back().edgeid)
+      if (origin->path_edges().rbegin()->graph_id() == path.back().edgeid) {
         origin->mutable_path_edges()->SwapElements(0, origin->path_edges_size() - 1);
+      }
       origin->mutable_path_edges()->RemoveLast();
     }
 
@@ -196,12 +201,14 @@ std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(
       auto offset = path.back().elapsed_time;
       std::for_each(temp_path.begin(), temp_path.end(),
                     [offset](PathInfo& i) { i.elapsed_time += offset; });
-      if (path.back().edgeid == temp_path.front().edgeid)
+      if (path.back().edgeid == temp_path.front().edgeid) {
         path.pop_back();
+      }
       path.insert(path.end(), temp_path.begin(), temp_path.end());
     } // Didnt need to merge
-    else
+    else {
       path.swap(temp_path);
+    }
 
     // Build trip path for this leg and add to the result if this
     // location is a BREAK or if this is the last location

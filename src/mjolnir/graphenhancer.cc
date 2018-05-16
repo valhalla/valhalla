@@ -85,8 +85,9 @@ struct enhancer_stats {
   uint32_t pencilucount;
   uint32_t density_counts[16];
   void operator()(const enhancer_stats& other) {
-    if (max_density < other.max_density)
+    if (max_density < other.max_density) {
       max_density = other.max_density;
+    }
     unreachable += other.unreachable;
     not_thru += other.not_thru;
     no_country_found += other.no_country_found;
@@ -269,8 +270,9 @@ bool IsNotThruEdge(GraphReader& reader,
   const GraphTile* tile;
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
-    if (expandset.empty())
+    if (expandset.empty()) {
       return true;
+    }
 
     // Get the node off of the expand list and add it to the visited list.
     // Expand edges from this node.
@@ -388,8 +390,9 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
     // Find the opposing directed edge and its heading
     if (i == directededge.opp_local_idx()) {
       auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
-      if (!diredge->forward())
+      if (!diredge->forward()) {
         std::reverse(shape.begin(), shape.end());
+      }
       uint32_t hdg = std::round(PointLL::HeadingAlongPolyline(
           shape, GetOffsetForHeading(diredge->classification(), diredge->use())));
 
@@ -415,8 +418,9 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
     // Get the heading of the outbound edge (unfortunately GraphEnhancer may
     // not have yet computed and stored headings for this node).
     auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
-    if (!diredge->forward())
+    if (!diredge->forward()) {
       std::reverse(shape.begin(), shape.end());
+    }
     uint32_t to_heading = std::round(PointLL::HeadingAlongPolyline(
         shape, GetOffsetForHeading(diredge->classification(), diredge->use())));
 
@@ -493,8 +497,9 @@ uint32_t GetDensity(GraphReader& reader,
     lock.lock();
     const GraphTile* newtile = reader.GetGraphTile(GraphId(t, local_level, 0));
     lock.unlock();
-    if (!newtile || newtile->header()->nodecount() == 0)
+    if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
+    }
     const auto start_node = newtile->node(0);
     const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
@@ -517,8 +522,9 @@ uint32_t GetDensity(GraphReader& reader,
   // Form density measure as km/km^2. Convert roadlengths to km and divide by 2
   // (since 2 directed edges per edge)
   float density = (roadlengths * 0.0005f) / (kPi * kDensityRadius2);
-  if (density > stats.max_density)
+  if (density > stats.max_density) {
     stats.max_density = density;
+  }
 
   // Convert density into a relative value from 0-16.
   uint32_t relative_density = std::round(density * 0.7f);
@@ -618,8 +624,9 @@ bool IsCyclewayUturn(uint32_t from_index,
                      uint32_t turn_degree) {
 
   // we only deal with Cycleways
-  if (edges[from_index].use() != Use::kCycleway || edges[to_index].use() != Use::kCycleway)
+  if (edges[from_index].use() != Use::kCycleway || edges[to_index].use() != Use::kCycleway) {
     return false;
+  }
 
   // Logic for drive on right
   if (directededge.drive_on_right()) {
@@ -741,8 +748,9 @@ uint32_t GetStopImpact(uint32_t from,
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
   RoadClass from_rc = edges[from].classification();
-  if (from_rc > RoadClass::kUnclassified)
+  if (from_rc > RoadClass::kUnclassified) {
     from_rc = RoadClass::kUnclassified;
+  }
 
   // High stop impact from a turn channel onto a turn channel unless
   // the other edge a low class road (walkways often intersect
@@ -926,10 +934,11 @@ void enhance(const boost::property_tree::ptree& pt,
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database)
+  if (!database) {
     LOG_WARN("Admin db not found.  Not saving admin information.");
-  else if (!admin_db_handle)
+  } else if (!admin_db_handle) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
+  }
 
   std::unordered_map<std::string, std::vector<int>> country_access =
       GetCountryAccess(admin_db_handle);
@@ -1030,17 +1039,19 @@ void enhance(const boost::property_tree::ptree& pt,
       uint32_t admin_index = nodeinfo.admin_index();
       // Set the country code
       std::string country_code = "";
-      if (admin_index != 0)
+      if (admin_index != 0) {
         country_code = tilebuilder.admins_builder(admin_index).country_iso();
-      else
+      } else {
         stats.no_country_found++;
+      }
 
       // Get headings of the edges - set in NodeInfo. Set driveability info
       // on the node as well.
       uint32_t count = nodeinfo.edge_count();
       uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
-      if (ntrans == 0)
+      if (ntrans == 0) {
         throw std::runtime_error("edge transitions set is empty");
+      }
 
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
@@ -1049,8 +1060,9 @@ void enhance(const boost::property_tree::ptree& pt,
 
         auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
         auto shape = e_offset.shape();
-        if (!directededge.forward())
+        if (!directededge.forward()) {
           std::reverse(shape.begin(), shape.end());
+        }
         heading[j] = std::round(PointLL::HeadingAlongPolyline(
             shape, GetOffsetForHeading(directededge.classification(), directededge.use())));
 
@@ -1117,12 +1129,14 @@ void enhance(const boost::property_tree::ptree& pt,
             // leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {
               sequence<OSMAccess>::iterator access_it = access_tags.find(target, less_than);
-              if (access_it != access_tags.end())
+              if (access_it != access_tags.end()) {
                 SetCountryAccess(directededge, access, access_it);
-              else
+              } else {
                 LOG_WARN("access tags not found for " + std::to_string(e_offset.wayid()));
-            } else
+              }
+            } else {
               SetCountryAccess(directededge, access, target);
+            }
             // motorroad default.  Only applies to RC <= kPrimary and has no country override.
             // We just use the defaults which is no bicycles, mopeds and no pedestrians.
             // leaves tile flag indicates that we have an access record for this edge.
@@ -1162,13 +1176,13 @@ void enhance(const boost::property_tree::ptree& pt,
 
                 // motorroad defaults remove ped, wheelchair, moped, and bike access.
                 // still check for user tags via access.
-                forward = GetAccess(forward,
-                                    (forward & ~(kPedestrianAccess | kWheelchairAccess |
-                                                 kMopedAccess | kBicycleAccess)),
+                forward = GetAccess(forward, (forward &
+                                              ~(kPedestrianAccess | kWheelchairAccess |
+                                                kMopedAccess | kBicycleAccess)),
                                     r_oneway_vehicle, r_oneway_bicycle, access);
-                reverse = GetAccess(reverse,
-                                    (reverse & ~(kPedestrianAccess | kWheelchairAccess |
-                                                 kMopedAccess | kBicycleAccess)),
+                reverse = GetAccess(reverse, (reverse &
+                                              ~(kPedestrianAccess | kWheelchairAccess |
+                                                kMopedAccess | kBicycleAccess)),
                                     f_oneway_vehicle, f_oneway_bicycle, access);
 
                 directededge.set_forwardaccess(forward);
@@ -1185,8 +1199,9 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Use::kPedestrian is really a kFootway
-        if (directededge.use() == Use::kPedestrian)
+        if (directededge.use() == Use::kPedestrian) {
           directededge.set_use(Use::kFootway);
+        }
 
         // Update speed.
         UpdateSpeed(directededge, density, urban_rc_speed);
@@ -1269,8 +1284,8 @@ void enhance(const boost::property_tree::ptree& pt,
       LOG_ERROR("Mismatch in access restriction count before " + std::to_string(ar_before) +
                 ""
                 " and after " +
-                std::to_string(access_restrictions.size()) +
-                " tileid = " + std::to_string(tile_id.tileid()));
+                std::to_string(access_restrictions.size()) + " tileid = " +
+                std::to_string(tile_id.tileid()));
     }
     tilebuilder.AddAccessRestrictions(access_restrictions);
 
@@ -1286,8 +1301,9 @@ void enhance(const boost::property_tree::ptree& pt,
     lock.unlock();
   }
 
-  if (admin_db_handle)
+  if (admin_db_handle) {
     sqlite3_close(admin_db_handle);
+  }
 
   // Send back the statistics
   result.set_value(stats);

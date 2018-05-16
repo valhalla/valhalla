@@ -75,19 +75,21 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
 // Get the time from the inputed date.
 // date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_time(const std::string& date_time, const std::locale& locale) {
-  if (date_time.find("T") == std::string::npos)
+  if (date_time.find("T") == std::string::npos) {
     return "";
+  }
 
   std::string datetime;
   std::size_t found = date_time.find_last_of("+"); // remove tz offset
-  if (found != std::string::npos)
+  if (found != std::string::npos) {
     datetime = date_time.substr(0, found);
-  else {
+  } else {
     found = date_time.find_last_of("-"); // remove tz offset
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       datetime = date_time.substr(0, found);
-    else
+    } else {
       return "";
+    }
   }
 
   std::string time = datetime;
@@ -113,17 +115,19 @@ std::string get_localized_time(const std::string& date_time, const std::locale& 
     // seconds is too granular so we try to remove
     if (time.find("PM") == std::string::npos && time.find("AM") == std::string::npos) {
       size_t found = time.find_last_of(":");
-      if (found != std::string::npos)
+      if (found != std::string::npos) {
         time = time.substr(0, found);
-      else {
+      } else {
         found = time.find_last_of("00");
-        if (found != std::string::npos)
+        if (found != std::string::npos) {
           time = time.substr(0, found - 1);
+        }
       }
     } else {
       boost::replace_all(time, ":00 ", " ");
-      if (time.substr(0, 1) == "0")
+      if (time.substr(0, 1) == "0") {
         time = time.substr(1, time.size());
+      }
     }
   } catch (std::exception&) { return ""; }
 
@@ -134,19 +138,21 @@ std::string get_localized_time(const std::string& date_time, const std::locale& 
 // Get the date from the inputed date.
 // date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_date(const std::string& date_time, const std::locale& locale) {
-  if (date_time.find("T") == std::string::npos)
+  if (date_time.find("T") == std::string::npos) {
     return "";
+  }
 
   std::string datetime;
   std::size_t found = date_time.find_last_of("+"); // remove tz offset
-  if (found != std::string::npos)
+  if (found != std::string::npos) {
     datetime = date_time.substr(0, found);
-  else {
+  } else {
     found = date_time.find_last_of("-"); // remove tz offset
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       datetime = date_time.substr(0, found);
-    else
+    } else {
       return "";
+    }
   }
 
   std::string date = datetime;

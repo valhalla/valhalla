@@ -82,8 +82,9 @@ void build_tile_set(const boost::property_tree::ptree& config,
                     const std::string& bin_file_prefix,
                     bool free_protobuf) {
   // cannot allow this when building tiles
-  if (config.get_child("mjolnir").get_optional<std::string>("tile_extract"))
+  if (config.get_child("mjolnir").get_optional<std::string>("tile_extract")) {
     throw std::runtime_error("Tiles cannot be directly built into a tar extract");
+  }
 
   // set up the directories and purge old tiles
   auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
@@ -114,8 +115,9 @@ void build_tile_set(const boost::property_tree::ptree& config,
                             bin_file_prefix + "complex_restrictions.bin");
 
   // Optionally free all protobuf memory but also you cant use the protobuffer lib after this!
-  if (free_protobuf)
+  if (free_protobuf) {
     OSMPBF::Parser::free();
+  }
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(config, osm_data, bin_file_prefix + "ways.bin",

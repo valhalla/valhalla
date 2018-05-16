@@ -55,8 +55,9 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
   // Sort nodes by graphid then by osmid, so its basically a set of tiles
   sequence<Node> nodes(nodes_file, false);
   nodes.sort([](const Node& a, const Node& b) {
-    if (a.graph_id == b.graph_id)
+    if (a.graph_id == b.graph_id) {
       return a.node.osmid < b.node.osmid;
+    }
     return a.graph_id < b.graph_id;
   });
   // run through the sorted nodes, going back to the edges they reference and updating each edge
@@ -83,8 +84,9 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
           run_index = node_index;
           ++node_count;
         } // not new keep the same graphid
-        else
+        else {
           node.graph_id.set_id(last_node.graph_id.id());
+        }
 
         // if this node marks the start of an edge, go tell the edge where the first node in the
         // series is
@@ -385,18 +387,20 @@ void BuildTileSet(const std::string& ways_file,
   auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database)
+  if (!database) {
     LOG_WARN("Admin db not found.  Not saving admin information.");
-  else if (!admin_db_handle)
+  } else if (!admin_db_handle) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
+  }
 
   database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
   sqlite3* tz_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database)
+  if (!database) {
     LOG_WARN("Time zone db not found.  Not saving time zone information.");
-  else if (!tz_db_handle)
+  } else if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
+  }
 
   const auto& tl = TileHierarchy::levels().rbegin();
   Tiles<PointLL> tiling = tl->second.tiles;
@@ -513,8 +517,9 @@ void BuildTileSet(const std::string& ways_file,
           // the 2 nodes). Check for edge error.
           bool forward = edge.sourcenode_ == node_itr.position();
           size_t source = edge.sourcenode_, target = edge.targetnode_;
-          if (!forward)
+          if (!forward) {
             std::swap(source, target);
+          }
 
           // Validate speed
           uint32_t speed = static_cast<uint32_t>(w.speed());
@@ -532,29 +537,31 @@ void BuildTileSet(const std::string& ways_file,
 
           uint32_t speed_limit = static_cast<uint32_t>(w.speed_limit());
           if (speed_limit > kMaxSpeedKph) {
-            LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
-                     " wayId= " + std::to_string(w.way_id()));
+            LOG_WARN("Speed limit = " + std::to_string(speed_limit) + " wayId= " +
+                     std::to_string(w.way_id()));
             speed_limit = kMaxSpeedKph;
           }
 
           uint32_t truck_speed = static_cast<uint32_t>(w.truck_speed());
           if (truck_speed > kMaxSpeedKph) {
-            LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
-                     " wayId= " + std::to_string(w.way_id()));
+            LOG_WARN("Truck Speed = " + std::to_string(truck_speed) + " wayId= " +
+                     std::to_string(w.way_id()));
             truck_speed = kMaxSpeedKph;
           }
 
           // Cul du sac
           auto use = w.use();
-          if (use == Use::kCuldesac)
+          if (use == Use::kCuldesac) {
             stats.culdesaccount++;
+          }
 
           // Handle simple turn restrictions that originate from this
           // directed edge
           uint32_t restrictions =
               CreateSimpleTurnRestriction(w.way_id(), target, nodes, edges, osmdata, ways, stats);
-          if (restrictions != 0)
+          if (restrictions != 0) {
             stats.simplerestrictions++;
+          }
 
           // traffic signal exists at an intersection node
           // OR
@@ -608,15 +615,17 @@ void BuildTileSet(const std::string& ways_file,
             }
           }
 
-          if ((bike_network & kMcn) || (w.bike_network() & kMcn))
+          if ((bike_network & kMcn) || (w.bike_network() & kMcn)) {
             use = Use::kMountainBike;
+          }
 
           // Check for updated ref from relations.
           std::string ref;
           auto iter = osmdata.way_ref.find(w.way_id());
           if (iter != osmdata.way_ref.end()) {
-            if (w.ref_index() != 0)
+            if (w.ref_index() != 0) {
               ref = GraphBuilder::GetRef(osmdata.ref_offset_map.name(w.ref_index()), iter->second);
+            }
           }
 
           // Get the shape for the edge and compute its length
@@ -693,8 +702,9 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // this can't happen
-          if (found == geo_attribute_cache.cend())
+          if (found == geo_attribute_cache.cend()) {
             throw std::runtime_error("GeoAttributes cached object should be there!");
+          }
 
           // ferry speed override.  duration is set on the way
           if (w.ferry() && w.duration()) {
@@ -716,9 +726,9 @@ void BuildTileSet(const std::string& ways_file,
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin
           // file. ferries don't have overrides in country access logic, so use this bit to indicate
           // if the speed has been set via the duration and length
-          if (!w.ferry())
+          if (!w.ferry()) {
             directededge.set_leaves_tile(w.has_user_tags());
-          else if (w.duration()) {
+          } else if (w.duration()) {
             directededge.set_leaves_tile(true);
           }
 
@@ -785,10 +795,11 @@ void BuildTileSet(const std::string& ways_file,
 
           // Set the number of lanes.
           if (w.forward_tagged_lanes() && w.backward_tagged_lanes()) {
-            if (forward)
+            if (forward) {
               directededge.set_lanecount(w.forward_lanes());
-            else
+            } else {
               directededge.set_lanecount(w.backward_lanes());
+            }
           } else {
             // The lanes tag in OSM means total number of lanes. For ways with
             // 2-way travel divide by 2. This will not be accurate for an odd
@@ -810,8 +821,9 @@ void BuildTileSet(const std::string& ways_file,
             }
           }
 
-          if (osmdata.via_set.find(w.way_id()) != osmdata.via_set.end())
+          if (osmdata.via_set.find(w.way_id()) != osmdata.via_set.end()) {
             directededge.set_part_of_complex_restriction(true);
+          }
 
           // grab all the modes if this way ends at a restriction(s)
           auto to = osmdata.end_map.equal_range(w.way_id());
@@ -827,9 +839,10 @@ void BuildTileSet(const std::string& ways_file,
 
               while (res_it != complex_restrictions.end() &&
                      (restriction = *res_it).from() == it->second) {
-                if (restriction.to() == w.way_id())
+                if (restriction.to() == w.way_id()) {
                   directededge.set_end_restriction(directededge.end_restriction() |
                                                    restriction.modes());
+                }
                 res_it++;
               }
             }
@@ -850,8 +863,9 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // Set drive on right flag
-          if (admin_index != 0)
+          if (admin_index != 0) {
             directededge.set_drive_on_right(drive_on_right[admin_index]);
+          }
 
           // Set shoulder based on current facing direction and which
           // side of the road is meant to be driven on.
@@ -965,11 +979,13 @@ void BuildTileSet(const std::string& ways_file,
     }
   }
 
-  if (admin_db_handle)
+  if (admin_db_handle) {
     sqlite3_close(admin_db_handle);
+  }
 
-  if (tz_db_handle)
+  if (tz_db_handle) {
     sqlite3_close(tz_db_handle);
+  }
 
   // Let the main thread see how this thread faired
   result.set_value(stats);
@@ -1096,8 +1112,9 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   boost::optional<std::string> elevation =
       pt.get_optional<std::string>("additional_data.elevation");
   std::unique_ptr<const skadi::sample> sample;
-  if (elevation && boost::filesystem::exists(*elevation))
+  if (elevation && boost::filesystem::exists(*elevation)) {
     sample.reset(new skadi::sample(*elevation));
+  }
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
@@ -1118,10 +1135,11 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
       std::vector<std::string> tmp = GetTagTokens(refdir, '|'); // US 51|north
       if (tmp.size() == 2) {
         if (tmp[0] == ref) { // US 51 == US 51
-          if (!refs.empty())
+          if (!refs.empty()) {
             refs += ";" + ref + " " + tmp[1]; // ref order of the way wins.
-          else
+          } else {
             refs = ref + " " + tmp[1];
+          }
           found = true;
           break;
         }
@@ -1129,10 +1147,11 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
     }
 
     if (!found) { // no direction found in relations for this ref
-      if (!refs.empty())
+      if (!refs.empty()) {
         refs += ";" + ref;
-      else
+      } else {
         refs = ref;
+      }
     }
   }
   return refs;
@@ -1153,12 +1172,14 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
 
     std::vector<std::string> j_refs =
         GetTagTokens(osmdata.ref_offset_map.name(way.junction_ref_index()));
-    for (auto& j_ref : j_refs)
+    for (auto& j_ref : j_refs) {
       exit_list.emplace_back(Sign::Type::kExitNumber, j_ref);
+    }
   } else if (node.ref() && !fork) {
     std::vector<std::string> n_refs = GetTagTokens(osmdata.node_ref.find(node.osmid)->second);
-    for (auto& n_ref : n_refs)
+    for (auto& n_ref : n_refs) {
       exit_list.emplace_back(Sign::Type::kExitNumber, n_ref);
+    }
   }
 
   ////////////////////////////////////////////////////////////////////////////

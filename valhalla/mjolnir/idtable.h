@@ -49,9 +49,8 @@ public:
    * @return  Returns true if the OSM Id is used. False if not.
    */
   inline const bool get(const uint64_t id) {
-    return id > maxosmid_ ? false
-                          : bitmarkers_[id / 64] &
-                                (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
+    return id > maxosmid_ ? false : bitmarkers_[id / 64] & (static_cast<uint64_t>(1)
+                                                            << (id % static_cast<uint64_t>(64)));
   }
 
   /**

@@ -307,8 +307,9 @@ public:
                     cr->dt_type(), cr->begin_hrs(), cr->begin_mins(), cr->end_hrs(), cr->end_mins(),
                     cr->dow(), cr->begin_week(), cr->begin_month(), cr->begin_day_dow(),
                     cr->end_week(), cr->end_month(), cr->end_day_dow(), current_time,
-                    baldr::DateTime::get_tz_db().from_index(tz_index)))
+                    baldr::DateTime::get_tz_db().from_index(tz_index))) {
               return true;
+            }
             continue;
           }
           return true;

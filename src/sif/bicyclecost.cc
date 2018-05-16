@@ -661,10 +661,10 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   uint32_t bike_speed =
       edge->dismount()
           ? kDismountSpeed
-          : static_cast<uint32_t>(
-                (speed_ * surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
-                 kGradeBasedSpeedFactor[edge->weighted_grade()]) +
-                0.5f);
+          : static_cast<uint32_t>((speed_ *
+                                   surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
+                                   kGradeBasedSpeedFactor[edge->weighted_grade()]) +
+                                  0.5f);
 
   // Represents how stressful a roadway is without looking at grade or cycle accommodations
   float roadway_stress = 1.0f;

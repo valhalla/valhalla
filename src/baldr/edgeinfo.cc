@@ -8,8 +8,9 @@ namespace {
 
 json::ArrayPtr names_json(const std::vector<std::string>& names) {
   auto a = json::array({});
-  for (const auto& n : names)
+  for (const auto& n : names) {
     a->push_back(n);
+  }
   return a;
 }
 
@@ -43,10 +44,11 @@ EdgeInfo::~EdgeInfo() {
 
 // Get the name info for the specified name index.
 NameInfo EdgeInfo::GetNameInfo(uint8_t index) const {
-  if (index < item_->name_count)
+  if (index < item_->name_count) {
     return name_info_list_[index];
-  else
+  } else {
     throw std::runtime_error("StreetNameOffset index was out of bounds");
+  }
 }
 
 // Get a list of names
@@ -95,8 +97,9 @@ uint16_t EdgeInfo::GetTypes() const {
 // Returns shape as a vector of PointLL
 const std::vector<PointLL>& EdgeInfo::shape() const {
   // if we haven't yet decoded the shape, do so
-  if (encoded_shape_ != nullptr && shape_.empty())
+  if (encoded_shape_ != nullptr && shape_.empty()) {
     shape_ = midgard::decode7<std::vector<PointLL>>(encoded_shape_, item_->encoded_shape_size);
+  }
   return shape_;
 }
 

@@ -42,8 +42,9 @@ configure(const boost::optional<std::string>& config = boost::none) {
   }
 
   // if it turned out no one ever configured us we throw
-  if (!pt)
+  if (!pt) {
     throw std::runtime_error("The service was not configured");
+  }
   return *pt;
 }
 void py_configure(const std::string& config_file) {

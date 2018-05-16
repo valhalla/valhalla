@@ -276,15 +276,15 @@ void test_matrix() {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s distance is not close enough"
                                " to expected value for CostMatrix. Expected: " +
-                               std::to_string(cost_matrix_answers[i].dist) +
-                               " Actual: " + std::to_string(results[i].dist));
+                               std::to_string(cost_matrix_answers[i].dist) + " Actual: " +
+                               std::to_string(results[i].dist));
     }
     if (!within_tolerance(results[i].time, cost_matrix_answers[i].time)) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s time is not close enough"
                                " to expected value for CostMatrix. Expected: " +
-                               std::to_string(cost_matrix_answers[i].time) +
-                               " Actual: " + std::to_string(results[i].time));
+                               std::to_string(cost_matrix_answers[i].time) + " Actual: " +
+                               std::to_string(results[i].time));
     }
   }
 
@@ -296,15 +296,15 @@ void test_matrix() {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s distance is not equal to"
                                " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(timedist_matrix_answers[i].dist) +
-                               " Actual: " + std::to_string(results[i].dist));
+                               std::to_string(timedist_matrix_answers[i].dist) + " Actual: " +
+                               std::to_string(results[i].dist));
     }
     if (!within_tolerance(results[i].time, timedist_matrix_answers[i].time)) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s time is not equal to"
                                " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(timedist_matrix_answers[i].time) +
-                               " Actual: " + std::to_string(results[i].time));
+                               std::to_string(timedist_matrix_answers[i].time) + " Actual: " +
+                               std::to_string(results[i].time));
     }
   }
 }
@@ -333,15 +333,15 @@ void test_matrix_osrm() {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s distance is not close enough"
                                " to expected value for CostMatrix. Expected: " +
-                               std::to_string(cost_matrix_answers[i].dist) +
-                               " Actual: " + std::to_string(results[i].dist));
+                               std::to_string(cost_matrix_answers[i].dist) + " Actual: " +
+                               std::to_string(results[i].dist));
     }
     if (results[i].time != cost_matrix_answers[i].time) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s time is not close enough"
                                " to expected value for CostMatrix. Expected: " +
-                               std::to_string(cost_matrix_answers[i].time) +
-                               " Actual: " + std::to_string(results[i].time));
+                               std::to_string(cost_matrix_answers[i].time) + " Actual: " +
+                               std::to_string(results[i].time));
     }
   }
 
@@ -353,15 +353,15 @@ void test_matrix_osrm() {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s distance is not equal to"
                                " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(timedist_matrix_answers[i].dist) +
-                               " Actual: " + std::to_string(results[i].dist));
+                               std::to_string(timedist_matrix_answers[i].dist) + " Actual: " +
+                               std::to_string(results[i].dist));
     }
     if (results[i].time != timedist_matrix_answers[i].time) {
       throw std::runtime_error("result " + std::to_string(i) +
                                "'s time is not equal to"
                                " the expected value for TimeDistMatrix. Expected: " +
-                               std::to_string(timedist_matrix_answers[i].time) +
-                               " Actual: " + std::to_string(results[i].time));
+                               std::to_string(timedist_matrix_answers[i].time) + " Actual: " +
+                               std::to_string(results[i].time));
     }
   }
 }

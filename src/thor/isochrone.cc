@@ -582,8 +582,9 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
       }
 
       // check if excluded.
-      if (tc->IsExcluded(tile, nodeinfo))
+      if (tc->IsExcluded(tile, nodeinfo)) {
         continue;
+      }
 
       // Add transfer time to the local time when entering a stop
       // as a pedestrian. This is a small added cost on top of
@@ -602,10 +603,11 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
             DateTime::get_formatted_date(origin_locations.Get(0).date_time()));
         dow = DateTime::day_of_week_mask(origin_locations.Get(0).date_time());
         uint32_t date_created = tile->header()->date_created();
-        if (date < date_created)
+        if (date < date_created) {
           date_before_tile = true;
-        else
+        } else {
           day = date - date_created;
+        }
 
         date_set = true;
       }
@@ -653,8 +655,9 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
         }
 
         // check if excluded.
-        if (tc->IsExcluded(tile, directededge))
+        if (tc->IsExcluded(tile, directededge)) {
           continue;
+        }
 
         // Look up the next departure along this edge
         const TransitDeparture* departure = tile->GetNextDeparture(
@@ -683,8 +686,9 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
               if (localtime + 30 > departure->departure_time()) {
                 departure = tile->GetNextDeparture(directededge->lineid(), localtime + 30, day, dow,
                                                    date_before_tile, wheelchair, bicycle);
-                if (!departure)
+                if (!departure) {
                   continue;
+                }
               }
             }
 
@@ -695,8 +699,9 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
             if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
               // TODO - create a configurable operator change penalty
               newcost.cost += 300;
-            } else
+            } else {
               newcost.cost += transfer_cost.cost;
+            }
           }
 
           // Change mode and costing to transit. Add edge cost.
@@ -736,8 +741,10 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
           // at a transit stop - this is like entering a station and exiting
           // without getting on transit
           if (nodeinfo->type() == NodeType::kTransitEgress &&
-              pred.use() == Use::kEgressConnection && directededge->use() == Use::kEgressConnection)
+              pred.use() == Use::kEgressConnection &&
+              directededge->use() == Use::kEgressConnection) {
             continue;
+          }
         }
       }
 

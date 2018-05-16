@@ -100,8 +100,9 @@ public:
             ostream_.unsetf(std::ios::basefield);
             ostream_.unsetf(std::ios::uppercase);
             ostream_.fill(fill);
-          } else
+          } else {
             ostream_ << c;
+          }
           break;
       }
     }
@@ -135,10 +136,11 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const fp_t& fp) {
-  if (std::isfinite(fp.value))
+  if (std::isfinite(fp.value)) {
     stream << std::setprecision(fp.precision) << std::fixed << fp.value;
-  else
+  } else {
     stream << std::setprecision(fp.precision) << std::fixed << '"' << fp.value << '"';
+  }
   return stream;
 }
 
@@ -146,8 +148,9 @@ inline std::ostream& operator<<(std::ostream& stream, const Jmap& json) {
   stream << '{';
   bool seprator = false;
   for (const auto& key_value : json) {
-    if (seprator)
+    if (seprator) {
       stream << ',';
+    }
     seprator = true;
     stream << '"' << key_value.first << "\":";
     boost::apply_visitor(OstreamVisitor(stream), key_value.second);
@@ -160,8 +163,9 @@ inline std::ostream& operator<<(std::ostream& stream, const Jarray& json) {
   stream << '[';
   bool seprator = false;
   for (const auto& element : json) {
-    if (seprator)
+    if (seprator) {
       stream << ',';
+    }
     seprator = true;
     boost::apply_visitor(OstreamVisitor(stream), element);
   }

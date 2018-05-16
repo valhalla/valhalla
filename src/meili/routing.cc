@@ -182,8 +182,9 @@ void set_origin(baldr::GraphReader& reader,
   // route
   const baldr::GraphTile* tile = nullptr;
   for (const auto& edge : destinations[origin_idx].edges) {
-    if (!edge.id.Is_Valid())
+    if (!edge.id.Is_Valid()) {
       continue;
+    }
 
     auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
     if (edge.begin_node()) {
@@ -226,19 +227,22 @@ void set_destinations(
   const baldr::GraphTile* tile = nullptr;
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
     for (const auto& edge : destinations[dest].edges) {
-      if (!edge.id.Is_Valid())
+      if (!edge.id.Is_Valid()) {
         continue;
+      }
 
       auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       if (edge.begin_node()) {
         const auto nodeid = edge_nodes.first;
-        if (!nodeid.Is_Valid())
+        if (!nodeid.Is_Valid()) {
           continue;
+        }
         node_dests[nodeid].insert(dest);
       } else if (edge.end_node()) {
         const auto nodeid = edge_nodes.second;
-        if (!nodeid.Is_Valid())
+        if (!nodeid.Is_Valid()) {
           continue;
+        }
         node_dests[nodeid].insert(dest);
 
       } else {
@@ -570,8 +574,9 @@ find_shortest_path(baldr::GraphReader& reader,
           if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
             // Get the end node tile and nodeinfo (to compute heuristic)
             const auto* nodeinfo = reader.GetEndNode(directededge, tile);
-            if (nodeinfo == nullptr)
+            if (nodeinfo == nullptr) {
               continue;
+            }
             float sortcost = cost.cost + heuristic(nodeinfo->latlng());
             labelset->put(directededge->endnode(), origin_edge.id, origin_edge.percent_along, 1.f,
                           cost, turn_cost, sortcost, label_idx, directededge, travelmode);

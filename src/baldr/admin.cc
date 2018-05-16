@@ -12,10 +12,11 @@ Admin::Admin(const uint32_t country_offset,
 
   std::size_t length = 0;
   // Example:  GB or US
-  if (country_iso.size() == kCountryIso)
+  if (country_iso.size() == kCountryIso) {
     length = country_iso.copy(country_iso_, kCountryIso);
-  else
+  } else {
     country_iso_[0] = '\0';
+  }
 
   // Example:  PA
   if (state_iso.size() == kStateIso - 1) {
@@ -23,10 +24,11 @@ Admin::Admin(const uint32_t country_offset,
     state_iso_[length] = '\0';
   }
   // Example:  WLS
-  else if (state_iso.size() == kStateIso)
+  else if (state_iso.size() == kStateIso) {
     length = state_iso.copy(state_iso_, kStateIso);
-  else
+  } else {
     state_iso_[0] = '\0';
+  }
 }
 
 // Get the offset within the text/names list for the state text.
@@ -43,8 +45,9 @@ uint32_t Admin::country_offset() const {
 const std::string Admin::country_iso() const {
   std::string str;
   for (int i = 0; i < kCountryIso; i++) {
-    if (country_iso_[i] == '\0')
+    if (country_iso_[i] == '\0') {
       break;
+    }
     str.append(1, country_iso_[i]);
   }
   return str;
@@ -54,8 +57,9 @@ const std::string Admin::country_iso() const {
 const std::string Admin::state_iso() const {
   std::string str;
   for (int i = 0; i < kStateIso; i++) {
-    if (state_iso_[i] == '\0')
+    if (state_iso_[i] == '\0') {
       break;
+    }
     str.append(1, state_iso_[i]);
   }
   return str;

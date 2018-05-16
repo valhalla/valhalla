@@ -33,30 +33,37 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<odin::Loc
                                     boost::optional<valhalla_exception_t> required_exception) {
   if (locations->size()) {
     for (auto& location : *locations) {
-      if (location.minimum_reachability() > max_reachability)
+      if (location.minimum_reachability() > max_reachability) {
         location.set_minimum_reachability(max_reachability);
-      if (location.radius() > max_radius)
+      }
+      if (location.radius() > max_radius) {
         location.set_radius(max_radius);
+      }
     }
-  } else if (required_exception)
-    throw *required_exception;
+  } else if (required_exception) {
+    throw * required_exception;
+  }
 }
 
 void loki_worker_t::parse_costing(valhalla_request_t& request) {
   // using the costing we can determine what type of edge filtering to use
-  if (!request.options.has_costing())
+  if (!request.options.has_costing()) {
     throw valhalla_exception_t{124};
+  };
 
   auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
-  if (costing.back() == '_')
+  if (costing.back() == '_') {
     costing.pop_back();
+  }
 
-  if (!request.options.do_not_track())
+  if (!request.options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing, " [ANALYTICS] ");
+  }
 
   // TODO - have a way of specifying mode at the location
-  if (costing == "multimodal")
+  if (costing == "multimodal") {
     costing = "pedestrian";
+  }
 
   // Get the costing options if in the config or make a blank one.
   // Creates the cost in the cost factory
@@ -83,8 +90,9 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing + "'"}; }
 
   // See if we have avoids and take care of them
-  if (request.options.avoid_locations_size() > max_avoid_locations)
+  if (request.options.avoid_locations_size() > max_avoid_locations) {
     throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+  };
   if (request.options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
@@ -94,13 +102,15 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
         for (const auto& edge : result.second.edges) {
           auto inserted = avoids.insert(edge.id);
           GraphId shortcut;
-          if (inserted.second && (shortcut = reader.GetShortcut(edge.id)).Is_Valid())
+          if (inserted.second && (shortcut = reader.GetShortcut(edge.id)).Is_Valid()) {
             avoids.insert(shortcut);
+          }
         }
       }
       rapidjson::Value avoid_edges{rapidjson::kArrayType};
-      for (auto avoid : avoids)
+      for (auto avoid : avoids) {
         avoid_edges.PushBack(rapidjson::Value(avoid), allocator);
+      }
       method_options_ptr->AddMember("avoid_edges", avoid_edges, allocator);
     } // swallow all failures on optional avoids
     catch (...) {
@@ -126,25 +136,30 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config)
   odin::DirectionsOptions::Action action;
   for (const auto& kv : config.get_child("loki.actions")) {
     auto path = kv.second.get_value<std::string>();
-    if (!odin::DirectionsOptions::Action_Parse(path, &action))
+    if (!odin::DirectionsOptions::Action_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
+    }
     action_str.append("'/" + path + "' ");
   }
   // Make sure we have at least something to support!
-  if (action_str.empty())
+  if (action_str.empty()) {
     throw std::runtime_error("The config actions for Loki are incorrectly loaded");
+  }
 
   // Build max_locations and max_distance maps
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius")
+        kv.first == "max_radius") {
       continue;
-    if (kv.first != "skadi" && kv.first != "trace")
+    }
+    if (kv.first != "skadi" && kv.first != "trace") {
       max_locations.emplace(kv.first,
                             config.get<size_t>("service_limits." + kv.first + ".max_locations"));
-    if (kv.first != "skadi")
+    }
+    if (kv.first != "skadi") {
       max_distance.emplace(kv.first,
                            config.get<float>("service_limits." + kv.first + ".max_distance"));
+    }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
       max_matrix_distance.emplace(
           kv.first, config.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
@@ -153,17 +168,21 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config)
     }
   }
   // this should never happen
-  if (max_locations.empty())
+  if (max_locations.empty()) {
     throw std::runtime_error("Missing max_locations configuration");
+  }
 
-  if (max_distance.empty())
+  if (max_distance.empty()) {
     throw std::runtime_error("Missing max_distance configuration");
+  }
 
-  if (max_matrix_distance.empty())
+  if (max_matrix_distance.empty()) {
     throw std::runtime_error("Missing max_matrix_distance configuration");
+  }
 
-  if (max_matrix_locations.empty())
+  if (max_matrix_locations.empty()) {
     throw std::runtime_error("Missing max_matrix_locations configuration");
+  }
 
   min_transit_walking_dis =
       config.get<size_t>("service_limits.pedestrian.min_transit_walking_distance");
@@ -194,17 +213,20 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config)
 }
 
 void loki_worker_t::cleanup() {
-  if (reader.OverCommitted())
+  if (reader.OverCommitted()) {
     reader.Clear();
+  }
 }
 
 #ifdef HAVE_HTTP
 void loki_worker_t::limits(valhalla_request_t& request) const {
   for (auto& location : *request.options.mutable_locations()) {
-    if (location.minimum_reachability() > max_reachability)
+    if (location.minimum_reachability() > max_reachability) {
       location.set_minimum_reachability(max_reachability);
-    if (location.radius() > max_radius)
+    }
+    if (location.radius() > max_radius) {
       location.set_radius(max_radius);
+    }
   }
 }
 
@@ -223,8 +245,9 @@ worker_t::result_t loki_worker_t::work(const std::list<zmq::message_t>& job,
     request.parse(http_request);
 
     // check there is a valid action
-    if (!request.options.has_action())
+    if (!request.options.has_action()) {
       return jsonify_error({106, action_str}, info, request);
+    }
 
     // enforce some limits
     limits(request);

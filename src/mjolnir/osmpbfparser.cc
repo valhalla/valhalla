@@ -61,18 +61,21 @@ BlobHeader read_header(char* buffer, std::ifstream& file, bool& finished) {
 
   // convert the size from network byte-order to host byte-order and check its sane
   sz = ntohl(sz);
-  if (sz > MAX_BLOB_HEADER_SIZE)
+  if (sz > MAX_BLOB_HEADER_SIZE) {
     throw std::runtime_error("blob-header-size is bigger than allowed " + std::to_string(sz) +
                              " > " + std::to_string(MAX_BLOB_HEADER_SIZE));
+  }
 
   // grab the blob header bytes
   file.read(buffer, sz);
-  if (!file.good())
+  if (!file.good()) {
     throw std::runtime_error("unable to read blob-header from file");
+  }
 
   // turn the bytes into a protobuf object
-  if (!result.ParseFromArray(buffer, sz))
+  if (!result.ParseFromArray(buffer, sz)) {
     throw std::runtime_error("unable to parse blob header");
+  }
 
   finished = false;
   return result;
@@ -84,23 +87,27 @@ read_blob(char* buffer, char* unpack_buffer, std::ifstream& file, const BlobHead
 
   // is the size of the following blob sane
   int32_t sz = header.datasize();
-  if (sz > MAX_UNCOMPRESSED_BLOB_SIZE)
+  if (sz > MAX_UNCOMPRESSED_BLOB_SIZE) {
     throw std::runtime_error("blob-size is bigger than allowed");
+  }
 
   // pull out the bytes
-  if (!file.read(buffer, sz))
+  if (!file.read(buffer, sz)) {
     throw std::runtime_error("unable to read blob from file");
+  }
 
   // turn it into a protobuf object
-  if (!blob.ParseFromArray(buffer, sz))
+  if (!blob.ParseFromArray(buffer, sz)) {
     throw std::runtime_error("unable to parse blob");
+  }
 
   // if the blob was uncompressed
   if (blob.has_raw()) {
     // check that raw_size is set correctly and move it to the final buffer
     sz = blob.raw().size();
-    if (sz != blob.raw_size())
+    if (sz != blob.raw_size()) {
       LOG_WARN("blob reports wrong raw_size: " + std::to_string(blob.raw_size()) + " bytes");
+    }
     memcpy(unpack_buffer, buffer, sz);
     return sz;
   } // if the blob was zlib compressed
@@ -114,12 +121,15 @@ read_blob(char* buffer, char* unpack_buffer, std::ifstream& file, const BlobHead
     z.zalloc = Z_NULL;
     z.zfree = Z_NULL;
     z.opaque = Z_NULL;
-    if (inflateInit(&z) != Z_OK)
+    if (inflateInit(&z) != Z_OK) {
       throw std::runtime_error("failed to init zlib stream");
-    if (inflate(&z, Z_FINISH) != Z_STREAM_END)
+    }
+    if (inflate(&z, Z_FINISH) != Z_STREAM_END) {
       throw std::runtime_error("failed to inflate zlib stream");
-    if (inflateEnd(&z) != Z_OK)
+    }
+    if (inflateEnd(&z) != Z_OK) {
       throw std::runtime_error("failed to deinit zlib stream");
+    }
     return z.total_out;
   }
 
@@ -148,8 +158,9 @@ void parse_primitive_block(char* unpack_buffer,
                            Callback& callback) {
   // turn the blob bytes into a protobuf object
   PrimitiveBlock primblock;
-  if (!primblock.ParseFromArray(unpack_buffer, sz))
+  if (!primblock.ParseFromArray(unpack_buffer, sz)) {
     throw std::runtime_error("unable to parse primitive block");
+  }
 
   // for each primitive group
   for (const auto& primitive_group : primblock.primitivegroup()) {
@@ -163,8 +174,10 @@ void parse_primitive_block(char* unpack_buffer,
         double lat =
             0.000000001 * (primblock.lat_offset() + (primblock.granularity() * node.lat()));
         callback.node_callback(node.id(), lon, lat, get_tags<Node>(node, primblock));
-        if (node.has_info() && node.info().has_changeset() && (interest & CHANGESETS) == CHANGESETS)
+        if (node.has_info() && node.info().has_changeset() &&
+            (interest & CHANGESETS) == CHANGESETS) {
           callback.changeset_callback(node.info().changeset());
+        }
       }
 
       // Dense Nodes
@@ -198,8 +211,9 @@ void parse_primitive_block(char* unpack_buffer,
         }
         if (dense_nodes.has_denseinfo() && (interest & CHANGESETS) == CHANGESETS) {
           uint64_t changeset = 0;
-          for (auto changeset_id_offset : dense_nodes.denseinfo().changeset())
+          for (auto changeset_id_offset : dense_nodes.denseinfo().changeset()) {
             callback.changeset_callback(changeset += changeset_id_offset);
+          }
         }
       }
     }
@@ -213,12 +227,14 @@ void parse_primitive_block(char* unpack_buffer,
         for (auto node_id_offset : way.refs()) {
           node += node_id_offset;
           // TODO: skip consecutive duplicates, make this configurable
-          if (nodes.size() == 0 || node != nodes.back())
+          if (nodes.size() == 0 || node != nodes.back()) {
             nodes.push_back(node);
+          }
         }
         callback.way_callback(way.id(), get_tags<Way>(way, primblock), nodes);
-        if (way.has_info() && way.info().has_changeset() && (interest & CHANGESETS) == CHANGESETS)
+        if (way.has_info() && way.info().has_changeset() && (interest & CHANGESETS) == CHANGESETS) {
           callback.changeset_callback(way.info().changeset());
+        }
       }
     }
 
@@ -235,23 +251,27 @@ void parse_primitive_block(char* unpack_buffer,
         }
         callback.relation_callback(relation.id(), get_tags<Relation>(relation, primblock), members);
         if (relation.has_info() && relation.info().has_changeset() &&
-            (interest & CHANGESETS) == CHANGESETS)
+            (interest & CHANGESETS) == CHANGESETS) {
           callback.changeset_callback(relation.info().changeset());
+        }
       }
     }
 
     // do the changesets
-    if ((interest & CHANGESETS) == CHANGESETS)
-      for (const auto& changeset : primitive_group.changesets())
+    if ((interest & CHANGESETS) == CHANGESETS) {
+      for (const auto& changeset : primitive_group.changesets()) {
         callback.changeset_callback(changeset.id());
+      }
+    }
   }
 }
 
 void parse_header_block(char* unpack_buffer, int32_t sz) {
   // turn the blob bytes into a protobuf object
   HeaderBlock header_block;
-  if (!header_block.ParseFromArray(unpack_buffer, sz))
+  if (!header_block.ParseFromArray(unpack_buffer, sz)) {
     throw std::runtime_error("unable to parse header block");
+  }
 
   // TODO: do something with replication information?
 }
@@ -287,13 +307,14 @@ void Parser::parse(std::ifstream& file, const Interest interest, Callback& callb
       // grab the blob that goes with the blob header
       int32_t sz = read_blob(buffer, unpack_buffer, file, header);
       // if its data parse it
-      if (header.type() == "OSMData")
+      if (header.type() == "OSMData") {
         parse_primitive_block(unpack_buffer, sz, interest, callback);
-      // if its something other than a header
-      else if (header.type() == "OSMHeader")
+        // if its something other than a header
+      } else if (header.type() == "OSMHeader") {
         parse_header_block(unpack_buffer, sz);
-      else
+      } else {
         LOG_WARN("Unknown blob type: " + header.type());
+      }
     }
   }
 

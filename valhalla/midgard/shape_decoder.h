@@ -29,8 +29,9 @@ private:
   int32_t next(const int32_t previous) noexcept(false) {
     int32_t byte, shift = 0, result = 0;
     do {
-      if (empty())
+      if (empty()) {
         throw std::runtime_error("Bad encoded polyline");
+      }
       // take the least significant 7 bits shifted into place
       byte = int32_t(*begin++);
       result |= (byte & 0x7f) << shift;
@@ -66,8 +67,9 @@ private:
     // grab each 5 bits and mask it in where it belongs using the shift
     int byte, shift = 0, result = 0;
     do {
-      if (empty())
+      if (empty()) {
         throw std::runtime_error("Bad encoded polyline");
+      }
       // take the least significant 5 bits shifted into place
       byte = int32_t(*begin++) - 63;
       result |= (byte & 0x1f) << shift;

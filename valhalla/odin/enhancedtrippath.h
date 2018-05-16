@@ -226,8 +226,9 @@ const std::unordered_map<uint8_t, std::string> TripPath_TravelMode_Strings{
 };
 inline std::string to_string(TripPath_TravelMode travel_mode) {
   auto i = TripPath_TravelMode_Strings.find(static_cast<uint8_t>(travel_mode));
-  if (i == TripPath_TravelMode_Strings.cend())
+  if (i == TripPath_TravelMode_Strings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -239,8 +240,9 @@ const std::unordered_map<uint8_t, std::string> TripPath_VehicleType_Strings{
 };
 inline std::string to_string(TripPath_VehicleType vehicle_type) {
   auto i = TripPath_VehicleType_Strings.find(static_cast<uint8_t>(vehicle_type));
-  if (i == TripPath_VehicleType_Strings.cend())
+  if (i == TripPath_VehicleType_Strings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -251,8 +253,9 @@ const std::unordered_map<uint8_t, std::string> TripPath_PedestrianType_Strings{
 };
 inline std::string to_string(TripPath_PedestrianType pedestrian_type) {
   auto i = TripPath_PedestrianType_Strings.find(static_cast<uint8_t>(pedestrian_type));
-  if (i == TripPath_PedestrianType_Strings.cend())
+  if (i == TripPath_PedestrianType_Strings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -264,8 +267,9 @@ const std::unordered_map<uint8_t, std::string> TripPath_BicycleType_Strings{
 };
 inline std::string to_string(TripPath_BicycleType bicycle_type) {
   auto i = TripPath_BicycleType_Strings.find(static_cast<uint8_t>(bicycle_type));
-  if (i == TripPath_BicycleType_Strings.cend())
+  if (i == TripPath_BicycleType_Strings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -277,8 +281,9 @@ const std::unordered_map<uint8_t, std::string> TripPath_Sidewalk_Strings = {
 };
 inline std::string to_string(TripPath_Sidewalk s) {
   auto i = TripPath_Sidewalk_Strings.find(static_cast<uint8_t>(s));
-  if (i == TripPath_Sidewalk_Strings.cend())
+  if (i == TripPath_Sidewalk_Strings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -290,8 +295,9 @@ const std::unordered_map<uint8_t, std::string> TripPath_Traversability_Strings =
 };
 inline std::string to_string(TripPath_Traversability t) {
   auto i = TripPath_Traversability_Strings.find(static_cast<uint8_t>(t));
-  if (i == TripPath_Traversability_Strings.cend())
+  if (i == TripPath_Traversability_Strings.cend()) {
     return "null";
+  }
   return i->second;
 }
 

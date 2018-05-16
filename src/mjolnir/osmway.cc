@@ -885,10 +885,11 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
        (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens;
 
-    if (!ref.empty())
+    if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
-    else
+    } else {
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+    }
 
     for (const auto& t : tokens) {
       types |= static_cast<uint64_t>(1) << location;
@@ -911,10 +912,11 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
       (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway) &&
       (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens;
-    if (!ref.empty())
+    if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
-    else
+    } else {
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+    }
 
     for (const auto& t : tokens) {
       types |= static_cast<uint64_t>(1) << location;

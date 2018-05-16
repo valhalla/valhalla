@@ -252,9 +252,9 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
+      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess)) {
         return 0.0f;
-      else {
+      } else {
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }
@@ -302,9 +302,9 @@ public:
 
 // Constructor
 AutoCost::AutoCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
-                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
-                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(pt, TravelMode::kDrive),
+      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
+                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
 
   surface_factor_ = 0.5f;
   // Get the vehicle type - enter as string and convert to enum
@@ -783,9 +783,9 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || !(edge->forwardaccess() & kBusAccess))
+      if (edge->IsTransition() || !(edge->forwardaccess() & kBusAccess)) {
         return 0.0f;
-      else {
+      } else {
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }
@@ -1000,9 +1000,9 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || !(edge->forwardaccess() & kHOVAccess))
+      if (edge->IsTransition() || !(edge->forwardaccess() & kHOVAccess)) {
         return 0.0f;
-      else {
+      } else {
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }
@@ -1120,8 +1120,9 @@ Cost HOVCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
   float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
 
-  if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess))
+  if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
     factor *= kHOVFactor;
+  }
 
   float sec = (edge->length() * speedfactor_[edge->speed()]);
   return Cost(sec * factor, sec);

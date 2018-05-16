@@ -18,8 +18,9 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       if (verbose) {
         auto segments = tile->GetTrafficSegments(edge.id);
         auto segments_array = json::array({});
-        for (const auto& segment : segments)
+        for (const auto& segment : segments) {
           segments_array->emplace_back(segment.json());
+        }
         array->emplace_back(json::map({
             {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
@@ -59,9 +60,11 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
 json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader, bool verbose) {
   // get the nodes we need
   std::unordered_set<uint64_t> nodes;
-  for (const auto& e : location.edges)
-    if (e.end_node())
+  for (const auto& e : location.edges) {
+    if (e.end_node()) {
       nodes.emplace(reader.GetGraphTile(e.id)->directededge(e.id)->endnode());
+    }
+  }
   // ad them into an array of json
   auto array = json::array({});
   for (auto node_id : nodes) {
@@ -103,8 +106,9 @@ json::MapPtr serialize(const PointLL& ll, const std::string& reason, bool verbos
       {"input_lat", json::fp_t{ll.lat(), 6}},
       {"input_lon", json::fp_t{ll.lng(), 6}},
   });
-  if (verbose)
+  if (verbose) {
     m->emplace("reason", reason);
+  }
 
   return m;
 }

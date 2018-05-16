@@ -177,8 +177,9 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
               l++;
             }
           }
-          if (bfound)
+          if (bfound) {
             break; // while (k < n_info->edge_count())
+          }
           k++;
         }
         if (!bfound) { // bad restriction or on another level
@@ -268,8 +269,9 @@ void build(const std::string& complex_restriction_file,
         if (directededge.IsTransition() || directededge.IsTransitLine() ||
             directededge.is_shortcut() || directededge.use() == Use::kTransitConnection ||
             directededge.use() == Use::kEgressConnection ||
-            directededge.use() == Use::kPlatformConnection)
+            directededge.use() == Use::kPlatformConnection) {
           continue;
+        }
         auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
         //    |      |       |
         //    |      |  to   |
@@ -306,15 +308,17 @@ void build(const std::string& complex_restriction_file,
               std::vector<uint64_t> res_way_ids;
               res_way_ids.push_back(e_offset.wayid());
 
-              for (const auto& v : restriction.vias())
+              for (const auto& v : restriction.vias()) {
                 res_way_ids.push_back(v);
+              }
 
               // if via = restriction.to then don't add to the res_way_ids vector.  This happens
               // when we have a restriction:<type> with a via as a node in the osm data.
-              if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to())
+              if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to()) {
                 res_way_ids.push_back(restriction.to());
-              else if (restriction.vias().size() > 1)
+              } else if (restriction.vias().size() > 1) {
                 res_way_ids.push_back(restriction.to());
+              }
 
               // walk in the forward direction.
               std::deque<GraphId> tmp_ids =
@@ -332,12 +336,16 @@ void build(const std::string& complex_restriction_file,
 
                 // if via = restriction.to then don't add to the res_way_ids vector.  This happens
                 // when we have a restriction:<type> with a via as a node in the osm data.
-                if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to())
-                  for (const auto& v : temp_vias)
+                if (restriction.vias().size() == 1 &&
+                    restriction.vias().at(0) != restriction.to()) {
+                  for (const auto& v : temp_vias) {
                     res_way_ids.push_back(v);
-                else if (restriction.vias().size() > 1)
-                  for (const auto& v : temp_vias)
+                  }
+                } else if (restriction.vias().size() > 1) {
+                  for (const auto& v : temp_vias) {
                     res_way_ids.push_back(v);
+                  }
+                }
 
                 res_way_ids.push_back(e_offset.wayid());
                 tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
@@ -435,15 +443,19 @@ void build(const std::string& complex_restriction_file,
                   std::vector<uint64_t> temp_vias = restriction.vias();
                   std::reverse(temp_vias.begin(), temp_vias.end());
 
-                  // if via = restriction.to then don't add to the res_way_ids vector.  This happens
+                  // if via = restriction.to then don't add to the res_way_ids vector.  This
+                  // happens
                   // when we have a restriction:<type> with a via as a node in the osm data.
                   if (restriction.vias().size() == 1 &&
-                      restriction.vias().at(0) != restriction.to())
-                    for (const auto& v : temp_vias)
+                      restriction.vias().at(0) != restriction.to()) {
+                    for (const auto& v : temp_vias) {
                       res_way_ids.push_back(v);
-                  else if (restriction.vias().size() > 1)
-                    for (const auto& v : temp_vias)
+                    }
+                  } else if (restriction.vias().size() > 1) {
+                    for (const auto& v : temp_vias) {
                       res_way_ids.push_back(v);
+                    }
+                  }
 
                   res_way_ids.push_back(it->second);
 
@@ -451,25 +463,27 @@ void build(const std::string& complex_restriction_file,
                   std::deque<GraphId> tmp_ids =
                       GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
 
-                  // now that we have the tile and currentNode walk in the reverse direction(forward
-                  // in relation to the restriction) as this is really what needs to be stored in
-                  // this tile.
+                  // now that we have the tile and currentNode walk in the reverse
+                  // direction(forward in relation to the restriction) as this is really what
+                  // needs to be stored in this tile.
                   if (tmp_ids.size()) {
 
                     res_way_ids.clear();
                     res_way_ids.push_back(it->second);
 
-                    for (const auto& v : restriction.vias())
+                    for (const auto& v : restriction.vias()) {
                       res_way_ids.push_back(v);
+                    }
 
                     // if via = restriction.to then don't add to the res_way_ids vector.  This
                     // happens when we have a restriction:<type> with a via as a node in the osm
                     // data.
                     if (restriction.vias().size() == 1 &&
-                        restriction.vias().at(0) != restriction.to())
+                        restriction.vias().at(0) != restriction.to()) {
                       res_way_ids.push_back(restriction.to());
-                    else if (restriction.vias().size() > 1)
+                    } else if (restriction.vias().size() > 1) {
                       res_way_ids.push_back(restriction.to());
+                    }
 
                     tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
 

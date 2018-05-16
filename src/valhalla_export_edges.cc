@@ -35,13 +35,15 @@ struct bitset_t {
     bits.resize(std::ceil(size / 64.0));
   }
   void set(const uint64_t id) {
-    if (id >= bits.size() * 64)
+    if (id >= bits.size() * 64) {
       throw std::runtime_error("id out of bounds");
+    }
     bits[id / 64] |= static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64));
   }
   bool get(const uint64_t id) const {
-    if (id >= bits.size() * 64)
+    if (id >= bits.size() * 64) {
       throw std::runtime_error("id out of bounds");
+    }
     return bits[id / 64] & (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
   }
 
@@ -75,8 +77,8 @@ edge_t opposing(GraphReader& reader, const GraphTile* tile, const DirectedEdge* 
   // Check for invalid opposing index
   if (edge->opp_index() == kMaxEdgesPerNode) {
     PointLL ll = t->node(edge->endnode())->latlng();
-    LOG_ERROR("Invalid edge opp index = " + std::to_string(edge->opp_index()) +
-              " LL = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+    LOG_ERROR("Invalid edge opp index = " + std::to_string(edge->opp_index()) + " LL = " +
+              std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
     return {id, nullptr};
   }
   return {id, t->directededge(id)};
@@ -89,8 +91,9 @@ edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set,
             const edge_t& edge,
             const std::vector<std::string>& names) {
   // get the right tile
-  if (tile->id() != edge.e->endnode().Tile_Base())
+  if (tile->id() != edge.e->endnode().Tile_Base()) {
     tile = reader.GetGraphTile(edge.e->endnode());
+  }
 
   // TODO: in the case of multiple candidates favor the ones with angles that are most straight
 
@@ -101,22 +104,26 @@ edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set,
     GraphId id = tile->id();
     id.set_id(node->edge_index() + i);
     // already used
-    if (edge_set.get(tile_set.find(tile->id())->second + id.id()))
+    if (edge_set.get(tile_set.find(tile->id())->second + id.id())) {
       continue;
+    }
     edge_t candidate{id, tile->directededge(id)};
     // dont need these
-    if (!ferries && candidate.e->use() == Use::kFerry)
+    if (!ferries && candidate.e->use() == Use::kFerry) {
       continue;
+    }
     // TODO: dont skip transition edges but rather follow them to other levels
     // skip these
     if (candidate.e->trans_up() || candidate.e->use() == Use::kTransitConnection ||
-        candidate.e->trans_down() || candidate.e->IsTransitLine()) // these should never happen
+        candidate.e->trans_down() || candidate.e->IsTransitLine()) { // these should never happen
       continue;
+    }
     // names have to match
     auto candidate_names = tile->edgeinfo(candidate.e->edgeinfo_offset()).GetNames();
     if (names.size() == candidate_names.size() &&
-        std::equal(names.cbegin(), names.cend(), candidate_names.cbegin()))
+        std::equal(names.cbegin(), names.cend(), candidate_names.cbegin())) {
       return candidate;
+    }
   }
 
   return {};
@@ -127,17 +134,20 @@ void extend(GraphReader& reader,
             const edge_t& edge,
             std::list<PointLL>& shape) {
   // get the shape
-  if (edge.i.Tile_Base() != tile->id())
+  if (edge.i.Tile_Base() != tile->id()) {
     tile = reader.GetGraphTile(edge.i);
+  }
   // get the shape
   auto info = tile->edgeinfo(edge.e->edgeinfo_offset());
   auto more = valhalla::midgard::decode7<std::list<PointLL>>(info.encoded_shape());
   // this shape runs the other way
-  if (!edge.e->forward())
+  if (!edge.e->forward()) {
     more.reverse();
+  }
   // connecting another shape we dont want dups where they meet
-  if (shape.size())
+  if (shape.size()) {
     more.pop_front();
+  }
   shape.splice(shape.end(), more);
 }
 
@@ -223,7 +233,8 @@ int main(int argc, char* argv[]) {
   bitset_t edge_set(edge_count);
 
   // TODO: we could parallelize this and it might be quite a bit faster but if we really want to
-  // maximize continuous edges we need to avoid the lady and the tramp scenario where two threads are
+  // maximize continuous edges we need to avoid the lady and the tramp scenario where two threads
+  // are
   // consuming the same stretch of road at the same time
 
   // for each tile
@@ -236,8 +247,9 @@ int main(int argc, char* argv[]) {
     const auto* tile = reader.GetGraphTile(tile_count_pair.first);
     for (uint32_t i = 0; i < tile->header()->directededgecount(); ++i) {
       // we've seen this one already
-      if (edge_set.get(tile_count_pair.second + i))
+      if (edge_set.get(tile_count_pair.second + i)) {
         continue;
+      }
 
       // TODO: dont mark transition edges since we may need to use them to change levels multiple
       // times maybe we should mark them though once every normal edge connected there has been
@@ -251,8 +263,9 @@ int main(int argc, char* argv[]) {
 
       // these wont have opposing edges that we care about
       if (edge.e->trans_up() || edge.e->use() == Use::kTransitConnection || edge.e->trans_down() ||
-          edge.e->IsTransitLine()) // these 2 should never happen
+          edge.e->IsTransitLine()) { // these 2 should never happen
         continue;
+      }
 
       // get the opposing edge as well (ensure a valid edge is returned)
       edge_t opposing_edge = opposing(reader, tile, edge);
@@ -263,21 +276,24 @@ int main(int argc, char* argv[]) {
       ++set;
 
       // shortcuts arent real and maybe we dont want ferries
-      if (edge.e->is_shortcut() || (!ferries && edge.e->use() == Use::kFerry))
+      if (edge.e->is_shortcut() || (!ferries && edge.e->use() == Use::kFerry)) {
         continue;
+      }
 
       // no name no thanks
       auto edge_info = tile->edgeinfo(edge.e->edgeinfo_offset());
       auto names = edge_info.GetNames();
-      if (names.size() == 0 && !unnamed)
+      if (names.size() == 0 && !unnamed) {
         continue;
+      }
 
       // TODO: at this point we need to traverse the graph from this edge to build a subgraph of
       // like-named connected edges. what we would like is that from that subgraph we extract
       // linestrings which are of the maximum length. this makes people's lives easier downstream.
       // finding such segments is NP-Hard and indeed even verifying a solution is NP-Complete. there
       // are some tricks though.. you can do this in linear time if your subgraph is a DAG. this
-      // can't be guaranteed in the overall graph, but we can create the subgraphs in such a way that
+      // can't be guaranteed in the overall graph, but we can create the subgraphs in such a way
+      // that
       // they are DAGs. this can produce suboptimal results however and depends on the initial edge.
       // so for now we'll just greedily export edges
 
@@ -316,22 +332,25 @@ int main(int argc, char* argv[]) {
 
       // get the shape
       std::list<PointLL> shape;
-      for (const auto& e : edges)
+      for (const auto& e : edges) {
         extend(reader, t, e, shape);
+      }
 
       // output it as: shape,name,name,...
       auto encoded = encode(shape);
       std::cout << encoded << column_separator;
-      for (const auto& name : names)
+      for (const auto& name : names) {
         std::cout << name << (&name == &names.back() ? "" : column_separator);
+      }
       std::cout << row_separator;
       std::cout.flush();
     }
 
     // check progress
     int procent = (100.f * set) / edge_count;
-    if (procent > progress)
+    if (procent > progress) {
       LOG_INFO(std::to_string(progress = procent) + "%");
+    }
   }
   LOG_INFO("Done");
 

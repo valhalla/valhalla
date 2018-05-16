@@ -80,23 +80,25 @@ public:
                                  const std::vector<OSMPBF::Member>& members) override {
     // Get tags
     auto results = lua_.Transform(OSMType::kRelation, tags);
-    if (results.size() == 0)
+    if (results.size() == 0) {
       return;
+    }
 
     OSMAdmin admin{osmid};
 
     for (const auto& tag : results) {
       // TODO:  Store multiple all the names
-      if (tag.first == "name" && !tag.second.empty())
+      if (tag.first == "name" && !tag.second.empty()) {
         admin.set_name_index(osmdata_.name_offset_map.index(tag.second));
-      else if (tag.first == "name:en" && !tag.second.empty())
+      } else if (tag.first == "name:en" && !tag.second.empty()) {
         admin.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
-      else if (tag.first == "admin_level")
+      } else if (tag.first == "admin_level") {
         admin.set_admin_level(std::stoi(tag.second));
-      else if (tag.first == "drive_on_right")
+      } else if (tag.first == "drive_on_right") {
         admin.set_drive_on_right(tag.second == "true" ? true : false);
-      else if (tag.first == "iso_code" && !tag.second.empty())
+      } else if (tag.first == "iso_code" && !tag.second.empty()) {
         admin.set_iso_code_index(osmdata_.name_offset_map.index(tag.second));
+      }
     }
 
     std::list<uint64_t> member_ids;
@@ -110,8 +112,9 @@ public:
       }
     }
 
-    if (admin.name_index() == admin.name_en_index())
+    if (admin.name_index() == admin.name_en_index()) {
       admin.set_name_en_index(0);
+    }
 
     admin.set_ways(member_ids);
 
@@ -151,38 +154,39 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   std::list<std::ifstream> file_handles;
   for (const auto& input_file : input_files) {
     file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open())
+    if (!file_handles.back().is_open()) {
       throw std::runtime_error("Unable to open: " + input_file);
+    }
   }
 
   // Parse each input file for relations
   LOG_INFO("Parsing relations...");
-  for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(
-        file_handle,
-        static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS | OSMPBF::Interest::CHANGESETS),
-        callback);
+  for (auto& file_handle : file_handles) {
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
+                                                                     OSMPBF::Interest::CHANGESETS),
+                          callback);
+  }
   LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) +
            " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");
 
   // Parse the ways.
   LOG_INFO("Parsing ways...");
-  for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(
-        file_handle,
-        static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS | OSMPBF::Interest::CHANGESETS),
-        callback);
+  for (auto& file_handle : file_handles) {
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
+                                                                     OSMPBF::Interest::CHANGESETS),
+                          callback);
+  }
   LOG_INFO("Finished with " + std::to_string(osmdata.way_map.size()) + " ways comprised of " +
            std::to_string(osmdata.node_count) + " nodes");
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
   LOG_INFO("Parsing nodes...");
-  for (auto& file_handle : file_handles)
-    OSMPBF::Parser::parse(
-        file_handle,
-        static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES | OSMPBF::Interest::CHANGESETS),
-        callback);
+  for (auto& file_handle : file_handles) {
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
+                                                                     OSMPBF::Interest::CHANGESETS),
+                          callback);
+  }
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes");
 
   // Return OSM data

@@ -59,8 +59,9 @@ bool IsLoopTerminal(const GraphTile& tile,
                       : reader.GetGraphTile(directededge.endnode());
   auto endnodeinfo = end_tile->node(directededge.endnode());
   // If there aren't 3 edges we don't want it
-  if (endnodeinfo->edge_count() != 3)
+  if (endnodeinfo->edge_count() != 3) {
     return false;
+  }
 
   // All the edges from our node
   const auto* first_edge = end_tile->directededge(endnodeinfo->edge_index());
@@ -122,10 +123,11 @@ bool IsLoopTerminal(const GraphTile& tile,
 
         // If the inbound and outbound edges go in opposite directions then there is a problem
         if (autoAccess(outbound, true) != autoAccess(&directededge, true) &&
-            autoAccess(outbound, false) != autoAccess(&directededge, false) && isOneWay(outbound))
+            autoAccess(outbound, false) != autoAccess(&directededge, false) && isOneWay(outbound)) {
           return true;
-        else
+        } else {
           return false;
+        }
       };
 
       if (loop_node_info->edge_count() == 2 ||
@@ -133,8 +135,9 @@ bool IsLoopTerminal(const GraphTile& tile,
         // Victory
         auto shape = tile.edgeinfo(first_edge->edgeinfo_offset()).shape();
         auto second_shape = tile.edgeinfo(last_edge->edgeinfo_offset()).shape();
-        for (auto& point : second_shape)
+        for (auto& point : second_shape) {
           shape.push_back(point);
+        }
         rd.AddTask(AABB2<PointLL>(shape), tile.edgeinfo(first_edge->edgeinfo_offset()).wayid(),
                    shape);
         return true;
@@ -171,11 +174,12 @@ bool IsLoop(GraphReader& reader,
     for (size_t j = 0; j < end_node->edge_count(); ++j, ++edge) {
       if (autoAccess(edge, true) && isOneWay(edge)) {
         // next one is here
-        if (!next && edge != opp_edge)
+        if (!next && edge != opp_edge) {
           next = edge;
-        // too many options its not a loop
-        else
+          // too many options its not a loop
+        } else {
           return false;
+        }
       }
     }
     // dead end, not a loop but a problem
@@ -189,8 +193,9 @@ bool IsLoop(GraphReader& reader,
                  tile->edgeinfo(next->edgeinfo_offset()).shape());
       return true;
     }
-    if (next)
+    if (next) {
       current_edge = next;
+    }
   }
   // we quit looking
   return false;
@@ -212,10 +217,12 @@ bool IsUnroutableNode(const GraphTile& tile,
         diredge->use() == Use::kPlatformConnection) {
       continue;
     }
-    if ((diredge->forwardaccess() & kAutoAccess))
+    if ((diredge->forwardaccess() & kAutoAccess)) {
       outbound++;
-    if ((diredge->reverseaccess() & kAutoAccess))
+    }
+    if ((diredge->reverseaccess() & kAutoAccess)) {
       inbound++;
+    }
   }
 
   // If there is a way in and no way out, or vice versa
@@ -263,10 +270,12 @@ void checkExitInfo(const GraphTile& tile,
     }
     // If it was a fork, store the data appropriately
     if (fork) {
-      for (auto& sign : tile_fork_signs)
+      for (auto& sign : tile_fork_signs) {
         stats.add_fork_exitinfo(sign);
-      for (auto& sign : ctry_fork_signs)
+      }
+      for (auto& sign : ctry_fork_signs) {
         stats.add_fork_exitinfo(sign);
+      }
     } else {
       // Otherwise store original edge info as a normal exit
       std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
@@ -383,8 +392,9 @@ void build(const boost::property_tree::ptree& pt,
 
     // Point tiles to the set we need for current level
     auto level = tile_id.level();
-    if (TileHierarchy::levels().rbegin()->second.level + 1 == level)
+    if (TileHierarchy::levels().rbegin()->second.level + 1 == level) {
       level = TileHierarchy::levels().rbegin()->second.level;
+    }
 
     const auto& tiles = TileHierarchy::levels().find(level)->second.tiles;
     level = tile_id.level();
@@ -484,8 +494,9 @@ void build(const boost::property_tree::ptree& pt,
 
     // Check if we need to clear the tile cache
     lock.lock();
-    if (graph_reader.OverCommitted())
+    if (graph_reader.OverCommitted()) {
       graph_reader.Clear();
+    }
     lock.unlock();
   }
 
@@ -547,8 +558,9 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   }
 
   // Wait for threads to finish
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
   // Get the promise from the future
   statistics stats;
   for (auto& result : results) {
@@ -582,18 +594,20 @@ bool ParseArguments(int argc, char* argv[]) {
     return true;
   }
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path))
+    if (boost::filesystem::is_regular_file(config_file_path)) {
       return true;
-    else
+    } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+    }
   }
 
   return false;
 }
 
 int main(int argc, char** argv) {
-  if (!ParseArguments(argc, argv))
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
+  }
 
   // check the type of input
   boost::property_tree::ptree pt;

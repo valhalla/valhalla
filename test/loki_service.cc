@@ -17,19 +17,12 @@ using namespace prime_server;
 namespace {
 
 const std::vector<http_request_t> valhalla_requests{
-    http_request_t(OPTIONS, "/route"),
-    http_request_t(HEAD, "/route"),
-    http_request_t(PUT, "/route"),
-    http_request_t(DELETE, "/route"),
-    http_request_t(TRACE, "/route"),
-    http_request_t(CONNECT, "/route"),
-    http_request_t(GET, ""),
-    http_request_t(POST, ""),
-    http_request_t(GET, "/route?json={"),
-    http_request_t(POST, "/route", "{"),
-    http_request_t(GET, "/route"),
-    http_request_t(POST, "/route"),
-    http_request_t(GET, "/optimized_route"),
+    http_request_t(OPTIONS, "/route"), http_request_t(HEAD, "/route"),
+    http_request_t(PUT, "/route"), http_request_t(DELETE, "/route"),
+    http_request_t(TRACE, "/route"), http_request_t(CONNECT, "/route"), http_request_t(GET, ""),
+    http_request_t(POST, ""), http_request_t(GET, "/route?json={"),
+    http_request_t(POST, "/route", "{"), http_request_t(GET, "/route"),
+    http_request_t(POST, "/route"), http_request_t(GET, "/optimized_route"),
     http_request_t(POST, "/optimized_route"),
     http_request_t(GET, R"(/locate?json={"locations":[{"lon":0}]})"),
     http_request_t(POST, "/locate", R"({"locations":[{"lon":0}]})"),
@@ -404,9 +397,9 @@ void run_requests(const std::vector<http_request_t>& requests,
               std::to_string(responses[request - requests.cbegin() - 1].first) +
               ", Actual Response Code: " + std::to_string(response.code));
         if (response.body != responses[request - requests.cbegin() - 1].second)
-          throw std::runtime_error(
-              "Expected Response: " + responses[request - requests.cbegin() - 1].second +
-              ", Actual Response: " + response.body);
+          throw std::runtime_error("Expected Response: " +
+                                   responses[request - requests.cbegin() - 1].second +
+                                   ", Actual Response: " + response.body);
 
         ++success_count;
         return request != requests.cend();

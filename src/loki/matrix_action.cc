@@ -36,8 +36,9 @@ void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& so
         LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
       }
 
-      if (path_distance > matrix_max_distance)
+      if (path_distance > matrix_max_distance) {
         throw valhalla_exception_t{154};
+      };
     }
   }
 }
@@ -54,8 +55,9 @@ void loki_worker_t::init_matrix(valhalla_request_t& request) {
   } // optimized route uses locations but needs to do a matrix
   else {
     parse_locations(request.options.mutable_locations(), valhalla_exception_t{112});
-    if (request.options.locations_size() < 2)
+    if (request.options.locations_size() < 2) {
       throw valhalla_exception_t{120};
+    };
 
     // create new sources and targets from locations
     request.options.mutable_targets()->CopyFrom(request.options.locations());
@@ -63,14 +65,18 @@ void loki_worker_t::init_matrix(valhalla_request_t& request) {
   }
 
   // sanitize
-  if (request.options.sources_size() < 1)
+  if (request.options.sources_size() < 1) {
     throw valhalla_exception_t{121};
-  for (auto& s : *request.options.mutable_sources())
+  };
+  for (auto& s : *request.options.mutable_sources()) {
     s.clear_heading();
-  if (request.options.targets_size() < 1)
+  }
+  if (request.options.targets_size() < 1) {
     throw valhalla_exception_t{122};
-  for (auto& t : *request.options.mutable_targets())
+  };
+  for (auto& t : *request.options.mutable_targets()) {
     t.clear_heading();
+  }
 
   // no locations!
   request.options.clear_locations();
@@ -82,16 +88,19 @@ void loki_worker_t::init_matrix(valhalla_request_t& request) {
 void loki_worker_t::matrix(valhalla_request_t& request) {
   init_matrix(request);
   auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
-  if (costing.back() == '_')
+  if (costing.back() == '_') {
     costing.pop_back();
+  }
 
-  if (costing == "multimodal")
+  if (costing == "multimodal") {
     throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
+  };
 
   // check that location size does not exceed max.
   auto max = max_matrix_locations.find(costing)->second;
-  if (request.options.sources_size() > max || request.options.targets_size() > max)
+  if (request.options.sources_size() > max || request.options.targets_size() > max) {
     throw valhalla_exception_t{150, std::to_string(max)};
+  };
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
@@ -118,23 +127,26 @@ void loki_worker_t::matrix(valhalla_request_t& request) {
                           reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
-      if (!connectivity_map)
+      if (!connectivity_map) {
         continue;
+      }
       auto colors =
           connectivity_map->get_colors(TileHierarchy::levels().rbegin()->first, projection, 0);
       for (auto& color : colors) {
         auto itr = color_counts.find(color);
-        if (itr == color_counts.cend())
+        if (itr == color_counts.cend()) {
           color_counts[color] = 1;
-        else
+        } else {
           ++itr->second;
+        }
       }
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 
   // are all the locations in the same color regions
-  if (!connectivity_map)
+  if (!connectivity_map) {
     return;
+  }
   bool connected = false;
   for (const auto& c : color_counts) {
     if (c.second == sources_targets.size()) {
@@ -142,12 +154,14 @@ void loki_worker_t::matrix(valhalla_request_t& request) {
       break;
     }
   }
-  if (!connected)
+  if (!connected) {
     throw valhalla_exception_t{170};
-  if (!request.options.do_not_track())
-    valhalla::midgard::logging::Log(
-        "max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km",
-        " [ANALYTICS] ");
+  };
+  if (!request.options.do_not_track()) {
+    valhalla::midgard::logging::Log("max_location_distance::" +
+                                        std::to_string(max_location_distance * kKmPerMeter) + "km",
+                                    " [ANALYTICS] ");
+  }
 }
 } // namespace loki
 } // namespace valhalla

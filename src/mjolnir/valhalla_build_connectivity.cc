@@ -77,10 +77,11 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path))
+    if (boost::filesystem::is_regular_file(config_file_path)) {
       return true;
-    else
+    } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+    }
   }
 
   return false;
@@ -105,8 +106,9 @@ struct RGB {
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
   // Parse command line arguments
-  if (!ParseArguments(argc, argv))
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
+  }
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;

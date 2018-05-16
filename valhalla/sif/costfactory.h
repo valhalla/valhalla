@@ -58,8 +58,9 @@ public:
   }
 
   cost_ptr_t Create(const std::string& name, const rapidjson::Value& config) const {
-    if (config.IsNull())
+    if (config.IsNull()) {
       return Create(name, boost::property_tree::ptree{});
+    }
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     config.Accept(writer);

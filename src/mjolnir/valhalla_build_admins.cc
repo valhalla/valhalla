@@ -106,10 +106,11 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path))
+    if (boost::filesystem::is_regular_file(config_file_path)) {
       return true;
-    else
+    } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+    }
   }
 
   return false;
@@ -129,10 +130,12 @@ int polygondata_comparearea(const void* vp1, const void* vp2) {
   const polygondata* p1 = (const polygondata*)vp1;
   const polygondata* p2 = (const polygondata*)vp2;
 
-  if (p1->area == p2->area)
+  if (p1->area == p2->area) {
     return 0;
-  if (p1->area > p2->area)
+  }
+  if (p1->area > p2->area) {
     return -1;
+  }
   return 1;
 }
 } // anonymous namespace
@@ -164,9 +167,9 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
       polys[totalpolys].area = polys[totalpolys].polygon->getArea();
       polys[totalpolys].iscontained = 0;
       polys[totalpolys].containedbyid = 0;
-      if (polys[totalpolys].area > 0.0)
+      if (polys[totalpolys].area > 0.0) {
         totalpolys++;
-      else {
+      } else {
         delete (polys[totalpolys].polygon);
         delete (polys[totalpolys].ring);
       }
@@ -180,8 +183,9 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
     int istoplevelafterall;
 
     for (unsigned i = 0; i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0)
+      if (polys[i].iscontained != 0) {
         continue;
+      }
 
       toplevelpolygons++;
 
@@ -212,14 +216,16 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
 
     // For each top level polygon create a new polygon including any holes
     for (unsigned i = 0; i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0)
+      if (polys[i].iscontained != 0) {
         continue;
+      }
 
       // List of holes for this top level polygon
       std::unique_ptr<std::vector<Geometry*>> interior(new std::vector<Geometry*>);
       for (unsigned j = i + 1; j < totalpolys; ++j) {
-        if (polys[j].iscontained == 1 && polys[j].containedbyid == i)
+        if (polys[j].iscontained == 1 && polys[j].containedbyid == i) {
           interior->push_back(polys[j].ring);
+        }
       }
 
       Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
@@ -234,12 +240,14 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
     }
     multipoly->normalize();
 
-    if (multipoly->isValid())
+    if (multipoly->isValid()) {
       wkts.push_back(writer.write(multipoly.get()));
+    }
   }
 
-  for (unsigned i = 0; i < totalpolys; ++i)
+  for (unsigned i = 0; i < totalpolys; ++i) {
     delete (polys[i].polygon);
+  }
 
   delete[](polys);
 
@@ -267,8 +275,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
-  if (!boost::filesystem::exists(boost::filesystem::path(*database).parent_path()))
+  if (!boost::filesystem::exists(boost::filesystem::path(*database).parent_path())) {
     boost::filesystem::create_directories(boost::filesystem::path(*database).parent_path());
+  }
 
   if (!boost::filesystem::exists(boost::filesystem::path(*database).parent_path())) {
     LOG_INFO("Admin directory not found. Admins will not be created.");
@@ -478,8 +487,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           if (admin.iso_code_index()) {
             iso = osmdata.name_offset_map.name(admin.iso_code_index());
             sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
-          } else
+          } else {
             sqlite3_bind_null(stmt, 2);
+          }
 
           sqlite3_bind_null(stmt, 3);
 
@@ -489,8 +499,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           if (admin.name_en_index()) {
             name_en = osmdata.name_offset_map.name(admin.name_en_index());
             sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
-          } else
+          } else {
             sqlite3_bind_null(stmt, 5);
+          }
 
           sqlite3_bind_int(stmt, 6, admin.drive_on_right());
           sqlite3_bind_text(stmt, 7, wkt.c_str(), wkt.length(), SQLITE_STATIC);
@@ -612,10 +623,11 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     for (uint32_t col = 0; col != column_values.size(); ++col) {
       int val = column_values.at(col);
-      if (val != -1)
+      if (val != -1) {
         sqlite3_bind_int(stmt, col + 5, val);
-      else
+      } else {
         sqlite3_bind_null(stmt, col + 5);
+      }
     }
 
     /* performing INSERT INTO */
@@ -643,8 +655,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
 int main(int argc, char** argv) {
 
-  if (!ParseArguments(argc, argv))
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
+  }
 
   // check what type of input we are getting
   boost::property_tree::ptree pt;

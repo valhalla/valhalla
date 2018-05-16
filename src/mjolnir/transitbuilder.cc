@@ -413,8 +413,9 @@ void FindOSMConnection(const PointLL& stop_ll,
     lock.lock();
     const GraphTile* newtile = reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
     lock.unlock();
-    if (!newtile || newtile->header()->nodecount() == 0)
+    if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
+    }
 
     // Use distance approximator for all distance checks
     DistanceApproximator approximator(stop_ll);
@@ -514,10 +515,10 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
       const AABB2<PointLL>& aabb = tile->BoundingBox();
 
-      LOG_ERROR("No closest edge found for this stop: " + stop_name +
-                " way Id = " + std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) +
-                "," + std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) +
-                ", " + std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ", " +
+      LOG_ERROR("No closest edge found for this stop: " + stop_name + " way Id = " +
+                std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
+                std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) + ", " +
+                std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ", " +
                 std::to_string(aabb.maxy()));
       return;
     }
@@ -566,14 +567,14 @@ void AddOSMConnection(const GraphId& transit_stop_node,
 
   // Check for errors
   if (length != 0.0f && length2 != 0.0 && (length + length2) < edgelength - 1) {
-    LOG_ERROR("EdgeLength= " + std::to_string(edgelength) +
-              " < connection lengths: " + std::to_string(length) + "," + std::to_string(length2) +
-              " when connecting to stop " + stop_name);
+    LOG_ERROR("EdgeLength= " + std::to_string(edgelength) + " < connection lengths: " +
+              std::to_string(length) + "," + std::to_string(length2) + " when connecting to stop " +
+              stop_name);
   }
   if (conn_count == 0) {
-    LOG_ERROR("Stop " + stop_name + " has no connections to OSM!" +
-              " Start Node Tile: " + std::to_string(startnode.tileid()) +
-              " End Node Tile: " + std::to_string(endnode.tileid()));
+    LOG_ERROR("Stop " + stop_name + " has no connections to OSM!" + " Start Node Tile: " +
+              std::to_string(startnode.tileid()) + " End Node Tile: " +
+              std::to_string(endnode.tileid()));
   }
 }
 
@@ -593,11 +594,13 @@ void build(const std::string& transit_dir,
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
-    if (reader_local_level.OverCommitted())
+    if (reader_local_level.OverCommitted()) {
       reader_local_level.Clear();
+    }
 
-    if (reader_transit_level.OverCommitted())
+    if (reader_transit_level.OverCommitted()) {
       reader_transit_level.Clear();
+    }
 
     GraphId tile_id = tile_start->Tile_Base();
 
@@ -640,8 +643,9 @@ void build(const std::string& transit_dir,
     }
 
     // this happens when you are running against small extracts...no work to be done.
-    if (connection_edges.size() == 0)
+    if (connection_edges.size() == 0) {
       continue;
+    }
 
     // Sort the connection edges
     std::sort(connection_edges.begin(), connection_edges.end());
@@ -703,8 +707,9 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
                                                GraphTile::FileSuffix(graph_id);
           boost::filesystem::path filename = destination_path;
           // Make sure the directory exists on the system and copy to the tile_dir
-          if (!boost::filesystem::exists(filename.parent_path()))
+          if (!boost::filesystem::exists(filename.parent_path())) {
             boost::filesystem::create_directories(filename.parent_path());
+          }
           boost::filesystem::copy_file(transit_file_itr->path(), destination_path,
                                        boost::filesystem::copy_option::overwrite_if_exists);
         }

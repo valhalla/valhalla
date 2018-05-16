@@ -103,8 +103,9 @@ const std::unordered_map<uint8_t, std::string> RoadClassStrings = {
 };
 inline std::string to_string(RoadClass r) {
   auto i = RoadClassStrings.find(static_cast<uint8_t>(r));
-  if (i == RoadClassStrings.cend())
+  if (i == RoadClassStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -181,8 +182,9 @@ const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
 };
 inline std::string to_string(NodeType n) {
   auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
-  if (i == NodeTypeStrings.cend())
+  if (i == NodeTypeStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -204,8 +206,9 @@ const std::unordered_map<uint8_t, std::string> IntersectionTypeStrings = {
 };
 inline std::string to_string(IntersectionType x) {
   auto i = IntersectionTypeStrings.find(static_cast<uint8_t>(x));
-  if (i == IntersectionTypeStrings.cend())
+  if (i == IntersectionTypeStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -288,8 +291,9 @@ const std::unordered_map<uint8_t, std::string> UseStrings = {
 };
 inline std::string to_string(Use u) {
   auto i = UseStrings.find(static_cast<uint8_t>(u));
-  if (i == UseStrings.cend())
+  if (i == UseStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -308,8 +312,9 @@ const std::unordered_map<uint8_t, std::string> SpeedTypeStrings = {
 };
 inline std::string to_string(SpeedType s) {
   auto i = SpeedTypeStrings.find(static_cast<uint8_t>(s));
-  if (i == SpeedTypeStrings.cend())
+  if (i == SpeedTypeStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -334,8 +339,9 @@ const std::unordered_map<uint8_t, std::string> CycleLaneStrings = {
 };
 inline std::string to_string(CycleLane c) {
   auto i = CycleLaneStrings.find(static_cast<uint8_t>(c));
-  if (i == CycleLaneStrings.cend())
+  if (i == CycleLaneStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -374,8 +380,9 @@ const std::unordered_map<uint8_t, std::string> SurfaceStrings = {
 };
 inline std::string to_string(Surface s) {
   auto i = SurfaceStrings.find(static_cast<uint8_t>(s));
-  if (i == SurfaceStrings.cend())
+  if (i == SurfaceStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 

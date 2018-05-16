@@ -12,10 +12,11 @@ ProcessAccess(const uint32_t current_access, const uint32_t country_access, cons
   auto current = ((type & current_access) == type);
   auto country = ((type & country_access) == type);
 
-  if (current && !country)
+  if (current && !country) {
     new_access &= ~(type);
-  else if (!current && country)
+  } else if (!current && country) {
     new_access |= type;
+  }
 
   return new_access;
 }
@@ -30,31 +31,39 @@ uint32_t GetAccess(const uint32_t current_access,
 
   uint32_t new_access = current_access;
 
-  if (!user_access.foot_tag())
+  if (!user_access.foot_tag()) {
     new_access = ProcessAccess(new_access, country_access, (kPedestrianAccess | kWheelchairAccess));
+  }
 
-  if (!oneway_bicycle && !user_access.bike_tag())
+  if (!oneway_bicycle && !user_access.bike_tag()) {
     new_access = ProcessAccess(new_access, country_access, kBicycleAccess);
+  }
 
   // if the reverse direction is oneway then do not add access for vehicles in the current
   // direction.
-  if (oneway_vehicle)
+  if (oneway_vehicle) {
     return new_access;
+  }
 
-  if (!user_access.auto_tag())
+  if (!user_access.auto_tag()) {
     new_access = ProcessAccess(new_access, country_access, kAutoAccess);
+  }
 
-  if (!user_access.bus_tag())
+  if (!user_access.bus_tag()) {
     new_access = ProcessAccess(new_access, country_access, kBusAccess);
+  }
 
-  if (!user_access.truck_tag())
+  if (!user_access.truck_tag()) {
     new_access = ProcessAccess(new_access, country_access, kTruckAccess);
+  }
 
-  if (!user_access.hov_tag())
+  if (!user_access.hov_tag()) {
     new_access = ProcessAccess(new_access, country_access, kHOVAccess);
+  }
 
-  if (!user_access.moped_tag())
+  if (!user_access.moped_tag()) {
     new_access = ProcessAccess(new_access, country_access, kMopedAccess);
+  }
 
   return new_access;
 }

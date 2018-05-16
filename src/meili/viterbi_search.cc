@@ -21,8 +21,9 @@ void StateIdIterator::Next() {
   // Search at previous time directly
   // used in cloning path so no need to enforce a continuous path
   --time_;
-  if (!stateid_.IsValid())
+  if (!stateid_.IsValid()) {
     stateid_ = vs_.SearchWinner(time_);
+  }
 }
 
 template <bool Maximize> void NaiveViterbiSearch<Maximize>::Clear() {

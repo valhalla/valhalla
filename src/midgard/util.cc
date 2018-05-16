@@ -103,23 +103,26 @@ memory_status::memory_status(const std::unordered_set<std::string> interest) {
     if (line.find_first_of("Vm") == 0) {
       // grab the name of it and see if we care about it
       std::string name = line.substr(0, line.find_first_of(':'));
-      if (interest.size() > 0 && interest.find(name) == interest.end())
+      if (interest.size() > 0 && interest.find(name) == interest.end()) {
         continue;
+      }
       // try to get the number of bytes
       line.erase(
           std::remove_if(line.begin(), line.end(), [](const char c) { return !std::isdigit(c); }),
           line.end());
-      if (line.size() == 0)
+      if (line.size() == 0) {
         continue;
+      }
       auto bytes = std::stod(line) * 1024.0;
       // get the units and scale
       std::pair<double, std::string> metric = std::make_pair(bytes, "b");
       for (auto unit : {"B", "KB", "MB", "GB"}) {
         metric.second = unit;
-        if (metric.first > 1024.0)
+        if (metric.first > 1024.0) {
           metric.first /= 1024.0;
-        else
+        } else {
           break;
+        }
       }
       metrics.emplace(std::piecewise_construct, std::forward_as_tuple(name),
                       std::forward_as_tuple(metric));
@@ -134,8 +137,9 @@ bool memory_status::supported() {
 }
 
 std::ostream& operator<<(std::ostream& stream, const memory_status& s) {
-  for (const auto& metric : s.metrics)
+  for (const auto& metric : s.metrics) {
     stream << metric.first << ": " << metric.second.first << metric.second.second << std::endl;
+  }
   return stream;
 }
 
@@ -146,8 +150,9 @@ std::ostream& operator<<(std::ostream& stream, const memory_status& s) {
 template <class container_t>
 container_t
 resample_spherical_polyline(const container_t& polyline, double resolution, bool preserve) {
-  if (polyline.size() == 0)
+  if (polyline.size() == 0) {
     return {};
+  };
 
   // for each point
   container_t resampled = {polyline.front()};
@@ -190,8 +195,9 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
     // we're going to the next point so consume whatever's left
     remaining -= d;
     last = *p;
-    if (preserve)
+    if (preserve) {
       resampled.push_back(last);
+    }
   }
 
   // TODO: do we want to let them know remaining?
@@ -219,8 +225,9 @@ bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord
   auto ab_yd = a.second - b.second;
   auto d_cross = uv_xd * ab_yd - ab_xd * uv_yd;
   // parallel or very close to it
-  if (std::abs(d_cross) < 1e-5)
+  if (std::abs(d_cross) < 1e-5) {
     return false;
+  }
   auto uv_cross = u.first * v.second - u.second * v.first;
   auto ab_cross = a.first * b.second - a.second * b.first;
   i.first = (uv_cross * ab_xd - uv_xd * ab_cross) / d_cross;
@@ -239,10 +246,12 @@ intersect<Point2>(const Point2& u, const Point2& v, const Point2& a, const Point
 template <class coord_t>
 typename coord_t::first_type
 y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y) {
-  if (std::abs(u.first - v.first) < 1e-5)
+  if (std::abs(u.first - v.first) < 1e-5) {
     return u.first;
-  if (std::abs(u.second - u.second) < 1e-5)
+  }
+  if (std::abs(u.second - u.second) < 1e-5) {
     return NAN;
+  }
   auto m = (v.second - u.second) / (v.first - u.first);
   auto b = u.second - (u.first * m);
   return (y - b) / m;
@@ -256,10 +265,12 @@ y_intercept<Point2>(const Point2& u, const Point2& v, const Point2::first_type y
 template <class coord_t>
 typename coord_t::first_type
 x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x) {
-  if (std::abs(u.second - v.second) < 1e-5)
+  if (std::abs(u.second - v.second) < 1e-5) {
     return u.second;
-  if (std::abs(u.first - v.first) < 1e-5)
+  }
+  if (std::abs(u.first - v.first) < 1e-5) {
     return NAN;
+  }
   auto m = (v.second - u.second) / (v.first - u.first);
   auto b = u.second - (u.first * m);
   return x * m + b;
@@ -275,8 +286,9 @@ template <class container_t> float polygon_area(const container_t& polygon) {
                                         : (polygon.back().first + polygon.front().first) *
                                               (polygon.back().second + polygon.front().second);
   for (auto p1 = polygon.cbegin(), p2 = std::next(polygon.cbegin()); p2 != polygon.cend();
-       ++p1, ++p2)
+       ++p1, ++p2) {
     area += (p1->first + p2->first) * (p1->second + p2->second);
+  }
   return area * .5;
 }
 
@@ -319,8 +331,9 @@ std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& seg
     return noise;
   };
   // fill up the noise queue so the first points arent unsmoothed
-  while (!noises.full())
+  while (!noises.full()) {
     get_noise();
+  }
 
   // for each point of the 1hz shape
   std::vector<midgard::PointLL> simulated;

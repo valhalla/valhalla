@@ -111,26 +111,31 @@ IntersectCase Ellipse<coord_t>::DoesIntersect(const AABB2<coord_t>& r) const {
   coord_t ur(r.maxx(), r.maxy());
   coord_t ll(r.minx(), r.miny());
   coord_t lr(r.maxx(), r.miny());
-  if (Contains(ul) && Contains(ur) && Contains(ll) && Contains(lr))
+  if (Contains(ul) && Contains(ur) && Contains(ll) && Contains(lr)) {
     return kContains;
+  }
 
   // Test if any of the rectangle edges intersect
   coord_t pt0, pt1;
   LineSegment2<coord_t> bottom(ll, lr);
-  if (Intersect(bottom, pt0, pt1) > 0)
+  if (Intersect(bottom, pt0, pt1) > 0) {
     return kIntersects;
+  }
 
   LineSegment2<coord_t> top(ul, ur);
-  if (Intersect(top, pt0, pt1) > 0)
+  if (Intersect(top, pt0, pt1) > 0) {
     return kIntersects;
+  }
 
   LineSegment2<coord_t> left(ll, ul);
-  if (Intersect(left, pt0, pt1) > 0)
+  if (Intersect(left, pt0, pt1) > 0) {
     return kIntersects;
+  }
 
   LineSegment2<coord_t> right(lr, ur);
-  if (Intersect(right, pt0, pt1) > 0)
+  if (Intersect(right, pt0, pt1) > 0) {
     return kIntersects;
+  }
 
   // Ellipse does not intersect any edge. The case for containing the
   // rectangle was considered above so if the ellipse center is inside the

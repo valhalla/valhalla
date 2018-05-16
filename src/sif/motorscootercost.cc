@@ -292,9 +292,9 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kMopedAccess) ||
-          edge->surface() > kMinimumScooterSurface)
+          edge->surface() > kMinimumScooterSurface) {
         return 0.0f;
-      else {
+      } else {
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }
@@ -344,9 +344,9 @@ public:
 
 // Constructor
 MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
-                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
-                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(pt, TravelMode::kDrive),
+      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
+                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
   maneuver_penalty_ =
       kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
   gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
