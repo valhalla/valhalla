@@ -26,12 +26,30 @@ elif type clang-format 2> /dev/null ; then
     CLANG_FORMAT=clang-format
     V=$(clang-format --version)
     if [[ $V != *3.8* ]] ; then
-        echo "clang-format is not 3.8 (returned ${V})"
+        echo "Installed clang-format is not version 3.8"
+        if [ ! -f $(pwd)/mason_packages/.link/bin/clang-format ] ; then
+            echo "Installing clang-format 3.8 via mason"
+            mkdir ./mason
+            curl -sSfL https://github.com/mapbox/mason/archive/v0.18.0.tar.gz | tar --gunzip --extract --strip-components=1 --exclude="*md" --exclude="test*" --directory=./mason
+            ./mason/mason install clang-format 3.8.1
+            ./mason/mason link clang-format 3.8.1
+        fi
+        echo "Using clang-format 3.8 from $(pwd)/mason_packages/.link/bin"
+        PATH="$(pwd)/mason_packages/.link/bin:$PATH"
         #exit 1
     fi
 else
-    echo "No appropriate clang-format found (expected clang-format-3.8, or clang-format)"
-    exit 1
+    echo "No clang-format found"
+    if [ ! -f $(pwd)/mason_packages/.link/bin/clang-format ] ; then
+        echo "Installing clang-format 3.8 via mason"
+        mkdir ./mason
+        curl -sSfL https://github.com/mapbox/mason/archive/v0.18.0.tar.gz | tar --gunzip --extract --strip-components=1 --exclude="*md" --exclude="test*" --directory=./mason
+        ./mason/mason install clang-format 3.8.1
+        ./mason/mason link clang-format 3.8.1
+    fi
+    echo "Using clang-format 3.8 from $(pwd)/mason_packages/.link/bin"
+    CLANG_FORMAT=clang-format
+    PATH="$(pwd)/mason_packages/.link/bin:$PATH"
 fi
 
 find src valhalla test -type f -name '*.h' -o -name '*.cc' \
