@@ -27,12 +27,13 @@ void check_shape(const google::protobuf::RepeatedPtrField<odin::Location>& shape
   max_shape *= max_factor;
 
   // Must have at least two points
-  if (shape.size() < 2)
+  if (shape.size() < 2) {
     throw valhalla_exception_t{123};
-  // Validate shape is not larger than the configured max
-  else if (shape.size() > max_shape)
+    // Validate shape is not larger than the configured max
+  } else if (shape.size() > max_shape) {
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) + "). The limit is " +
                                         std::to_string(max_shape)};
+  };
 
   valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
 }
@@ -46,8 +47,9 @@ void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& sh
   // Calculate "crow distance" of shape
   auto crow_distance = to_ll(*shape.begin()).Distance(to_ll(*shape.rbegin()));
 
-  if (crow_distance > max_distance)
+  if (crow_distance > max_distance) {
     throw valhalla_exception_t{154};
+  };
 
   valhalla::midgard::logging::Log(
       "location_distance::" + std::to_string(crow_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
@@ -56,15 +58,17 @@ void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& sh
 void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
 
   // Validate the best paths count is not less than 1
-  if (best_paths < 1)
+  if (best_paths < 1) {
     throw valhalla_exception_t{158, "(" + std::to_string(best_paths) +
                                         "). The best_paths lower limit is 1"};
+  };
 
   // Validate the best paths count is not larger than the configured best paths max
-  if (best_paths > max_best_paths)
+  if (best_paths > max_best_paths) {
     throw valhalla_exception_t{158, "(" + std::to_string(best_paths) +
                                         "). The best_paths upper limit is " +
                                         std::to_string(max_best_paths)};
+  };
 }
 
 void check_best_paths_shape(unsigned int best_paths,
@@ -72,31 +76,35 @@ void check_best_paths_shape(unsigned int best_paths,
                             size_t max_best_paths_shape) {
 
   // Validate shape is not larger than the configured best paths shape max
-  if ((best_paths > 1) && (shape.size() > max_best_paths_shape))
+  if ((best_paths > 1) && (shape.size() > max_best_paths_shape)) {
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) +
                                         "). The best paths shape limit is " +
                                         std::to_string(max_best_paths_shape)};
+  };
 }
 
 void check_gps_accuracy(const float input_gps_accuracy, const float max_gps_accuracy) {
-  if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f)
+  if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f) {
     throw valhalla_exception_t{158};
+  };
 
   valhalla::midgard::logging::Log("gps_accuracy::" + std::to_string(input_gps_accuracy) + "meters",
                                   " [ANALYTICS] ");
 }
 
 void check_search_radius(const float input_search_radius, const float max_search_radius) {
-  if (input_search_radius > max_search_radius || input_search_radius < 0.f)
+  if (input_search_radius > max_search_radius || input_search_radius < 0.f) {
     throw valhalla_exception_t{158};
+  };
 
   valhalla::midgard::logging::Log(
       "search_radius::" + std::to_string(input_search_radius) + "meters", " [ANALYTICS] ");
 }
 
 void check_turn_penalty_factor(const float input_turn_penalty_factor) {
-  if (input_turn_penalty_factor < 0.f)
+  if (input_turn_penalty_factor < 0.f) {
     throw valhalla_exception_t{158};
+  };
 }
 } // namespace
 
@@ -107,8 +115,9 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
   parse_costing(request);
 
   // we require shape or encoded polyline but we dont know which at first
-  if (!request.options.shape_size())
+  if (!request.options.shape_size()) {
     throw valhalla_exception_t{114};
+  };
 
   // Determine max factor, defaults to 1. This factor is used to increase
   // the max value when an edge_walk shape match is requested
@@ -116,8 +125,9 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
   std::string shape_match =
       rapidjson::GetValueByPointerWithDefault(request.document, "/shape_match", "walk_or_snap")
           .GetString();
-  if (shape_match == "edge_walk")
+  if (shape_match == "edge_walk") {
     max_factor = 5.0f;
+  }
 
   // Validate shape count and distance (for now, just send max_factor for distance)
   check_shape(request.options.shape(), max_trace_shape);
@@ -138,12 +148,15 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
       rapidjson::get_optional<float>(request.document, "/trace_options/search_radius");
   auto input_turn_penalty_factor =
       rapidjson::get_optional<float>(request.document, "/trace_options/turn_penalty_factor");
-  if (input_gps_accuracy)
+  if (input_gps_accuracy) {
     check_gps_accuracy(*input_gps_accuracy, max_gps_accuracy);
-  if (input_search_radius)
+  }
+  if (input_search_radius) {
     check_search_radius(*input_search_radius, max_search_radius);
-  if (input_turn_penalty_factor)
+  }
+  if (input_turn_penalty_factor) {
     check_turn_penalty_factor(*input_turn_penalty_factor);
+  }
 
   // Set locations after parsing the shape
   locations_from_shape(request);
@@ -152,10 +165,12 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
 void loki_worker_t::trace(valhalla_request_t& request) {
   init_trace(request);
   auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
-  if (costing.back() == '_')
+  if (costing.back() == '_') {
     costing.pop_back();
-  if (costing == "multimodal")
+  }
+  if (costing == "multimodal") {
     throw valhalla_exception_t{140, odin::DirectionsOptions::Action_Name(request.options.action())};
+  };
 }
 
 void loki_worker_t::locations_from_shape(valhalla_request_t& request) {

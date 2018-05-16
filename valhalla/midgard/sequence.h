@@ -135,11 +135,13 @@ public:
 #else
           open(new_file_name.c_str(), O_RDWR, 0);
 #endif
-      if (fd == -1)
+      if (fd == -1) {
         throw std::runtime_error(new_file_name + "(open): " + strerror(errno));
+      }
       ptr = mmap(nullptr, new_count * sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-      if (ptr == MAP_FAILED)
+      if (ptr == MAP_FAILED) {
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
+      }
 
 #if defined(_MSC_VER)
       auto cl = _close(fd);
@@ -147,8 +149,9 @@ public:
       auto cl = close(fd);
       posix_madvise(ptr, new_count * sizeof(T), advice);
 #endif
-      if (cl == -1)
+      if (cl == -1) {
         throw std::runtime_error(new_file_name + "(close): " + strerror(errno));
+      }
       count = new_count;
       file_name = new_file_name;
     }
@@ -160,8 +163,9 @@ public:
     if (ptr) {
       // unmap
       auto un = munmap(ptr, count * sizeof(T));
-      if (un == -1)
+      if (un == -1) {
         throw std::runtime_error(file_name + "(munmap): " + strerror(errno));
+      }
 
       // clear
       ptr = nullptr;
@@ -218,12 +222,14 @@ public:
         file_name(file_name) {
 
     // crack open the file
-    if (!*file)
+    if (!*file) {
       throw std::runtime_error(file_name + ": " + strerror(errno));
+    }
     auto end = file->tellg();
     auto element_count = static_cast<std::streamoff>(std::ceil(end / sizeof(T)));
-    if (end != static_cast<decltype(end)>(element_count * sizeof(T)))
+    if (end != static_cast<decltype(end)>(element_count * sizeof(T))) {
       throw std::runtime_error("This file has an incorrect size for type");
+    }
     write_buffer.reserve(write_buffer_size ? write_buffer_size : 1);
 
     // memory map the file for reading
@@ -239,8 +245,9 @@ public:
   void push_back(const T& obj) {
     write_buffer.push_back(obj);
     // push it to the file
-    if (write_buffer.size() == write_buffer.capacity())
+    if (write_buffer.size() == write_buffer.capacity()) {
       flush();
+    }
   }
 
   // finds the first matching object by scanning O(n)
@@ -253,8 +260,9 @@ public:
     // keep looking while we have stuff to look at
     while (start_index < memmap.size()) {
       T candidate = memmap ? *(static_cast<const T*>(memmap) + start_index) : (*this)[start_index];
-      if (predicate(target, candidate))
+      if (predicate(target, candidate)) {
         return start_index;
+      }
       ++start_index;
     }
     return npos;
@@ -268,8 +276,9 @@ public:
 
     flush();
     // if no elements we are done
-    if (memmap.size() == 0)
+    if (memmap.size() == 0) {
       return;
+    }
     std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
     return;
   }
@@ -293,8 +302,9 @@ public:
   void enumerate(const std::function<void(const T&)>& predicate) {
     flush();
     // grab each element and do something with it
-    for (size_t i = 0; i < memmap.size(); ++i)
+    for (size_t i = 0; i < memmap.size(); ++i) {
       predicate(*(at(i)));
+    }
   }
 
   // force writing whatever we have in the write_buffer to file
@@ -410,14 +420,16 @@ public:
   iterator find(const T& target, const std::function<bool(const T&, const T&)>& predicate) {
     flush();
     // if no elements we are done
-    if (memmap.size() == 0)
+    if (memmap.size() == 0) {
       return end();
+    }
     // if we did find it return the iterator to it
     auto* found =
         std::lower_bound(static_cast<const T*>(memmap),
                          static_cast<const T*>(memmap) + memmap.size(), target, predicate);
-    if (!(predicate(target, *found) || predicate(*found, target)))
+    if (!(predicate(target, *found) || predicate(*found, target))) {
       return at(found - static_cast<const T*>(memmap));
+    }
     // we didnt find it
     return end();
   }
@@ -487,9 +499,11 @@ struct tar {
       // Skip everything after the last NUL/space character
       // In some TAR archives the size field has non-trailing NULs/spaces, so this is necessary
       const unsigned char* check = ptr; // This is used to check where the last NUL/space char is
-      for (; check >= (unsigned char*)data; check--)
-        if ((*check) == 0 || (*check) == ' ')
+      for (; check >= (unsigned char*)data; check--) {
+        if ((*check) == 0 || (*check) == ' ') {
           ptr = check - 1;
+        }
+      }
       for (; ptr >= (unsigned char*)data; ptr--) {
         sum += ((*ptr) - 48) * multiplier;
         multiplier *= 8;
@@ -526,8 +540,9 @@ struct tar {
       : tar_file(tar_file), corrupt_blocks(0) {
     // map the file
     struct stat s;
-    if (stat(tar_file.c_str(), &s) || s.st_size == 0 || (s.st_size % sizeof(header_t)) != 0)
+    if (stat(tar_file.c_str(), &s) || s.st_size == 0 || (s.st_size % sizeof(header_t)) != 0) {
       return;
+    }
     try {
       mm.map(tar_file, s.st_size);
     } catch (...) { return; }
@@ -546,9 +561,10 @@ struct tar {
       }
       auto size = h->get_file_size();
       // do we record entry file or not
-      if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0'))
+      if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0')) {
         contents.emplace(std::piecewise_construct, std::forward_as_tuple(std::string{h->name}),
                          std::forward_as_tuple(position, size));
+      }
       // every entry's data is rounded to the nearst header_t sized "block"
       auto blocks = static_cast<size_t>(std::ceil(static_cast<double>(size) / sizeof(header_t)));
       position += blocks * sizeof(header_t);

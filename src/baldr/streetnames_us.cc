@@ -51,14 +51,15 @@ StreetNamesUs::FindCommonBaseNames(const StreetNames& other_street_names) const 
       if (street_name->HasSameBaseName(*other_street_name)) {
         // Use the name with the cardinal directional suffix
         // thus, 'US 30 West' will be used instead of 'US 30'
-        if (!street_name->GetPostCardinalDir().empty())
+        if (!street_name->GetPostCardinalDir().empty()) {
           common_base_names->emplace_back(midgard::make_unique<StreetNameUs>(street_name->value()));
-        else if (!other_street_name->GetPostCardinalDir().empty())
+        } else if (!other_street_name->GetPostCardinalDir().empty()) {
           common_base_names->emplace_back(
               midgard::make_unique<StreetNameUs>(other_street_name->value()));
-        // Use street_name by default
-        else
+          // Use street_name by default
+        } else {
           common_base_names->emplace_back(midgard::make_unique<StreetNameUs>(street_name->value()));
+        }
         break;
       }
     }

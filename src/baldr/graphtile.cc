@@ -56,8 +56,9 @@ GraphTile::GraphTile()
 GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : header_(nullptr) {
 
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level())
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
     return;
+  }
 
   // Open to the end of the file so we can immediately get size;
   std::string file_location =
@@ -106,8 +107,9 @@ GraphTile::GraphTile(const GraphId& graphid, char* ptr, size_t size) : header_(n
 
 GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler) {
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level())
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
     return;
+  }
 
   // Get the response returned from curl
   std::string uri = tile_url + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
@@ -278,9 +280,10 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
   // figure the largest id for this level
   auto found = TileHierarchy::levels().find(graphid.level());
   if (found == TileHierarchy::levels().cend() &&
-      graphid.level() != TileHierarchy::GetTransitLevel().level)
+      graphid.level() != TileHierarchy::GetTransitLevel().level) {
     throw std::runtime_error("Could not compute FileSuffix for non-existent level: " +
                              std::to_string(graphid.level()));
+  }
 
   // get the level info
   const auto& level = graphid.level() == TileHierarchy::GetTransitLevel().level
@@ -291,8 +294,9 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
   auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
   size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
   const size_t remainder = max_length % 3;
-  if (remainder)
+  if (remainder) {
     max_length += 3 - remainder;
+  }
 
   // make a locale to use as a formatter for numbers
   std::ostringstream stream;
@@ -317,17 +321,21 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
       filesystem::path_separator, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
   // we require slashes
   auto pos = fname.find_last_of(filesystem::path_separator);
-  if (pos == fname.npos)
+  if (pos == fname.npos) {
     throw std::runtime_error("Invalid tile path: " + fname);
+  }
 
   // swallow numbers until you reach the end or a dot
-  for (; pos < fname.size(); ++pos)
-    if (allowed.find(fname[pos]) == allowed.cend())
+  for (; pos < fname.size(); ++pos) {
+    if (allowed.find(fname[pos]) == allowed.cend()) {
       break;
+    }
+  }
 
   // if you didnt reach the end and it wasnt a dot then this isnt valid
-  if (pos != fname.size() && fname[pos] != '.')
+  if (pos != fname.size() && fname[pos] != '.') {
     throw std::runtime_error("Invalid tile path: " + fname);
+  }
 
   // run backwards while you find an allowed char but stop if not 3 digits between slashes
   std::vector<int> digits;
@@ -335,20 +343,23 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   for (--pos; pos < last; --pos) {
     auto& c = fname.at(pos);
     // invalid char showed up
-    if (allowed.find(c) == allowed.cend())
+    if (allowed.find(c) == allowed.cend()) {
       throw std::runtime_error("Invalid tile path: " + fname);
+    }
     // if its a slash thats another digit
     if (c == filesystem::path_separator) {
       // this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
-      if (dist != 4 && dist != 2)
+      if (dist != 4 && dist != 2) {
         throw std::runtime_error("Invalid tile path: " + fname);
+      }
       // we'll keep this
       auto i = atoi(fname.substr(pos + 1, last - (pos + 1)).c_str());
       digits.push_back(i);
       // and we'll stop if it was the level (always a single digit see GraphId)
-      if (dist == 2)
+      if (dist == 2) {
         break;
+      }
       // next
       last = pos;
     }
@@ -357,8 +368,9 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   // if the first thing isnt a valid level bail
   auto found = TileHierarchy::levels().find(digits.back());
   if (found == TileHierarchy::levels().cend() &&
-      digits.back() != TileHierarchy::GetTransitLevel().level)
+      digits.back() != TileHierarchy::GetTransitLevel().level) {
     throw std::runtime_error("Invalid tile path: " + fname);
+  }
 
   // get the level info
   uint32_t level = digits.back();
@@ -370,13 +382,15 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   // get the number of sub directories that we should have
   auto max_id = tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1;
   size_t parts = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
-  if (parts % 3 != 0)
+  if (parts % 3 != 0) {
     parts += 3 - (parts % 3);
+  }
   parts /= 3;
 
   // bail if its the wrong number of sub dirs
-  if (digits.size() != parts)
+  if (digits.size() != parts) {
     throw std::runtime_error("Invalid tile path: " + fname);
+  }
 
   // parse the id of the tile
   int multiplier = 1;
@@ -387,8 +401,9 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   }
 
   // if after parsing them the number is out of bounds bail
-  if (id > max_id)
+  if (id > max_id) {
     throw std::runtime_error("Invalid tile path: " + fname);
+  }
 
   // you've passed the test enjoy your id
   return {id, level, 0};
@@ -400,8 +415,9 @@ AABB2<PointLL> GraphTile::BoundingBox() const {
   // figure the largest id for this level
   auto level = TileHierarchy::levels().find(header_->graphid().level());
   if (level == TileHierarchy::levels().end() &&
-      header_->graphid().level() == ((TileHierarchy::levels().rbegin())->second.level + 1))
+      header_->graphid().level() == ((TileHierarchy::levels().rbegin())->second.level + 1)) {
     level = TileHierarchy::levels().begin();
+  }
 
   auto tiles = level->second.tiles;
   return tiles.TileBounds(header_->graphid().tileid());
@@ -413,10 +429,10 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) 
     const auto* edge = directededge(nodeinfo.edge_index());
     return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
   }
-  throw std::runtime_error(
-      "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
-      std::to_string(node.level()) + "," + std::to_string(node.id()) +
-      " nodecount= " + std::to_string(header_->nodecount()));
+  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                           std::to_string(node.tileid()) + "," + std::to_string(node.level()) +
+                           "," + std::to_string(node.id()) + " nodecount= " +
+                           std::to_string(header_->nodecount()));
 }
 
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) const {
@@ -425,10 +441,10 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
     const auto* edge = directededge(nodeinfo.edge_index());
     return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
   }
-  throw std::runtime_error(
-      "GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) +
-      "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
-      " nodecount= " + std::to_string(header_->nodecount()));
+  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+                           " nodecount= " + std::to_string(header_->nodecount()));
 }
 
 // Get a pointer to edge info.
@@ -546,13 +562,15 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
 
   // Add signs
   for (; found < count && signs_[found].edgeindex() == idx; ++found) {
-    if (signs_[found].text_offset() < textlist_size_)
+    if (signs_[found].text_offset() < textlist_size_) {
       signs.emplace_back(signs_[found].type(), (textlist_ + signs_[found].text_offset()));
-    else
+    } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
+    }
   }
-  if (signs.size() == 0)
+  if (signs.size() == 0) {
     LOG_ERROR("No signs found for idx = " + std::to_string(idx));
+  }
   return signs;
 }
 
@@ -591,8 +609,9 @@ std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx)
   for (; found < count && lane_connectivity_[found].to() == idx; ++found) {
     lcs.emplace_back(lane_connectivity_[found]);
   }
-  if (lcs.size() == 0)
+  if (lcs.size() == 0) {
     LOG_ERROR("No lane connections found for idx = " + std::to_string(idx));
+  }
   return lcs;
 }
 
@@ -650,8 +669,9 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
       uint32_t departure_time = departures_[found].departure_time();
       uint32_t end_time = departures_[found].end_time();
       uint32_t frequency = departures_[found].frequency();
-      while (departure_time < current_time && departure_time < end_time)
+      while (departure_time < current_time && departure_time < end_time) {
         departure_time += frequency;
+      }
 
       if (departure_time >= current_time && departure_time < end_time &&
           GetTransitSchedule(departures_[found].schedule_index())
@@ -670,8 +690,8 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   }
 
   // TODO - maybe wrap around, try next day?
-  LOG_DEBUG("No more departures found for lineid = " + std::to_string(lineid) +
-            " current_time = " + std::to_string(current_time));
+  LOG_DEBUG("No more departures found for lineid = " + std::to_string(lineid) + " current_time = " +
+            std::to_string(current_time));
   return nullptr;
 }
 
@@ -710,14 +730,16 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   for (; found < count && departures_[found].lineid() == lineid; ++found) {
     if (departures_[found].tripid() == tripid) {
 
-      if (departures_[found].type() == kFixedSchedule)
+      if (departures_[found].type() == kFixedSchedule) {
         return &departures_[found];
+      }
 
       uint32_t departure_time = departures_[found].departure_time();
       uint32_t end_time = departures_[found].end_time();
       uint32_t frequency = departures_[found].frequency();
-      while (departure_time < current_time && departure_time < end_time)
+      while (departure_time < current_time && departure_time < end_time) {
         departure_time += frequency;
+      }
 
       if (departure_time >= current_time && departure_time < end_time) {
         const auto& d = departures_[found];
@@ -730,8 +752,8 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
     }
   }
 
-  LOG_INFO("No departures found for lineid = " + std::to_string(lineid) +
-           " and tripid = " + std::to_string(tripid));
+  LOG_INFO("No departures found for lineid = " + std::to_string(lineid) + " and tripid = " +
+           std::to_string(tripid));
   return nullptr;
 }
 
@@ -741,8 +763,9 @@ std::unordered_map<uint32_t, TransitDeparture*> GraphTile::GetTransitDepartures(
   std::unordered_map<uint32_t, TransitDeparture*> deps;
   deps.reserve(header_->departurecount());
 
-  for (uint32_t i = 0; i < header_->departurecount(); i++)
+  for (uint32_t i = 0; i < header_->departurecount(); i++) {
     deps.insert({departures_[i].lineid(), &departures_[i]});
+  }
 
   return deps;
 }
@@ -765,19 +788,22 @@ const std::unordered_map<std::string, std::list<GraphId>>& GraphTile::GetOperato
 // Get the transit stop given its index within the tile.
 const TransitStop* GraphTile::GetTransitStop(const uint32_t idx) const {
   uint32_t count = header_->stopcount();
-  if (count == 0)
+  if (count == 0) {
     return nullptr;
+  }
 
-  if (idx < count)
+  if (idx < count) {
     return &transit_stops_[idx];
+  }
   throw std::runtime_error("GraphTile Transit Stop index out of bounds");
 }
 
 // Get the transit route given its index within the tile.
 const TransitRoute* GraphTile::GetTransitRoute(const uint32_t idx) const {
   uint32_t count = header_->routecount();
-  if (count == 0)
+  if (count == 0) {
     return nullptr;
+  }
 
   if (idx < count) {
     return &transit_routes_[idx];
@@ -788,8 +814,9 @@ const TransitRoute* GraphTile::GetTransitRoute(const uint32_t idx) const {
 // Get the transit schedule given its schedule index.
 const TransitSchedule* GraphTile::GetTransitSchedule(const uint32_t idx) const {
   uint32_t count = header_->schedulecount();
-  if (count == 0)
+  if (count == 0) {
     return nullptr;
+  }
 
   if (idx < count) {
     return &transit_schedules_[idx];
@@ -830,9 +857,11 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
   }
 
   // Add restrictions for only the access that we are interested in
-  for (; found < count && access_restrictions_[found].edgeindex() == idx; ++found)
-    if (access_restrictions_[found].modes() & access)
+  for (; found < count && access_restrictions_[found].edgeindex() == idx; ++found) {
+    if (access_restrictions_[found].modes() & access) {
       restrictions.emplace_back(access_restrictions_[found]);
+    }
+  }
 
   return restrictions;
 }
@@ -849,8 +878,9 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
 }
 
 std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const GraphId& edge) const {
-  if (edge.Tile_Base() != header_->graphid())
+  if (edge.Tile_Base() != header_->graphid()) {
     throw std::runtime_error("Wrong tile for edge id");
+  }
   return GetTrafficSegments(edge.id());
 }
 
@@ -861,8 +891,9 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
     // normal ots's
     if (!t.chunk()) {
       // single association should always be 1 segment
-      if (t.count() != 1)
+      if (t.count() != 1) {
         return {};
+      }
       // return the one
       GraphId segment_id = {header_->graphid().tileid(), header_->graphid().level(), t.id()};
       TrafficSegment seg(segment_id, 0.0f, 1.0f, t.starts_segment(), t.ends_segment());
@@ -881,8 +912,9 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
       return segments;
     }
   } // Tile does not contain traffic
-  else if (header_->traffic_id_count() == 0)
+  else if (header_->traffic_id_count() == 0) {
     return {};
+  }
   // you were out of bounds
   throw std::runtime_error("GraphTile GetTrafficSegments index out of bounds: " +
                            std::to_string(header_->graphid().tileid()) + "," +

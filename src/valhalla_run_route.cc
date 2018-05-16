@@ -372,9 +372,10 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
           " [NARRATIVE] ");
     }
 
-    if (i < trip_directions.maneuver_size() - 1)
+    if (i < trip_directions.maneuver_size() - 1) {
       valhalla::midgard::logging::Log("----------------------------------------------",
                                       " [NARRATIVE] ");
+    }
   }
   valhalla::midgard::logging::Log("==============================================",
                                   " [NARRATIVE] ");
@@ -519,10 +520,12 @@ int main(int argc, char* argv[]) {
     boost::property_tree::read_json(stream, json_ptree);
 
     try {
-      for (const auto& location : json_ptree.get_child("locations"))
+      for (const auto& location : json_ptree.get_child("locations")) {
         locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
-      if (locations.size() < 2)
+      }
+      if (locations.size() < 2) {
         throw;
+      }
     } catch (...) {
       throw std::runtime_error("insufficiently specified required parameter 'locations'");
     }
@@ -544,12 +547,13 @@ int main(int argc, char* argv[]) {
       auto date_time_type = (*date_time_ptr).get<int>("type");
       auto date_time_value = (*date_time_ptr).get_optional<std::string>("value");
 
-      if (date_time_type == 0) // current
+      if (date_time_type == 0) { // current
         locations.front().date_time_ = "current";
-      else if (date_time_type == 1) // depart at
+      } else if (date_time_type == 1) { // depart at
         locations.front().date_time_ = date_time_value;
-      else if (date_time_type == 2) // arrive by
+      } else if (date_time_type == 2) { // arrive by
         locations.back().date_time_ = date_time_value;
+      }
     }
   }
 
@@ -594,8 +598,9 @@ int main(int argc, char* argv[]) {
   factory.Register("transit", CreateTransitCost);
 
   // Figure out the route type
-  for (auto& c : routetype)
+  for (auto& c : routetype) {
     c = std::tolower(c);
+  }
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
@@ -642,10 +647,11 @@ int main(int argc, char* argv[]) {
                                               path_location.back(), 0);
     for (auto color : colors) {
       auto itr = color_counts.find(color);
-      if (itr == color_counts.cend())
+      if (itr == color_counts.cend()) {
         color_counts[color] = 1;
-      else
+      } else {
         ++itr->second;
+      }
     }
 
     // are all the locations in the same color regions

@@ -36,8 +36,9 @@ bool PathLocation::operator==(const PathLocation& other) const {
         break;
       }
     }
-    if (!found)
+    if (!found) {
       return false;
+    }
   }
   return true;
 }

@@ -35,8 +35,9 @@ void bresenham_line(float x0,
     }
     // mark this pixel
     bool o = set_pixel(std::floor(x), std::floor(y));
-    if (outside == false && o == true)
+    if (outside == false && o == true) {
       return;
+    }
     outside = o;
   }
 }
@@ -86,8 +87,9 @@ template <class coord_t> struct closest_first_generator_t {
     }
     for (const auto& c : corners) {
       auto d = seed.Distance(c);
-      if (d < distance)
+      if (d < distance) {
         distance = d;
+      }
     }
     return distance;
   }
@@ -101,13 +103,15 @@ template <class coord_t> struct closest_first_generator_t {
     for (const auto& off : neighbor_offsets) {
       // skip y out of bounds
       auto ny = y + off.second;
-      if (ny == -1 || ny == subrows)
+      if (ny == -1 || ny == subrows) {
         continue;
+      }
       // fix x
       auto nx = x + off.first;
       if (nx == -1 || nx == subcols) {
-        if (!coord_t::IsSpherical())
+        if (!coord_t::IsSpherical()) {
           continue;
+        }
         nx = (nx + subcols) % subcols;
       }
       // actually add the thing
@@ -122,8 +126,9 @@ template <class coord_t> struct closest_first_generator_t {
   // get the next closest subdivision
   std::tuple<int32_t, unsigned short, float> next() {
     // get the next closest one or bail
-    if (!queue.size())
+    if (!queue.size()) {
       throw std::runtime_error("Subdivisions were exhausted");
+    }
     auto best = *queue.cbegin();
     queue.erase(queue.cbegin());
     // add its neighbors
@@ -170,13 +175,14 @@ template <class coord_t> void Tiles<coord_t>::ShiftTileBounds(const coord_t& shi
 // Get the "row" based on y.
 template <class coord_t> int32_t Tiles<coord_t>::Row(const float y) const {
   // Return -1 if outside the tile system bounds
-  if (y < tilebounds_.miny() || y > tilebounds_.maxy())
+  if (y < tilebounds_.miny() || y > tilebounds_.maxy()) {
     return -1;
+  }
 
   // If equal to the max y return the largest row
-  if (y == tilebounds_.maxy())
+  if (y == tilebounds_.maxy()) {
     return nrows_ - 1;
-  else {
+  } else {
     return static_cast<int32_t>((y - tilebounds_.miny()) / tilesize_);
   }
 }
@@ -184,13 +190,14 @@ template <class coord_t> int32_t Tiles<coord_t>::Row(const float y) const {
 // Get the "column" based on x.
 template <class coord_t> int32_t Tiles<coord_t>::Col(const float x) const {
   // Return -1 if outside the tile system bounds
-  if (x < tilebounds_.minx() || x > tilebounds_.maxx())
+  if (x < tilebounds_.minx() || x > tilebounds_.maxx()) {
     return -1;
+  }
 
   // If equal to the max x return the largest column
-  if (x == tilebounds_.maxx())
+  if (x == tilebounds_.maxx()) {
     return ncolumns_ - 1;
-  else {
+  } else {
     float col = (x - tilebounds_.minx()) / tilesize_;
     return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
   }
@@ -200,8 +207,9 @@ template <class coord_t> int32_t Tiles<coord_t>::Col(const float x) const {
 template <class coord_t> int32_t Tiles<coord_t>::TileId(const float y, const float x) const {
   // Return -1 if totally outside the extent.
   if (y < tilebounds_.miny() || x < tilebounds_.minx() || y > tilebounds_.maxy() ||
-      x > tilebounds_.maxx())
+      x > tilebounds_.maxx()) {
     return -1;
+  }
 
   // Find the tileid by finding the latitude row and longitude column
   return (Row(y) * ncolumns_) + Col(x);
@@ -391,8 +399,9 @@ Tiles<coord_t>::Intersect(const container_t& linestring) const {
   const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
     // cant mark ones that are outside the valid range of tiles
     // TODO: wrap coordinates around x and y?
-    if (x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
+    if (x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_) {
       return true;
+    }
     // find the tile
     int32_t tile_column = x / nsubdivisions_;
     int32_t tile_row = y / nsubdivisions_;
@@ -410,8 +419,9 @@ Tiles<coord_t>::Intersect(const container_t& linestring) const {
   auto max_meters =
       std::max(1.f, subdivision_size_ * .25f *
                         DistanceApproximator::MetersPerLngDegree(linestring.front().second));
-  if (coord_t::IsSpherical() && Polyline2<coord_t>::Length(linestring) > max_meters)
+  if (coord_t::IsSpherical() && Polyline2<coord_t>::Length(linestring) > max_meters) {
     resampled = resample_spherical_polyline(linestring, max_meters, true);
+  }
 
   // for each segment
   const auto& line = resampled.size() ? resampled : linestring;
@@ -421,10 +431,11 @@ Tiles<coord_t>::Intersect(const container_t& linestring) const {
     auto u = *ui;
     auto v = u;
     std::advance(vi, 1);
-    if (vi != line.cend())
+    if (vi != line.cend()) {
       v = *vi;
-    else if (line.size() > 1)
+    } else if (line.size() > 1) {
       return intersection;
+    }
     ui = vi;
 
     // figure out global subdivision start and end points

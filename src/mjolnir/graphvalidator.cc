@@ -214,8 +214,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
           if (edge.is_shortcut()) {
             std::vector<std::string> names = tile->edgeinfo(edge.edgeinfo_offset()).GetNames();
             std::string name = (names.size() > 0) ? names[0] : "unnamed";
-            LOG_DEBUG("Duplicate shortcut for " + name +
-                      " at LL = " + std::to_string(nodeinfo->latlng().lat()) + "," +
+            LOG_DEBUG("Duplicate shortcut for " + name + " at LL = " +
+                      std::to_string(nodeinfo->latlng().lat()) + "," +
                       std::to_string(nodeinfo->latlng().lng()));
           } else {
             LOG_DEBUG("Potential duplicate: wayids " + std::to_string(wayid) + " and " +
@@ -335,8 +335,9 @@ void validate(
 
     // Point tiles to the set we need for current level
     auto level = tile_id.level();
-    if (TileHierarchy::levels().rbegin()->second.level + 1 == level)
+    if (TileHierarchy::levels().rbegin()->second.level + 1 == level) {
       level = TileHierarchy::levels().rbegin()->second.level;
+    }
 
     const auto& tiles = TileHierarchy::levels().find(level)->second.tiles;
     level = tile_id.level();
@@ -427,8 +428,9 @@ void validate(
           endnode_tile = graph_reader.GetGraphTile(directededge.endnode());
           lock.unlock();
           // make sure this is set to false as access tag logic could of set this to true.
-        } else
+        } else {
           directededge.set_leaves_tile(false);
+        }
 
         // Set the opposing edge index and get the country ISO at the end
         // node. Set the deadend flag and internal flag (if the opposing
@@ -443,8 +445,9 @@ void validate(
         directededge.set_opp_index(opp_index);
         if (directededge.use() == Use::kTransitConnection ||
             directededge.use() == Use::kEgressConnection ||
-            directededge.use() == Use::kPlatformConnection)
+            directededge.use() == Use::kPlatformConnection) {
           directededge.set_opp_local_idx(opp_index);
+        }
 
         // Mark a country crossing if country ISO codes do not match
         if (!begin_node_iso.empty() && !end_node_iso.empty() && begin_node_iso != end_node_iso) {
@@ -516,8 +519,9 @@ void validate(
     }
 
     // Check if we need to clear the tile cache
-    if (graph_reader.OverCommitted())
+    if (graph_reader.OverCommitted()) {
       graph_reader.Clear();
+    }
     lock.unlock();
 
     // Add possible duplicates to return class
@@ -625,8 +629,9 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   }
 
   // Wait for threads to finish
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
   // Get the promise from the future
   std::vector<uint32_t> duplicates(TileHierarchy::levels().size(), 0);
   std::vector<std::vector<float>> densities(3);
@@ -636,8 +641,9 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     // Total up duplicates for each level
     for (uint8_t i = 0; i < TileHierarchy::levels().size(); ++i) {
       duplicates[i] += std::get<0>(data)[i];
-      for (auto& d : std::get<1>(data)[i])
+      for (auto& d : std::get<1>(data)[i]) {
         densities[i].push_back(d);
+      }
     }
     // keep track of tweeners
     merge(std::get<2>(data), tweeners);
@@ -648,11 +654,13 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   LOG_INFO("Binning inter-tile edges...");
   auto start = tweeners.begin();
   auto end = tweeners.end();
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread.reset(new std::thread(bin_tweeners, std::cref(tile_dir), std::ref(start), std::cref(end),
                                  dataset_id, std::ref(lock)));
-  for (auto& thread : threads)
+  }
+  for (auto& thread : threads) {
     thread->join();
+  }
   LOG_INFO("Finished");
 
   // print dupcount and find densities
@@ -671,8 +679,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       sum += density;
     }
     float average_density = sum / densities[level].size();
-    LOG_DEBUG("Average density = " + std::to_string(average_density) +
-              " max = " + std::to_string(max_density));
+    LOG_DEBUG("Average density = " + std::to_string(average_density) + " max = " +
+              std::to_string(max_density));
   }
 }
 } // namespace mjolnir

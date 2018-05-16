@@ -26,8 +26,9 @@ void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& lo
         max_location_distance = path_distance;
       }
 
-      if (path_distance > matrix_max_distance)
+      if (path_distance > matrix_max_distance) {
         throw valhalla_exception_t{154};
+      };
     }
   }
 }
@@ -39,26 +40,32 @@ namespace loki {
 void loki_worker_t::init_isochrones(valhalla_request_t& request) {
   // strip off unused information
   parse_locations(request.options.mutable_locations());
-  if (request.options.locations_size() < 1)
+  if (request.options.locations_size() < 1) {
     throw valhalla_exception_t{120};
-  for (auto& l : *request.options.mutable_locations())
+  };
+  for (auto& l : *request.options.mutable_locations()) {
     l.clear_heading();
+  }
 
   // make sure the isoline definitions are valid
   auto contours =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(request.document, "/contours");
-  if (!contours)
+  if (!contours) {
     throw valhalla_exception_t{113};
+  };
   // check that the number of contours is ok
-  if (contours->Size() > max_contours)
+  if (contours->Size() > max_contours) {
     throw valhalla_exception_t{152, std::to_string(max_contours)};
+  };
   size_t prev = 0;
   for (const auto& contour : *contours) {
     const int c = rapidjson::get_optional<int>(contour, "/time").get_value_or(-1);
-    if (c < prev || c == -1)
+    if (c < prev || c == -1) {
       throw valhalla_exception_t{111};
-    if (c > max_time)
+    };
+    if (c > max_time) {
       throw valhalla_exception_t{151, std::to_string(max_time)};
+    };
     prev = c;
   }
   parse_costing(request);
@@ -66,17 +73,19 @@ void loki_worker_t::init_isochrones(valhalla_request_t& request) {
 void loki_worker_t::isochrones(valhalla_request_t& request) {
   init_isochrones(request);
   // check that location size does not exceed max
-  if (request.options.locations_size() > max_locations.find("isochrone")->second)
+  if (request.options.locations_size() > max_locations.find("isochrone")->second) {
     throw valhalla_exception_t{150, std::to_string(max_locations.find("isochrone")->second)};
+  };
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
   check_distance(request.options.locations(), max_distance.find("isochrone")->second,
                  max_location_distance);
-  if (!request.options.do_not_track())
-    valhalla::midgard::logging::Log(
-        "max_location_distance::" + std::to_string(max_location_distance * kKmPerMeter) + "km",
-        " [ANALYTICS] ");
+  if (!request.options.do_not_track()) {
+    valhalla::midgard::logging::Log("max_location_distance::" +
+                                        std::to_string(max_location_distance * kKmPerMeter) + "km",
+                                    " [ANALYTICS] ");
+  }
 
   try {
     // correlate the various locations to the underlying graph

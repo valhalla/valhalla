@@ -46,12 +46,14 @@ public:
                     const uint32_t bucketsize,
                     const LabelCost& labelcost) {
     // We need at least a bucketsize of 1 or more
-    if (bucketsize < 1)
+    if (bucketsize < 1) {
       throw std::runtime_error("Bucketsize must be 1 or greater");
+    }
 
     // We need at least a bucketrange of something larger than 0
-    if (range <= 0.f)
+    if (range <= 0.f) {
       throw std::runtime_error("Bucketrange must be greater than 0");
+    }
 
     // Adjust min cost to be the start of a bucket
     uint32_t c = static_cast<uint32_t>(mincost);
@@ -221,10 +223,11 @@ private:
       mincost_ += (std::floor((min - mincost_) / bucketrange_)) * bucketrange_;
 
       // Avoid precision issues
-      if (mincost_ > min)
+      if (mincost_ > min) {
         mincost_ -= bucketrange_;
-      else if (mincost_ + bucketrange_ < min)
+      } else if (mincost_ + bucketrange_ < min) {
         mincost_ += bucketrange_;
+      }
       maxcost_ = mincost_ + bucketrange_;
 
       // Move elements within the range from overflow to buckets

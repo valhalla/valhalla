@@ -222,9 +222,9 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->IsTransition() || edge->is_shortcut() || edge->use() >= Use::kFerry ||
-          !(edge->forwardaccess() & kPedestrianAccess))
+          !(edge->forwardaccess() & kPedestrianAccess)) {
         return 0.0f;
-      else {
+      } else {
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }
@@ -351,30 +351,33 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   std::string stop_action = pt.get("filters.stops.action", "");
   if (stop_action.size()) {
     for (const auto& kv : pt.get_child("filters.stops.ids")) {
-      if (stop_action == "exclude")
+      if (stop_action == "exclude") {
         stop_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (stop_action == "include")
+      } else if (stop_action == "include") {
         stop_include_onestops_.emplace(kv.second.get_value<std::string>());
+      }
     }
   }
 
   std::string operator_action = pt.get("filters.operators.action", "");
   if (operator_action.size()) {
     for (const auto& kv : pt.get_child("filters.operators.ids")) {
-      if (operator_action == "exclude")
+      if (operator_action == "exclude") {
         oper_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (operator_action == "include")
+      } else if (operator_action == "include") {
         oper_include_onestops_.emplace(kv.second.get_value<std::string>());
+      }
     }
   }
 
   std::string routes_action = pt.get("filters.routes.action", "");
   if (routes_action.size()) {
     for (const auto& kv : pt.get_child("filters.routes.ids")) {
-      if (routes_action == "exclude")
+      if (routes_action == "exclude") {
         route_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (routes_action == "include")
+      } else if (routes_action == "include") {
         route_include_onestops_.emplace(kv.second.get_value<std::string>());
+      }
     }
   }
 
@@ -423,15 +426,17 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
     if (stop_onestops.size()) {
       for (const auto& e : stop_exclude_onestops_) {
         const auto& one_stop = stop_onestops.find(e);
-        if (one_stop != stop_onestops.end())
+        if (one_stop != stop_onestops.end()) {
           exclude_stops_.emplace(one_stop->second);
+        }
       }
 
       // exclude all operators but the ones the users wants to use
       if (stop_include_onestops_.size()) {
         for (auto const& onestop : stop_onestops) {
-          if (stop_include_onestops_.find(onestop.first) == stop_include_onestops_.end())
+          if (stop_include_onestops_.find(onestop.first) == stop_include_onestops_.end()) {
             exclude_stops_.emplace(onestop.second);
+          }
         }
       }
     }
@@ -447,8 +452,9 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
       for (const auto& e : oper_exclude_onestops_) {
         const auto& one_stop = oper_onestops.find(e);
         if (one_stop != oper_onestops.end()) {
-          for (const auto& tls : one_stop->second)
+          for (const auto& tls : one_stop->second) {
             exclude_routes_.emplace(tls);
+          }
         }
       }
 
@@ -456,8 +462,9 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
       if (oper_include_onestops_.size()) {
         for (auto const& onestop : oper_onestops) {
           if (oper_include_onestops_.find(onestop.first) == oper_include_onestops_.end()) {
-            for (const auto& tls : onestop.second)
+            for (const auto& tls : onestop.second) {
               exclude_routes_.emplace(tls);
+            }
           }
         }
       }
@@ -475,8 +482,9 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
       for (const auto& e : route_exclude_onestops_) {
         const auto& one_stop = route_onestops.find(e);
         if (one_stop != route_onestops.end()) {
-          for (const auto& tls : one_stop->second)
+          for (const auto& tls : one_stop->second) {
             exclude_routes_.emplace(tls);
+          }
         }
       }
 
@@ -484,8 +492,9 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
       if (route_include_onestops_.size()) {
         for (auto const& onestop : route_onestops) {
           if (route_include_onestops_.find(onestop.first) == route_include_onestops_.end()) {
-            for (const auto& tls : onestop.second)
+            for (const auto& tls : onestop.second) {
               exclude_routes_.emplace(tls);
+            }
           }
         }
       }
@@ -526,8 +535,9 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
     if (edge->endnode().tileid() == tile->id().tileid()) {
       if (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level,
                                       tile->node(edge->endnode())->stop_index())) !=
-          exclude_stops_.end())
+          exclude_stops_.end()) {
         return false;
+      }
     }
   }
 

@@ -66,8 +66,9 @@ PointLL PointLL::MidPoint(const PointLL& p) const {
 // geometry (law of cosines).
 float PointLL::Distance(const PointLL& ll2) const {
   // If points are the same, return 0
-  if (*this == ll2)
+  if (*this == ll2) {
     return 0.0f;
+  }
 
   // Delta longitude. Don't need to worry about crossing 180
   // since cos(x) = cos(-x)
@@ -80,12 +81,13 @@ float PointLL::Distance(const PointLL& ll2) const {
 
   // Angle subtended * radius of earth (portion of the circumference).
   // Protect against cosb being outside -1 to 1 range.
-  if (cosb >= 1.0)
+  if (cosb >= 1.0) {
     return 0.00001f;
-  else if (cosb <= -1.0)
+  } else if (cosb <= -1.0) {
     return kPi * kRadEarthMeters;
-  else
+  } else {
     return (float)(acos(cosb) * kRadEarthMeters);
+  }
 }
 
 // Calculates the curvature using this position and 2 others. Found by
@@ -105,8 +107,9 @@ float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {
 // specified lat,lng. This uses Haversine method (spherical geometry).
 float PointLL::Heading(const PointLL& ll2) const {
   // If points are the same, return 0
-  if (*this == ll2)
+  if (*this == ll2) {
     return 0.0f;
+  }
 
   // Convert to radians and compute heading
   float lat1 = lat() * kRadPerDeg;
@@ -129,16 +132,19 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
   float mindistsqr = std::numeric_limits<float>::max();
   size_t process_size = 0;
 
-  if (begin_index < pts.size())
+  if (begin_index < pts.size()) {
     process_size = (pts.size() - begin_index);
+  }
 
   // If there are no points to process we are done
-  if (process_size == 0)
+  if (process_size == 0) {
     return std::make_tuple(std::move(closest), std::move(mindistsqr), std::move(closest_segment));
+  }
 
   // If there is one point to process we are done
-  if (process_size == 1)
+  if (process_size == 1) {
     return std::make_tuple(pts[begin_index], sqrt(DistanceSquared(pts[begin_index])), begin_index);
+  }
 
   // Longitude (x) is scaled by the cos of the latitude so that distances are
   // correct in lat,lon space
@@ -184,8 +190,10 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
     }
 
     // Check if we should bail early because of looking at too much shape
-    if (dist_cutoff != std::numeric_limits<float>::infinity() && (dist_cutoff -= u.Distance(v)) < 0)
+    if (dist_cutoff != std::numeric_limits<float>::infinity() &&
+        (dist_cutoff -= u.Distance(v)) < 0) {
       break;
+    }
   }
   return std::make_tuple(std::move(closest), sqrt(mindistsqr), closest_segment);
 }
@@ -301,8 +309,9 @@ bool PointLL::IsSpherical() {
 
 PointLL PointLL::Project(const PointLL& u, const PointLL& v, float lon_scale) const {
   // we're done if this is a zero length segment
-  if (u == v)
+  if (u == v) {
     return u;
+  }
 
   // project a onto b where b is the origin vector representing this segment
   // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
@@ -316,11 +325,12 @@ PointLL PointLL::Project(const PointLL& u, const PointLL& v, float lon_scale) co
                (second - u.second) * by; // only need the numerator at first
 
   // projects along the ray before u
-  if (scale <= 0.f)
+  if (scale <= 0.f) {
     return u;
-  // projects along the ray after v
-  else if (scale >= sq)
+    // projects along the ray after v
+  } else if (scale >= sq) {
     return v;
+  }
   // projects along the ray between u and v
   scale /= sq;
   return {u.first + bx * scale, u.second + by * scale};

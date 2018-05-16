@@ -55,22 +55,24 @@ serializeIsochrones(const valhalla_request_t& request,
       for (const auto& contour : feature) {
         // make some geometry
         auto coords = array({});
-        for (const auto& coord : contour)
+        for (const auto& coord : contour) {
           coords->push_back(array({fp_t{coord.first, 6}, fp_t{coord.second, 6}}));
+        }
         // its either a ring
-        if (polygons)
+        if (polygons) {
           geom->emplace_back(coords);
-        // or a single line, if someone has more than one contour per feature they messed up
-        else
+          // or a single line, if someone has more than one contour per feature they messed up
+        } else {
           geom = coords;
+        }
       }
       // add a feature
       features->emplace_back(map({
           {"type", std::string("Feature")},
-          {"geometry", map({
-                           {"type", std::string(polygons ? "Polygon" : "LineString")},
-                           {"coordinates", geom},
-                       })},
+          {"geometry",
+           map({
+               {"type", std::string(polygons ? "Polygon" : "LineString")}, {"coordinates", geom},
+           })},
           {"properties", map({
                              {"contour", static_cast<uint64_t>(interval.first)},
                              {"color", hex.str()},            // lines
@@ -96,12 +98,12 @@ serializeIsochrones(const valhalla_request_t& request,
   }
   // make the collection
   auto feature_collection = map({
-      {"type", std::string("FeatureCollection")},
-      {"features", features},
+      {"type", std::string("FeatureCollection")}, {"features", features},
   });
 
-  if (request.options.has_id())
+  if (request.options.has_id()) {
     feature_collection->emplace("id", request.options.id());
+  }
 
   std::stringstream ss;
   ss << *feature_collection;

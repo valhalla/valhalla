@@ -133,8 +133,9 @@ inline float normalize(const float num, const float den) {
 // A container class like vector or list
 template <class container_t> float length(const container_t& pts) {
   float length = 0.0f;
-  for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p)
+  for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
+  }
   return length;
 }
 
@@ -250,8 +251,9 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
  */
 template <class T1, class T2> inline T2 ToMap(const T1& inmap) {
   T2 outmap;
-  for (const auto& key_value : inmap)
+  for (const auto& key_value : inmap) {
     outmap[key_value.first] = key_value.second.data();
+  }
   return outmap;
 }
 
@@ -276,8 +278,9 @@ template <class T1, class T2> inline T2 ToSet(const T1& inset) {
  * @param epsilon to help with approximate equality
  */
 template <class T> bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
-  if (epsilon < static_cast<T>(0))
+  if (epsilon < static_cast<T>(0)) {
     throw std::logic_error("Using a negative epsilon is not supported");
+  }
   T diff = a - b;
   // if its non-negative it better be less than epsilon, if its negative then it better be bigger
   // than epsilon
@@ -286,10 +289,12 @@ template <class T> bool equal(const T a, const T b, const T epsilon = static_cas
 }
 
 template <class T> bool similar(const T a, const T b, const double similarity = .99) {
-  if (a == 0 || b == 0)
+  if (a == 0 || b == 0) {
     return a == b;
-  if ((a < 0) != (b < 0))
+  }
+  if ((a < 0) != (b < 0)) {
     return false;
+  }
   return (double)std::min(a, b) / (double)std::max(a, b) >= similarity;
 }
 
@@ -319,12 +324,14 @@ template <typename T, typename... Args> std::unique_ptr<T> make_unique(Args&&...
  */
 template <class T> T circular_range_clamp(T value, T lower, T upper) {
   // yeah..
-  if (lower >= upper)
+  if (lower >= upper) {
     throw std::runtime_error("invalid range for clamp");
+  }
 
   // easy case
-  if (lower <= value && value <= upper)
+  if (lower <= value && value <= upper) {
     return value;
+  }
 
   // see how far off the bottom of the range it is
   auto i = upper - lower;
@@ -442,10 +449,11 @@ template <typename T> struct ring_queue_t {
     v.reserve(limit);
   }
   void emplace_back(T&& t) {
-    if (v.size() < limit)
+    if (v.size() < limit) {
       v.emplace_back(t);
-    else
+    } else {
       v[i] = t;
+    }
     i = (i + 1) % limit;
   };
   const T& front() const {

@@ -228,8 +228,8 @@ void test_viterbi_search(const std::vector<Column>& columns) {
       test::assert_bool(na.AccumulatedCost(na_winner) == vs.AccumulatedCost(vs_winner),
                         "costs should be both optimal"
                         "but got na = " +
-                            std::to_string(na.AccumulatedCost(na_winner)) +
-                            " and vs = " + std::to_string(vs.AccumulatedCost(vs_winner)));
+                            std::to_string(na.AccumulatedCost(na_winner)) + " and vs = " +
+                            std::to_string(vs.AccumulatedCost(vs_winner)));
     } else {
       test::assert_bool(!vs_winner.IsValid(), "both winners should not be found");
     }

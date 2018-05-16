@@ -111,12 +111,13 @@ public:
    * @return  Returns a pointer to the node.
    */
   const NodeInfo* node(const GraphId& node) const {
-    if (node.id() < header_->nodecount())
+    if (node.id() < header_->nodecount()) {
       return &nodes_[node.id()];
-    throw std::runtime_error(
-        "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
-        std::to_string(node.level()) + "," + std::to_string(node.id()) +
-        " nodecount= " + std::to_string(header_->nodecount()));
+    }
+    throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
+                             std::to_string(node.tileid()) + "," + std::to_string(node.level()) +
+                             "," + std::to_string(node.id()) + " nodecount= " +
+                             std::to_string(header_->nodecount()));
   }
 
   /**
@@ -125,8 +126,9 @@ public:
    * @return  Returns a pointer to the node.
    */
   const NodeInfo* node(const size_t idx) const {
-    if (idx < header_->nodecount())
+    if (idx < header_->nodecount()) {
       return &nodes_[idx];
+    }
     throw std::runtime_error(
         "GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) +
         "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
@@ -139,13 +141,14 @@ public:
    * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const GraphId& edge) const {
-    if (edge.id() < header_->directededgecount())
+    if (edge.id() < header_->directededgecount()) {
       return &directededges_[edge.id()];
+    }
     throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
                              std::to_string(header_->graphid().tileid()) + "," +
                              std::to_string(header_->graphid().level()) + "," +
-                             std::to_string(edge.id()) +
-                             " directededgecount= " + std::to_string(header_->directededgecount()));
+                             std::to_string(edge.id()) + " directededgecount= " +
+                             std::to_string(header_->directededgecount()));
   }
 
   /**
@@ -154,13 +157,14 @@ public:
    * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const size_t idx) const {
-    if (idx < header_->directededgecount())
+    if (idx < header_->directededgecount()) {
       return &directededges_[idx];
+    }
     throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
                              std::to_string(header_->graphid().tileid()) + "," +
                              std::to_string(header_->graphid().level()) + "," +
-                             std::to_string(idx) +
-                             " directededgecount= " + std::to_string(header_->directededgecount()));
+                             std::to_string(idx) + " directededgecount= " +
+                             std::to_string(header_->directededgecount()));
   }
 
   /**

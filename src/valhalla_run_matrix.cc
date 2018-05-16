@@ -76,9 +76,9 @@ void LogResults(const std::string& matrixtype,
     uint32_t idx2 = 0;
     uint32_t nlocs = path_locations.size();
     for (auto& td : res) {
-      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
-               ": Distance= " + std::to_string(td.dist) + " Time= " + GetFormattedTime(td.time) +
-               " secs = " + std::to_string(td.time));
+      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) + ": Distance= " +
+               std::to_string(td.dist) + " Time= " + GetFormattedTime(td.time) + " secs = " +
+               std::to_string(td.time));
       idx2++;
       if (idx2 == nlocs) {
         idx2 = 0;
@@ -106,8 +106,8 @@ void LogResults(const std::string& matrixtype,
   } else {
     uint32_t idx = 0;
     for (auto& td : res) {
-      LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) +
-               " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
+      LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) + " Time= " +
+               GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
       idx++;
     }
   }
@@ -180,8 +180,9 @@ int main(int argc, char* argv[]) {
   boost::property_tree::read_json(stream, json_ptree);
   std::vector<Location> locations;
   try {
-    for (const auto& location : json_ptree.get_child("locations"))
+    for (const auto& location : json_ptree.get_child("locations")) {
       locations.emplace_back(std::move(Location::FromPtree(location.second)));
+    }
   } catch (...) {
     throw std::runtime_error("insufficiently specified required parameter 'locations'");
   }
@@ -218,8 +219,9 @@ int main(int argc, char* argv[]) {
   factory.Register("transit", CreateTransitCost);
 
   // Figure out the route type
-  for (auto& c : routetype)
+  for (auto& c : routetype) {
     c = std::tolower(c);
+  }
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
@@ -291,16 +293,18 @@ int main(int argc, char* argv[]) {
   std::unordered_map<std::string, float> max_matrix_distance;
   for (const auto& kv : pt.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius")
+        kv.first == "max_radius") {
       continue;
+    }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
       max_matrix_distance.emplace(
           kv.first, pt.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
     }
   }
 
-  if (max_matrix_distance.empty())
+  if (max_matrix_distance.empty()) {
     throw std::runtime_error("Missing max_matrix_distance configuration");
+  }
 
   // Compute the cost matrix
   t0 = std::chrono::high_resolution_clock::now();

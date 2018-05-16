@@ -21,8 +21,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(valhalla_requ
   parse_locations(request);
   auto costing = parse_costing(request);
 
-  if (!request.options.do_not_track())
+  if (!request.options.do_not_track()) {
     valhalla::midgard::logging::Log("matrix_type::optimized_route", " [ANALYTICS] ");
+  }
 
   // Use CostMatrix to find costs from each location to every other location
   CostMatrix costmatrix;
@@ -41,8 +42,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(valhalla_requ
   for (size_t i = 0; i < td.size(); ++i) {
     // If any location is completely unreachable then we cant have a connected path
     if (i % correlated.size() == 0) {
-      if (!reachable)
+      if (!reachable) {
         throw valhalla_exception_t{441, " at index " + std::to_string(i / correlated.size())};
+      };
       reachable = false;
     }
     reachable = reachable || td[i].time != kMaxCost;
@@ -55,8 +57,9 @@ std::list<valhalla::odin::TripPath> thor_worker_t::optimized_route(valhalla_requ
   auto optimal_order = optimizer.Solve(correlated.size(), time_costs);
   // put the optimal order into the locations array
   request.options.mutable_locations()->Clear();
-  for (size_t i = 0; i < optimal_order.size(); i++)
+  for (size_t i = 0; i < optimal_order.size(); i++) {
     request.options.mutable_locations()->Add()->CopyFrom(correlated.Get(optimal_order[i]));
+  }
 
   return path_depart_at(*request.options.mutable_locations(), costing);
 }

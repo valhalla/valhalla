@@ -214,12 +214,15 @@ bool TransitDeparture::operator<(const TransitDeparture& other) const {
     if (type() == other.type()) {
       if (departure_time() == other.departure_time()) {
         return tripid() < other.tripid();
-      } else
+      } else {
         return departure_time() < other.departure_time();
-    } else
+      }
+    } else {
       return type() < other.type();
-  } else
+    }
+  } else {
     return lineid() < other.lineid();
+  }
 }
 
 } // namespace baldr

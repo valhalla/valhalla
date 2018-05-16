@@ -20,24 +20,27 @@ StreetNameUs::StreetNameUs(const std::string& value) : StreetName(value) {
 
 std::string StreetNameUs::GetPreDir() const {
   for (const auto& pre_dir : StreetNameUs::pre_dirs_) {
-    if (StartsWith(pre_dir))
+    if (StartsWith(pre_dir)) {
       return pre_dir;
+    }
   }
   return "";
 }
 
 std::string StreetNameUs::GetPostDir() const {
   for (const auto& post_dir : StreetNameUs::post_dirs_) {
-    if (EndsWith(post_dir))
+    if (EndsWith(post_dir)) {
       return post_dir;
+    }
   }
   return "";
 }
 
 std::string StreetNameUs::GetPostCardinalDir() const {
   for (const auto& post_cardinal_dir : StreetNameUs::post_cardinal_dirs_) {
-    if (EndsWith(post_cardinal_dir))
+    if (EndsWith(post_cardinal_dir)) {
       return post_cardinal_dir;
+    }
   }
   return "";
 }

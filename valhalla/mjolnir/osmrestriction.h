@@ -106,14 +106,18 @@ struct OSMRestriction {
         if (std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0) {
           if (modes() == o.modes()) {
             return (time_domain() < o.time_domain());
-          } else
+          } else {
             return modes() < o.modes();
-        } else
+          }
+        } else {
           return vias() < o.vias();
-      } else
+        }
+      } else {
         return to() < o.to();
-    } else
+      }
+    } else {
       return from() < o.from();
+    }
   }
 
   /**

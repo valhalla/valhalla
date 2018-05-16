@@ -117,8 +117,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
   uint32_t max_transfer_distance = costing->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
-  if (!origin.has_date_time())
+  if (!origin.has_date_time()) {
     return {};
+  };
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   // Note: because we can correlate to more than one place for a given PathLocation
@@ -173,8 +174,10 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
     // Allow this process to be aborted
     size_t current_labels = edgelabels_.size();
     if (interrupt &&
-        total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval)
+        total_labels / kInterruptIterationsInterval <
+            current_labels / kInterruptIterationsInterval) {
       (*interrupt)();
+    }
     total_labels = current_labels;
 
     // Get next element from adjacency list. Check that it is valid. An
@@ -238,8 +241,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
       }
 
       // check if excluded.
-      if (tc->IsExcluded(tile, nodeinfo))
+      if (tc->IsExcluded(tile, nodeinfo)) {
         continue;
+      }
     }
 
     // Set local time. TODO: adjust for time zone.
@@ -277,10 +281,11 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
         date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
         dow = DateTime::day_of_week_mask(origin.date_time());
         uint32_t date_created = tile->header()->date_created();
-        if (date < date_created)
+        if (date < date_created) {
           date_before_tile = true;
-        else
+        } else {
           day = date - date_created;
+        }
 
         date_set = true;
       }
@@ -348,8 +353,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
           continue;
         }
         // check if excluded.
-        if (tc->IsExcluded(tile, directededge))
+        if (tc->IsExcluded(tile, directededge)) {
           continue;
+        }
 
         // Look up the next departure along this edge
         const TransitDeparture* departure = tile->GetNextDeparture(
@@ -378,8 +384,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
               if (localtime + 30 > departure->departure_time()) {
                 departure = tile->GetNextDeparture(directededge->lineid(), localtime + 30, day, dow,
                                                    date_before_tile, wheelchair, bicycle);
-                if (!departure)
+                if (!departure) {
                   continue;
+                }
               }
             }
 
@@ -390,8 +397,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
             if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
               // TODO - create a configurable operator change penalty
               newcost.cost += 300;
-            } else
+            } else {
               newcost.cost += transfer_cost.cost;
+            }
           }
 
           // Change mode and costing to transit. Add edge cost.
@@ -432,8 +440,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
           // without getting on transit
           if (nodeinfo->type() == NodeType::kTransitEgress &&
               pred.use() == Use::kTransitConnection &&
-              directededge->use() == Use::kTransitConnection)
+              directededge->use() == Use::kTransitConnection) {
             continue;
+          }
         }
       }
 

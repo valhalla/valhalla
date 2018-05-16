@@ -249,8 +249,9 @@ int main(int argc, char* argv[]) {
   factory.Register("transit", CreateTransitCost);
 
   // Figure out the route type
-  for (auto& c : routetype)
+  for (auto& c : routetype) {
     c = std::tolower(c);
+  }
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
@@ -301,8 +302,9 @@ int main(int argc, char* argv[]) {
   }
   // TODO: build real request from options above and call the functions like actor_t does
   valhalla::valhalla_request_t request;
-  for (const auto& pl : path_location)
+  for (const auto& pl : path_location) {
     valhalla::baldr::PathLocation::toPBF(pl, request.options.mutable_locations()->Add(), reader);
+  }
 
   // Compute the isotile
   auto t1 = std::chrono::high_resolution_clock::now();
@@ -339,8 +341,8 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-  LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" +
-           " size= " + std::to_string(iso_data.size()));
+  LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" + " size= " +
+           std::to_string(iso_data.size()));
   LOG_INFO("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) +
            " max = " + std::to_string(max_row));
   LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) +

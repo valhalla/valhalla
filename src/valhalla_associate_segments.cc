@@ -350,8 +350,9 @@ inline vm::PointLL coord_for_lrp(const pbf::Segment::LocationReference& lrp) {
 vb::Location location_for_lrp(const pbf::Segment::LocationReference& lrp) {
   vb::Location location({static_cast<double>(lrp.coord().lng()) * 0.0000001,
                          static_cast<double>(lrp.coord().lat()) * 0.0000001});
-  if (lrp.has_bear())
+  if (lrp.has_bear()) {
     location.heading_ = lrp.bear();
+  }
   return location;
 }
 
@@ -367,8 +368,9 @@ vo::Location loki_search_single(const vb::Location& loc, vb::GraphReader& reader
   locs.back().radius_ = kEdgeDistanceTolerance;
   vb::PathLocation path_loc(loc);
   auto results = vl::Search(locs, reader, edge_filter, vl::PassThroughNodeFilter);
-  if (results.size())
+  if (results.size()) {
     path_loc = std::move(results.begin()->second);
+  }
 
   vo::Location l;
   vb::PathLocation::toPBF(path_loc, &l, reader);
@@ -463,14 +465,16 @@ vb::GraphId next_edge(const GraphId& edge_id,
                       vb::GraphReader& reader,
                       const vb::GraphTile*& tile,
                       uint32_t& edge_length) {
-  if (tile->id() != edge_id.Tile_Base())
+  if (tile->id() != edge_id.Tile_Base()) {
     tile = reader.GetGraphTile(edge_id);
+  }
   const auto* edge = tile->directededge(edge_id);
 
   // Get the end node (need a new tile if the edge leaves the current tile)
   GraphId end_node = edge->endnode();
-  if (edge->leaves_tile())
+  if (edge->leaves_tile()) {
     tile = reader.GetGraphTile(end_node);
+  }
   const auto* node = tile->node(end_node);
 
   // Get child edges of this node
@@ -480,9 +484,9 @@ vb::GraphId next_edge(const GraphId& edge_id,
     // Skip U-turns and edges that are not allowed
     if (i != edge->opp_index() && allow_edge_pred(child_edge)) {
       // Return invalid GraphId if more than 1 candidate edge exists
-      if (next.Is_Valid())
+      if (next.Is_Valid()) {
         return {};
-      else {
+      } else {
         next = {end_node.tileid(), end_node.level(), node->edge_index() + i};
         edge_length = child_edge->length();
       }
@@ -671,8 +675,8 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
 
   // Fall back to A* shortest path to form the path edges
   if (segment.lrps(0).at_node() && segment.lrps(size - 1).at_node()) {
-    LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) +
-              " value = " + std::to_string(segment_id.value));
+    LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) + " value = " +
+              std::to_string(segment_id.value));
   } else {
     LOG_DEBUG("Fall back to A* - LRPs are not at nodes: " + std::to_string(segment_id) +
               " value = " + std::to_string(segment_id.value));
@@ -768,11 +772,11 @@ bool edge_association::match_segment(vb::GraphId segment_id,
   if (edges.empty()) {
     size_t n = segment.lrps_size();
     if (segment.lrps(0).at_node() && segment.lrps(n - 1).at_node()) {
-      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) +
-                " value = " + std::to_string(segment_id.value));
+      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) + " value = " +
+                std::to_string(segment_id.value));
     } else {
-      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) +
-                " value = " + std::to_string(segment_id.value));
+      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) + " value = " +
+                std::to_string(segment_id.value));
     }
     return false;
   }
@@ -788,13 +792,15 @@ bool edge_association::match_segment(vb::GraphId segment_id,
     // Full edge.
     if (edge.start_pct == 0.0f && edge.end_pct == 1.0f) {
       // Store the local segment and leave the non local for later
-      if (m_tile_builder->id() == edge.edgeid.Tile_Base())
+      if (m_tile_builder->id() == edge.edgeid.Tile_Base()) {
         m_tile_builder->AddTrafficSegment(edge.edgeid, assoc);
-      else
+      } else {
         m_leftover_associations.emplace_back(std::make_pair(edge.edgeid, std::move(assoc)));
+      }
     } // Add the temporary chunk information for this edge to the map
-    else
+    else {
       traffic_chunks[edge.edgeid].emplace_back(std::move(assoc));
+    }
   }
   return true;
 }
@@ -867,8 +873,9 @@ void add_local_associations(const bpt::ptree& pt,
       osmlr_tiles.pop_front();
     }
     lock.unlock();
-    if (osmlr_filename.empty())
+    if (osmlr_filename.empty()) {
       break;
+    }
 
     // get the local associations
     e.add_tile(osmlr_filename);
@@ -894,15 +901,17 @@ void add_leftover_associations(const bpt::ptree& pt,
       leftovers.erase(leftovers.begin());
     }
     lock.unlock();
-    if (associations.empty())
+    if (associations.empty()) {
       break;
+    }
 
     // Write leftovers
     vj::GraphTileBuilder tile_builder(tile_dir, associations.front().first.Tile_Base(), false);
     tile_builder.InitializeTrafficSegments();
     tile_builder.InitializeTrafficChunks();
-    for (const auto& association : associations)
+    for (const auto& association : associations) {
       tile_builder.AddTrafficSegment(association.first, association.second);
+    }
     tile_builder.UpdateTrafficSegments(false);
   }
 }
@@ -920,8 +929,9 @@ void add_chunks(const bpt::ptree& pt,
       chunks.erase(chunks.begin());
     }
     lock.unlock();
-    if (associated_chunks.empty())
+    if (associated_chunks.empty()) {
       break;
+    }
 
     // Write chunks
     vj::GraphTileBuilder tile_builder(tile_dir, associated_chunks.front().first.Tile_Base(), false);
@@ -1024,8 +1034,9 @@ int main(int argc, char** argv) {
   }
 
   // wait for it to finish
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
   LOG_INFO("Finished");
 
   // Gather statistics, chunks, and leftovers (associations in a different tile)
@@ -1040,17 +1051,21 @@ int main(int argc, char** argv) {
   for (auto& result : results) {
     auto associations = result.get_future().get();
 
-    for (const auto& x : associations.success_count())
+    for (const auto& x : associations.success_count()) {
       success_count[x.first] += x.second;
+    }
 
-    for (const auto& x : associations.failure_count())
+    for (const auto& x : associations.failure_count()) {
       failure_count[x.first] += x.second;
+    }
 
-    for (const auto& x : associations.walk_count())
+    for (const auto& x : associations.walk_count()) {
       walk_count[x.first] += x.second;
+    }
 
-    for (const auto& x : associations.path_count())
+    for (const auto& x : associations.path_count()) {
       path_count[x.first] += x.second;
+    }
 
     // Leftovers
     for (const auto& association : associations.leftovers()) {
@@ -1073,20 +1088,24 @@ int main(int argc, char** argv) {
     chunk_count += associations.chunks().size();
   }
 
-  for (const auto& x : success_count)
+  for (const auto& x : success_count) {
     LOG_INFO("Success = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
+  }
 
-  for (const auto& x : failure_count)
+  for (const auto& x : failure_count) {
     LOG_INFO("Failure = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
+  }
 
-  for (const auto& x : walk_count)
+  for (const auto& x : walk_count) {
     LOG_INFO("Walk = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
+  }
 
-  for (const auto& x : path_count)
+  for (const auto& x : path_count) {
     LOG_INFO("Path = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
+  }
 
-  LOG_INFO("Leftovers = " + std::to_string(leftover_count) +
-           " Chunks = " + std::to_string(chunk_count));
+  LOG_INFO("Leftovers = " + std::to_string(leftover_count) + " Chunks = " +
+           std::to_string(chunk_count));
 
   LOG_INFO("Associating neighbouring traffic segments with " + std::to_string(num_threads) +
            " threads");
@@ -1099,8 +1118,9 @@ int main(int argc, char** argv) {
   }
 
   // wait for it to finish
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
 
   // Write all the chunks
   LOG_INFO("Adding chunks (edge associations to multiple segments) " + std::to_string(num_threads) +
@@ -1111,8 +1131,9 @@ int main(int argc, char** argv) {
   }
 
   // wait for it to finish
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
   LOG_INFO("Finished");
 
   LOG_INFO("Finished");

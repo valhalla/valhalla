@@ -232,8 +232,9 @@ public:
    * @return GraphTile* a pointer to the graph tile
    */
   const GraphTile* GetGraphTile(const GraphId& graphid, const GraphTile*& tile) {
-    if (!tile || tile->id() != graphid.Tile_Base())
+    if (!tile || tile->id() != graphid.Tile_Base()) {
       tile = GetGraphTile(graphid);
+    }
     return tile;
   }
 
@@ -511,8 +512,9 @@ public:
    */
   EdgeInfo edgeinfo(const GraphId& edgeid, const GraphTile*& tile) {
     auto* edge = directededge(edgeid, tile);
-    if (edge == nullptr)
+    if (edge == nullptr) {
       throw std::runtime_error("Cannot find edgeinfo for edge: " + std::to_string(edgeid));
+    }
     return tile->edgeinfo(edge->edgeinfo_offset());
   }
 

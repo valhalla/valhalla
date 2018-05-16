@@ -19,10 +19,11 @@ json::ArrayPtr serialize_range_height(const std::vector<float>& ranges,
 
   for (const auto height : heights) {
     auto element = json::array({json::fp_t{*range, 0}});
-    if (height == no_data_value)
+    if (height == no_data_value) {
       element->push_back(nullptr);
-    else
+    } else {
       element->push_back({json::fp_t{height, 0}});
+    }
     array->push_back(element);
     ++range;
   }
@@ -34,10 +35,11 @@ json::ArrayPtr serialize_height(const std::vector<double>& heights, const double
 
   for (const auto height : heights) {
     // add all heights's to an array
-    if (height == no_data_value)
+    if (height == no_data_value) {
       array->push_back(nullptr);
-    else
+    } else {
       array->push_back({json::fp_t{height, 0}});
+    }
   }
 
   return array;
@@ -78,12 +80,14 @@ std::string serializeHeight(const valhalla_request_t& request,
     json = json::map({{"height", serialize_height(heights, skadi::sample::get_no_data_value())}});
   }
   // send back the shape as well
-  if (request.options.has_encoded_polyline())
+  if (request.options.has_encoded_polyline()) {
     json->emplace("encoded_polyline", request.options.encoded_polyline());
-  else
+  } else {
     json->emplace("shape", serialize_shape(request.options.shape()));
-  if (request.options.has_id())
+  }
+  if (request.options.has_id()) {
     json->emplace("id", request.options.id());
+  }
 
   std::stringstream ss;
   ss << *json;

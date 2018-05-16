@@ -35,20 +35,23 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
     const auto& edgeid = *it;
-    if (!edgeid.Is_Valid())
+    if (!edgeid.Is_Valid()) {
       continue;
+    }
 
     // Get the edge and its opposing edge. Transition edges are not
     // allowed so we do not need to check node levels.
     const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid, tile);
-    if (!opp_edgeid.Is_Valid())
+    if (!opp_edgeid.Is_Valid()) {
       continue;
+    }
     const auto opp_edge = tile->directededge(opp_edgeid);
 
     // Make sure it's the last one since we need the tile of this edge
     const auto edge = reader_.directededge(edgeid, tile);
-    if (!edge)
+    if (!edge) {
       continue;
+    }
 
     // NOTE a pointer to edgeinfo is needed here because it returns
     // an unique ptr
@@ -132,8 +135,9 @@ void IndexBin(const baldr::GraphTile& tile,
     const auto* bin_tile = edge_id.tileid() == tile.header()->graphid().tileid()
                                ? &tile
                                : reader.GetGraphTile(edge_id);
-    if (bin_tile == nullptr)
+    if (bin_tile == nullptr) {
       continue;
+    }
 
     // Get the edge shape and add to grid. Use lazy_shape to avoid allocations
     // NOTE: bins do not contain transition edges and transit connection edges

@@ -46,8 +46,9 @@ bool ComplexRestrictionBuilder::operator==(const ComplexRestrictionBuilder& othe
       end_day_dow_ != other.end_day_dow_ || end_month_ != other.end_month_ ||
       end_week_ != other.end_week_ || end_hrs_ != other.end_hrs_ || via_list_ != other.via_list_ ||
       type_ != other.type_ || modes_ != other.modes_ || dow_ != other.dow_ ||
-      begin_mins_ != other.begin_mins_ || end_mins_ != other.end_mins_)
+      begin_mins_ != other.begin_mins_ || end_mins_ != other.end_mins_) {
     return false;
+  }
 
   return true;
 }

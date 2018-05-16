@@ -38,15 +38,17 @@ tz_db_t::tz_db_t() {
 
 size_t tz_db_t::to_index(const std::string& region) const {
   auto it = std::find(regions.cbegin(), regions.cend(), region);
-  if (it == regions.cend())
+  if (it == regions.cend()) {
     return 0;
+  }
   return (it - regions.cbegin()) + 1;
 }
 
 boost::shared_ptr<boost::local_time::tz_database::time_zone_base_type>
 tz_db_t::from_index(size_t index) const {
-  if (index < 1 || index > regions.size())
+  if (index < 1 || index > regions.size()) {
     return {};
+  };
   return time_zone_from_region(regions[index - 1]);
 }
 
@@ -61,8 +63,9 @@ std::string get_testing_date_time() {
   auto tz = get_tz_db().from_index(get_tz_db().to_index("America/New_York"));
   boost::gregorian::date d = get_formatted_date(iso_date_time(tz));
 
-  while (d.day_of_week() != boost::date_time::Tuesday)
+  while (d.day_of_week() != boost::date_time::Tuesday) {
     d += boost::gregorian::days(1);
+  }
 
   return to_iso_extended_string(d) + "T08:00";
 }
@@ -78,8 +81,9 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
     std::string dt = date;
     dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
     d = boost::gregorian::from_undelimited_string(dt);
-  } else
+  } else {
     d = boost::gregorian::from_undelimited_string(date);
+  }
   return d;
 }
 
@@ -125,19 +129,22 @@ uint64_t get_service_days(boost::gregorian::date& start_date,
   boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
 
   // if our start date is more than 60 days out, reject.
-  if (start_date > (tile_header_date + boost::gregorian::days(59)))
+  if (start_date > (tile_header_date + boost::gregorian::days(59))) {
     return 0;
+  }
 
-  if (start_date <= tile_header_date && tile_header_date <= end_date)
+  if (start_date <= tile_header_date && tile_header_date <= end_date) {
     start_date = tile_header_date;
-  else if (tile_header_date > end_date) // reject.
+  } else if (tile_header_date > end_date) { // reject.
     return 0;
+  }
 
   // only support 60 days out.  (59 days and include the end_date = 60)
   boost::gregorian::date enddate = tile_header_date + boost::gregorian::days(59);
 
-  if (enddate <= end_date)
+  if (enddate <= end_date) {
     end_date = enddate;
+  }
 
   uint32_t days = 0;
   boost::gregorian::day_iterator itr(tile_header_date + boost::gregorian::days(days));
@@ -178,8 +185,9 @@ uint64_t get_service_days(boost::gregorian::date& start_date,
 
     // were we supposed to be on for this day?
     // and are we at or after the start date?
-    if ((dow_mask & dow) && (itr >= start_date))
+    if ((dow_mask & dow) && (itr >= start_date)) {
       bit_set |= static_cast<uint64_t>(1) << x;
+    }
 
     ++itr;
     ++x;
@@ -197,8 +205,9 @@ uint64_t add_service_day(const uint64_t& days,
   boost::gregorian::date start_date = pivot_date_ + boost::gregorian::days(tile_date);
   boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
 
-  if (enddate > end_date)
+  if (enddate > end_date) {
     enddate = end_date;
+  }
 
   if (start_date <= added_date && added_date <= enddate) {
     boost::gregorian::date_period range(start_date, added_date);
@@ -218,8 +227,9 @@ uint64_t remove_service_day(const uint64_t& days,
   boost::gregorian::date start_date = pivot_date_ + boost::gregorian::days(tile_date);
   boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
 
-  if (enddate > end_date)
+  if (enddate > end_date) {
     enddate = end_date;
+  }
 
   if (start_date <= removed_date && removed_date <= enddate) {
     boost::gregorian::date_period range(start_date, removed_date);
@@ -250,8 +260,9 @@ bool is_service_available(const uint64_t days,
 // Get the number of days that have elapsed from the pivot date for the inputed date.
 // date_time is in the format of 20150516 or 2015-05-06T08:00
 uint32_t days_from_pivot_date(const boost::gregorian::date& date_time) {
-  if (date_time <= pivot_date_)
+  if (date_time <= pivot_date_) {
     return 0;
+  }
   boost::gregorian::date_period range(pivot_date_, date_time);
   return static_cast<uint32_t>(range.length().days());
 }
@@ -263,8 +274,9 @@ std::string iso_date_time(const uint8_t dow_mask,
 
   std::string iso_date_time;
   std::stringstream ss("");
-  if (time.empty() || time.find(":") == std::string::npos || !time_zone)
+  if (time.empty() || time.find(":") == std::string::npos || !time_zone) {
     return iso_date_time;
+  }
 
   uint8_t dow;
   switch (dow_mask) {
@@ -316,11 +328,13 @@ std::string iso_date_time(const uint8_t dow_mask,
     // will today work?
     if (date.day_of_week().as_enum() == dow) {
       // is the desired time in the past?
-      if (desired_tod < current_tod)
+      if (desired_tod < current_tod) {
         date += boost::gregorian::days(7);
+      }
     } else {
-      while (date.day_of_week().as_enum() != dow)
+      while (date.day_of_week().as_enum() != dow) {
         date += boost::gregorian::days(1);
+      }
     }
     iso_date_time = to_iso_extended_string(date) + "T" + time;
   } catch (std::exception& e) {}
@@ -330,8 +344,9 @@ std::string iso_date_time(const uint8_t dow_mask,
 // Get the current iso date and time.
 std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone) {
   std::string iso_date_time;
-  if (!time_zone)
+  if (!time_zone) {
     return iso_date_time;
+  }
 
   try {
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
@@ -345,8 +360,9 @@ std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone) {
     std::string time = ss_time.str();
 
     std::size_t found = time.find_last_of(":"); // remove seconds.
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       time = time.substr(0, found);
+    }
 
     iso_date_time = to_iso_extended_string(date) + "T" + time;
   } catch (std::exception& e) {}
@@ -356,8 +372,9 @@ std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone) {
 // Get the seconds since epoch based on timezone.
 uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone) {
 
-  if (!time_zone)
+  if (!time_zone) {
     return 0;
+  }
 
   try {
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
@@ -375,8 +392,9 @@ uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone) 
 // Get the seconds since epoch time is already adjusted based on TZ
 uint64_t seconds_since_epoch(const std::string& date_time,
                              const boost::local_time::time_zone_ptr& time_zone) {
-  if (date_time.empty())
+  if (date_time.empty()) {
     return 0;
+  }
 
   try {
     boost::gregorian::date date;
@@ -420,8 +438,9 @@ void timezone_diff(const bool is_depart_at,
                    const boost::local_time::time_zone_ptr& origin_tz,
                    const boost::local_time::time_zone_ptr& dest_tz) {
 
-  if ((origin_tz == dest_tz) || (seconds == 0) || (!origin_tz || !dest_tz))
+  if ((origin_tz == dest_tz) || (seconds == 0) || (!origin_tz || !dest_tz)) {
     return;
+  }
 
   try {
     std::string tz_string;
@@ -448,16 +467,19 @@ void timezone_diff(const bool is_depart_at,
 
           if (in_range) {
             // starts and ends on the same day.
-            if (o_date == d_date)
+            if (o_date == d_date) {
               in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <=
                          dest_date_time.local_time().time_of_day();
+            }
           }
-        } else if (dst_date == d_date)
+        } else if (dst_date == d_date) {
           in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <=
                      dest_date_time.local_time().time_of_day();
+        }
       }
-      if (in_range)
+      if (in_range) {
         dest_date_time -= dest_tz->dst_offset();
+      }
     }
 
     if (!is_depart_at) {
@@ -472,29 +494,33 @@ void timezone_diff(const bool is_depart_at,
 
           if (in_range) {
             // starts and ends on the same day.
-            if (o_date == d_date)
+            if (o_date == d_date) {
               in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() >
                          dest_date_time.local_time().time_of_day();
+            }
           }
-        } else if (dst_date == d_date)
+        } else if (dst_date == d_date) {
           in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() >
                      dest_date_time.local_time().time_of_day();
+        }
       }
 
-      if (in_range)
+      if (in_range) {
         origin_date_time -= origin_tz->dst_offset();
+      }
     }
 
     origin_pt = origin_date_time.local_time();
     dest_pt = dest_date_time.local_time();
 
     boost::posix_time::time_duration td = origin_pt - dest_pt;
-    if (origin_tz->base_utc_offset() < dest_tz->base_utc_offset())
+    if (origin_tz->base_utc_offset() < dest_tz->base_utc_offset()) {
       seconds += abs(td.total_seconds());
-    else {
+    } else {
       // should never happen
-      if (seconds - abs(td.total_seconds()) < 0)
+      if (seconds - abs(td.total_seconds()) < 0) {
         return;
+      }
       seconds -= abs(td.total_seconds());
     }
   } catch (std::exception& e) {}
@@ -503,8 +529,9 @@ void timezone_diff(const bool is_depart_at,
 std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz) {
 
   std::string iso_date;
-  if (seconds == 0 || !tz)
+  if (seconds == 0 || !tz) {
     return iso_date;
+  }
 
   try {
     std::string tz_string;
@@ -519,25 +546,29 @@ std::string seconds_to_date(const uint64_t seconds, const boost::local_time::tim
     std::string time = ss_time.str();
 
     std::size_t found = time.find_last_of(":"); // remove seconds.
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       time = time.substr(0, found);
+    }
 
     ss_time.str("");
-    if (date_time.is_dst())
+    if (date_time.is_dst()) {
       ss_time << tz->dst_offset() + tz->base_utc_offset();
-    else
+    } else {
       ss_time << tz->base_utc_offset();
+    }
 
     // positive tz
     if (ss_time.str().find("+") == std::string::npos &&
-        ss_time.str().find("-") == std::string::npos)
+        ss_time.str().find("-") == std::string::npos) {
       iso_date = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
-    else
+    } else {
       iso_date = to_iso_extended_string(date) + "T" + time + ss_time.str();
+    }
 
     found = iso_date.find_last_of(":"); // remove seconds.
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       iso_date = iso_date.substr(0, found);
+    }
 
   } catch (std::exception& e) {}
   return iso_date;
@@ -555,8 +586,9 @@ void seconds_to_date(const bool is_depart_at,
   iso_origin = "";
   iso_dest = "";
 
-  if (!origin_tz || !dest_tz)
+  if (!origin_tz || !dest_tz) {
     return;
+  }
 
   try {
     std::string tz_string;
@@ -583,16 +615,19 @@ void seconds_to_date(const bool is_depart_at,
 
           if (in_range) {
             // starts and ends on the same day.
-            if (o_date == d_date)
+            if (o_date == d_date) {
               in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <=
                          dest_date_time.local_time().time_of_day();
+            }
           }
-        } else if (dst_date == d_date)
+        } else if (dst_date == d_date) {
           in_range = dest_tz->dst_local_end_time(d_date.year()).time_of_day() <=
                      dest_date_time.local_time().time_of_day();
+        }
       }
-      if (in_range)
+      if (in_range) {
         dest_date_time -= dest_tz->dst_offset();
+      }
     }
 
     if (!is_depart_at) {
@@ -607,17 +642,20 @@ void seconds_to_date(const bool is_depart_at,
 
           if (in_range) {
             // starts and ends on the same day.
-            if (o_date == d_date)
+            if (o_date == d_date) {
               in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() >
                          dest_date_time.local_time().time_of_day();
+            }
           }
-        } else if (dst_date == d_date)
+        } else if (dst_date == d_date) {
           in_range = origin_tz->dst_local_end_time(o_date.year()).time_of_day() >
                      dest_date_time.local_time().time_of_day();
+        }
       }
 
-      if (in_range)
+      if (in_range) {
         origin_date_time -= origin_tz->dst_offset();
+      }
     }
 
     origin_pt = origin_date_time.local_time();
@@ -627,25 +665,29 @@ void seconds_to_date(const bool is_depart_at,
     std::string time = ss_time.str();
 
     std::size_t found = time.find_last_of(":"); // remove seconds.
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       time = time.substr(0, found);
+    }
 
     ss_time.str("");
-    if (origin_date_time.is_dst())
+    if (origin_date_time.is_dst()) {
       ss_time << origin_tz->dst_offset() + origin_tz->base_utc_offset();
-    else
+    } else {
       ss_time << origin_tz->base_utc_offset();
+    }
 
     // positive tz
     if (ss_time.str().find("+") == std::string::npos &&
-        ss_time.str().find("-") == std::string::npos)
+        ss_time.str().find("-") == std::string::npos) {
       iso_origin = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
-    else
+    } else {
       iso_origin = to_iso_extended_string(date) + "T" + time + ss_time.str();
+    }
 
     found = iso_origin.find_last_of(":"); // remove seconds.
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       iso_origin = iso_origin.substr(0, found);
+    }
 
     dest_pt = dest_date_time.local_time();
     date = dest_pt.date();
@@ -654,25 +696,29 @@ void seconds_to_date(const bool is_depart_at,
     time = ss_time.str();
 
     found = time.find_last_of(":"); // remove seconds.
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       time = time.substr(0, found);
+    }
 
     ss_time.str("");
-    if (dest_date_time.is_dst())
+    if (dest_date_time.is_dst()) {
       ss_time << dest_tz->dst_offset() + dest_tz->base_utc_offset();
-    else
+    } else {
       ss_time << dest_tz->base_utc_offset();
+    }
 
     // positive tz
     if (ss_time.str().find("+") == std::string::npos &&
-        ss_time.str().find("-") == std::string::npos)
+        ss_time.str().find("-") == std::string::npos) {
       iso_dest = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
-    else
+    } else {
       iso_dest = to_iso_extended_string(date) + "T" + time + ss_time.str();
+    }
 
     found = iso_dest.find_last_of(":"); // remove seconds.
-    if (found != std::string::npos)
+    if (found != std::string::npos) {
       iso_dest = iso_dest.substr(0, found);
+    }
 
   } catch (std::exception& e) {}
 }
@@ -683,8 +729,9 @@ uint32_t day_of_week_mask(const std::string& date_time) {
   boost::gregorian::date date;
   date = get_formatted_date(date_time);
 
-  if (date < pivot_date_)
+  if (date < pivot_date_) {
     return kDOWNone;
+  }
 
   boost::gregorian::greg_weekday wd = date.day_of_week();
 
@@ -723,10 +770,11 @@ uint32_t seconds_from_midnight(const std::string& date_time) {
 
   boost::posix_time::time_duration td;
   std::size_t found = date_time.find("T"); // YYYY-MM-DDTHH:MM
-  if (found != std::string::npos)
+  if (found != std::string::npos) {
     td = boost::posix_time::duration_from_string(date_time.substr(found + 1));
-  else
+  } else {
     td = boost::posix_time::duration_from_string(date_time);
+  }
 
   return static_cast<uint32_t>(td.total_seconds());
 }
@@ -755,8 +803,9 @@ std::string get_duration(const std::string& date_time,
     date = boost::gregorian::from_undelimited_string(date_time);
   }
 
-  if (date < pivot_date_)
+  if (date < pivot_date_) {
     return formatted_date_time;
+  }
 
   boost::posix_time::ptime end = start + boost::posix_time::seconds(seconds);
   formatted_date_time = boost::posix_time::to_iso_extended_string(end);
@@ -764,8 +813,9 @@ std::string get_duration(const std::string& date_time,
   boost::local_time::local_date_time dt(end, tz);
 
   std::size_t found = formatted_date_time.find_last_of(":"); // remove seconds.
-  if (found != std::string::npos)
+  if (found != std::string::npos) {
     formatted_date_time = formatted_date_time.substr(0, found);
+  }
 
   std::stringstream ss;
   std::string tz_abbrev;
@@ -790,8 +840,9 @@ std::string get_duration(const std::string& date_time,
   formatted_date_time += ss.str();
 
   found = formatted_date_time.find_last_of(":"); // remove seconds.
-  if (found != std::string::npos)
+  if (found != std::string::npos) {
     formatted_date_time = formatted_date_time.substr(0, found);
+  }
 
   formatted_date_time += " " + tz_abbrev;
 
@@ -804,12 +855,14 @@ bool is_iso_local(const std::string& date_time) {
   std::stringstream ss("");
   bool is_ok = true;
 
-  if (date_time.size() != 16) // YYYY-MM-DDTHH:MM
+  if (date_time.size() != 16) { // YYYY-MM-DDTHH:MM
     return false;
+  }
 
   if (date_time.at(4) != '-' || date_time.at(7) != '-' || date_time.at(10) != 'T' ||
-      date_time.at(13) != ':')
+      date_time.at(13) != ':') {
     return false;
+  }
 
   try {
     boost::local_time::local_time_input_facet* input_facet =
@@ -826,8 +879,9 @@ bool is_iso_local(const std::string& date_time) {
     uint32_t hour = std::stoi(time.substr(0, 2));
     uint32_t min = std::stoi(time.substr(3));
 
-    if (hour > 23 || min > 59)
+    if (hour > 23 || min > 59) {
       return false;
+    }
 
   } catch (std::exception& e) { return false; }
   return is_ok;
@@ -903,10 +957,12 @@ bool is_restricted(const bool type,
     uint8_t b_week = begin_week;
     uint8_t e_week = end_week;
 
-    if (type == kNthDow && begin_week && !begin_day_dow && !begin_month) // Su[-1]
+    if (type == kNthDow && begin_week && !begin_day_dow && !begin_month) { // Su[-1]
       b_month = d.month().as_enum();
-    if (type == kNthDow && end_week && !end_day_dow && !end_month) // Su[-1]
+    }
+    if (type == kNthDow && end_week && !end_day_dow && !end_month) { // Su[-1]
       e_month = d.month().as_enum();
+    }
 
     if (type == kNthDow && begin_week && !begin_day_dow && !begin_month && !end_week &&
         !end_day_dow && !end_month) { // only Su[-1] set in begin.
@@ -940,13 +996,15 @@ bool is_restricted(const bool type,
 
       uint32_t e_year = d.year(), b_year = d.year();
       if (b_month == e_month) {
-        if (b_day_dow > e_day_dow) // Mar 15 - Mar 1
+        if (b_day_dow > e_day_dow) { // Mar 15 - Mar 1
           e_year = d.year() + 1;
+        }
       } else if (b_month > e_month) { // Oct 10 - Mar 3
-        if (b_month > d.month().as_enum())
+        if (b_month > d.month().as_enum()) {
           b_year = d.year() - 1;
-        else
+        } else {
           e_year = d.year() + 1;
+        }
       }
 
       begin_date = boost::gregorian::date(b_year, b_month, b_day_dow);
@@ -958,13 +1016,15 @@ bool is_restricted(const bool type,
 
       uint32_t e_year = d.year(), b_year = d.year();
       if (b_month == e_month) {
-        if (b_day_dow > e_day_dow) // Mar 15 - Mar 1
+        if (b_day_dow > e_day_dow) { // Mar 15 - Mar 1
           e_year = d.year() + 1;
+        }
       } else if (b_month > e_month) { // Oct 10 - Mar 3
-        if (b_month > d.month().as_enum())
+        if (b_month > d.month().as_enum()) {
           b_year = d.year() - 1;
-        else
+        } else {
           e_year = d.year() + 1;
+        }
       }
 
       if (b_week && b_week <= 5) { // kNthDow
@@ -990,10 +1050,11 @@ bool is_restricted(const bool type,
         b_td = boost::posix_time::hours(begin_hrs) + boost::posix_time::minutes(begin_mins);
         e_td = boost::posix_time::hours(end_hrs) + boost::posix_time::minutes(end_mins);
 
-        if (begin_hrs > end_hrs) // 19:00 - 06:00
+        if (begin_hrs > end_hrs) { // 19:00 - 06:00
           dt_in_range = !(e_td <= td && td <= b_td);
-        else
+        } else {
           dt_in_range = (b_td <= td && td <= e_td);
+        }
       }
       return (dow_in_range && dt_in_range);
     }
@@ -1011,10 +1072,11 @@ bool is_restricted(const bool type,
 
     bool time_in_range = false;
 
-    if (begin_hrs > end_hrs) // 19:00 - 06:00
+    if (begin_hrs > end_hrs) { // 19:00 - 06:00
       time_in_range = !(e_td <= td && td <= b_td);
-    else
+    } else {
       time_in_range = (b_td <= td && td <= e_td);
+    }
 
     dt_in_range = (dt_in_range && time_in_range);
   } catch (std::exception& e) {}
@@ -1028,26 +1090,27 @@ uint8_t get_dow_mask(const std::string& dow) {
   std::transform(str.begin(), str.end(), str.begin(), ::toupper);
   str.erase(boost::remove_if(str, boost::is_any_of(":")), str.end());
 
-  if (str == "SUNDAY" || str == "SUN" || str == "SU")
+  if (str == "SUNDAY" || str == "SUN" || str == "SU") {
     return kSunday;
 
-  else if (str == "MONDAY" || str == "MON" || str == "MO")
+  } else if (str == "MONDAY" || str == "MON" || str == "MO") {
     return kMonday;
 
-  else if (str == "TUESDAY" || str == "TUES" || str == "TUE" || str == "TU")
+  } else if (str == "TUESDAY" || str == "TUES" || str == "TUE" || str == "TU") {
     return kTuesday;
 
-  else if (str == "WEDNESDAY" || str == "WEDS" || str == "WED" || str == "WE")
+  } else if (str == "WEDNESDAY" || str == "WEDS" || str == "WED" || str == "WE") {
     return kWednesday;
 
-  else if (str == "THURSDAY" || str == "THURS" || str == "THUR" || str == "TH")
+  } else if (str == "THURSDAY" || str == "THURS" || str == "THUR" || str == "TH") {
     return kThursday;
 
-  else if (str == "FRIDAY" || str == "FRI" || str == "FR")
+  } else if (str == "FRIDAY" || str == "FRI" || str == "FR") {
     return kFriday;
 
-  else if (str == "SATURDAY" || str == "SAT" || str == "SA")
+  } else if (str == "SATURDAY" || str == "SAT" || str == "SA") {
     return kSaturday;
+  }
   return kDOWNone;
 }
 
@@ -1058,26 +1121,27 @@ DOW get_dow(const std::string& dow) {
   std::transform(str.begin(), str.end(), str.begin(), ::toupper);
   str.erase(boost::remove_if(str, boost::is_any_of(":")), str.end());
 
-  if (str == "SUNDAY" || str == "SUN" || str == "SU")
+  if (str == "SUNDAY" || str == "SUN" || str == "SU") {
     return DOW::kSunday;
 
-  else if (str == "MONDAY" || str == "MON" || str == "MO")
+  } else if (str == "MONDAY" || str == "MON" || str == "MO") {
     return DOW::kMonday;
 
-  else if (str == "TUESDAY" || str == "TUES" || str == "TUE" || str == "TU")
+  } else if (str == "TUESDAY" || str == "TUES" || str == "TUE" || str == "TU") {
     return DOW::kTuesday;
 
-  else if (str == "WEDNESDAY" || str == "WEDS" || str == "WED" || str == "WE")
+  } else if (str == "WEDNESDAY" || str == "WEDS" || str == "WED" || str == "WE") {
     return DOW::kWednesday;
 
-  else if (str == "THURSDAY" || str == "THURS" || str == "THUR" || str == "TH")
+  } else if (str == "THURSDAY" || str == "THURS" || str == "THUR" || str == "TH") {
     return DOW::kThursday;
 
-  else if (str == "FRIDAY" || str == "FRI" || str == "FR")
+  } else if (str == "FRIDAY" || str == "FRI" || str == "FR") {
     return DOW::kFriday;
 
-  else if (str == "SATURDAY" || str == "SAT" || str == "SA")
+  } else if (str == "SATURDAY" || str == "SAT" || str == "SA") {
     return DOW::kSaturday;
+  }
   return DOW::kNone;
 }
 
@@ -1088,41 +1152,42 @@ baldr::MONTH get_month(const std::string& month) {
   std::transform(str.begin(), str.end(), str.begin(), ::toupper);
   str.erase(boost::remove_if(str, boost::is_any_of(":")), str.end());
 
-  if (str == "JANUARY" || str == "JAN")
+  if (str == "JANUARY" || str == "JAN") {
     return MONTH::kJan;
 
-  else if (str == "FEBRUARY" || str == "FEB")
+  } else if (str == "FEBRUARY" || str == "FEB") {
     return MONTH::kFeb;
 
-  else if (str == "MARCH" || str == "MAR")
+  } else if (str == "MARCH" || str == "MAR") {
     return MONTH::kMar;
 
-  else if (str == "APRIL" || str == "APR")
+  } else if (str == "APRIL" || str == "APR") {
     return MONTH::kApr;
 
-  else if (str == "MAY")
+  } else if (str == "MAY") {
     return MONTH::kMay;
 
-  else if (str == "JUNE" || str == "JUN")
+  } else if (str == "JUNE" || str == "JUN") {
     return MONTH::kJun;
 
-  else if (str == "JULY" || str == "JUL")
+  } else if (str == "JULY" || str == "JUL") {
     return MONTH::kJul;
 
-  else if (str == "AUGUST" || str == "AUG")
+  } else if (str == "AUGUST" || str == "AUG") {
     return MONTH::kAug;
 
-  else if (str == "SEPTEMBER" || str == "SEP" || str == "SEPT")
+  } else if (str == "SEPTEMBER" || str == "SEP" || str == "SEPT") {
     return MONTH::kSep;
 
-  else if (str == "OCTOBER" || str == "OCT")
+  } else if (str == "OCTOBER" || str == "OCT") {
     return MONTH::kOct;
 
-  else if (str == "NOVEMBER" || str == "NOV")
+  } else if (str == "NOVEMBER" || str == "NOV") {
     return MONTH::kNov;
 
-  else if (str == "DECEMBER" || str == "DEC")
+  } else if (str == "DECEMBER" || str == "DEC") {
     return MONTH::kDec;
+  }
   return MONTH::kNone;
 }
 
@@ -1158,8 +1223,10 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     boost::algorithm::trim(condition);
 
     // Holidays and school hours skip for now
-    if (condition.size() >= 2 && (condition.substr(0, 2) == "PH" || condition.substr(0, 2) == "SH"))
+    if (condition.size() >= 2 &&
+        (condition.substr(0, 2) == "PH" || condition.substr(0, 2) == "SH")) {
       return time_domains;
+    }
 
     // Dec Su[-1]-Mar 3
     re::regex regex = re::regex(
@@ -1263,8 +1330,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
         // is this data looking good enough to try to process?
         if (times.size()) {
 
-        } else
+        } else {
           return time_domains;
+        }
 
         // multiple times are saved as multiple restrictions
         for (const auto& t : times) {
@@ -1276,8 +1344,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
             // process the hour on
             std::size_t found = on_off.at(0).find(":");
-            if (found == std::string::npos)
+            if (found == std::string::npos) {
               return time_domains;
+            }
 
             std::stringstream stream(on_off.at(0));
             uint32_t hour, min;
@@ -1291,8 +1360,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
             // process the hour off
             found = on_off.at(1).find(":");
-            if (found == std::string::npos)
+            if (found == std::string::npos) {
               return time_domains;
+            }
 
             stream.str("");
             stream.clear();
@@ -1326,9 +1396,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
       bool is_nth_week = false;
       bool ends_nth_week = false;
 
-      if (mdt.find(',') != std::string::npos)
+      if (mdt.find(',') != std::string::npos) {
         months_dow = GetTokens(mdt, ',');
-      else if (mdt.find('-') != std::string::npos) {
+      } else if (mdt.find('-') != std::string::npos) {
         months_dow = GetTokens(mdt, '-');
         is_range = true;
 
@@ -1363,8 +1433,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
       } else if (mdt.find('#') != std::string::npos) { // May#15
         is_date = true;
         months_dow = GetTokens(mdt, '#');
-      } else
+      } else {
         months_dow.push_back(mdt); // just one day: Th or month
+      }
 
       // dealing with months?
       if (get_month(months_dow.at(0)) != MONTH::kNone) {
@@ -1426,8 +1497,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
                 timedomain.set_begin_month(static_cast<uint8_t>(get_month(md)));
                 // assume no range.  Dec Su[-1] Su-Sa 15:00-17:00 starts on the last week
                 // in Dec and ends in the last week in Dec
-                if (!is_range)
+                if (!is_range) {
                   timedomain.set_end_month(timedomain.begin_month());
+                }
               } else {
                 timedomain.set_end_month(static_cast<uint8_t>(get_month(md)));
 
@@ -1437,17 +1509,19 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
                   if (months_dow.at(months_dow.size() - 1).find('[') == std::string::npos) {
                     timedomain.set_end_day_dow(std::stoi(months_dow.at(months_dow.size() - 1)));
                     break;
-                  } else
+                  } else {
                     ends_nth_week = true;
+                  }
                 }
               }
 
             } else if (get_dow(md) != DOW::kNone) {
 
-              if (timedomain.begin_day_dow() == 0)
+              if (timedomain.begin_day_dow() == 0) {
                 timedomain.set_begin_day_dow(static_cast<uint8_t>(get_dow(md)));
-              else
+              } else {
                 timedomain.set_end_day_dow(static_cast<uint8_t>(get_dow(md)));
+              }
 
             } else if (md.find('[') != std::string::npos && md.find(']') != std::string::npos) {
               md.erase(boost::remove_if(md, boost::is_any_of("[]")), md.end());
@@ -1456,10 +1530,12 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
                 timedomain.set_begin_week(std::stoi(md));
                 // assume no range.  Dec Su[-1] Su-Sa 15:00-17:00 starts on the last week
                 // in Dec and ends in the last week in Dec
-                if (!is_range)
+                if (!is_range) {
                   timedomain.set_end_week(timedomain.begin_week());
-              } else
+                }
+              } else {
                 timedomain.set_end_week(std::stoi(md));
+              }
             } else if (is_date && is_range && timedomain.begin_month() != 0 &&
                        timedomain.end_month() == 0) { // Mar 3-Dec Su[-1] Sat
               timedomain.set_begin_day_dow(std::stoi(md));
@@ -1472,8 +1548,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
         // Mo,We,Th,Fr
         if (!is_range) {
           // wipe out assumption that this restriction is for the entire week.
-          if (timedomain.type() == kNthDow)
+          if (timedomain.type() == kNthDow) {
             timedomain.set_dow(0);
+          }
 
           for (auto& md : months_dow) {
             timedomain.set_dow(timedomain.dow() + get_dow_mask(md));
@@ -1492,8 +1569,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           // Mo-Fr
         } else if (months_dow.size() == 2) {
           // wipe out assumption that this restriction is for the entire week.
-          if (timedomain.type() == kNthDow)
+          if (timedomain.type() == kNthDow) {
             timedomain.set_dow(0);
+          }
 
           uint8_t b_index = static_cast<uint8_t>(get_dow(months_dow.at(0)));
           uint8_t e_index = static_cast<uint8_t>(get_dow(months_dow.at(1)));
@@ -1512,8 +1590,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
             b_index++;
           }
 
-        } else
+        } else {
           return time_domains;
+        }
       } else {
 
         std::vector<std::string> on_off;
@@ -1527,16 +1606,18 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
           } else if (is_range && months_dow.size() == 2) {
             on_off.insert(std::end(on_off), std::begin(months_dow), std::end(months_dow));
-          } else
+          } else {
             continue;
+          }
 
           // do we have an hour on and hour off?
           if (on_off.size() == 2) {
 
             // process the hour on
             std::size_t found = on_off.at(0).find(":");
-            if (found == std::string::npos)
+            if (found == std::string::npos) {
               return time_domains;
+            }
 
             std::stringstream stream(on_off.at(0));
             uint32_t hour, min;
@@ -1550,8 +1631,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
             // process the hour off
             found = on_off.at(1).find(":");
-            if (found == std::string::npos)
+            if (found == std::string::npos) {
               return time_domains;
+            }
 
             stream.str("");
             stream.clear();
@@ -1571,8 +1653,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     }
 
     // no time.
-    if (time_domains.size() == 0 && timedomain.td_value())
+    if (time_domains.size() == 0 && timedomain.td_value()) {
       time_domains.push_back(timedomain.td_value());
+    }
   } catch (const std::invalid_argument& arg) {
     LOG_INFO("invalid_argument thrown for condition " + str);
   } catch (const std::out_of_range& oor) {

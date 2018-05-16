@@ -71,12 +71,13 @@ json::MapPtr to_geometry(const polygon_t& polygon) {
   for (const auto& ring : polygon) {
     auto ring_coords = json::array({});
     for (const auto& coord : ring) {
-      if (outer)
+      if (outer) {
         ring_coords->emplace_back(
             json::array({json::fp_t{coord.first, 6}, json::fp_t{coord.second, 6}}));
-      else
+      } else {
         ring_coords->emplace_front(
             json::array({json::fp_t{coord.first, 6}, json::fp_t{coord.second, 6}}));
+      }
     }
     coords->emplace_back(ring_coords);
     outer = false;
@@ -116,8 +117,9 @@ polygon_t to_boundary(const std::pair<size_t, std::unordered_set<uint32_t>>& reg
   };
   // get the neighbor tile giving -1 if no neighbor
   auto neighbor = [&tiles](int32_t tile, int side) -> int32_t {
-    if (tile == -1)
+    if (tile == -1) {
       return -1;
+    }
     auto rc = tiles.GetRowColumn(tile);
     switch (side) {
       default:
@@ -158,13 +160,15 @@ polygon_t to_boundary(const std::pair<size_t, std::unordered_set<uint32_t>>& reg
     // walk until you see the starting edge again
     do {
       // add this edges geometry
-      if (ccw)
+      if (ccw) {
         ring.push_back(coord(tile, side));
-      else
+      } else {
         ring.push_front(coord(tile, side));
+      }
       auto inserted = used[side].insert(tile);
-      if (!inserted.second)
+      if (!inserted.second) {
         throw std::logic_error("Any tile edge can only be used once as part of the geometry");
+      }
       // we need to go to the first existing neighbor tile following our winding
       // starting with the one on the other side of the current side
       auto adjc = neighbor(tile, (side + 1) % 4);
@@ -185,9 +189,11 @@ polygon_t to_boundary(const std::pair<size_t, std::unordered_set<uint32_t>>& reg
   // the smallest numbered tile has a left edge on the outer ring of the polygon
   auto start_tile = *region.second.cbegin();
   int start_side = 0;
-  for (auto tile : region.second)
-    if (tile < start_tile)
+  for (auto tile : region.second) {
+    if (tile < start_tile) {
       start_tile = tile;
+    }
+  }
 
   // trace the outer
   trace(start_tile, start_side, true);
@@ -199,15 +205,17 @@ polygon_t to_boundary(const std::pair<size_t, std::unordered_set<uint32_t>>& reg
       if (!member(neighbor(start_tile, start_side)) &&
           used[start_side].find(start_tile) == used[start_side].cend()) {
         // build the inner ring
-        if (start_side != -1)
+        if (start_side != -1) {
           trace(start_tile, start_side, false);
+        }
       }
     }
   }
 
   // close all the rings
-  for (auto& ring : polygon)
+  for (auto& ring : polygon) {
     ring.push_back(ring.front());
+  }
 
   // give it back
   return polygon;
@@ -232,20 +240,23 @@ connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt) {
   // All tiles have color 0 (not connected), go through and connect
   // (build the ColorMap). Transit level uses local hierarchy tiles
   for (auto& color : colors) {
-    if (color.first == transit_level)
+    if (color.first == transit_level) {
       TileHierarchy::levels().rbegin()->second.tiles.ColorMap(color.second);
-    else
+    } else {
       TileHierarchy::levels().find(color.first)->second.tiles.ColorMap(color.second);
+    }
   }
 }
 
 size_t connectivity_map_t::get_color(const GraphId& id) const {
   auto level = colors.find(id.level());
-  if (level == colors.cend())
+  if (level == colors.cend()) {
     return 0;
+  }
   auto color = level->second.find(id.tileid());
-  if (color == level->second.cend())
+  if (color == level->second.cend()) {
     return 0;
+  }
   return color->second;
 }
 
@@ -255,8 +266,9 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_lev
 
   std::unordered_set<size_t> result;
   auto level = colors.find(hierarchy_level);
-  if (level == colors.cend())
+  if (level == colors.cend()) {
     return result;
+  }
   const auto& tiles = TileHierarchy::levels().find(hierarchy_level)->second.tiles;
   for (const auto& edge : location.edges) {
     // Get a list of tiles required within the radius of the projected point
@@ -269,8 +281,9 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_lev
     std::vector<int32_t> tilelist = tiles.TileList(bbox);
     for (auto& id : tilelist) {
       auto color = level->second.find(id);
-      if (color != level->second.cend())
+      if (color != level->second.cend()) {
         result.emplace(color->second);
+      }
     }
   }
   return result;
@@ -280,8 +293,9 @@ std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const
   // bail if we dont have the level
   uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
   auto bbox = TileHierarchy::levels().find(tile_level);
-  if (bbox == TileHierarchy::levels().cend())
+  if (bbox == TileHierarchy::levels().cend()) {
     throw std::runtime_error("hierarchy level not found");
+  }
 
   // make a region map (inverse mapping of color to lists of tiles)
   // could cache this but shouldnt need to call it much
@@ -290,18 +304,20 @@ std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const
   if (level != colors.cend()) {
     for (const auto& tile : level->second) {
       auto region = regions.find(tile.second);
-      if (region == regions.end())
+      if (region == regions.end()) {
         regions.emplace(tile.second, std::unordered_set<uint32_t>{tile.first});
-      else
+      } else {
         region->second.emplace(tile.first);
+      }
     }
   }
 
   // record the arity of each region so we can put the biggest ones first
   auto comp = [](const size_t& a, const size_t& b) { return a > b; };
   std::multimap<size_t, size_t, decltype(comp)> arities(comp);
-  for (const auto& region : regions)
+  for (const auto& region : regions) {
     arities.emplace(region.second.size(), region.first);
+  }
 
   // get the boundary of each region
   std::unordered_map<size_t, polygon_t> boundaries;
@@ -317,8 +333,9 @@ std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const
 std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level) const {
   uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
   auto bbox = TileHierarchy::levels().find(tile_level);
-  if (bbox == TileHierarchy::levels().cend())
+  if (bbox == TileHierarchy::levels().cend()) {
     throw std::runtime_error("hierarchy level not found");
+  }
 
   std::vector<size_t> tiles(bbox->second.tiles.nrows() * bbox->second.tiles.ncolumns(),
                             static_cast<uint32_t>(0));
@@ -326,8 +343,9 @@ std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level)
   if (level != colors.cend()) {
     for (size_t i = 0; i < tiles.size(); ++i) {
       const auto color = level->second.find(static_cast<uint32_t>(i));
-      if (color != level->second.cend())
+      if (color != level->second.cend()) {
         tiles[i] = color->second;
+      }
     }
   }
 

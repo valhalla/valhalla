@@ -50,8 +50,9 @@ struct curler_t {
   };
 
   curler_t() : connection(init_curl()) {
-    if (connection.get() == nullptr)
+    if (connection.get() == nullptr) {
       throw logged_error_t("Failed to created CURL connection");
+    }
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ERRORBUFFER, error),
                 "Failed to set error buffer");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FOLLOWLOCATION, 1L),
@@ -89,13 +90,15 @@ struct curler_t {
 
 protected:
   void assert_curl(CURLcode code, const std::string& msg) {
-    if (code != CURLE_OK)
+    if (code != CURLE_OK) {
       throw logged_error_t(msg + error);
+    }
   };
 
   static size_t write_callback(char* in, size_t block_size, size_t blocks, std::vector<char>* out) {
-    if (!out)
+    if (!out) {
       return static_cast<size_t>(0);
+    }
     out->insert(out->end(), in, in + (block_size * blocks));
     return block_size * blocks;
   }

@@ -290,19 +290,23 @@ size_t Navigator::FindManeuverIndex(size_t begin_search_index, size_t shape_inde
 
   // Validate the begin_search_index
   if ((route_.trip().legs(leg_index_).maneuvers_size() == 0) ||
-      (begin_search_index > destination_maneuver_index))
+      (begin_search_index > destination_maneuver_index)) {
     throw valhalla_exception_t{502};
+  };
 
   // Check for destination shape index and return destination maneuver index
-  if (IsDestinationShapeIndex(shape_index))
+  if (IsDestinationShapeIndex(shape_index)) {
     return destination_maneuver_index;
+  }
 
   // Loop over maneuvers - starting at specified maneuver index and return
   // the maneuver index that contains the specified shape index
   for (size_t i = begin_search_index; i < destination_maneuver_index; ++i) {
     const auto& maneuver = route_.trip().legs(leg_index_).maneuvers(i);
-    if ((shape_index >= maneuver.begin_shape_index()) && (shape_index < maneuver.end_shape_index()))
+    if ((shape_index >= maneuver.begin_shape_index()) &&
+        (shape_index < maneuver.end_shape_index())) {
       return i;
+    }
   }
   // If not found, throw exception
   throw valhalla_exception_t{502};
@@ -316,20 +320,24 @@ size_t Navigator::RfindManeuverIndex(size_t rbegin_search_index, size_t shape_in
   size_t destination_maneuver_index = (maneuver_count - 1);
 
   // Validate the rbegin_search_index
-  if ((maneuver_count == 0) || (rbegin_search_index > destination_maneuver_index))
+  if ((maneuver_count == 0) || (rbegin_search_index > destination_maneuver_index)) {
     throw valhalla_exception_t{502};
+  };
 
   // Check for destination shape index and rbegin search index
   // if so, return destination maneuver index
-  if (IsDestinationShapeIndex(shape_index) && (destination_maneuver_index == rbegin_search_index))
+  if (IsDestinationShapeIndex(shape_index) && (destination_maneuver_index == rbegin_search_index)) {
     return destination_maneuver_index;
+  }
 
   // Loop over maneuvers in reverse - starting at specified maneuver index
   // and return the maneuver index that contains the specified shape index
   for (size_t i = rbegin_search_index; i < maneuver_count; --i) {
     const auto& maneuver = route_.trip().legs(leg_index_).maneuvers(i);
-    if ((shape_index >= maneuver.begin_shape_index()) && (shape_index < maneuver.end_shape_index()))
+    if ((shape_index >= maneuver.begin_shape_index()) &&
+        (shape_index < maneuver.end_shape_index())) {
       return i;
+    }
   }
   // If not found, throw exception
   throw valhalla_exception_t{502};
@@ -366,18 +374,20 @@ NavigationStatus Navigator::SnapToRoute(const FixLocation& fix_location) {
 
   // Set the remaining index
   size_t remaining_index = 0;
-  if (snapped_to_shape_point || IsDestinationShapeIndex(current_shape_index_))
+  if (snapped_to_shape_point || IsDestinationShapeIndex(current_shape_index_)) {
     remaining_index = current_shape_index_;
-  else
+  } else {
     remaining_index = (current_shape_index_ + 1);
+  }
 
   // Calculate the partial length, if needed
   float partial_length = 0.0f;
   if (!snapped_to_shape_point && !IsDestinationShapeIndex(current_shape_index_)) {
     partial_length = (closest_ll.Distance(shape_.at(remaining_index)) * midgard::kKmPerMeter);
     // Convert to miles, if needed
-    if (!HasKilometerUnits())
+    if (!HasKilometerUnits()) {
       partial_length = (partial_length * midgard::kMilePerKm);
+    }
   }
 
   // Set the maneuver index and maneuver end shape index
@@ -456,10 +466,11 @@ bool Navigator::OnRouteLocationCloseToOrigin(const NavigationStatus& nav_status)
 
 float Navigator::UnitsToMeters(float units) const {
   float km_length = 0.0f;
-  if (HasKilometerUnits())
+  if (HasKilometerUnits()) {
     km_length = units;
-  else
+  } else {
     km_length = units * midgard::kKmPerMile;
+  }
 
   return (km_length * kMetersPerKm);
 }
@@ -471,15 +482,17 @@ size_t Navigator::GetWordCount(const std::string& instruction) const {
 
   while (pos != end) {
     // Skip over space, white space, and punctuation
-    while (pos != end && ((*pos == ' ') || std::isspace(*pos) || std::ispunct(*pos)))
+    while (pos != end && ((*pos == ' ') || std::isspace(*pos) || std::ispunct(*pos))) {
       ++pos;
+    }
 
     // Word found - increment
     word_count += (pos != end);
 
     // Skip over letters in word
-    while (pos != end && ((*pos != ' ') && (!std::isspace(*pos)) && (!std::ispunct(*pos))))
+    while (pos != end && ((*pos != ' ') && (!std::isspace(*pos)) && (!std::ispunct(*pos)))) {
       ++pos;
+    }
   }
   return word_count;
 }

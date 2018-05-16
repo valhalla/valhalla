@@ -57,8 +57,9 @@ std::string actor_t::route(const std::string& request_str, const std::function<v
   // serialize them out to json string
   auto bytes = tyr::serializeDirections(request, legs, directions);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return bytes;
 }
 
@@ -72,8 +73,9 @@ std::string actor_t::locate(const std::string& request_str,
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.locate(request);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return json;
 }
 
@@ -89,8 +91,9 @@ std::string actor_t::matrix(const std::string& request_str,
   // compute the matrix
   auto json = pimpl->thor_worker.matrix(request);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return json;
 }
 
@@ -110,8 +113,9 @@ std::string actor_t::optimized_route(const std::string& request_str,
   // serialize them out to json string
   auto bytes = tyr::serializeDirections(request, legs, directions);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return bytes;
 }
 
@@ -127,8 +131,9 @@ std::string actor_t::isochrone(const std::string& request_str,
   // compute the isochrones
   auto json = pimpl->thor_worker.isochrones(request);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return json;
 }
 
@@ -148,8 +153,9 @@ std::string actor_t::trace_route(const std::string& request_str,
   // serialize them out to json string
   auto bytes = tyr::serializeDirections(request, legs, directions);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return bytes;
 }
 
@@ -165,8 +171,9 @@ std::string actor_t::trace_attributes(const std::string& request_str,
   // get the path and turn it into attribution along it
   auto json = pimpl->thor_worker.trace_attributes(request);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return json;
 }
 
@@ -180,8 +187,9 @@ std::string actor_t::height(const std::string& request_str,
   // get the height at each point
   auto json = pimpl->loki_worker.height(request);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return json;
 }
 
@@ -195,8 +203,9 @@ std::string actor_t::transit_available(const std::string& request_str,
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.transit_available(request);
   // if they want you do to do the cleanup automatically
-  if (auto_cleanup)
+  if (auto_cleanup) {
     cleanup();
+  }
   return json;
 }
 

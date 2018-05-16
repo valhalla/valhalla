@@ -18,20 +18,22 @@ boost::property_tree::ptree parse_json(const std::string& json,
     boost::property_tree::read_json(stream, request);
   } catch (...) { throw std::runtime_error("Couln't parse json input"); }
 
-  if (customizable.empty())
+  if (customizable.empty()) {
     return request;
+  }
 
   auto match_options = request.get_child_optional("match_options");
-  if (!match_options)
+  if (!match_options) {
     return request;
+  }
 
   for (const auto& kv : *match_options) {
     if (customizable.find(kv.first) != customizable.end() && !kv.second.data().empty()) {
       // mode is a string
-      if (kv.first == "mode")
+      if (kv.first == "mode") {
         match_config.put<std::string>(kv.first, kv.second.data());
-      // anything else is float
-      else {
+        // anything else is float
+      } else {
         try {
           match_config.put<float>(kv.first, std::stof(kv.second.data()));
         } catch (...) {
@@ -48,8 +50,9 @@ void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
   // merging the edges that are the same into the final edges record
   for (auto edge_itr = edges.begin(); edge_itr != edges.end(); ++edge_itr) {
     auto prev = std::prev(edge_itr);
-    if (edge_itr != edges.begin() && edge_itr->edgeid == prev->edgeid)
+    if (edge_itr != edges.begin() && edge_itr->edgeid == prev->edgeid) {
       edge_itr->source = prev->source;
+    }
   }
 
   // delete duplicates that we copied to the final edge
@@ -91,16 +94,18 @@ merge_segments(const std::vector<valhalla::meili::interpolation_t>& markers,
   valhalla::baldr::GraphId edge;
   for (const auto& marker : markers) {
     // skip if its a repeat or we cant get the tile
-    if (marker.edge == edge || !reader.GetGraphTile(marker.edge, tile))
+    if (marker.edge == edge || !reader.GetGraphTile(marker.edge, tile)) {
       continue;
+    }
     // get segments for this edge
     edge = marker.edge;
     const auto* directed_edge = tile->directededge(edge);
     // if there were no segments we'll start an invalid one to serve
     // as a placeholder for the section of the path that has no ots's
     auto segments = tile->GetTrafficSegments(edge);
-    if (segments.empty())
+    if (segments.empty()) {
       segments = {valhalla::baldr::TrafficSegment{{}, 0, 1, true, true}};
+    };
     // the way id for this edge
     auto way_id = tile->edgeinfo(directed_edge->edgeinfo_offset()).wayid();
     // merge them into single entries per segment id
@@ -112,8 +117,9 @@ merge_segments(const std::vector<valhalla::meili::interpolation_t>& markers,
         merged.back()->ends_segment_ = segment.ends_segment_;
         merged.back().internal = merged.back().internal && is_internal(directed_edge);
         merged.back().turn_channel = merged.back().turn_channel && is_turn_channel(directed_edge);
-        if (merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id)
+        if (merged.back().way_ids.size() == 0 || merged.back().way_ids.back() != way_id) {
           merged.back().way_ids.push_back(way_id);
+        }
       } // new one
       else {
         merged.emplace_back(merged_traffic_segment_t{segment,
@@ -174,15 +180,17 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
 
   // Populate a measurement measurements to pass to the map matcher
   auto measurements = parse_measurements(request, default_accuracy, default_search_radius);
-  if (measurements.empty())
+  if (measurements.empty()) {
     return R"({"segments":[]})";
+  }
 
   // Create the matched path results
   auto topk_matches = matcher->OfflineMatch(measurements);
   const auto& match_results = topk_matches.front().results;
   auto& edge_segments = topk_matches.front().segments;
-  if (match_results.size() != measurements.size())
+  if (match_results.size() != measurements.size()) {
     throw std::runtime_error("Sequence size not equal to match result size.");
+  }
 
   // Get the edges associated with the entire connected trace path
   auto interpolations = interpolate_matches(match_results, edge_segments, matcher);
@@ -217,8 +225,9 @@ std::list<std::vector<interpolation_t>> TrafficSegmentMatcher::interpolate_match
     // find the end of the this block
     while (end_edge != edges.cend()) {
       if (!matcher->graphreader().AreEdgesConnectedForward(std::prev(end_edge)->edgeid,
-                                                           end_edge->edgeid))
+                                                           end_edge->edgeid)) {
         break;
+      }
       ++end_edge;
     }
 
@@ -237,11 +246,12 @@ std::list<std::vector<interpolation_t>> TrafficSegmentMatcher::interpolate_match
       // add distances for all the match points that happened on this edge
       for (; idx < matches.size(); ++idx) {
         // skip unroutable ones, we dont know what edge they were on
-        if (!matches[idx].edgeid.Is_Valid())
+        if (!matches[idx].edgeid.Is_Valid()) {
           continue;
-        // if its a valid one that doesnt match we move on
-        else if (matches[idx].edgeid != segment->edgeid)
+          // if its a valid one that doesnt match we move on
+        } else if (matches[idx].edgeid != segment->edgeid) {
           break;
+        }
         // it was the right thing we were looking for
         interpolated.emplace_back(interpolation_t{
             segment->edgeid, matches[idx].distance_along * edge_length + total_length,
@@ -264,8 +274,9 @@ std::list<std::vector<interpolation_t>> TrafficSegmentMatcher::interpolate_match
       // find the range that have values (or the ends of the range
       auto left = backfill != interpolated.begin() ? std::prev(backfill) : backfill;
       auto right = std::next(backfill);
-      for (; right != interpolated.end() && right->epoch_time == -1; ++right)
+      for (; right != interpolated.end() && right->epoch_time == -1; ++right) {
         ;
+      }
       // backfill between left and right
       while (backfill != right) {
         // if both indices are valid we interpolate
@@ -349,8 +360,9 @@ TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t
       left = std::find_if(left, markers.cend(), [&segment](const interpolation_t& mark) {
         return mark.edge == segment.begin_edge && mark.edge_distance >= segment->begin_percent_;
       });
-      if (left->edge_distance > segment->begin_percent_)
+      if (left->edge_distance > segment->begin_percent_) {
         left = std::prev(left);
+      }
 
       // move the right marker right until its adjacent to the segment end
       right = std::find_if(right, markers.cend(), [&segment](const interpolation_t& mark) {
@@ -434,8 +446,9 @@ TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t
 
       // Break out of the loop once we are past where we have interpolations
       // (e.g. for a long edge with many segments).
-      if (idx > 0 && right->epoch_time == -1)
+      if (idx > 0 && right->epoch_time == -1) {
         break;
+      }
 
       // if the right side of this was the end of this edge then at least we need to start from the
       // next edge
@@ -455,8 +468,9 @@ TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree requ
                                           float default_search_radius) {
   // check for required parameters
   auto trace_pts = request.get_child_optional("trace");
-  if (!trace_pts)
+  if (!trace_pts) {
     throw std::runtime_error("Missing required json array 'trace'.");
+  }
 
   // Populate a measurement sequence to pass to the map matcher
   std::vector<Measurement> measurements;
@@ -473,12 +487,15 @@ TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree requ
   }
 
   // not enough data
-  if (measurements.size() < 2)
+  if (measurements.size() < 2) {
     throw std::runtime_error("2 or more trace points are required.");
+  }
   // out of order data, should we reorder?
-  for (size_t i = 1; i < measurements.size(); ++i)
-    if (measurements[i - 1].epoch_time() > measurements[i].epoch_time())
+  for (size_t i = 1; i < measurements.size(); ++i) {
+    if (measurements[i - 1].epoch_time() > measurements[i].epoch_time()) {
       throw std::runtime_error("Trace points must be in chronological order.");
+    }
+  }
   // same time different place?
   auto remove_itr = std::remove_if(
       measurements.begin(), measurements.end(), [&measurements](const Measurement& m) {
@@ -502,12 +519,14 @@ TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t>& traffic_s
                           {"queue_length", static_cast<int64_t>(seg.queue_length)},
                           {"internal", static_cast<bool>(seg.internal)}});
     // some of the segments are just sections of the path with no ots's
-    if (seg.segment_id.Is_Valid())
+    if (seg.segment_id.Is_Valid()) {
       segment->emplace("segment_id", seg.segment_id.value);
+    }
 
     auto way_ids = baldr::json::array({});
-    for (auto way_id : seg.way_ids)
+    for (auto way_id : seg.way_ids) {
       way_ids->push_back(way_id);
+    }
     segment->emplace("way_ids", way_ids);
 
     segments->emplace_back(segment);

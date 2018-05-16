@@ -83,8 +83,9 @@ valhalla::baldr::json::MapPtr waypoint(const odin::Location& location,
 json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
                          bool tracepoints) {
   auto waypoints = json::array({});
-  for (const auto& location : locations)
+  for (const auto& location : locations) {
     waypoints->emplace_back(waypoint(location, tracepoints));
+  }
   return waypoints;
 }
 

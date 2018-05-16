@@ -53,23 +53,27 @@ template <class coord_t> bool OBB2<coord_t>::Overlap(const OBB2<coord_t>& b) con
 
   // A's basis vectors as separating axes
   float rb = b.extent0_ * fabs(r00) + b.extent1_ * fabs(r01);
-  if (fabs(t.x()) > (extent0_ + rb))
+  if (fabs(t.x()) > (extent0_ + rb)) {
     return false;
+  }
 
   float r10 = basis1_.Dot(b.basis0_);
   float r11 = basis1_.Dot(b.basis1_);
   rb = b.extent0_ * fabs(r10) + b.extent1_ * fabs(r11);
-  if (fabs(t.y()) > (extent1_ + rb))
+  if (fabs(t.y()) > (extent1_ + rb)) {
     return false;
+  }
 
   // B's basis vectors as separating axes
   float ra = extent0_ * fabs(r00) + extent1_ * fabs(r10);
-  if (fabs(t.x() * r00 + t.y() * r10) > (ra + b.extent0_))
+  if (fabs(t.x() * r00 + t.y() * r10) > (ra + b.extent0_)) {
     return false;
+  }
 
   ra = extent0_ * fabs(r01) + extent1_ * fabs(r11);
-  if (fabs(t.x() * r01 + t.y() * r11) > (ra + b.extent1_))
+  if (fabs(t.x() * r01 + t.y() * r11) > (ra + b.extent1_)) {
     return false;
+  }
 
   // No separating axis found, the two boxes overlap
   return true;

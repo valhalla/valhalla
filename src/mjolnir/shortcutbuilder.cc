@@ -295,8 +295,9 @@ bool CanContract(GraphReader& reader,
   std::string iso = tile->admininfo(nodeinfo->admin_index()).country_iso();
   std::string e1_iso = EndNodeIso(edge1, reader);
   std::string e2_iso = EndNodeIso(edge2, reader);
-  if (e1_iso != iso || e2_iso != iso)
+  if (e1_iso != iso || e2_iso != iso) {
     return false;
+  }
 
   // Simple check for a possible maneuver where the continuation is a turn
   // and there are other edges at the node (forward intersecting edge or a
@@ -419,8 +420,9 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
       std::list<PointLL> shape =
           valhalla::midgard::decode7<std::list<PointLL>>(edgeinfo.encoded_shape());
-      if (!directededge->forward())
+      if (!directededge->forward()) {
         std::reverse(shape.begin(), shape.end());
+      }
 
       // Get names - they apply over all edges of the shortcut
       auto names = tile->GetNames(directededge->edgeinfo_offset());

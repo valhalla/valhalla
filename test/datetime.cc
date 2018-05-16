@@ -289,8 +289,8 @@ void TryIsRestricted(const TimeDomain td, const std::string date, const bool exp
                               td.begin_day_dow(), td.end_week(), td.end_month(), td.end_day_dow(),
                               DateTime::seconds_since_epoch(date, tz), tz) != expected_value) {
 
-    throw std::runtime_error("Is Restricted " + date +
-                             " test failed.  Expected: " + std::to_string(expected_value));
+    throw std::runtime_error("Is Restricted " + date + " test failed.  Expected: " +
+                             std::to_string(expected_value));
   }
 }
 
@@ -337,9 +337,9 @@ void TryConditionalRestrictions(const std::string condition,
     res.end_hrs() << " end mins " << res.end_mins() << std::endl;*/
 
     if (res.td_value() != expected_values.at(x))
-      throw std::runtime_error("Time domain " + condition +
-                               " test failed.  Expected: " + std::to_string(expected_values.at(x)) +
-                               " but received " + std::to_string(res.td_value()));
+      throw std::runtime_error("Time domain " + condition + " test failed.  Expected: " +
+                               std::to_string(expected_values.at(x)) + " but received " +
+                               std::to_string(res.td_value()));
   }
 }
 

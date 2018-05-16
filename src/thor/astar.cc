@@ -271,8 +271,10 @@ AStarPathAlgorithm::GetBestPath(odin::Location& origin,
     // Allow this process to be aborted
     size_t current_labels = edgelabels_.size();
     if (interrupt &&
-        total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval)
+        total_labels / kInterruptIterationsInterval <
+            current_labels / kInterruptIterationsInterval) {
       (*interrupt)();
+    }
     total_labels = current_labels;
 
     // Abort if max label count is exceeded

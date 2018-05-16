@@ -39,8 +39,9 @@ using namespace valhalla::mjolnir;
 
 std::string url_encode(const std::string& unencoded) {
   char* encoded = curl_escape(unencoded.c_str(), static_cast<int>(unencoded.size()));
-  if (encoded == nullptr)
+  if (encoded == nullptr) {
     throw std::runtime_error("url encoding failed");
+  }
   std::string encoded_str(encoded);
   curl_free(encoded);
   return encoded_str;
@@ -55,8 +56,9 @@ struct logged_error_t : public std::runtime_error {
 // TODO: use curler_t and expand its interface to be more flexible
 struct pt_curler_t {
   pt_curler_t() : connection(curl_easy_init(), [](CURL* c) { curl_easy_cleanup(c); }) {
-    if (connection.get() == nullptr)
+    if (connection.get() == nullptr) {
       throw logged_error_t("Failed to created CURL connection");
+    }
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ERRORBUFFER, error),
                 "Failed to set error buffer");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FOLLOWLOCATION, 1L),
@@ -97,27 +99,31 @@ struct pt_curler_t {
             read_json(result, pt);
           } catch (...) { threw = true; }
           // has to parse and have required info
-          if (!threw && (retry_if_no.empty() || pt.get_child_optional(retry_if_no)))
+          if (!threw && (retry_if_no.empty() || pt.get_child_optional(retry_if_no))) {
             break;
+          }
           log_extra = "Unusable response ";
         }
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
       // dont log rate limit stuff its too frequent
-      if (http_code != 429 || (tries % 10) == 0)
+      if (http_code != 429 || (tries % 10) == 0) {
         LOG_WARN(log_extra + "retrying " + url);
+      }
     };
     return pt;
   }
 
 protected:
   void assert_curl(CURLcode code, const std::string& msg) {
-    if (code != CURLE_OK)
+    if (code != CURLE_OK) {
       throw logged_error_t(msg + error);
+    }
   };
   static size_t write_callback(char* in, size_t block_size, size_t blocks, std::stringstream* out) {
-    if (!out)
+    if (!out) {
       return static_cast<size_t>(0);
+    }
     out->write(in, block_size * blocks);
     return block_size * blocks;
   }
@@ -128,8 +134,9 @@ protected:
 std::string url(const std::string& path, const ptree& pt) {
   auto url = pt.get<std::string>("base_url") + path;
   auto key = pt.get_optional<std::string>("api_key");
-  if (key)
+  if (key) {
     url += "&api_key=" + *key;
+  }
   return url;
 }
 
@@ -176,14 +183,18 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
       for (const auto& coord : feature.second.get_child("geometry.coordinates").front().second) {
         auto x = coord.second.front().second.get_value<float>();
         auto y = coord.second.back().second.get_value<float>();
-        if (x < min_x)
+        if (x < min_x) {
           min_x = x;
-        if (x > max_x)
+        }
+        if (x > max_x) {
           max_x = x;
-        if (y < min_y)
+        }
+        if (y < min_y) {
           min_y = y;
-        if (y > max_y)
+        }
+        if (y > max_y) {
           max_y = y;
+        }
       }
 
       // expand the top and bottom edges of the box to account for geodesics
@@ -191,14 +202,18 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
       max_y += std::abs(max_y - PointLL(min_x, max_y).MidPoint({max_x, max_y}).second);
       auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
       auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
-      if (min_c > max_c)
+      if (min_c > max_c) {
         std::swap(min_c, max_c);
-      if (min_r > max_r)
+      }
+      if (min_r > max_r) {
         std::swap(min_r, max_r);
+      }
       // for each tile in the polygon figure out how heavy it is and keep track of it
-      for (auto i = min_c; i <= max_c; ++i)
-        for (auto j = min_r; j <= max_r; ++j)
+      for (auto i = min_c; i <= max_c; ++i) {
+        for (auto j = min_r; j <= max_r; ++j) {
           tiles.emplace(GraphId(tile_level.tiles.TileId(i, j), tile_level.level, 0));
+        }
+      }
     }
   }
   // we want slowest to build tiles first, routes query is slowest so we weight by that
@@ -240,7 +255,8 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
           tile,
           stops_total +
               10 /* + routes_total * 1000 + pairs_total*/}); // TODO: factor in stop pairs as well
-      LOG_INFO(GraphTile::FileSuffix(tile) + " should have " + std::to_string(stops_total) +  " stops "/* +
+      LOG_INFO(GraphTile::FileSuffix(tile) + " should have " + std::to_string(stops_total) +
+               " stops " /* +
           std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs"*/);
     }
   }
@@ -267,8 +283,9 @@ void get_stops(Transit_Fetch& tile,
     const auto& ll_pt = stop_pt.second.get_child("geometry_centroid.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
     auto lat = ll_pt.back().second.get_value<float>();
-    if (!filter.Contains({lon, lat}))
+    if (!filter.Contains({lon, lat})) {
       continue;
+    }
     auto* stop = tile.add_stops();
     stop->set_lon(lon);
     stop->set_lat(lat);
@@ -280,8 +297,9 @@ void get_stops(Transit_Fetch& tile,
     stop->set_graphid(stop_id);
 
     auto tz = stop_pt.second.get<std::string>("timezone", "null");
-    if (tz != "null")
+    if (tz != "null") {
       stop->set_timezone(tz);
+    }
 
     stops.emplace(stop->onestop_id(), stop_id);
     if (stops.size() == kMaxGraphId) {
@@ -301,28 +319,28 @@ void get_routes(Transit_Fetch& tile,
     set_no_null(std::string, route_pt.second, "onestop_id", "null", route->set_onestop_id);
     std::string vehicle_type = route_pt.second.get<std::string>("vehicle_type", "null");
     Transit_Fetch_VehicleType type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kRail;
-    if (vehicle_type == "tram" || vehicle_type == "tram_service")
+    if (vehicle_type == "tram" || vehicle_type == "tram_service") {
       type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kTram;
-    else if (vehicle_type == "metro")
+    } else if (vehicle_type == "metro") {
       type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kMetro;
-    else if (vehicle_type == "rail" || vehicle_type == "suburban_railway" ||
-             vehicle_type == "railway_service")
+    } else if (vehicle_type == "rail" || vehicle_type == "suburban_railway" ||
+               vehicle_type == "railway_service") {
       type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kRail;
-    else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
-             vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
-             vehicle_type == "bus_service" || vehicle_type == "shuttle_bus" ||
-             vehicle_type == "demand_and_response_bus_service" ||
-             vehicle_type == "regional_bus_service" || vehicle_type == "coach_service")
+    } else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
+               vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
+               vehicle_type == "bus_service" || vehicle_type == "shuttle_bus" ||
+               vehicle_type == "demand_and_response_bus_service" ||
+               vehicle_type == "regional_bus_service" || vehicle_type == "coach_service") {
       type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kBus;
-    else if (vehicle_type == "ferry")
+    } else if (vehicle_type == "ferry") {
       type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kFerry;
-    else if (vehicle_type == "cablecar")
+    } else if (vehicle_type == "cablecar") {
       type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kCableCar;
-    else if (vehicle_type == "gondola")
+    } else if (vehicle_type == "gondola") {
       type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kGondola;
-    else if (vehicle_type == "funicular")
+    } else if (vehicle_type == "funicular") {
       type = Transit_Fetch_VehicleType::Transit_Fetch_VehicleType_kFunicular;
-    else {
+    } else {
       LOG_ERROR("Skipping unsupported vehicle_type: " + vehicle_type + " for route " +
                 route->onestop_id());
       tile.mutable_routes()->RemoveLast();
@@ -344,14 +362,15 @@ void get_routes(Transit_Fetch& tile,
     route_text_color = (route_text_color == "null" ? "000000" : route_text_color);
 
     auto website = websites.find(route->operated_by_onestop_id());
-    if (website != websites.cend())
+    if (website != websites.cend()) {
       route->set_operated_by_website(website->second);
+    }
 
     // use short name (e.g., BART) over long name (e.g., Bay Area Rapid Transit)
     auto short_name = short_names.find(route->operated_by_onestop_id());
-    if (short_name != short_names.cend())
+    if (short_name != short_names.cend()) {
       route->set_operated_by_name(short_name->second);
-    else
+    } else
       set_no_null(std::string, route_pt.second, "operated_by_name", "null",
                   route->set_operated_by_name);
 
@@ -407,18 +426,20 @@ bool get_stop_pairs(Transit_Fetch& tile,
     // origin
     pair->set_origin_onestop_id(pair_pt.second.get<std::string>("origin_onestop_id"));
     auto origin = stops.find(pair->origin_onestop_id());
-    if (origin != stops.cend())
+    if (origin != stops.cend()) {
       pair->set_origin_graphid(origin->second);
-    else
+    } else {
       dangles = true;
+    }
 
     // destination
     pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
     auto destination = stops.find(pair->destination_onestop_id());
-    if (destination != stops.cend())
+    if (destination != stops.cend()) {
       pair->set_destination_graphid(destination->second);
-    else
+    } else {
       dangles = true;
+    }
 
     // um yeah this goes nowhere
     if (pair->origin_onestop_id() == pair->destination_onestop_id()) {
@@ -457,7 +478,8 @@ bool get_stop_pairs(Transit_Fetch& tile,
       if (origin_time < frequency_start_time) {
         tile.mutable_stop_pairs()->RemoveLast();
         continue;
-        // LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id()
+        // LOG_WARN("Frequency frequency_start_time after origin_time: " +
+        // pair->origin_onestop_id()
         // + " --> " + pair->destination_onestop_id());
       }
       pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
@@ -566,8 +588,9 @@ bool get_stop_pairs(Transit_Fetch& tile,
   }
 
   // no stop pairs due to new route type.
-  if (tile.mutable_stop_pairs()->size() == 0)
+  if (tile.mutable_stop_pairs()->size() == 0) {
     return false;
+  }
 
   return dangles;
 }
@@ -580,12 +603,14 @@ void write_pbf(const Transit_Fetch& tile, const boost::filesystem::path& transit
   }
 
   // write pbf to file
-  if (!boost::filesystem::exists(transit_tile.parent_path()))
+  if (!boost::filesystem::exists(transit_tile.parent_path())) {
     boost::filesystem::create_directories(transit_tile.parent_path());
+  }
   std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!tile.SerializeToOstream(&stream))
+  if (!tile.SerializeToOstream(&stream)) {
     LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " +
               std::to_string(tile.ByteSize()));
+  }
 
   if (tile.routes_size() && tile.stops_size() && tile.stop_pairs_size() && tile.shapes_size()) {
     LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
@@ -612,11 +637,12 @@ void fetch_tiles(const ptree& pt,
   auto database = pt.get_optional<std::string>("mjolnir.timezone");
   // Initialize the tz DB (if it exists)
   sqlite3* tz_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database)
+  if (!database) {
     LOG_WARN("Time zone db not found.  Not saving time zone information from db.");
-  else if (!tz_db_handle)
+  } else if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database +
              " not found.  Not saving time zone information from db.");
+  }
 
   // for each tile
   while (true) {
@@ -706,13 +732,15 @@ void fetch_tiles(const ptree& pt,
       for (const auto& operators_pt : response.get_child("operators")) {
         std::string onestop_id = operators_pt.second.get<std::string>("onestop_id", "");
         std::string website = operators_pt.second.get<std::string>("website", "");
-        if (!onestop_id.empty() && onestop_id != "null" && !website.empty() && website != "null")
+        if (!onestop_id.empty() && onestop_id != "null" && !website.empty() && website != "null") {
           websites.emplace(onestop_id, website);
+        }
 
         std::string short_name = operators_pt.second.get<std::string>("short_name", "");
         if (!onestop_id.empty() && onestop_id != "null" && !short_name.empty() &&
-            short_name != "null")
+            short_name != "null") {
           short_names.emplace(onestop_id, short_name);
+        }
       }
       // please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
@@ -788,12 +816,14 @@ void fetch_tiles(const ptree& pt,
     }
 
     // remember who dangles
-    if (dangles)
+    if (dangles) {
       dangling.emplace_back(current);
+    }
 
     // save the last tile
-    if (tile.stop_pairs_size())
+    if (tile.stop_pairs_size()) {
       write_pbf(tile, transit_tile.string());
+    }
   }
 
   // give back the work for later
@@ -812,13 +842,15 @@ fetch(const ptree& pt,
   unique_transit_t uniques;
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
   std::vector<std::promise<std::list<GraphId>>> promises(threads.size());
-  for (size_t i = 0; i < threads.size(); ++i)
+  for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(fetch_tiles, std::cref(pt), std::ref(tiles), std::ref(uniques),
                                      std::ref(promises[i])));
+  }
 
   // let the threads finish and get the dangling list
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
   std::list<GraphId> dangling;
   for (auto& promise : promises) {
     try {
@@ -848,8 +880,9 @@ Transit_Fetch read_pbf(const std::string& file_name, std::mutex& lock) {
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
   cs.SetTotalBytesLimit(limit, limit);
   Transit_Fetch transit;
-  if (!transit.ParseFromCodedStream(&cs))
+  if (!transit.ParseFromCodedStream(&cs)) {
     throw std::runtime_error("Couldn't load " + file_name);
+  }
   return transit;
 }
 
@@ -862,8 +895,9 @@ struct dist_sort_t {
   bool operator()(const GraphId& a, const GraphId& b) const {
     auto a_dist = center.Distance(grid.TileBounds(a.tileid()).Center());
     auto b_dist = center.Distance(grid.TileBounds(b.tileid()).Center());
-    if (a_dist == b_dist)
+    if (a_dist == b_dist) {
       return a.tileid() < b.tileid();
+    }
     return a_dist < b_dist;
   }
 };
@@ -901,10 +935,12 @@ void stitch_tiles(const ptree& pt,
       auto tile = read_pbf(file_name, lock);
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {
-        if (!stop_pair.has_origin_graphid())
+        if (!stop_pair.has_origin_graphid()) {
           needed.emplace(stop_pair.origin_onestop_id(), GraphId{});
-        if (!stop_pair.has_destination_graphid())
+        }
+        if (!stop_pair.has_destination_graphid()) {
           needed.emplace(stop_pair.destination_onestop_id(), GraphId{});
+        }
       }
 
       // do while we have more to find and arent sick of searching
@@ -933,9 +969,9 @@ void stitch_tiles(const ptree& pt,
       for (auto& stop_pair : *tile.mutable_stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
           auto found = needed.find(stop_pair.origin_onestop_id())->second;
-          if (found.Is_Valid())
+          if (found.Is_Valid()) {
             stop_pair.set_origin_graphid(found);
-          else if (not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
+          } else if (not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.origin_onestop_id());
             not_found.emplace(stop_pair.origin_onestop_id());
           }
@@ -943,9 +979,9 @@ void stitch_tiles(const ptree& pt,
         }
         if (!stop_pair.has_destination_graphid()) {
           auto found = needed.find(stop_pair.destination_onestop_id())->second;
-          if (found.Is_Valid())
+          if (found.Is_Valid()) {
             stop_pair.set_destination_graphid(found);
-          else if (not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
+          } else if (not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.destination_onestop_id());
             not_found.emplace(stop_pair.destination_onestop_id());
           }
@@ -977,13 +1013,15 @@ void stitch(const ptree& pt,
   std::mutex lock;
 
   // make let them rip
-  for (size_t i = 0; i < threads.size(); ++i)
+  for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(stitch_tiles, std::cref(pt), std::cref(all_tiles),
                                      std::ref(dangling_tiles), std::ref(lock)));
+  }
 
   // wait for them to finish
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
 
   LOG_INFO("Finished");
 }
@@ -1042,10 +1080,12 @@ int main(int argc, char** argv) {
       std::to_string(TileHierarchy::levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
-  for (; transit_file_itr != end_file_itr; ++transit_file_itr)
+  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if (boost::filesystem::is_regular(transit_file_itr->path()) &&
-        transit_file_itr->path().extension() == ".pbf")
+        transit_file_itr->path().extension() == ".pbf") {
       all_tiles.emplace(GraphTile::GetTileId(transit_file_itr->path().string()));
+    }
+  }
 
   // spawn threads to connect dangling stop pairs to adjacent tiles' stops
   stitch(pt, all_tiles, dangling_tiles);

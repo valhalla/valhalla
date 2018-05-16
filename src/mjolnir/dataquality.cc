@@ -11,8 +11,8 @@ namespace mjolnir {
 // Constructor
 DataQuality::DataQuality()
     : nodecount(0), directededge_count(0), simplerestrictions(0), timedrestrictions(0),
-      culdesaccount(0), forward_restrictions_count(0),
-      reverse_restrictions_count(0), node_counts{} {
+      culdesaccount(0), forward_restrictions_count(0), reverse_restrictions_count(0),
+      node_counts{} {
 }
 
 // Add statistics (accumulate from several DataQuality objects)
@@ -74,8 +74,8 @@ void DataQuality::LogIssues() const {
       dups.emplace_back(DuplicateWay(dup.first.first, dup.first.second, dup.second));
       duplicates += dup.second;
     }
-    LOG_WARN("Duplicate ways " + std::to_string(duplicateways_.size()) +
-             " duplicate edges = " + std::to_string(duplicates));
+    LOG_WARN("Duplicate ways " + std::to_string(duplicateways_.size()) + " duplicate edges = " +
+             std::to_string(duplicates));
   }
 
   // Sort by edgecount and write to separate file

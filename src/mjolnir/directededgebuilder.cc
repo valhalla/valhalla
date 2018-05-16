@@ -44,15 +44,17 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_toll(way.toll());
   set_dest_only(way.destination_only());
 
-  if (bike_network)
+  if (bike_network) {
     set_bike_network(way.bike_network() | bike_network);
-  else
+  } else {
     set_bike_network(way.bike_network());
+  }
 
   set_truck_route(way.truck_route());
 
-  if (!way.destination_only())
+  if (!way.destination_only()) {
     set_dest_only(way.no_thru_traffic());
+  }
 
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());

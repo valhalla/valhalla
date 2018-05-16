@@ -92,28 +92,39 @@ public:
     l->mutable_ll()->set_lat(pl.latlng_.second);
     l->set_type(pl.stoptype_ == Location::StopType::BREAK ? odin::Location::kBreak
                                                           : odin::Location::kThrough);
-    if (!pl.name_.empty())
+    if (!pl.name_.empty()) {
       l->set_name(pl.name_);
-    if (!pl.street_.empty())
+    }
+    if (!pl.street_.empty()) {
       l->set_street(pl.street_);
-    if (!pl.city_.empty())
+    }
+    if (!pl.city_.empty()) {
       l->set_city(pl.city_);
-    if (!pl.state_.empty())
+    }
+    if (!pl.state_.empty()) {
       l->set_state(pl.state_);
-    if (!pl.zip_.empty())
+    }
+    if (!pl.zip_.empty()) {
       l->set_postal_code(pl.zip_);
-    if (!pl.country_.empty())
+    }
+    if (!pl.country_.empty()) {
       l->set_country(pl.country_);
-    if (pl.date_time_)
+    }
+    if (pl.date_time_) {
       l->set_date_time(*pl.date_time_);
-    if (pl.heading_)
+    }
+    if (pl.heading_) {
       l->set_heading(*pl.heading_);
-    if (pl.heading_tolerance_)
+    }
+    if (pl.heading_tolerance_) {
       l->set_heading_tolerance(*pl.heading_tolerance_);
-    if (pl.node_snap_tolerance_)
+    }
+    if (pl.node_snap_tolerance_) {
       l->set_node_snap_tolerance(*pl.node_snap_tolerance_);
-    if (pl.way_id_)
+    }
+    if (pl.way_id_) {
       l->set_way_id(*pl.way_id_);
+    }
     l->set_minimum_reachability(pl.minimum_reachability_);
     l->set_radius(pl.radius_);
 
@@ -130,8 +141,9 @@ public:
               : (e.sos == PathLocation::RIGHT ? odin::Location::kRight : odin::Location::kNone));
       edge->set_distance(e.distance);
       edge->set_minimum_reachability(e.minimum_reachability);
-      for (const auto& n : reader.edgeinfo(e.id).GetNames())
+      for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
+      }
     }
 
     auto* filtered_edges = l->mutable_filtered_edges();
@@ -147,8 +159,9 @@ public:
               : (e.sos == PathLocation::RIGHT ? odin::Location::kRight : odin::Location::kNone));
       edge->set_distance(e.distance);
       edge->set_minimum_reachability(e.minimum_reachability);
-      for (const auto& n : reader.edgeinfo(e.id).GetNames())
+      for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
+      }
     }
   }
 
@@ -156,36 +169,48 @@ public:
     Location l({loc.ll().lng(), loc.ll().lat()},
                odin::Location::kBreak ? Location::StopType::BREAK : Location::StopType::THROUGH,
                loc.minimum_reachability(), loc.radius());
-    if (loc.has_name())
+    if (loc.has_name()) {
       l.name_ = loc.name();
-    if (loc.has_street())
+    }
+    if (loc.has_street()) {
       l.street_ = loc.street();
-    if (loc.has_city())
+    }
+    if (loc.has_city()) {
       l.city_ = loc.city();
-    if (loc.has_state())
+    }
+    if (loc.has_state()) {
       l.state_ = loc.state();
-    if (loc.has_postal_code())
+    }
+    if (loc.has_postal_code()) {
       l.zip_ = loc.postal_code();
-    if (loc.has_country())
+    }
+    if (loc.has_country()) {
       l.country_ = loc.country();
-    if (loc.has_date_time())
+    }
+    if (loc.has_date_time()) {
       l.date_time_ = loc.date_time();
-    if (loc.has_heading())
+    }
+    if (loc.has_heading()) {
       l.heading_ = loc.heading();
-    if (loc.has_heading_tolerance())
+    }
+    if (loc.has_heading_tolerance()) {
       l.heading_tolerance_ = loc.heading_tolerance();
-    if (loc.has_node_snap_tolerance())
+    }
+    if (loc.has_node_snap_tolerance()) {
       l.node_snap_tolerance_ = loc.node_snap_tolerance();
-    if (loc.has_way_id())
+    }
+    if (loc.has_way_id()) {
       l.way_id_ = loc.way_id();
+    }
     return l;
   }
 
   static std::vector<Location>
   fromPBF(const google::protobuf::RepeatedPtrField<odin::Location>& locations) {
     std::vector<Location> pls;
-    for (const auto& l : locations)
+    for (const auto& l : locations) {
       pls.emplace_back(fromPBF(l));
+    }
     return pls;
   }
 };

@@ -52,12 +52,14 @@ namespace logging {
 Logger* LoggerFactory::Produce(const LoggingConfig& config) const {
   // grab the type
   auto type = config.find("type");
-  if (type == config.end())
+  if (type == config.end()) {
     throw std::runtime_error("Logging factory configuration requires a type of logger");
+  }
   // grab the logger
   auto found = find(type->second);
-  if (found != end())
+  if (found != end()) {
     return found->second(config);
+  }
   // couldn't get a logger
   throw std::runtime_error("Couldn't produce logger for type: " + type->second);
 }
@@ -165,8 +167,9 @@ public:
   FileLogger(const LoggingConfig& config) : Logger(config) {
     // grab the file name
     auto name = config.find("file_name");
-    if (name == config.end())
+    if (name == config.end()) {
       throw std::runtime_error("No output file provided to file logger");
+    }
     file_name = name->second;
 
     // if we specify an interval

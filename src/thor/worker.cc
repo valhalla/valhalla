@@ -78,8 +78,9 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config)
       config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius")
+        kv.first == "max_radius") {
       continue;
+    }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
       max_matrix_distance.emplace(
           kv.first, config.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
@@ -129,8 +130,9 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(std::move(request_str));
         auto trip_paths = optimized_route(request);
         result.messages.emplace_back(request.options.SerializeAsString());
-        for (auto& trippath : trip_paths)
+        for (auto& trippath : trip_paths) {
           result.messages.emplace_back(trippath.SerializeAsString());
+        }
         denominator = std::max(request.options.sources_size(), request.options.targets_size());
         break;
       }
@@ -143,8 +145,9 @@ worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(std::move(request_str));
         auto trip_paths = route(request);
         result.messages.emplace_back(request.options.SerializeAsString());
-        for (const auto& trippath : trip_paths)
+        for (const auto& trippath : trip_paths) {
           result.messages.emplace_back(trippath.SerializeAsString());
+        }
         denominator = request.options.locations_size();
         break;
       }
@@ -216,16 +219,18 @@ valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const rapidjson::Document& 
                                                      const std::string& costing) {
   auto costing_options =
       rapidjson::get_child_optional(request, ("/costing_options/" + costing).c_str());
-  if (costing_options)
+  if (costing_options) {
     return factory.Create(costing, *costing_options);
+  }
   return factory.Create(costing, boost::property_tree::ptree{});
 }
 
 std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
   // Parse out the type of route - this provides the costing method to use
   auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
-  if (costing.back() == '_')
+  if (costing.back() == '_') {
     costing.pop_back();
+  }
 
   // Set travel mode and construct costing
   if (costing == "multimodal" || costing == "transit") {
@@ -255,14 +260,16 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           // completely disable scores for this location
-          if (location.has_rank_candidates() && !location.rank_candidates())
+          if (location.has_rank_candidates() && !location.rank_candidates()) {
             candidate.set_distance(0);
-          // scale the score to favor closer results more
-          else
+            // scale the score to favor closer results more
+          } else {
             candidate.set_distance(candidate.distance() * candidate.distance() * kDistanceScale);
+          }
           // remember the min score
-          if (minScore > candidate.distance())
+          if (minScore > candidate.distance()) {
             minScore = candidate.distance();
+          }
         }
       }
 
@@ -272,8 +279,9 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
-          if (candidate.distance() > max_score->second)
+          if (candidate.distance() > max_score->second) {
             candidate.set_distance(max_score->second);
+          }
         }
       }
     }
@@ -334,19 +342,25 @@ void thor_worker_t::log_admin(const valhalla::odin::TripPath& trip_path) {
   std::stringstream s_ss, c_ss;
   if (trip_path.admin_size() > 0) {
     for (const auto& admin : trip_path.admin()) {
-      if (admin.has_state_code())
+      if (admin.has_state_code()) {
         state_iso.insert(admin.state_code());
-      if (admin.has_country_code())
+      }
+      if (admin.has_country_code()) {
         country_iso.insert(admin.country_code());
+      }
     }
-    for (const std::string& x : state_iso)
+    for (const std::string& x : state_iso) {
       s_ss << " " << x;
-    for (const std::string& x : country_iso)
+    }
+    for (const std::string& x : country_iso) {
       c_ss << " " << x;
-    if (!s_ss.eof())
+    }
+    if (!s_ss.eof()) {
       valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
-    if (!c_ss.eof())
+    }
+    if (!c_ss.eof()) {
       valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
+    }
   }
 }
 
@@ -357,8 +371,9 @@ void thor_worker_t::cleanup() {
   trace.clear();
   isochrone_gen.Clear();
   matcher_factory.ClearFullCache();
-  if (reader.OverCommitted())
+  if (reader.OverCommitted()) {
     reader.Clear();
+  }
 }
 
 } // namespace thor

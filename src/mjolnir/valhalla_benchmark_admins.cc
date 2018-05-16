@@ -108,25 +108,31 @@ GetAdminInfo(sqlite3* db_handle,
       std::string country_iso = "";
       std::string state_iso = "";
 
-      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT) {
         country_name = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
+      }
 
-      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
         state_name = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
+      }
 
-      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) {
         country_iso = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
+      }
 
-      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) {
         state_iso = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)));
+      }
 
       bool dor = true;
-      if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
+      if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER) {
         dor = sqlite3_column_int(stmt, 5);
+      }
 
       std::string geom = "";
-      if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT)
+      if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) {
         geom = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6)));
+      }
 
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
@@ -254,17 +260,19 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path))
+    if (boost::filesystem::is_regular_file(config_file_path)) {
       return true;
-    else
+    } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+    }
   }
   return false;
 }
 
 int main(int argc, char** argv) {
-  if (!ParseArguments(argc, argv))
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
+  }
 
   // Ccheck what type of input we are getting
   boost::property_tree::ptree pt;

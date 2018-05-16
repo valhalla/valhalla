@@ -16,12 +16,13 @@ struct MatchResult : meili::MatchResult {
 
   MatchResult(meili::MatchResult result) : meili::MatchResult(result) {
     // Set the type based on edge id and state
-    if (edgeid.Is_Valid() && HasState())
+    if (edgeid.Is_Valid() && HasState()) {
       type = Type::kMatched;
-    else if (edgeid.Is_Valid())
+    } else if (edgeid.Is_Valid()) {
       type = Type::kInterpolated;
-    else
+    } else {
       type = Type::kUnmatched;
+    }
 
     // Default values for edge index and begin/end route discontinuity
     edge_index = kInvalidEdgeIndex;

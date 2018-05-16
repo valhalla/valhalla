@@ -278,8 +278,9 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
     auto curr_man = maneuvers.begin();
     auto next_man = maneuvers.begin();
 
-    if (next_man != maneuvers.end())
+    if (next_man != maneuvers.end()) {
       ++next_man;
+    }
 
     while (next_man != maneuvers.end()) {
       // Process common base names
@@ -355,8 +356,9 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       else if (curr_man->internal_intersection() && (curr_man != next_man)) {
         LOG_TRACE("+++ Combine: current internal maneuver with next maneuver +++");
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
-        if (is_first_man)
+        if (is_first_man) {
           prev_man = curr_man;
+        }
         maneuvers_have_been_combined = true;
         ++next_man;
       }
@@ -365,8 +367,9 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         LOG_TRACE("+++ Combine: current turn channel maneuver with next maneuver +++");
         curr_man =
             CombineTurnChannelManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
-        if (is_first_man)
+        if (is_first_man) {
           prev_man = curr_man;
+        }
         maneuvers_have_been_combined = true;
         ++next_man;
       }
@@ -609,32 +612,39 @@ ManeuversBuilder::CombineSameNameStraightManeuver(std::list<Maneuver>& maneuvers
   curr_man->set_end_shape_index(next_man->end_shape_index());
 
   // If needed, set ramp
-  if (next_man->ramp())
+  if (next_man->ramp()) {
     curr_man->set_ramp(true);
+  }
 
   // If needed, set ferry
-  if (next_man->ferry())
+  if (next_man->ferry()) {
     curr_man->set_ferry(true);
+  }
 
   // If needed, set rail_ferry
-  if (next_man->rail_ferry())
+  if (next_man->rail_ferry()) {
     curr_man->set_rail_ferry(true);
+  }
 
   // If needed, set roundabout
-  if (next_man->roundabout())
+  if (next_man->roundabout()) {
     curr_man->set_roundabout(true);
+  }
 
   // If needed, set portions_toll
-  if (next_man->portions_toll())
+  if (next_man->portions_toll()) {
     curr_man->set_portions_toll(true);
+  }
 
   // If needed, set portions_unpaved
-  if (next_man->portions_unpaved())
+  if (next_man->portions_unpaved()) {
     curr_man->set_portions_unpaved(true);
+  }
 
   // If needed, set portions_highway
-  if (next_man->portions_highway())
+  if (next_man->portions_highway()) {
     curr_man->set_portions_highway(true);
+  }
 
   return maneuvers.erase(next_man);
 }
@@ -644,8 +654,9 @@ void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
   auto prev_man = maneuvers.rbegin();
   auto curr_man = maneuvers.rbegin();
 
-  if (prev_man != maneuvers.rend())
+  if (prev_man != maneuvers.rend()) {
     ++prev_man;
+  }
 
   // Rank the exit signs
   while (prev_man != maneuvers.rend()) {
@@ -1709,10 +1720,9 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
   // and the the turn is a sharp left (179 < turn < 211)
   //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
   // and oneway edges
-  if (curr_edge->drive_on_right() &&
-      (((turn_degree > 179) && (turn_degree < 211)) ||
-       (((prev_edge->length() < 50) || (curr_edge->length() < 50)) && (turn_degree > 179) &&
-        (turn_degree < 226))) &&
+  if (curr_edge->drive_on_right() && (((turn_degree > 179) && (turn_degree < 211)) ||
+                                      (((prev_edge->length() < 50) || (curr_edge->length() < 50)) &&
+                                       (turn_degree > 179) && (turn_degree < 226))) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
 
@@ -1752,10 +1762,9 @@ bool ManeuversBuilder::IsRightPencilPointUturn(int node_index,
   // and the turn is a sharp right (149 < turn < 181)
   //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
   // and oneway edges
-  if (curr_edge->drive_on_right() &&
-      (((turn_degree > 149) && (turn_degree < 181)) ||
-       (((prev_edge->length() < 50) || (curr_edge->length() < 50)) && (turn_degree > 134) &&
-        (turn_degree < 181))) &&
+  if (curr_edge->drive_on_right() && (((turn_degree > 149) && (turn_degree < 181)) ||
+                                      (((prev_edge->length() < 50) || (curr_edge->length() < 50)) &&
+                                       (turn_degree > 134) && (turn_degree < 181))) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
 
@@ -1866,16 +1875,17 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
 }
 
 Maneuver::RelativeDirection ManeuversBuilder::DetermineRelativeDirection(uint32_t turn_degree) {
-  if ((turn_degree > 329) || (turn_degree < 31))
+  if ((turn_degree > 329) || (turn_degree < 31)) {
     return Maneuver::RelativeDirection::kKeepStraight;
-  else if ((turn_degree > 30) && (turn_degree < 160))
+  } else if ((turn_degree > 30) && (turn_degree < 160)) {
     return Maneuver::RelativeDirection::kRight;
-  else if ((turn_degree > 159) && (turn_degree < 201))
+  } else if ((turn_degree > 159) && (turn_degree < 201)) {
     return Maneuver::RelativeDirection::KReverse;
-  else if ((turn_degree > 200) && (turn_degree < 330))
+  } else if ((turn_degree > 200) && (turn_degree < 330)) {
     return Maneuver::RelativeDirection::kLeft;
-  else
+  } else {
     return Maneuver::RelativeDirection::kNone;
+  }
 }
 
 bool ManeuversBuilder::UsableInternalIntersectionName(Maneuver& maneuver, int node_index) const {
@@ -1924,12 +1934,13 @@ void ManeuversBuilder::UpdateInternalTurnCount(Maneuver& maneuver, int node_inde
 
 float ManeuversBuilder::GetSpeed(TripPath_TravelMode travel_mode, float edge_speed) const {
   // TODO use pedestrian and bicycle speeds from costing options?
-  if (travel_mode == TripPath_TravelMode_kPedestrian)
+  if (travel_mode == TripPath_TravelMode_kPedestrian) {
     return 5.1f;
-  else if (travel_mode == TripPath_TravelMode_kBicycle)
+  } else if (travel_mode == TripPath_TravelMode_kBicycle) {
     return 20.0f;
-  else
+  } else {
     return edge_speed;
+  }
 }
 
 bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iterator prev_man,
@@ -1989,8 +2000,9 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
   auto curr_man = maneuvers.begin();
   auto next_man = maneuvers.begin();
 
-  if (next_man != maneuvers.end())
+  if (next_man != maneuvers.end()) {
     ++next_man;
+  }
 
   // Walk the maneuvers to find signless interchange maneuvers to enhance
   while (next_man != maneuvers.end()) {

@@ -248,14 +248,18 @@ public:
    * @param  r2  Bounding bounding box to "combine" with this bounding box.
    */
   void Expand(const AABB2& r2) {
-    if (r2.minx() < minx_)
+    if (r2.minx() < minx_) {
       minx_ = r2.minx();
-    if (r2.miny() < miny_)
+    }
+    if (r2.miny() < miny_) {
       miny_ = r2.miny();
-    if (r2.maxx() > maxx_)
+    }
+    if (r2.maxx() > maxx_) {
       maxx_ = r2.maxx();
-    if (r2.maxy() > maxy_)
+    }
+    if (r2.maxy() > maxy_) {
       maxy_ = r2.maxy();
+    }
   }
 
   /**
@@ -263,14 +267,18 @@ public:
    * @param  point  Point to "add" to this bounding box.
    */
   void Expand(const coord_t& point) {
-    if (point.x() < minx_)
+    if (point.x() < minx_) {
       minx_ = point.x();
-    if (point.y() < miny_)
+    }
+    if (point.y() < miny_) {
       miny_ = point.y();
-    if (point.x() > maxx_)
+    }
+    if (point.x() > maxx_) {
       maxx_ = point.x();
-    if (point.y() > maxy_)
+    }
+    if (point.y() > maxy_) {
       maxy_ = point.y();
+    }
   }
 
 protected:

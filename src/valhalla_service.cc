@@ -49,8 +49,9 @@ int main(int argc, char** argv) {
     if (listen.find("icp://") != 0) {
       LOG_ERROR("You must listen on either tcp://ip:port or ipc://some_socket_file");
       return EXIT_FAILURE;
-    } else
+    } else {
       LOG_WARN("Listening on a domain socket limits the server to local requests");
+    }
   }
 
   // configure logging
@@ -65,8 +66,9 @@ int main(int argc, char** argv) {
 
   // number of workers to use at each stage
   auto worker_concurrency = std::thread::hardware_concurrency();
-  if (argc > 2)
+  if (argc > 2) {
     worker_concurrency = std::stoul(argv[2]);
+  }
 
   // setup the cluster within this process
   zmq::context_t context;

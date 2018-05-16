@@ -175,8 +175,9 @@ void GraphTileBuilder::StoreTileData() {
                                    GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path()))
+  if (!boost::filesystem::exists(filename.parent_path())) {
     boost::filesystem::create_directories(filename.parent_path());
+  }
 
   // Open file and truncate
   std::stringstream in_mem;
@@ -263,13 +264,15 @@ void GraphTileBuilder::StoreTileData() {
     // Write the edge data
     header_builder_.set_edgeinfo_offset(header_builder_.complex_restriction_reverse_offset() +
                                         reverse_restriction_size);
-    for (const auto& edgeinfo : edgeinfo_list_)
+    for (const auto& edgeinfo : edgeinfo_list_) {
       in_mem << edgeinfo;
+    }
 
     // Write the names
     header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_offset_);
-    for (const auto& text : textlistbuilder_)
+    for (const auto& text : textlistbuilder_) {
       in_mem << text << '\0';
+    }
 
     // Add padding (if needed) to align to 8-byte word.
     int tmp = in_mem.tellp() % 8;
@@ -314,8 +317,8 @@ void GraphTileBuilder::StoreTileData() {
         static_cast<uint32_t>(in_mem.tellp()) + static_cast<uint32_t>(sizeof(GraphTileHeader));
     if (header_builder_.end_offset() != curr) {
       LOG_ERROR("Mismatch in end offset " + std::to_string(header_builder_.end_offset()) +
-                " vs in_mem stream " + std::to_string(curr) +
-                " padding = " + std::to_string(padding));
+                " vs in_mem stream " + std::to_string(curr) + " padding = " +
+                std::to_string(padding));
     }
 
     LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset "
@@ -348,8 +351,9 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
       tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(header_->graphid());
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path()))
+  if (!boost::filesystem::exists(filename.parent_path())) {
     boost::filesystem::create_directories(filename.parent_path());
+  }
 
   // Open file. Truncate so we replace the contents.
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -505,8 +509,9 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
         ni.is_ref_ = 0;
-        if ((types & (1ULL << location)))
+        if ((types & (1ULL << location))) {
           ni.is_ref_ = 1; // set the ref bit.
+        }
         name_info_list.emplace_back(ni);
         ++name_count;
       }
@@ -586,8 +591,9 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
         ni.is_ref_ = 0;
-        if ((types & (1ULL << location)))
+        if ((types & (1ULL << location))) {
           ni.is_ref_ = 1; // set the ref bit.
+        }
         name_info_list.emplace_back(ni);
         ++name_count;
       }
@@ -662,36 +668,41 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
 
 // Gets a non-const node from existing tile data.
 NodeInfo& GraphTileBuilder::node(const size_t idx) {
-  if (idx < header_->nodecount())
+  if (idx < header_->nodecount()) {
     return nodes_[idx];
+  }
   throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
 }
 
 // Get the node builder at the specified index.
 NodeInfo& GraphTileBuilder::node_builder(const size_t idx) {
-  if (idx < header_->nodecount())
+  if (idx < header_->nodecount()) {
     return nodes_builder_[idx];
+  }
   throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
 }
 
 // Gets a non-const directed edge from existing tile data.
 DirectedEdge& GraphTileBuilder::directededge(const size_t idx) {
-  if (idx < header_->directededgecount())
+  if (idx < header_->directededgecount()) {
     return directededges_[idx];
+  }
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
 // Gets a pointer to directed edges within the list being built.
 const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) {
-  if (idx < header_->directededgecount())
+  if (idx < header_->directededgecount()) {
     return &directededges_builder_[idx];
+  }
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
 // Get the directed edge builder at the specified index.
 DirectedEdge& GraphTileBuilder::directededge_builder(const size_t idx) {
-  if (idx < header_->directededgecount())
+  if (idx < header_->directededgecount()) {
     return directededges_builder_[idx];
+  }
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
@@ -705,29 +716,33 @@ AccessRestriction& GraphTileBuilder::accessrestriction(const size_t idx) {
 
 // Gets an access restriction builder at the specified index.
 AccessRestriction& GraphTileBuilder::accessrestriction_builder(const size_t idx) {
-  if (idx < header_->access_restriction_count())
+  if (idx < header_->access_restriction_count()) {
     return access_restriction_builder_[idx];
+  }
   throw std::runtime_error("GraphTileBuilder access restriction index is out of bounds");
 }
 
 // Gets a non-const sign from existing tile data.
 Sign& GraphTileBuilder::sign(const size_t idx) {
-  if (idx < header_->signcount())
+  if (idx < header_->signcount()) {
     return signs_[idx];
+  }
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
 // Gets a sign builder at the specified index.
 Sign& GraphTileBuilder::sign_builder(const size_t idx) {
-  if (idx < header_->signcount())
+  if (idx < header_->signcount()) {
     return signs_builder_[idx];
+  }
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
 // Gets a const admin builder at specified index.
 const Admin& GraphTileBuilder::admins_builder(size_t idx) {
-  if (idx < admins_builder_.size())
+  if (idx < admins_builder_.size()) {
     return admins_builder_.at(idx);
+  }
   throw std::runtime_error("GraphTileBuilder admin index is out of bounds");
 }
 
@@ -744,8 +759,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
   // we store these at the highest level
   auto max_level = TileHierarchy::levels().rbegin()->first;
   // skip transit or other special levels and empty tiles
-  if (tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0)
+  if (tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0) {
     return bins;
+  }
   // is this the highest level
   auto max = tile->header()->graphid().level() == max_level;
   auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
@@ -757,14 +773,16 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
        edge < start_edge + tile->header()->directededgecount(); ++edge) {
     // dont bin these
     if (edge->is_shortcut() || edge->IsTransition() || edge->use() == Use::kTransitConnection ||
-        edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection)
+        edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection) {
       continue;
+    }
 
     // get the shape or bail if none
     auto info = tile->edgeinfo(edge->edgeinfo_offset());
     const auto& shape = info.shape();
-    if (shape.empty())
+    if (shape.empty()) {
       continue;
+    }
 
     // avoid duplicates and minimize leaving a tile for shape by:
     // writing the edge to the tile it originates in
@@ -775,8 +793,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
     auto intermediate = start_id < end_id;
 
     // if this starts and ends in the same tile and we've seen it already we can skip it
-    if (start_id == end_id && !ids.insert(edge->edgeinfo_offset()).second)
+    if (start_id == end_id && !ids.insert(edge->edgeinfo_offset()).second) {
       continue;
+    }
 
     // for each bin that got intersected
     auto intersection = tiles.Intersect(shape);
@@ -793,8 +812,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
                              ? bins
                              : tweeners.insert({GraphId(i.first, max_level, 0), {}}).first->second;
         // keep the edge id
-        for (auto bin : i.second)
+        for (auto bin : i.second) {
           out_bins[bin].push_back(edge_id);
+        }
       }
     }
   }
@@ -818,8 +838,9 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   shift *= sizeof(GraphId);
   // update header bin indices
   uint32_t offsets[kBinCount] = {static_cast<uint32_t>(bins[0].size())};
-  for (size_t i = 1; i < kBinCount; ++i)
+  for (size_t i = 1; i < kBinCount; ++i) {
     offsets[i] = static_cast<uint32_t>(bins[i].size()) + offsets[i - 1];
+  }
   // update header offsets
   // NOTE: if format changes to add more things here we need to make a change here as well
   GraphTileHeader header = *tile->header();
@@ -838,8 +859,9 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   // rewrite the tile
   boost::filesystem::path filename =
       tile_dir + filesystem::path_separator + GraphTile::FileSuffix(header.graphid());
-  if (!boost::filesystem::exists(filename.parent_path()))
+  if (!boost::filesystem::exists(filename.parent_path())) {
     boost::filesystem::create_directories(filename.parent_path());
+  }
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   // open it
   if (file.is_open()) {
@@ -850,15 +872,17 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
     file.write(begin, end - begin);
     // the updated bins
-    for (const auto& bin : bins)
+    for (const auto& bin : bins) {
       file.write(reinterpret_cast<const char*>(bin.data()), bin.size() * sizeof(GraphId));
+    }
     // the rest of the stuff after bins
     begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
     end = reinterpret_cast<const char*>(tile->header()) + tile->header()->end_offset();
     file.write(begin, end - begin);
   } // failed
-  else
+  else {
     throw std::runtime_error("Failed to open file " + filename.string());
+  }
 }
 
 // Initialize traffic segment association. Sizes the traffic segment Id list
@@ -965,8 +989,9 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
       tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(header_builder_.graphid());
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path()))
+  if (!boost::filesystem::exists(filename.parent_path())) {
     boost::filesystem::create_directories(filename.parent_path());
+  }
 
   // Open file and truncate
   std::stringstream in_mem;

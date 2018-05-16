@@ -145,22 +145,22 @@ void TryClosestPoint(const std::vector<PointLL>& pts,
 
   // Test expected closest point
   if (!result_pt.ApproximatelyEqual(expected_pt))
-    throw runtime_error(
-        "TryClosestPoint point test failed - found: " + std::to_string(result_pt.lat()) + "," +
-        std::to_string(result_pt.lng()) + " | expected: " + std::to_string(expected_pt.lat()) +
-        "," + std::to_string(expected_pt.lng()));
+    throw runtime_error("TryClosestPoint point test failed - found: " +
+                        std::to_string(result_pt.lat()) + "," + std::to_string(result_pt.lng()) +
+                        " | expected: " + std::to_string(expected_pt.lat()) + "," +
+                        std::to_string(expected_pt.lng()));
 
   // Test expected distance
   if (!valhalla::midgard::equal<float>(std::get<1>(result), expected_dist, 0.5f))
-    throw runtime_error(
-        "TryClosestPoint distance test failed - found: " + std::to_string(std::get<1>(result)) +
-        " | expected: " + std::to_string(expected_dist));
+    throw runtime_error("TryClosestPoint distance test failed - found: " +
+                        std::to_string(std::get<1>(result)) + " | expected: " +
+                        std::to_string(expected_dist));
 
   // Test expected index
   if (std::get<2>(result) != expected_idx)
-    throw runtime_error(
-        "TryClosestPoint index test failed - found: " + std::to_string(std::get<2>(result)) +
-        " | expected: " + std::to_string(expected_idx));
+    throw runtime_error("TryClosestPoint index test failed - found: " +
+                        std::to_string(std::get<2>(result)) + " | expected: " +
+                        std::to_string(expected_idx));
 }
 
 void TryClosestPointNoDistance(const std::vector<PointLL>& pts,
@@ -180,8 +180,8 @@ void TryClosestPointNoDistance(const std::vector<PointLL>& pts,
   // Test expected index
   if (std::get<2>(result) != expected_idx)
     throw runtime_error("TryClosestPointNoDistance index test failed - found: " +
-                        std::to_string(std::get<2>(result)) +
-                        " | expected: " + std::to_string(expected_idx));
+                        std::to_string(std::get<2>(result)) + " | expected: " +
+                        std::to_string(expected_idx));
 }
 
 void TestClosestPoint() {

@@ -26,8 +26,9 @@ std::string StreetNames::ToString(uint32_t max_count,
                                   const VerbalTextFormatter* verbal_formatter) const {
   std::string name_string;
   uint32_t count = 0;
-  if (this->empty())
+  if (this->empty()) {
     name_string = "unnamed";
+  }
   for (auto& street_name : *this) {
     // If supplied, limit by max count
     if ((max_count > 0) && (count == max_count)) {
@@ -48,10 +49,11 @@ std::string StreetNames::ToParameterString() const {
   bool is_first = true;
   name_string += "{ ";
   for (auto& street_name : *this) {
-    if (is_first)
+    if (is_first) {
       is_first = false;
-    else
+    } else {
       name_string += ", ";
+    }
     name_string += "\"";
     name_string += street_name->value();
     name_string += "\"";
@@ -92,14 +94,15 @@ StreetNames::FindCommonBaseNames(const StreetNames& other_street_names) const {
       if (street_name->HasSameBaseName(*other_street_name)) {
         // Use the name with the cardinal directional suffix
         // thus, 'US 30 West' will be used instead of 'US 30'
-        if (!street_name->GetPostCardinalDir().empty())
+        if (!street_name->GetPostCardinalDir().empty()) {
           common_base_names->emplace_back(midgard::make_unique<StreetName>(street_name->value()));
-        else if (!other_street_name->GetPostCardinalDir().empty())
+        } else if (!other_street_name->GetPostCardinalDir().empty()) {
           common_base_names->emplace_back(
               midgard::make_unique<StreetName>(other_street_name->value()));
-        // Use street_name by default
-        else
+          // Use street_name by default
+        } else {
           common_base_names->emplace_back(midgard::make_unique<StreetName>(street_name->value()));
+        }
         break;
       }
     }

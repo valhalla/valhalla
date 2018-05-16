@@ -228,8 +228,9 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
   // Get the opposing predecessor directed edge
   const DirectedEdge* opp_pred_edge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, opp_pred_edge++) {
-    if (opp_pred_edge->localedgeidx() == pred.opp_local_idx())
+    if (opp_pred_edge->localedgeidx() == pred.opp_local_idx()) {
       break;
+    }
   }
 
   // Expand from end node.

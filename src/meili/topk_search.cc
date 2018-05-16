@@ -6,13 +6,15 @@ namespace meili {
 float EnlargedEmissionCostModel::operator()(const StateId& stateid) {
   // If this was a removed state bail
   const auto& original_stateid = evs_.GetOrigin(stateid);
-  if (evs_.IsRemoved(original_stateid))
+  if (evs_.IsRemoved(original_stateid)) {
     return -1.0;
+  }
 
   // Check for cache and compute if its not there
   auto c = cached_costs_.find(stateid);
-  if (c == cached_costs_.cend())
+  if (c == cached_costs_.cend()) {
     c = cached_costs_.emplace(stateid, calculate_cost(stateid, original_stateid)).first;
+  }
   return c->second;
 }
 
@@ -42,8 +44,9 @@ float EnlargedEmissionCostModel::calculate_cost(const StateId& stateid,
 float EnlargedTransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) {
   auto couple = std::make_pair(lhs, rhs);
   auto c = cached_costs_.find(couple);
-  if (c == cached_costs_.cend())
+  if (c == cached_costs_.cend()) {
     c = cached_costs_.emplace(couple, calculate_cost(lhs, rhs)).first;
+  }
   return c->second;
 }
 
@@ -131,8 +134,9 @@ void TopKSearch::RemovePath(const std::vector<StateId>& path) {
 
 StateId TopKSearch::GetOrigin(const StateId& stateid, const StateId& not_found) const {
   auto found = initial_origins_.find(stateid);
-  if (found == initial_origins_.end())
+  if (found == initial_origins_.end()) {
     return not_found;
+  }
   return found->second;
 }
 

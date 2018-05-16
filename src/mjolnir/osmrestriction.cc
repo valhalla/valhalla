@@ -44,9 +44,11 @@ std::vector<uint64_t> OSMRestriction::vias() const {
 
   std::vector<uint64_t> vias;
   std::vector<uint64_t> tmp(std::begin(vias_), std::end(vias_));
-  for (const auto& v : tmp)
-    if (v != 0)
+  for (const auto& v : tmp) {
+    if (v != 0) {
       vias.push_back(v);
+    }
+  }
 
   return vias;
 }

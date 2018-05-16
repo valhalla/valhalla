@@ -162,8 +162,9 @@ std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t column, size_t 
 
 // Get the offsets to the given bin in the 5x5 grid.
 std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t index) const {
-  if (index < kBinCount)
+  if (index < kBinCount) {
     return std::make_pair(index == 0 ? 0 : bin_offsets_[index - 1], bin_offsets_[index]);
+  }
   throw std::runtime_error("Bin out of bounds");
 }
 

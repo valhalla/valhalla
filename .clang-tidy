@@ -1,7 +1,8 @@
 ---
-Checks:          '*,-clang-diagnostic-*'
+#Checks:          '*,-clang-diagnostic-*'
+Checks:          'readability-braces-around-statements,-clang-*'
 #WarningsAsErrors: '*'
-HeaderFilterRegex: '\/src\/'
+#HeaderFilterRegex: '\/src\/'
 AnalyzeTemporaryDtors: false
 CheckOptions:    
   - key:             google-readability-braces-around-statements.ShortStatementLines
@@ -23,7 +24,5 @@ CheckOptions:
   - key:             modernize-replace-auto-ptr.IncludeStyle
     value:           llvm
   - key:             modernize-use-nullptr.NullMacros
-    value:           'NULL'
-  - key:             clang-diagnostic-*
     value:           'NULL'
 ...

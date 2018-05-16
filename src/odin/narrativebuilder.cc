@@ -659,10 +659,11 @@ std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(Maneuver& ma
   else if (dest.has_street() && !(dest.street().empty())) {
     phrase_id += 1;
     auto* verbal_formatter = maneuver.verbal_formatter();
-    if (verbal_formatter)
+    if (verbal_formatter) {
       destination = verbal_formatter->Format(dest.street());
-    else
+    } else {
       destination = dest.street();
+    }
   }
 
   // Check for side of street relative direction
@@ -714,10 +715,11 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(Maneuver& maneuve
   else if (dest.has_street() && !(dest.street().empty())) {
     phrase_id += 1;
     auto* verbal_formatter = maneuver.verbal_formatter();
-    if (verbal_formatter)
+    if (verbal_formatter) {
       destination = verbal_formatter->Format(dest.street());
-    else
+    } else {
       destination = dest.street();
+    }
   }
 
   // Check for side of street relative direction
@@ -1143,9 +1145,8 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(Maneuver& maneuver
   }
 
   return FormVerbalUturnInstruction(
-      phrase_id,
-      FormRelativeTwoDirection(maneuver.type(),
-                               dictionary_.uturn_verbal_subset.relative_directions),
+      phrase_id, FormRelativeTwoDirection(maneuver.type(),
+                                          dictionary_.uturn_verbal_subset.relative_directions),
       street_names, cross_street_names);
 }
 
@@ -1184,9 +1185,8 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(Maneuver& maneuver,
   }
 
   return FormVerbalUturnInstruction(
-      phrase_id,
-      FormRelativeTwoDirection(maneuver.type(),
-                               dictionary_.uturn_verbal_subset.relative_directions),
+      phrase_id, FormRelativeTwoDirection(maneuver.type(),
+                                          dictionary_.uturn_verbal_subset.relative_directions),
       street_names, cross_street_names);
 }
 
@@ -1862,9 +1862,8 @@ std::string NarrativeBuilder::FormVerbalAlertKeepInstruction(Maneuver& maneuver,
   }
 
   return FormVerbalKeepInstruction(
-      phrase_id,
-      FormRelativeThreeDirection(maneuver.type(),
-                                 dictionary_.keep_verbal_subset.relative_directions),
+      phrase_id, FormRelativeThreeDirection(maneuver.type(),
+                                            dictionary_.keep_verbal_subset.relative_directions),
       street_names, exit_number_sign, exit_toward_sign);
 }
 
@@ -1916,9 +1915,8 @@ std::string NarrativeBuilder::FormVerbalKeepInstruction(Maneuver& maneuver,
   }
 
   return FormVerbalKeepInstruction(
-      phrase_id,
-      FormRelativeThreeDirection(maneuver.type(),
-                                 dictionary_.keep_verbal_subset.relative_directions),
+      phrase_id, FormRelativeThreeDirection(maneuver.type(),
+                                            dictionary_.keep_verbal_subset.relative_directions),
       street_names, exit_number_sign, exit_toward_sign);
 }
 
@@ -2016,9 +2014,8 @@ NarrativeBuilder::FormVerbalAlertKeepToStayOnInstruction(Maneuver& maneuver,
                       element_max_count, delim, maneuver.verbal_formatter());
 
   return FormVerbalKeepToStayOnInstruction(
-      0,
-      FormRelativeThreeDirection(maneuver.type(),
-                                 dictionary_.keep_to_stay_on_verbal_subset.relative_directions),
+      0, FormRelativeThreeDirection(maneuver.type(),
+                                    dictionary_.keep_to_stay_on_verbal_subset.relative_directions),
       street_names);
 }
 
@@ -2841,9 +2838,8 @@ std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitPlatformTag, transit_stop_name);
-  boost::replace_all(
-      instruction, kTimeTag,
-      get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
+                                                               dictionary_.GetLocale()));
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -2871,9 +2867,8 @@ std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kTransitPlatformTag, transit_stop_name);
-  boost::replace_all(
-      instruction, kTimeTag,
-      get_localized_time(maneuver.GetTransitDepartureTime(), dictionary_.GetLocale()));
+  boost::replace_all(instruction, kTimeTag, get_localized_time(maneuver.GetTransitDepartureTime(),
+                                                               dictionary_.GetLocale()));
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

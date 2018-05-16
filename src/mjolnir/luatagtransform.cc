@@ -66,8 +66,9 @@ LuaTagTransform::LuaTagTransform(const std::string& lua) {
 }
 
 LuaTagTransform::~LuaTagTransform() {
-  if (state_ != NULL)
+  if (state_ != NULL) {
     lua_close(state_);
+  }
 }
 
 Tags LuaTagTransform::Transform(OSMType type, const Tags& maptags) {
@@ -131,8 +132,9 @@ Tags LuaTagTransform::Transform(OSMType type, const Tags& maptags) {
     int filter = lua_tointeger(state_, -2);
     lua_pop(state_, 2);
 
-    if (filter)
+    if (filter) {
       result.clear();
+    }
   } catch (std::exception& e) {
     // ..gets sent back to the main thread
     LOG_ERROR((boost::format("Exception in Lua function: %1%: %2%") % lua_func % e.what()).str());
