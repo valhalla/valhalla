@@ -16,10 +16,9 @@ include(GNUInstallDirs)
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
-option(ENABLE_HTTP "Enable HTTP" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
-option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" OFF)
+option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
@@ -60,14 +59,12 @@ find_package(SpatiaLite)
 find_package(GEOS)
 
 add_library(libprime_server INTERFACE IMPORTED)
-if(ENABLE_HTTP)
-  pkg_check_modules(libprime_server libprime_server>=0.6.3)
-  if(libprime_server_FOUND)
-    set_target_properties(libprime_server PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARIES}"
-      INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
-      INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
-  endif()
+if(ENABLE_SERVICES)
+  pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
+  set_target_properties(libprime_server PROPERTIES
+    INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
+    INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
 endif()
 
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
@@ -576,16 +573,22 @@ endif()
 if(ENABLE_PYTHON_BINDINGS)
   find_package(PythonInterp)
   find_package(PythonLibs)
-  set(_Boost_PYTHON${PYTHON_VERSION_MAJOR}_HEADERS "boost/python.hpp")
-  find_package(Boost COMPONENTS python${PYTHON_VERSION_MAJOR})
+  if(${PYTHON_VERSION_MAJOR} EQUAL 3)
+    set(Boost_Python_lib "Boost::python${PYTHON_VERSION_MAJOR}")
+    set(_Boost_PYTHON${PYTHON_VERSION_MAJOR}_HEADERS "boost/python.hpp")
+    find_package(Boost COMPONENTS python${PYTHON_VERSION_MAJOR})
+  else()
+    set(Boost_Python_lib "Boost::python")
+    find_package(Boost COMPONENTS python)
+  endif()
   python_add_module(python_valhalla src/bindings/python/python.cc)
   set_target_properties(python_valhalla PROPERTIES
     OUTPUT_NAME valhalla
     LINK_LIBRARIES ${PYTHON_LIBRARIES}
     INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
-  target_link_libraries(python_valhalla valhalla Boost::python${PYTHON_VERSION_MAJOR})
-  set_target_properties(valhalla PROPERTIES
-    POSITION_INDEPENDENT_CODE ON)
+  target_link_libraries(python_valhalla valhalla ${Boost_Python_lib})
+  set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(valhalla-protobuf PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 
