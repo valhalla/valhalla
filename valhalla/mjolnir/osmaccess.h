@@ -138,21 +138,21 @@ struct OSMAccess {
   // Access attributes
   union AccessAttributes {
     struct Fields {
-      uint8_t auto_tag      :1;
-      uint8_t bike_tag      :1;
-      uint8_t bus_tag       :1;
-      uint8_t foot_tag      :1;
-      uint8_t truck_tag     :1;
-      uint8_t hov_tag       :1;
-      uint8_t motorroad_tag :1;
-      uint8_t moped_tag     :1;
+      uint8_t auto_tag : 1;
+      uint8_t bike_tag : 1;
+      uint8_t bus_tag : 1;
+      uint8_t foot_tag : 1;
+      uint8_t truck_tag : 1;
+      uint8_t hov_tag : 1;
+      uint8_t motorroad_tag : 1;
+      uint8_t moped_tag : 1;
     } fields;
     uint32_t v;
   };
   AccessAttributes attributes_;
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMACCESS_H
+#endif // VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMACCESS_H

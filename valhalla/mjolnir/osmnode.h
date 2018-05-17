@@ -11,21 +11,21 @@ namespace valhalla {
 namespace mjolnir {
 
 struct NodeAttributes {
-  uint32_t access_mask      : 12;
-  uint32_t type             : 4;
-  uint32_t exit_to          : 1;
-  uint32_t ref              : 1;
-  uint32_t name             : 1;
-  uint32_t intersection     : 1;
-  uint32_t traffic_signal   : 1;
-  uint32_t forward_signal   : 1;
-  uint32_t backward_signal  : 1;
-  uint32_t non_link_edge    : 1;
-  uint32_t link_edge        : 1;
-  uint32_t shortlink        : 1;  // Link edge < kMaxInternalLength
-  uint32_t non_ferry_edge   : 1;
-  uint32_t ferry_edge       : 1;
-  uint32_t spare            : 4;
+  uint32_t access_mask : 12;
+  uint32_t type : 4;
+  uint32_t exit_to : 1;
+  uint32_t ref : 1;
+  uint32_t name : 1;
+  uint32_t intersection : 1;
+  uint32_t traffic_signal : 1;
+  uint32_t forward_signal : 1;
+  uint32_t backward_signal : 1;
+  uint32_t non_link_edge : 1;
+  uint32_t link_edge : 1;
+  uint32_t shortlink : 1; // Link edge < kMaxInternalLength
+  uint32_t non_ferry_edge : 1;
+  uint32_t ferry_edge : 1;
+  uint32_t spare : 4;
 };
 
 /**
@@ -65,14 +65,14 @@ struct OSMNode {
   uint32_t access_mask() const;
 
   /**
-    * Set payment mask.
-    */
-   // void set_payment_mask(const uint32_t payment_mask);
+   * Set payment mask.
+   */
+  // void set_payment_mask(const uint32_t payment_mask);
 
-   /**
-    * Get the payment mask.
-    */
-   // uint32_t payment_mask() const;
+  /**
+   * Get the payment mask.
+   */
+  // uint32_t payment_mask() const;
 
   /**
    * Sets the type.
@@ -167,7 +167,7 @@ struct OSMNode {
   const NodeAttributes& attributes() const;
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_OSMNODE_H
+#endif // VALHALLA_MJOLNIR_OSMNODE_H

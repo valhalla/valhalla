@@ -2,9 +2,9 @@
 #include <valhalla/mjolnir/node_expander.h>
 
 #include <list>
-#include <vector>
 #include <queue>
 #include <unordered_set>
+#include <vector>
 
 #include "baldr/graphid.h"
 #include "midgard/util.h"
@@ -22,21 +22,21 @@ using nodelist_t = std::vector<std::vector<sequence<Node>::iterator>>;
 // Create a tree structure for storing link edges and nodes
 struct LinkTreeNode {
   bool has_exit;
-  uint32_t non_link_count;                // Number of non-link edges
-  uint32_t link_count;                    // Total number of link edges
-  uint32_t classification;                // Classification at this node
-  uint32_t node_index;                    // Node index in the sequence
-  std::vector<uint32_t> link_edge_index;  // Edge indices of children (links)
-  std::vector<LinkTreeNode> children;     // End nodes of link edges
-  LinkTreeNode* parent;                   // Pointer back to the parent
+  uint32_t non_link_count;               // Number of non-link edges
+  uint32_t link_count;                   // Total number of link edges
+  uint32_t classification;               // Classification at this node
+  uint32_t node_index;                   // Node index in the sequence
+  std::vector<uint32_t> link_edge_index; // Edge indices of children (links)
+  std::vector<LinkTreeNode> children;    // End nodes of link edges
+  LinkTreeNode* parent;                  // Pointer back to the parent
 
-  LinkTreeNode(const bool ex, const uint32_t nlc, const uint32_t lc, uint32_t rc,
-               const uint32_t idx, LinkTreeNode* p)
-      : has_exit(ex),
-        non_link_count(nlc),
-        link_count(lc),
-        classification(rc),
-        node_index(idx),
+  LinkTreeNode(const bool ex,
+               const uint32_t nlc,
+               const uint32_t lc,
+               uint32_t rc,
+               const uint32_t idx,
+               LinkTreeNode* p)
+      : has_exit(ex), non_link_count(nlc), link_count(lc), classification(rc), node_index(idx),
         parent(p) {
     // Reserve space so these do not get re-allocated. This is needed since
     // pointers to the parent node (within the parent's children vector) are
@@ -78,15 +78,11 @@ bool IsTurnChannel(sequence<OSMWay>& ways,
 
     // Check if an exit sign exists.
     OSMWay way = *ways[edge.wayindex_];
-    if (way.junction_ref_index() != 0 ||
-        way.destination_ref_index() != 0 ||
-        way.destination_street_index() != 0 ||
-        way.destination_ref_to_index() != 0 ||
-        way.destination_street_to_index() != 0 ||
-        way.destination_index() != 0 ||
-        way.destination_forward_index() != 0 ||
-        way.destination_backward_index() != 0) {
-     return false;
+    if (way.junction_ref_index() != 0 || way.destination_ref_index() != 0 ||
+        way.destination_street_index() != 0 || way.destination_ref_to_index() != 0 ||
+        way.destination_street_to_index() != 0 || way.destination_index() != 0 ||
+        way.destination_forward_index() != 0 || way.destination_backward_index() != 0) {
+      return false;
     }
   }
   return true;
@@ -97,10 +93,9 @@ uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
   for (const auto& edge : edges) {
     if (!edge.first.attributes.link &&
-        (edge.first.attributes.driveableforward ||
-         edge.first.attributes.driveablereverse) &&
-         edge.first.attributes.importance < bestrc &&
-         edge.first.attributes.importance != kServiceClass) {
+        (edge.first.attributes.driveableforward || edge.first.attributes.driveablereverse) &&
+        edge.first.attributes.importance < bestrc &&
+        edge.first.attributes.importance != kServiceClass) {
       bestrc = edge.first.attributes.importance;
     }
   }
@@ -115,12 +110,10 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
   while (node_itr != nodes.end()) {
     // If the node has a both links and non links at it
     auto bundle = collect_node_edges(node_itr, nodes, edges);
-    if (bundle.node.attributes_.link_edge &&
-        bundle.node.attributes_.non_link_edge) {
+    if (bundle.node.attributes_.link_edge && bundle.node.attributes_.non_link_edge) {
       // Check if this node has a link edge that is driveable from the node
       for (const auto& edge : bundle.node_edges) {
-        if (edge.first.attributes.link &&
-            edge.first.attributes.driveforward) {
+        if (edge.first.attributes.link && edge.first.attributes.driveforward) {
           // Get the highest classification of non-link edges at this node.
           // Add to the exit node list if a valid classification...if no
           // connecting edge is driveable the node will be skipped.
@@ -138,8 +131,8 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
 
   // Output exit counts for each class
   for (uint32_t rc = 0; rc < kMaxClassification; rc++) {
-    LOG_INFO("Class: " + std::to_string(rc) +  " exit count = " +
-               std::to_string(exit_nodes[rc].size()));
+    LOG_INFO("Class: " + std::to_string(rc) + " exit count = " +
+             std::to_string(exit_nodes[rc].size()));
   }
   return exit_nodes;
 }
@@ -147,9 +140,11 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
 // Reclassify links in the link tree. Work up from each leaf and potentially
 // reclassify sets of connected links until a branch (more than 1 child link)
 // or the root is encountered.
-std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root, sequence<Edge>& edges,
-                sequence<OSMWay>& ways, sequence<OSMWayNode>& way_nodes,
-                std::queue<LinkTreeNode*>& leaves) {
+std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
+                                         sequence<Edge>& edges,
+                                         sequence<OSMWay>& ways,
+                                         sequence<OSMWayNode>& way_nodes,
+                                         std::queue<LinkTreeNode*>& leaves) {
   // Get the classification at the root node.
   std::pair<uint32_t, uint32_t> counts = std::make_pair(0, 0);
   uint32_t exit_classification = root.classification;
@@ -194,8 +189,7 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root, sequence<Edge>& edg
       if (parent->children.size() > 1 && parent->parent != nullptr) {
         // Add this branch to the leaves queue. Update the classification
         // at the branch node.
-        parent->classification = std::min(parent->classification,
-                           leaf_node->classification);
+        parent->classification = std::min(parent->classification, leaf_node->classification);
         leaves.push(parent);
         break;
       }
@@ -223,8 +217,8 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root, sequence<Edge>& edg
     // nodes along the path can have more than 2 links (fork). The end nodes
     // must have a non-link edge.
     bool turn_channel = false;
-    if (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
-                  !has_exit && ends_have_non_link) {
+    if (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork && !has_exit &&
+        ends_have_non_link) {
       turn_channel = IsTurnChannel(ways, edges, way_nodes, link_edge_indexes);
     }
 
@@ -263,21 +257,21 @@ void ReclassifyLinks(const std::string& ways_file,
                      const std::string& way_nodes_file) {
   LOG_INFO("Reclassifying link graph edges...");
 
-    // Need to capture these in the expand lambda
-  std::unordered_set<size_t> visitedset;  // Set of visited nodes
-  std::vector<LinkTreeNode*> expandset;   // Set of nodes to expand
-  std::queue<LinkTreeNode*> leaves;       // Leaf nodes of the link tree
+  // Need to capture these in the expand lambda
+  std::unordered_set<size_t> visitedset; // Set of visited nodes
+  std::vector<LinkTreeNode*> expandset;  // Set of nodes to expand
+  std::queue<LinkTreeNode*> leaves;      // Leaf nodes of the link tree
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
 
   // Lambda to expand from the end node of an edge. Adds the link edge and
   // end node to the link tree. Possibly adds the end node to the expandset.
   // Where no expansion occurs a leaf node is identified.
-  auto expand = [&expandset, &nodes, &edges, &visitedset, &leaves]
-          (const Edge& edge, const uint32_t link_edge_index, LinkTreeNode* tree_node) {
+  auto expand = [&expandset, &nodes, &edges, &visitedset, &leaves](
+      const Edge& edge, const uint32_t link_edge_index, LinkTreeNode* tree_node) {
     // Find end node of this link edge
-    auto end_node = edge.sourcenode_ == tree_node->node_index ?
-             nodes[edge.targetnode_] : nodes[edge.sourcenode_];
+    auto end_node = edge.sourcenode_ == tree_node->node_index ? nodes[edge.targetnode_]
+                                                              : nodes[edge.sourcenode_];
 
     // Get the edges at the end node and get best non-link classification
     auto bundle = collect_node_edges(end_node, nodes, edges);
@@ -289,10 +283,9 @@ void ReclassifyLinks(const std::string& ways_file,
       throw std::runtime_error("Exceeding kMaxLinkEdges in ReclassifyLinks");
     }
     tree_node->link_edge_index.push_back(link_edge_index);
-    tree_node->children.emplace_back(
-              (bundle.node.ref() || bundle.node.exit_to()),
-              bundle.non_link_count, bundle.link_count, rc,
-              end_node.position(), tree_node);
+    tree_node->children.emplace_back((bundle.node.ref() || bundle.node.exit_to()),
+                                     bundle.non_link_count, bundle.link_count, rc,
+                                     end_node.position(), tree_node);
 
     // Return if this end node has already been visited (could be a loop)
     if (visitedset.find(end_node.position()) != visitedset.end()) {
@@ -346,9 +339,8 @@ void ReclassifyLinks(const std::string& ways_file,
       auto bundle = collect_node_edges(node, nodes, edges);
 
       // Form the link tree from this exit node. Add the root exit node.
-      LinkTreeNode exit_node((bundle.node.ref() || bundle.node.exit_to()),
-                bundle.non_link_count, bundle.link_count,
-                classification, node.position(), nullptr);
+      LinkTreeNode exit_node((bundle.node.ref() || bundle.node.exit_to()), bundle.non_link_count,
+                             bundle.link_count, classification, node.position(), nullptr);
       visitedset.insert(node.position());
 
       // Expand link edges from the exit node
@@ -356,9 +348,8 @@ void ReclassifyLinks(const std::string& ways_file,
         // Get the edge information. Skip non-link edges, link edges that are
         // not driveable in the forward direction, and link edges already
         // tested for reclassification
-        if (!startedge.first.attributes.link ||
-            !startedge.first.attributes.driveforward ||
-             startedge.first.attributes.reclass_link) {
+        if (!startedge.first.attributes.link || !startedge.first.attributes.driveforward ||
+            startedge.first.attributes.reclass_link) {
           continue;
         }
 
@@ -376,9 +367,8 @@ void ReclassifyLinks(const std::string& ways_file,
           for (const auto& expandededge : expanded.node_edges) {
             // Do not allow use of the start edge, any non-link edge, or any
             // edge not driveable in the forward direction from the node.
-            if (expandededge.second == startedge.second ||
-               !expandededge.first.attributes.link ||
-               !expandededge.first.attributes.driveforward) {
+            if (expandededge.second == startedge.second || !expandededge.first.attributes.link ||
+                !expandededge.first.attributes.driveforward) {
               continue;
             }
 
@@ -388,8 +378,7 @@ void ReclassifyLinks(const std::string& ways_file,
             if (expandededge.first.attributes.reclass_link) {
               uint32_t rc1 = tree_node->classification;
               uint32_t rc2 = expandededge.first.attributes.importance;
-              if (rc1 == kAbsurdRoadClass ||
-                 (rc2 > rc1 && rc2 != kAbsurdRoadClass)) {
+              if (rc1 == kAbsurdRoadClass || (rc2 > rc1 && rc2 != kAbsurdRoadClass)) {
                 tree_node->classification = rc2;
               }
               leaves.push(tree_node);
@@ -408,9 +397,9 @@ void ReclassifyLinks(const std::string& ways_file,
       tc_count += counts.second;
     }
   }
-  LOG_INFO("Finished with " + std::to_string(count) + " reclassified. " +
-           " Turn channel count = " + std::to_string(tc_count));
+  LOG_INFO("Finished with " + std::to_string(count) + " reclassified. " + " Turn channel count = " +
+           std::to_string(tc_count));
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

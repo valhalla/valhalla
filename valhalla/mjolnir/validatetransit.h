@@ -1,13 +1,13 @@
 #ifndef VALHALLA_MJOLNIR_VALIDATETRANSIT_H
 #define VALHALLA_MJOLNIR_VALIDATETRANSIT_H
 
-#include <cstdint>
 #include <boost/property_tree/ptree.hpp>
+#include <cstdint>
 #include <unordered_set>
 
-#include <valhalla/mjolnir/util.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/mjolnir/util.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -18,7 +18,7 @@ struct OneStopTest {
   std::string route_id;
   std::string date_time;
 
-  bool operator < (const OneStopTest& other) const {
+  bool operator<(const OneStopTest& other) const {
     return origin < other.origin;
   }
 };
@@ -42,8 +42,7 @@ void ParseLogFile(const std::string& filename);
  * Class used to test graph tile information at the transit level.
  */
 class ValidateTransit {
- public:
-
+public:
   /**
    * Validate the transit level graph tile information.
    * @param pt            property tree containing the hierarchy configuration
@@ -55,10 +54,9 @@ class ValidateTransit {
   static bool Validate(const boost::property_tree::ptree& pt,
                        const std::unordered_set<baldr::GraphId>& all_tiles,
                        const std::vector<OneStopTest>& onestoptests);
-
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_VALIDATETRANSIT_H
+#endif // VALHALLA_MJOLNIR_VALIDATETRANSIT_H

@@ -6,11 +6,11 @@ namespace sif {
 
 // Travel modes
 enum class TravelMode : uint8_t {
-   kDrive = 0,
-   kPedestrian = 1,
-   kBicycle = 2,
-   kPublicTransit = 3,
-   kMaxTravelMode = 4
+  kDrive = 0,
+  kPedestrian = 1,
+  kBicycle = 2,
+  kPublicTransit = 3,
+  kMaxTravelMode = 4
 };
 
 // Vehicle travel type
@@ -19,28 +19,25 @@ enum class VehicleType : uint8_t {
   kMotorcycle = 1,
   kBus = 2,
   kTractorTrailer = 3,
-  kMotorScooter = 4
+  kMotorScooter = 4,
+  kFourWheelDrive = 5
 };
 
 // Pedestrian travel type
-enum class PedestrianType : uint8_t {
-  kFoot = 0,
-  kWheelchair = 1,
-  kSegway = 2
-};
+enum class PedestrianType : uint8_t { kFoot = 0, kWheelchair = 1, kSegway = 2 };
 
 // Bicycle travel type
 enum class BicycleType : uint8_t {
-  kRoad     = 0,
-  kCross    = 1,    // Cyclocross bike - road bike setup with wider tires
-  kHybrid   = 2,    // Hybrid or city bike
+  kRoad = 0,
+  kCross = 1,  // Cyclocross bike - road bike setup with wider tires
+  kHybrid = 2, // Hybrid or city bike
   kMountain = 3
 };
 
 // Transit travel type
 // TODO: these are in graphconstants
 // decide what to do
-//enum class TransitType : uint8_t {
+// enum class TransitType : uint8_t {
 //  kTram = 0,
 //  kMetro = 1,
 //  kRail = 2,
@@ -62,9 +59,7 @@ struct Cost {
   /**
    * Default constructor
    */
-  Cost()
-      : cost(0.0f),
-        secs(0.0f) {
+  Cost() : cost(0.0f), secs(0.0f) {
   }
 
   /**
@@ -72,9 +67,7 @@ struct Cost {
    * @param  c  Cost (units defined by the costing model)
    * @param  s  Time in seconds.
    */
-  Cost(const float c, const float s)
-       : cost(c),
-         secs(s) {
+  Cost(const float c, const float s) : cost(c), secs(s) {
   }
 
   /**
@@ -82,7 +75,7 @@ struct Cost {
    * @param  other  Cost to add to this cost.
    * @return  Returns the sum of the costs.
    */
-  Cost operator + (const Cost& other) const {
+  Cost operator+(const Cost& other) const {
     return Cost(cost + other.cost, secs + other.secs);
   }
 
@@ -91,7 +84,7 @@ struct Cost {
    * @param  other  Cost to subtract from this cost.
    * @return  Returns the cost after subtraction.
    */
-  Cost operator - (const Cost& other) const {
+  Cost operator-(const Cost& other) const {
     return Cost(cost - other.cost, secs - other.secs);
   }
 
@@ -100,7 +93,7 @@ struct Cost {
    * @param   other  Cost to add to the current cost.
    * @return  Returns address of this cost.
    */
-  Cost& operator += (const Cost& other) {
+  Cost& operator+=(const Cost& other) {
     cost += other.cost;
     secs += other.secs;
     return *this;
@@ -111,7 +104,7 @@ struct Cost {
    * @param   other  Cost to subtract from the current cost.
    * @return  Returns address of this cost.
    */
-  Cost& operator -= (const Cost& other) {
+  Cost& operator-=(const Cost& other) {
     cost -= other.cost;
     secs -= other.secs;
     return *this;
@@ -122,7 +115,7 @@ struct Cost {
    * @param  f  Scale / multiplication factor.
    * @return  Returns address of this cost.
    */
-  Cost& operator *= (const float f) {
+  Cost& operator*=(const float f) {
     cost *= f;
     secs *= f;
     return *this;
@@ -134,7 +127,7 @@ struct Cost {
    * @return  Returns a new cost that is the product of this cost and
    *          the scaling factor.
    */
-  Cost operator * (const float f) const {
+  Cost operator*(const float f) const {
     return Cost(cost * f, secs * f);
   }
 
@@ -143,7 +136,7 @@ struct Cost {
    * @param  other  Cost to compare against.
    * @return  Returns true if this cost is less than the other cost.
    */
-  bool operator < (const Cost& other) const {
+  bool operator<(const Cost& other) const {
     return cost < other.cost;
   }
 
@@ -152,12 +145,12 @@ struct Cost {
    * @param  other  Cost to compare against.
    * @return  Returns true if this cost is greater than the other cost.
    */
-  bool operator > (const Cost& other) const {
+  bool operator>(const Cost& other) const {
     return cost > other.cost;
   }
 };
 
-}
-}
+} // namespace sif
+} // namespace valhalla
 
-#endif  // VALHALLA_SIF_COST_CONSTANTS_H_
+#endif // VALHALLA_SIF_COST_CONSTANTS_H_

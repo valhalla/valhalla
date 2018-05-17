@@ -7,28 +7,36 @@ namespace valhalla {
 namespace baldr {
 
 // Static tile levels
-std::map<uint8_t, TileLevel> TileHierarchy::levels_  = {
-  {2, TileLevel{2, stringToRoadClass.find("ServiceOther")->second, "local",
-    midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}}, .25, static_cast<unsigned short>(kBinsDim)}}},
-  {1, TileLevel{1, stringToRoadClass.find("Tertiary")->second, "arterial",
-    midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}}, 1, static_cast<unsigned short>(kBinsDim)}}},
-  {0, TileLevel{0, stringToRoadClass.find("Primary")->second, "highway",
-    midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}}, 4, static_cast<unsigned short>(kBinsDim)}}}
-};
+std::map<uint8_t, TileLevel> TileHierarchy::levels_ = {
+    {2, TileLevel{2, stringToRoadClass.find("ServiceOther")->second, "local",
+                  midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                   .25,
+                                                   static_cast<unsigned short>(kBinsDim)}}},
+    {1, TileLevel{1, stringToRoadClass.find("Tertiary")->second, "arterial",
+                  midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                   1,
+                                                   static_cast<unsigned short>(kBinsDim)}}},
+    {0, TileLevel{0, stringToRoadClass.find("Primary")->second, "highway",
+                  midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                   4,
+                                                   static_cast<unsigned short>(kBinsDim)}}}};
 
-//Should we make a class lower than service other for transit?
-TileLevel TileHierarchy::transit_level_ = {3, stringToRoadClass.find("ServiceOther")->second, "transit",
-  midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}}, .25, static_cast<unsigned short>(kBinsDim)}};
+// Should we make a class lower than service other for transit?
+TileLevel TileHierarchy::transit_level_ = {
+    3, stringToRoadClass.find("ServiceOther")->second, "transit",
+    midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                     .25,
+                                     static_cast<unsigned short>(kBinsDim)}};
 
 // Returns the GraphId of the requested tile based on a lat,lng and a level.
 // If the level is not supported an invalid id will be returned.
 GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const uint8_t level) {
   GraphId id;
   const auto& tl = levels().find(level);
-  if(tl != levels_.end()) {
+  if (tl != levels_.end()) {
     auto tile_id = tl->second.tiles.TileId(pointll);
     if (tile_id >= 0) {
-      id = { static_cast<uint32_t>(tile_id), level, 0 };
+      id = {static_cast<uint32_t>(tile_id), level, 0};
     }
   }
   return id;
@@ -52,9 +60,8 @@ uint8_t TileHierarchy::get_max_level() {
 
 // Returns all the GraphIds of the tiles which intersect the given bounding
 // box at that level.
-std::vector<GraphId> TileHierarchy::GetGraphIds(
-        const midgard::AABB2<midgard::PointLL> &bbox,
-        const uint8_t level) {
+std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::PointLL>& bbox,
+                                                const uint8_t level) {
   std::vector<GraphId> ids;
   auto itr = levels().find(level);
   if (itr != levels().end()) {
@@ -70,10 +77,9 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(
 
 // Returns all the GraphIds of the tiles which intersect the given bounding
 // box at any level.
-std::vector<GraphId> TileHierarchy::GetGraphIds(
-        const midgard::AABB2<midgard::PointLL> &bbox) {
+std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::PointLL>& bbox) {
   std::vector<GraphId> ids;
-  for (const auto &entry : levels()) {
+  for (const auto& entry : levels()) {
     auto level_ids = GetGraphIds(bbox, entry.first);
     ids.reserve(ids.size() + level_ids.size());
     ids.insert(ids.end(), level_ids.begin(), level_ids.end());
@@ -81,5 +87,5 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(
   return ids;
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

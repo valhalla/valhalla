@@ -1,8 +1,8 @@
-#include <vector>
-#include <algorithm>
-#include <exception>
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include <algorithm>
+#include <exception>
+#include <vector>
 
 #include "thor/route_matcher.h"
 
@@ -22,7 +22,7 @@ namespace thor {
 
 namespace {
 
-using end_edge_t = std::pair<PathLocation::PathEdge, float>;
+using end_edge_t = std::pair<odin::Location::PathEdge, float>;
 using end_node_t = std::unordered_map<GraphId, end_edge_t>;
 
 // Total distance match delta
@@ -42,19 +42,19 @@ float length_comparison(const float length, const bool exact_match) {
     t = length * 0.1f;
     max_t = 100.0f;
   }
-  float tolerance = (t < kMinLengthTolerance) ? kMinLengthTolerance :
-                      (t > max_t) ? max_t : t;
+  float tolerance = (t < kMinLengthTolerance) ? kMinLengthTolerance : (t > max_t) ? max_t : t;
   return length + tolerance;
 }
 
 // Get a map of end edges and the start node of each edge. This is used
 // to terminate the edge walking method.
 end_node_t GetEndEdges(GraphReader& reader,
-        const std::vector<PathLocation>& correlated) {
+                       const google::protobuf::RepeatedPtrField<odin::Location>& correlated) {
   end_node_t end_nodes;
-  for (const auto& edge : correlated.back().edges) {
+  for (const auto& edge : correlated.rbegin()->path_edges()) {
     // If destination is at a node - skip any outbound edge
-    if (edge.begin_node() || !edge.id.Is_Valid()) {
+    GraphId graphid(edge.graph_id());
+    if (edge.begin_node() || !graphid.Is_Valid()) {
       continue;
     }
 
@@ -63,12 +63,12 @@ end_node_t GetEndEdges(GraphReader& reader,
     // at a node (not partially along the edge)
     if (edge.end_node()) {
       // If this edge ends at a node add its end node
-      auto* tile = reader.GetGraphTile(edge.id);
-      auto* directededge = tile->directededge(edge.id);
+      auto* tile = reader.GetGraphTile(graphid);
+      auto* directededge = tile->directededge(graphid);
       end_nodes.insert({directededge->endnode(), std::make_pair(edge, 0.0f)});
     } else {
       // Get the start node of this edge
-      GraphId opp_edge_id = reader.GetOpposingEdgeId(edge.id);
+      GraphId opp_edge_id = reader.GetOpposingEdgeId(graphid);
       auto* tile = reader.GetGraphTile(opp_edge_id);
       if (tile == nullptr) {
         throw std::runtime_error("Couldn't get the opposing edge tile");
@@ -76,7 +76,7 @@ end_node_t GetEndEdges(GraphReader& reader,
       auto* opp_edge = tile->directededge(opp_edge_id);
 
       // Compute partial distance along end edge
-      float dist = opp_edge->length() * edge.dist;
+      float dist = opp_edge->length() * edge.percent_along();
       end_nodes.insert({opp_edge->endnode(), std::make_pair(edge, dist)});
     }
   }
@@ -86,16 +86,20 @@ end_node_t GetEndEdges(GraphReader& reader,
   return end_nodes;
 }
 
-
 bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
-                      const TravelMode& mode, GraphReader& reader,
+                      const TravelMode& mode,
+                      GraphReader& reader,
                       const std::vector<meili::Measurement>& shape,
                       const std::vector<float>& distances,
-                      size_t& correlated_index, const GraphTile* tile,
-                      const GraphId& node, end_node_t& end_nodes,
-                      EdgeLabel& prev_edge_label, float& elapsed_time,
+                      size_t& correlated_index,
+                      const GraphTile* tile,
+                      const GraphId& node,
+                      end_node_t& end_nodes,
+                      EdgeLabel& prev_edge_label,
+                      float& elapsed_time,
                       std::vector<PathInfo>& path_infos,
-                      const bool from_transition, GraphId& end_node,
+                      const bool from_transition,
+                      GraphId& end_node,
                       const float total_distance) {
   // Done expanding when node equals stop node and the accumulated distance plus
   // the partial last edge distance is approximately equal to the total distance
@@ -109,7 +113,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
 
     // Verify distance is approximately equal to the total distance
     if (midgard::equal<float>((acc_distance + n->second.second), total_distance,
-        kTotalDistanceEpsilon)) {
+                              kTotalDistanceEpsilon)) {
       end_node = node;
       return true;
     }
@@ -128,8 +132,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
     // Look back in path_infos by 1-2 edges to make sure we aren't in a loop.
     // A loop can occur if we have edges shorter than the lat,lng tolerance.
     uint32_t n = path_infos.size();
-    if (n > 1 &&  (edge_id == path_infos[n-2].edgeid ||
-        edge_id == path_infos[n-1].edgeid)) {
+    if (n > 1 && (edge_id == path_infos[n - 2].edgeid || edge_id == path_infos[n - 1].edgeid)) {
       continue;
     }
 
@@ -142,9 +145,8 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         if (end_node_tile == nullptr) {
           continue;
         }
-        if (expand_from_node(mode_costing, mode, reader, shape, distances,
-                             correlated_index, end_node_tile, de->endnode(),
-                             end_nodes, prev_edge_label, elapsed_time,
+        if (expand_from_node(mode_costing, mode, reader, shape, distances, correlated_index,
+                             end_node_tile, de->endnode(), end_nodes, prev_edge_label, elapsed_time,
                              path_infos, true, end_node, total_distance)) {
           return true;
         } else {
@@ -174,10 +176,12 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       }
 
       // Found a match if shape equals directed edge LL within tolerance
-      if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) && de->length() < length_comparison(length, true)) {
+      if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
+          de->length() < length_comparison(length, true)) {
         // Update the elapsed time based on transition cost
-        elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
-            de, node_info, prev_edge_label).secs;
+        elapsed_time += mode_costing[static_cast<int>(mode)]
+                            ->TransitionCost(de, node_info, prev_edge_label)
+                            .secs;
 
         // Update the elapsed time based on edge cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs;
@@ -189,10 +193,9 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end edge...
-        if (expand_from_node(mode_costing, mode, reader, shape, distances,
-                             index, end_node_tile, de->endnode(),
-                             end_nodes, prev_edge_label, elapsed_time,
-                             path_infos, false, end_node, total_distance)) {
+        if (expand_from_node(mode_costing, mode, reader, shape, distances, index, end_node_tile,
+                             de->endnode(), end_nodes, prev_edge_label, elapsed_time, path_infos,
+                             false, end_node, total_distance)) {
           return true;
         } else {
           // Match failed along this edge, pop the last entry off path_infos
@@ -207,21 +210,21 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
   return false;
 }
 
-}
+} // namespace
 
 // For the route path using an edge walking method.
-bool RouteMatcher::FormPath(
-    const std::shared_ptr<DynamicCost>* mode_costing,
-    const sif::TravelMode& mode, GraphReader& reader,
-    const std::vector<meili::Measurement>& shape,
-    const std::vector<PathLocation>& correlated,
-    std::vector<PathInfo>& path_infos) {
+bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
+                            const sif::TravelMode& mode,
+                            GraphReader& reader,
+                            const std::vector<meili::Measurement>& shape,
+                            const google::protobuf::RepeatedPtrField<odin::Location>& correlated,
+                            std::vector<PathInfo>& path_infos) {
   // Form distances between shape points
   float total_distance = 0.0f;
   std::vector<float> distances;
   distances.push_back(0.0f);
   for (size_t i = 1; i < shape.size(); i++) {
-    float d = shape[i].lnglat().Distance(shape[i-1].lnglat());
+    float d = shape[i].lnglat().Distance(shape[i - 1].lnglat());
     distances.push_back(d);
     total_distance += d;
   }
@@ -232,23 +235,24 @@ bool RouteMatcher::FormPath(
 
   // Iterate through start edges
   float elapsed_time = 0.0f;
-  for (const auto& edge : correlated.front().edges) {
+  for (const auto& edge : correlated.begin()->path_edges()) {
     // If origin is at a node - skip any inbound edge
     if (edge.end_node()) {
       continue;
     }
 
     // Process and validate begin edge
-    if (!edge.id.Is_Valid()) {
+    GraphId graphid(edge.graph_id());
+    if (!graphid.Is_Valid()) {
       throw std::runtime_error("Invalid begin edge id");
     }
-    const GraphTile* begin_edge_tile = reader.GetGraphTile(edge.id);
+    const GraphTile* begin_edge_tile = reader.GetGraphTile(graphid);
     if (begin_edge_tile == nullptr) {
       throw std::runtime_error("Begin tile is null");
     }
 
     // Process directed edge and info
-    const DirectedEdge* de = begin_edge_tile->directededge(edge.id);
+    const DirectedEdge* de = begin_edge_tile->directededge(graphid);
     const GraphTile* end_node_tile = reader.GetGraphTile(de->endnode());
     if (begin_edge_tile == nullptr) {
       throw std::runtime_error("End node tile is null");
@@ -258,7 +262,7 @@ bool RouteMatcher::FormPath(
     // Initialize indexes and shape
     size_t index = 0;
     float length = 0.0f;
-    float de_remaining_length = de->length() * (1 - edge.dist);
+    float de_remaining_length = de->length() * (1 - edge.percent_along());
     float de_length = length_comparison(de_remaining_length, true);
     EdgeLabel prev_edge_label;
     // Loop over shape to form path from matching edges
@@ -269,23 +273,23 @@ bool RouteMatcher::FormPath(
       }
 
       // Check if shape is within tolerance at the end node
-      if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) && de_remaining_length < length_comparison(length, true)) {
+      if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
+          de_remaining_length < length_comparison(length, true)) {
 
         // Update the elapsed time edge cost at begin edge
-        elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs
-            * (1 - edge.dist);
+        elapsed_time +=
+            mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs * (1 - edge.percent_along());
 
         // Add begin edge
-        path_infos.emplace_back(mode, elapsed_time, edge.id, 0);
+        path_infos.emplace_back(mode, elapsed_time, graphid, 0);
 
         // Set previous edge label
-        prev_edge_label = {kInvalidLabel, edge.id, de, {}, 0, 0, mode, 0};
+        prev_edge_label = {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0};
 
         // Continue walking shape to find the end node
         GraphId end_node;
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, index,
-                             end_node_tile, de->endnode(), end_nodes,
-                             prev_edge_label, elapsed_time, path_infos,
+        if (expand_from_node(mode_costing, mode, reader, shape, distances, index, end_node_tile,
+                             de->endnode(), end_nodes, prev_edge_label, elapsed_time, path_infos,
                              false, end_node, total_distance)) {
           // If node equals stop node then when are done expanding - get
           // the matching end edge
@@ -303,22 +307,25 @@ bool RouteMatcher::FormPath(
 
           // Get the end edge and add transition time and partial time along
           // the destination edge.
-          const GraphTile* end_edge_tile = reader.GetGraphTile(end_edge.id);
+          GraphId end_edge_graphid(end_edge.graph_id());
+          const GraphTile* end_edge_tile = reader.GetGraphTile(end_edge_graphid);
           if (end_edge_tile == nullptr) {
             throw std::runtime_error("End edge tile is null");
           }
-          const DirectedEdge* end_de = end_edge_tile->directededge(end_edge.id);
+          const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
 
           // Update the elapsed time based on transition cost
-          elapsed_time += mode_costing[static_cast<int>(mode)]->TransitionCost(
-              end_de, end_edge_tile->node(n->first), prev_edge_label).secs;
+          elapsed_time +=
+              mode_costing[static_cast<int>(mode)]
+                  ->TransitionCost(end_de, end_edge_tile->node(n->first), prev_edge_label)
+                  .secs;
 
           // Update the elapsed time based on edge cost
           elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(end_de).secs *
-                          end_edge.dist;
+                          end_edge.percent_along();
 
           // Add end edge
-          path_infos.emplace_back(mode, elapsed_time, end_edge.id, 0);
+          path_infos.emplace_back(mode, elapsed_time, end_edge_graphid, 0);
 
           return true;
         } else {
@@ -332,22 +339,22 @@ bool RouteMatcher::FormPath(
     // Did not find the end of the origin edge. Check for special case where
     // end is along the same edge.
     for (auto end : end_nodes) {
-      if (end.second.first.id == edge.id) {
+      if (end.second.first.graph_id() == edge.graph_id()) {
         // Update the elapsed time based on edge cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs *
-                               (end.second.first.dist - edge.dist);
+                        (end.second.first.percent_along() - edge.percent_along());
 
         // Add end edge
-        path_infos.emplace_back(mode, elapsed_time, edge.id, 0);
+        path_infos.emplace_back(mode, elapsed_time, GraphId(edge.graph_id()), 0);
         return true;
       }
     }
   }
   // TODO - would be nice to know this, but if map-matching fallback is specified
   // this would not fall back.
-//  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
+  //  throw std::runtime_error("RouteMatcher::FormPath could not match to begin edge");
   return false;
 }
 
-}
-}
+} // namespace thor
+} // namespace valhalla

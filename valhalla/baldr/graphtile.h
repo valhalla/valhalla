@@ -3,26 +3,26 @@
 
 #include <cstdint>
 #include <valhalla/baldr/accessrestriction.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
+#include <valhalla/baldr/curler.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edge_elevation.h>
+#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/trafficassociation.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
-#include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transitschedule.h>
+#include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
-#include <valhalla/baldr/sign.h>
-#include <valhalla/baldr/edgeinfo.h>
-#include <valhalla/baldr/admininfo.h>
-#include <valhalla/baldr/curler.h>
 
-#include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/util.h>
 
 #include <memory>
 #include <valhalla/baldr/signinfo.h>
@@ -30,14 +30,11 @@
 namespace valhalla {
 namespace baldr {
 
-using tile_index_pair = std::pair<uint32_t, uint32_t>;
-
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
 class GraphTile {
- public:
-
+public:
   /**
    * Constructor
    */
@@ -62,8 +59,9 @@ class GraphTile {
 
   /**
    * Constructor given the graph Id, in memory tile data
-   * @param  graphid  Tile Id.
-   * @param  tile     Vector of char data with tile's data..
+   * @param  tile_url URL of tile
+   * @param  graphid Tile Id
+   * @param  curler curler that will handle tile downloading
    */
   GraphTile(const std::string& tile_url, const GraphId& graphid, curler_t& curler);
 
@@ -82,7 +80,6 @@ class GraphTile {
   /**
    * Get the tile Id given the full path to the file.
    * @param  fname    Filename with complete path.
-   * @param  tile_dir Base tile directory.
    * @return  Returns the tile Id.
    */
   static GraphId GetTileId(const std::string& fname);
@@ -114,13 +111,13 @@ class GraphTile {
    * @return  Returns a pointer to the node.
    */
   const NodeInfo* node(const GraphId& node) const {
-    if (node.id() < header_->nodecount())
+    if (node.id() < header_->nodecount()) {
       return &nodes_[node.id()];
+    }
     throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                               std::to_string(node.tileid()) + "," +
-                               std::to_string(node.level()) + "," +
-                               std::to_string(node.id()) + " nodecount= " +
-                               std::to_string(header_->nodecount()));
+                             std::to_string(node.tileid()) + "," + std::to_string(node.level()) +
+                             "," + std::to_string(node.id()) + " nodecount= " +
+                             std::to_string(header_->nodecount()));
   }
 
   /**
@@ -129,13 +126,13 @@ class GraphTile {
    * @return  Returns a pointer to the node.
    */
   const NodeInfo* node(const size_t idx) const {
-    if (idx < header_->nodecount())
+    if (idx < header_->nodecount()) {
       return &nodes_[idx];
-    throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                             std::to_string(header_->graphid().tileid()) + "," +
-                             std::to_string(header_->graphid().level()) + "," +
-                             std::to_string(idx)  + " nodecount= " +
-                             std::to_string(header_->nodecount()));
+    }
+    throw std::runtime_error(
+        "GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) +
+        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+        " nodecount= " + std::to_string(header_->nodecount()));
   }
 
   /**
@@ -144,12 +141,13 @@ class GraphTile {
    * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const GraphId& edge) const {
-    if (edge.id() < header_->directededgecount())
+    if (edge.id() < header_->directededgecount()) {
       return &directededges_[edge.id()];
+    }
     throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
                              std::to_string(header_->graphid().tileid()) + "," +
                              std::to_string(header_->graphid().level()) + "," +
-                             std::to_string(edge.id())  + " directededgecount= " +
+                             std::to_string(edge.id()) + " directededgecount= " +
                              std::to_string(header_->directededgecount()));
   }
 
@@ -159,12 +157,13 @@ class GraphTile {
    * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const size_t idx) const {
-    if (idx < header_->directededgecount())
+    if (idx < header_->directededgecount()) {
       return &directededges_[idx];
+    }
     throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
                              std::to_string(header_->graphid().tileid()) + "," +
                              std::to_string(header_->graphid().level()) + "," +
-                             std::to_string(idx)  + " directededgecount= " +
+                             std::to_string(idx) + " directededgecount= " +
                              std::to_string(header_->directededgecount()));
   }
 
@@ -186,12 +185,12 @@ class GraphTile {
    * Convenience method to get opposing edge Id given a directed edge.
    * The end node of the directed edge must be in this tile.
    * @param  edge  Directed edge.
-   * @return Returns the GraphId of hte opposing directed edge.
+   * @return Returns the GraphId of the opposing directed edge.
    */
   GraphId GetOpposingEdgeId(const DirectedEdge* edge) const {
     GraphId endnode = edge->endnode();
-    return { endnode.tileid(), endnode.level(),
-             node(endnode.id())->edge_index() + edge->opp_index() };
+    return {endnode.tileid(), endnode.level(),
+            node(endnode.id())->edge_index() + edge->opp_index()};
   }
 
   /**
@@ -208,9 +207,8 @@ class GraphTile {
    * @return  Returns the vector of complex restrictions in the order requested
    *          based on the id and modes.
    */
-  std::vector<ComplexRestriction> GetRestrictions(const bool forward,
-                                                  const GraphId id,
-                                                  const uint64_t modes) const;
+  std::vector<ComplexRestriction*>
+  GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const;
 
   /**
    * Convenience method to get the directed edges originating at a node.
@@ -219,8 +217,8 @@ class GraphTile {
    * @param  edge_index  (OUT) Index of the first outbound edge.
    * @return  Returns a pointer to the first outbound directed edge.
    */
-  const DirectedEdge* GetDirectedEdges(const uint32_t node_index,
-                                       uint32_t& count, uint32_t& edge_index) const;
+  const DirectedEdge*
+  GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const;
 
   /**
    * Convenience method to get the names for an edge given the offset to the
@@ -229,6 +227,14 @@ class GraphTile {
    * @return  Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
+
+  /**
+   * Convenience method to get the types for the names given the offset to the
+   * edge information.
+   * @param  edgeinfo_offset  Offset to the edge info.
+   * @return  Returns unit16_t.  If a bit is set, then it is a ref.
+   */
+  uint16_t GetTypes(const uint32_t edgeinfo_offset) const;
 
   /**
    * Get the admininfo at the specified index. Populates the state name and
@@ -270,7 +276,7 @@ class GraphTile {
    * @param   date_before_tile  Is the date that was inputed before
    *                            the tile creation date?
    * @param   wheelchair        Only find departures with wheelchair access if true
-   * @param   bicyle            Only find departures with bicycle access if true
+   * @param   bicycle           Only find departures with bicycle access if true
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departures are found.
    */
@@ -278,7 +284,7 @@ class GraphTile {
                                            const uint32_t current_time,
                                            const uint32_t day,
                                            const uint32_t dow,
-                                           bool  date_before_tile,
+                                           bool date_before_tile,
                                            bool wheelchair,
                                            bool bicycle) const;
 
@@ -298,28 +304,28 @@ class GraphTile {
    * Get the departures based on the line Id
    * @return  Returns a map of lineids to departures.
    */
-  std::unordered_map<uint32_t,TransitDeparture*> GetTransitDepartures() const;
+  std::unordered_map<uint32_t, TransitDeparture*> GetTransitDepartures() const;
 
   /**
-   * Get the stop onestops in this tile
-   * @return  Returns a map of onestops
+   * Get the stop onestop Ids in this tile.
+   * @return  Returns a map of transit stops with onestop Ids as the key and
+   *          a GraphId (transit tile plus the stop Id) as the value.
    */
-  std::unordered_map<std::string, tile_index_pair>
-    GetStopOneStops() const;
+  const std::unordered_map<std::string, GraphId>& GetStopOneStops() const;
 
   /**
-   * Get the route onestops in this tile
-   * @return  Returns a map of onestops
+   * Get the route onestop Ids in this tile.
+   * @return  Returns a map with the route onestop Id as the key and a list
+   *          of GraphIds (transit tile plus route line Id) as the value.
    */
-  std::unordered_map<std::string, std::list<tile_index_pair>>
-    GetRouteOneStops() const;
+  const std::unordered_map<std::string, std::list<GraphId>>& GetRouteOneStops() const;
 
   /**
-   * Get the operator onestops in this tile
-   * @return  Returns a map of onestops
+   * Get the operator onestops in this tile.
+   * @return  Returns a map with onestop Id as the key with a list of GraphIds
+   *          as the value.
    */
-  std::unordered_map<std::string, std::list<tile_index_pair>>
-    GetOperatorOneStops() const;
+  const std::unordered_map<std::string, std::list<GraphId>>& GetOperatorOneStops() const;
 
   /**
    * Get the transit stop given its index
@@ -388,7 +394,7 @@ class GraphTile {
 
   /**
    * Get lane connections ending on this edge.
-   * @param  edge  GraphId of the directed edge.
+   * @param  idx  GraphId of the directed edge.
    * @return  Returns a list of lane connections ending on this edge.
    */
   std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
@@ -399,17 +405,15 @@ class GraphTile {
    * @return  Returns a pointer to the edge elevation data for the edge.
    *          Returns nullptr if no elevation data exists.
    */
-  const EdgeElevation* edge_elevation(const GraphId& edge) const  {
-    if (header_->has_edge_elevation() &&
-        edge.id() < header_->directededgecount()) {
+  const EdgeElevation* edge_elevation(const GraphId& edge) const {
+    if (header_->has_edge_elevation() && edge.id() < header_->directededgecount()) {
       return &edge_elevation_[edge.id()];
     } else {
       return nullptr;
     }
   }
 
- protected:
-
+protected:
   // Graph tile memory, this must be shared so that we can put it into cache
   std::shared_ptr<std::vector<char>> graphtile_;
 
@@ -500,13 +504,13 @@ class GraphTile {
   EdgeElevation* edge_elevation_;
 
   // Map of stop one stops in this tile.
-  std::unordered_map<std::string, tile_index_pair> stop_one_stops;
+  std::unordered_map<std::string, GraphId> stop_one_stops;
 
   // Map of route one stops in this tile.
-  std::unordered_map<std::string, std::list<tile_index_pair>> route_one_stops;
+  std::unordered_map<std::string, std::list<GraphId>> route_one_stops;
 
   // Map of operator one stops in this tile.
-  std::unordered_map<std::string, std::list<tile_index_pair>> oper_one_stops;
+  std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
 
   /**
    * Set pointers to internal tile data structures.
@@ -514,8 +518,7 @@ class GraphTile {
    * @param  tile_ptr   Pointer to the start of the tile.
    * @param  tile_size  Tile size in bytes.
    */
-  void Initialize(const GraphId& graphid, char* tile_ptr,
-                  const size_t tile_size);
+  void Initialize(const GraphId& graphid, char* tile_ptr, const size_t tile_size);
 
   /**
    * For transit tiles, save off the pair<tileid,lineid> lookup via
@@ -528,7 +531,7 @@ class GraphTile {
   void AssociateOneStopIds(const GraphId& graphid);
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_GRAPHTILE_H_
+#endif // VALHALLA_BALDR_GRAPHTILE_H_

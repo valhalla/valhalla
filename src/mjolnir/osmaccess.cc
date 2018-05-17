@@ -1,9 +1,9 @@
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/util.h"
 
-#include <iostream>
-#include <cstring>
 #include "midgard/logging.h"
+#include <cstring>
+#include <iostream>
 
 using namespace valhalla::baldr;
 
@@ -105,5 +105,5 @@ bool OSMAccess::motorroad_tag() const {
   return attributes_.fields.motorroad_tag;
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

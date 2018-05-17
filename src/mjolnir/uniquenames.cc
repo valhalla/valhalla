@@ -18,22 +18,22 @@ uint32_t UniqueNames::index(const std::string& name) {
   uint32_t index = 0;
   auto it = names_.find(name);
   if (it != names_.end()) {
-     index = it->second;
-  }
-  else {
-     // Not in the map, add index and update
-     it = names_.insert(it, NamesMap::value_type(name, 0));
-     indexes_.push_back(it);
-     index = indexes_.size() - 1;
-     it->second = index;
+    index = it->second;
+  } else {
+    // Not in the map, add index and update
+    it = names_.insert(it, NamesMap::value_type(name, 0));
+    indexes_.push_back(it);
+    index = indexes_.size() - 1;
+    it->second = index;
   }
   return index;
 }
 
 // Get the name given the index
 const std::string& UniqueNames::name(const uint32_t index) const {
-  if (index < (uint32_t)indexes_.size())
+  if (index < (uint32_t)indexes_.size()) {
     return indexes_[index]->first;
+  }
 
   // Return the empty string in the index 0 location
   return indexes_[0]->first;
@@ -59,5 +59,5 @@ void UniqueNames::Log() const {
   LOG_DEBUG("Number of indexes: " + std::to_string(indexes_.size()));
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

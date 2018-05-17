@@ -1,10 +1,10 @@
 #include <algorithm>
-#include <ostream>
 #include <iostream>
+#include <ostream>
 
+#include "baldr/edgeinfo.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "baldr/edgeinfo.h"
 #include "mjolnir/edgeinfobuilder.h"
 
 namespace valhalla {
@@ -16,11 +16,9 @@ void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
 }
 
 // Set the list of name info (offsets, etc.) used by this edge.
-void EdgeInfoBuilder::set_name_info_list(
-    const std::vector<NameInfo>& name_info_list) {
+void EdgeInfoBuilder::set_name_info_list(const std::vector<NameInfo>& name_info_list) {
   if (name_info_list.size() > kMaxNamesPerEdge) {
-    LOG_WARN("Tried to exceed max names per edge: " +
-                  std::to_string(name_info_list.size()));
+    LOG_WARN("Tried to exceed max names per edge: " + std::to_string(name_info_list.size()));
   } else {
     name_info_list_ = name_info_list;
   }
@@ -36,18 +34,15 @@ void EdgeInfoBuilder::AddNameInfo(const baldr::NameInfo& info) {
 }
 
 // Set the shape of the edge. Encode the vector of lat,lng to a string.
-template <class shape_container_t>
-void EdgeInfoBuilder::set_shape(const shape_container_t& shape) {
+template <class shape_container_t> void EdgeInfoBuilder::set_shape(const shape_container_t& shape) {
   encoded_shape_ = midgard::encode7<shape_container_t>(shape);
 }
-template void EdgeInfoBuilder::set_shape<std::vector<PointLL> >(const std::vector<PointLL>&);
-template void EdgeInfoBuilder::set_shape<std::list<PointLL> >(const std::list<PointLL>&);
-
+template void EdgeInfoBuilder::set_shape<std::vector<PointLL>>(const std::vector<PointLL>&);
+template void EdgeInfoBuilder::set_shape<std::list<PointLL>>(const std::list<PointLL>&);
 
 // Set the encoded shape string.
 void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
-  std::copy(encoded_shape.begin(), encoded_shape.end(),
-            back_inserter(encoded_shape_));
+  std::copy(encoded_shape.begin(), encoded_shape.end(), back_inserter(encoded_shape_));
 }
 
 // Get the size of the edge info (including name offsets and shape string)
@@ -84,8 +79,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
 
   // Check if we are exceeding the max encoded size
   if (eib.encoded_shape_.size() > kMaxEncodedShapeSize) {
-    LOG_WARN("Exceeding max encoded shape size: " +
-              std::to_string(eib.encoded_shape_.size()));
+    LOG_WARN("Exceeding max encoded shape size: " + std::to_string(eib.encoded_shape_.size()));
     item.encoded_shape_size = static_cast<uint32_t>(kMaxEncodedShapeSize);
   } else {
     item.encoded_shape_size = static_cast<uint32_t>(eib.encoded_shape_.size());
@@ -94,8 +88,8 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Write out the bytes
   os.write(reinterpret_cast<const char*>(&eib.wayid_), sizeof(uint64_t));
   os.write(reinterpret_cast<const char*>(&item), sizeof(baldr::EdgeInfo::PackedItem));
-  os.write(reinterpret_cast<const char*>(&eib.name_info_list_[0]),
-            (name_count * sizeof(NameInfo)));
+  os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
+           (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;
 
   // Pad to an 8 byte boundary
@@ -108,5 +102,5 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   return os;
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

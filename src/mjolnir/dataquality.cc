@@ -10,31 +10,28 @@ namespace mjolnir {
 
 // Constructor
 DataQuality::DataQuality()
-    : nodecount(0),
-      directededge_count(0),
-      simplerestrictions(0),
-      timedrestrictions(0),
-      culdesaccount(0),
-      forward_restrictions_count(0),
-      reverse_restrictions_count(0),
+    : nodecount(0), directededge_count(0), simplerestrictions(0), timedrestrictions(0),
+      culdesaccount(0), forward_restrictions_count(0), reverse_restrictions_count(0),
       node_counts{} {
 }
 
 // Add statistics (accumulate from several DataQuality objects)
 void DataQuality::AddStatistics(const DataQuality& stats) {
-  nodecount          += stats.nodecount;
+  nodecount += stats.nodecount;
   directededge_count += stats.directededge_count;
   simplerestrictions += stats.simplerestrictions;
-  timedrestrictions  += stats.timedrestrictions;
-  culdesaccount      += stats.culdesaccount;
+  timedrestrictions += stats.timedrestrictions;
+  culdesaccount += stats.culdesaccount;
   for (uint32_t i = 0; i < 128; i++) {
     node_counts[i] += stats.node_counts[i];
   }
 }
 
 // Adds an issue.
-void DataQuality::AddIssue(const DataIssueType issuetype, const GraphId& graphid,
-            const uint64_t wayid1, const uint64_t wayid2) {
+void DataQuality::AddIssue(const DataIssueType issuetype,
+                           const GraphId& graphid,
+                           const uint64_t wayid1,
+                           const uint64_t wayid2) {
   if (issuetype == kDuplicateWays) {
     std::pair<uint64_t, uint64_t> wayids = std::make_pair(wayid1, wayid2);
     auto it = duplicateways_.find(wayids);
@@ -74,12 +71,11 @@ void DataQuality::LogIssues() const {
   if (duplicateways_.size() > 0) {
     LOG_WARN("Duplicate Ways: count = " + std::to_string(duplicateways_.size()));
     for (const auto& dup : duplicateways_) {
-      dups.emplace_back(DuplicateWay(dup.first.first, dup.first.second,
-                                      dup.second));
+      dups.emplace_back(DuplicateWay(dup.first.first, dup.first.second, dup.second));
       duplicates += dup.second;
     }
-    LOG_WARN("Duplicate ways " + std::to_string(duplicateways_.size()) +
-             " duplicate edges = " + std::to_string(duplicates));
+    LOG_WARN("Duplicate ways " + std::to_string(duplicateways_.size()) + " duplicate edges = " +
+             std::to_string(duplicates));
   }
 
   // Sort by edgecount and write to separate file
@@ -88,8 +84,7 @@ void DataQuality::LogIssues() const {
   dupfile.open("duplicateways.txt", std::ofstream::out | std::ofstream::app);
   dupfile << "WayID1   WayID2    DuplicateEdges" << std::endl;
   for (const auto& dupway : dups) {
-    dupfile << dupway.wayid1 << "," << dupway.wayid2 << ","
-            << dupway.edgecount << std::endl;
+    dupfile << dupway.wayid1 << "," << dupway.wayid2 << "," << dupway.edgecount << std::endl;
   }
   dupfile.close();
 
@@ -110,5 +105,5 @@ void DataQuality::LogIssues() const {
   }
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

@@ -1,19 +1,18 @@
-#include <cstdint>
 #include "baldr/shared_tiles.h"
+#include "baldr/filesystem_utils.h"
+#include <cstdint>
 
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sys/stat.h>
 #include <boost/filesystem.hpp>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <sys/stat.h>
 
 #include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 
-namespace {
-
-}
+namespace {}
 
 namespace valhalla {
 namespace baldr {
@@ -33,7 +32,7 @@ SharedTiles::SharedTiles(const boost::property_tree::ptree& pt) {
 
   // Open to the end of the file so we can immediately get size;
   size_t filesize = 0;
-  std::string file_location = tile_dir + "/" + shared_tile_file;
+  std::string file_location = tile_dir + filesystem::path_separator + shared_tile_file;
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     filesize = file.tellg();
@@ -43,7 +42,7 @@ SharedTiles::SharedTiles(const boost::property_tree::ptree& pt) {
   if (filesize == 0) {
     LOG_INFO("Could not find shared file!");
     max_level_ = -1;
-    tile_ptr_  = nullptr;
+    tile_ptr_ = nullptr;
   } else {
     LOG_INFO("Memory mapping the tiles!");
 
@@ -94,19 +93,17 @@ char* SharedTiles::get_tile_ptr() const {
  */
 tile_pair SharedTiles::GetTile(const GraphId& graphid) const {
   // Make sure level and tile Id are valid
-  if (graphid.level() > max_level_ ||
-      graphid.tileid() > tile_count_[graphid.level()]) {
-    return { nullptr, 0 };
+  if (graphid.level() > max_level_ || graphid.tileid() > tile_count_[graphid.level()]) {
+    return {nullptr, 0};
   } else {
     size_t idx = indexes_[graphid.level()][graphid.tileid()];
     if (idx == 0) {
-      return { nullptr, 0 };
+      return {nullptr, 0};
     } else {
-      return { tile_ptr_ + idx, sizes_[graphid.level()][graphid.tileid()] };
+      return {tile_ptr_ + idx, sizes_[graphid.level()][graphid.tileid()]};
     }
   }
 }
 
-
-}
-}
+} // namespace baldr
+} // namespace valhalla

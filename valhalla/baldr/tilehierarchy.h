@@ -1,16 +1,16 @@
 #ifndef VALHALLA_MIDGARD_TILEHIERARCHY_H
 #define VALHALLA_MIDGARD_TILEHIERARCHY_H
 
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <cstdint>
 #include <map>
 #include <string>
-#include <cstdint>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace baldr {
@@ -34,7 +34,7 @@ struct TileLevel {
  * tile hierarchy levels are static.
  */
 class TileHierarchy {
- public:
+public:
   /**
    * Get the set of levels in this hierarchy.
    * @return set of TileLevel objects.
@@ -77,7 +77,7 @@ class TileHierarchy {
 
   /**
    * Gets the hierarchy level given the road class.
-   * @param  road_class  Road classification.
+   * @param  roadclass  Road classification.
    * @return Returns the level.
    */
   static uint8_t get_level(const RoadClass roadclass);
@@ -88,12 +88,12 @@ class TileHierarchy {
    */
   static uint8_t get_max_level();
 
- private:
+private:
   static std::map<uint8_t, TileLevel> levels_;
   static TileLevel transit_level_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_TILEHIERARCHY_H
+#endif // VALHALLA_MIDGARD_TILEHIERARCHY_H

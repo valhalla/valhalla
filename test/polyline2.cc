@@ -1,5 +1,5 @@
-#include <cstdint>
 #include "midgard/polyline2.h"
+#include <cstdint>
 
 #include "test.h"
 
@@ -30,8 +30,7 @@ void TryGeneralizeAndLength(Polyline2<Point2>& pl, const float& gen, const float
   if (pl2.pts().size() != 2)
     throw runtime_error("Generalize #3 test failed.");
 
-  if ((pl2.pts().at(0) != Point2(25.0f, 25.0f))
-      || (pl2.pts().at(1) != Point2(50.0f, 100.0f))) {
+  if ((pl2.pts().at(0) != Point2(25.0f, 25.0f)) || (pl2.pts().at(1) != Point2(50.0f, 100.0f))) {
     throw runtime_error("Generalize #2 test failed.");
   }
 
@@ -40,8 +39,8 @@ void TryGeneralizeAndLength(Polyline2<Point2>& pl, const float& gen, const float
 }
 
 void TestGeneralizeAndLength() {
-  std::vector<Point2> pts = { Point2(25.0f, 25.0f), Point2(50.0f, 50.0f),
-      Point2(25.0f, 75.0f), Point2(50.0f, 100.0f) };
+  std::vector<Point2> pts = {Point2(25.0f, 25.0f), Point2(50.0f, 50.0f), Point2(25.0f, 75.0f),
+                             Point2(50.0f, 100.0f)};
   Polyline2<Point2> pl(pts);
   TryGeneralizeAndLength(pl, 100.0f, 79.0569f);
 }
@@ -50,7 +49,7 @@ void TryClosestPoint(const Polyline2<Point2>& pl, const Point2& a, const Point2&
 
   auto result = pl.ClosestPoint(a);
 
-  if (std::get<0>(result)!= b)
+  if (std::get<0>(result) != b)
     throw runtime_error("ClosestPoint test failed.");
 }
 
@@ -83,21 +82,43 @@ void TryClip(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) 
   if (x != exp)
     throw runtime_error("Clip test failed: count not correct");
 
-  if ((pl.pts().at(0) != Point2(25.0f, 25.0f))
-      || (pl.pts().at(1) != Point2(50.0f, 50.0f))) {
+  if ((pl.pts().at(0) != Point2(25.0f, 25.0f)) || (pl.pts().at(1) != Point2(50.0f, 50.0f))) {
     throw runtime_error("Clip test failed: clipped points not correct");
   }
 }
 
+void TryClipOutside(Polyline2<Point2>& pl, const AABB2<Point2>& a) {
+  uint32_t x = pl.Clip(a);
+  if (x != 0) {
+    throw runtime_error("Clip test failed: all vertices outside so count should be 0");
+  }
+}
+
 void TestClip() {
-  std::vector<Point2> pts = { Point2(25.0f, 25.0f), Point2(50.0f, 50.0f),
-      Point2(25.0f, 75.0f), Point2(50.0f, 100.0f) };
+  std::vector<Point2> pts = {Point2(25.0f, 25.0f), Point2(50.0f, 50.0f), Point2(25.0f, 75.0f),
+                             Point2(50.0f, 100.0f)};
   Polyline2<Point2> pl(pts);
   TryClip(pl, AABB2<Point2>(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
 
   // Test with vertices on edges
   Polyline2<Point2> pl2(pts);
   TryClip(pl2, AABB2<Point2>(Point2(25.0f, 25.0f), Point2(50.0f, 100.0f)), 4);
+
+  // Test Clip with all vertices above top of AABB
+  Polyline2<Point2> pl3(pts);
+  TryClipOutside(pl3, AABB2<Point2>(Point2(0.0f, 0.0f), Point2(50.0f, 20.0f)));
+
+  // Test Clip with all vertices left of AABB
+  Polyline2<Point2> pl4(pts);
+  TryClipOutside(pl4, AABB2<Point2>(Point2(50.0f, 25.0f), Point2(100.0f, 100.0f)));
+
+  // Test Clip with all vertices right of AABB
+  Polyline2<Point2> pl5(pts);
+  TryClipOutside(pl5, AABB2<Point2>(Point2(0.0f, 25.0f), Point2(10.0f, 100.0f)));
+
+  // Test Clip with all vertices below bottom of AABB
+  Polyline2<Point2> pl6(pts);
+  TryClipOutside(pl6, AABB2<Point2>(Point2(25.0f, 100.0f), Point2(50.0f, 200.0f)));
 }
 
 void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) {
@@ -106,21 +127,19 @@ void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uin
   if (x != 2)
     throw runtime_error("ClippedPolyline test failed: count not correct");
 
-  if ((pl2.pts().at(0) != Point2(25.0f, 25.0f))
-      || (pl2.pts().at(1) != Point2(50.0f, 50.0f))) {
-    throw runtime_error(
-        "ClippedPolyline test failed: clipped points not correct");
+  if ((pl2.pts().at(0) != Point2(25.0f, 25.0f)) || (pl2.pts().at(1) != Point2(50.0f, 50.0f))) {
+    throw runtime_error("ClippedPolyline test failed: clipped points not correct");
   }
 }
 
 void TestClippedPolyline() {
-  std::vector<Point2> pts = { Point2(25.0f, 25.0f), Point2(50.0f, 50.0f),
-      Point2(25.0f, 75.0f), Point2(50.0f, 100.0f) };
+  std::vector<Point2> pts = {Point2(25.0f, 25.0f), Point2(50.0f, 50.0f), Point2(25.0f, 75.0f),
+                             Point2(50.0f, 100.0f)};
   Polyline2<Point2> pl(pts);
   TryClippedPolyline(pl, AABB2<Point2>(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("polyline2");

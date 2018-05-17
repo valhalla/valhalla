@@ -2,20 +2,20 @@
 #define VALHALLA_ODIN_MANEUVER_H_
 
 #include <cstdint>
-#include <string>
 #include <list>
-#include <unordered_map>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
 
-#include <valhalla/proto/tripcommon.pb.h>
-#include <valhalla/proto/trippath.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla::baldr;
 
@@ -27,7 +27,7 @@ namespace odin {
  * maneuver list that will be used to populate the trip directions.
  */
 class Maneuver {
- public:
+public:
   enum class RelativeDirection {
     kNone,
     kKeepStraight,
@@ -48,13 +48,11 @@ class Maneuver {
   void set_street_names(std::unique_ptr<StreetNames>&& street_names);
   bool HasStreetNames() const;
 
-  bool HasSameNames(
-      const Maneuver* other_maneuver,
-      bool allow_begin_intersecting_edge_name_consistency = false) const;
+  bool HasSameNames(const Maneuver* other_maneuver,
+                    bool allow_begin_intersecting_edge_name_consistency = false) const;
 
-  bool HasSimilarNames(
-      const Maneuver* other_maneuver,
-      bool allow_begin_intersecting_edge_name_consistency = false) const;
+  bool HasSimilarNames(const Maneuver* other_maneuver,
+                       bool allow_begin_intersecting_edge_name_consistency = false) const;
 
   const StreetNames& begin_street_names() const;
   void set_begin_street_names(const std::vector<std::string>& names);
@@ -71,8 +69,7 @@ class Maneuver {
   void set_instruction(std::string&& instruction);
 
   // Kilometers
-  float length(const DirectionsOptions::Units& units =
-      DirectionsOptions::Units::DirectionsOptions_Units_kKilometers) const;
+  float length(const DirectionsOptions::Units& units = DirectionsOptions::kilometers) const;
   void set_length(float length);
 
   // Seconds
@@ -90,8 +87,8 @@ class Maneuver {
   void set_begin_relative_direction(RelativeDirection begin_relative_direction);
 
   TripDirections_Maneuver_CardinalDirection begin_cardinal_direction() const;
-  void set_begin_cardinal_direction(
-      TripDirections_Maneuver_CardinalDirection begin_cardinal_direction);
+  void
+  set_begin_cardinal_direction(TripDirections_Maneuver_CardinalDirection begin_cardinal_direction);
 
   uint32_t begin_heading() const;
   void set_begin_heading(uint32_t beginHeading);
@@ -161,31 +158,26 @@ class Maneuver {
   void set_fork(bool fork);
 
   bool begin_intersecting_edge_name_consistency() const;
-  void set_begin_intersecting_edge_name_consistency(
-      bool begin_intersecting_edge_name_consistency);
+  void set_begin_intersecting_edge_name_consistency(bool begin_intersecting_edge_name_consistency);
 
   bool intersecting_forward_edge() const;
   void set_intersecting_forward_edge(bool intersecting_forward_edge);
 
   const std::string& verbal_transition_alert_instruction() const;
-  void set_verbal_transition_alert_instruction(
-      const std::string& verbal_transition_alert_instruction);
-  void set_verbal_transition_alert_instruction(
-      std::string&& verbal_transition_alert_instruction);
+  void
+  set_verbal_transition_alert_instruction(const std::string& verbal_transition_alert_instruction);
+  void set_verbal_transition_alert_instruction(std::string&& verbal_transition_alert_instruction);
   bool HasVerbalTransitionAlertInstruction() const;
 
   const std::string& verbal_pre_transition_instruction() const;
-  void set_verbal_pre_transition_instruction(
-      const std::string& verbal_pre_transition_instruction);
-  void set_verbal_pre_transition_instruction(
-      std::string&& verbal_pre_transition_instruction);
+  void set_verbal_pre_transition_instruction(const std::string& verbal_pre_transition_instruction);
+  void set_verbal_pre_transition_instruction(std::string&& verbal_pre_transition_instruction);
   bool HasVerbalPreTransitionInstruction() const;
 
   const std::string& verbal_post_transition_instruction() const;
-  void set_verbal_post_transition_instruction(
-      const std::string& verbal_post_transition_instruction);
-  void set_verbal_post_transition_instruction(
-      std::string&& verbal_post_transition_instruction);
+  void
+  set_verbal_post_transition_instruction(const std::string& verbal_post_transition_instruction);
+  void set_verbal_post_transition_instruction(std::string&& verbal_post_transition_instruction);
   bool HasVerbalPostTransitionInstruction() const;
 
   bool tee() const;
@@ -231,10 +223,12 @@ class Maneuver {
   void set_transit_connection_egress_info(const TransitEgressInfo& transit_connection_egress_info);
 
   const TransitStationInfo& transit_connection_station_info() const;
-  void set_transit_connection_station_info(const TransitStationInfo& transit_connection_station_info);
+  void
+  set_transit_connection_station_info(const TransitStationInfo& transit_connection_station_info);
 
   const TransitPlatformInfo& transit_connection_platform_info() const;
-  void set_transit_connection_platform_info(const TransitPlatformInfo& transit_connection_platform_info);
+  void
+  set_transit_connection_platform_info(const TransitPlatformInfo& transit_connection_platform_info);
 
   bool IsTransit() const;
 
@@ -268,21 +262,20 @@ class Maneuver {
   void set_verbal_arrive_instruction(std::string&& verbal_arrive_instruction);
 
   const VerbalTextFormatter* verbal_formatter() const;
-  void set_verbal_formatter(
-      std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
+  void set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
 
   std::string ToString() const;
 
   std::string ToParameterString() const;
 
- protected:
+protected:
   TripDirections_Maneuver_Type type_;
   std::unique_ptr<StreetNames> street_names_;
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
   std::string instruction_;
-  float length_;     // Kilometers
-  uint32_t time_;    // Seconds
+  float length_;        // Kilometers
+  uint32_t time_;       // Seconds
   uint32_t basic_time_; // len/speed on each edge with no stop impact in seconds
   uint32_t turn_degree_;
   RelativeDirection begin_relative_direction_;
@@ -353,10 +346,9 @@ class Maneuver {
   // TODO notes
 
   static const std::unordered_map<int, std::string> relative_direction_string_;
-
 };
 
-}
-}
+} // namespace odin
+} // namespace valhalla
 
-#endif  // VALHALLA_ODIN_MANEUVER_H_
+#endif // VALHALLA_ODIN_MANEUVER_H_

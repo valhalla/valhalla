@@ -22,6 +22,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include "baldr/datetime.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -98,8 +99,9 @@ struct builder_stats {
 
 std::string url_encode(const std::string& unencoded) {
   char* encoded = curl_escape(unencoded.c_str(), static_cast<int>(unencoded.size()));
-  if (encoded == nullptr)
+  if (encoded == nullptr) {
     throw std::runtime_error("url encoding failed");
+  }
   std::string encoded_str(encoded);
   curl_free(encoded);
   return encoded_str;
@@ -114,8 +116,9 @@ struct logged_error_t : public std::runtime_error {
 // TODO: use curler_t and expand its interface to be more flexible
 struct pt_curler_t {
   pt_curler_t() : connection(curl_easy_init(), [](CURL* c) { curl_easy_cleanup(c); }) {
-    if (connection.get() == nullptr)
+    if (connection.get() == nullptr) {
       throw logged_error_t("Failed to created CURL connection");
+    }
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ERRORBUFFER, error),
                 "Failed to set error buffer");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FOLLOWLOCATION, 1L),
@@ -156,27 +159,31 @@ struct pt_curler_t {
             read_json(result, pt);
           } catch (...) { threw = true; }
           // has to parse and have required info
-          if (!threw && (retry_if_no.empty() || pt.get_child_optional(retry_if_no)))
+          if (!threw && (retry_if_no.empty() || pt.get_child_optional(retry_if_no))) {
             break;
+          }
           log_extra = "Unusable response ";
         }
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
       // dont log rate limit stuff its too frequent
-      if (http_code != 429 || (tries % 10) == 0)
+      if (http_code != 429 || (tries % 10) == 0) {
         LOG_WARN(log_extra + "retrying " + url);
+      }
     };
     return pt;
   }
 
 protected:
   void assert_curl(CURLcode code, const std::string& msg) {
-    if (code != CURLE_OK)
+    if (code != CURLE_OK) {
       throw logged_error_t(msg + error);
+    }
   };
   static size_t write_callback(char* in, size_t block_size, size_t blocks, std::stringstream* out) {
-    if (!out)
+    if (!out) {
       return static_cast<size_t>(0);
+    }
     out->write(in, block_size * blocks);
     return block_size * blocks;
   }
@@ -187,8 +194,9 @@ protected:
 std::string url(const std::string& path, const ptree& pt) {
   auto url = pt.get<std::string>("base_url") + path;
   auto key = pt.get_optional<std::string>("api_key");
-  if (key)
+  if (key) {
     url += "&api_key=" + *key;
+  }
   return url;
 }
 
@@ -234,14 +242,18 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
       for (const auto& coord : feature.second.get_child("geometry.coordinates").front().second) {
         auto x = coord.second.front().second.get_value<float>();
         auto y = coord.second.back().second.get_value<float>();
-        if (x < min_x)
+        if (x < min_x) {
           min_x = x;
-        if (x > max_x)
+        }
+        if (x > max_x) {
           max_x = x;
-        if (y < min_y)
+        }
+        if (y < min_y) {
           min_y = y;
-        if (y > max_y)
+        }
+        if (y > max_y) {
           max_y = y;
+        }
       }
 
       // expand the top and bottom edges of the box to account for geodesics
@@ -249,14 +261,18 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
       max_y += std::abs(max_y - PointLL(min_x, max_y).MidPoint({max_x, max_y}).second);
       auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
       auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
-      if (min_c > max_c)
+      if (min_c > max_c) {
         std::swap(min_c, max_c);
-      if (min_r > max_r)
+      }
+      if (min_r > max_r) {
         std::swap(min_r, max_r);
+      }
       // for each tile in the polygon figure out how heavy it is and keep track of it
-      for (auto i = min_c; i <= max_c; ++i)
-        for (auto j = min_r; j <= max_r; ++j)
+      for (auto i = min_c; i <= max_c; ++i) {
+        for (auto j = min_r; j <= max_r; ++j) {
           tiles.emplace(GraphId(tile_level.tiles.TileId(i, j), tile_level.level, 0));
+        }
+      }
     }
   }
   // we want slowest to build tiles first, routes query is slowest so we weight by that
@@ -290,8 +306,8 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
     request =
     url((boost::format("/api/v1/schedule_stop_pairs?total=true&per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon %
-    utc->tm_mday).str(), pt);
-    auto pairs_total = curler(request, "meta.total").get<size_t>("meta.total");
+    utc->tm_mday).str(), pt); auto pairs_total = curler(request,
+    "meta.total").get<size_t>("meta.total");
     */
     // we have anything we want it
     if (stations_total > 0 /* || routes_total > 0|| pairs_total > 0*/) {
@@ -332,8 +348,9 @@ void get_stop_stations(Transit& tile,
 
     if (!filter.Contains({lon, lat}) || station_pt.second.get_child("stop_egresses").size() == 0 ||
         station_pt.second.get_child("stop_platforms").size() == 0 ||
-        onestop_id.find('>') != std::string::npos || onestop_id.find('<') != std::string::npos)
+        onestop_id.find('>') != std::string::npos || onestop_id.find('<') != std::string::npos) {
       continue;
+    }
 
     // add egresses first.
     GraphId prev_type_graphid;
@@ -358,10 +375,11 @@ void get_stop_stations(Transit& tile,
       // null (both; can enter and exit the egress)
       // enter (can enter the egress from street)
       // exit (can exit egress from street)
-      if (traversability == "enter")
+      if (traversability == "enter") {
         node->set_traversability(static_cast<uint32_t>(Traversability::kForward));
-      else if (traversability == "exit")
+      } else if (traversability == "exit") {
         node->set_traversability(static_cast<uint32_t>(Traversability::kBackward));
+      }
 
       GraphId egress_id(tile_id.tileid(), tile_id.level(), nodes.size());
       node->set_graphid(egress_id);
@@ -369,12 +387,14 @@ void get_stop_stations(Transit& tile,
       // we want to set the previous id to the first egress in the
       // list so that when we write to the valhalla tile we know
       // where to start.
-      if (!prev_type_graphid.Is_Valid())
+      if (!prev_type_graphid.Is_Valid()) {
         prev_type_graphid = egress_id;
+      }
 
       auto tz = egress_pt.second.get<std::string>("timezone", "null");
-      if (tz != "null")
+      if (tz != "null") {
         node->set_timezone(tz);
+      }
 
       nodes.emplace(node->onestop_id(), egress_id);
       if (nodes.size() == kMaxGraphId) {
@@ -395,8 +415,9 @@ void get_stop_stations(Transit& tile,
     node->set_graphid(station_id);
 
     auto tz = station_pt.second.get<std::string>("timezone", "null");
-    if (tz != "null")
+    if (tz != "null") {
       node->set_timezone(tz);
+    }
 
     node->set_prev_type_graphid(prev_type_graphid);
     nodes.emplace(node->onestop_id(), station_id);
@@ -422,8 +443,9 @@ void get_stop_stations(Transit& tile,
       node->set_graphid(platform_id);
 
       auto tz = platforms_pt.second.get<std::string>("timezone", "null");
-      if (tz != "null")
+      if (tz != "null") {
         node->set_timezone(tz);
+      }
 
       node->set_prev_type_graphid(station_id);
       std::string onestop = node->onestop_id();
@@ -451,28 +473,28 @@ void get_routes(Transit& tile,
     set_no_null(std::string, route_pt.second, "onestop_id", "null", route->set_onestop_id);
     std::string vehicle_type = route_pt.second.get<std::string>("vehicle_type", "null");
     Transit_VehicleType type = Transit_VehicleType::Transit_VehicleType_kRail;
-    if (vehicle_type == "tram" || vehicle_type == "tram_service")
+    if (vehicle_type == "tram" || vehicle_type == "tram_service") {
       type = Transit_VehicleType::Transit_VehicleType_kTram;
-    else if (vehicle_type == "metro")
+    } else if (vehicle_type == "metro") {
       type = Transit_VehicleType::Transit_VehicleType_kMetro;
-    else if (vehicle_type == "rail" || vehicle_type == "suburban_railway" ||
-             vehicle_type == "railway_service")
+    } else if (vehicle_type == "rail" || vehicle_type == "suburban_railway" ||
+               vehicle_type == "railway_service") {
       type = Transit_VehicleType::Transit_VehicleType_kRail;
-    else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
-             vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
-             vehicle_type == "bus_service" || vehicle_type == "shuttle_bus" ||
-             vehicle_type == "demand_and_response_bus_service" ||
-             vehicle_type == "regional_bus_service" || vehicle_type == "coach_service")
+    } else if (vehicle_type == "bus" || vehicle_type == "trolleybus_service" ||
+               vehicle_type == "express_bus_service" || vehicle_type == "local_bus_service" ||
+               vehicle_type == "bus_service" || vehicle_type == "shuttle_bus" ||
+               vehicle_type == "demand_and_response_bus_service" ||
+               vehicle_type == "regional_bus_service" || vehicle_type == "coach_service") {
       type = Transit_VehicleType::Transit_VehicleType_kBus;
-    else if (vehicle_type == "ferry")
+    } else if (vehicle_type == "ferry") {
       type = Transit_VehicleType::Transit_VehicleType_kFerry;
-    else if (vehicle_type == "cablecar")
+    } else if (vehicle_type == "cablecar") {
       type = Transit_VehicleType::Transit_VehicleType_kCableCar;
-    else if (vehicle_type == "gondola")
+    } else if (vehicle_type == "gondola") {
       type = Transit_VehicleType::Transit_VehicleType_kGondola;
-    else if (vehicle_type == "funicular")
+    } else if (vehicle_type == "funicular") {
       type = Transit_VehicleType::Transit_VehicleType_kFunicular;
-    else {
+    } else {
       LOG_ERROR("Skipping unsupported vehicle_type: " + vehicle_type + " for route " +
                 route->onestop_id());
       tile.mutable_routes()->RemoveLast();
@@ -494,14 +516,15 @@ void get_routes(Transit& tile,
     route_text_color = (route_text_color == "null" ? "000000" : route_text_color);
 
     auto website = websites.find(route->operated_by_onestop_id());
-    if (website != websites.cend())
+    if (website != websites.cend()) {
       route->set_operated_by_website(website->second);
+    }
 
     // use short name (e.g., BART) over long name (e.g., Bay Area Rapid Transit)
     auto short_name = short_names.find(route->operated_by_onestop_id());
-    if (short_name != short_names.cend())
+    if (short_name != short_names.cend()) {
       route->set_operated_by_name(short_name->second);
-    else
+    } else
       set_no_null(std::string, route_pt.second, "operated_by_name", "null",
                   route->set_operated_by_name);
 
@@ -557,30 +580,34 @@ bool get_stop_pairs(Transit& tile,
     // origin
     auto origin_id = pair_pt.second.get<std::string>("origin_onestop_id");
 
-    if (origin_id.find("<") == std::string::npos)
+    if (origin_id.find('<') == std::string::npos) {
       pair->set_origin_onestop_id(origin_id + "<");
-    else
+    } else {
       pair->set_origin_onestop_id(origin_id);
+    }
 
     auto origin = stops.find(origin_id);
-    if (origin != stops.cend())
+    if (origin != stops.cend()) {
       pair->set_origin_graphid(origin->second);
-    else
+    } else {
       dangles = true;
+    }
 
     // destination
     auto destination_id = pair_pt.second.get<std::string>("destination_onestop_id");
 
-    if (destination_id.find("<") == std::string::npos)
+    if (destination_id.find('<') == std::string::npos) {
       pair->set_destination_onestop_id(destination_id + "<");
-    else
+    } else {
       pair->set_destination_onestop_id(destination_id);
+    }
 
     auto destination = stops.find(destination_id);
-    if (destination != stops.cend())
+    if (destination != stops.cend()) {
       pair->set_destination_graphid(destination->second);
-    else
+    } else {
       dangles = true;
+    }
 
     // um yeah this goes nowhere
     if (pair->origin_onestop_id() == pair->destination_onestop_id()) {
@@ -619,7 +646,8 @@ bool get_stop_pairs(Transit& tile,
       if (origin_time < frequency_start_time) {
         tile.mutable_stop_pairs()->RemoveLast();
         continue;
-        // LOG_WARN("Frequency frequency_start_time after origin_time: " + pair->origin_onestop_id()
+        // LOG_WARN("Frequency frequency_start_time after origin_time: " +
+        // pair->origin_onestop_id()
         // + " --> " + pair->destination_onestop_id());
       }
       pair->set_frequency_end_time(DateTime::seconds_from_midnight(frequency_end_time));
@@ -728,8 +756,9 @@ bool get_stop_pairs(Transit& tile,
   }
 
   // no stop pairs due to new route type.
-  if (tile.mutable_stop_pairs()->size() == 0)
+  if (tile.mutable_stop_pairs()->size() == 0) {
     return false;
+  }
 
   return dangles;
 }
@@ -742,12 +771,14 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
   }
 
   // write pbf to file
-  if (!boost::filesystem::exists(transit_tile.parent_path()))
+  if (!boost::filesystem::exists(transit_tile.parent_path())) {
     boost::filesystem::create_directories(transit_tile.parent_path());
+  }
   std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!tile.SerializeToOstream(&stream))
+  if (!tile.SerializeToOstream(&stream)) {
     LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " +
               std::to_string(tile.ByteSize()));
+  }
 
   if (tile.routes_size() && tile.nodes_size() && tile.stop_pairs_size() && tile.shapes_size()) {
     LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.nodes_size()) + " nodes " +
@@ -802,7 +833,7 @@ void fetch_tiles(const ptree& pt,
     auto file_name = GraphTile::FileSuffix(current);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
     boost::filesystem::path transit_tile =
-        pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
+        pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator + file_name;
 
     // tiles are wrote out with .pbf or .pbf.n ext
     uint32_t ext = 0;
@@ -852,26 +883,28 @@ void fetch_tiles(const ptree& pt,
       for (const auto& operators_pt : response.get_child("operators")) {
         std::string onestop_id = operators_pt.second.get<std::string>("onestop_id", "");
         std::string website = operators_pt.second.get<std::string>("website", "");
-        if (!onestop_id.empty() && onestop_id != "null" && !website.empty() && website != "null")
+        if (!onestop_id.empty() && onestop_id != "null" && !website.empty() && website != "null") {
           websites.emplace(onestop_id, website);
+        }
 
         std::string short_name = operators_pt.second.get<std::string>("short_name", "");
         if (!onestop_id.empty() && onestop_id != "null" && !short_name.empty() &&
-            short_name != "null")
+            short_name != "null") {
           short_names.emplace(onestop_id, short_name);
+        }
       }
       // please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
     } while (request && (request = *request + api_key));
 
     // pull out all ROUTES
-    request = url((boost::format("/api/v1/"
-                                 "routes?total=false&include_geometry=false&per_page=%1%&bbox=%2%,%"
-                                 "3%,%4%,%5%") %
-                   pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() %
-                   bbox.maxy())
-                      .str(),
-                  pt);
+    request = url(
+        (boost::format(
+             "/api/v1/"
+             "routes?total=false&include_geometry=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
+         pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
+            .str(),
+        pt);
     std::unordered_map<std::string, size_t> routes;
     request = *request + import_level;
 
@@ -935,12 +968,14 @@ void fetch_tiles(const ptree& pt,
     }
 
     // remember who dangles
-    if (dangles)
+    if (dangles) {
       dangling.emplace_back(current);
+    }
 
     // save the last tile
-    if (tile.stop_pairs_size())
+    if (tile.stop_pairs_size()) {
       write_pbf(tile, transit_tile.string());
+    }
   }
 
   // give back the work for later
@@ -959,13 +994,15 @@ fetch(const ptree& pt,
   unique_transit_t uniques;
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
   std::vector<std::promise<std::list<GraphId>>> promises(threads.size());
-  for (size_t i = 0; i < threads.size(); ++i)
+  for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(fetch_tiles, std::cref(pt), std::ref(tiles), std::ref(uniques),
                                      std::ref(promises[i])));
+  }
 
   // let the threads finish and get the dangling list
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
   std::list<GraphId> dangling;
   for (auto& promise : promises) {
     try {
@@ -995,8 +1032,9 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
   cs.SetTotalBytesLimit(limit, limit);
   Transit transit;
-  if (!transit.ParseFromCodedStream(&cs))
+  if (!transit.ParseFromCodedStream(&cs)) {
     throw std::runtime_error("Couldn't load " + file_name);
+  }
   return transit;
 }
 
@@ -1009,8 +1047,9 @@ struct dist_sort_t {
   bool operator()(const GraphId& a, const GraphId& b) const {
     auto a_dist = center.Distance(grid.TileBounds(a.tileid()).Center());
     auto b_dist = center.Distance(grid.TileBounds(b.tileid()).Center());
-    if (a_dist == b_dist)
+    if (a_dist == b_dist) {
       return a.tileid() < b.tileid();
+    }
     return a_dist < b_dist;
   }
 };
@@ -1023,7 +1062,7 @@ void stitch_tiles(const ptree& pt,
   auto tile_name = [&pt](const GraphId& id) {
     auto file_name = GraphTile::FileSuffix(id);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    return pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
+    return pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator + file_name;
   };
 
   // for each tile
@@ -1048,10 +1087,12 @@ void stitch_tiles(const ptree& pt,
       auto tile = read_pbf(file_name, lock);
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {
-        if (!stop_pair.has_origin_graphid())
+        if (!stop_pair.has_origin_graphid()) {
           needed.emplace(stop_pair.origin_onestop_id(), GraphId{});
-        if (!stop_pair.has_destination_graphid())
+        }
+        if (!stop_pair.has_destination_graphid()) {
           needed.emplace(stop_pair.destination_onestop_id(), GraphId{});
+        }
       }
 
       // do while we have more to find and arent sick of searching
@@ -1080,9 +1121,9 @@ void stitch_tiles(const ptree& pt,
       for (auto& stop_pair : *tile.mutable_stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
           auto found = needed.find(stop_pair.origin_onestop_id())->second;
-          if (found.Is_Valid())
+          if (found.Is_Valid()) {
             stop_pair.set_origin_graphid(found);
-          else if (not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
+          } else if (not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.origin_onestop_id());
             not_found.emplace(stop_pair.origin_onestop_id());
           }
@@ -1090,9 +1131,9 @@ void stitch_tiles(const ptree& pt,
         }
         if (!stop_pair.has_destination_graphid()) {
           auto found = needed.find(stop_pair.destination_onestop_id())->second;
-          if (found.Is_Valid())
+          if (found.Is_Valid()) {
             stop_pair.set_destination_graphid(found);
-          else if (not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
+          } else if (not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.destination_onestop_id());
             not_found.emplace(stop_pair.destination_onestop_id());
           }
@@ -1124,13 +1165,15 @@ void stitch(const ptree& pt,
   std::mutex lock;
 
   // make let them rip
-  for (size_t i = 0; i < threads.size(); ++i)
+  for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(stitch_tiles, std::cref(pt), std::cref(all_tiles),
                                      std::ref(dangling_tiles), std::ref(lock)));
+  }
 
   // wait for them to finish
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread->join();
+  }
 
   LOG_INFO("Finished");
 }
@@ -1172,10 +1215,11 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
         Transit spp;
         {
           // already loaded
-          if (ext == ".pbf")
+          if (ext == ".pbf") {
             spp = transit;
-          else
+          } else {
             spp = read_pbf(fname, lock);
+          }
         }
 
         if (spp.stop_pairs_size() == 0) {
@@ -1207,8 +1251,9 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             dep.shapeid = sp.shape_id();
             dep.orig_dist_traveled = sp.origin_dist_traveled();
             dep.dest_dist_traveled = sp.destination_dist_traveled();
-          } else
+          } else {
             dep.shapeid = 0;
+          }
 
           dep.blockid = sp.has_block_id() ? sp.block_id() : 0;
           dep.dep_time = sp.origin_departure_time();
@@ -1271,8 +1316,9 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           uint64_t days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
 
           // if this is a service addition for one day, delete the dow_mask.
-          if (sp.service_start_date() == sp.service_end_date())
+          if (sp.service_start_date() == sp.service_end_date()) {
             dow_mask = kDOWNone;
+          }
 
           // if dep.days == 0 then feed either starts after the end_date or tile_header_date >
           // end_date
@@ -1285,8 +1331,9 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           dep.headsign_offset = transit_tilebuilder.AddName(sp.trip_headsign());
           uint32_t end_day = (DateTime::days_from_pivot_date(end_date) - tile_date);
 
-          if (end_day > kScheduleEndDay)
+          if (end_day > kScheduleEndDay) {
             end_day = kScheduleEndDay;
+          }
 
           // if subtractions are between start and end date then turn off bit.
           for (const auto& x : sp.service_except_dates()) {
@@ -1328,8 +1375,9 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             // midnight.
             stats.midnight_dep_count++;
             departures.emplace(dep.orig_pbf_graphid, dep);
-            while (origin_seconds >= kSecondsPerDay)
+            while (origin_seconds >= kSecondsPerDay) {
               origin_seconds -= kSecondsPerDay;
+            }
 
             dep.dep_time = origin_seconds;
             dep.frequency_end_time = 0;
@@ -1337,8 +1385,9 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             if (sp.has_frequency_end_time() && sp.has_frequency_headway_seconds()) {
               uint32_t frequency_end_time = sp.frequency_end_time();
               // adjust the end time if it is after midnight.
-              while (frequency_end_time >= kSecondsPerDay)
+              while (frequency_end_time >= kSecondsPerDay) {
                 frequency_end_time -= kSecondsPerDay;
+              }
 
               dep.frequency_end_time = frequency_end_time;
               dep.frequency = sp.frequency_headway_seconds();
@@ -1424,8 +1473,8 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
                             const float dest_dist_traveled,
                             const std::vector<PointLL>& trip_shape,
                             const std::vector<float>& distances,
-                            const std::string origin_id,
-                            const std::string dest_id) {
+                            const std::string& origin_id,
+                            const std::string& dest_id) {
 
   std::list<PointLL> shape;
   if (shapeid != 0 && trip_shape.size() && stop_ll != endstop_ll &&
@@ -1443,16 +1492,16 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
 
     // distance calculations can be off just a bit (i.e., 9372.224609 < 9372.500000) so set it to
     // the last element.
-    if (distances.back() < dest_dist_traveled)
+    if (distances.back() < dest_dist_traveled) {
       upper_bound = distances.cend() - 1;
+    }
 
     // lower_bound returns an iterator pointing to the first element which does not compare less
-    // than the dist_traveled;
-    // therefore, we need to back up one if it does not equal the lower_bound value.  For example,
-    // we could be starting
-    // at the beginning of the points list
-    if (orig_dist_traveled != (*lower_bound))
+    // than the dist_traveled; therefore, we need to back up one if it does not equal the
+    // lower_bound value.  For example, we could be starting at the beginning of the points list
+    if (orig_dist_traveled != (*lower_bound)) {
       prev_distance = *(--lower_bound);
+    }
 
     // loop through the points.
     for (auto itr = lower_bound; itr != upper_bound; ++itr) {
@@ -1482,9 +1531,9 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
 
       // find point x using the orig_dist_traveled - this is our first point added to shape
       if (itr == lower_bound) {
-        if (orig_dist_traveled == *itr) // just add p0
+        if (orig_dist_traveled == *itr) { // just add p0
           shape.push_back(p0);
-        else {
+        } else {
           // distance from p0 to x using the orig_dist_traveled
           d_from_p0_to_x = (orig_dist_traveled - prev_distance) / (distance - prev_distance);
           x = p0 + (p1 - p0) * d_from_p0_to_x;
@@ -1495,15 +1544,17 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
       // find point x using the dest_dist_traveled - this is our last point added to the shape
       if ((itr + 1) == upper_bound) {
         if (dest_dist_traveled == *itr) { // just add p0
-          if (shape.back() != p0)         // avoid dups
+          if (shape.back() != p0) {       // avoid dups
             shape.push_back(p0);
+          }
         } else {
           // distance from p0 to x using the dest_dist_traveled
           d_from_p0_to_x = (dest_dist_traveled - prev_distance) / (distance - prev_distance);
           x = p0 + (p1 - p0) * d_from_p0_to_x;
 
-          if (shape.back() != x) // avoid dups
+          if (shape.back() != x) { // avoid dups
             shape.push_back(x);
+          }
           // we are done p1 is too far away
         }
         break;
@@ -1548,8 +1599,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::unordered_set<GraphId>& all_tiles,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
                 const std::unordered_map<GraphId, uint16_t>& stop_access,
-                const std::unordered_map<uint32_t, Shape> shape_data,
-                const std::vector<float> distances,
+                const std::unordered_map<uint32_t, Shape>& shape_data,
+                const std::vector<float>& distances,
                 const std::vector<uint32_t>& route_types,
                 std::vector<OneStopTest>& onestoptests,
                 bool tile_within_one_tz,
@@ -1590,7 +1641,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     GraphId platform_pbf_id = stop_edges.second.origin_pbf_graphid;
     uint32_t platform_index = platform_pbf_id.id();
     const Transit_Node& platform = transit.nodes(platform_index);
-    std::string origin_id = platform.onestop_id();
+    const std::string& origin_id = platform.onestop_id();
     if (GraphId(platform.graphid()) != platform_pbf_id) {
       LOG_ERROR("Platform key not equal!");
     }
@@ -1627,15 +1678,18 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
       uint32_t timezone = 0;
-      if (!tz.empty())
+      if (!tz.empty()) {
         timezone = DateTime::get_tz_db().to_index(tz);
+      }
 
       if (timezone == 0) {
         // fallback to tz database.
         timezone =
             (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, station_ll);
-        if (timezone == 0)
+
+        if (timezone == 0) {
           LOG_WARN("Timezone not found for station " + station.name());
+        }
       }
       station_node.set_timezone(timezone);
 
@@ -1650,8 +1704,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       while (true) {
         const Transit_Node& egress = transit.nodes(index);
-        if (static_cast<NodeType>(egress.type()) != NodeType::kTransitEgress)
+        if (static_cast<NodeType>(egress.type()) != NodeType::kTransitEgress) {
           break;
+        }
 
         GraphId egress_pbf_id = GraphId(egress.graphid());
         // Get the Valhalla graphId of the origin node (transit stop)
@@ -1670,15 +1725,17 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         const std::string& tz = egress.has_timezone() ? egress.timezone() : "";
         uint32_t timezone = 0;
-        if (!tz.empty())
+        if (!tz.empty()) {
           timezone = DateTime::get_tz_db().to_index(tz);
+        }
 
         if (timezone == 0) {
           // fallback to tz database.
           timezone =
               (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, egress_ll);
-          if (timezone == 0)
+          if (timezone == 0) {
             LOG_WARN("Timezone not found for egress " + egress.name());
+          }
         }
 
         NodeInfo egress_node(egress_ll, RoadClass::kServiceOther, n_access,
@@ -1707,7 +1764,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::list<PointLL> shape = {egress_ll, station_ll};
 
         uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-            0, egress_graphid, station_graphid, 0, shape, names, added);
+            0, egress_graphid, station_graphid, 0, shape, names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1755,7 +1812,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-            0, station_graphid, egress_graphid, 0, shape, names, added);
+            0, station_graphid, egress_graphid, 0, shape, names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1772,12 +1829,14 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // index is currently set to the first platform for this station.
       while (true) {
 
-        if (index == transit.nodes_size())
+        if (index == transit.nodes_size()) {
           break;
+        }
 
         const Transit_Node& platform = transit.nodes(index);
-        if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform)
+        if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform) {
           break;
+        }
 
         GraphId platform_pbf_id = GraphId(platform.graphid());
 
@@ -1809,7 +1868,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-            0, station_graphid, platform_graphid, 0, shape, names, added);
+            0, station_graphid, platform_graphid, 0, shape, names, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1841,15 +1900,17 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     const std::string& tz = platform.has_timezone() ? platform.timezone() : "";
     uint32_t timezone = 0;
-    if (!tz.empty())
+    if (!tz.empty()) {
       timezone = DateTime::get_tz_db().to_index(tz);
+    }
 
     if (timezone == 0) {
       // fallback to tz database.
       timezone =
           (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, platform_ll);
-      if (timezone == 0)
+      if (timezone == 0) {
         LOG_WARN("Timezone not found for platform " + platform.name());
+      }
     }
 
     NodeInfo platform_node(platform_ll, RoadClass::kServiceOther, n_access,
@@ -1882,7 +1943,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // TODO - these need to be valhalla graph Ids
     uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-        0, platform_graphid, station_graphid, 0, shape, names, added);
+        0, platform_graphid, station_graphid, 0, shape, names, 0, added);
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(true);
 
@@ -1919,7 +1980,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             GraphId(end_platform_graphid.tileid(), end_platform_graphid.level(), 0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
-        const std::string file = transit_dir + '/' + file_name;
+        const std::string file = transit_dir + filesystem::path_separator + file_name;
         Transit endtransit = read_pbf(file, lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
@@ -1960,8 +2021,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         // copy only the distances that we care about.
         std::copy((distances.cbegin() + shape_d.begins), (distances.cbegin() + shape_d.ends),
                   back_inserter(distance));
-      } else if (transitedge.shapeid != 0)
+      } else if (transitedge.shapeid != 0) {
         LOG_WARN("Shape Id not found: " + std::to_string(transitedge.shapeid));
+      }
 
       // TODO - if we separate transit edges based on more than just routeid
       // we will need to do something to differentiate edges (maybe use
@@ -1970,7 +2032,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                             transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
 
       uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-          transitedge.routeid, platform_graphid, endnode, 0, shape, names, added);
+          transitedge.routeid, platform_graphid, endnode, 0, shape, names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
@@ -2019,16 +2081,18 @@ void build_tiles(const boost::property_tree::ptree& pt,
   auto database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
   sqlite3* tz_db_handle = GetDBHandle(*database);
-  if (!tz_db_handle)
+  if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database +
              " not found.  Not saving time zone information from db.");
+  }
 
   const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
-    if (reader_transit_level.OverCommitted())
+    if (reader_transit_level.OverCommitted()) {
       reader_transit_level.Clear();
+    }
     GraphId tile_id = tile_start->Tile_Base();
 
     // Get transit pbf tile
@@ -2036,7 +2100,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(), 0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
-    const std::string file = transit_dir + '/' + file_name;
+    const std::string file = transit_dir + filesystem::path_separator + file_name;
 
     // Make sure it exists
     if (!boost::filesystem::exists(file)) {
@@ -2066,8 +2130,9 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
       const Transit_Node& node = transit.nodes(i);
 
-      if (!node.wheelchair_boarding())
+      if (!node.wheelchair_boarding()) {
         stop_access[GraphId(node.graphid())] |= kWheelchairAccess;
+      }
 
       // Store stop information in TransitStops
       tilebuilder_transit.AddTransitStop({tilebuilder_transit.AddName(node.onestop_id()),
@@ -2117,8 +2182,9 @@ void build_tiles(const boost::property_tree::ptree& pt,
     // Form departures and egress/station/platform hierarchy
     for (uint32_t i = 0; i < transit.nodes_size(); i++) {
       const Transit_Node& platform = transit.nodes(i);
-      if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform)
+      if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform) {
         continue;
+      }
 
       GraphId platform_pbf_graphid = GraphId(platform.graphid());
       StopEdges stopedges;
@@ -2205,8 +2271,9 @@ void build_tiles(const boost::property_tree::ptree& pt,
     lock.unlock();
   }
 
-  if (tz_db_handle)
+  if (tz_db_handle) {
     sqlite3_close(tz_db_handle);
+  }
 
   // Send back the statistics
   results.set_value(stats);
@@ -2286,9 +2353,10 @@ void build(const ptree& pt,
     }
   }
 
-  if (total_no_dir_edge_count)
+  if (total_no_dir_edge_count) {
     LOG_ERROR("There were " + std::to_string(total_no_dir_edge_count) +
               " nodes with no directed edges");
+  }
 
   if (total_dep_count) {
     float percent =
@@ -2307,10 +2375,11 @@ void build(const ptree& pt,
 
 int main(int argc, char** argv) {
   if (argc < 2) {
-    std::cerr << "Usage: " << std::string(argv[0])
-              << " valhalla_config transit_land_url per_page [target_directory] [bounding_box] "
-                 "[transit_land_api_key]"
-              << std::endl;
+    std::cerr
+        << "Usage: " << std::string(argv[0])
+        << " valhalla_config transit_land_url per_page [target_directory] [bounding_box]"
+           "[transit_land_api_key]"
+        << std::endl;
     std::cerr << "Sample: " << std::string(argv[0])
               << " conf/valhalla.json http://transit.land/ 1000 ./transit_tiles "
                  "-31.56,36.63,-6.18,42.16 transitland-YOUR_KEY_SUFFIX"
@@ -2367,14 +2436,16 @@ int main(int argc, char** argv) {
 
   // figure out which transit tiles even exist
   boost::filesystem::recursive_directory_iterator transit_file_itr(
-      pt.get<std::string>("mjolnir.transit_dir") + '/' +
+      pt.get<std::string>("mjolnir.transit_dir") + filesystem::path_separator +
       std::to_string(TileHierarchy::levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
-  for (; transit_file_itr != end_file_itr; ++transit_file_itr)
+  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if (boost::filesystem::is_regular(transit_file_itr->path()) &&
-        transit_file_itr->path().extension() == ".pbf")
+        transit_file_itr->path().extension() == ".pbf") {
       all_tiles.emplace(GraphTile::GetTileId(transit_file_itr->path().string()));
+    }
+  }
 
   // spawn threads to connect dangling stop pairs to adjacent tiles' stops
   stitch(pt, all_tiles, dangling_tiles);

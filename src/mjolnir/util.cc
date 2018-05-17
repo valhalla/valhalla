@@ -1,24 +1,25 @@
 #include "mjolnir/util.h"
 
-#include "mjolnir/graphvalidator.h"
-#include "mjolnir/pbfgraphparser.h"
-#include "mjolnir/osmpbfparser.h"
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/transitbuilder.h"
-#include "mjolnir/graphenhancer.h"
-#include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/shortcutbuilder.h"
-#include "mjolnir/restrictionbuilder.h"
-#include "midgard/point2.h"
-#include "midgard/aabb2.h"
-#include "midgard/polyline2.h"
-#include "midgard/logging.h"
+#include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "midgard/aabb2.h"
+#include "midgard/logging.h"
+#include "midgard/point2.h"
+#include "midgard/polyline2.h"
+#include "mjolnir/graphbuilder.h"
+#include "mjolnir/graphenhancer.h"
+#include "mjolnir/graphvalidator.h"
+#include "mjolnir/hierarchybuilder.h"
+#include "mjolnir/osmpbfparser.h"
+#include "mjolnir/pbfgraphparser.h"
+#include "mjolnir/restrictionbuilder.h"
+#include "mjolnir/shortcutbuilder.h"
+#include "mjolnir/transitbuilder.h"
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
 
 namespace valhalla {
 namespace mjolnir {
@@ -26,11 +27,9 @@ namespace mjolnir {
 /**
  * Splits a tag into a vector of strings.  Delim defaults to ;
  */
-std::vector<std::string> GetTagTokens(const std::string& tag_value,
-                                      char delim) {
+std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value,
-                          std::bind1st(std::equal_to<char>(), delim),
+  boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
                           boost::algorithm::token_compress_on);
   return tokens;
 }
@@ -46,25 +45,62 @@ std::string remove_double_quotes(const std::string& s) {
   return ret;
 }
 
-void build_tile_set(const boost::property_tree::ptree& config, const std::vector<std::string>& input_files, const std::string& bin_file_prefix, bool free_protobuf) {
-  //cannot allow this when building tiles
-  if(config.get_child("mjolnir").get_optional<std::string>("tile_extract"))
-    throw std::runtime_error("Tiles cannot be directly built into a tar extract");
+// Compute a curvature metric given an edge shape
+uint32_t compute_curvature(const std::list<PointLL>& shape) {
+  // Edges with just 2 shape points have no curvature.
+  // TODO - perhaps a post-process to "average" curvature along adjacent edges
+  // and smooth curvature on connected edges may be desirable?
+  if (shape.size() == 2) {
+    return 0;
+  }
 
-  //set up the directories and purge old tiles
+  // Iterate through sets of shape vertices and compute a radius of curvature.
+  // Apply a score to each section.
+  uint32_t n = 0;
+  float total_score = 0.0f;
+  auto p1 = shape.begin();
+  auto p2 = p1;
+  p2++;
+  auto p3 = p2;
+  p3++;
+  for (; p3 != shape.end(); ++p1, ++p2, ++p3) {
+    float radius = p1->Curvature(*p2, *p3);
+    if (!std::isnan(radius)) {
+      // Compute a score and cap it at 25 (that way one sharp turn doesn't
+      // impact the total edge more than it should)
+      float score = (radius > 1000.0f) ? 0.0f : 1500.0f / radius;
+      total_score += (score > 25.0f) ? 25.0f : score;
+      n++;
+    }
+  }
+  float average_score = (n == 0) ? 0.0f : total_score / n;
+  return average_score > 15.0f ? 15 : static_cast<uint32_t>(average_score);
+}
+
+void build_tile_set(const boost::property_tree::ptree& config,
+                    const std::vector<std::string>& input_files,
+                    const std::string& bin_file_prefix,
+                    bool free_protobuf) {
+  // cannot allow this when building tiles
+  if (config.get_child("mjolnir").get_optional<std::string>("tile_extract")) {
+    throw std::runtime_error("Tiles cannot be directly built into a tar extract");
+  }
+
+  // set up the directories and purge old tiles
   auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
-  for(const auto& level : valhalla::baldr::TileHierarchy::levels()) {
-    auto level_dir = tile_dir + "/" + std::to_string(level.first);
-    if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
+  for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
+    auto level_dir = tile_dir + baldr::filesystem::path_separator + std::to_string(level.first);
+    if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
       boost::filesystem::remove_all(level_dir);
     }
   }
 
-  //check for transit level.
-  auto level_dir = tile_dir + "/" +
-      std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level+1);
-  if(boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
+  // check for transit level.
+  auto level_dir =
+      tile_dir + baldr::filesystem::path_separator +
+      std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level + 1);
+  if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
     LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
     boost::filesystem::remove_all(level_dir);
   }
@@ -73,16 +109,20 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
-  auto osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, bin_file_prefix + "ways.bin",
-      bin_file_prefix + "way_nodes.bin", bin_file_prefix + "access.bin", bin_file_prefix + "complex_restrictions.bin");
+  auto osm_data =
+      PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, bin_file_prefix + "ways.bin",
+                            bin_file_prefix + "way_nodes.bin", bin_file_prefix + "access.bin",
+                            bin_file_prefix + "complex_restrictions.bin");
 
   // Optionally free all protobuf memory but also you cant use the protobuffer lib after this!
-  if(free_protobuf)
+  if (free_protobuf) {
     OSMPBF::Parser::free();
+  }
 
   // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder::Build(config, osm_data, bin_file_prefix + "ways.bin", bin_file_prefix + "way_nodes.bin",
-      bin_file_prefix + "complex_restrictions.bin");
+  GraphBuilder::Build(config, osm_data, bin_file_prefix + "ways.bin",
+                      bin_file_prefix + "way_nodes.bin",
+                      bin_file_prefix + "complex_restrictions.bin");
 
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
@@ -116,8 +156,7 @@ void build_tile_set(const boost::property_tree::ptree& config, const std::vector
   // Validate the graph and add information that cannot be added until
   // full graph is formed.
   GraphValidator::Validate(config);
-
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

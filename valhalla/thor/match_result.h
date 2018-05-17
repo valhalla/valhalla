@@ -2,10 +2,11 @@
 #ifndef VALHALLA_THOR_MATCH_RESULT_H_
 #define VALHALLA_THOR_MATCH_RESULT_H_
 
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/meili/match_result.h>
+#include <valhalla/midgard/pointll.h>
 
+#include <utility>
 
 namespace valhalla {
 namespace thor {
@@ -13,27 +14,17 @@ namespace thor {
 constexpr uint32_t kInvalidEdgeIndex = std::numeric_limits<uint32_t>::max();
 
 struct MatchResult : meili::MatchResult {
-  enum class Type {
-      kUnmatched,
-      kInterpolated,
-      kMatched
-  };
+  enum class Type { kUnmatched, kInterpolated, kMatched };
 
-  MatchResult(meili::MatchResult result) {
-    lnglat = result.lnglat;
-    distance_from = result.distance_from;
-    edgeid = result.edgeid;
-    distance_along = result.distance_along;
-    epoch_time = result.epoch_time;
-    stateid = result.stateid;
-
+  MatchResult(meili::MatchResult result) : meili::MatchResult(std::move(result)) {
     // Set the type based on edge id and state
-    if (edgeid.Is_Valid() && HasState())
+    if (edgeid.Is_Valid() && HasState()) {
       type = Type::kMatched;
-    else if (edgeid.Is_Valid())
+    } else if (edgeid.Is_Valid()) {
       type = Type::kInterpolated;
-    else
+    } else {
       type = Type::kUnmatched;
+    }
 
     // Default values for edge index and begin/end route discontinuity
     edge_index = kInvalidEdgeIndex;
@@ -53,7 +44,9 @@ struct MatchResult : meili::MatchResult {
   // True if end location of route discontinuity, otherwise false
   bool end_route_discontinuity;
 
-  bool HasEdgeIndex() const { return edge_index != kInvalidEdgeIndex; }
+  bool HasEdgeIndex() const {
+    return edge_index != kInvalidEdgeIndex;
+  }
 };
 
 struct RouteDiscontinuity {
@@ -62,6 +55,6 @@ struct RouteDiscontinuity {
   float distance_along;
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 #endif // VALHALLA_THOR_MATCH_RESULT_H_

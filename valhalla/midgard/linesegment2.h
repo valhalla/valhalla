@@ -15,9 +15,8 @@ namespace midgard {
  * Line segment in 2D. Template class to work with Point2 (Euclidean x,y)
  * or PointLL (latitude,longitude).
  */
-template <class coord_t>
-class LineSegment2 {
- public:
+template <class coord_t> class LineSegment2 {
+public:
   /**
    * Default constructor.
    */
@@ -49,7 +48,7 @@ class LineSegment2 {
    * @param   closest  (Return) Closest point on the segment to c.
    * @return  Returns the distance squared from pt to the closest point on
    *          the segment.
-  */
+   */
   float DistanceSquared(const coord_t& p, coord_t& closest) const;
 
   /**
@@ -59,7 +58,7 @@ class LineSegment2 {
    * @param   closest  (Return) Closest point on the segment to c.
    * @return  Returns the distance from p to the closest point on
    *          the segment.
-  */
+   */
   float Distance(const coord_t& p, coord_t& closest) const;
 
   /**
@@ -70,8 +69,7 @@ class LineSegment2 {
    * @param   intersect    (OUT) Intersection point.
    * @return  Returns true if an intersection exists, false if not.
    */
-  bool Intersect(const LineSegment2<coord_t>& segment,
-                 coord_t& intersect) const;
+  bool Intersect(const LineSegment2<coord_t>& segment, coord_t& intersect) const;
 
   /**
    * Determines if the line segment intersects specified convex polygon.
@@ -90,8 +88,7 @@ class LineSegment2 {
    * @return  Returns true if any part of the segment intersects the polygon,
    *          false if no intersection.
    */
-  bool ClipToPolygon(const std::vector<coord_t>& poly,
-                     LineSegment2<coord_t>& clip_segment) const;
+  bool ClipToPolygon(const std::vector<coord_t>& poly, LineSegment2<coord_t>& clip_segment) const;
 
   /**
    * Tests if a point is to left, right, or on the line segment.
@@ -101,12 +98,12 @@ class LineSegment2 {
    */
   float IsLeft(const coord_t& p) const;
 
- private:
+private:
   coord_t a_;
   coord_t b_;
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_LINESEGMENT2_H_
+#endif // VALHALLA_MIDGARD_LINESEGMENT2_H_

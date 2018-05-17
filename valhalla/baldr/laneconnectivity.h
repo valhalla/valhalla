@@ -2,6 +2,8 @@
 #define VALHALLA_BALDR_LANECONNECTIVITY_H_
 
 #include <cstdint>
+#include <string>
+
 namespace valhalla {
 namespace baldr {
 
@@ -10,14 +12,14 @@ constexpr size_t kMaxLanesPerConnection = (1 << kMaxLanesPerConnectionBits) - 1;
 
 /**
  * Structure to compactly store lane mask.
- * 
+ *
  * Example: 1|2|3|4|4
  */
 class LaneConnectivityLanes {
- public:
-    /**
+public:
+  /**
    * Constructor with arguments.
-   * @param  string   String representation of lane mask
+   * @param lanes String representation of lane mask
    */
   LaneConnectivityLanes(const std::string& lanes);
 
@@ -27,11 +29,11 @@ class LaneConnectivityLanes {
    */
   std::string to_string() const;
 
- private:
+private:
   void set_lane(uint8_t n, uint8_t lane);
   uint8_t get_lane(uint8_t n) const;
 
- protected:
+protected:
   uint64_t value_; // Single 64 bit value representing lane mask.
 };
 
@@ -39,7 +41,7 @@ class LaneConnectivityLanes {
  * Structure to store lane connectivity between two edges.
  */
 class LaneConnectivity {
- public:
+public:
   /**
    * Default constructor.
    */
@@ -52,15 +54,17 @@ class LaneConnectivity {
    * @param  to_lanes  List of lanes on `to` edge
    * @param  from_lanes List of lanes on `from` edge.
    */
-  LaneConnectivity(const uint32_t idx, const uint64_t from,
-      const std::string& to_lanes, const std::string& from_lanes);
+  LaneConnectivity(const uint32_t idx,
+                   const uint64_t from,
+                   const std::string& to_lanes,
+                   const std::string& from_lanes);
 
   /**
    * operator < - for sorting. Sort by `to` Id.
    * @param  other  Other lane connectivity structure to compare to.
    * @return  Returns true if id < other id.
    */
-  bool operator < (const LaneConnectivity& other) const;
+  bool operator<(const LaneConnectivity& other) const;
 
   /**
    * Get the index of the directed edge this lane connection applies to.
@@ -71,7 +75,7 @@ class LaneConnectivity {
 
   /**
    * Set the directed edge index to which this lane connection applies to.
-   * @param edgeindex   Edge index.
+   * @param idx Edge index.
    */
   void set_to(const uint32_t idx);
 
@@ -93,14 +97,15 @@ class LaneConnectivity {
    */
   std::string to_lanes() const;
 
- protected:
-  uint64_t to_         : 22; // where this connection is going to (edge index)
-  uint64_t from_       : 42; // where this connection is coming from (way id) // (XXX: 42-bits, maybe be a problem in a few years)
+protected:
+  uint64_t to_ : 22;   // where this connection is going to (edge index)
+  uint64_t from_ : 42; // where this connection is coming from (way id) // (XXX: 42-bits, maybe be a
+                       // problem in a few years)
   LaneConnectivityLanes to_lanes_;
   LaneConnectivityLanes from_lanes_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_LANECONNECTIVITY_H_
+#endif // VALHALLA_BALDR_LANECONNECTIVITY_H_

@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <list>
 
-#include <valhalla/proto/trippath.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -17,8 +17,7 @@ namespace odin {
  * enhanced trip path.
  */
 class ManeuversBuilder {
- public:
-
+public:
   /**
    * Constructor that assigns the specified directions options and trip path.
    *
@@ -26,39 +25,41 @@ class ManeuversBuilder {
    *                           language.
    * @param trip_path The trip path - list of nodes, edges, attributes and shape.
    */
-  ManeuversBuilder(const DirectionsOptions& directions_options,
-                   EnhancedTripPath* trip_path);
+  ManeuversBuilder(const DirectionsOptions& directions_options, EnhancedTripPath* trip_path);
 
   std::list<Maneuver> Build();
 
- protected:
+protected:
   std::list<Maneuver> Produce();
 
   void Combine(std::list<Maneuver>& maneuvers);
 
-  std::list<Maneuver>::iterator CollapseTransitConnectionStartManeuver(
-      std::list<Maneuver>& maneuvers,
-      std::list<Maneuver>::iterator curr_man,
-      std::list<Maneuver>::iterator next_man);
+  std::list<Maneuver>::iterator
+  CollapseTransitConnectionStartManeuver(std::list<Maneuver>& maneuvers,
+                                         std::list<Maneuver>::iterator curr_man,
+                                         std::list<Maneuver>::iterator next_man);
 
-  std::list<Maneuver>::iterator CollapseTransitConnectionDestinationManeuver(
-      std::list<Maneuver>& maneuvers,
-      std::list<Maneuver>::iterator curr_man,
-      std::list<Maneuver>::iterator next_man);
+  std::list<Maneuver>::iterator
+  CollapseTransitConnectionDestinationManeuver(std::list<Maneuver>& maneuvers,
+                                               std::list<Maneuver>::iterator curr_man,
+                                               std::list<Maneuver>::iterator next_man);
 
-  std::list<Maneuver>::iterator CombineInternalManeuver(
-      std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator prev_man,
-      std::list<Maneuver>::iterator curr_man,
-      std::list<Maneuver>::iterator next_man, bool start_man);
+  std::list<Maneuver>::iterator CombineInternalManeuver(std::list<Maneuver>& maneuvers,
+                                                        std::list<Maneuver>::iterator prev_man,
+                                                        std::list<Maneuver>::iterator curr_man,
+                                                        std::list<Maneuver>::iterator next_man,
+                                                        bool start_man);
 
-  std::list<Maneuver>::iterator CombineTurnChannelManeuver(
-      std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator prev_man,
-      std::list<Maneuver>::iterator curr_man,
-      std::list<Maneuver>::iterator next_man, bool start_man);
+  std::list<Maneuver>::iterator CombineTurnChannelManeuver(std::list<Maneuver>& maneuvers,
+                                                           std::list<Maneuver>::iterator prev_man,
+                                                           std::list<Maneuver>::iterator curr_man,
+                                                           std::list<Maneuver>::iterator next_man,
+                                                           bool start_man);
 
-  std::list<Maneuver>::iterator CombineSameNameStraightManeuver(
-      std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator curr_man,
-      std::list<Maneuver>::iterator next_man);
+  std::list<Maneuver>::iterator
+  CombineSameNameStraightManeuver(std::list<Maneuver>& maneuvers,
+                                  std::list<Maneuver>::iterator curr_man,
+                                  std::list<Maneuver>::iterator next_man);
 
   void CountAndSortExitSigns(std::list<Maneuver>& maneuvers);
 
@@ -80,24 +81,26 @@ class ManeuversBuilder {
                                         EnhancedTripPath_Edge* prev_edge,
                                         EnhancedTripPath_Edge* curr_edge);
 
-  TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
-      uint32_t heading);
+  TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(uint32_t heading);
 
   bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index);
 
-  bool IncludeUnnamedPrevEdge(int node_index, EnhancedTripPath_Edge* prev_edge,
+  bool IncludeUnnamedPrevEdge(int node_index,
+                              EnhancedTripPath_Edge* prev_edge,
                               EnhancedTripPath_Edge* curr_edge) const;
 
-  bool IsFork(int node_index, EnhancedTripPath_Edge* prev_edge,
-              EnhancedTripPath_Edge* curr_edge) const;
+  bool
+  IsFork(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
 
-  bool IsTee(int node_index, EnhancedTripPath_Edge* prev_edge,
-             EnhancedTripPath_Edge* curr_edge) const;
+  bool
+  IsTee(int node_index, EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const;
 
-  bool IsLeftPencilPointUturn(int node_index, EnhancedTripPath_Edge* prev_edge,
+  bool IsLeftPencilPointUturn(int node_index,
+                              EnhancedTripPath_Edge* prev_edge,
                               EnhancedTripPath_Edge* curr_edge) const;
 
-  bool IsRightPencilPointUturn(int node_index, EnhancedTripPath_Edge* prev_edge,
+  bool IsRightPencilPointUturn(int node_index,
+                               EnhancedTripPath_Edge* prev_edge,
                                EnhancedTripPath_Edge* curr_edge) const;
 
   bool IsIntersectingForwardEdge(int node_index,
@@ -106,8 +109,7 @@ class ManeuversBuilder {
 
   void DetermineRelativeDirection(Maneuver& maneuver);
 
-  static Maneuver::RelativeDirection DetermineRelativeDirection(
-      uint32_t turn_degree);
+  static Maneuver::RelativeDirection DetermineRelativeDirection(uint32_t turn_degree);
 
   bool UsableInternalIntersectionName(Maneuver& maneuver, int node_index) const;
 
@@ -133,14 +135,13 @@ class ManeuversBuilder {
    * @return true if the current turn channel maneuver is able to be combined
    * with the next maneuver, false otherwise.
    */
-  bool IsTurnChannelManeuverCombinable(
-      std::list<Maneuver>::iterator prev_man,
-      std::list<Maneuver>::iterator curr_man,
-      std::list<Maneuver>::iterator next_man,
-      bool start_man) const;
+  bool IsTurnChannelManeuverCombinable(std::list<Maneuver>::iterator prev_man,
+                                       std::list<Maneuver>::iterator curr_man,
+                                       std::list<Maneuver>::iterator next_man,
+                                       bool start_man) const;
 
   /**
-   * Enhance a signless interchange maneuver by adding the subsquent street name
+   * Enhance a signless interchange maneuver by adding the subsequent street name
    * as a branch name.
    *
    * @param maneuvers The list of maneuvers to process.
@@ -149,10 +150,9 @@ class ManeuversBuilder {
 
   const DirectionsOptions& directions_options_;
   EnhancedTripPath* trip_path_;
-
 };
 
-}
-}
+} // namespace odin
+} // namespace valhalla
 
-#endif  // VALHALLA_ODIN_MANEUVERSBUILDER_H_
+#endif // VALHALLA_ODIN_MANEUVERSBUILDER_H_

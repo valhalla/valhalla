@@ -1,8 +1,8 @@
-#include "test.h"
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "test.h"
 
 #include <random>
 
@@ -11,13 +11,15 @@ using namespace valhalla::midgard;
 namespace {
 
 void TestMaxId() {
-  if(Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .25) != 1036799)
+  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .25) !=
+      1036799)
     throw std::runtime_error("Unexpected maxid result");
-  if(Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1) != 64799)
+  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1) != 64799)
     throw std::runtime_error("Unexpected maxid result");
-  if(Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 4) != 4049)
+  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 4) != 4049)
     throw std::runtime_error("Unexpected maxid result");
-  if(Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .33) != 595685)
+  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .33) !=
+      595685)
     throw std::runtime_error("Unexpected maxid result");
 }
 
@@ -114,8 +116,7 @@ void TileList() {
   AABB2<PointLL> bbox(PointLL(-99.5f, 30.5f), PointLL(-90.5f, 39.5f));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
   if (tilelist.size() != 100) {
-    throw std::runtime_error("Wrong number of tiles " +
-                             std::to_string(tilelist.size()) +
+    throw std::runtime_error("Wrong number of tiles " + std::to_string(tilelist.size()) +
                              " found in TileList");
   }
 
@@ -123,8 +124,7 @@ void TileList() {
   AABB2<PointLL> bbox2(PointLL(-183.5f, 30.5f), PointLL(-176.5f, 34.5f));
   tilelist = tiles.TileList(bbox2);
   if (tilelist.size() != 40) {
-    throw std::runtime_error("Wrong number of tiles " +
-                             std::to_string(tilelist.size()) +
+    throw std::runtime_error("Wrong number of tiles " + std::to_string(tilelist.size()) +
                              " found in TileList crossing -180");
   }
 
@@ -132,139 +132,201 @@ void TileList() {
   AABB2<PointLL> bbox3(PointLL(176.5f, 30.5f), PointLL(183.5f, 34.5f));
   tilelist = tiles.TileList(bbox3);
   if (tilelist.size() != 40) {
-    throw std::runtime_error("Wrong number of tiles " +
-                             std::to_string(tilelist.size()) +
+    throw std::runtime_error("Wrong number of tiles " + std::to_string(tilelist.size()) +
                              " found in TileList crossing 180");
   }
 
   Tiles<PointLL> tiles2(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 0.25f);
-  AABB2<PointLL> bbox4(PointLL(-76.489998f,40.509998f), PointLL(-76.480003f,40.520000f));
+  AABB2<PointLL> bbox4(PointLL(-76.489998f, 40.509998f), PointLL(-76.480003f, 40.520000f));
   tilelist = tiles.TileList(bbox4);
   if (tilelist.size() != 1) {
-     throw std::runtime_error("Wrong number of tiles " +
-                              std::to_string(tilelist.size()) +
-                              " found in TileList");
+    throw std::runtime_error("Wrong number of tiles " + std::to_string(tilelist.size()) +
+                             " found in TileList");
   }
 }
 
-using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short> >;
-void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const intersect_t& expected) {
+using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short>>;
+void assert_answer(const Tiles<Point2>& g,
+                   const std::list<Point2>& l,
+                   const intersect_t& expected) {
   auto answer = g.Intersect(l);
-  //wrong number of tiles
-  if(answer.size() > expected.size())
-    throw std::logic_error("Expected no more than" + std::to_string(expected.size()) + " intersected tiles but got " + std::to_string(answer.size()));
-  for(const auto& t : answer) {
-    //missing tile
+  // wrong number of tiles
+  if (answer.size() > expected.size())
+    throw std::logic_error("Expected no more than" + std::to_string(expected.size()) +
+                           " intersected tiles but got " + std::to_string(answer.size()));
+  for (const auto& t : answer) {
+    // missing tile
     auto i = expected.find(t.first);
-    if(i == expected.cend())
+    if (i == expected.cend())
       throw std::logic_error("Unexpected intersected tile " + std::to_string(t.first));
-    //wrong number of subdivisions
-    if(t.second.size() > i->second.size())
-      throw std::logic_error("in tile " + std::to_string(t.first) + " expected no more than " + std::to_string(i->second.size()) + " intersected subdivisions but got " + std::to_string(t.second.size()));
-    //missing subdivision
-    for(const auto& s : t.second)
-      if(i->second.find(s) == i->second.cend())
-        throw std::logic_error("In tile " + std::to_string(t.first) + " unexpected intersected subdivision " + std::to_string(s));
+    // wrong number of subdivisions
+    if (t.second.size() > i->second.size())
+      throw std::logic_error("in tile " + std::to_string(t.first) + " expected no more than " +
+                             std::to_string(i->second.size()) +
+                             " intersected subdivisions but got " +
+                             std::to_string(t.second.size()));
+    // missing subdivision
+    for (const auto& s : t.second)
+      if (i->second.find(s) == i->second.cend())
+        throw std::logic_error("In tile " + std::to_string(t.first) +
+                               " unexpected intersected subdivision " + std::to_string(s));
   }
 }
 
 void test_intersect_linestring() {
-  Tiles<Point2> t(AABB2<Point2>{-5,-5,5,5}, 2.5, 5);
+  Tiles<Point2> t(AABB2<Point2>{-5, -5, 5, 5}, 2.5, 5);
 
-  //nothing
+  // nothing
   assert_answer(t, {}, intersect_t{});
-  assert_answer(t, { {-10,-10} }, intersect_t{});
-  assert_answer(t, { {-10,-10}, {-10,-10} }, intersect_t{});
+  assert_answer(t, {{-10, -10}}, intersect_t{});
+  assert_answer(t, {{-10, -10}, {-10, -10}}, intersect_t{});
 
-  //single
-  assert_answer(t, { {-1,-1} }, intersect_t{{5,{18}}});
-  assert_answer(t, { {-1,-1}, {-1,-1} }, intersect_t{{5,{18}}});
+  // single
+  assert_answer(t, {{-1, -1}}, intersect_t{{5, {18}}});
+  assert_answer(t, {{-1, -1}, {-1, -1}}, intersect_t{{5, {18}}});
 
-  //horizontal
-  assert_answer(t, { {-4.9,-4.9}, {4.9,-4.9} }, intersect_t{{0,{0,1,2,3,4}},{1,{0,1,2,3,4}},{2,{0,1,2,3,4}},{3,{0,1,2,3,4}}});
-  assert_answer(t, { {-5.9,-4.9}, {5.9,-4.9} }, intersect_t{{0,{0,1,2,3,4}},{1,{0,1,2,3,4}},{2,{0,1,2,3,4}},{3,{0,1,2,3,4}}});
-  assert_answer(t, { {-4.9,4.9}, {4.9,4.9} }, intersect_t{{12,{20,21,22,23,24}},{13,{20,21,22,23,24}},{14,{20,21,22,23,24}},{15,{20,21,22,23,24}}});
-  assert_answer(t, { {-5.9,4.9}, {5.9,4.9} }, intersect_t{{12,{20,21,22,23,24}},{13,{20,21,22,23,24}},{14,{20,21,22,23,24}},{15,{20,21,22,23,24}}});
+  // horizontal
+  assert_answer(t, {{-4.9, -4.9}, {4.9, -4.9}}, intersect_t{{0, {0, 1, 2, 3, 4}},
+                                                            {1, {0, 1, 2, 3, 4}},
+                                                            {2, {0, 1, 2, 3, 4}},
+                                                            {3, {0, 1, 2, 3, 4}}});
+  assert_answer(t, {{-5.9, -4.9}, {5.9, -4.9}}, intersect_t{{0, {0, 1, 2, 3, 4}},
+                                                            {1, {0, 1, 2, 3, 4}},
+                                                            {2, {0, 1, 2, 3, 4}},
+                                                            {3, {0, 1, 2, 3, 4}}});
+  assert_answer(t, {{-4.9, 4.9}, {4.9, 4.9}}, intersect_t{{12, {20, 21, 22, 23, 24}},
+                                                          {13, {20, 21, 22, 23, 24}},
+                                                          {14, {20, 21, 22, 23, 24}},
+                                                          {15, {20, 21, 22, 23, 24}}});
+  assert_answer(t, {{-5.9, 4.9}, {5.9, 4.9}}, intersect_t{{12, {20, 21, 22, 23, 24}},
+                                                          {13, {20, 21, 22, 23, 24}},
+                                                          {14, {20, 21, 22, 23, 24}},
+                                                          {15, {20, 21, 22, 23, 24}}});
 
-  //vertical
-  assert_answer(t, { {-4.9,4.9}, {-4.9,-4.9} }, intersect_t{{0,{0,5,10,15,20}},{4,{0,5,10,15,20}},{8,{0,5,10,15,20}},{12,{0,5,10,15,20}}});
-  assert_answer(t, { {-4.9,5.9}, {-4.9,-5.9} }, intersect_t{{0,{0,5,10,15,20}},{4,{0,5,10,15,20}},{8,{0,5,10,15,20}},{12,{0,5,10,15,20}}});
-  assert_answer(t, { {4.9,4.9}, {4.9,-4.9} }, intersect_t{{3,{4,9,14,19,24}},{7,{4,9,14,19,24}},{11,{4,9,14,19,24}},{15,{4,9,14,19,24}}});
-  assert_answer(t, { {4.9,5.9}, {4.9,-5.9} }, intersect_t{{3,{4,9,14,19,24}},{7,{4,9,14,19,24}},{11,{4,9,14,19,24}},{15,{4,9,14,19,24}}});
+  // vertical
+  assert_answer(t, {{-4.9, 4.9}, {-4.9, -4.9}}, intersect_t{{0, {0, 5, 10, 15, 20}},
+                                                            {4, {0, 5, 10, 15, 20}},
+                                                            {8, {0, 5, 10, 15, 20}},
+                                                            {12, {0, 5, 10, 15, 20}}});
+  assert_answer(t, {{-4.9, 5.9}, {-4.9, -5.9}}, intersect_t{{0, {0, 5, 10, 15, 20}},
+                                                            {4, {0, 5, 10, 15, 20}},
+                                                            {8, {0, 5, 10, 15, 20}},
+                                                            {12, {0, 5, 10, 15, 20}}});
+  assert_answer(t, {{4.9, 4.9}, {4.9, -4.9}}, intersect_t{{3, {4, 9, 14, 19, 24}},
+                                                          {7, {4, 9, 14, 19, 24}},
+                                                          {11, {4, 9, 14, 19, 24}},
+                                                          {15, {4, 9, 14, 19, 24}}});
+  assert_answer(t, {{4.9, 5.9}, {4.9, -5.9}}, intersect_t{{3, {4, 9, 14, 19, 24}},
+                                                          {7, {4, 9, 14, 19, 24}},
+                                                          {11, {4, 9, 14, 19, 24}},
+                                                          {15, {4, 9, 14, 19, 24}}});
 
-  //diagonal
-  assert_answer(t, { {-4.9,-4.9}, {4.9,4.9} }, intersect_t{ {0,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{1,{20}},{4,{4}},
-                                                            {5,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{6,{20}},{9,{4}},
-                                                            {10,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{11,{20}},{14,{4}},
-                                                            {15,{0,1,5,6,7,11,12,13,17,18,19,23,24}} });
-  assert_answer(t, { {-5.9,-5.9}, {5.9,5.9} }, intersect_t{ {0,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{1,{20}},{4,{4}},
-                                                            {5,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{6,{20}},{9,{4}},
-                                                            {10,{0,1,5,6,7,11,12,13,17,18,19,23,24}},{11,{20}},{14,{4}},
-                                                            {15,{0,1,5,6,7,11,12,13,17,18,19,23,24}} });
-  assert_answer(t, { {-4.9,4.9}, {4.9,-4.9} }, intersect_t{ {2,{24}},{3,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{7,{0}},
-                                                            {5,{24}},{6,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{10,{0}},
-                                                            {8,{24}},{9,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{15,{0}},
-                                                            {12,{3,4,9,7,8,13,11,12,17,15,16,21,20}} });
-  assert_answer(t, { {-5.9,5.9}, {5.9,-5.9} }, intersect_t{ {2,{24}},{3,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{7,{0}},
-                                                            {5,{24}},{6,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{10,{0}},
-                                                            {8,{24}},{9,{3,4,9,7,8,13,11,12,17,15,16,21,20}},{15,{0}},
-                                                            {12,{3,4,9,7,8,13,11,12,17,15,16,21,20}} });
+  // diagonal
+  assert_answer(t, {{-4.9, -4.9}, {4.9, 4.9}},
+                intersect_t{{0, {0, 1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24}},
+                            {1, {20}},
+                            {4, {4}},
+                            {5, {0, 1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24}},
+                            {6, {20}},
+                            {9, {4}},
+                            {10, {0, 1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24}},
+                            {11, {20}},
+                            {14, {4}},
+                            {15, {0, 1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24}}});
+  assert_answer(t, {{-5.9, -5.9}, {5.9, 5.9}},
+                intersect_t{{0, {0, 1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24}},
+                            {1, {20}},
+                            {4, {4}},
+                            {5, {0, 1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24}},
+                            {6, {20}},
+                            {9, {4}},
+                            {10, {0, 1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24}},
+                            {11, {20}},
+                            {14, {4}},
+                            {15, {0, 1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24}}});
+  assert_answer(t, {{-4.9, 4.9}, {4.9, -4.9}},
+                intersect_t{{2, {24}},
+                            {3, {3, 4, 9, 7, 8, 13, 11, 12, 17, 15, 16, 21, 20}},
+                            {7, {0}},
+                            {5, {24}},
+                            {6, {3, 4, 9, 7, 8, 13, 11, 12, 17, 15, 16, 21, 20}},
+                            {10, {0}},
+                            {8, {24}},
+                            {9, {3, 4, 9, 7, 8, 13, 11, 12, 17, 15, 16, 21, 20}},
+                            {15, {0}},
+                            {12, {3, 4, 9, 7, 8, 13, 11, 12, 17, 15, 16, 21, 20}}});
+  assert_answer(t, {{-5.9, 5.9}, {5.9, -5.9}},
+                intersect_t{{2, {24}},
+                            {3, {3, 4, 9, 7, 8, 13, 11, 12, 17, 15, 16, 21, 20}},
+                            {7, {0}},
+                            {5, {24}},
+                            {6, {3, 4, 9, 7, 8, 13, 11, 12, 17, 15, 16, 21, 20}},
+                            {10, {0}},
+                            {8, {24}},
+                            {9, {3, 4, 9, 7, 8, 13, 11, 12, 17, 15, 16, 21, 20}},
+                            {15, {0}},
+                            {12, {3, 4, 9, 7, 8, 13, 11, 12, 17, 15, 16, 21, 20}}});
 
-  //random slopes
-  t = Tiles<Point2>(AABB2<Point2>{0,0,6,6}, 6, 6);
-  assert_answer(t, { {0.5,0.5}, {5.5,4.5} }, intersect_t{{0,{0,1,7,8,14,15,21,22,28,29}}});
-  assert_answer(t, { {5.5,4.5}, {0.5,0.5} }, intersect_t{{0,{0,1,7,8,14,15,21,22,28,29}}});
-  assert_answer(t, { {5.5,0.5}, {0.5,2.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
-  assert_answer(t, { {0.5,2.5}, {5.5,0.5} }, intersect_t{{0,{4,5,7,8,9,10,12,13}}});
-  assert_answer(t, { {-1,-2}, {4,8} }, intersect_t{{0,{0,6,7,12,13,19,20,25,26,32,33}}});
-  assert_answer(t, { {4,8}, {-1,-2} }, intersect_t{{0,{0,6,7,12,13,19,20,25,26,32,33}}});
-  assert_answer(t, { {1,2}, {2,4} }, intersect_t{{0,{6,7,12,13,19,20,25,26}}});
-  assert_answer(t, { {2,4}, {1,2} }, intersect_t{{0,{6,7,12,13,19,20,25,26}}});
+  // random slopes
+  t = Tiles<Point2>(AABB2<Point2>{0, 0, 6, 6}, 6, 6);
+  assert_answer(t, {{0.5, 0.5}, {5.5, 4.5}},
+                intersect_t{{0, {0, 1, 7, 8, 14, 15, 21, 22, 28, 29}}});
+  assert_answer(t, {{5.5, 4.5}, {0.5, 0.5}},
+                intersect_t{{0, {0, 1, 7, 8, 14, 15, 21, 22, 28, 29}}});
+  assert_answer(t, {{5.5, 0.5}, {0.5, 2.5}}, intersect_t{{0, {4, 5, 7, 8, 9, 10, 12, 13}}});
+  assert_answer(t, {{0.5, 2.5}, {5.5, 0.5}}, intersect_t{{0, {4, 5, 7, 8, 9, 10, 12, 13}}});
+  assert_answer(t, {{-1, -2}, {4, 8}}, intersect_t{{0, {0, 6, 7, 12, 13, 19, 20, 25, 26, 32, 33}}});
+  assert_answer(t, {{4, 8}, {-1, -2}}, intersect_t{{0, {0, 6, 7, 12, 13, 19, 20, 25, 26, 32, 33}}});
+  assert_answer(t, {{1, 2}, {2, 4}}, intersect_t{{0, {6, 7, 12, 13, 19, 20, 25, 26}}});
+  assert_answer(t, {{2, 4}, {1, 2}}, intersect_t{{0, {6, 7, 12, 13, 19, 20, 25, 26}}});
 
-  //some real locations on earth (without polar coordinates accounted for)
-  Tiles<PointLL> ll(AABB2<PointLL>{-180,-90,180,90}, .25, 5);
-  std::vector<PointLL> shape{{9.5499754, 47.250248},{9.55031681, 47.2501144}};
+  // some real locations on earth (without polar coordinates accounted for)
+  Tiles<PointLL> ll(AABB2<PointLL>{-180, -90, 180, 90}, .25, 5);
+  std::vector<PointLL> shape{{9.5499754, 47.250248}, {9.55031681, 47.2501144}};
   auto intersection = ll.Intersect(shape);
-  for(const auto& i : intersection)
-    if(i.first != 791318)
+  for (const auto& i : intersection)
+    if (i.first != 791318)
       throw std::logic_error("This tile shouldn't be intersected: " + std::to_string(i.first));
 
   shape = {{130.399643, 33.6005592}, {130.399994, 33.5999985}};
   intersection = ll.Intersect(shape);
   size_t count = 0;
-  for(const auto& i : intersection)
+  for (const auto& i : intersection)
     count += i.second.size();
-  if(count > 2)
-    throw std::logic_error("Should not have " + std::to_string(count) + " intersections for this shape");
-
+  if (count > 2)
+    throw std::logic_error("Should not have " + std::to_string(count) +
+                           " intersections for this shape");
 }
 
 void test_random_linestring() {
-  Tiles<Point2> t(AABB2<Point2>{-10,-10,10,10}, 1, 5);
+  Tiles<Point2> t(AABB2<Point2>{-10, -10, 10, 10}, 1, 5);
   std::default_random_engine generator;
   std::uniform_real_distribution<> distribution(-10, 10);
-  for(int i = 0; i < 500; ++i) {
+  for (int i = 0; i < 500; ++i) {
     std::vector<Point2> linestring;
-    for(int j = 0; j < 100; ++j)
+    for (int j = 0; j < 100; ++j)
       linestring.emplace_back(PointLL(distribution(generator), distribution(generator)));
     auto answer = t.Intersect(linestring);
-    for(auto tile : answer)
-      for(auto sub : tile.second)
-        if(sub > 24)
+    for (auto tile : answer)
+      for (auto sub : tile.second)
+        if (sub > 24)
           throw std::runtime_error("Non-existant bin!");
   }
 }
 
 template <class coord_t>
-std::pair<int32_t, int32_t> to_xy(std::tuple<int32_t, unsigned short, float> tile, const Tiles<coord_t>& t) {
-  auto ax = (std::get<0>(tile) % t.ncolumns()) * t.nsubdivisions() + (std::get<1>(tile) % t.nsubdivisions());
-  auto ay = (std::get<0>(tile) / t.ncolumns()) * t.nsubdivisions() + (std::get<1>(tile) / t.nsubdivisions());
+std::pair<int32_t, int32_t> to_xy(std::tuple<int32_t, unsigned short, float> tile,
+                                  const Tiles<coord_t>& t) {
+  auto ax = (std::get<0>(tile) % t.ncolumns()) * t.nsubdivisions() +
+            (std::get<1>(tile) % t.nsubdivisions());
+  auto ay = (std::get<0>(tile) / t.ncolumns()) * t.nsubdivisions() +
+            (std::get<1>(tile) / t.nsubdivisions());
   return std::make_pair(ax, ay);
 }
 
 template <class coord_t>
 int32_t to_global_sub(std::tuple<int32_t, unsigned short, float> tile, const Tiles<coord_t>& t) {
-  auto xy = to_xy(tile,t);
+  auto xy = to_xy(tile, t);
   return xy.second * (t.ncolumns() * t.nsubdivisions()) + xy.first;
 }
 
@@ -278,13 +340,19 @@ coord_t dist(int32_t sub, const Tiles<coord_t>& tiles, const coord_t& seed) {
   auto y0 = tiles.TileBounds().miny() + y * tiles.SubdivisionSize();
   auto y1 = tiles.TileBounds().miny() + (y + 1) * tiles.SubdivisionSize();
   auto distance = std::numeric_limits<float>::max();
-  std::list<coord_t> corners{ {x0, y0}, {x1, y0}, {x0, y1}, {x1, y1} };
-  if(x0 < seed.first && x1 > seed.first) { corners.emplace_back(seed.first, y0); corners.emplace_back(seed.first, y1); }
-  if(y0 < seed.second && y1 > seed.second) { corners.emplace_back(x0, seed.second); corners.emplace_back(x1, seed.second); }
+  std::list<coord_t> corners{{x0, y0}, {x1, y0}, {x0, y1}, {x1, y1}};
+  if (x0 < seed.first && x1 > seed.first) {
+    corners.emplace_back(seed.first, y0);
+    corners.emplace_back(seed.first, y1);
+  }
+  if (y0 < seed.second && y1 > seed.second) {
+    corners.emplace_back(x0, seed.second);
+    corners.emplace_back(x1, seed.second);
+  }
   coord_t used;
-  for(const auto& c : corners) {
+  for (const auto& c : corners) {
     auto d = seed.Distance(c);
-    if(d < distance) {
+    if (d < distance) {
       distance = d;
       used = c;
     }
@@ -292,39 +360,37 @@ coord_t dist(int32_t sub, const Tiles<coord_t>& tiles, const coord_t& seed) {
   return used;
 }
 
-template <class coord_t>
-void test_point(const Tiles<coord_t>& t, const coord_t& p) {
+template <class coord_t> void test_point(const Tiles<coord_t>& t, const coord_t& p) {
   auto a = t.ClosestFirst(p);
   size_t size = 0;
   size_t zeros = 0;
   std::tuple<int32_t, unsigned short, float> last{-1, -1, 0};
-  while(true) {
+  while (true) {
     try {
-      //keep track of zero distsance subdivisions
+      // keep track of zero distsance subdivisions
       auto r = a();
       auto d = std::get<2>(r);
-      if(d == 0)
+      if (d == 0)
         ++zeros;
-      //if its out of order you fail
-      if(d < std::get<2>(last)) {
-        //auto l = dist(to_global_sub(last, t), t, p);
-        //auto c = dist(to_global_sub(r, t), t, p);
+      // if its out of order you fail
+      if (d < std::get<2>(last)) {
+        // auto l = dist(to_global_sub(last, t), t, p);
+        // auto c = dist(to_global_sub(r, t), t, p);
         throw std::logic_error("Distances should be smallest first");
       }
-      //remember the last distance and how many we've seen
+      // remember the last distance and how many we've seen
       last = r;
       ++size;
-    }
-    catch(const std::runtime_error& e) {
-      if(std::string(e.what()) != "Subdivisions were exhausted")
+    } catch (const std::runtime_error& e) {
+      if (std::string(e.what()) != "Subdivisions were exhausted")
         throw std::logic_error("Should have thrown only for running out of subdivisions");
       break;
     }
   }
 
-  if(size != t.ncolumns()*t.nsubdivisions()*t.nrows()*t.nsubdivisions())
+  if (size != t.ncolumns() * t.nsubdivisions() * t.nrows() * t.nsubdivisions())
     throw std::logic_error("Number of subdivisions didnt match");
-  if(zeros != 1 && zeros != 2 && zeros != 4)
+  if (zeros != 1 && zeros != 2 && zeros != 4)
     throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
 }
 
@@ -333,83 +399,98 @@ void test_closest_first() {
   auto m = PointLL(8.99546623, -78.2651062).Distance({-91.2, 90});
   auto n = PointLL(8.99546623, -78.2651062).Distance({-92, 90});
 
-  //test a simple 8x4 grid for polar and meridian wrapping
-  Tiles<PointLL> t(AABB2<PointLL>{-180,-90,180,90}, 90, 2);
+  // test a simple 8x4 grid for polar and meridian wrapping
+  Tiles<PointLL> t(AABB2<PointLL>{-180, -90, 180, 90}, 90, 2);
   auto y = t.ClosestFirst({179.99, -16.825});
-  if(to_global_sub(y(), t) != 15)
+  if (to_global_sub(y(), t) != 15)
     throw std::logic_error("Should have been 15");
-  if(to_global_sub(y(), t) != 8)
+  if (to_global_sub(y(), t) != 8)
     throw std::logic_error("Should have been wrapped to 8");
-  if(to_global_sub(y(), t) != 23)
+  if (to_global_sub(y(), t) != 23)
     throw std::logic_error("Should have been above to 23");
   y = t.ClosestFirst({-179.99, -16.825});
-  if(to_global_sub(y(), t) != 8)
+  if (to_global_sub(y(), t) != 8)
     throw std::logic_error("Should have been 8");
-  if(to_global_sub(y(), t) != 15)
+  if (to_global_sub(y(), t) != 15)
     throw std::logic_error("Should have been wrapped to 15");
-  if(to_global_sub(y(), t) != 16)
+  if (to_global_sub(y(), t) != 16)
     throw std::logic_error("Should have been above to 16");
 
-  //check realistic antimeridian wrapping
-  t = Tiles<PointLL>(AABB2<PointLL>{-180,-90,180,90}, .25, 5);
+  // check realistic antimeridian wrapping
+  t = Tiles<PointLL>(AABB2<PointLL>{-180, -90, 180, 90}, .25, 5);
   PointLL p{179.99, -16.825};
-  int px = (p.first - t.TileBounds().minx()) / t.TileBounds().Width() * t.ncolumns() * t.nsubdivisions();
-  int py = (p.second - t.TileBounds().miny()) / t.TileBounds().Height() * t.nrows() * t.nsubdivisions();
+  int px =
+      (p.first - t.TileBounds().minx()) / t.TileBounds().Width() * t.ncolumns() * t.nsubdivisions();
+  int py =
+      (p.second - t.TileBounds().miny()) / t.TileBounds().Height() * t.nrows() * t.nsubdivisions();
   auto c = t.ClosestFirst(p);
   auto first = c();
-  if(to_global_sub(first, t) != py * t.ncolumns() * t.nsubdivisions() + px)
+  if (to_global_sub(first, t) != py * t.ncolumns() * t.nsubdivisions() + px)
     throw std::logic_error("Unexpected global subdivision");
-  if(std::get<2>(first) != 0)
+  if (std::get<2>(first) != 0)
     throw std::logic_error("Unexpected distance");
-  auto second  = c();
-  if(to_global_sub(second, t) != py * t.ncolumns() * t.nsubdivisions())
+  auto second = c();
+  if (to_global_sub(second, t) != py * t.ncolumns() * t.nsubdivisions())
     throw std::logic_error("Unexpected global subdivision");
-  if(std::get<2>(second) != p.Distance({-180, -16.825}))
+  if (std::get<2>(second) != p.Distance({-180, -16.825}))
     throw std::logic_error("Unexpected distance");
 
-  //try planar coordinate system
-  Tiles<Point2> tp(AABB2<Point2>{-10,-10,10,10}, 1, 5);
-  for(const auto& p : std::list<Point2>{ {0,0}, {-1.99,-1.99}, {-.03,1.21}, {7.23,-3.332}, {.04,8.76}, {9.99,9.99} })
+  // try planar coordinate system
+  Tiles<Point2> tp(AABB2<Point2>{-10, -10, 10, 10}, 1, 5);
+  for (const auto& p : std::list<Point2>{
+           {0, 0}, {-1.99, -1.99}, {-.03, 1.21}, {7.23, -3.332}, {.04, 8.76}, {9.99, 9.99}})
     test_point(tp, p);
 
-  //try spherical coordinate system
-  t = Tiles<PointLL>(AABB2<PointLL>{-180,-90,180,90}, 4, 5);
-  for(const auto& p : std::list<PointLL>{ {0,0}, {-76.5,40.5}, {47.31707,9.2827}, {11.92515,78.92409}, {-67.61196,-54.93575}, {179.99155,-16.80257}, {179.99,89.99} })
+  // try spherical coordinate system
+  t = Tiles<PointLL>(AABB2<PointLL>{-180, -90, 180, 90}, 4, 5);
+  for (const auto& p : std::list<PointLL>{{0, 0},
+                                          {-76.5, 40.5},
+                                          {47.31707, 9.2827},
+                                          {11.92515, 78.92409},
+                                          {-67.61196, -54.93575},
+                                          {179.99155, -16.80257},
+                                          {179.99, 89.99}})
     test_point(t, p);
 
-  //try some randos
+  // try some randos
   std::default_random_engine generator;
-  std::uniform_real_distribution<> distribution(0,360);
-  for(size_t i = 0; i < 25; ++i) {
-    PointLL p{ distribution(generator) - 180.f, distribution(generator)/2 - 90.f };
+  std::uniform_real_distribution<> distribution(0, 360);
+  for (size_t i = 0; i < 25; ++i) {
+    PointLL p{distribution(generator) - 180.f, distribution(generator) / 2 - 90.f};
     test_point(t, p);
   }
 }
 
 void test_intersect_bbox_world() {
-  AABB2<PointLL> world_box{-180,-90,180,90};
+  AABB2<PointLL> world_box{-180, -90, 180, 90};
   Tiles<PointLL> t(world_box, 90, 2);
   auto intersection = t.Intersect(world_box);
   if (intersection.size() != t.TileCount()) {
-    throw std::runtime_error("Expected " + std::to_string(t.TileCount()) + " tiles returned from world-spanning intersection, but got " + std::to_string(intersection.size()) + " instead.");
+    throw std::runtime_error("Expected " + std::to_string(t.TileCount()) +
+                             " tiles returned from world-spanning intersection, but got " +
+                             std::to_string(intersection.size()) + " instead.");
   }
   auto nbins = t.nsubdivisions() * t.nsubdivisions();
-  for (const auto &i : intersection) {
-    const auto &bins = i.second;
+  for (const auto& i : intersection) {
+    const auto& bins = i.second;
     if (bins.size() != nbins) {
-      throw std::runtime_error("Expected " + std::to_string(nbins) + " bins for tile " + std::to_string(i.first) + " but got " + std::to_string(bins.size()) + " instead.");
+      throw std::runtime_error("Expected " + std::to_string(nbins) + " bins for tile " +
+                               std::to_string(i.first) + " but got " + std::to_string(bins.size()) +
+                               " instead.");
     }
   }
 }
 
 void test_intersect_bbox_single() {
-  AABB2<PointLL> world_box{-180,-90,180,90};
+  AABB2<PointLL> world_box{-180, -90, 180, 90};
   Tiles<PointLL> t(world_box, 90, 2);
 
   AABB2<PointLL> single_box{1, 1, 2, 2};
   auto intersection = t.Intersect(single_box);
   if (intersection.size() != 1) {
-    throw std::runtime_error("Expected one tile returned from world-spanning intersection, but got " + std::to_string(intersection.size()) + " instead.");
+    throw std::runtime_error(
+        "Expected one tile returned from world-spanning intersection, but got " +
+        std::to_string(intersection.size()) + " instead.");
   }
   auto tile_id = intersection.begin()->first;
   auto bins = intersection.begin()->second;
@@ -422,7 +503,8 @@ void test_intersect_bbox_single() {
   // there should be a single result bin, which should be in the lower left
   // and therefore be bin 0.
   if (bins.size() != 1) {
-    throw std::runtime_error("Expected a single bin, but got " + std::to_string(bins.size()) + " bins.");
+    throw std::runtime_error("Expected a single bin, but got " + std::to_string(bins.size()) +
+                             " bins.");
   }
   auto bin_id = *bins.begin();
   if (bin_id != 0) {
@@ -431,18 +513,20 @@ void test_intersect_bbox_single() {
 }
 
 void test_intersect_bbox_rounding() {
-  AABB2<PointLL> world_box{-180,-90,180,90};
+  AABB2<PointLL> world_box{-180, -90, 180, 90};
   Tiles<PointLL> t(world_box, 0.25, 5);
 
   AABB2<PointLL> single_box{0.5, 0.5, 0.501, 0.501};
   auto intersection = t.Intersect(single_box);
   if (intersection.size() != 1) {
-    throw std::runtime_error("Expected one tile returned from intersection, but got " + std::to_string(intersection.size()) + " instead.");
+    throw std::runtime_error("Expected one tile returned from intersection, but got " +
+                             std::to_string(intersection.size()) + " instead.");
   }
   auto bins = intersection.begin()->second;
   // expect only the lower left bin, 0
   if (bins.size() != 1) {
-    throw std::runtime_error("Expected a single bin, but got " + std::to_string(bins.size()) + " bins.");
+    throw std::runtime_error("Expected a single bin, but got " + std::to_string(bins.size()) +
+                             " bins.");
   }
   auto bin_id = *bins.begin();
   if (bin_id != 0) {
@@ -450,7 +534,7 @@ void test_intersect_bbox_rounding() {
   }
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("tiles");

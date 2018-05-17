@@ -1,24 +1,25 @@
 #include "mjolnir/validatetransit.h"
-#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/dataquality.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
 
 #include <future>
-#include <thread>
 #include <queue>
+#include <thread>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/algorithm/string.hpp>
 
+#include "baldr/datetime.h"
+#include "baldr/filesystem_utils.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
-#include "baldr/datetime.h"
-#include "baldr/tilehierarchy.h"
-#include "baldr/graphid.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphtile.h"
-#include "baldr/graphreader.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -37,11 +38,14 @@ struct validate_stats {
 // Walk the transit data starting at the origin onestop_id/node and walk the edges
 // until we find the destination onestop_id/node.  Must walk via the route
 // onestop_id provided in the tests.
-bool WalkTransitLines(const GraphId& n_graphId, GraphReader& reader,
-                      const GraphId& tileid, std::mutex& lock,
-                      std::unordered_multimap<GraphId,uint64_t>& visited_map,
+bool WalkTransitLines(const GraphId& n_graphId,
+                      GraphReader& reader,
+                      const GraphId& tileid,
+                      std::mutex& lock,
+                      std::unordered_multimap<GraphId, uint64_t>& visited_map,
                       const std::string& date_time,
-                      const std::string& end_name, const std::string& route_name) {
+                      const std::string& end_name,
+                      const std::string& route_name) {
   lock.lock();
   const GraphTile* endnodetile = reader.GetGraphTile(n_graphId);
   lock.unlock();
@@ -52,31 +56,30 @@ bool WalkTransitLines(const GraphId& n_graphId, GraphReader& reader,
   uint32_t j = 0;
   uint32_t localtime = DateTime::seconds_from_midnight(date_time);
   uint32_t date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(date_time));
-  uint32_t dow  = DateTime::day_of_week_mask(date_time);
+  uint32_t dow = DateTime::day_of_week_mask(date_time);
   uint32_t date_created = endnodetile->header()->date_created();
   uint32_t day = 0;
   uint32_t time_added = 0;
   bool date_before_tile = false;
-  if (date < date_created)
+  if (date < date_created) {
     date_before_tile = true;
-  else
+  } else {
     day = date - date_created;
+  }
 
   bool bDone = false;
 
   while (j < n_info->edge_count() && time_added <= 14400) {
 
-    const DirectedEdge* de =
-        endnodetile->directededge(n_info->edge_index() + j);
+    const DirectedEdge* de = endnodetile->directededge(n_info->edge_index() + j);
 
     GraphId edgeid(currentNode.tileid(), currentNode.level(), n_info->edge_index() + j);
 
     // all should be a transit lines, but make sure.
     if (de->IsTransitLine()) {
 
-      const TransitDeparture* departure = endnodetile->GetNextDeparture(
-          de->lineid(), localtime, day, dow, false,
-          false, false);
+      const TransitDeparture* departure =
+          endnodetile->GetNextDeparture(de->lineid(), localtime, day, dow, false, false, false);
 
       // Don't want to walk an edge at a particular time more than once.
       bool visited = false;
@@ -100,33 +103,33 @@ bool WalkTransitLines(const GraphId& n_graphId, GraphReader& reader,
           currentNode = de->endnode();
 
           // if (tripid == 0) then this is the first pass.
-          if (tripid == 0)
+          if (tripid == 0) {
             tripid = departure->tripid();
+          }
 
-          //get the new tile if needed.
+          // get the new tile if needed.
           if (endnodetile->id() != currentNode.Tile_Base()) {
             lock.lock();
             endnodetile = reader.GetGraphTile(currentNode);
             lock.unlock();
           }
-          //get new end node and start over if needed.
+          // get new end node and start over if needed.
           n_info = endnodetile->node(currentNode);
 
           // are we done?
           std::string station_name;
-          //stations are in the same tile as platforms and the tests contain the station
-          //onestop ids and not the platforms
+          // stations are in the same tile as platforms and the tests contain the station
+          // onestop ids and not the platforms
           uint32_t z = 0;
           while (z < n_info->edge_count()) {
 
-            const DirectedEdge* de =
-                endnodetile->directededge(n_info->edge_index() + z);
+            const DirectedEdge* de = endnodetile->directededge(n_info->edge_index() + z);
 
-            //get the station node
+            // get the station node
             if (de->use() == Use::kPlatformConnection) {
 
-              const TransitStop* transit_station = endnodetile->GetTransitStop(
-                  endnodetile->node(de->endnode())->stop_index());
+              const TransitStop* transit_station =
+                  endnodetile->GetTransitStop(endnodetile->node(de->endnode())->stop_index());
 
               station_name = endnodetile->GetName(transit_station->one_stop_offset());
               break;
@@ -146,10 +149,10 @@ bool WalkTransitLines(const GraphId& n_graphId, GraphReader& reader,
       }
     }
     // if we get here add 30 sec and try again.  up to 4 hrs.
-    if (j+1 == n_info->edge_count()) {
+    if (j + 1 == n_info->edge_count()) {
       time_added += 30;
       localtime += 30;
-      j=0;
+      j = 0;
       tripid = 0;
       continue;
     }
@@ -159,7 +162,8 @@ bool WalkTransitLines(const GraphId& n_graphId, GraphReader& reader,
 }
 
 // validate the transit data using the one_stop tests.
-void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
+void validate(const boost::property_tree::ptree& pt,
+              std::mutex& lock,
               std::unordered_set<GraphId>::const_iterator tile_start,
               std::unordered_set<GraphId>::const_iterator tile_end,
               const std::vector<OneStopTest>& onestoptests,
@@ -172,14 +176,15 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
   std::unordered_multimap<std::string, std::string> failed_tests;
 
   // Iterate through the tiles in the queue and find any that include stops
-  for(; tile_start != tile_end; ++tile_start) {
+  for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
-    if(reader_transit_level.OverCommitted())
+    if (reader_transit_level.OverCommitted()) {
       reader_transit_level.Clear();
+    }
     GraphId tile_id = tile_start->Tile_Base();
 
     lock.lock();
-    GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level()+1, tile_id.id());
+    GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder(reader_transit_level.tile_dir(), transit_tile_id, true);
     lock.unlock();
@@ -191,18 +196,17 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
       // all should be multiuseplatform, but check just to be sure.
       if (nodeinfo.type() == NodeType::kMultiUseTransitPlatform) {
 
-        //stations are in the same tile as platforms and the tests contain the station
-        //onestop ids and not the platforms
+        // stations are in the same tile as platforms and the tests contain the station
+        // onestop ids and not the platforms
         uint32_t j = 0;
         while (j < nodeinfo.edge_count()) {
 
-          const DirectedEdge* de =
-              transit_tile->directededge(nodeinfo.edge_index() + j);
+          const DirectedEdge* de = transit_tile->directededge(nodeinfo.edge_index() + j);
 
-          //get the station node
+          // get the station node
           if (de->use() == Use::kPlatformConnection) {
-            const TransitStop* transit_station = transit_tile->GetTransitStop(
-                transit_tile->node(de->endnode())->stop_index());
+            const TransitStop* transit_station =
+                transit_tile->GetTransitStop(transit_tile->node(de->endnode())->stop_index());
 
             station_name = transit_tile->GetName(transit_station->one_stop_offset());
             break;
@@ -216,8 +220,8 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
 
         for (auto t = p.first; t != p.second; ++t) {
 
-          //has this test passed already?
-          //don't want to run again for another platform under a station.
+          // has this test passed already?
+          // don't want to run again for another platform under a station.
           bool bfound = false;
           auto tests = passed_tests.equal_range(t->origin);
           for (auto it = tests.first; it != tests.second; ++it) {
@@ -227,62 +231,61 @@ void validate(const boost::property_tree::ptree& pt, std::mutex& lock,
             }
           }
 
-          if (bfound)
+          if (bfound) {
             continue;
+          }
 
-          const TransitStop* transit_stop = transit_tile->GetTransitStop(
-                      nodeinfo.stop_index());
-          GraphId currentNode = GraphId(transit_tile->id().tileid(),transit_tile->id().level(), i);
+          const TransitStop* transit_stop = transit_tile->GetTransitStop(nodeinfo.stop_index());
+          GraphId currentNode = GraphId(transit_tile->id().tileid(), transit_tile->id().level(), i);
           GraphId tileid = transit_tile->id();
-          std::unordered_multimap<GraphId,uint64_t> visited_map;
+          std::unordered_multimap<GraphId, uint64_t> visited_map;
 
-          if (!WalkTransitLines(currentNode, reader_transit_level,
-                                tileid, lock, visited_map, t->date_time,
-                                t->destination, t->route_id)) {
+          if (!WalkTransitLines(currentNode, reader_transit_level, tileid, lock, visited_map,
+                                t->date_time, t->destination, t->route_id)) {
 
-            //Try again avoiding the departures found in the previous "walk"
-            //We do this because we could of walked in the incorrect direction and
-            //the route line could have the same name and id.
-            if (!WalkTransitLines(currentNode, reader_transit_level,
-                                  tileid, lock, visited_map, t->date_time,
-                                  t->destination, t->route_id)) {
+            // Try again avoiding the departures found in the previous "walk"
+            // We do this because we could of walked in the incorrect direction and
+            // the route line could have the same name and id.
+            if (!WalkTransitLines(currentNode, reader_transit_level, tileid, lock, visited_map,
+                                  t->date_time, t->destination, t->route_id)) {
 
-              LOG_DEBUG("Test from " + t->origin + " to " + t->destination + " @ " +
-                        t->date_time + " route id " + t->route_id + " failed.");
-              failed_tests.emplace(t->origin, (t->destination + " @ " + t->date_time + " " + t->route_id));
+              LOG_DEBUG("Test from " + t->origin + " to " + t->destination + " @ " + t->date_time +
+                        " route id " + t->route_id + " failed.");
+              failed_tests.emplace(t->origin,
+                                   (t->destination + " @ " + t->date_time + " " + t->route_id));
               continue;
             }
           }
-          LOG_DEBUG("Test from " + t->origin + " to " + t->destination + " @ " +
-                   t->date_time + " route id " + t->route_id + " passed.");
-          passed_tests.emplace(t->origin, (t->destination + " @ " + t->date_time + " " + t->route_id));
-
+          LOG_DEBUG("Test from " + t->origin + " to " + t->destination + " @ " + t->date_time +
+                    " route id " + t->route_id + " passed.");
+          passed_tests.emplace(t->origin,
+                               (t->destination + " @ " + t->date_time + " " + t->route_id));
         }
       }
     }
   }
 
   std::set<std::string> failures;
-  for ( auto p = failed_tests.begin(); p != failed_tests.end(); ++p ) {
+  for (auto p = failed_tests.begin(); p != failed_tests.end(); ++p) {
     bool bfound = false;
     auto tests = passed_tests.equal_range(p->first);
-     for (auto it = tests.first; it != tests.second; ++it) {
-       if (it->second == (p->second)) {
-         bfound = true;
-         break;
-       }
-     }
+    for (auto it = tests.first; it != tests.second; ++it) {
+      if (it->second == (p->second)) {
+        bfound = true;
+        break;
+      }
+    }
 
-     if (bfound)
-       continue;
-     else { // only report a failure one time.  A station has multiple platforms and we could of
-       //walked the transit lines of the wrong platform.
-       if (failures.find(p->first + p->second) == failures.end()) {
-         failure_count++;
-         LOG_ERROR("Test from " + p->first + " to " + p->second + " failed.");
-         failures.emplace(p->first + p->second);
-       }
-     }
+    if (bfound) {
+      continue;
+    } else { // only report a failure one time.  A station has multiple platforms and we could of
+      // walked the transit lines of the wrong platform.
+      if (failures.find(p->first + p->second) == failures.end()) {
+        failure_count++;
+        LOG_ERROR("Test from " + p->first + " to " + p->second + " failed.");
+        failures.emplace(p->first + p->second);
+      }
+    }
   }
 
   // Send back the statistics
@@ -307,7 +310,7 @@ std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
       tokenizer tok{line, sep};
       uint32_t field_num = 0;
       OneStopTest onestoptest{};
-      for (const auto &t : tok) {
+      for (const auto& t : tok) {
         switch (field_num) {
           case 0:
             onestoptest.origin = remove_double_quotes(t);
@@ -324,8 +327,9 @@ std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
         }
         field_num++;
       }
-      if (onestoptest.date_time.empty())
+      if (onestoptest.date_time.empty()) {
         onestoptest.date_time = default_date_time;
+      }
 
       onestoptests.emplace_back(std::move(onestoptest));
     }
@@ -337,13 +341,13 @@ std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
   return onestoptests;
 }
 
-//create parse a Valhalla responses and create transit tests.
-//Example request and results from a log file:
-/*28 2017/01/26 15:03:16.482590 GET /route?json=%7B%22locations%22%3A%5B%7B%22lon%22%3A-73.98827%2C%22lat%22%3A40.74912%2C%22type%22%3A%22break%22%7D%2C%7B%22lon%22%3A-74.06289%2C%22lat%22%3A40.73301%2C%22type%22%3A%22break%22%7D%5D%2C%22costing%22%3A%22multimodal%22%2C%22costin
-g_options%22%3A%7B%22transit%22%3A%7B%22use_bus%22%3A0.3%2C%22use_rail%22%3A0.6%2C%22use_transfers%22%3A0.3%7D%7D%2C%22date_time%22%3A%7B%22type%22%3A1%2C%22value%22%3A%222017-01-24T08%3A00%22%7D%7D%0A HTTP/1.1
-2017/01/26 15:03:16.482691 [INFO] Got Loki Request 28
-2017/01/26 15:03:16.483346 [ANALYTICS] location_count::2
-2017/01/26 15:03:16.483358 [ANALYTICS] costing_type::multimodal
+// create parse a Valhalla responses and create transit tests.
+// Example request and results from a log file:
+/*28 2017/01/26 15:03:16.482590 GET
+/route?json=%7B%22locations%22%3A%5B%7B%22lon%22%3A-73.98827%2C%22lat%22%3A40.74912%2C%22type%22%3A%22break%22%7D%2C%7B%22lon%22%3A-74.06289%2C%22lat%22%3A40.73301%2C%22type%22%3A%22break%22%7D%5D%2C%22costing%22%3A%22multimodal%22%2C%22costin
+g_options%22%3A%7B%22transit%22%3A%7B%22use_bus%22%3A0.3%2C%22use_rail%22%3A0.6%2C%22use_transfers%22%3A0.3%7D%7D%2C%22date_time%22%3A%7B%22type%22%3A1%2C%22value%22%3A%222017-01-24T08%3A00%22%7D%7D%0A
+HTTP/1.1 2017/01/26 15:03:16.482691 [INFO] Got Loki Request 28 2017/01/26 15:03:16.483346
+[ANALYTICS] location_count::2 2017/01/26 15:03:16.483358 [ANALYTICS] costing_type::multimodal
 2017/01/26 15:03:16.483423 [ANALYTICS] location_distance::6.543840km
 2017/01/26 15:03:16.562768 [INFO] Got Thor Request 28
 2017/01/26 15:03:16.565691 [ANALYTICS] travel_mode::1
@@ -379,7 +383,7 @@ void ParseLogFile(const std::string& filename) {
   boost::char_separator<char> sep{" "};
 
   std::string type, origin, dest, tranisit_route;
-  bool route=false;
+  bool route = false;
   origin = "";
   dest = "";
   tranisit_route = "";
@@ -392,7 +396,7 @@ void ParseLogFile(const std::string& filename) {
       tokenizer tok{line, sep};
       uint32_t field_num = 0;
       OneStopTest onestoptest{};
-      for (const auto &t : tok) {
+      for (const auto& t : tok) {
         switch (field_num) {
           case 2:
             type = remove_double_quotes(t);
@@ -403,8 +407,8 @@ void ParseLogFile(const std::string& filename) {
               std::string transit, value;
               std::size_t found = o_s.find_last_of("::");
               if (found != std::string::npos) {
-                transit = o_s.substr(0,found-1);
-                value = o_s.substr(found+1);
+                transit = o_s.substr(0, found - 1);
+                value = o_s.substr(found + 1);
               }
 
               if (transit == "transit_route_stopid") {
@@ -417,11 +421,13 @@ void ParseLogFile(const std::string& filename) {
                 tranisit_route = value;
                 route = true;
               } else if (transit == "transit_stopid") {
-                if (route && origin.empty())
+                if (route && origin.empty()) {
                   origin = value;
-                else dest = value;
+                } else {
+                  dest = value;
+                }
               }
-            } else if (type == "[INFO]"){
+            } else if (type == "[INFO]") {
               origin = "";
               dest = "";
               tranisit_route = "";
@@ -444,7 +450,6 @@ void ParseLogFile(const std::string& filename) {
   } else {
     std::cout << "One stop test file: " << filename << " not found" << std::endl;
   }
-
 }
 
 // Enhance the local level of the graph
@@ -452,7 +457,8 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
                                const std::unordered_set<GraphId>& tiles,
                                const std::vector<OneStopTest>& onestoptests) {
 
-  unsigned int thread_count = std::max(static_cast<unsigned int>(1), std::thread::hardware_concurrency());
+  unsigned int thread_count =
+      std::max(static_cast<unsigned int>(1), std::thread::hardware_concurrency());
   auto t1 = std::chrono::high_resolution_clock::now();
 
   std::unordered_set<GraphId> all_tiles;
@@ -464,20 +470,25 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     // Bail if nothing
     auto hierarchy_properties = pt.get_child("mjolnir");
     auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-    if(!transit_dir || !boost::filesystem::exists(*transit_dir) || !boost::filesystem::is_directory(*transit_dir)) {
+    if (!transit_dir || !boost::filesystem::exists(*transit_dir) ||
+        !boost::filesystem::is_directory(*transit_dir)) {
       LOG_INFO("Transit directory not found. Transit will not be added.");
       return false;
     }
     // Also bail if nothing inside
-    transit_dir->push_back('/');
+    transit_dir->push_back(filesystem::path_separator);
     GraphReader reader(hierarchy_properties);
     auto local_level = TileHierarchy::levels().rbegin()->first;
-    if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) + "/")) {
-      boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level +1 ) + "/"), end_file_itr;
-      for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
-        if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".gph") {
+    if (boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
+                                        filesystem::path_separator)) {
+      boost::filesystem::recursive_directory_iterator transit_file_itr(
+          *transit_dir + std::to_string(local_level + 1) + filesystem::path_separator),
+          end_file_itr;
+      for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+        if (boost::filesystem::is_regular(transit_file_itr->path()) &&
+            transit_file_itr->path().extension() == ".gph") {
           auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
-          GraphId transit_tile_id = GraphId(graph_id.tileid(), graph_id.level()-1, graph_id.id());
+          GraphId transit_tile_id = GraphId(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
           all_tiles.emplace(transit_tile_id);
         }
       }
@@ -485,7 +496,9 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     local_pt.get_child("mjolnir").erase("tile_dir");
     local_pt.add("mjolnir.tile_dir", std::string(*transit_dir));
 
-  } else all_tiles = tiles; // we called validate from valhalla_build_transit and tiles is not empty.
+  } else {
+    all_tiles = tiles; // we called validate from valhalla_build_transit and tiles is not empty.
+  }
 
   if (!all_tiles.size()) {
     LOG_INFO("No transit tiles found. Transit will not be validated.");
@@ -498,13 +511,13 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
   }
 
   // A place to hold worker threads and their results
-  std::vector<std::shared_ptr<std::thread> > threads(thread_count);
+  std::vector<std::shared_ptr<std::thread>> threads(thread_count);
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
 
   // A place to hold the results of those threads (exceptions, stats)
-  std::list<std::promise<validate_stats> > results;
+  std::list<std::promise<validate_stats>> results;
 
   // Start the threads, divvy up the work
   LOG_INFO("Validating " + std::to_string(all_tiles.size()) + " transit tiles...");
@@ -522,10 +535,9 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(
-        new std::thread(validate, std::cref(local_pt.get_child("mjolnir")),
-                        std::ref(lock), tile_start, tile_end,
-                        std::cref(onestoptests), std::ref(results.back())));
+    threads[i].reset(new std::thread(validate, std::cref(local_pt.get_child("mjolnir")),
+                                     std::ref(lock), tile_start, tile_end, std::cref(onestoptests),
+                                     std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
@@ -542,9 +554,8 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
       auto thread_stats = result.get_future().get();
       stats(thread_stats);
       failure_count += stats.failure_count;
-    }
-    catch(std::exception& e) {
-      //TODO: throw further up the chain?
+    } catch (std::exception& e) {
+      // TODO: throw further up the chain?
     }
   }
 
@@ -559,8 +570,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Success!  Validation tests passed.");
   return true;
-
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

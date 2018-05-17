@@ -1,18 +1,18 @@
 #include "midgard/pointll.h"
 #include "midgard/constants.h"
-#include "midgard/util.h"
 #include "midgard/distanceapproximator.h"
-#include "midgard/vector2.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
+#include "midgard/vector2.h"
 
-#include <limits>
 #include <cmath>
+#include <limits>
 #include <list>
 
 namespace {
 constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
 constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
-}
+} // namespace
 
 namespace valhalla {
 namespace midgard {
@@ -27,7 +27,7 @@ bool PointLL::IsValid() const {
 
 // Sets the coordinates to an invalid state
 void PointLL::Invalidate() {
-  first  = INVALID;
+  first = INVALID;
   second = INVALID;
 }
 
@@ -39,27 +39,23 @@ float PointLL::DistanceSquared(const PointLL& ll2) const {
 
 // Mid point along the geodesic between these points
 PointLL PointLL::MidPoint(const PointLL& p) const {
-  //radians
+  // radians
   const auto lon1 = first * -RAD_PER_DEG;
   const auto lat1 = second * RAD_PER_DEG;
   const auto lon2 = p.first * -RAD_PER_DEG;
   const auto lat2 = p.second * RAD_PER_DEG;
-  //useful throughout
+  // useful throughout
   const auto sl1 = sin(lat1);
   const auto sl2 = sin(lat2);
   const auto cl1 = cos(lat1);
   const auto cl2 = cos(lat2);
-  //fairly accurate distance between points
-  const auto d = acos(
-    sl1 * sl2 +
-    cl1 * cl2 *
-    cos(lon1 - lon2)
-  );
-  //interpolation parameters
+  // fairly accurate distance between points
+  const auto d = acos(sl1 * sl2 + cl1 * cl2 * cos(lon1 - lon2));
+  // interpolation parameters
   const auto ab = sin(d * .5) / sin(d);
   const auto acs1 = ab * cl1;
   const auto bcs2 = ab * cl2;
-  //find the interpolated point along the arc
+  // find the interpolated point along the arc
   const auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
   const auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
   const auto z = ab * (sl1 + sl2);
@@ -70,8 +66,9 @@ PointLL PointLL::MidPoint(const PointLL& p) const {
 // geometry (law of cosines).
 float PointLL::Distance(const PointLL& ll2) const {
   // If points are the same, return 0
-  if (*this == ll2)
+  if (*this == ll2) {
     return 0.0f;
+  }
 
   // Delta longitude. Don't need to worry about crossing 180
   // since cos(x) = cos(-x)
@@ -84,12 +81,13 @@ float PointLL::Distance(const PointLL& ll2) const {
 
   // Angle subtended * radius of earth (portion of the circumference).
   // Protect against cosb being outside -1 to 1 range.
-  if (cosb >= 1.0)
+  if (cosb >= 1.0) {
     return 0.00001f;
-  else if (cosb < -1.0)
+  } else if (cosb <= -1.0) {
     return kPi * kRadEarthMeters;
-  else
+  } else {
     return (float)(acos(cosb) * kRadEarthMeters);
+  }
 }
 
 // Calculates the curvature using this position and 2 others. Found by
@@ -101,15 +99,17 @@ float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {
   float c = Distance(ll2);
   float s = (a + b + c) * 0.5f;
   float k = sqrtf(s * (s - a) * (s - b) * (s - c));
-  return ((a * b * c) / (4.0f * k));
+  return (std::isnan(k) || k == 0.0f) ? std::numeric_limits<float>::max()
+                                      : ((a * b * c) / (4.0f * k));
 }
 
 // Calculates the heading or azimuth from the current lat,lng to the
 // specified lat,lng. This uses Haversine method (spherical geometry).
 float PointLL::Heading(const PointLL& ll2) const {
   // If points are the same, return 0
-  if (*this == ll2)
+  if (*this == ll2) {
     return 0.0f;
+  }
 
   // Convert to radians and compute heading
   float lat1 = lat() * kRadPerDeg;
@@ -124,24 +124,28 @@ float PointLL::Heading(const PointLL& ll2) const {
 // Finds the closest point to the supplied polyline as well as the distance
 // squared to that point and the index of the segment where the closest point
 // lies.
-std::tuple<PointLL, float, int> PointLL::ClosestPoint(
-    const std::vector<PointLL>& pts, size_t begin_index) const {
-  PointLL closest {};
+std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>& pts,
+                                                      size_t begin_index,
+                                                      float dist_cutoff) const {
+  PointLL closest{};
   int closest_segment = -1;
   float mindistsqr = std::numeric_limits<float>::max();
   size_t process_size = 0;
 
-  if (begin_index < pts.size())
+  if (begin_index < pts.size()) {
     process_size = (pts.size() - begin_index);
+  }
 
   // If there are no points to process we are done
-  if (process_size == 0)
-    return std::make_tuple(std::move(closest), std::move(mindistsqr),
-                           std::move(closest_segment));
+  if (process_size == 0) {
+    return std::make_tuple(std::move(closest), std::move(mindistsqr), std::move(closest_segment));
+  }
 
   // If there is one point to process we are done
-  if (process_size == 1)
-    return std::make_tuple(pts[begin_index], sqrt(DistanceSquared(pts[begin_index])), begin_index);
+  if (process_size == 1) {
+    return std::make_tuple(pts[begin_index], std::sqrt(DistanceSquared(pts[begin_index])),
+                           begin_index);
+  }
 
   // Longitude (x) is scaled by the cos of the latitude so that distances are
   // correct in lat,lon space
@@ -159,22 +163,23 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(
     auto bx = v.lng() - u.lng();
     auto by = v.lat() - u.lat();
 
-    // Scale longitude when finding the projection. Avoid divided-by-zero
-    // which gives a NaN scale, otherwise comparisons below will fail
+    // Scale longitude when finding the projection. Only need the numerator
+    // at first, saving the division for the case where the lat,lon projects
+    // along the current segment.
     auto bx2 = bx * lon_scale;
-    auto sq  = bx2 * bx2 + by * by;
-    auto scale = sq > 0 ?  (((lng() - u.lng()) * lon_scale * bx2 +
-                             (lat() - u.lat()) *by) / sq) : 0.f;
+    auto sq = bx2 * bx2 + by * by;
+    auto scale = (lng() - u.lng()) * lon_scale * bx2 + (lat() - u.lat()) * by;
 
     // Projects along the ray before u
     if (scale <= 0.f) {
-      point = { u.lng(), u.lat() };
+      point = {u.lng(), u.lat()};
     } // Projects along the ray after v
-    else if (scale >= 1.f) {
-      point = { v.lng(), v.lat() };
+    else if (scale >= sq) {
+      point = {v.lng(), v.lat()};
     } // Projects along the ray between u and v
     else {
-      point = { u.lng() + bx * scale, u.lat() + by * scale };
+      scale /= sq;
+      point = {u.lng() + bx * scale, u.lat() + by * scale};
     }
 
     // Check if this point is better
@@ -184,15 +189,21 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(
       mindistsqr = sq_distance;
       closest = std::move(point);
     }
+
+    // Check if we should bail early because of looking at too much shape
+    if (dist_cutoff != std::numeric_limits<float>::infinity() &&
+        (dist_cutoff -= u.Distance(v)) < 0) {
+      break;
+    }
   }
-  return std::make_tuple(std::move(closest), sqrt(mindistsqr),
-                         closest_segment);
+  return std::make_tuple(std::move(closest), std::sqrt(mindistsqr), closest_segment);
 }
 
 // Calculate the heading from the start index within a polyline of lat,lng
 // points to a point at the specified distance from the start.
 float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
-                                    const float dist, const uint32_t idx0,
+                                    const float dist,
+                                    const uint32_t idx0,
                                     const uint32_t idx1) {
   // Check that at least 2 points exist
   int n = static_cast<int>(idx1) - static_cast<int>(idx0);
@@ -232,7 +243,8 @@ float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
 // Calculate the heading from a point at a specified distance from the end
 // of a polyline of lat,lng points to the end point of the polyline.
 float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
-                                      const float dist, const uint32_t idx0,
+                                      const float dist,
+                                      const uint32_t idx0,
                                       const uint32_t idx1) {
   // Check that at least 2 points exist
   int n = static_cast<int>(idx1) - static_cast<int>(idx0);
@@ -244,7 +256,6 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
   // If more than 2 points, walk edges of the polyline until the length
   // is exceeded.
   if (n > 1) {
-    int i = n - 2;
     double d = 0.0;
     double seglength;
     auto pt1 = pts.begin() + idx1;
@@ -272,20 +283,19 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
 
 // Tests whether this point is within a convex polygon. Iterate through the
 // edges - to be inside the point must be to the same side of each edge.
-template <class container_t>
-bool PointLL::WithinPolygon(const container_t& poly) const {
+template <class container_t> bool PointLL::WithinPolygon(const container_t& poly) const {
   auto p1 = poly.front() == poly.back() ? poly.begin() : std::prev(poly.end());
   auto p2 = poly.front() == poly.back() ? std::next(p1) : poly.begin();
-  //for each edge
+  // for each edge
   size_t winding_number = 0;
-  for(; p2 != poly.end(); p1 = p2, ++p2) {
-    //going upward
-    if(p1->second <= second) {
-      //crosses if its in between on the y and to the left
+  for (; p2 != poly.end(); p1 = p2, ++p2) {
+    // going upward
+    if (p1->second <= second) {
+      // crosses if its in between on the y and to the left
       winding_number += p2->second > second && IsLeft(*p1, *p2) > 0;
-    }//going downward maybe
+    } // going downward maybe
     else {
-      //crosses if its in between or on and to the right
+      // crosses if its in between or on and to the right
       winding_number -= p2->second <= second && IsLeft(*p1, *p2) < 0;
     }
   }
@@ -294,30 +304,35 @@ bool PointLL::WithinPolygon(const container_t& poly) const {
   return winding_number != 0;
 }
 
-bool PointLL::IsSpherical() { return true; }
+bool PointLL::IsSpherical() {
+  return true;
+}
 
 PointLL PointLL::Project(const PointLL& u, const PointLL& v, float lon_scale) const {
-  //we're done if this is a zero length segment
-  if(u == v)
+  // we're done if this is a zero length segment
+  if (u == v) {
     return u;
+  }
 
-  //project a onto b where b is the origin vector representing this segment
-  //and a is the origin vector to the point we are projecting, (a.b/b.b)*b
+  // project a onto b where b is the origin vector representing this segment
+  // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
   auto bx = v.first - u.first;
   auto by = v.second - u.second;
 
   // Scale longitude when finding the projection
   auto bx2 = bx * lon_scale;
   auto sq = bx2 * bx2 + by * by;
-  auto scale = (first - u.first) * lon_scale * bx2 + (second - u.second) * by; //only need the numerator at first
+  auto scale = (first - u.first) * lon_scale * bx2 +
+               (second - u.second) * by; // only need the numerator at first
 
-  //projects along the ray before u
-  if(scale <= 0.f)
+  // projects along the ray before u
+  if (scale <= 0.f) {
     return u;
-  //projects along the ray after v
-  else if(scale >= sq)
+    // projects along the ray after v
+  } else if (scale >= sq) {
     return v;
-  //projects along the ray between u and v
+  }
+  // projects along the ray between u and v
   scale /= sq;
   return {u.first + bx * scale, u.second + by * scale};
 }
@@ -326,5 +341,5 @@ PointLL PointLL::Project(const PointLL& u, const PointLL& v, float lon_scale) co
 template bool PointLL::WithinPolygon(const std::vector<PointLL>&) const;
 template bool PointLL::WithinPolygon(const std::list<PointLL>&) const;
 
-}
-}
+} // namespace midgard
+} // namespace valhalla

@@ -27,5 +27,5 @@ Turn::Type Turn::GetType(uint32_t turn_degree) {
   throw std::runtime_error("Turn degree out of range");
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

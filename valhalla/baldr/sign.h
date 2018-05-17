@@ -15,13 +15,8 @@ namespace baldr {
  * edge index.
  */
 class Sign {
- public:
-  enum class Type : uint8_t {
-    kExitNumber,
-    kExitBranch,
-    kExitToward,
-    kExitName
-  };
+public:
+  enum class Type : uint8_t { kExitNumber, kExitBranch, kExitToward, kExitName };
 
   /**
    * Constructor given arguments.
@@ -29,43 +24,53 @@ class Sign {
    * @param  type Sign type.
    * @param  text_offset  Offset to text in the names/text table.
    */
-  Sign(const uint32_t idx, const Sign::Type& type, const uint32_t text_offset);
+  Sign(const uint32_t idx, const Sign::Type& type, const uint32_t text_offset)
+      : edgeindex_(idx), type_(static_cast<uint32_t>(type)), spare_(0), text_offset_(text_offset) {
+  }
 
   /**
    * Get the index of the directed edge this sign applies to.
    * @return  Returns the directed edge index (within the same tile
    *          as the sign information).
    */
-  uint32_t edgeindex() const;
+  uint32_t edgeindex() const {
+    return edgeindex_;
+  }
 
   /**
    * Set the directed edge index.
    * @param  idx  Directed edge index.
    */
-  void set_edgeindex(const uint32_t idx);
+  void set_edgeindex(const uint32_t idx) {
+    edgeindex_ = idx;
+  }
 
   /**
    * Get the sign type.
    * @return  Returns the sign type.
    */
-  Sign::Type type() const;
+  Sign::Type type() const {
+    return static_cast<Sign::Type>(type_);
+  }
 
   /**
    * Get the offset into the GraphTile text list for the text associated
    * with the sign.
    * @return  Returns the text offset.
    */
-  uint32_t text_offset() const;
+  uint32_t text_offset() const {
+    return text_offset_;
+  }
 
- protected:
-  uint32_t edgeindex_  : 22;     // kMaxTileEdgeCount in nodeinfo.h: 22 bits
-  uint32_t type_       :  8;
-  uint32_t spare_      :  2;
+protected:
+  uint32_t edgeindex_ : 22; // kMaxTileEdgeCount in nodeinfo.h: 22 bits
+  uint32_t type_ : 8;
+  uint32_t spare_ : 2;
 
   uint32_t text_offset_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_SIGN_H_
+#endif // VALHALLA_BALDR_SIGN_H_

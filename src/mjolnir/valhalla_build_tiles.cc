@@ -1,17 +1,17 @@
 #include <string>
 #include <vector>
 
-#include "mjolnir/util.h"
 #include "config.h"
+#include "mjolnir/util.h"
 
 using namespace valhalla::mjolnir;
 
-#include <iostream>
-#include <boost/program_options.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <iostream>
 
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -24,31 +24,30 @@ int main(int argc, char** argv) {
   std::string inline_config;
   std::vector<std::string> input_files;
   bpo::options_description options(
-    "valhalla_build_tiles " VERSION "\n\n"
-    "Usage: valhalla_build_tiles [options] <protocolbuffer_input_file>\n\n"
-    "valhalla_build_tiles is a program that creates the route graph from an osm.pbf "
-    "extract. Sample json configs are located in ../conf directory.\n\n");
+      "valhalla_build_tiles " VERSION "\n\n"
+      "Usage: valhalla_build_tiles [options] <protocolbuffer_input_file>\n\n"
+      "valhalla_build_tiles is a program that creates the route graph from an osm.pbf "
+      "extract. Sample json configs are located in ../conf directory.\n\n");
 
-  options.add_options()
-      ("help,h", "Print this help message.")
-      ("version,v", "Print the version of this software.")
-      ("config,c",
-        boost::program_options::value<boost::filesystem::path>(&config_file_path),
-        "Path to the json configuration file.")
-      ("inline-config,i",
-        boost::program_options::value<std::string>(&inline_config),
-        "Inline json config.")
+  options.add_options()("help,h", "Print this help message.")(
+      "version,v", "Print the version of this software.")(
+      "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path),
+      "Path to the json configuration file.")(
+      "inline-config,i", boost::program_options::value<std::string>(&inline_config),
+      "Inline json config.")
       // positional arguments
-      ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
+      ("input_files",
+       boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
 
   bpo::positional_options_description pos_options;
   pos_options.add("input_files", 16);
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+               vm);
     bpo::notify(vm);
 
-  } catch (std::exception &e) {
+  } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n";
     return EXIT_FAILURE;
   }
@@ -69,30 +68,31 @@ int main(int argc, char** argv) {
 
   // Read the config file
   boost::property_tree::ptree pt;
-  if(vm.count("inline-config")) {
-    std::stringstream ss; ss << inline_config;
+  if (vm.count("inline-config")) {
+    std::stringstream ss;
+    ss << inline_config;
     boost::property_tree::read_json(ss, pt);
-  }
-  else if (vm.count("config") && boost::filesystem::is_regular_file(config_file_path)) {
-    boost::property_tree::read_json(config_file_path.c_str(), pt);
-  }
-  else {
+  } else if (vm.count("config") && boost::filesystem::is_regular_file(config_file_path)) {
+    boost::property_tree::read_json(config_file_path.string(), pt);
+  } else {
     std::cerr << "Configuration is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;
   }
 
-  //configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("mjolnir.logging");
-  if(logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
+  // configure logging
+  boost::optional<boost::property_tree::ptree&> logging_subtree =
+      pt.get_child_optional("mjolnir.logging");
+  if (logging_subtree) {
+    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                   std::unordered_map<std::string, std::string>>(
+        logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  //build some tiles
+  // build some tiles
   pt.get_child("mjolnir").erase("tile_extract");
   pt.get_child("mjolnir").erase("tile_url");
   build_tile_set(pt, input_files);
 
   return EXIT_SUCCESS;
 }
-

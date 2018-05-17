@@ -17,15 +17,13 @@ constexpr uint32_t kLocalLevel = 2;
  * Get the begin node of a directed edge - transition down to the local
  * level if it is not already on that level.
  */
-GraphId PathAlgorithm::GetStartNode(GraphReader& graphreader,
-                     const DirectedEdge* directededge) {
+GraphId PathAlgorithm::GetStartNode(GraphReader& graphreader, const DirectedEdge* directededge) {
   // Get the end node of directed edge
   const GraphTile* tile = graphreader.GetGraphTile(directededge->endnode());
   const NodeInfo* nodeinfo = tile->node(directededge->endnode());
 
   // Get the opposing edge and then get its endnode
-  const DirectedEdge* edge = tile->directededge(nodeinfo->edge_index() +
-                       directededge->opp_index());
+  const DirectedEdge* edge = tile->directededge(nodeinfo->edge_index() + directededge->opp_index());
   GraphId endnode = edge->endnode();
 
   // Transition down to the local level
@@ -34,8 +32,7 @@ GraphId PathAlgorithm::GetStartNode(GraphReader& graphreader,
     // edges are last if they exist)
     tile = graphreader.GetGraphTile(endnode);
     nodeinfo = tile->node(endnode);
-    edge = tile->directededge(nodeinfo->edge_index() +
-                              nodeinfo->edge_count() - 1);
+    edge = tile->directededge(nodeinfo->edge_index() + nodeinfo->edge_count() - 1);
     uint32_t n = 0;
     while (!edge->trans_down()) {
       // TODO - validate we don't go too far!
@@ -53,8 +50,7 @@ GraphId PathAlgorithm::GetStartNode(GraphReader& graphreader,
 
 // Form the path from the adjacency list.
 // TODO - support partial distances at origin/destination
-std::vector<GraphId> PathAlgorithm::FormLocalPath(const uint32_t dest,
-               GraphReader& graphreader) {
+std::vector<GraphId> PathAlgorithm::FormLocalPath(const uint32_t dest, GraphReader& graphreader) {
   // Add the destination edge - it should be on the local level
   std::vector<GraphId> edgesonpath;
   if (edgelabels_[dest].edgeid().level() != kLocalLevel) {
@@ -64,16 +60,14 @@ std::vector<GraphId> PathAlgorithm::FormLocalPath(const uint32_t dest,
 
   uint32_t edgelabel_index = dest;
   GraphId prior_local_node;
-  while ((edgelabel_index = edgelabels_[edgelabel_index].predecessor()) !=
-              kInvalidLabel) {
+  while ((edgelabel_index = edgelabels_[edgelabel_index].predecessor()) != kInvalidLabel) {
     // Get the GraphId of the directed edge and and get the directed edge info
     GraphId edgeid = edgelabels_[edgelabel_index].edgeid();
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Store the end node if a downward transition to the local level
-    if (directededge->trans_down() &&
-        directededge->endnode().level() == kLocalLevel) {
+    if (directededge->trans_down() && directededge->endnode().level() == kLocalLevel) {
       prior_local_node = directededge->endnode();
     }
 
@@ -92,9 +86,8 @@ std::vector<GraphId> PathAlgorithm::FormLocalPath(const uint32_t dest,
       // the prior local node
       if (directededge->shortcut()) {
         // Recover a set of edges on the local level that make up the shortcut
-        prior_local_node = RecoverShortcut(graphreader, startnode,
-                                           prior_local_node,
-                                           directededge, edgesonpath);
+        prior_local_node =
+            RecoverShortcut(graphreader, startnode, prior_local_node, directededge, edgesonpath);
         if (!prior_local_node.Is_Valid()) {
           LOG_ERROR("Could not recover shortcut edge - store the shortcut");
           prior_local_node = startnode;
@@ -108,8 +101,7 @@ std::vector<GraphId> PathAlgorithm::FormLocalPath(const uint32_t dest,
         const NodeInfo* nodeinfo = tile->node(startnode);
         uint32_t edgeindex = nodeinfo->edge_index();
         directededge = tile->directededge(edgeindex);
-        while (!(directededge->endnode() == prior_local_node &&
-              n < nodeinfo->edge_count())) {
+        while (!(directededge->endnode() == prior_local_node && n < nodeinfo->edge_count())) {
           directededge++;
           edgeindex++;
           n++;
@@ -124,8 +116,7 @@ std::vector<GraphId> PathAlgorithm::FormLocalPath(const uint32_t dest,
         prior_local_node = startnode;
 
         // Add the directed edge graph Id to the path
-        edgesonpath.emplace_back(startnode.tileid(), startnode.level(),
-                                edgeindex);
+        edgesonpath.emplace_back(startnode.tileid(), startnode.level(), edgeindex);
       }
     } else {
       // Add the edges on path if not a transition up or down
@@ -163,13 +154,10 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
   // Expand from the start node
   tile = graphreader.GetGraphTile(startnode);
   nodeinfo = tile->node(startnode);
-  GraphId edgeid(startnode.tileid(), startnode.level(),
-                 nodeinfo->edge_index());
+  GraphId edgeid(startnode.tileid(), startnode.level(), nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++,
-            directededge++, ++edgeid) {
-    if (directededge->trans_up() ||
-        directededge->use() != shortcutedge->use() ||
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid) {
+    if (directededge->trans_up() || directededge->use() != shortcutedge->use() ||
         directededge->classification() != shortcutedge->classification() ||
         !(directededge->forwardaccess() & kAutoAccess)) {
       continue;
@@ -207,10 +195,9 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
       // Expand from end of the prior directed edge
       uint32_t opp_index = connectededge->opp_index();
       GraphId connedgeid(connectededge->endnode().tileid(), startnode.level(),
-                       nodeinfo->edge_index());
+                         nodeinfo->edge_index());
       connectededge = tile->directededge(nodeinfo->edge_index());
-      for (uint32_t j = 0; j < nodeinfo->edge_count(); j++,
-                connectededge++, ++connedgeid) {
+      for (uint32_t j = 0; j < nodeinfo->edge_count(); j++, connectededge++, ++connedgeid) {
         // Skip opposing directed edge, any transition edges. Skip any
         // non-matching directed edges (use, importance) or non-driveable.
         if (j == opp_index || connectededge->trans_up() ||
@@ -232,5 +219,5 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
   return invalid_graph_id;
 }
 
-}
-}
+} // namespace thor
+} // namespace valhalla

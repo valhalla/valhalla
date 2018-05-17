@@ -1,15 +1,15 @@
-#include <cstdint>
 #include "test.h"
+#include <cstdint>
 
-#include <vector>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <vector>
 
-#include "baldr/graphid.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/graphid.h"
+#include "baldr/sign.h"
 #include "mjolnir/edgeinfobuilder.h"
 #include <boost/shared_array.hpp>
-#include "baldr/sign.h"
 #include <memory>
 
 using namespace std;
@@ -67,7 +67,7 @@ void TestWriteRead() {
   boost::shared_array<char> memblock = ToFileAndBack(eibuilder);
   std::unique_ptr<EdgeInfo> ei(new EdgeInfo(memblock.get(), nullptr, 0));
 
-  //TODO: errors thrown should say what was found and what was expected
+  // TODO: errors thrown should say what was found and what was expected
 
   // Validate the read in fields to the original EdgeInfoBuilder
   if (!(name_info_list.size() == ei->name_count()))
@@ -77,8 +77,8 @@ void TestWriteRead() {
 
   // Check the name indices
   for (uint8_t i = 0; i < ei->name_count(); ++i) {
-    if (!(name_info_list[i].name_offset_ == ei->GetNameOffset(static_cast<uint8_t>(i))))
-      throw runtime_error("WriteRead:GetNameOffset test failed");
+    if (name_info_list[i].name_offset_ != ei->GetNameInfo(i).name_offset_)
+      throw runtime_error("WriteRead:NameOffset test failed");
   }
 
   // Check the shape points
@@ -88,7 +88,7 @@ void TestWriteRead() {
   }
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("edgeinfobuilder");

@@ -149,7 +149,6 @@ nobase_include_HEADERS = \
 	valhalla/baldr/double_bucket_queue.h \
 	valhalla/baldr/edge_elevation.h \
 	valhalla/baldr/edgeinfo.h \
-	valhalla/baldr/geojson.h \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
 	valhalla/baldr/graphreader.h \
@@ -163,6 +162,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/sign.h \
 	valhalla/baldr/signinfo.h \
 	valhalla/baldr/tilehierarchy.h \
+	valhalla/baldr/timedomain.h \
 	valhalla/baldr/turn.h \
 	valhalla/baldr/streetname.h \
 	valhalla/baldr/streetnames.h \
@@ -253,6 +253,7 @@ nobase_include_HEADERS = \
 	valhalla/thor/trippathbuilder.h \
 	valhalla/thor/attributes_controller.h \
 	valhalla/thor/trafficalgorithm.h \
+	valhalla/thor/timedep.h \
 	valhalla/thor/timedistancematrix.h \
 	valhalla/tyr/serializers.h \
 	valhalla/tyr/navigator.h \
@@ -265,7 +266,6 @@ libvalhalla_la_SOURCES = \
 	src/midgard/polyline2.cc \
 	src/midgard/obb2.cc \
 	src/midgard/pointll.cc \
-	src/midgard/vector2.cc \
 	src/midgard/aabb2.cc \
 	src/midgard/point2.cc \
 	src/midgard/util.cc \
@@ -273,15 +273,11 @@ libvalhalla_la_SOURCES = \
 	src/midgard/logging.cc \
 	src/baldr/accessrestriction.cc \
 	src/baldr/admin.cc \
-	src/baldr/admininfo.cc \
-	src/baldr/complexrestriction.cc \
 	src/baldr/connectivity_map.cc \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
-	src/baldr/double_bucket_queue.cc \
 	src/baldr/edge_elevation.cc \
 	src/baldr/edgeinfo.cc \
-	src/baldr/geojson.cc \
 	src/baldr/graphid.cc \
 	src/baldr/graphreader.cc \
 	src/baldr/graphtile.cc \
@@ -291,8 +287,6 @@ libvalhalla_la_SOURCES = \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
 	src/baldr/pathlocation.cc \
-	src/baldr/sign.cc \
-	src/baldr/signinfo.cc \
 	src/baldr/tilehierarchy.cc \
 	src/baldr/turn.cc \
 	src/baldr/streetname.cc \
@@ -377,9 +371,18 @@ libvalhalla_la_SOURCES = \
 	src/thor/matrix_action.cc \
 	src/thor/optimized_route_action.cc \
 	src/thor/route_action.cc \
+	src/thor/timedep_forward.cc \
+	src/thor/timedep_reverse.cc \
 	src/thor/trace_attributes_action.cc \
 	src/thor/trace_route_action.cc \
 	src/tyr/serializers.cc \
+	src/tyr/isochrone_serializer.cc \
+	src/tyr/matrix_serializer.cc \
+	src/tyr/height_serializer.cc \
+	src/tyr/locate_serializer.cc \
+	src/tyr/route_serializer.cc \
+	src/tyr/transit_available_serializer.cc \
+	src/tyr/trace_serializer.cc \
 	src/tyr/navigator.cc \
 	src/tyr/actor.cc
 libvalhalla_la_CPPFLAGS = @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@ $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
@@ -887,7 +890,7 @@ endif
 if DATA_TOOLS
 #some of the tests want tiles of a certain location so lets build those
 test/data/utrecht_tiles: valhalla_build_tiles
-	@echo "Building Utrecht Tiles..." && rm -rf test/data/*utrecht_tiles && ./valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/tmp_utrecht_tiles","concurrency":1,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf && mv test/data/tmp_utrecht_tiles test/data/utrecht_tiles
+	@echo "Building Utrecht Tiles..." && rm -rf test/data/*utrecht_tiles && ./valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/tmp_utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf && mv test/data/tmp_utrecht_tiles test/data/utrecht_tiles
 TEST_CLEANFILES += test/data/utrecht_tiles
 
 check_PROGRAMS += \

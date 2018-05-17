@@ -2,11 +2,11 @@
 #define VALHALLA_BALDR_NODEINFO_H_
 
 #include <cstdint>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/json.h>
 
 using namespace valhalla::midgard;
 
@@ -15,17 +15,17 @@ namespace baldr {
 
 class GraphTile;
 
-constexpr uint32_t kMaxEdgesPerNode     = 127;      // Maximum edges per node
-constexpr uint32_t kMaxAdminsPerTile    = 63;       // Maximum Admins per tile
-constexpr uint32_t kMaxTimeZonesPerTile = 511;      // Maximum TimeZones index
-constexpr uint32_t kMaxLocalEdgeIndex   = 7;        // Max. index of edges on
-                                                    // local level
+constexpr uint32_t kMaxEdgesPerNode = 127;     // Maximum edges per node
+constexpr uint32_t kMaxAdminsPerTile = 63;     // Maximum Admins per tile
+constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
+constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on
+                                               // local level
 
 // Heading shrink factor to reduce max heading of 359 to 255
-constexpr float kHeadingShrinkFactor = (255.f/359.f);
+constexpr float kHeadingShrinkFactor = (255.f / 359.f);
 
 // Heading expand factor to increase max heading of 255 to 359
-constexpr float kHeadingExpandFactor = (359.f/255.f);
+constexpr float kHeadingExpandFactor = (359.f / 255.f);
 
 /**
  * Information held for each node within the graph. The graph uses a forward
@@ -33,7 +33,7 @@ constexpr float kHeadingExpandFactor = (359.f/255.f);
  * directed edge points to the other end node of the edge.
  */
 class NodeInfo {
- public:
+public:
   /**
    * Constructor
    */
@@ -47,9 +47,11 @@ class NodeInfo {
    * @param  type           The type of node.
    * @param  traffic_signal Has a traffic signal at this node?
    */
-  NodeInfo(const std::pair<float, float>& ll, const baldr::RoadClass rc,
-                  const uint32_t access, const baldr::NodeType type,
-                  const bool traffic_signal);
+  NodeInfo(const std::pair<float, float>& ll,
+           const baldr::RoadClass rc,
+           const uint32_t access,
+           const baldr::NodeType type,
+           const bool traffic_signal);
 
   /**
    * Get the latitude, longitude of the node.
@@ -161,7 +163,7 @@ class NodeInfo {
    * @return Returns traversability (see graphconstants.h)
    */
   Traversability local_driveability(const uint32_t localidx) const {
-    uint32_t s = localidx * 2;     // 2 bits per index
+    uint32_t s = localidx * 2; // 2 bits per index
     return static_cast<Traversability>((local_driveability_ & (3 << s)) >> s);
   }
 
@@ -171,8 +173,7 @@ class NodeInfo {
    * @param  localidx  Local edge index.
    * @param  t         Traversability (see graphconstants.h)
    */
-  void set_local_driveability(const uint32_t localidx,
-                              const baldr::Traversability t);
+  void set_local_driveability(const uint32_t localidx, const baldr::Traversability t);
 
   /**
    * Get the relative road density at the node.
@@ -290,8 +291,7 @@ class NodeInfo {
    * @param  to    Local index of the to edge.
    * @param  c     Are names consistent between the 2 edges?
    */
-  void set_name_consistency(const uint32_t from, const uint32_t to,
-                            const bool c);
+  void set_name_consistency(const uint32_t from, const uint32_t to, const bool c);
 
   /**
    * Get the connecting way id for a transit stop.
@@ -324,35 +324,35 @@ class NodeInfo {
 
   /**
    * Returns the json representation of the object
-   * @param   the tile required to get admin information
+   * @param tile the tile required to get admin information
    * @return  json object
    */
   json::MapPtr json(const GraphTile* tile) const;
 
- protected:
+protected:
   // Latitude, longitude position of the node.
   std::pair<float, float> latlng_;
 
   // Node attributes and admin information
-  uint64_t edge_index_       : 21;  // Index within the node's tile of its
-                                    // first outbound directed edge
-  uint64_t access_           : 12;  // Access through the node - bit field
-  uint64_t edge_count_       : 7;   // Number of outbound edges (on this level)
-  uint32_t local_edge_count_ : 3;   // # of regular edges across all levels
-                                    // (up to kMaxLocalEdgeIndex+1)
-  uint64_t admin_index_      : 6;   // Index into this tile's admin data list
-  uint64_t timezone_         : 9;   // Time zone
-  uint64_t intersection_     : 5;   // Intersection type
-  uint64_t spare_0           : 1;   //maybe add to admin_index?
+  uint64_t edge_index_ : 21;      // Index within the node's tile of its
+                                  // first outbound directed edge
+  uint64_t access_ : 12;          // Access through the node - bit field
+  uint64_t edge_count_ : 7;       // Number of outbound edges (on this level)
+  uint64_t local_edge_count_ : 3; // # of regular edges across all levels
+                                  // (up to kMaxLocalEdgeIndex+1)
+  uint64_t admin_index_ : 6;      // Index into this tile's admin data list
+  uint64_t timezone_ : 9;         // Time zone
+  uint64_t intersection_ : 5;     // Intersection type
+  uint64_t spare_0 : 1;           // maybe add to admin_index?
 
   // Node type and additional node attributes
   uint32_t local_driveability_ : 16; // Driveability for regular edges (up to
                                      // kMaxLocalEdgeIndex+1 edges)
-  uint32_t density_            : 4;  // Relative road density
-  uint32_t type_               : 4;  // NodeType, see graphconstants
-  uint32_t mode_change_        : 1;  // Mode change allowed?
-  uint32_t traffic_signal_     : 1;  // Traffic signal
-  uint32_t admin_index_ext_    : 6;  // Extended admin index
+  uint32_t density_ : 4;             // Relative road density
+  uint32_t type_ : 4;                // NodeType, see graphconstants
+  uint32_t mode_change_ : 1;         // Mode change allowed?
+  uint32_t traffic_signal_ : 1;      // Traffic signal
+  uint32_t admin_index_ext_ : 6;     // Extended admin index
 
   // Transit stop index (for transit level) / name consistency for all
   // other levels
@@ -372,7 +372,7 @@ class NodeInfo {
   WayHeading way_heading_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_NODEINFO_H_
+#endif // VALHALLA_BALDR_NODEINFO_H_

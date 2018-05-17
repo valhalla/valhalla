@@ -1,61 +1,64 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "proto/tripdirections.pb.h"
-#include "proto/directions_options.pb.h"
-#include "odin/enhancedtrippath.h"
-#include "odin/directionsbuilder.h"
-#include "odin/maneuversbuilder.h"
-#include "odin/narrativebuilder.h"
-#include "odin/narrative_builder_factory.h"
 #include "exception.h"
+#include "odin/directionsbuilder.h"
+#include "odin/enhancedtrippath.h"
+#include "odin/maneuversbuilder.h"
+#include "odin/narrative_builder_factory.h"
+#include "odin/narrativebuilder.h"
+#include "proto/directions_options.pb.h"
+#include "proto/tripdirections.pb.h"
 
 namespace {
 // Minimum edge length (~10 feet)
 constexpr auto kMinEdgeLength = 0.003f;
 
-}
+} // namespace
 
 namespace valhalla {
 namespace odin {
 
-const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type {
-  { static_cast<int>(TripPath_VehicleType_kCar), TripDirections_VehicleType_kCar },
-  { static_cast<int>(TripPath_VehicleType_kMotorcycle), TripDirections_VehicleType_kMotorcycle },
-  { static_cast<int>(TripPath_VehicleType_kAutoBus), TripDirections_VehicleType_kAutoBus },
-  { static_cast<int>(TripPath_VehicleType_kTractorTrailer), TripDirections_VehicleType_kTractorTrailer },
-  { static_cast<int>(TripPath_VehicleType_kMotorScooter), TripDirections_VehicleType_kMotorScooter },
+const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type{
+    {static_cast<int>(TripPath_VehicleType_kCar), TripDirections_VehicleType_kCar},
+    {static_cast<int>(TripPath_VehicleType_kMotorcycle), TripDirections_VehicleType_kMotorcycle},
+    {static_cast<int>(TripPath_VehicleType_kAutoBus), TripDirections_VehicleType_kAutoBus},
+    {static_cast<int>(TripPath_VehicleType_kTractorTrailer),
+     TripDirections_VehicleType_kTractorTrailer},
+    {static_cast<int>(TripPath_VehicleType_kMotorScooter),
+     TripDirections_VehicleType_kMotorScooter},
 };
 
-const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type {
-  { static_cast<int>(TripPath_PedestrianType_kFoot), TripDirections_PedestrianType_kFoot },
-  { static_cast<int>(TripPath_PedestrianType_kWheelchair), TripDirections_PedestrianType_kWheelchair },
-  { static_cast<int>(TripPath_PedestrianType_kSegway), TripDirections_PedestrianType_kSegway },
+const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type{
+    {static_cast<int>(TripPath_PedestrianType_kFoot), TripDirections_PedestrianType_kFoot},
+    {static_cast<int>(TripPath_PedestrianType_kWheelchair),
+     TripDirections_PedestrianType_kWheelchair},
+    {static_cast<int>(TripPath_PedestrianType_kSegway), TripDirections_PedestrianType_kSegway},
 };
 
-const std::unordered_map<int, TripDirections_BicycleType> translate_bicycle_type {
-  { static_cast<int>(TripPath_BicycleType_kRoad), TripDirections_BicycleType_kRoad },
-  { static_cast<int>(TripPath_BicycleType_kCross), TripDirections_BicycleType_kCross },
-  { static_cast<int>(TripPath_BicycleType_kHybrid), TripDirections_BicycleType_kHybrid },
-  { static_cast<int>(TripPath_BicycleType_kMountain), TripDirections_BicycleType_kMountain },
+const std::unordered_map<int, TripDirections_BicycleType> translate_bicycle_type{
+    {static_cast<int>(TripPath_BicycleType_kRoad), TripDirections_BicycleType_kRoad},
+    {static_cast<int>(TripPath_BicycleType_kCross), TripDirections_BicycleType_kCross},
+    {static_cast<int>(TripPath_BicycleType_kHybrid), TripDirections_BicycleType_kHybrid},
+    {static_cast<int>(TripPath_BicycleType_kMountain), TripDirections_BicycleType_kMountain},
 };
 
-const std::unordered_map<int, TripDirections_TransitType> translate_transit_type {
-  { static_cast<int>(TripPath_TransitType_kTram), TripDirections_TransitType_kTram },
-  { static_cast<int>(TripPath_TransitType_kMetro), TripDirections_TransitType_kMetro },
-  { static_cast<int>(TripPath_TransitType_kRail), TripDirections_TransitType_kRail },
-  { static_cast<int>(TripPath_TransitType_kBus), TripDirections_TransitType_kBus },
-  { static_cast<int>(TripPath_TransitType_kFerry), TripDirections_TransitType_kFerry },
-  { static_cast<int>(TripPath_TransitType_kCableCar), TripDirections_TransitType_kCableCar },
-  { static_cast<int>(TripPath_TransitType_kGondola), TripDirections_TransitType_kGondola },
-  { static_cast<int>(TripPath_TransitType_kFunicular), TripDirections_TransitType_kFunicular },
+const std::unordered_map<int, TripDirections_TransitType> translate_transit_type{
+    {static_cast<int>(TripPath_TransitType_kTram), TripDirections_TransitType_kTram},
+    {static_cast<int>(TripPath_TransitType_kMetro), TripDirections_TransitType_kMetro},
+    {static_cast<int>(TripPath_TransitType_kRail), TripDirections_TransitType_kRail},
+    {static_cast<int>(TripPath_TransitType_kBus), TripDirections_TransitType_kBus},
+    {static_cast<int>(TripPath_TransitType_kFerry), TripDirections_TransitType_kFerry},
+    {static_cast<int>(TripPath_TransitType_kCableCar), TripDirections_TransitType_kCableCar},
+    {static_cast<int>(TripPath_TransitType_kGondola), TripDirections_TransitType_kGondola},
+    {static_cast<int>(TripPath_TransitType_kFunicular), TripDirections_TransitType_kFunicular},
 };
 
-const std::unordered_map<int, TripDirections_TravelMode> translate_travel_mode {
-  { static_cast<int>(TripPath_TravelMode_kDrive), TripDirections_TravelMode_kDrive },
-  { static_cast<int>(TripPath_TravelMode_kPedestrian), TripDirections_TravelMode_kPedestrian },
-  { static_cast<int>(TripPath_TravelMode_kBicycle), TripDirections_TravelMode_kBicycle },
-  { static_cast<int>(TripPath_TravelMode_kTransit), TripDirections_TravelMode_kTransit },
+const std::unordered_map<int, TripDirections_TravelMode> translate_travel_mode{
+    {static_cast<int>(TripPath_TravelMode_kDrive), TripDirections_TravelMode_kDrive},
+    {static_cast<int>(TripPath_TravelMode_kPedestrian), TripDirections_TravelMode_kPedestrian},
+    {static_cast<int>(TripPath_TravelMode_kBicycle), TripDirections_TravelMode_kBicycle},
+    {static_cast<int>(TripPath_TravelMode_kTransit), TripDirections_TravelMode_kTransit},
 };
 
 DirectionsBuilder::DirectionsBuilder() {
@@ -66,8 +69,8 @@ DirectionsBuilder::DirectionsBuilder() {
 // NarrativeBuilder::Build to form the maneuver list. This method
 // calls PopulateTripDirections to transform the maneuver list into the
 // trip directions.
-TripDirections DirectionsBuilder::Build(
-    const DirectionsOptions& directions_options, TripPath& trip_path) {
+TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_options,
+                                        TripPath& trip_path) {
   // Validate trip path node list
   if (trip_path.node_size() < 1) {
     throw valhalla_exception_t{210};
@@ -122,9 +125,10 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
 
 // Returns the trip directions based on the specified directions options,
 // trip path, and maneuver list.
-TripDirections DirectionsBuilder::PopulateTripDirections(
-    const DirectionsOptions& directions_options, EnhancedTripPath* etp,
-    std::list<Maneuver>& maneuvers) {
+TripDirections
+DirectionsBuilder::PopulateTripDirections(const DirectionsOptions& directions_options,
+                                          EnhancedTripPath* etp,
+                                          std::list<Maneuver>& maneuvers) {
   TripDirections trip_directions;
 
   // Populate trip and leg IDs
@@ -155,15 +159,16 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
     trip_maneuver->set_length(maneuver.length(directions_options.units()));
     trip_maneuver->set_time(maneuver.time());
-    trip_maneuver->set_begin_cardinal_direction(
-        maneuver.begin_cardinal_direction());
+    trip_maneuver->set_begin_cardinal_direction(maneuver.begin_cardinal_direction());
     trip_maneuver->set_begin_heading(maneuver.begin_heading());
     trip_maneuver->set_begin_shape_index(maneuver.begin_shape_index());
     trip_maneuver->set_end_shape_index(maneuver.end_shape_index());
-    if (maneuver.portions_toll())
+    if (maneuver.portions_toll()) {
       trip_maneuver->set_portions_toll(maneuver.portions_toll());
-    if (maneuver.portions_unpaved())
+    }
+    if (maneuver.portions_unpaved()) {
       trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
+    }
 
     if (maneuver.HasVerbalTransitionAlertInstruction()) {
       trip_maneuver->set_verbal_transition_alert_instruction(
@@ -186,37 +191,31 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
       // Process exit number info
       if (maneuver.HasExitNumberSign()) {
-        auto* trip_exit_number_elements = trip_sign
-            ->mutable_exit_number_elements();
+        auto* trip_exit_number_elements = trip_sign->mutable_exit_number_elements();
         for (const auto& exit_number : maneuver.signs().exit_number_list()) {
           auto* trip_exit_number_element = trip_exit_number_elements->Add();
           trip_exit_number_element->set_text(exit_number.text());
-          trip_exit_number_element->set_consecutive_count(
-              exit_number.consecutive_count());
+          trip_exit_number_element->set_consecutive_count(exit_number.consecutive_count());
         }
       }
 
       // Process exit branch info
       if (maneuver.HasExitBranchSign()) {
-        auto* trip_exit_branch_elements = trip_sign
-            ->mutable_exit_branch_elements();
+        auto* trip_exit_branch_elements = trip_sign->mutable_exit_branch_elements();
         for (const auto& exit_branch : maneuver.signs().exit_branch_list()) {
           auto* trip_exit_branch_element = trip_exit_branch_elements->Add();
           trip_exit_branch_element->set_text(exit_branch.text());
-          trip_exit_branch_element->set_consecutive_count(
-              exit_branch.consecutive_count());
+          trip_exit_branch_element->set_consecutive_count(exit_branch.consecutive_count());
         }
       }
 
       // Process exit toward info
       if (maneuver.HasExitTowardSign()) {
-        auto* trip_exit_toward_elements = trip_sign
-            ->mutable_exit_toward_elements();
+        auto* trip_exit_toward_elements = trip_sign->mutable_exit_toward_elements();
         for (const auto& exit_toward : maneuver.signs().exit_toward_list()) {
           auto* trip_exit_toward_element = trip_exit_toward_elements->Add();
           trip_exit_toward_element->set_text(exit_toward.text());
-          trip_exit_toward_element->set_consecutive_count(
-              exit_toward.consecutive_count());
+          trip_exit_toward_element->set_consecutive_count(exit_toward.consecutive_count());
         }
       }
 
@@ -226,17 +225,14 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
         for (const auto& exit_name : maneuver.signs().exit_name_list()) {
           auto* trip_exit_name_element = trip_exit_name_elements->Add();
           trip_exit_name_element->set_text(exit_name.text());
-          trip_exit_name_element->set_consecutive_count(
-              exit_name.consecutive_count());
+          trip_exit_name_element->set_consecutive_count(exit_name.consecutive_count());
         }
       }
-
     }
 
     // Roundabout exit count
     if (maneuver.roundabout_exit_count() > 0) {
-      trip_maneuver->set_roundabout_exit_count(
-          maneuver.roundabout_exit_count());
+      trip_maneuver->set_roundabout_exit_count(maneuver.roundabout_exit_count());
     }
 
     // Depart instructions
@@ -244,8 +240,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       trip_maneuver->set_depart_instruction(maneuver.depart_instruction());
     }
     if (!maneuver.verbal_depart_instruction().empty()) {
-      trip_maneuver->set_verbal_depart_instruction(
-          maneuver.verbal_depart_instruction());
+      trip_maneuver->set_verbal_depart_instruction(maneuver.verbal_depart_instruction());
     }
 
     // Arrive instructions
@@ -253,8 +248,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       trip_maneuver->set_arrive_instruction(maneuver.arrive_instruction());
     }
     if (!maneuver.verbal_arrive_instruction().empty()) {
-      trip_maneuver->set_verbal_arrive_instruction(
-          maneuver.verbal_arrive_instruction());
+      trip_maneuver->set_verbal_arrive_instruction(maneuver.verbal_arrive_instruction());
     }
 
     // Process transit route
@@ -279,8 +273,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
         trip_transit_info->set_description(transit_route.description);
       }
       if (!transit_route.operator_onestop_id.empty()) {
-        trip_transit_info->set_operator_onestop_id(
-            transit_route.operator_onestop_id);
+        trip_transit_info->set_operator_onestop_id(transit_route.operator_onestop_id);
       }
       if (!transit_route.operator_name.empty()) {
         trip_transit_info->set_operator_name(transit_route.operator_name);
@@ -296,8 +289,9 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     }
 
     // Verbal multi-cue
-    if (maneuver.verbal_multi_cue())
+    if (maneuver.verbal_multi_cue()) {
       trip_maneuver->set_verbal_multi_cue(maneuver.verbal_multi_cue());
+    }
 
     // Travel mode
     trip_maneuver->set_travel_mode(translate_travel_mode.find(maneuver.travel_mode())->second);
@@ -328,10 +322,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   }
 
   // Populate summary
-  trip_directions.mutable_summary()->set_length(
-      etp->GetLength(directions_options.units()));
-  trip_directions.mutable_summary()->set_time(
-      etp->node(etp->GetLastNodeIndex()).elapsed_time());
+  trip_directions.mutable_summary()->set_length(etp->GetLength(directions_options.units()));
+  trip_directions.mutable_summary()->set_time(etp->node(etp->GetLastNodeIndex()).elapsed_time());
   auto mutable_bbox = trip_directions.mutable_summary()->mutable_bbox();
   mutable_bbox->mutable_min_ll()->set_lat(etp->bbox().min_ll().lat());
   mutable_bbox->mutable_min_ll()->set_lng(etp->bbox().min_ll().lng());
@@ -344,5 +336,5 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   return trip_directions;
 }
 
-}
-}
+} // namespace odin
+} // namespace valhalla

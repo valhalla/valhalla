@@ -6,13 +6,12 @@
 namespace valhalla {
 namespace meili {
 
-void StateIdIterator::Next()
-{
+void StateIdIterator::Next() {
   ValidateStateId(time_, stateid_);
 
   // We're done searching between states if time == 0 meaning we found the last one or
   // we are at a state without a path to it but aren't allowing breaks in the path
-  if(0 == time_ ||
+  if (0 == time_ ||
       (stateid_.IsValid() && !(stateid_ = vs_.Predecessor(stateid_)).IsValid() && !allow_breaks_)) {
     time_ = kInvalidTime;
     stateid_ = StateId();
@@ -22,28 +21,23 @@ void StateIdIterator::Next()
   // Search at previous time directly
   // used in cloning path so no need to enforce a continuous path
   --time_;
-  if (!stateid_.IsValid())
+  if (!stateid_.IsValid()) {
     stateid_ = vs_.SearchWinner(time_);
+  }
 }
 
-template <bool Maximize>
-void NaiveViterbiSearch<Maximize>::Clear()
-{
+template <bool Maximize> void NaiveViterbiSearch<Maximize>::Clear() {
   IViterbiSearch::Clear();
   states_.clear();
   ClearSearch();
 }
 
-template <bool Maximize>
-void NaiveViterbiSearch<Maximize>::ClearSearch()
-{
+template <bool Maximize> void NaiveViterbiSearch<Maximize>::ClearSearch() {
   history_.clear();
   winner_.clear();
 }
 
-template <bool Maximize>
-bool NaiveViterbiSearch<Maximize>::AddStateId(const StateId& stateid)
-{
+template <bool Maximize> bool NaiveViterbiSearch<Maximize>::AddStateId(const StateId& stateid) {
   if (!IViterbiSearch::AddStateId(stateid)) {
     return false;
   }
@@ -57,13 +51,11 @@ bool NaiveViterbiSearch<Maximize>::AddStateId(const StateId& stateid)
 }
 
 template <bool Maximize>
-inline double
-NaiveViterbiSearch<Maximize>::AccumulatedCost(const StateId& stateid) const
-{ return stateid.IsValid() ? GetLabel(stateid).costsofar() : kInvalidCost; }
+inline double NaiveViterbiSearch<Maximize>::AccumulatedCost(const StateId& stateid) const {
+  return stateid.IsValid() ? GetLabel(stateid).costsofar() : kInvalidCost;
+}
 
-template <bool Maximize>
-StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target)
-{
+template <bool Maximize> StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target) {
   if (states_.size() <= target) {
     return {};
   }
@@ -87,7 +79,7 @@ StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target)
 
     auto winner = FindWinner(labels);
     if (!winner.IsValid() && 0 < time) {
-      // If it's not reachable by prevous column, we find the winner
+      // If it's not reachable by previous column, we find the winner
       // with the best emission cost only
       labels = InitLabels(column, true);
       winner = FindWinner(labels);
@@ -100,15 +92,13 @@ StateId NaiveViterbiSearch<Maximize>::SearchWinner(StateId::Time target)
 }
 
 template <bool Maximize>
-inline StateId
-NaiveViterbiSearch<Maximize>::Predecessor(const StateId& stateid) const
-{ return stateid.IsValid() ? GetLabel(stateid).predecessor() : StateId(); }
+inline StateId NaiveViterbiSearch<Maximize>::Predecessor(const StateId& stateid) const {
+  return stateid.IsValid() ? GetLabel(stateid).predecessor() : StateId();
+}
 
 template <bool Maximize>
-void NaiveViterbiSearch<Maximize>::UpdateLabels(
-    std::vector<StateLabel>& labels,
-    const std::vector<StateLabel>& prev_labels) const
-{
+void NaiveViterbiSearch<Maximize>::UpdateLabels(std::vector<StateLabel>& labels,
+                                                const std::vector<StateLabel>& prev_labels) const {
   for (const auto& prev_label : prev_labels) {
     const auto& prev_stateid = prev_label.stateid();
 
@@ -145,25 +135,19 @@ void NaiveViterbiSearch<Maximize>::UpdateLabels(
 }
 
 template <bool Maximize>
-std::vector<StateLabel>
-NaiveViterbiSearch<Maximize>::InitLabels(
-    const std::vector<StateId>& column,
-    bool use_emission_cost) const
-{
+std::vector<StateLabel> NaiveViterbiSearch<Maximize>::InitLabels(const std::vector<StateId>& column,
+                                                                 bool use_emission_cost) const {
   std::vector<StateLabel> labels;
-  for (const auto& stateid: column) {
-    labels.emplace_back(
-        use_emission_cost ? EmissionCost(stateid) : kInvalidCost,
-        stateid,
-        StateId());
+  labels.reserve(column.size());
+  for (const auto& stateid : column) {
+    labels.emplace_back(use_emission_cost ? EmissionCost(stateid) : kInvalidCost, stateid,
+                        StateId());
   }
   return labels;
 }
 
 template <bool Maximize>
-StateId
-NaiveViterbiSearch<Maximize>::FindWinner(const std::vector<StateLabel>& labels) const
-{
+StateId NaiveViterbiSearch<Maximize>::FindWinner(const std::vector<StateLabel>& labels) const {
   const auto cmp = [](const StateLabel& lhs, const StateLabel& rhs) {
     return lhs.costsofar() < rhs.costsofar();
   };
@@ -186,16 +170,11 @@ NaiveViterbiSearch<Maximize>::FindWinner(const std::vector<StateLabel>& labels) 
 
 // Linear search a state's label
 template <bool Maximize>
-const StateLabel&
-NaiveViterbiSearch<Maximize>::GetLabel(const StateId& stateid) const
-{
+const StateLabel& NaiveViterbiSearch<Maximize>::GetLabel(const StateId& stateid) const {
   const auto& labels = history_[stateid.time()];
-  const auto it = std::find_if(
-      labels.cbegin(),
-      labels.cend(),
-      [&stateid](const StateLabel& label) {
-        return label.stateid() == stateid;
-      });
+  const auto it = std::find_if(labels.cbegin(), labels.cend(), [&stateid](const StateLabel& label) {
+    return label.stateid() == stateid;
+  });
   if (it == labels.end()) {
     throw std::runtime_error("impossible that label not found; if it happened, check SearchWinner");
   }
@@ -205,8 +184,7 @@ NaiveViterbiSearch<Maximize>::GetLabel(const StateId& stateid) const
 template class NaiveViterbiSearch<true>;
 template class NaiveViterbiSearch<false>;
 
-bool ViterbiSearch::AddStateId(const StateId& stateid)
-{
+bool ViterbiSearch::AddStateId(const StateId& stateid) {
   if (!IViterbiSearch::AddStateId(stateid)) {
     return false;
   }
@@ -224,8 +202,7 @@ bool ViterbiSearch::AddStateId(const StateId& stateid)
   return true;
 }
 
-StateId ViterbiSearch::SearchWinner(StateId::Time time)
-{
+StateId ViterbiSearch::SearchWinner(StateId::Time time) {
   // Use the cache
   if (time < winner_.size()) {
     return winner_[time];
@@ -255,9 +232,7 @@ StateId ViterbiSearch::SearchWinner(StateId::Time time)
   return {};
 }
 
-StateId
-ViterbiSearch::Predecessor(const StateId& stateid) const
-{
+StateId ViterbiSearch::Predecessor(const StateId& stateid) const {
   const auto it = scanned_labels_.find(stateid);
   if (it == scanned_labels_.end()) {
     return {};
@@ -266,8 +241,7 @@ ViterbiSearch::Predecessor(const StateId& stateid) const
   }
 }
 
-double ViterbiSearch::AccumulatedCost(const StateId& stateid) const
-{
+double ViterbiSearch::AccumulatedCost(const StateId& stateid) const {
   const auto it = scanned_labels_.find(stateid);
   if (it == scanned_labels_.end()) {
     return -1.f;
@@ -276,15 +250,13 @@ double ViterbiSearch::AccumulatedCost(const StateId& stateid) const
   }
 }
 
-void ViterbiSearch::Clear()
-{
+void ViterbiSearch::Clear() {
   IViterbiSearch::Clear();
   states_.clear();
   ClearSearch();
 }
 
-void ViterbiSearch::ClearSearch()
-{
+void ViterbiSearch::ClearSearch() {
   earliest_time_ = 0;
   queue_.clear();
   scanned_labels_.clear();
@@ -292,8 +264,7 @@ void ViterbiSearch::ClearSearch()
   unreached_states_ = states_;
 }
 
-void ViterbiSearch::InitQueue(const std::vector<StateId>& column)
-{
+void ViterbiSearch::InitQueue(const std::vector<StateId>& column) {
   queue_.clear();
   for (const auto stateid : column) {
     const auto emission_cost = EmissionCost(stateid);
@@ -304,10 +275,10 @@ void ViterbiSearch::InitQueue(const std::vector<StateId>& column)
   }
 }
 
-void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid)
-{
+void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid) {
   if (!(stateid.time() + 1 < unreached_states_.size())) {
-    throw std::logic_error("the state at time " + std::to_string(stateid.time()) + " is impossible to have successors");
+    throw std::logic_error("the state at time " + std::to_string(stateid.time()) +
+                           " is impossible to have successors");
   }
 
   const auto it = scanned_labels_.find(stateid);
@@ -334,7 +305,7 @@ void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid)
       continue;
     }
 
-    const auto next_costsofar = CostSofar(costsofar, transition_cost,  emission_cost);
+    const auto next_costsofar = CostSofar(costsofar, transition_cost, emission_cost);
     if (IsInvalidCost(next_costsofar)) {
       continue;
     }
@@ -343,16 +314,13 @@ void ViterbiSearch::AddSuccessorsToQueue(const StateId& stateid)
   }
 }
 
-StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_new_start)
-{
+StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_new_start) {
   if (unreached_states_.size() <= target) {
     if (unreached_states_.empty()) {
-      throw std::runtime_error(
-          "empty states: add some states at least before searching");
+      throw std::runtime_error("empty states: add some states at least before searching");
     } else {
-      throw std::runtime_error(
-          "the target time is beyond the maximum allowed time "
-          + std::to_string(unreached_states_.size()-1));
+      throw std::runtime_error("the target time is beyond the maximum allowed time " +
+                               std::to_string(unreached_states_.size() - 1));
     }
   }
 
@@ -394,9 +362,8 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
     // Mark it as scanned and remember its cost and predecessor
     const auto& inserted = scanned_labels_.emplace(stateid, label);
     if (!inserted.second) {
-      throw std::logic_error(
-          "the principle of optimality is violated in the viterbi search,"
-          " probably negative costs occurred");
+      throw std::logic_error("the principle of optimality is violated in the viterbi search,"
+                             " probably negative costs occurred");
     }
 
     // Remove it from its column
@@ -420,7 +387,8 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
       if (!(stateid.time() == winner_.size())) {
         // Should check if states at unreached_states_[time] are all
         // at the same TIME
-        throw std::logic_error("found a state from the future time " + std::to_string(stateid.time()));
+        throw std::logic_error("found a state from the future time " +
+                               std::to_string(stateid.time()));
       }
       winner_.push_back(stateid);
     }
@@ -452,5 +420,5 @@ StateId::Time ViterbiSearch::IterativeSearch(StateId::Time target, bool request_
   return searched_time;
 }
 
-}
-}
+} // namespace meili
+} // namespace valhalla
