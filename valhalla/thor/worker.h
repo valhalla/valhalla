@@ -82,7 +82,6 @@ protected:
 
   void parse_locations(valhalla_request_t& request);
   void parse_measurements(const valhalla_request_t& request);
-  void parse_trace_config(const valhalla_request_t& request);
   std::string parse_costing(const valhalla_request_t& request);
   void filter_attributes(const valhalla_request_t& request, AttributesController& controller);
 
@@ -103,9 +102,6 @@ protected:
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   valhalla::meili::MapMatcherFactory matcher_factory;
   valhalla::baldr::GraphReader& reader;
-  std::unordered_set<std::string> trace_customizable;
-  boost::property_tree::ptree trace_config;
-  ;
 };
 
 } // namespace thor

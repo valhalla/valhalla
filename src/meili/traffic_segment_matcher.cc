@@ -9,40 +9,12 @@
 
 namespace {
 
-boost::property_tree::ptree parse_json(const std::string& json,
-                                       const std::unordered_set<std::string>& customizable,
-                                       boost::property_tree::ptree& match_config) {
+boost::property_tree::ptree parse_json(const std::string& json) {
   boost::property_tree::ptree request;
   try {
     std::stringstream stream(json);
     boost::property_tree::read_json(stream, request);
-  } catch (...) { throw std::runtime_error("Couln't parse json input"); }
-
-  if (customizable.empty()) {
-    return request;
-  }
-
-  auto match_options = request.get_child_optional("match_options");
-  if (!match_options) {
-    return request;
-  }
-
-  for (const auto& kv : *match_options) {
-    if (customizable.find(kv.first) != customizable.end() && !kv.second.data().empty()) {
-      // mode is a string
-      if (kv.first == "mode") {
-        match_config.put<std::string>(kv.first, kv.second.data());
-        // anything else is float
-      } else {
-        try {
-          match_config.put<float>(kv.first, std::stof(kv.second.data()));
-        } catch (...) {
-          throw std::out_of_range("Invalid argument: " + kv.first + " is out of float range.");
-        }
-      }
-    }
-  }
-
+  } catch (...) { throw std::runtime_error("Couldn't parse json input"); }
   return request;
 }
 
@@ -164,13 +136,13 @@ TrafficSegmentMatcher::TrafficSegmentMatcher(const boost::property_tree::ptree& 
 std::string TrafficSegmentMatcher::match(const std::string& json) {
   // Try to parse json
   boost::property_tree::ptree match_config;
-  auto request = parse_json(json, customizable, match_config);
+  auto request = parse_json(json);
 
   // Create a matcher
   std::shared_ptr<MapMatcher> matcher;
   float default_accuracy, default_search_radius;
   try {
-    matcher.reset(matcher_factory.Create(match_config));
+    matcher.reset(matcher_factory.Create(request));
     default_accuracy = matcher->config().get<float>("gps_accuracy");
     default_search_radius = matcher->config().get<float>("search_radius");
   } catch (...) { throw std::runtime_error("Couldn't create traffic matcher using configuration."); }

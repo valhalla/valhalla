@@ -39,8 +39,21 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root)
 MapMatcherFactory::~MapMatcherFactory() {
 }
 
+MapMatcher* MapMatcherFactory::Create(const rapidjson::Value& preferences) {
+  if (preferences.IsNull())
+    return Create(boost::property_tree::ptree{});
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  preferences.Accept(writer);
+  boost::property_tree::ptree pt;
+  std::istringstream is(buffer.GetString());
+  ;
+  boost::property_tree::read_json(is, pt);
+  return Create(pt);
+}
+
 MapMatcher* MapMatcherFactory::Create(const boost::property_tree::ptree& preferences) {
-  const auto& name = preferences.get<std::string>("mode", config_.get<std::string>("mode"));
+  const auto& name = preferences.get<std::string>("costing", config_.get<std::string>("mode"));
   return Create(name, preferences);
 }
 
@@ -48,7 +61,7 @@ MapMatcher* MapMatcherFactory::Create(const std::string& costing,
                                       const boost::property_tree::ptree& preferences) {
   const auto& config = MergeConfig(costing, preferences);
 
-  valhalla::sif::cost_ptr_t cost = get_costing(config, costing);
+  valhalla::sif::cost_ptr_t cost = get_costing(preferences, costing);
   valhalla::sif::TravelMode mode = cost->travel_mode();
 
   mode_costing_[static_cast<uint32_t>(mode)] = cost;
@@ -71,9 +84,28 @@ MapMatcherFactory::MergeConfig(const std::string& name,
     }
   }
 
+  std::unordered_set<std::string> customizable;
+  for (const auto& item : config_.get_child("customizable")) {
+    customizable.insert(item.second.get_value<std::string>());
+  }
+
   // Preferences overwrites defaults
-  for (const auto& child : preferences) {
-    config.put_child(child.first, child.second);
+  const auto trace_options = preferences.get_child_optional("trace_options");
+  if (trace_options) {
+    for (const auto& child : *trace_options) {
+      const auto& name = child.first;
+      const auto& values = child.second.data();
+      if (customizable.find(name) != customizable.end() && !values.empty()) {
+        try {
+          // Possibly throw std::invalid_argument or std::out_of_range
+          config.put<float>(name, std::stof(values));
+        } catch (const std::invalid_argument& ex) {
+          throw std::invalid_argument("Invalid argument: unable to parse " + name + " to float");
+        } catch (const std::out_of_range& ex) {
+          throw std::out_of_range("Invalid argument: " + name + " is out of float range");
+        }
+      }
+    }
   }
 
   // Give it back

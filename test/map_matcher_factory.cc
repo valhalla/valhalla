@@ -45,7 +45,7 @@ void TestMapMatcherFactory() {
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
                         "travel mode must be bicycle");
       test::assert_bool(matcher->config().get<std::string>("hello") == "default world",
-                        "config for drive should override default");
+                        "config for bicycle should use default");
       delete matcher;
     }
 
@@ -54,13 +54,16 @@ void TestMapMatcherFactory() {
       auto config = root;
       meili::MapMatcherFactory factory(config);
       ptree preferences;
-      preferences.put<std::string>("hello", "preferred world");
-      config.put<std::string>("meili.auto.hello", "world");
-      config.put<std::string>("meili.default.hello", "default world");
+      int preferred_search_radius = 3;
+      int incorrect_search_radius = 2;
+      int default_search_radius = 1;
+      preferences.put<int>("trace_options.search_radius", preferred_search_radius);
+      config.put<int>("meili.auto.search_radius", incorrect_search_radius);
+      config.put<int>("meili.default.search_radius", default_search_radius);
       auto matcher = factory.Create("pedestrian", preferences);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
                         "travel mode should be pedestrian");
-      test::assert_bool(matcher->config().get<std::string>("hello") == "preferred world",
+      test::assert_bool(matcher->config().get<int>("search_radius") == preferred_search_radius,
                         "preference for pedestrian should override pedestrian config");
       delete matcher;
     }
@@ -69,11 +72,12 @@ void TestMapMatcherFactory() {
     {
       meili::MapMatcherFactory factory(root);
       ptree preferences;
-      preferences.put<std::string>("hello", "preferred world");
+      int preferred_search_radius = 3;
+      preferences.put<int>("trace_options.search_radius", preferred_search_radius);
       auto matcher = factory.Create("multimodal", preferences);
       test::assert_bool(matcher->travelmode() == meili::kUniversalTravelMode,
                         "travel mode should be universal");
-      test::assert_bool(matcher->config().get<std::string>("hello") == "preferred world",
+      test::assert_bool(matcher->config().get<int>("search_radius") == preferred_search_radius,
                         "preference for universal should override config");
       delete matcher;
     }
@@ -92,16 +96,34 @@ void TestMapMatcherFactory() {
     {
       meili::MapMatcherFactory factory(root);
       ptree preferences;
-      preferences.put<std::string>("mode", "pedestrian");
+      preferences.put<std::string>("costing", "pedestrian");
       auto matcher = factory.Create(preferences);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
-                        "should read mode in preferences correctly");
+                        "should read costing in preferences correctly");
       delete matcher;
 
-      preferences.put<std::string>("mode", "bicycle");
+      preferences.put<std::string>("costing", "bicycle");
       matcher = factory.Create(preferences);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
-                        "should read mode in preferences correctly again");
+                        "should read costing in preferences correctly again");
+      delete matcher;
+    }
+
+    // Test custom costing
+    {
+      meili::MapMatcherFactory factory(root);
+      ptree preferences;
+
+      preferences.put<std::string>("costing", "pedestrian");
+      auto matcher = factory.Create(preferences);
+      test::assert_bool(matcher->costing()->travel_type() != (int)sif::PedestrianType::kSegway,
+                        "should not have custom costing options when not set in preferences");
+      delete matcher;
+
+      preferences.put<std::string>("costing_options.pedestrian.type", "segway");
+      matcher = factory.Create(preferences);
+      test::assert_bool(matcher->costing()->travel_type() == (int)sif::PedestrianType::kSegway,
+                        "should read custom costing options in preferences correctly");
       delete matcher;
     }
 
