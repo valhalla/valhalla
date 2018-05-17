@@ -1033,11 +1033,10 @@ void stitch(const ptree& pt,
 
 int main(int argc, char** argv) {
   if (argc < 2) {
-    std::cerr
-        << "Usage: " << std::string(argv[0])
-        << " valhalla_config transit_land_url per_page [target_directory] [bounding_box] "
-           "[transit_land_api_key]"
-        << std::endl;
+    std::cerr << "Usage: " << std::string(argv[0])
+              << " valhalla_config transit_land_url per_page [target_directory] [bounding_box] "
+                 "[transit_land_api_key]"
+              << std::endl;
     std::cerr << "Sample: " << std::string(argv[0])
               << " conf/valhalla.json http://transit.land/ 1000 ./transit_tiles "
                  "-31.56,36.63,-6.18,42.16 transitland-YOUR_KEY_SUFFIX"
