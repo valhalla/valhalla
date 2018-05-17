@@ -114,11 +114,11 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
   }
   if ((way.motorcycle_forward()  &&  forward) ||
       (way.motorcycle_backward() && !forward)) {
-    forward_access |= kMotorCycleAccess;
+    forward_access |= kMotorcycleAccess;
   }
   if ((way.motorcycle_forward() && !forward) ||
       (way.motorcycle_backward() && forward)) {
-    reverse_access |= kMotorCycleAccess;
+    reverse_access |= kMotorcycleAccess;
   }
   if ((way.emergency_forward()  &&  forward) ||
       (way.emergency_backward() && !forward)) {

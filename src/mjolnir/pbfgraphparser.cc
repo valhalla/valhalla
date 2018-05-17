@@ -649,7 +649,7 @@ struct graph_callback : public OSMPBF::Callback {
           uint16_t mode = 0;
           if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional")
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
-                kHOVAccess | kMopedAccess | kMotorCycleAccess);
+                kHOVAccess | kMopedAccess | kMotorcycleAccess);
           else if (tag.first == "bicycle:conditional")
             mode = kBicycleAccess;
           else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional")
@@ -659,7 +659,7 @@ struct graph_callback : public OSMPBF::Callback {
           else if (tag.first == "moped:conditional" || tag.first == "mofa:conditional")
             mode = kMopedAccess;
           else if (tag.first == "motorcycle:conditional")
-            mode = kMotorCycleAccess;
+            mode = kMotorcycleAccess;
           else if (tag.first == "psv:conditional")
             mode = (kTaxiAccess | kBusAccess);
           else if (tag.first == "taxi:conditional")
@@ -1159,7 +1159,7 @@ struct graph_callback : public OSMPBF::Callback {
         if (tag.first == "restriction:motorcar")
           modes |= (kAutoAccess | kMopedAccess);
         else if (tag.first == "restriction:motorcycle")
-          modes |= kMotorCycleAccess;
+          modes |= kMotorcycleAccess;
         else if (tag.first == "restriction:taxi")
           modes |= kTaxiAccess;
         else if (tag.first == "restriction:bus")
@@ -1356,14 +1356,14 @@ struct graph_callback : public OSMPBF::Callback {
         if (!isTypeRestriction) {
 
           modes = (kAutoAccess |  kMopedAccess | kTaxiAccess | kBusAccess | kBicycleAccess |
-                   kTruckAccess | kEmergencyAccess | kMotorCycleAccess);
+                   kTruckAccess | kEmergencyAccess | kMotorcycleAccess);
           // remove access as the restriction does not apply to these modes.
           std::vector<std::string> tokens  = GetTagTokens(except);
           for (const auto& t : tokens) {
             if (t == "motorcar")
               modes = modes & ~(kAutoAccess | kMopedAccess);
             else if (t == "motorcycle")
-              modes = modes & ~kMotorCycleAccess;
+              modes = modes & ~kMotorcycleAccess;
             else if (t == "psv")
               modes = modes & ~(kTaxiAccess | kBusAccess);
             else if (t == "taxi")
