@@ -387,6 +387,10 @@ struct graph_callback : public OSMPBF::Callback {
         access.set_moped_tag(true);
         has_user_tags = true;
       }
+      else if (tag.first == "motorcycle_tag") {
+        access.set_motorcycle_tag(true);
+        has_user_tags = true;
+      }
       else if (tag.first == "hov_tag") {
         access.set_hov_tag(true);
         has_user_tags = true;
@@ -426,6 +430,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_hov_forward(tag.second == "true" ? true : false);
       else if (tag.first == "moped_forward")
         w.set_moped_forward(tag.second == "true" ? true : false);
+      else if (tag.first == "motorcycle_forward")
+        w.set_motorcycle_forward(tag.second == "true" ? true : false);
       else if (tag.first == "auto_backward")
         w.set_auto_backward(tag.second == "true" ? true : false);
       else if (tag.first == "truck_backward")
@@ -440,6 +446,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_hov_backward(tag.second == "true" ? true : false);
       else if (tag.first == "moped_backward")
         w.set_moped_backward(tag.second == "true" ? true : false);
+      else if (tag.first == "motorcycle_backward")
+        w.set_motorcycle_backward(tag.second == "true" ? true : false);
       else if (tag.first == "pedestrian")
         w.set_pedestrian(tag.second == "true" ? true : false);
       else if (tag.first == "private" && tag.second == "true") {
@@ -617,7 +625,7 @@ struct graph_callback : public OSMPBF::Callback {
 
       //motor_vehicle:conditional=no @ (16:30-07:00)
       else if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional" ||
-            tag.first == "bicycle:conditional" ||
+            tag.first == "bicycle:conditional" || tag.first == "motorcycle:conditional" ||
             tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
             tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
             tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
@@ -641,7 +649,7 @@ struct graph_callback : public OSMPBF::Callback {
           uint16_t mode = 0;
           if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional")
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
-                kHOVAccess | kMopedAccess);
+                kHOVAccess | kMopedAccess | kMotorCycleAccess);
           else if (tag.first == "bicycle:conditional")
             mode = kBicycleAccess;
           else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional")
@@ -650,6 +658,8 @@ struct graph_callback : public OSMPBF::Callback {
             mode = kTruckAccess;
           else if (tag.first == "moped:conditional" || tag.first == "mofa:conditional")
             mode = kMopedAccess;
+          else if (tag.first == "motorcycle:conditional")
+            mode = kMotorCycleAccess;
           else if (tag.first == "psv:conditional")
             mode = (kTaxiAccess | kBusAccess);
           else if (tag.first == "taxi:conditional")
@@ -1136,9 +1146,10 @@ struct graph_callback : public OSMPBF::Callback {
         except = tag.second;
       }
       else if ((tag.first == "restriction" || tag.first == "restriction:motorcar" ||
-          tag.first == "restriction:taxi" || tag.first == "restriction:bus" ||
-          tag.first == "restriction:bicycle" || tag.first == "restriction:hgv" ||
-          tag.first == "restriction:hazmat" || tag.first == "restriction:emergency") &&
+          tag.first == "restriction:motorcycle" || tag.first == "restriction:taxi" ||
+          tag.first == "restriction:bus" || tag.first == "restriction:bicycle" ||
+          tag.first == "restriction:hgv" || tag.first == "restriction:hazmat" ||
+          tag.first == "restriction:emergency") &&
           !tag.second.empty()) {
 
         isRestriction = true;
@@ -1147,6 +1158,8 @@ struct graph_callback : public OSMPBF::Callback {
 
         if (tag.first == "restriction:motorcar")
           modes |= (kAutoAccess | kMopedAccess);
+        else if (tag.first == "restriction:motorcycle")
+          modes |= kMotorCycleAccess;
         else if (tag.first == "restriction:taxi")
           modes |= kTaxiAccess;
         else if (tag.first == "restriction:bus")
@@ -1343,12 +1356,14 @@ struct graph_callback : public OSMPBF::Callback {
         if (!isTypeRestriction) {
 
           modes = (kAutoAccess |  kMopedAccess | kTaxiAccess | kBusAccess | kBicycleAccess |
-                   kTruckAccess | kEmergencyAccess);
+                   kTruckAccess | kEmergencyAccess | kMotorCycleAccess);
           // remove access as the restriction does not apply to these modes.
           std::vector<std::string> tokens  = GetTagTokens(except);
           for (const auto& t : tokens) {
             if (t == "motorcar")
               modes = modes & ~(kAutoAccess | kMopedAccess);
+            else if (t == "motorcycle")
+              modes = modes & ~kMotorCycleAccess;
             else if (t == "psv")
               modes = modes & ~(kTaxiAccess | kBusAccess);
             else if (t == "taxi")

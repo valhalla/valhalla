@@ -94,7 +94,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   if (!node.intersection() ||
       node.type() != NodeType::kGate || node.access_mask() !=
           (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-              kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
+              kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorCycleAccess))
     throw std::runtime_error("Gate at end of way test failed.");
 
   //block
@@ -109,14 +109,14 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   if (!node.intersection() ||
       node.type() != NodeType::kBorderControl || node.access_mask() !=
           (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-              kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
+              kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorCycleAccess))
     throw std::runtime_error("Border control test failed.");
 
   //has bike tag but all should have access
   node = GetNode(696222071, way_nodes);
   if (!node.intersection() || node.access_mask() !=
       (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-          kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
+          kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorCycleAccess))
     throw std::runtime_error("Bike access only failed.");
 
   //Is a bollard with no flags set.
@@ -194,7 +194,7 @@ void RemovableBollards(const std::string& config_file) {
   if (!node.intersection() ||
     node.type() != NodeType::kGate || node.access_mask() !=
       (kAutoAccess | kHOVAccess | kTruckAccess | kBusAccess | kEmergencyAccess |
-          kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess))
+          kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess | kMotorCycleAccess))
     throw std::runtime_error("Rising Bollard not marked as intersection.");
 
   boost::filesystem::remove(ways_file);

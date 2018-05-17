@@ -1,0 +1,8 @@
+-j '{"locations":[{"lat":32.77692394313504,"lon":-96.78455740224307,"type":"break"},{"lat":32.77659919945511,"lon":-96.78668171178288,"type":"break"}],"costing":"motorcycle"}'
+-j '{"locations":[{"lat":32.77692394313504,"lon":-96.78455740224307,"type":"break"},{"lat":32.77659919945511,"lon":-96.78668171178288,"type":"break"}],"costing":"motorcycle","date_time":{"type":1,"value":"2018-05-15T06:30"}}'
+-j '{"locations":[{"lat":52.307704570278425,"lon":4.689113795866433,"type":"break"},{"lat":52.30768489077867,"lon":4.688791930784646,"type":"break"}],"costing":"motorcycle"}'
+-j '{"locations":[{"lat":52.011745032826454,"lon":4.380545318017539,"type":"break"},{"lat":52.01148749177001,"lon":4.380207359681663,"type":"break"}],"costing":"motorcycle"}'
+-j '{"locations":[{"lat":50.897457332575954,"lon":4.025255441665649,"type":"break"},{"lat":50.89682801714832,"lon":4.017595052719116,"type":"break","name":""}],"costing":"motorcycle"}'
+
+
+
