@@ -8,7 +8,8 @@ AC_DEFUN([CHECK_COVERAGE],
 AC_ARG_ENABLE([coverage],
   [AS_HELP_STRING([--enable-coverage],
     [enable coverage testing])],
-  [enable_coverage=yes],[enable_coverage=no])
+  [enable_coverage="$enableval"],
+  [enable_coverage=no])
 
 AM_CONDITIONAL(ENABLE_COVERAGE, test "x$enable_coverage" = "xyes")
 
