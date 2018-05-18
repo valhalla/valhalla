@@ -15,10 +15,11 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "proto/navigator.pb.h"
-#include "proto/route.pb.h"
 #include "tyr/navigator.h"
 #include "tyr/serializers.h"
+
+#include <valhalla/proto/navigator.pb.h>
+#include <valhalla/proto/route.pb.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

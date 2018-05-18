@@ -1,7 +1,7 @@
 #include <cstdint>
 //#include "mjolnir/transitbuilder.h"
 //#include "mjolnir/graphtilebuilder.h"
-#include "proto/transit.pb.h"
+#include <valhalla/proto/transit.pb.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/operations.hpp>

@@ -18,8 +18,9 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/util.h"
-#include "proto/directions_options.pb.h"
 #include "tyr/serializers.h"
+
+#include <valhalla/proto/directions_options.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

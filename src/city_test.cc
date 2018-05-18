@@ -20,13 +20,14 @@
 #include "mjolnir/util.h"
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
-#include "proto/directions_options.pb.h"
-#include "proto/tripdirections.pb.h"
-#include "proto/trippath.pb.h"
 #include "sif/costfactory.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
+
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -64,7 +64,7 @@ jobs:
           key: ccache
           paths:
             - ~/.ccache
-      # - run: make -C build install
+      - run: make -C build install
 workflows:
   version: 2
   build_and_test:

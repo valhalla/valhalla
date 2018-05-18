@@ -24,6 +24,7 @@ option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 ## Configure imported libraries
 set(boost_components
@@ -32,8 +33,7 @@ set(boost_components
   iostreams
   program_options
   regex
-  system
-  thread)
+  system)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   list(APPEND boost_components zlib)
 endif()
@@ -57,7 +57,7 @@ find_package(LZ4 REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(SpatiaLite)
 find_package(GEOS)
-
+find_package(Threads REQUIRED)
 add_library(libprime_server INTERFACE IMPORTED)
 if(ENABLE_SERVICES)
   pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
@@ -90,44 +90,18 @@ if (NOT XXD)
   message(FATAL_ERROR "xxd executable not found")
 endif()
 
-add_custom_command(OUTPUT valhalla/date_time_zonespec.h
-  COMMAND ${XXD} -i -s `head -1 date_time/zonespec.csv | wc -c` date_time/zonespec.csv ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
-  DEPENDS date_time/zonespec.csv)
-
-message(STATUS "Configuring lua/graph.lua to generate graph_lua_proc.h")
-add_custom_command(OUTPUT valhalla/graph_lua_proc.h
-  COMMAND ${XXD} -i lua/graph.lua ${CMAKE_BINARY_DIR}/valhalla/graph_lua_proc.h
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMENT "Compiling lua/graph.lua to graph_lua_proc.h"
-  DEPENDS lua/graph.lua
-  VERBATIM)
-
-message(STATUS "Configuring lua/admin.lua to generate admin_lua_proc.h")
-add_custom_command(OUTPUT valhalla/admin_lua_proc.h
-  COMMAND ${XXD} -i lua/admin.lua ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
-  DEPENDS lua/admin.lua
-  VERBATIM)
-
-message(STATUS "Configuring locales/*.json to generate locales.h")
-file(GLOB locale_jsons ${CMAKE_SOURCE_DIR}/locales *.json)
-set(_locales_h ${CMAKE_BINARY_DIR}/valhalla/locales.h)
-add_custom_command(OUTPUT valhalla/locales.h
-  COMMAND echo "#include <unordered_map>\\n" > ${_locales_h}
-  COMMAND find . -name "*.json" -exec ${XXD} -i {} \; >> ${_locales_h}
-  COMMAND echo "const std::unordered_map<std::string, std::string> locales_json = {" >> ${_locales_h}
-  COMMAND find . -name "*.json" -printf "%f\\n" | sed s/.json// | sed "p;s@[./-]@_@g" | xargs -n 2 | awk "{ printf \"    {\\\"%s\\\", {__%s_json, __%s_json + __%s_json_len}},\\n\", $1, $2, $2, $2 }"  >> ${_locales_h}
-  COMMAND echo "};\\n" >> ${_locales_h}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/locales
-  COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
-  DEPENDS ${locale_jsons}
-  VERBATIM)
-
 ## libvalhalla
 add_subdirectory(proto ${CMAKE_BINARY_DIR}/valhalla/proto)
+add_subdirectory(src/baldr)
+add_subdirectory(src/loki)
+add_subdirectory(src/meili)
+add_subdirectory(src/midgard)
+add_subdirectory(src/mjolnir)
+add_subdirectory(src/odin)
+add_subdirectory(src/sif)
+add_subdirectory(src/skadi)
+add_subdirectory(src/thor)
+add_subdirectory(src/tyr)
 
 message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/valhalla.h")
 configure_file(${CMAKE_SOURCE_DIR}/valhalla/valhalla.h.in ${CMAKE_BINARY_DIR}/valhalla/valhalla.h @ONLY)
@@ -135,372 +109,60 @@ configure_file(${CMAKE_SOURCE_DIR}/valhalla/valhalla.h.in ${CMAKE_BINARY_DIR}/va
 message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/config.h")
 configure_file(${CMAKE_SOURCE_DIR}/valhalla/config.h.cmake ${CMAKE_BINARY_DIR}/valhalla/config.h @ONLY)
 
-# TODO: split file lists in submodules
 message(STATUS "Configuring valhalla library target")
 set(valhalla_hdrs
-  ${CMAKE_SOURCE_DIR}/valhalla/valhalla.h
+  ${CMAKE_BINARY_DIR}/valhalla/valhalla.h
   ${CMAKE_SOURCE_DIR}/valhalla/exception.h
-  ${CMAKE_SOURCE_DIR}/valhalla/worker.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/linesegment2.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/tiles.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/gridded_data.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/polyline2.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/obb2.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/pointll.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/vector2.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/constants.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/aabb2.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/point2.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/util.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/distanceapproximator.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/ellipse.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/sequence.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/shape_decoder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/encoded.h
-  ${CMAKE_SOURCE_DIR}/valhalla/midgard/logging.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/accessrestriction.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/admin.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/admininfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/complexrestriction.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/connectivity_map.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/curler.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/datetime.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/directededge.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/double_bucket_queue.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/edge_elevation.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/edgeinfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/filesystem_utils.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphconstants.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphid.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphreader.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphtile.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphtileheader.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/json.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/nodeinfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/location.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/pathlocation.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/rapidjson_utils.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/sign.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/signinfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/tilehierarchy.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/turn.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetname.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetnames.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetnames_factory.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetname_us.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetnames_us.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/trafficassociation.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transitdeparture.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transitroute.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transitschedule.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transitstop.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transittransfer.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/laneconnectivity.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us_co.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us_tx.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_factory.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/reutil.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/edgetracker.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/merge.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/costconstants.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/costfactory.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/autocost.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/bicyclecost.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/motorscootercost.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/pedestriancost.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/transitcost.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/truckcost.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/dynamiccost.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/hierarchylimits.h
-  ${CMAKE_SOURCE_DIR}/valhalla/sif/edgelabel.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/universal_cost.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/candidate_search.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/geometry_helpers.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/grid_range_query.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/emission_cost_model.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/transition_cost_model.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/priority_queue.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/routing.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/stateid.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/viterbi_search.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/topk_search.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/measurement.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/match_result.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/grid_traversal.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/state.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/map_matcher.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/map_matcher_factory.h
-  ${CMAKE_SOURCE_DIR}/valhalla/meili/traffic_segment_matcher.h
-  ${CMAKE_SOURCE_DIR}/valhalla/skadi/sample.h
-  ${CMAKE_SOURCE_DIR}/valhalla/skadi/util.h
-  ${CMAKE_SOURCE_DIR}/valhalla/loki/worker.h
-  ${CMAKE_SOURCE_DIR}/valhalla/loki/search.h
-  ${CMAKE_SOURCE_DIR}/valhalla/loki/node_search.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/worker.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/directionsbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/maneuversbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/narrative_dictionary.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/narrative_builder_factory.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/narrativebuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/enhancedtrippath.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/maneuver.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/sign.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/signs.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/util.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/transitrouteinfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/worker.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/astar.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/astarheuristic.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/bidirectional_astar.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/costmatrix.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/edgestatus.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/isochrone.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/optimizer.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/map_matcher.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/match_result.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/multimodal.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/pathalgorithm.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/pathinfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/route_matcher.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/trippathbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/attributes_controller.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/trafficalgorithm.h
-  ${CMAKE_SOURCE_DIR}/valhalla/thor/timedistancematrix.h
-  ${CMAKE_SOURCE_DIR}/valhalla/tyr/serializers.h
-  ${CMAKE_SOURCE_DIR}/valhalla/tyr/navigator.h
-  ${CMAKE_SOURCE_DIR}/valhalla/tyr/actor.h
-  ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h
-  ${CMAKE_BINARY_DIR}/valhalla/locales.h)
+  ${CMAKE_SOURCE_DIR}/valhalla/worker.h)
 
 set(valhalla_srcs
-  ${CMAKE_SOURCE_DIR}/src/worker.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/linesegment2.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/tiles.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/gridded_data.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/polyline2.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/obb2.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/pointll.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/aabb2.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/point2.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/util.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/ellipse.cc
-  ${CMAKE_SOURCE_DIR}/src/midgard/logging.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/accessrestriction.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/admin.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/connectivity_map.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/datetime.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/directededge.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/edge_elevation.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/edgeinfo.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/graphid.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/graphreader.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/graphtile.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/graphtileheader.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/edgetracker.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/merge.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/nodeinfo.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/location.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/pathlocation.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/tilehierarchy.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/turn.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/streetname.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/streetnames.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/streetnames_factory.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/streetname_us.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/streetnames_us.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/transitdeparture.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/transitroute.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/transitschedule.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/transitstop.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/transittransfer.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/laneconnectivity.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/verbal_text_formatter.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/verbal_text_formatter_us.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/verbal_text_formatter_us_co.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/verbal_text_formatter_us_tx.cc
-  ${CMAKE_SOURCE_DIR}/src/baldr/verbal_text_formatter_factory.cc
-  ${CMAKE_SOURCE_DIR}/src/sif/autocost.cc
-  ${CMAKE_SOURCE_DIR}/src/sif/bicyclecost.cc
-  ${CMAKE_SOURCE_DIR}/src/sif/motorscootercost.cc
-  ${CMAKE_SOURCE_DIR}/src/sif/pedestriancost.cc
-  ${CMAKE_SOURCE_DIR}/src/sif/transitcost.cc
-  ${CMAKE_SOURCE_DIR}/src/sif/truckcost.cc
-  ${CMAKE_SOURCE_DIR}/src/sif/dynamiccost.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/universal_cost.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/viterbi_search.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/topk_search.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/routing.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/candidate_search.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/transition_cost_model.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/map_matcher.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/map_matcher_factory.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/match_route.cc
-  ${CMAKE_SOURCE_DIR}/src/meili/traffic_segment_matcher.cc
-  ${CMAKE_SOURCE_DIR}/src/skadi/sample.cc
-  ${CMAKE_SOURCE_DIR}/src/skadi/util.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/search.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/worker.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/height_action.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/locate_action.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/route_action.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/matrix_action.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/isochrone_action.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/trace_route_action.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/transit_available_action.cc
-  ${CMAKE_SOURCE_DIR}/src/loki/node_search.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/directionsbuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/maneuversbuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/narrative_dictionary.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/narrative_builder_factory.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/narrativebuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/enhancedtrippath.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/maneuver.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/sign.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/signs.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/util.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/transitrouteinfo.cc
-  ${CMAKE_SOURCE_DIR}/src/odin/worker.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/astar.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/bidirectional_astar.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/costmatrix.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/isochrone.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/map_matcher.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/multimodal.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/optimizer.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/trippathbuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/attributes_controller.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/route_matcher.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/timedep_forward.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/timedep_reverse.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/trafficalgorithm.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/timedistancematrix.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/worker.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/isochrone_action.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/matrix_action.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/optimized_route_action.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/route_action.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/trace_attributes_action.cc
-  ${CMAKE_SOURCE_DIR}/src/thor/trace_route_action.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/serializers.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/isochrone_serializer.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/matrix_serializer.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/height_serializer.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/locate_serializer.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/route_serializer.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/transit_available_serializer.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/trace_serializer.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/navigator.cc
-  ${CMAKE_SOURCE_DIR}/src/tyr/actor.cc)
-
-set(valhalla_data_tools_hdrs
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/admin.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/countryaccess.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/complexrestrictionbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/dataquality.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/directededgebuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/graphtilebuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/edgeinfobuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/uniquenames.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/ferry_connections.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/graphbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/graphenhancer.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/graphvalidator.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/hierarchybuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/idtable.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/linkclassification.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/luatagtransform.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/node_expander.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/osmaccess.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/osmadmin.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/osmdata.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/osmnode.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/osmpbfparser.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/osmaccessrestriction.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/osmrestriction.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/osmway.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/pbfadminparser.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/pbfgraphparser.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/restrictionbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/shortcutbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/transitbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/util.h
-  ${CMAKE_SOURCE_DIR}/valhalla/mjolnir/validatetransit.h
-  ${CMAKE_BINARY_DIR}/valhalla/graph_lua_proc.h
-  ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h)
-
-set(valhalla_data_tools_srcs
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/admin.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/complexrestrictionbuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/countryaccess.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/dataquality.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/directededgebuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/graphtilebuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/edgeinfobuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/uniquenames.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/ferry_connections.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/graphbuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/graphenhancer.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/graphvalidator.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/hierarchybuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/linkclassification.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/luatagtransform.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/node_expander.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/osmaccess.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/osmadmin.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/osmnode.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/osmpbfparser.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/osmaccessrestriction.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/osmrestriction.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/osmway.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/pbfadminparser.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/pbfgraphparser.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/restrictionbuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/shortcutbuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/transitbuilder.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/util.cc
-  ${CMAKE_SOURCE_DIR}/src/mjolnir/validatetransit.cc)
+  ${CMAKE_SOURCE_DIR}/src/worker.cc)
 
 add_library(valhalla
   ${valhalla_srcs}
-  ${valhalla_hdrs}
-  ${valhalla_data_tools_srcs}
-  ${valhalla_data_tools_hdrs})
+  ${valhalla_hdrs})
 
-target_link_libraries(valhalla
-  valhalla::protobuf
-  libprime_server
-  Boost::filesystem
-  Boost::iostreams
-  Boost::thread
-  Spatialite::Spatialite
-  SQLite3::SQLite3
-  Lua::Lua
-  CURL::CURL
-  LZ4::LZ4
-  ZLIB::ZLIB)
+if (MSVC)
+  target_compile_definitions(valhalla PRIVATE "VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI")
+endif()
 
 target_include_directories(valhalla
   PUBLIC
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/valhalla
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/valhalla
-  PRIVATE
-    ${CMAKE_SOURCE_DIR}/rapidjson/include)
+    ${CMAKE_BINARY_DIR}/valhalla)
 
-# Common compile definitions
-set(valhalla_compile_definitions "BOOST_NO_CXX11_SCOPED_ENUMS;RAPIDJSON_HAS_STDSTRING")
-if (MSVC)
-  list(APPEND valhalla_compile_definitions "VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI")
+target_link_libraries(valhalla
+  valhalla::mjolnir
+  valhalla::baldr
+  valhalla::tyr
+  valhalla::midgard
+  valhalla::meili
+  valhalla::sif
+  valhalla::skadi
+  valhalla::protobuf)
+
+if(NOT BUILD_SHARED_LIBS)
+  add_custom_command(TARGET valhalla POST_BUILD
+    COMMAND ${CMAKE_AR} rc $<TARGET_FILE:valhalla>
+      $<TARGET_FILE:valhalla::baldr>
+      $<TARGET_FILE:valhalla::loki>
+      $<TARGET_FILE:valhalla::meili>
+      $<TARGET_FILE:valhalla::midgard>
+      $<TARGET_FILE:valhalla::mjolnir>
+      $<TARGET_FILE:valhalla::odin>
+      $<TARGET_FILE:valhalla::sif>
+      $<TARGET_FILE:valhalla::skadi>
+      $<TARGET_FILE:valhalla::thor>
+      $<TARGET_FILE:valhalla::tyr>
+      $<TARGET_FILE:valhalla::mjolnir>)
 endif()
 
-target_compile_definitions(valhalla PRIVATE ${valhalla_compile_definitions})
 set_target_properties(valhalla PROPERTIES
-  VERSION   2.4.9
+  VERSION 2.4.9
   SOVERSION 2
-  PUBLIC_HEADER "valhalla/valhalla.h") # TODO: public headers lists
+  PUBLIC_HEADER "${valhalla_hdrs}")
 install(TARGETS valhalla
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -588,7 +250,6 @@ if(ENABLE_PYTHON_BINDINGS)
     INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
   target_link_libraries(python_valhalla valhalla ${Boost_Python_lib})
   set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(valhalla-protobuf PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 

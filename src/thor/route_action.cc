@@ -4,11 +4,12 @@
 #include "baldr/json.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "proto/tripcommon.pb.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "thor/attributes_controller.h"
+
+#include <valhalla/proto/tripcommon.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

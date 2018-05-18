@@ -9,7 +9,8 @@
 
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
-#include "proto/trippath.pb.h"
+
+#include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla::midgard;
 

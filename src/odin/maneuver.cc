@@ -8,11 +8,11 @@
 #include "midgard/util.h"
 
 #include "odin/maneuver.h"
-#include "proto/directions_options.pb.h"
-#include "proto/tripcommon.pb.h"
-#include "proto/tripdirections.pb.h"
-
 #include "odin/transitrouteinfo.h"
+
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;

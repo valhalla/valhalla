@@ -6,7 +6,8 @@
 
 #include "odin/maneuver.h"
 #include "odin/maneuversbuilder.h"
-#include "proto/directions_options.pb.h"
+
+#include <valhalla/proto/directions_options.pb.h>
 
 #include "test.h"
 

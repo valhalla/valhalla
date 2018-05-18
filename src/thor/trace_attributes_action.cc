@@ -13,12 +13,13 @@
 #include "midgard/logging.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
-#include "proto/tripdirections.pb.h"
-#include "proto/trippath.pb.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
+#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

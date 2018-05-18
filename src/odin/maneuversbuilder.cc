@@ -24,8 +24,9 @@
 #include "odin/maneuversbuilder.h"
 #include "odin/sign.h"
 #include "odin/signs.h"
-#include "proto/directions_options.pb.h"
-#include "proto/tripdirections.pb.h"
+
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

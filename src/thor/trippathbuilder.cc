@@ -15,11 +15,12 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "proto/tripcommon.pb.h"
 #include "sif/costconstants.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
 #include "thor/trippathbuilder.h"
+
+#include <valhalla/proto/tripcommon.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

@@ -22,9 +22,6 @@
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
-#include "proto/directions_options.pb.h"
-#include "proto/tripdirections.pb.h"
-#include "proto/trippath.pb.h"
 #include "sif/costfactory.h"
 #include "thor/astar.h"
 #include "thor/attributes_controller.h"
@@ -33,6 +30,10 @@
 #include "thor/route_matcher.h"
 #include "thor/trippathbuilder.h"
 #include "worker.h"
+
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 
 #include "config.h"
 

@@ -44,6 +44,6 @@ add_library(valhalla-protobuf STATIC ${protobuff_srcs} ${protobuff_hdrs})
 add_library(valhalla::protobuf ALIAS valhalla-protobuf)
 target_link_libraries(valhalla-protobuf protobuf::libprotobuf)
 
-if(BUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
   set_property(TARGET valhalla-protobuf PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
