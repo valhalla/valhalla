@@ -3,6 +3,10 @@
 -j '{"locations":[{"lat":52.307704570278425,"lon":4.689113795866433,"type":"break"},{"lat":52.30768489077867,"lon":4.688791930784646,"type":"break"}],"costing":"motorcycle"}'
 -j '{"locations":[{"lat":52.011745032826454,"lon":4.380545318017539,"type":"break"},{"lat":52.01148749177001,"lon":4.380207359681663,"type":"break"}],"costing":"motorcycle"}'
 -j '{"locations":[{"lat":50.897457332575954,"lon":4.025255441665649,"type":"break"},{"lat":50.89682801714832,"lon":4.017595052719116,"type":"break","name":""}],"costing":"motorcycle"}'
+-j '{"locations":[{"lat":42.1492,"lon":-123.3635,"type":"break"},{"lat":42.1773,"lon":-123.3507,"type":"break","name":""}],"costing":"motorcycle"}'
+-j '{"locations":[{"lat":37.3898,"lon":-109.6573,"type":"break"},{"lat":37.3098,"lon":-109.6551,"type":"break","name":""}],"costing":"motorcycle"}'
+-j '{"locations":[{"lat":38.4717,"lon":-109.6303,"type":"break"},{"lat":38.3404,"lon":-109.6612,"type":"break","name":""}],"costing":"motorcycle"}'
+-j '{"locations":[{"lat":46.4331,"lon":-115.5317,"type":"break"},{"lat":46.5127,"lon":-115.1204,"type":"break","name":""}],"costing":"motorcycle"}'
 
 
 
