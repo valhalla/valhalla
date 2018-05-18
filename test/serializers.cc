@@ -1,5 +1,5 @@
-#include "proto/route.pb.h"
 #include <string>
+#include <valhalla/proto/route.pb.h>
 
 #include "midgard/logging.h"
 #include "test.h"

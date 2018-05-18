@@ -14,15 +14,16 @@
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "odin/directionsbuilder.h"
-#include "proto/directions_options.pb.h"
-#include "proto/tripdirections.pb.h"
-#include "proto/trippath.pb.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/pedestriancost.h"
 #include "thor/astar.h"
 #include "thor/attributes_controller.h"
 #include "thor/trippathbuilder.h"
+
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/trippath.pb.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>

@@ -4,7 +4,8 @@
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrativebuilder.h"
 #include "odin/util.h"
-#include "proto/directions_options.pb.h"
+
+#include <valhalla/proto/directions_options.pb.h>
 
 namespace valhalla {
 namespace odin {

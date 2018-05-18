@@ -30,7 +30,7 @@
 #include "midgard/logging.h"
 #include "mjolnir/admin.h"
 
-#include "proto/transit_fetch.pb.h"
+#include <valhalla/proto/transit_fetch.pb.h>
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;

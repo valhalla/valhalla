@@ -15,8 +15,9 @@
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
 #include "odin/worker.h"
-#include "proto/trippath.pb.h"
 #include "tyr/serializers.h"
+
+#include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

@@ -7,8 +7,9 @@
 #include "odin/maneuversbuilder.h"
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrativebuilder.h"
-#include "proto/directions_options.pb.h"
-#include "proto/tripdirections.pb.h"
+
+#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 
 namespace {
 // Minimum edge length (~10 feet)

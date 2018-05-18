@@ -35,7 +35,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/validatetransit.h"
 
-#include "proto/transit.pb.h"
+#include <valhalla/proto/transit.pb.h>
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
