@@ -502,9 +502,8 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
     }
   }
 
-// Reverse the list and return
-std:
-  reverse(path.begin(), path.end());
+  // Reverse the list and return
+  std::reverse(path.begin(), path.end());
   return path;
 }
 

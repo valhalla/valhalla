@@ -686,9 +686,8 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(GraphReader& graphreader) {
     }
   }
 
-// Reverse the list
-std:
-  reverse(path.begin(), path.end());
+  // Reverse the list
+  std::reverse(path.begin(), path.end());
 
   // Special case code if the last edge of the forward path is
   // the destination edge - update the elapsed time

@@ -25,12 +25,14 @@ elif type clang-format 2> /dev/null ; then
     # Clang format found, but need to check version
     CLANG_FORMAT=clang-format
     V=$(clang-format --version)
-    if [[ $V != *7.0* ]] ; then
+    if [[ $V != *6.0* ]] ; then
         echo "Installed clang-format is not version 7.0"
         if [ ! -f $(pwd)/mason_packages/.link/bin/clang-format ] ; then
             echo "Installing clang-format 7.0 via mason"
-            mkdir ./mason
-            curl -sSfL https://github.com/mapbox/mason/archive/v0.18.0.tar.gz | tar --gunzip --extract --strip-components=1 --exclude="*md" --exclude="test*" --directory=./mason
+            if [ ! -d mason ] ; then
+                mkdir -p ./mason
+                curl -sSfL https://github.com/mapbox/mason/archive/v0.18.0.tar.gz | tar --gunzip --extract --strip-components=1 --exclude="*md" --exclude="test*" --directory=./mason
+            fi
             ./mason/mason install clang-format 7.0.0
             ./mason/mason link clang-format 7.0.0
         fi
@@ -42,8 +44,10 @@ else
     echo "No clang-format found"
     if [ ! -f $(pwd)/mason_packages/.link/bin/clang-format ] ; then
         echo "Installing clang-format 7.0.0 via mason"
-        mkdir ./mason
-        curl -sSfL https://github.com/mapbox/mason/archive/v0.18.0.tar.gz | tar --gunzip --extract --strip-components=1 --exclude="*md" --exclude="test*" --directory=./mason
+        if [ ! -d mason ] ; then
+            mkdir -p ./mason
+            curl -sSfL https://github.com/mapbox/mason/archive/v0.18.0.tar.gz | tar --gunzip --extract --strip-components=1 --exclude="*md" --exclude="test*" --directory=./mason
+        fi
         ./mason/mason install clang-format 7.0.0
         ./mason/mason link clang-format 7.0.0
     fi
