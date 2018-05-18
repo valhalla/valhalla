@@ -13,7 +13,7 @@ namespace baldr {
  * type, etc.).
  */
 class TransitStop {
- public:
+public:
   // Constructor with arguments
   TransitStop(const uint32_t one_stop_offset,
               const uint32_t name_offset,
@@ -48,17 +48,16 @@ class TransitStop {
    */
   Traversability traversability() const;
 
- protected:
-  uint64_t one_stop_offset_ : 24;  // TransitLand one stop Id offset.
-  uint64_t name_offset_     : 24;  // Stop name offset in the text/name list.
-  uint64_t generated_       : 1;
-  uint64_t traversability_  : 2;
-  uint64_t spare_           : 13;
-  //size of tests
-
+protected:
+  uint64_t one_stop_offset_ : 24; // TransitLand one stop Id offset.
+  uint64_t name_offset_ : 24;     // Stop name offset in the text/name list.
+  uint64_t generated_ : 1;
+  uint64_t traversability_ : 2;
+  uint64_t spare_ : 13;
+  // size of tests
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_TRANSITSTOP_H_
+#endif // VALHALLA_BALDR_TRANSITSTOP_H_

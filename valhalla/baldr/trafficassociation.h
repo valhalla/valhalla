@@ -7,7 +7,7 @@ namespace valhalla {
 namespace baldr {
 
 // 8 bits are used for percentages
-constexpr float kPercentFactor    = 255.0f;
+constexpr float kPercentFactor = 255.0f;
 constexpr float kInvPercentFactor = 1.0f / 255.0f;
 
 // Structure used to return information
@@ -18,21 +18,21 @@ struct TrafficSegment {
   bool starts_segment_;
   bool ends_segment_;
 
-  TrafficSegment(const GraphId& id, const float begin_pct,
-                 const float end_pct, const bool starts, const bool ends)
-      : segment_id_(id),
-        begin_percent_(begin_pct),
-        end_percent_(end_pct),
-        starts_segment_(starts),
+  TrafficSegment(const GraphId& id,
+                 const float begin_pct,
+                 const float end_pct,
+                 const bool starts,
+                 const bool ends)
+      : segment_id_(id), begin_percent_(begin_pct), end_percent_(end_pct), starts_segment_(starts),
         ends_segment_(ends) {
   }
   json::MapPtr json() const {
     return json::map({
-      {"segment_id", segment_id_.value},
-      {"begin_percent", json::fp_t{begin_percent_, 3}},
-      {"end_percent", json::fp_t{end_percent_, 3}},
-      {"starts_segment", starts_segment_},
-      {"ends_segment", ends_segment_},
+        {"segment_id", segment_id_.value},
+        {"begin_percent", json::fp_t{begin_percent_, 3}},
+        {"end_percent", json::fp_t{end_percent_, 3}},
+        {"starts_segment", starts_segment_},
+        {"ends_segment", ends_segment_},
     });
   }
 };
@@ -45,16 +45,17 @@ struct TrafficSegment {
  * multiple chunks per edge.
  */
 class TrafficChunk {
- public:
+public:
   /**
    * Constructor with arguments
    */
-  TrafficChunk(const GraphId& segment_id, const float begin_percent,
-               const float end_percent, const bool starts, const bool ends)
-      : segment_id_(segment_id.value),
-        begin_percent_((begin_percent  * kPercentFactor) + 0.5f),
-        end_percent_((end_percent * kPercentFactor) + 0.5f),
-        starts_segment_(starts),
+  TrafficChunk(const GraphId& segment_id,
+               const float begin_percent,
+               const float end_percent,
+               const bool starts,
+               const bool ends)
+      : segment_id_(segment_id.value), begin_percent_((begin_percent * kPercentFactor) + 0.5f),
+        end_percent_((end_percent * kPercentFactor) + 0.5f), starts_segment_(starts),
         ends_segment_(ends) {
   }
 
@@ -100,12 +101,12 @@ class TrafficChunk {
     return ends_segment_;
   }
 
- private:
-  uint64_t segment_id_     : 46; // Traffic segment Id
-  uint64_t begin_percent_  : 8;  // Begin percent of the segment along the edge
-  uint64_t end_percent_    : 8;  // End percent of the segment along the edge
-  uint64_t starts_segment_ : 1;  // Edge starts this traffic segment
-  uint64_t ends_segment_   : 1;  // Edge ends this traffic segment
+private:
+  uint64_t segment_id_ : 46;    // Traffic segment Id
+  uint64_t begin_percent_ : 8;  // Begin percent of the segment along the edge
+  uint64_t end_percent_ : 8;    // End percent of the segment along the edge
+  uint64_t starts_segment_ : 1; // Edge starts this traffic segment
+  uint64_t ends_segment_ : 1;   // Edge ends this traffic segment
 };
 
 /**
@@ -117,16 +118,12 @@ class TrafficChunk {
  * segment is in a different tile.
  */
 class TrafficAssociation {
- public:
+public:
   /**
    * Default constructor.
    */
   TrafficAssociation()
-     : id_(0),
-       count_(0),
-       starts_segment_(false),
-       ends_segment_(false),
-       chunk_(false) {
+      : id_(0), count_(0), starts_segment_(false), ends_segment_(false), chunk_(false) {
   }
 
   /**
@@ -137,13 +134,8 @@ class TrafficAssociation {
    * @param  ends    Percentage along the segment at the end
    *                        of the edge.
    */
-  TrafficAssociation(const uint32_t id, const bool starts,
-                     const bool ends)
-      : id_(id),
-        count_(1),
-        starts_segment_(starts),
-        ends_segment_(ends),
-        chunk_(false) {
+  TrafficAssociation(const uint32_t id, const bool starts, const bool ends)
+      : id_(id), count_(1), starts_segment_(starts), ends_segment_(ends), chunk_(false) {
   }
 
   /**
@@ -153,11 +145,8 @@ class TrafficAssociation {
    * @param  chunk_index    Index into the list of chunks.
    */
   TrafficAssociation(const size_t chunk_count, const size_t chunk_index)
-    :  id_(static_cast<uint32_t>(chunk_index)),
-       count_(static_cast<uint32_t>(chunk_count)),
-       starts_segment_(false),
-       ends_segment_(false),
-       chunk_(true) {
+      : id_(static_cast<uint32_t>(chunk_index)), count_(static_cast<uint32_t>(chunk_count)),
+        starts_segment_(false), ends_segment_(false), chunk_(true) {
   }
 
   /**
@@ -213,16 +202,16 @@ class TrafficAssociation {
     return std::make_pair(count_, id_);
   }
 
- protected:
-  uint32_t id_              : 21; // Traffic segment Id (within same tile)
-                                  // Chunk index if a chunk
-  uint32_t count_           : 8;  // If a chunk
-  uint32_t starts_segment_  : 1;  // Start of the traffic segment
-  uint32_t ends_segment_    : 1;  // End of the traffic segment
-  uint32_t chunk_           : 1;  // This is part of a chunk
+protected:
+  uint32_t id_ : 21;            // Traffic segment Id (within same tile)
+                                // Chunk index if a chunk
+  uint32_t count_ : 8;          // If a chunk
+  uint32_t starts_segment_ : 1; // Start of the traffic segment
+  uint32_t ends_segment_ : 1;   // End of the traffic segment
+  uint32_t chunk_ : 1;          // This is part of a chunk
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_TRAFFICASSOCIATION_H_
+#endif // VALHALLA_BALDR_TRAFFICASSOCIATION_H_

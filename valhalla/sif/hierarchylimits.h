@@ -1,8 +1,8 @@
 #ifndef VALHALLA_SIF_HIERARCHYLIMITS_H_
 #define VALHALLA_SIF_HIERARCHYLIMITS_H_
 
-#include <limits>
 #include <boost/property_tree/ptree.hpp>
+#include <limits>
 
 // Default hierarchy transitions. Note that this corresponds to a 3 level
 // strategy: highway, arterial, local. Any changes to this will require
@@ -16,14 +16,13 @@ constexpr float kMaxDistance = std::numeric_limits<float>::max();
 // for bidirectional to allow enough expansion on local and arterial to account
 // for routes where more direct paths are available near the origin and
 // destination.
-constexpr uint32_t kDefaultMaxUpTransitions[] = {
-    0, 400, 100, 0, 0, 0, 0, 0 };
+constexpr uint32_t kDefaultMaxUpTransitions[] = {0, 400, 100, 0, 0, 0, 0, 0};
 
 // Default distances within which expansion is always allowed
 // (per level). Used only for A*.
-constexpr float kDefaultExpansionWithinDist[] = {
-    kMaxDistance, 100000.0f, 5000.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-}
+constexpr float kDefaultExpansionWithinDist[] = {kMaxDistance, 100000.0f, 5000.0f, 0.0f,
+                                                 0.0f,         0.0f,      0.0f,    0.0f};
+} // namespace
 
 namespace valhalla {
 namespace sif {
@@ -38,12 +37,12 @@ namespace sif {
  * destination.
  */
 struct HierarchyLimits {
-  uint32_t up_transition_count;  // # of upward transitions from this level
-  uint32_t max_up_transitions;   // Maximum number of upward transitions before
-                                 // expansion is stopped on a level.
-  float expansion_within_dist;   // Distance (m) to destination within which
-                                 // expansion of a hierarchy level is
-                                 // always allowed. Used for A*.
+  uint32_t up_transition_count; // # of upward transitions from this level
+  uint32_t max_up_transitions;  // Maximum number of upward transitions before
+                                // expansion is stopped on a level.
+  float expansion_within_dist;  // Distance (m) to destination within which
+                                // expansion of a hierarchy level is
+                                // always allowed. Used for A*.
 
   /**
    * Set hierarchy limits for the specified level using a property tree.
@@ -57,12 +56,12 @@ struct HierarchyLimits {
     std::string hl = "hierarchy_limits." + std::to_string(level);
 
     // Set maximum number of upward transitions
-    max_up_transitions = pt.get<uint32_t>(hl + ".max_up_transitions",
-                    kDefaultMaxUpTransitions[level]);
+    max_up_transitions =
+        pt.get<uint32_t>(hl + ".max_up_transitions", kDefaultMaxUpTransitions[level]);
 
     // Set distance within which expansion is always allowed for this level
-    expansion_within_dist = pt.get<float>(hl + ".expansion_within_dist",
-                    kDefaultExpansionWithinDist[level]);
+    expansion_within_dist =
+        pt.get<float>(hl + ".expansion_within_dist", kDefaultExpansionWithinDist[level]);
   }
 
   /**
@@ -74,8 +73,7 @@ struct HierarchyLimits {
    * @return  Returns true if expansion at this hierarchy level should stop.
    */
   bool StopExpanding(const float dist) const {
-    return (dist > expansion_within_dist &&
-            up_transition_count > max_up_transitions);
+    return (dist > expansion_within_dist && up_transition_count > max_up_transitions);
   }
 
   /**
@@ -102,7 +100,7 @@ struct HierarchyLimits {
   }
 };
 
-}
-}
+} // namespace sif
+} // namespace valhalla
 
-#endif  // VALHALLA_SIF_HIERARCHYLIMITS_H_
+#endif // VALHALLA_SIF_HIERARCHYLIMITS_H_

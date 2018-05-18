@@ -1,9 +1,9 @@
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/util.h"
 
-#include <iostream>
-#include <cstring>
 #include "midgard/logging.h"
+#include <cstring>
+#include <iostream>
 
 using namespace valhalla::baldr;
 

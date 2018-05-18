@@ -1,9 +1,9 @@
-#include <iostream> // TODO remove if not needed
-#include <map>
-#include <algorithm>
+#include "thor/timedep.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
-#include "thor/timedep.h"
+#include <algorithm>
+#include <iostream> // TODO remove if not needed
+#include <map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -14,8 +14,7 @@ namespace thor {
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
-TimeDepForward::TimeDepForward()
-    : AStarPathAlgorithm() {
+TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
   mode_ = TravelMode::kDrive;
   travel_type_ = 0;
   adjacencylist_ = nullptr;
@@ -27,7 +26,6 @@ TimeDepForward::TimeDepForward()
 TimeDepForward::~TimeDepForward() {
   Clear();
 }
-
 
 // Get the timezone at the origin.
 int TimeDepForward::GetOriginTimezone(GraphReader& graphreader) {
@@ -47,11 +45,13 @@ int TimeDepForward::GetOriginTimezone(GraphReader& graphreader) {
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
 void TimeDepForward::ExpandForward(GraphReader& graphreader,
-                   const GraphId& node, const EdgeLabel& pred,
-                   const uint32_t pred_idx, const bool from_transition,
-                   uint64_t localtime,
-                   const odin::Location& destination,
-                   std::pair<int32_t, float>& best_path) {
+                                   const GraphId& node,
+                                   const EdgeLabel& pred,
+                                   const uint32_t pred_idx,
+                                   const bool from_transition,
+                                   uint64_t localtime,
+                                   const odin::Location& destination,
+                                   std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -66,7 +66,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
   // Adjust for time zone (if different from timezone at the start).
   if (nodeinfo->timezone() != origin_tz_index_) {
     DateTime::timezone_diff(true, localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
-                           DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+                            DateTime::get_tz_db().from_index(nodeinfo->timezone()));
   }
 
   // Expand from end node.
@@ -80,15 +80,15 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     if (directededge->trans_up()) {
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx,
-                      true, localtime, destination, best_path);
+        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
+                      destination, best_path);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx,
-                      true, localtime, destination, best_path);
+        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
+                      destination, best_path);
       }
       continue;
     }
@@ -102,16 +102,15 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction exists.
     if (es->set() == EdgeSet::kPermanent ||
-       !costing_->Allowed(directededge, pred, tile, edgeid, localtime,
-                          nodeinfo->timezone()) ||
-        costing_->Restricted(directededge, pred, edgelabels_, tile,
-                                     edgeid, true, localtime, nodeinfo->timezone())) {
+        !costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone()) ||
+        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, localtime,
+                             nodeinfo->timezone())) {
       continue;
     }
 
     // Compute the cost to the end of this edge
     Cost newcost = pred.cost() + costing_->EdgeCost(directededge) +
-          costing_->TransitionCost(directededge, nodeinfo, pred);
+                   costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
@@ -134,8 +133,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       // a path to be formed even if the convergence test fails (can
       // happen with large edge scores)
       if (best_path.first == -1 || newcost.cost < best_path.second) {
-         best_path.first = (es->set() == EdgeSet::kTemporary) ?
-            es->index() : edgelabels_.size();
+        best_path.first = (es->set() == EdgeSet::kTemporary) ? es->index() : edgelabels_.size();
         best_path.second = newcost.cost;
       }
     }
@@ -145,7 +143,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     // by the difference in real cost (A* heuristic doesn't change)
     if (es->set() == EdgeSet::kTemporary) {
       EdgeLabel& lab = edgelabels_[es->index()];
-      if (newcost.cost <  lab.cost().cost) {
+      if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost);
@@ -159,20 +157,18 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     float dist = 0.0f;
     float sortcost = newcost.cost;
     if (p == destinations_.end()) {
-      const GraphTile* t2 = directededge->leaves_tile() ?
-          graphreader.GetGraphTile(directededge->endnode()) : tile;
+      const GraphTile* t2 =
+          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
       }
-      sortcost += astarheuristic_.Get(
-             t2->node(directededge->endnode())->latlng(), dist);
+      sortcost += astarheuristic_.Get(t2->node(directededge->endnode())->latlng(), dist);
     }
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost,
-                                 sortcost, dist, mode_, 0);
-    *es = { EdgeSet::kTemporary, idx };
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_, 0);
+    *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
 }
@@ -180,9 +176,10 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
 // Calculate time-dependent best path using a forward search. Supports
 // "depart-at" routes.
 std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
-             odin::Location& destination, GraphReader& graphreader,
-             const std::shared_ptr<DynamicCost>* mode_costing,
-             const TravelMode mode) {
+                                                  odin::Location& destination,
+                                                  GraphReader& graphreader,
+                                                  const std::shared_ptr<DynamicCost>* mode_costing,
+                                                  const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -191,15 +188,16 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   // date_time must be set on the origin.
   if (!origin.has_date_time()) {
     LOG_ERROR("TimeDepForward called without time set on the origin location");
-    return { };
+    return {};
   }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  //Note: because we can correlate to more than one place for a given PathLocation
-  //using edges.front here means we are only setting the heuristics to one of them
-  //alternate paths using the other correlated points to may be harder to find
+  // Note: because we can correlate to more than one place for a given PathLocation
+  // using edges.front here means we are only setting the heuristics to one of them
+  // alternate paths using the other correlated points to may be harder to find
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(),
+                          destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -212,36 +210,38 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   origin_tz_index_ = GetOriginTimezone(graphreader);
 
   // Set route start time (seconds from epoch)
-  uint64_t start_time = DateTime::seconds_since_epoch(origin.date_time(),
-                                                      DateTime::get_tz_db().from_index(origin_tz_index_));
+  uint64_t start_time = DateTime::seconds_since_epoch(
+      origin.date_time(), DateTime::get_tz_db().from_index(origin_tz_index_));
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
   // Find shortest path
-  uint32_t nc = 0;       // Count of iterations with no convergence
-                         // towards destination
+  uint32_t nc = 0; // Count of iterations with no convergence
+                   // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
   const GraphTile* tile;
   size_t total_labels = 0;
   while (true) {
     // Allow this process to be aborted
     size_t current_labels = edgelabels_.size();
-    if(interrupt && total_labels/kInterruptIterationsInterval < current_labels/kInterruptIterationsInterval)
+    if (interrupt &&
+        total_labels / kInterruptIterationsInterval <
+            current_labels / kInterruptIterationsInterval) {
       (*interrupt)();
+    }
     total_labels = current_labels;
 
     // Abort if max label count is exceeded
     if (total_labels > max_label_count_) {
-      return { };
+      return {};
     }
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
-      LOG_ERROR("Route failed after iterations = " +
-                     std::to_string(edgelabels_.size()));
-      return { };
+      LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
+      return {};
     }
 
     // Copy the EdgeLabel for use in costing. Check if this is a destination
@@ -275,8 +275,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
       if (best_path.first >= 0) {
         return FormPath(best_path.first);
       } else {
-        LOG_ERROR("No convergence to destination after = " +
-                           std::to_string(edgelabels_.size()));
+        LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
         return {};
       }
     }
@@ -291,11 +290,11 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
     uint64_t localtime = start_time + (double)pred.cost().secs;
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false,
-                  localtime, destination, best_path);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, destination,
+                  best_path);
   }
-  return {};      // Should never get here
+  return {}; // Should never get here
 }
 
-}
-}
+} // namespace thor
+} // namespace valhalla

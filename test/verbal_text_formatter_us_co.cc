@@ -1,7 +1,7 @@
-#include "test.h"
+#include "baldr/verbal_text_formatter_us_co.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
-#include "baldr/verbal_text_formatter_us_co.h"
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -10,24 +10,22 @@ namespace {
 
 // Sub class to test protected methods
 class VerbalTextFormatterUsCoTest : public VerbalTextFormatterUsCo {
- public:
-  VerbalTextFormatterUsCoTest(const std::string& country_code,
-                          const std::string& state_code)
+public:
+  VerbalTextFormatterUsCoTest(const std::string& country_code, const std::string& state_code)
       : VerbalTextFormatterUsCo(country_code, state_code) {
   }
 
   std::string ProcessStatesTts(const std::string& source) const {
     return VerbalTextFormatterUsCo::ProcessStatesTts(source);
   }
-
 };
 
 void TryProcessStatesTts(string source, string expected) {
   VerbalTextFormatterUsCoTest formatter_test("US", "CO");
   string tts = formatter_test.ProcessStatesTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect ProcessStatesTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect ProcessStatesTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -92,15 +90,13 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("WV 7", "West Virginia 7");
   TryProcessStatesTts("WI 30", "Wisconsin 30");
   TryProcessStatesTts("WY 212", "Wyoming 212");
-
 }
 
 void TryFormat(string source, string expected) {
   VerbalTextFormatterUsCoTest formatter_test("US", "CO");
   string tts = formatter_test.Format(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 
@@ -146,7 +142,7 @@ void TestFormat() {
   TryFormat("T609", "T6 o9");
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("verbal_text_formatter_us_co");

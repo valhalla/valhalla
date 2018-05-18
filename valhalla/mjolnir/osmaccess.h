@@ -166,7 +166,7 @@ struct OSMAccess {
   AccessAttributes attributes_;
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMACCESS_H
+#endif // VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMACCESS_H

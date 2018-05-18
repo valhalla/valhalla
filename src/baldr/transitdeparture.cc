@@ -6,14 +6,15 @@ namespace baldr {
 
 // Constructor for a fixed schedule departure
 TransitDeparture::TransitDeparture(const uint32_t lineid,
-                 const uint32_t tripid, const uint32_t routeid,
-                 const uint32_t blockid,
-                 const uint32_t headsign_offset,
-                 const uint32_t departure_time,
-                 const uint32_t elapsed_time,
-                 const uint32_t schedule_index,
-                 const bool wheelchair_accessible,
-                 const bool bicycle_accessible) {
+                                   const uint32_t tripid,
+                                   const uint32_t routeid,
+                                   const uint32_t blockid,
+                                   const uint32_t headsign_offset,
+                                   const uint32_t departure_time,
+                                   const uint32_t elapsed_time,
+                                   const uint32_t schedule_index,
+                                   const bool wheelchair_accessible,
+                                   const bool bicycle_accessible) {
   // Set type to fixed schedule
   type_ = kFixedSchedule;
   spare_ = 0;
@@ -62,21 +63,22 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
   }
 
   wheelchair_accessible_ = wheelchair_accessible;
-  bicycle_accessible_ =  bicycle_accessible;
+  bicycle_accessible_ = bicycle_accessible;
 }
 
 // Constructor for a frequency based schedule departure
 TransitDeparture::TransitDeparture(const uint32_t lineid,
-                 const uint32_t tripid, const uint32_t routeid,
-                 const uint32_t blockid,
-                 const uint32_t headsign_offset,
-                 const uint32_t departure_time,
-                 const uint32_t end_time,
-                 const uint32_t frequency,
-                 const uint32_t elapsed_time,
-                 const uint32_t schedule_index,
-                 const bool wheelchair_accessible,
-                 const bool bicycle_accessible) {
+                                   const uint32_t tripid,
+                                   const uint32_t routeid,
+                                   const uint32_t blockid,
+                                   const uint32_t headsign_offset,
+                                   const uint32_t departure_time,
+                                   const uint32_t end_time,
+                                   const uint32_t frequency,
+                                   const uint32_t elapsed_time,
+                                   const uint32_t schedule_index,
+                                   const bool wheelchair_accessible,
+                                   const bool bicycle_accessible) {
   // Set type to frequency schedule
   type_ = kFrequencySchedule;
   spare_ = 0;
@@ -135,7 +137,7 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
   }
 
   wheelchair_accessible_ = wheelchair_accessible;
-  bicycle_accessible_ =  bicycle_accessible;
+  bicycle_accessible_ = bicycle_accessible;
 }
 
 // Get the type of departure.
@@ -171,16 +173,14 @@ uint32_t TransitDeparture::headsign_offset() const {
 
 // Get the departure time.
 uint32_t TransitDeparture::departure_time() const {
-  return (type_ == kFixedSchedule) ?
-        departure_times_.fixed_.departure_time_ :
-        departure_times_.frequency_.departure_time_;
+  return (type_ == kFixedSchedule) ? departure_times_.fixed_.departure_time_
+                                   : departure_times_.frequency_.departure_time_;
 }
 
 // Get the elapsed time until arrival at the next stop.
 uint32_t TransitDeparture::elapsed_time() const {
-  return (type_ == kFixedSchedule) ?
-        departure_times_.fixed_.elapsed_time_ :
-        departure_times_.frequency_.elapsed_time_;
+  return (type_ == kFixedSchedule) ? departure_times_.fixed_.elapsed_time_
+                                   : departure_times_.frequency_.elapsed_time_;
 }
 
 // Get the end time of frequency based departures.
@@ -209,15 +209,21 @@ bool TransitDeparture::bicycle_accessible() const {
 }
 
 // operator < - for sorting. Sort by line Id and departure time.
-bool TransitDeparture::operator < (const TransitDeparture& other) const {
+bool TransitDeparture::operator<(const TransitDeparture& other) const {
   if (lineid() == other.lineid()) {
     if (type() == other.type()) {
       if (departure_time() == other.departure_time()) {
         return tripid() < other.tripid();
-      } else return departure_time() < other.departure_time();
-    } else return type() < other.type();
-  } else return lineid() < other.lineid();
+      } else {
+        return departure_time() < other.departure_time();
+      }
+    } else {
+      return type() < other.type();
+    }
+  } else {
+    return lineid() < other.lineid();
+  }
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

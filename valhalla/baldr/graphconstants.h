@@ -1,8 +1,8 @@
 #ifndef VALHALLA_BALDR_GRAPHCONSTANTS_H_
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace valhalla {
 namespace baldr {
@@ -13,14 +13,14 @@ constexpr uint32_t kMaxGraphTileId = 4194303;
 constexpr uint32_t kMaxGraphId = 2097151;
 
 // Access bit field constants. Access in directed edge allows 12 bits.
-constexpr uint16_t kAutoAccess       = 1;
+constexpr uint16_t kAutoAccess = 1;
 constexpr uint16_t kPedestrianAccess = 2;
-constexpr uint16_t kBicycleAccess    = 4;
-constexpr uint16_t kTruckAccess      = 8;
-constexpr uint16_t kEmergencyAccess  = 16;
-constexpr uint16_t kTaxiAccess       = 32;
-constexpr uint16_t kBusAccess        = 64;
-constexpr uint16_t kHOVAccess        = 128;
+constexpr uint16_t kBicycleAccess = 4;
+constexpr uint16_t kTruckAccess = 8;
+constexpr uint16_t kEmergencyAccess = 16;
+constexpr uint16_t kTaxiAccess = 32;
+constexpr uint16_t kBusAccess = 64;
+constexpr uint16_t kHOVAccess = 128;
 constexpr uint16_t kWheelchairAccess = 256;
 constexpr uint16_t kMopedAccess      = 512;
 constexpr uint16_t kMotorcycleAccess = 1024;
@@ -32,37 +32,37 @@ constexpr uint32_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess 
 
 // Maximum number of transit records per tile and other max. transit
 // field values.
-constexpr uint32_t kMaxTransitDepartures    = 16777215;
-constexpr uint32_t kMaxTransitStops         = 65535;
-constexpr uint32_t kMaxTransitRoutes        = 4095;
-constexpr uint32_t kMaxTransitSchedules     = 4095;
-constexpr uint32_t kMaxTransitBlockId       = 1048575;
-constexpr uint32_t kMaxTransitLineId        = 1048575;
+constexpr uint32_t kMaxTransitDepartures = 16777215;
+constexpr uint32_t kMaxTransitStops = 65535;
+constexpr uint32_t kMaxTransitRoutes = 4095;
+constexpr uint32_t kMaxTransitSchedules = 4095;
+constexpr uint32_t kMaxTransitBlockId = 1048575;
+constexpr uint32_t kMaxTransitLineId = 1048575;
 constexpr uint32_t kMaxTransitDepartureTime = 131071;
-constexpr uint32_t kMaxTransitElapsedTime   = 131071;
-constexpr uint32_t kMaxStartTime            = 131071;
-constexpr uint32_t kMaxEndTime              = 131071;
-constexpr uint32_t kMaxEndDay               = 63;
-constexpr uint32_t kScheduleEndDay          = 60;
-constexpr uint32_t kMaxFrequency            = 8191;
-constexpr uint32_t kMaxTransfers            = 65535;
-constexpr uint32_t kMaxTransferTime         = 65535;
-constexpr uint32_t kMaxTripId               = 536870912;  // 29 bits
+constexpr uint32_t kMaxTransitElapsedTime = 131071;
+constexpr uint32_t kMaxStartTime = 131071;
+constexpr uint32_t kMaxEndTime = 131071;
+constexpr uint32_t kMaxEndDay = 63;
+constexpr uint32_t kScheduleEndDay = 60;
+constexpr uint32_t kMaxFrequency = 8191;
+constexpr uint32_t kMaxTransfers = 65535;
+constexpr uint32_t kMaxTransferTime = 65535;
+constexpr uint32_t kMaxTripId = 536870912; // 29 bits
 
 // Maximum offset into the text/name list
-constexpr uint32_t kMaxNameOffset           = 16777215;   // 24 bits
+constexpr uint32_t kMaxNameOffset = 16777215; // 24 bits
 
 // Payment constants. Bit constants.
-constexpr uint8_t kCoins  = 1; // Coins
-constexpr uint8_t kNotes  = 2; // Bills
-constexpr uint8_t kETC    = 4; // Electronic Toll Collector
+constexpr uint8_t kCoins = 1; // Coins
+constexpr uint8_t kNotes = 2; // Bills
+constexpr uint8_t kETC = 4;   // Electronic Toll Collector
 
 // Edge traversability
 enum class Traversability {
-  kNone = 0,        // Edge is not traversable in either direction
-  kForward = 1,     // Edge is traversable in the forward direction
-  kBackward = 2,    // Edge is traversable in the backward direction
-  kBoth = 3         // Edge is traversable in both directions
+  kNone = 0,     // Edge is not traversable in either direction
+  kForward = 1,  // Edge is traversable in the forward direction
+  kBackward = 2, // Edge is traversable in the backward direction
+  kBoth = 3      // Edge is traversable in both directions
 };
 
 // Maximum relative density at a node or within a tile
@@ -71,10 +71,10 @@ constexpr uint32_t kMaxDensity = 15;
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.
-constexpr uint32_t kMaxSpeedKph = 140;      // ~85 MPH
+constexpr uint32_t kMaxSpeedKph = 140; // ~85 MPH
 
 // Maximum ferry speed
-constexpr uint32_t kMaxFerrySpeedKph = 40;  // 21 knots
+constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots
 
 // Road class or importance of an edge
 enum class RoadClass : uint8_t {
@@ -87,26 +87,26 @@ enum class RoadClass : uint8_t {
   kResidential = 6,
   kServiceOther = 7
 };
-const std::unordered_map<std::string, RoadClass> stringToRoadClass =
-  { {"Motorway", RoadClass::kMotorway}, {"Trunk", RoadClass::kTrunk}, {"Primary", RoadClass::kPrimary},
-    {"Secondary", RoadClass::kSecondary}, {"Tertiary", RoadClass::kTertiary},
-    {"Unclassified", RoadClass::kUnclassified},{"Residential", RoadClass::kResidential},
-    {"ServiceOther", RoadClass::kServiceOther}
-  };
+const std::unordered_map<std::string, RoadClass> stringToRoadClass = {
+    {"Motorway", RoadClass::kMotorway},       {"Trunk", RoadClass::kTrunk},
+    {"Primary", RoadClass::kPrimary},         {"Secondary", RoadClass::kSecondary},
+    {"Tertiary", RoadClass::kTertiary},       {"Unclassified", RoadClass::kUnclassified},
+    {"Residential", RoadClass::kResidential}, {"ServiceOther", RoadClass::kServiceOther}};
 const std::unordered_map<uint8_t, std::string> RoadClassStrings = {
-  {static_cast<uint8_t>(RoadClass::kMotorway), "motorway"},
-  {static_cast<uint8_t>(RoadClass::kTrunk), "trunk"},
-  {static_cast<uint8_t>(RoadClass::kPrimary), "primary"},
-  {static_cast<uint8_t>(RoadClass::kSecondary), "secondary"},
-  {static_cast<uint8_t>(RoadClass::kTertiary), "tertiary"},
-  {static_cast<uint8_t>(RoadClass::kUnclassified), "unclassified"},
-  {static_cast<uint8_t>(RoadClass::kResidential), "residential"},
-  {static_cast<uint8_t>(RoadClass::kServiceOther), "service_other"},
+    {static_cast<uint8_t>(RoadClass::kMotorway), "motorway"},
+    {static_cast<uint8_t>(RoadClass::kTrunk), "trunk"},
+    {static_cast<uint8_t>(RoadClass::kPrimary), "primary"},
+    {static_cast<uint8_t>(RoadClass::kSecondary), "secondary"},
+    {static_cast<uint8_t>(RoadClass::kTertiary), "tertiary"},
+    {static_cast<uint8_t>(RoadClass::kUnclassified), "unclassified"},
+    {static_cast<uint8_t>(RoadClass::kResidential), "residential"},
+    {static_cast<uint8_t>(RoadClass::kServiceOther), "service_other"},
 };
 inline std::string to_string(RoadClass r) {
   auto i = RoadClassStrings.find(static_cast<uint8_t>(r));
-  if(i == RoadClassStrings.cend())
+  if (i == RoadClassStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -118,17 +118,17 @@ constexpr float kMaxInternalLength = 32.0f;
 constexpr float kMaxTurnChannelLength = 200.0f;
 
 // Bicycle Network constants. Bit constants.
-constexpr uint8_t kNcn = 1;   // Part of national bicycle network
-constexpr uint8_t kRcn = 2;   // Part of regional bicycle network
-constexpr uint8_t kLcn = 4;   // Part of local bicycle network
-constexpr uint8_t kMcn = 8;   // Part of mountain bicycle network
+constexpr uint8_t kNcn = 1; // Part of national bicycle network
+constexpr uint8_t kRcn = 2; // Part of regional bicycle network
+constexpr uint8_t kLcn = 4; // Part of local bicycle network
+constexpr uint8_t kMcn = 8; // Part of mountain bicycle network
 constexpr uint8_t kMaxBicycleNetwork = 15;
 
 // Maximum offset to edge information
-constexpr uint32_t kMaxEdgeInfoOffset = 33554431;   // 2^25 bytes
+constexpr uint32_t kMaxEdgeInfoOffset = 33554431; // 2^25 bytes
 
 // Maximum length of an edge
-constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
+constexpr uint32_t kMaxEdgeLength = 16777215; // 2^24 meters
 
 // Maximum number of edges allowed in a turn restriction mask
 constexpr uint32_t kMaxTurnRestrictionEdges = 8;
@@ -155,10 +155,10 @@ constexpr uint32_t kMaxAddedTime = 255;
 
 // Node types.
 enum class NodeType : uint8_t {
-  kStreetIntersection = 0,      // Regular intersection of 2 roads
-  kGate = 1,                    // Gate or rising bollard
-  kBollard = 2,                 // Bollard (fixed obstruction)
-  kTollBooth = 3,               // Toll booth / fare collection
+  kStreetIntersection = 0, // Regular intersection of 2 roads
+  kGate = 1,               // Gate or rising bollard
+  kBollard = 2,            // Bollard (fixed obstruction)
+  kTollBooth = 3,          // Toll booth / fare collection
   // TODO - for now there is no differentiation between bus and rail stops...
   kTransitEgress = 4,           // Transit egress
   kTransitStation = 5,          // Transit station
@@ -169,45 +169,47 @@ enum class NodeType : uint8_t {
   kBorderControl = 10           // Border control
 };
 const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
-  {static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
-  {static_cast<uint8_t>(NodeType::kGate), "gate"},
-  {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
-  {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
-  {static_cast<uint8_t>(NodeType::kTransitEgress), "transit_egress"},
-  {static_cast<uint8_t>(NodeType::kTransitStation), "transit_station"},
-  {static_cast<uint8_t>(NodeType::kMultiUseTransitPlatform), "multi_use_transit_platform"},
-  {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
-  {static_cast<uint8_t>(NodeType::kParking), "parking"},
-  {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
-  {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
+    {static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
+    {static_cast<uint8_t>(NodeType::kGate), "gate"},
+    {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
+    {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
+    {static_cast<uint8_t>(NodeType::kTransitEgress), "transit_egress"},
+    {static_cast<uint8_t>(NodeType::kTransitStation), "transit_station"},
+    {static_cast<uint8_t>(NodeType::kMultiUseTransitPlatform), "multi_use_transit_platform"},
+    {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
+    {static_cast<uint8_t>(NodeType::kParking), "parking"},
+    {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
+    {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
 };
 inline std::string to_string(NodeType n) {
   auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
-  if(i == NodeTypeStrings.cend())
+  if (i == NodeTypeStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
 // Intersection types. Classifications of various intersections.
 // Maximum value = 31 (DO NOT EXCEED!)
 enum class IntersectionType : uint8_t {
-  kRegular = 0,       // Regular, unclassified intersection
-  kFalse = 1,         // False intersection. Only 2 edges connect. Typically
-                      // where 2 ways are split or where attributes force a split.
-  kDeadEnd = 2,       // Node only connects to one edge ("dead-end").
-  kFork = 3           // All edges are links OR all edges are not links
-                      // and node is a motorway_junction.
+  kRegular = 0, // Regular, unclassified intersection
+  kFalse = 1,   // False intersection. Only 2 edges connect. Typically
+                // where 2 ways are split or where attributes force a split.
+  kDeadEnd = 2, // Node only connects to one edge ("dead-end").
+  kFork = 3     // All edges are links OR all edges are not links
+                // and node is a motorway_junction.
 };
 const std::unordered_map<uint8_t, std::string> IntersectionTypeStrings = {
-  {static_cast<uint8_t>(IntersectionType::kRegular), "regular"},
-  {static_cast<uint8_t>(IntersectionType::kFalse), "false"},
-  {static_cast<uint8_t>(IntersectionType::kDeadEnd), "dead-end"},
-  {static_cast<uint8_t>(IntersectionType::kFork), "fork"},
+    {static_cast<uint8_t>(IntersectionType::kRegular), "regular"},
+    {static_cast<uint8_t>(IntersectionType::kFalse), "false"},
+    {static_cast<uint8_t>(IntersectionType::kDeadEnd), "dead-end"},
+    {static_cast<uint8_t>(IntersectionType::kFork), "fork"},
 };
 inline std::string to_string(IntersectionType x) {
   auto i = IntersectionTypeStrings.find(static_cast<uint8_t>(x));
-  if(i == IntersectionTypeStrings.cend())
+  if (i == IntersectionTypeStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -216,27 +218,27 @@ inline std::string to_string(IntersectionType x) {
 enum class Use : uint8_t {
   // Road specific uses
   kRoad = 0,
-  kRamp = 1,              // Link - exits/entrance ramps.
-  kTurnChannel = 2,       // Link - turn lane.
-  kTrack = 3,             // Agricultural use, forest tracks
-  kDriveway = 4,          // Driveway/private service
-  kAlley = 5,             // Service road - limited route use
-  kParkingAisle = 6,      // Access roads in parking areas
-  kEmergencyAccess = 7,   // Emergency vehicles only
-  kDriveThru = 8,         // Commercial drive-thru (banks/fast-food)
-  kCuldesac = 9,          // Cul-de-sac (edge that forms a loop and is only
-                          // connected at one node to another edge.
-  kLivingStreet = 10,     // Streets with preference towards bicyclists and pedestrians
+  kRamp = 1,            // Link - exits/entrance ramps.
+  kTurnChannel = 2,     // Link - turn lane.
+  kTrack = 3,           // Agricultural use, forest tracks
+  kDriveway = 4,        // Driveway/private service
+  kAlley = 5,           // Service road - limited route use
+  kParkingAisle = 6,    // Access roads in parking areas
+  kEmergencyAccess = 7, // Emergency vehicles only
+  kDriveThru = 8,       // Commercial drive-thru (banks/fast-food)
+  kCuldesac = 9,        // Cul-de-sac (edge that forms a loop and is only
+                        // connected at one node to another edge.
+  kLivingStreet = 10,   // Streets with preference towards bicyclists and pedestrians
 
   // Bicycle specific uses
-  kCycleway = 20,          // Dedicated bicycle path
-  kMountainBike = 21,      // Mountain bike trail
+  kCycleway = 20,     // Dedicated bicycle path
+  kMountainBike = 21, // Mountain bike trail
 
   kSidewalk = 24,
 
   // Pedestrian specific uses
   kFootway = 25,
-  kSteps = 26,             // Stairs
+  kSteps = 26, // Stairs
   kPath = 27,
   kPedestrian = 28,
   kBridleway = 29,
@@ -260,58 +262,60 @@ enum class Use : uint8_t {
   kTransitConnection = 54   // Connection to multi-use transit stop
 };
 const std::unordered_map<uint8_t, std::string> UseStrings = {
-  {static_cast<uint8_t>(Use::kRoad), "road"},
-  {static_cast<uint8_t>(Use::kRamp), "ramp"},
-  {static_cast<uint8_t>(Use::kTurnChannel), "turn_channel"},
-  {static_cast<uint8_t>(Use::kTrack), "track"},
-  {static_cast<uint8_t>(Use::kDriveway), "driveway"},
-  {static_cast<uint8_t>(Use::kAlley), "alley"},
-  {static_cast<uint8_t>(Use::kParkingAisle), "parking_aisle"},
-  {static_cast<uint8_t>(Use::kEmergencyAccess), "emergency_access"},
-  {static_cast<uint8_t>(Use::kDriveThru), "drive_through"},
-  {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
-  {static_cast<uint8_t>(Use::kLivingStreet), "living_street"},
-  {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
-  {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
-  {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
-  {static_cast<uint8_t>(Use::kFootway), "footway"},
-  {static_cast<uint8_t>(Use::kSteps), "steps"},
-  {static_cast<uint8_t>(Use::kPath), "path"},
-  {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
-  {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
-  {static_cast<uint8_t>(Use::kOther), "other"},
-  {static_cast<uint8_t>(Use::kRailFerry), "rail-ferry"},
-  {static_cast<uint8_t>(Use::kFerry), "ferry"},
-  {static_cast<uint8_t>(Use::kRail), "rail"},
-  {static_cast<uint8_t>(Use::kBus), "bus"},
-  {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
-  {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
-  {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
+    {static_cast<uint8_t>(Use::kRoad), "road"},
+    {static_cast<uint8_t>(Use::kRamp), "ramp"},
+    {static_cast<uint8_t>(Use::kTurnChannel), "turn_channel"},
+    {static_cast<uint8_t>(Use::kTrack), "track"},
+    {static_cast<uint8_t>(Use::kDriveway), "driveway"},
+    {static_cast<uint8_t>(Use::kAlley), "alley"},
+    {static_cast<uint8_t>(Use::kParkingAisle), "parking_aisle"},
+    {static_cast<uint8_t>(Use::kEmergencyAccess), "emergency_access"},
+    {static_cast<uint8_t>(Use::kDriveThru), "drive_through"},
+    {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
+    {static_cast<uint8_t>(Use::kLivingStreet), "living_street"},
+    {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
+    {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
+    {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
+    {static_cast<uint8_t>(Use::kFootway), "footway"},
+    {static_cast<uint8_t>(Use::kSteps), "steps"},
+    {static_cast<uint8_t>(Use::kPath), "path"},
+    {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
+    {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
+    {static_cast<uint8_t>(Use::kOther), "other"},
+    {static_cast<uint8_t>(Use::kRailFerry), "rail-ferry"},
+    {static_cast<uint8_t>(Use::kFerry), "ferry"},
+    {static_cast<uint8_t>(Use::kRail), "rail"},
+    {static_cast<uint8_t>(Use::kBus), "bus"},
+    {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
+    {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
+    {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
 };
 inline std::string to_string(Use u) {
   auto i = UseStrings.find(static_cast<uint8_t>(u));
-  if(i == UseStrings.cend())
+  if (i == UseStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
 // Speed type
 enum class SpeedType : uint8_t {
-  kTagged = 0,            // Tagged maximum speed
-  kClassified = 1,        // Speed assigned based on highway classification
-  kClassifiedUrban = 2,   // Classified speed in urban area
-  kClassifiedRural = 3    // Classified speed in rural area
+  kTagged = 0,          // Tagged maximum speed
+  kClassified = 1,      // Speed assigned based on highway classification
+  kClassifiedUrban = 2, // Classified speed in urban area
+  kClassifiedRural = 3  // Classified speed in rural area
 };
 const std::unordered_map<uint8_t, std::string> SpeedTypeStrings = {
-  {static_cast<uint8_t>(SpeedType::kTagged), "tagged"},
-  {static_cast<uint8_t>(SpeedType::kClassified), "classified"},
-  {static_cast<uint8_t>(SpeedType::kClassifiedUrban), "classified_urban"},
-  {static_cast<uint8_t>(SpeedType::kClassifiedRural), "classified_rural"},
+    {static_cast<uint8_t>(SpeedType::kTagged), "tagged"},
+    {static_cast<uint8_t>(SpeedType::kClassified), "classified"},
+    {static_cast<uint8_t>(SpeedType::kClassifiedUrban), "classified_urban"},
+    {static_cast<uint8_t>(SpeedType::kClassifiedRural), "classified_rural"},
 };
 inline std::string to_string(SpeedType s) {
   auto i = SpeedTypeStrings.find(static_cast<uint8_t>(s));
-  if(i == SpeedTypeStrings.cend())
+  if (i == SpeedTypeStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -329,15 +333,16 @@ enum class CycleLane : uint8_t {
                   // Alternative: Path with no pedestrians on it
 };
 const std::unordered_map<uint8_t, std::string> CycleLaneStrings = {
-  {static_cast<uint8_t>(CycleLane::kNone), "none"},
-  {static_cast<uint8_t>(CycleLane::kShared), "shared"},
-  {static_cast<uint8_t>(CycleLane::kDedicated), "dedicated"},
-  {static_cast<uint8_t>(CycleLane::kSeparated), "separated"},
+    {static_cast<uint8_t>(CycleLane::kNone), "none"},
+    {static_cast<uint8_t>(CycleLane::kShared), "shared"},
+    {static_cast<uint8_t>(CycleLane::kDedicated), "dedicated"},
+    {static_cast<uint8_t>(CycleLane::kSeparated), "separated"},
 };
 inline std::string to_string(CycleLane c) {
   auto i = CycleLaneStrings.find(static_cast<uint8_t>(c));
-  if(i == CycleLaneStrings.cend())
+  if (i == CycleLaneStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -365,19 +370,20 @@ enum class Surface : uint8_t {
   kImpassable = 7
 };
 const std::unordered_map<uint8_t, std::string> SurfaceStrings = {
-  {static_cast<uint8_t>(Surface::kPavedSmooth), "paved_smooth"},
-  {static_cast<uint8_t>(Surface::kPaved), "paved"},
-  {static_cast<uint8_t>(Surface::kPavedRough), "paved_rough"},
-  {static_cast<uint8_t>(Surface::kCompacted), "compacted"},
-  {static_cast<uint8_t>(Surface::kDirt), "dirt"},
-  {static_cast<uint8_t>(Surface::kGravel), "gravel"},
-  {static_cast<uint8_t>(Surface::kPath), "path"},
-  {static_cast<uint8_t>(Surface::kImpassable), "impassable"},
+    {static_cast<uint8_t>(Surface::kPavedSmooth), "paved_smooth"},
+    {static_cast<uint8_t>(Surface::kPaved), "paved"},
+    {static_cast<uint8_t>(Surface::kPavedRough), "paved_rough"},
+    {static_cast<uint8_t>(Surface::kCompacted), "compacted"},
+    {static_cast<uint8_t>(Surface::kDirt), "dirt"},
+    {static_cast<uint8_t>(Surface::kGravel), "gravel"},
+    {static_cast<uint8_t>(Surface::kPath), "path"},
+    {static_cast<uint8_t>(Surface::kImpassable), "impassable"},
 };
 inline std::string to_string(Surface s) {
   auto i = SurfaceStrings.find(static_cast<uint8_t>(s));
-  if(i == SurfaceStrings.cend())
+  if (i == SurfaceStrings.cend()) {
     return "null";
+  }
   return i->second;
 }
 
@@ -396,15 +402,15 @@ enum class DOW : uint8_t {
 // Used for restrictions.  A restriction can start and end on a particular month
 enum class MONTH : uint8_t {
   kNone = 0,
-  kJan =  1,
-  kFeb =  2,
-  kMar =  3,
-  kApr =  4,
-  kMay =  5,
-  kJun =  6,
-  kJul =  7,
-  kAug =  8,
-  kSep =  9,
+  kJan = 1,
+  kFeb = 2,
+  kMar = 3,
+  kApr = 4,
+  kMay = 5,
+  kJun = 6,
+  kJul = 7,
+  kAug = 8,
+  kSep = 9,
   kOct = 10,
   kNov = 11,
   kDec = 12
@@ -422,18 +428,18 @@ enum class TransitType : uint8_t {
   kFunicular = 7
 };
 
-//This is our pivot date for transit.  No dates will be older than this date.
-const std::string kPivotDate = "20140101";  //January 1, 2014
+// This is our pivot date for transit.  No dates will be older than this date.
+const std::string kPivotDate = "20140101"; // January 1, 2014
 
 // Used for day of week mask.
-constexpr uint8_t kDOWNone    = 0;
-constexpr uint8_t kSunday     = 1;
-constexpr uint8_t kMonday     = 2;
-constexpr uint8_t kTuesday    = 4;
-constexpr uint8_t kWednesday  = 8;
-constexpr uint8_t kThursday   = 16;
-constexpr uint8_t kFriday     = 32;
-constexpr uint8_t kSaturday   = 64;
+constexpr uint8_t kDOWNone = 0;
+constexpr uint8_t kSunday = 1;
+constexpr uint8_t kMonday = 2;
+constexpr uint8_t kTuesday = 4;
+constexpr uint8_t kWednesday = 8;
+constexpr uint8_t kThursday = 16;
+constexpr uint8_t kFriday = 32;
+constexpr uint8_t kSaturday = 64;
 constexpr uint8_t kAllDaysOfWeek = 127;
 
 // Restriction types. If a restriction exists this value will be set.
@@ -456,7 +462,7 @@ enum class RestrictionType : uint8_t {
 enum class AccessType : uint8_t {
   kHazmat = 0,
   kMaxHeight = 1,
-  kMaxWidth= 2,
+  kMaxWidth = 2,
   kMaxLength = 3,
   kMaxWeight = 4,
   kMaxAxleLoad = 5,
@@ -487,9 +493,7 @@ inline float GetOffsetForHeading(RoadClass road_class, Use use) {
     case Use::kBridleway: {
       offset *= 0.5f;
     }
-    default: {
-      break;
-    }
+    default: { break; }
   }
 
   return offset;
@@ -501,20 +505,20 @@ constexpr uint32_t kOneStopIdSize = 256;
 
 // Transit transfer types
 enum class TransferType : uint8_t {
-  kRecommended = 0,   // Recommended transfer point between 2 routes
-  kTimed       = 1,   // Timed transfer between 2 routes. Departing vehicle
-                      // is expected to wait, allowing sufficient time for
-                      // passengers to transfer.
-  kMinTime     = 2,   // Transfer is expected to take the time specified.
-  kNotPossible = 3    // Transfers not possible between routes
+  kRecommended = 0, // Recommended transfer point between 2 routes
+  kTimed = 1,       // Timed transfer between 2 routes. Departing vehicle
+                    // is expected to wait, allowing sufficient time for
+                    // passengers to transfer.
+  kMinTime = 2,     // Transfer is expected to take the time specified.
+  kNotPossible = 3  // Transfers not possible between routes
 };
 
 enum class CalendarExceptionType : uint8_t {
-  kAdded       = 1,   // Service added for the specified date
-  kRemoved     = 2    // Service removed for the specified date
+  kAdded = 1,  // Service added for the specified date
+  kRemoved = 2 // Service removed for the specified date
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_GRAPHCONSTANTS_H_
+#endif // VALHALLA_BALDR_GRAPHCONSTANTS_H_

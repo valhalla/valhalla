@@ -597,7 +597,7 @@ struct OSMWay {
    * Sets if the oneway is in the opposite direction
    * @param  oneway_reverse
    */
-  void set_oneway_reverse (const bool oneway_reverse);
+  void set_oneway_reverse(const bool oneway_reverse);
 
   /**
    * Gets if the oneway is in the opposite direction
@@ -968,40 +968,40 @@ struct OSMWay {
   bool backward_tagged_speed() const;
 
   /**
-    * Sets the tagged_lanes flag.
-    * @param  tagged_lanes  User specified lanes?
-    */
-   void set_tagged_lanes(const bool tagged_lanes);
+   * Sets the tagged_lanes flag.
+   * @param  tagged_lanes  User specified lanes?
+   */
+  void set_tagged_lanes(const bool tagged_lanes);
 
-   /**
-    * Get the tagged_lanes flag.
-    * @return  Returns tagged_lanes flag.
-    */
-   bool tagged_lanes() const;
+  /**
+   * Get the tagged_lanes flag.
+   * @return  Returns tagged_lanes flag.
+   */
+  bool tagged_lanes() const;
 
-   /**
-    * Sets the forward tagged_lanes flag.
-    * @param  forward_tagged_lanes  User specified lanes?
-    */
-   void set_forward_tagged_lanes(const bool forward_tagged_lanes);
+  /**
+   * Sets the forward tagged_lanes flag.
+   * @param  forward_tagged_lanes  User specified lanes?
+   */
+  void set_forward_tagged_lanes(const bool forward_tagged_lanes);
 
-   /**
-    * Get the forward_tagged_lanes flag.
-    * @return  Returns forward_tagged_lanes flag.
-    */
-   bool forward_tagged_lanes() const;
+  /**
+   * Get the forward_tagged_lanes flag.
+   * @return  Returns forward_tagged_lanes flag.
+   */
+  bool forward_tagged_lanes() const;
 
-   /**
-    * Sets the backward tagged_lanes flag.
-    * @param  backward_tagged_lanes  User specified lanes?
-    */
-   void set_backward_tagged_lanes(const bool backward_tagged_lanes);
+  /**
+   * Sets the backward tagged_lanes flag.
+   * @param  backward_tagged_lanes  User specified lanes?
+   */
+  void set_backward_tagged_lanes(const bool backward_tagged_lanes);
 
-   /**
-    * Get the backward_tagged_lanes flag.
-    * @return  Returns backward_tagged_lanes flag.
-    */
-   bool backward_tagged_lanes() const;
+  /**
+   * Get the backward_tagged_lanes flag.
+   * @return  Returns backward_tagged_lanes flag.
+   */
+  bool backward_tagged_lanes() const;
 
   /**
    * Sets the truck route flag.
@@ -1111,31 +1111,31 @@ struct OSMWay {
   // Way attributes
   union WayAttributes {
     struct Fields {
-      uint32_t destination_only       :1;
-      uint32_t no_thru_traffic        :1;
-      uint32_t oneway                 :1;
-      uint32_t oneway_reverse         :1;
-      uint32_t roundabout             :1;
-      uint32_t ferry                  :1;
-      uint32_t rail                   :1;
-      uint32_t surface                :3;
-      uint32_t tunnel                 :1;
-      uint32_t toll                   :1;
-      uint32_t bridge                 :1;
-      uint32_t seasonal               :1;
-      uint32_t drive_on_right         :1;
-      uint32_t bike_network           :4;
-      uint32_t exit                   :1;
-      uint32_t tagged_speed           :1;
-      uint32_t forward_tagged_speed   :1;
-      uint32_t backward_tagged_speed  :1;
-      uint32_t tagged_lanes           :1;
-      uint32_t forward_tagged_lanes   :1;
-      uint32_t backward_tagged_lanes  :1;
-      uint32_t truck_route            :1;
-      uint32_t sidewalk_right         :1;
-      uint32_t sidewalk_left          :1;
-      uint32_t sac_scale              :3;
+      uint32_t destination_only : 1;
+      uint32_t no_thru_traffic : 1;
+      uint32_t oneway : 1;
+      uint32_t oneway_reverse : 1;
+      uint32_t roundabout : 1;
+      uint32_t ferry : 1;
+      uint32_t rail : 1;
+      uint32_t surface : 3;
+      uint32_t tunnel : 1;
+      uint32_t toll : 1;
+      uint32_t bridge : 1;
+      uint32_t seasonal : 1;
+      uint32_t drive_on_right : 1;
+      uint32_t bike_network : 4;
+      uint32_t exit : 1;
+      uint32_t tagged_speed : 1;
+      uint32_t forward_tagged_speed : 1;
+      uint32_t backward_tagged_speed : 1;
+      uint32_t tagged_lanes : 1;
+      uint32_t forward_tagged_lanes : 1;
+      uint32_t backward_tagged_lanes : 1;
+      uint32_t truck_route : 1;
+      uint32_t sidewalk_right : 1;
+      uint32_t sidewalk_left : 1;
+      uint32_t sac_scale : 3;
     } fields;
     uint32_t v;
   };
@@ -1143,18 +1143,18 @@ struct OSMWay {
 
   union Classification {
     struct Fields {
-      uint32_t road_class        :3;     // Importance of the road/path
-      uint32_t link              :1;     // *link tag - Ramp or turn channel
-      uint32_t use               :6;     // Use / form
-      uint32_t lanes             :4;
-      uint32_t forward_lanes     :4;
-      uint32_t backward_lanes    :4;
-      uint32_t turn_channel      :1;     // *link tag - turn channel (no ramp)
-      uint16_t wheelchair        :1;
-      uint16_t wheelchair_tag    :1;
-      uint32_t pedestrian        :1;
-      uint32_t has_user_tags     :1;
-      uint32_t spare             :5;     // Spare
+      uint32_t road_class : 3; // Importance of the road/path
+      uint32_t link : 1;       // *link tag - Ramp or turn channel
+      uint32_t use : 6;        // Use / form
+      uint32_t lanes : 4;
+      uint32_t forward_lanes : 4;
+      uint32_t backward_lanes : 4;
+      uint32_t turn_channel : 1; // *link tag - turn channel (no ramp)
+      uint16_t wheelchair : 1;
+      uint16_t wheelchair_tag : 1;
+      uint32_t pedestrian : 1;
+      uint32_t has_user_tags : 1;
+      uint32_t spare : 5; // Spare
     } fields;
     uint32_t v;
   };
@@ -1208,7 +1208,7 @@ struct OSMWay {
   // max speed limit in kilometers per hour
   uint8_t speed_limit_;
 
-  // average speed if exists, else advisory speed if exists, else max_speed if exists, 
+  // average speed if exists, else advisory speed if exists, else max_speed if exists,
   // else categorized speed in kilometers per hour
   uint8_t speed_;
 
@@ -1224,7 +1224,7 @@ struct OSMWay {
   uint8_t spare_;
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
+#endif // VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H

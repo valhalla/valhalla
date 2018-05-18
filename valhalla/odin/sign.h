@@ -8,7 +8,7 @@ namespace valhalla {
 namespace odin {
 
 class Sign {
- public:
+public:
   /**
    * Constructor.
    * @param  text   Text string.
@@ -35,15 +35,14 @@ class Sign {
 
   std::string ToParameterString() const;
 
-  bool operator ==(const Sign& rhs) const;
+  bool operator==(const Sign& rhs) const;
 
- protected:
+protected:
   std::string text_;
   uint32_t consecutive_count_;
-
 };
 
-}
-}
+} // namespace odin
+} // namespace valhalla
 
-#endif  // VALHALLA_ODIN_SIGN_H_
+#endif // VALHALLA_ODIN_SIGN_H_

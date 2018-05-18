@@ -1,11 +1,11 @@
 #ifndef VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
 #define VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
 
-#include <cstdint>
-#include <vector>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <valhalla/midgard/util.h>
+#include <vector>
 
 namespace valhalla {
 namespace baldr {
@@ -15,7 +15,7 @@ constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 /**
  * A callable element which returns the cost for a label.
  */
-using LabelCost = std::function<float (const uint32_t label)>;
+using LabelCost = std::function<float(const uint32_t label)>;
 
 // Bucket type and bucket list type.
 using bucket_t = std::vector<uint32_t>;
@@ -29,7 +29,7 @@ using buckets_t = std::vector<bucket_t>;
  * needed. Each bucket stores label indexes into external data.
  */
 class DoubleBucketQueue {
- public:
+public:
   /**
    * Constructor given a minimum cost, a range of costs held within the
    * bucket sort, and a bucket size. All costs above mincost + range are
@@ -41,15 +41,19 @@ class DoubleBucketQueue {
    *                   Must be an integer value.
    * @param labelcost  Functor to get a cost given a label index.
    */
-  DoubleBucketQueue(const float mincost, const float range,
-                    const uint32_t bucketsize, const LabelCost& labelcost) {
+  DoubleBucketQueue(const float mincost,
+                    const float range,
+                    const uint32_t bucketsize,
+                    const LabelCost& labelcost) {
     // We need at least a bucketsize of 1 or more
-    if(bucketsize < 1)
+    if (bucketsize < 1) {
       throw std::runtime_error("Bucketsize must be 1 or greater");
+    }
 
     // We need at least a bucketrange of something larger than 0
-    if(range <= 0.f)
+    if (range <= 0.f) {
       throw std::runtime_error("Bucketrange must be greater than 0");
+    }
 
     // Adjust min cost to be the start of a bucket
     uint32_t c = static_cast<uint32_t>(mincost);
@@ -118,7 +122,7 @@ class DoubleBucketQueue {
     // Get the buckets of the previous and new costs. Nothing needs to be done
     // if old cost and the new cost are in the same buckets.
     bucket_t& prevbucket = get_bucket(labelcost_(label));
-    bucket_t& newbucket  = get_bucket(newcost);
+    bucket_t& newbucket = get_bucket(newcost);
     if (prevbucket != newbucket) {
       // Add label to newbucket and remove from previous bucket
       newbucket.push_back(label);
@@ -156,14 +160,13 @@ class DoubleBucketQueue {
     return label;
   }
 
-
- private:
-  float bucketrange_;  // Total range of costs in lower level buckets
-  float bucketsize_;   // Bucket size (range of costs in same bucket)
-  float inv_;          // 1/bucketsize (so we can avoid division)
-  float mincost_;      // Minimum cost within the low level buckets
-  float maxcost_;      // Above this goes into overflow bucket
-  float currentcost_;  // Current cost
+private:
+  float bucketrange_; // Total range of costs in lower level buckets
+  float bucketsize_;  // Bucket size (range of costs in same bucket)
+  float inv_;         // 1/bucketsize (so we can avoid division)
+  float mincost_;     // Minimum cost within the low level buckets
+  float maxcost_;     // Above this goes into overflow bucket
+  float currentcost_; // Current cost
 
   // Low level buckets
   buckets_t buckets_;
@@ -183,10 +186,10 @@ class DoubleBucketQueue {
    * @return Returns the bucket that the cost lies within.
    */
   bucket_t& get_bucket(const float cost) {
-    return (cost < currentcost_) ? *currentbucket_ :
-             (cost < maxcost_) ?
-               buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :
-               overflowbucket_;
+    return (cost < currentcost_)
+               ? *currentbucket_
+               : (cost < maxcost_) ? buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)]
+                                   : overflowbucket_;
   }
 
   /**
@@ -208,22 +211,23 @@ class DoubleBucketQueue {
    */
   void empty_overflow() {
     // Get the minimum label so we can figure out where the new range should be
-    auto itr = std::min_element(overflowbucket_.begin(), overflowbucket_.end(), [this](uint32_t a, uint32_t b){
-      return labelcost_(a) < labelcost_(b);
-    });
+    auto itr =
+        std::min_element(overflowbucket_.begin(), overflowbucket_.end(),
+                         [this](uint32_t a, uint32_t b) { return labelcost_(a) < labelcost_(b); });
 
     // If there is actually stuff to move
-    if(itr != overflowbucket_.end()) {
+    if (itr != overflowbucket_.end()) {
 
       // Adjust cost range so smallest element is in the buckets_
       float min = labelcost_(*itr);
       mincost_ += (std::floor((min - mincost_) / bucketrange_)) * bucketrange_;
 
       // Avoid precision issues
-      if(mincost_ > min)
+      if (mincost_ > min) {
         mincost_ -= bucketrange_;
-      else if(mincost_ + bucketrange_ < min)
+      } else if (mincost_ + bucketrange_ < min) {
         mincost_ += bucketrange_;
+      }
       maxcost_ = mincost_ + bucketrange_;
 
       // Move elements within the range from overflow to buckets
@@ -232,7 +236,7 @@ class DoubleBucketQueue {
         // Get the cost (using the label cost function)
         float cost = labelcost_(label);
         if (cost < maxcost_) {
-          buckets_[static_cast<uint32_t>((cost-mincost_)*inv_)].push_back(label);
+          buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
         } else {
           tmp.push_back(label);
         }
@@ -248,8 +252,7 @@ class DoubleBucketQueue {
   }
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
-
+#endif // VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_

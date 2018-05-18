@@ -1,13 +1,14 @@
+#include "baldr/edge_elevation.h"
 #include <cmath>
 #include <valhalla/midgard/logging.h>
-#include "baldr/edge_elevation.h"
 
 namespace valhalla {
 namespace baldr {
 
 // Constructor with arguments.
-EdgeElevation:: EdgeElevation(const float mean_elev, const float max_up_slope,
-                              const float max_down_slope) {
+EdgeElevation::EdgeElevation(const float mean_elev,
+                             const float max_up_slope,
+                             const float max_down_slope) {
   set_mean_elevation(mean_elev);
   set_max_up_slope(max_up_slope);
   set_max_down_slope(max_down_slope);
@@ -49,5 +50,5 @@ void EdgeElevation::set_max_down_slope(const float slope) {
   }
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

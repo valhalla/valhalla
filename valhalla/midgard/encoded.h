@@ -3,41 +3,37 @@
 
 #include <valhalla/midgard/shape_decoder.h>
 
-#include <type_traits>
 #include <cmath>
+#include <type_traits>
 #include <vector>
 
 namespace valhalla {
 namespace midgard {
 
 // specialized implementation for std::vector with reserve
-template<class container_t,
-         class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
-typename
-std::enable_if<std::is_same<std::vector<typename container_t::value_type>,
-                            container_t>::value,
-               container_t>::type
+template <class container_t, class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
+typename std::enable_if<
+    std::is_same<std::vector<typename container_t::value_type>, container_t>::value,
+    container_t>::type
 decode(const char* encoded, size_t length) {
   ShapeDecoder shape(encoded, length);
   container_t c;
   c.reserve(length / 4);
-  while (! shape.empty()) {
+  while (!shape.empty()) {
     c.emplace_back(shape.pop());
   }
   return c;
 }
 
 // implementation for non std::vector
-template<class container_t,
-         class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
-typename
-std::enable_if<! std::is_same<std::vector<typename container_t::value_type>,
-                              container_t>::value,
-               container_t>::type
+template <class container_t, class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
+typename std::enable_if<
+    !std::is_same<std::vector<typename container_t::value_type>, container_t>::value,
+    container_t>::type
 decode(const char* encoded, size_t length) {
   ShapeDecoder shape(encoded, length);
   container_t c;
-  while (! shape.empty()) {
+  while (!shape.empty()) {
     c.emplace_back(shape.pop());
   }
   return c;
@@ -49,14 +45,12 @@ decode(const char* encoded, size_t length) {
  * @param encoded    the encoded points
  * @return points   the container of points
  */
-template<class container_t,
-         class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
+template <class container_t, class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
 container_t decode(const std::string& encoded) {
   return decode<container_t, ShapeDecoder>(encoded.c_str(), encoded.length());
 }
 
-template<class container_t>
-container_t decode7(const char* encoded, size_t length) {
+template <class container_t> container_t decode7(const char* encoded, size_t length) {
   return decode<container_t, Shape7Decoder<typename container_t::value_type>>(encoded, length);
 }
 
@@ -66,8 +60,7 @@ container_t decode7(const char* encoded, size_t length) {
  * @param encoded    the encoded points
  * @return points   the container of points
  */
-template<class container_t>
-container_t decode7(const std::string& encoded) {
+template <class container_t> container_t decode7(const std::string& encoded) {
   return decode7<container_t>(encoded.c_str(), encoded.length());
 }
 
@@ -79,46 +72,44 @@ container_t decode7(const std::string& encoded) {
  * @param points    the list of points to encode
  * @return string   the encoded container of points
  */
-template<class container_t>
-std::string encode(const container_t& points) {
-  //a place to keep the output
+template <class container_t> std::string encode(const container_t& points) {
+  // a place to keep the output
   std::string output;
-  //unless the shape is very course you should probably only need about 3 bytes
-  //per coord, which is 6 bytes with 2 coords, so we overshoot to 8 just in case
+  // unless the shape is very course you should probably only need about 3 bytes
+  // per coord, which is 6 bytes with 2 coords, so we overshoot to 8 just in case
   output.reserve(points.size() * 8);
 
-  //handy lambda to turn an integer into an encoded string
+  // handy lambda to turn an integer into an encoded string
   auto serialize = [&output](int number) {
-    //move the bits left 1 position and flip all the bits if it was a negative number
+    // move the bits left 1 position and flip all the bits if it was a negative number
     number = number < 0 ? ~(number << 1) : (number << 1);
-    //write 5 bit chunks of the number
+    // write 5 bit chunks of the number
     while (number >= 0x20) {
       int nextValue = (0x20 | (number & 0x1f)) + 63;
       output.push_back(static_cast<char>(nextValue));
       number >>= 5;
     }
-    //write the last chunk
+    // write the last chunk
     number += 63;
     output.push_back(static_cast<char>(number));
   };
 
-  //this is an offset encoding so we remember the last point we saw
+  // this is an offset encoding so we remember the last point we saw
   int last_lon = 0, last_lat = 0;
-  //for each point
+  // for each point
   for (const auto& p : points) {
-    //shift the decimal point 5 places to the right and truncate
+    // shift the decimal point 5 places to the right and truncate
     int lon = static_cast<int>(floor(static_cast<double>(p.first) * 1e6));
     int lat = static_cast<int>(floor(static_cast<double>(p.second) * 1e6));
-    //encode each coordinate, lat first for some reason
+    // encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);
-    //remember the last one we encountered
+    // remember the last one we encountered
     last_lon = lon;
     last_lat = lat;
   }
   return output;
 }
-
 
 /**
  * Varint encode a container of points into a string
@@ -126,48 +117,47 @@ std::string encode(const container_t& points) {
  * @param points    the list of points to encode
  * @return string   the encoded container of points
  */
-template<class container_t>
-std::string encode7(const container_t& points) {
-  //a place to keep the output
+template <class container_t> std::string encode7(const container_t& points) {
+  // a place to keep the output
   std::string output;
-  //unless the shape is very course you should probably only need about 3 bytes
-  //per coord, which is 6 bytes with 2 coords, so we overshoot to 8 just in case
+  // unless the shape is very course you should probably only need about 3 bytes
+  // per coord, which is 6 bytes with 2 coords, so we overshoot to 8 just in case
   output.reserve(points.size() * 8);
 
-  //handy lambda to turn an integer into an encoded string
+  // handy lambda to turn an integer into an encoded string
   auto serialize = [&output](int number) {
-    //get the sign bit down on the least significant end to
-    //make the most significant bits mostly zeros
+    // get the sign bit down on the least significant end to
+    // make the most significant bits mostly zeros
     number = number < 0 ? ~(number << 1) : number << 1;
-    //we take 7 bits of this at a time
+    // we take 7 bits of this at a time
     while (number > 0x7f) {
-      //marking the most significant bit means there are more pieces to come
+      // marking the most significant bit means there are more pieces to come
       int nextValue = (0x80 | (number & 0x7f));
       output.push_back(static_cast<char>(nextValue));
       number >>= 7;
     }
-    //write the last chunk
+    // write the last chunk
     output.push_back(static_cast<char>(number & 0x7f));
   };
 
-  //this is an offset encoding so we remember the last point we saw
+  // this is an offset encoding so we remember the last point we saw
   int last_lon = 0, last_lat = 0;
-  //for each point
+  // for each point
   for (const auto& p : points) {
-    //shift the decimal point x places to the right and truncate
+    // shift the decimal point x places to the right and truncate
     int lon = static_cast<int>(floor(static_cast<double>(p.first) * 1e6));
     int lat = static_cast<int>(floor(static_cast<double>(p.second) * 1e6));
-    //encode each coordinate, lat first for some reason
+    // encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);
-    //remember the last one we encountered
+    // remember the last one we encountered
     last_lon = lon;
     last_lat = lat;
   }
   return output;
 }
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
 #endif // VALHALLA_MIDGARD_ENCODED_H_

@@ -1,53 +1,69 @@
-#include <stdexcept>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <stdexcept>
 
 #include "baldr/location.h"
 #include "baldr/rapidjson_utils.h"
-#include "midgard/pointll.h"
 #include "midgard/logging.h"
+#include "midgard/pointll.h"
 #include "midgard/util.h"
 
 namespace valhalla {
 namespace baldr {
 
-Location::Location(const midgard::PointLL& latlng, const StopType& stoptype, unsigned int minimum_reachability, unsigned long radius)
-  : latlng_(latlng), stoptype_(stoptype), minimum_reachability_(minimum_reachability), radius_(radius) {
+Location::Location(const midgard::PointLL& latlng,
+                   const StopType& stoptype,
+                   unsigned int minimum_reachability,
+                   unsigned long radius)
+    : latlng_(latlng), stoptype_(stoptype), minimum_reachability_(minimum_reachability),
+      radius_(radius) {
 }
 
 boost::property_tree::ptree Location::ToPtree() const {
   boost::property_tree::ptree location;
   location.put("lat", latlng_.lat());
   location.put("lon", latlng_.lng());
-  if (stoptype_ == StopType::THROUGH)
+  if (stoptype_ == StopType::THROUGH) {
     location.put("type", "through");
-  else
+  } else {
     location.put("type", "break");
+  }
 
-  if(!name_.empty())
+  if (!name_.empty()) {
     location.put("name", name_);
-  if(!street_.empty())
+  }
+  if (!street_.empty()) {
     location.put("street", street_);
-  if(!city_.empty())
+  }
+  if (!city_.empty()) {
     location.put("city", city_);
-  if(!state_.empty())
+  }
+  if (!state_.empty()) {
     location.put("state", state_);
-  if(!zip_.empty())
+  }
+  if (!zip_.empty()) {
     location.put("postal_code", zip_);
-  if(!country_.empty())
+  }
+  if (!country_.empty()) {
     location.put("country", country_);
+  }
 
-  if(date_time_ && !(*date_time_).empty())
+  if (date_time_ && !(*date_time_).empty()) {
     location.put("date_time", *date_time_);
-  if(heading_)
+  }
+  if (heading_) {
     location.put("heading", *heading_);
-  if(heading_tolerance_)
+  }
+  if (heading_tolerance_) {
     location.put("heading_tolerance", *heading_tolerance_);
-  if(node_snap_tolerance_)
+  }
+  if (node_snap_tolerance_) {
     location.put("node_snap_tolerance", *node_snap_tolerance_);
-  if(way_id_)
+  }
+  if (way_id_) {
     location.put("way_id", *way_id_);
+  }
 
   location.put("minimum_reachability", minimum_reachability_);
   location.put("radius", radius_);
@@ -60,33 +76,45 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
 
   location.AddMember("lat", latlng_.lat(), a);
   location.AddMember("lon", latlng_.lng(), a);
-  if (stoptype_ == StopType::THROUGH)
+  if (stoptype_ == StopType::THROUGH) {
     location.AddMember("type", "through", a);
-  else
+  } else {
     location.AddMember("type", "break", a);
+  }
 
-  if(!name_.empty())
+  if (!name_.empty()) {
     location.AddMember("name", name_, a);
-  if(!street_.empty())
+  }
+  if (!street_.empty()) {
     location.AddMember("street", street_, a);
-  if(!city_.empty())
+  }
+  if (!city_.empty()) {
     location.AddMember("city", city_, a);
-  if(!state_.empty())
+  }
+  if (!state_.empty()) {
     location.AddMember("state", state_, a);
-  if(!zip_.empty())
+  }
+  if (!zip_.empty()) {
     location.AddMember("postal_code", zip_, a);
-  if(!country_.empty())
+  }
+  if (!country_.empty()) {
     location.AddMember("country", country_, a);
-  if(date_time_ && !date_time_->empty())
+  }
+  if (date_time_ && !date_time_->empty()) {
     location.AddMember("date_time", *date_time_, a);
-  if(heading_)
+  }
+  if (heading_) {
     location.AddMember("heading", *heading_, a);
-  if(heading_tolerance_)
+  }
+  if (heading_tolerance_) {
     location.AddMember("heading_tolerance", *heading_tolerance_, a);
-  if(node_snap_tolerance_)
+  }
+  if (node_snap_tolerance_) {
     location.AddMember("node_snap_tolerance", *node_snap_tolerance_, a);
-  if(way_id_)
+  }
+  if (way_id_) {
     location.AddMember("way_id", *way_id_, a);
+  }
 
   location.AddMember("minimum_reachability", minimum_reachability_, a);
   location.AddMember("radius", static_cast<unsigned int>(radius_), a);
@@ -96,13 +124,14 @@ rapidjson::Value Location::ToRapidJson(rapidjson::Document::AllocatorType& a) co
 Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 
   float lat = pt.get<float>("lat");
-  if (lat < -90.0f || lat > 90.0f)
+  if (lat < -90.0f || lat > 90.0f) {
     throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+  }
   float lon = midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
 
-  Location location({ lon, lat },
-    (pt.get<std::string>("type", "break") == "through" ?
-      StopType::THROUGH : StopType::BREAK));
+  Location location(
+      {lon, lat},
+      (pt.get<std::string>("type", "break") == "through" ? StopType::THROUGH : StopType::BREAK));
 
   location.name_ = pt.get<std::string>("name", "");
   location.street_ = pt.get<std::string>("street", "");
@@ -123,25 +152,32 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   return location;
 }
 
-Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int default_reachability, unsigned long default_radius){
+Location Location::FromRapidJson(const rapidjson::Value& d,
+                                 unsigned int default_reachability,
+                                 unsigned long default_radius) {
   auto lat = rapidjson::get_optional<float>(d, "/lat");
-  if (! lat) throw std::runtime_error{"lat is missing"};
+  if (!lat) {
+    throw std::runtime_error{"lat is missing"};
+  };
 
-  if (*lat < -90.0f || *lat > 90.0f)
+  if (*lat < -90.0f || *lat > 90.0f) {
     throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+  }
 
   auto lon = rapidjson::get_optional<float>(d, "/lon");
-  if (! lon) throw std::runtime_error{"lon is missing"};
+  if (!lon) {
+    throw std::runtime_error{"lon is missing"};
+  };
 
   lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
 
   StopType stop_type{StopType::BREAK};
   auto stop_type_json = rapidjson::get_optional<std::string>(d, "/type");
-  if (stop_type_json && *stop_type_json == std::string("through")){
+  if (stop_type_json && *stop_type_json == std::string("through")) {
     stop_type = StopType::THROUGH;
   }
 
-  Location location{{*lon,*lat}, stop_type};
+  Location location{{*lon, *lat}, stop_type};
 
   location.name_ = rapidjson::get<std::string>(d, "/name", "");
   location.street_ = rapidjson::get<std::string>(d, "/street", "");
@@ -156,39 +192,42 @@ Location Location::FromRapidJson(const rapidjson::Value& d, unsigned int default
   location.node_snap_tolerance_ = rapidjson::get_optional<float>(d, "/node_snap_tolerance");
   location.way_id_ = rapidjson::get_optional<uint64_t>(d, "/way_id");
 
-  location.minimum_reachability_ = rapidjson::get<unsigned int>(d, "/minimum_reachability", default_reachability);
+  location.minimum_reachability_ =
+      rapidjson::get<unsigned int>(d, "/minimum_reachability", default_reachability);
   location.radius_ = rapidjson::get<unsigned int>(d, "/radius", default_radius);
 
   return location;
 }
 
 Location Location::FromCsv(const std::string& csv) {
-  //split it up into parts
+  // split it up into parts
   std::vector<std::string> parts;
   boost::algorithm::split(parts, csv, boost::algorithm::is_any_of(","));
-  if (parts.size() < 2)
+  if (parts.size() < 2) {
     throw std::runtime_error("Bad format for csv formatted location");
+  }
 
   float lat = std::stof(parts[0]);
-  if (lat < -90.0f || lat > 90.0f)
+  if (lat < -90.0f || lat > 90.0f) {
     throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+  }
   float lon = midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
 
-  //make the lng, lat and check for info about the stop type
-  Location l({ lon, lat },
-    (parts.size() > 2 && parts[2] == "through" ?
-      StopType::THROUGH : StopType::BREAK));
+  // make the lng, lat and check for info about the stop type
+  Location l({lon, lat},
+             (parts.size() > 2 && parts[2] == "through" ? StopType::THROUGH : StopType::BREAK));
 
   return l;
 }
 
 bool Location::operator==(const Location& o) const {
-  return latlng_ == o.latlng_ && stoptype_ == o.stoptype_ && name_ == o.name_ && street_ == o.street_ &&
-      city_ == o.city_ && state_ == o.state_ && zip_ == o.zip_ && country_ == o.country_ &&
-      date_time_ == o.date_time_ && heading_ == o.heading_ && heading_tolerance_ == o.heading_tolerance_ &&
-      node_snap_tolerance_ == o.node_snap_tolerance_ && way_id_ == o.way_id_ &&
-      minimum_reachability_ == o.minimum_reachability_ && radius_ == o.radius_;
+  return latlng_ == o.latlng_ && stoptype_ == o.stoptype_ && name_ == o.name_ &&
+         street_ == o.street_ && city_ == o.city_ && state_ == o.state_ && zip_ == o.zip_ &&
+         country_ == o.country_ && date_time_ == o.date_time_ && heading_ == o.heading_ &&
+         heading_tolerance_ == o.heading_tolerance_ &&
+         node_snap_tolerance_ == o.node_snap_tolerance_ && way_id_ == o.way_id_ &&
+         minimum_reachability_ == o.minimum_reachability_ && radius_ == o.radius_;
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MJOLNIR_ADMINCONSTANTS_H_
 #define VALHALLA_MJOLNIR_ADMINCONSTANTS_H_
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 #include <valhalla/baldr/graphconstants.h>
 
@@ -23,8 +23,8 @@ enum class AccessTypes : uint16_t {
   kMotorroad = 8
 };
 
-//Based on logic at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access-Restrictions
-//vector = trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, path, and motorroad
+// Based on logic at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access-Restrictions
+// vector = trunk, trunk_link, track, footway, pedestrian, bridleway, cycleway, path, and motorroad
 //-1 indicates a null value will be set which means no change from default access.
 //0 indicates no access.
 const std::unordered_map<std::string, std::vector<int>> kCountryAccess {

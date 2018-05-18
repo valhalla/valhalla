@@ -1,8 +1,8 @@
 #ifndef VALHALLA_ODIN_TRANSIT_ROUTE_INFO_H_
 #define VALHALLA_ODIN_TRANSIT_ROUTE_INFO_H_
 
-#include <string>
 #include <list>
+#include <string>
 
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/proto/trippath.pb.h>
@@ -28,10 +28,9 @@ struct TransitRouteInfo {
   std::string operator_name;
   std::string operator_url;
   std::list<TransitPlatformInfo> transit_stops;
-
 };
 
-}
-}
+} // namespace odin
+} // namespace valhalla
 
-#endif  // VALHALLA_ODIN_TRANSIT_ROUTE_INFO_H_
+#endif // VALHALLA_ODIN_TRANSIT_ROUTE_INFO_H_

@@ -7,6 +7,7 @@
 *.cpp text
 *.h text
 *.hpp text
+*.in text
 
 # Declare files that will always have LF line endings on checkout.
 *.ac text eol=lf

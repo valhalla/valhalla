@@ -1,6 +1,6 @@
+#include <algorithm>
 #include <cstdint>
 #include <vector>
-#include <algorithm>
 
 #include "baldr/sign.h"
 #include "baldr/signinfo.h"
@@ -40,22 +40,19 @@ void TestCtor() {
   TryCtor("Harrisburg East");
 }
 
-void TryDescendingSortByConsecutiveCount(
-    std::vector<valhalla::odin::Sign>& signs,
-    const std::vector<valhalla::odin::Sign>& expectedSigns) {
+void TryDescendingSortByConsecutiveCount(std::vector<valhalla::odin::Sign>& signs,
+                                         const std::vector<valhalla::odin::Sign>& expectedSigns) {
 
   if (signs.size() != expectedSigns.size())
     throw std::runtime_error("DescendingSortByConsecutiveCount size mismatch");
 
-  std::sort(
-      signs.begin(), signs.end(),
-      [](const valhalla::odin::Sign& lhs, const valhalla::odin::Sign& rhs) {
-        return lhs.consecutive_count() > rhs.consecutive_count();
-      });
+  std::sort(signs.begin(), signs.end(),
+            [](const valhalla::odin::Sign& lhs, const valhalla::odin::Sign& rhs) {
+              return lhs.consecutive_count() > rhs.consecutive_count();
+            });
 
   for (size_t x = 0, n = signs.size(); x < n; ++x) {
-    if (signs.at(x).consecutive_count()
-        != expectedSigns.at(x).consecutive_count())
+    if (signs.at(x).consecutive_count() != expectedSigns.at(x).consecutive_count())
       throw std::runtime_error("Incorrect DescendingSortByConsecutiveCount");
   }
 }
@@ -66,12 +63,9 @@ void TestDescendingSortByConsecutiveCount_0_1() {
   valhalla::odin::Sign signConsecutiveCount1("Hershey");
   signConsecutiveCount1.set_consecutive_count(1);
 
-  std::vector<valhalla::odin::Sign> signs = { signConsecutiveCount0,
-      signConsecutiveCount1 };
+  std::vector<valhalla::odin::Sign> signs = {signConsecutiveCount0, signConsecutiveCount1};
 
-  TryDescendingSortByConsecutiveCount(signs, { signConsecutiveCount1,
-                                          signConsecutiveCount0 });
-
+  TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount1, signConsecutiveCount0});
 }
 
 void TestDescendingSortByConsecutiveCount_1_2() {
@@ -81,12 +75,9 @@ void TestDescendingSortByConsecutiveCount_1_2() {
   valhalla::odin::Sign signConsecutiveCount2("I 81 North");
   signConsecutiveCount2.set_consecutive_count(2);
 
-  std::vector<valhalla::odin::Sign> signs = { signConsecutiveCount1,
-      signConsecutiveCount2 };
+  std::vector<valhalla::odin::Sign> signs = {signConsecutiveCount1, signConsecutiveCount2};
 
-  TryDescendingSortByConsecutiveCount(signs, { signConsecutiveCount2,
-                                          signConsecutiveCount1 });
-
+  TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount2, signConsecutiveCount1});
 }
 
 void TestDescendingSortByConsecutiveCount_2_4() {
@@ -96,12 +87,9 @@ void TestDescendingSortByConsecutiveCount_2_4() {
   valhalla::odin::Sign signConsecutiveCount4("51B");
   signConsecutiveCount4.set_consecutive_count(4);
 
-  std::vector<valhalla::odin::Sign> signs = { signConsecutiveCount2,
-      signConsecutiveCount4 };
+  std::vector<valhalla::odin::Sign> signs = {signConsecutiveCount2, signConsecutiveCount4};
 
-  TryDescendingSortByConsecutiveCount(signs, { signConsecutiveCount4,
-                                          signConsecutiveCount2 });
-
+  TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount4, signConsecutiveCount2});
 }
 
 void TestDescendingSortByConsecutiveCount_0_1_2() {
@@ -113,33 +101,27 @@ void TestDescendingSortByConsecutiveCount_0_1_2() {
   valhalla::odin::Sign signConsecutiveCount2("New York");
   signConsecutiveCount2.set_consecutive_count(2);
 
-  std::vector<valhalla::odin::Sign> signs = { signConsecutiveCount0,
-      signConsecutiveCount1, signConsecutiveCount2 };
+  std::vector<valhalla::odin::Sign> signs = {signConsecutiveCount0, signConsecutiveCount1,
+                                             signConsecutiveCount2};
 
   // Reverse order
-  TryDescendingSortByConsecutiveCount(signs, { signConsecutiveCount2,
-                                          signConsecutiveCount1,
-                                          signConsecutiveCount0 });
+  TryDescendingSortByConsecutiveCount(
+      signs, {signConsecutiveCount2, signConsecutiveCount1, signConsecutiveCount0});
 
-  signs = {signConsecutiveCount2,
-    signConsecutiveCount1, signConsecutiveCount0};
+  signs = {signConsecutiveCount2, signConsecutiveCount1, signConsecutiveCount0};
 
   // In order
-  TryDescendingSortByConsecutiveCount(signs, { signConsecutiveCount2,
-                                          signConsecutiveCount1,
-                                          signConsecutiveCount0 });
+  TryDescendingSortByConsecutiveCount(
+      signs, {signConsecutiveCount2, signConsecutiveCount1, signConsecutiveCount0});
 
-  signs = {signConsecutiveCount0,
-    signConsecutiveCount2, signConsecutiveCount1};
+  signs = {signConsecutiveCount0, signConsecutiveCount2, signConsecutiveCount1};
 
   // Mixed order
-  TryDescendingSortByConsecutiveCount(signs, { signConsecutiveCount2,
-                                          signConsecutiveCount1,
-                                          signConsecutiveCount0 });
-
+  TryDescendingSortByConsecutiveCount(
+      signs, {signConsecutiveCount2, signConsecutiveCount1, signConsecutiveCount0});
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("sign");
