@@ -152,8 +152,10 @@ int main(int argc, char* argv[]) {
   std::string filename = "World_Cities_Location_table.csv";
 
   std::string ctry;
-  options.add_options()("help,h", "Print this help message.")(
-      "country,c", boost::program_options::value<std::string>(&ctry), "Country");
+  options.add_options()("help,h",
+                        "Print this help message.")("country,c",
+                                                    boost::program_options::value<std::string>(&ctry),
+                                                    "Country");
 
   bpo::variables_map vm;
   try {
@@ -177,9 +179,9 @@ int main(int argc, char* argv[]) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       pt.get_child_optional("thor.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                   std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -290,8 +292,8 @@ int main(int argc, char* argv[]) {
       // TODO - perhaps walk the edges to find total length?
     }
   }
-  LOG_INFO(std::to_string(success_count) + " out of " +
-           std::to_string(success_count + error_count) + " succeeded");
+  LOG_INFO(std::to_string(success_count) + " out of " + std::to_string(success_count + error_count) +
+           " succeeded");
   LOG_INFO("Success on first pass: " + std::to_string(npasses[0]));
   LOG_INFO("Success on second pass: " + std::to_string(npasses[1]));
   LOG_INFO("Success on third pass: " + std::to_string(npasses[2]));

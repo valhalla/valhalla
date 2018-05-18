@@ -302,9 +302,9 @@ public:
 
 // Constructor
 AutoCost::AutoCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive),
-      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
-                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
+                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
+                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
 
   surface_factor_ = 0.5f;
   // Get the vehicle type - enter as string and convert to enum
@@ -333,8 +333,8 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   tollbooth_penalty_ =
       kTollBoothPenaltyRange(pt.get<float>("toll_booth_penalty", kDefaultTollBoothPenalty));
   alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  country_crossing_cost_ = kCountryCrossingCostRange(
-      pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
+  country_crossing_cost_ =
+      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
   country_crossing_penalty_ = kCountryCrossingPenaltyRange(
       pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
 
@@ -1160,8 +1160,7 @@ AutoCost* make_autocost_from_json(const std::string& property, float testVal) {
 std::uniform_real_distribution<float>*
 make_distributor_from_range(const ranged_default_t<float>& range) {
   float rangeLength = range.max - range.min;
-  return new std::uniform_real_distribution<float>(range.min - rangeLength,
-                                                   range.max + rangeLength);
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
 void testAutoCostParams() {
@@ -1184,8 +1183,7 @@ void testAutoCostParams() {
   // destination_only_penalty_
   distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_autocost_from_json("destination_only_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_autocost_from_json("destination_only_penalty", (*distributor)(generator)));
     if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
         ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
       throw std::runtime_error("destination_only_penalty_ is not within it's range");
@@ -1206,8 +1204,7 @@ void testAutoCostParams() {
   distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("gate_cost", (*distributor)(generator)));
-    if (ctorTester->gate_cost_ < kGateCostRange.min ||
-        ctorTester->gate_cost_ > kGateCostRange.max) {
+    if (ctorTester->gate_cost_ < kGateCostRange.min || ctorTester->gate_cost_ > kGateCostRange.max) {
       throw std::runtime_error("gate_cost_ is not within it's range");
     }
   }
@@ -1265,8 +1262,7 @@ void testAutoCostParams() {
   // country_crossing_penalty_
   distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_autocost_from_json("country_crossing_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_autocost_from_json("country_crossing_penalty", (*distributor)(generator)));
     if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
         ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
       throw std::runtime_error("country_crossing_penalty_ is not within it's range");
@@ -1277,8 +1273,7 @@ void testAutoCostParams() {
   distributor.reset(make_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_autocost_from_json("use_ferry", (*distributor)(generator)));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min ||
-        ctorTester->use_ferry_ > kUseFerryRange.max) {
+    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
       throw std::runtime_error("use_ferry_ is not within it's range");
     }
   }

@@ -210,8 +210,7 @@ void graph_builder::write_tiles(uint8_t level) const {
   // iterators.
   std::unordered_map<vb::GraphId, edge_vector_t::iterator> tile_bases;
   vb::GraphId last_tile_id;
-  for (edge_vector_t::iterator itr = renumbered_edges.begin(); itr != renumbered_edges.end();
-       ++itr) {
+  for (edge_vector_t::iterator itr = renumbered_edges.begin(); itr != renumbered_edges.end(); ++itr) {
     auto tile_id = itr->first.Tile_Base();
     if (last_tile_id != tile_id) {
       last_tile_id = tile_id;
@@ -227,12 +226,12 @@ void graph_builder::write_tiles(uint8_t level) const {
     vm::PointLL start_point = writer.node_latlng(e.first);
     vm::PointLL end_point = writer.node_latlng(e.second);
 
-    DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1,
-                                     1, {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1, 1,
+                                     {}, {}, 0, false, 0, 0);
 
     auto opp = std::make_pair(e.second, e.first);
-    auto itr = std::lower_bound(renumbered_edges.begin(), renumbered_edges.end(), opp,
-                                sort_pair_by_tile());
+    auto itr =
+        std::lower_bound(renumbered_edges.begin(), renumbered_edges.end(), opp, sort_pair_by_tile());
 
     // check that we found the opposite edge, which should always exist.
     assert(itr != renumbered_edges.end() && *itr == opp);
@@ -354,8 +353,7 @@ void test_small_node_block() {
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
   if (nodes.size() != 4) {
-    throw std::runtime_error("Expecting to find four nodes, but got " +
-                             std::to_string(nodes.size()));
+    throw std::runtime_error("Expecting to find four nodes, but got " + std::to_string(nodes.size()));
   }
 }
 

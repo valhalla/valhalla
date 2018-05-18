@@ -86,8 +86,8 @@ constexpr ranged_default_t<uint32_t> kMaxDistanceWheelchairRange{0, kMaxDistance
                                                                  kMaxDistanceFoot};
 constexpr ranged_default_t<uint32_t> kMaxDistanceFootRange{0, kMaxDistanceFoot, kMaxDistanceFoot};
 
-constexpr ranged_default_t<float> kSpeedWheelchairRange{
-    kMinPedestrianSpeed, kDefaultSpeedWheelchair, kMaxPedestrianSpeed};
+constexpr ranged_default_t<float> kSpeedWheelchairRange{kMinPedestrianSpeed, kDefaultSpeedWheelchair,
+                                                        kMaxPedestrianSpeed};
 constexpr ranged_default_t<float> kSpeedFootRange{kMinPedestrianSpeed, kDefaultSpeedFoot,
                                                   kMaxPedestrianSpeed};
 
@@ -106,8 +106,7 @@ constexpr ranged_default_t<float> kModeFactorRange{kMinFactor, kModeFactor, kMax
 constexpr ranged_default_t<float> kManeuverPenaltyRange{kMinFactor, kDefaultManeuverPenalty,
                                                         kMaxSeconds};
 constexpr ranged_default_t<float> kGatePenaltyRange{kMinFactor, kDefaultGatePenalty, kMaxSeconds};
-constexpr ranged_default_t<float> kWalkwayFactorRange{kMinFactor, kDefaultWalkwayFactor,
-                                                      kMaxFactor};
+constexpr ranged_default_t<float> kWalkwayFactorRange{kMinFactor, kDefaultWalkwayFactor, kMaxFactor};
 constexpr ranged_default_t<float> kSideWalkFactorRange{kMinFactor, kDefaultSideWalkFactor,
                                                        kMaxFactor};
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
@@ -118,10 +117,10 @@ constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCr
                                                             kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty,
                                                                kMaxSeconds};
-constexpr ranged_default_t<uint32_t> kTransitStartEndMaxDistanceRange{
-    0, kTransitStartEndMaxDistance, 100000}; // Max 100k
-constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{
-    0, kTransitTransferMaxDistance, 50000}; // Max 50k
+constexpr ranged_default_t<uint32_t> kTransitStartEndMaxDistanceRange{0, kTransitStartEndMaxDistance,
+                                                                      100000}; // Max 100k
+constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{0, kTransitTransferMaxDistance,
+                                                                      50000}; // Max 50k
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 constexpr float kSacScaleSpeedFactor[] = {
@@ -408,8 +407,7 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     speed_ = kSpeedWheelchairRange(pt.get<float>("walking_speed", kDefaultSpeedWheelchair));
     step_penalty_ =
         kStepPenaltyWheelchairRange(pt.get<float>("step_penalty", kDefaultStepPenaltyWheelchair));
-    max_grade_ =
-        kMaxGradeWheelchairRange(pt.get<uint32_t>("max_grade", kDefaultMaxGradeWheelchair));
+    max_grade_ = kMaxGradeWheelchairRange(pt.get<uint32_t>("max_grade", kDefaultMaxGradeWheelchair));
     minimal_allowed_surface_ = Surface::kCompacted;
   } else {
     // Assume type = foot
@@ -437,8 +435,8 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   alley_factor_ = kAlleyFactorRange(pt.get<float>("alley_factor", kDefaultAlleyFactor));
   driveway_factor_ = kDrivewayFactorRange(pt.get<float>("driveway_factor", kDefaultDrivewayFactor));
   ferry_cost_ = kFerryCostRange(pt.get<float>("ferry_cost", kDefaultFerryCost));
-  country_crossing_cost_ = kCountryCrossingCostRange(
-      pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
+  country_crossing_cost_ =
+      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
   country_crossing_penalty_ = kCountryCrossingPenaltyRange(
       pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
   transit_start_end_max_distance_ = kTransitStartEndMaxDistanceRange(
@@ -513,8 +511,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index) const {
   if (!(edge->forwardaccess() & access_mask_) || (edge->surface() > minimal_allowed_surface_) ||
-      edge->is_shortcut() || IsUserAvoidEdge(edgeid) ||
-      edge->sac_scale() > max_hiking_difficulty_ ||
+      edge->is_shortcut() || IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
@@ -653,8 +650,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   uint32_t idx = pred.opp_local_idx();
   // Ignore name inconsistency when entering a link to avoid double penalizing.
   if (!edge->link() && edge->use() != Use::kEgressConnection &&
-      edge->use() != Use::kPlatformConnection &&
-      !node->name_consistency(idx, edge->localedgeidx())) {
+      edge->use() != Use::kPlatformConnection && !node->name_consistency(idx, edge->localedgeidx())) {
     // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
@@ -696,8 +692,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 
   // Ignore name inconsistency when entering a link to avoid double penalizing.
   if (!edge->link() && edge->use() != Use::kEgressConnection &&
-      edge->use() != Use::kPlatformConnection &&
-      !node->name_consistency(idx, edge->localedgeidx())) {
+      edge->use() != Use::kPlatformConnection && !node->name_consistency(idx, edge->localedgeidx())) {
     // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
@@ -760,8 +755,7 @@ make_pedestriancost_from_json(const std::string& property, float testVal, const 
 std::uniform_real_distribution<float>*
 make_distributor_from_range(const ranged_default_t<float>& range) {
   float rangeLength = range.max - range.min;
-  return new std::uniform_real_distribution<float>(range.min - rangeLength,
-                                                   range.max + rangeLength);
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
 std::uniform_int_distribution<uint32_t>*
@@ -794,8 +788,8 @@ void testPedestrianCostParams() {
   // speed_
   real_distributor.reset(make_distributor_from_range(kSpeedWheelchairRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_pedestriancost_from_json("walking_speed", (*real_distributor)(generator),
-                                                   "wheelchair"));
+    ctorTester.reset(
+        make_pedestriancost_from_json("walking_speed", (*real_distributor)(generator), "wheelchair"));
     if (ctorTester->speed_ < kSpeedWheelchairRange.min ||
         ctorTester->speed_ > kSpeedWheelchairRange.max) {
       throw std::runtime_error("speed_ with type wheelchair is not within it's range");
@@ -805,8 +799,8 @@ void testPedestrianCostParams() {
   // step_penalty_
   real_distributor.reset(make_distributor_from_range(kStepPenaltyWheelchairRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_pedestriancost_from_json("step_penalty", (*real_distributor)(generator),
-                                                   "wheelchair"));
+    ctorTester.reset(
+        make_pedestriancost_from_json("step_penalty", (*real_distributor)(generator), "wheelchair"));
     if (ctorTester->step_penalty_ < kStepPenaltyWheelchairRange.min ||
         ctorTester->step_penalty_ > kStepPenaltyWheelchairRange.max) {
       throw std::runtime_error("step_penalty_ with type wheelchair is not within it's range");
@@ -1006,8 +1000,7 @@ void testPedestrianCostParams() {
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_pedestriancost_from_json("use_ferry", (*real_distributor)(generator), "foot"));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min ||
-        ctorTester->use_ferry_ > kUseFerryRange.max) {
+    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
       throw std::runtime_error("use_ferry_ is not within it's range");
     }
   }

@@ -95,10 +95,11 @@ void run_service(const boost::property_tree::ptree& config) {
 
   // listen for requests
   zmq::context_t context;
-  prime_server::worker_t worker(
-      context, upstream_endpoint, "ipc:///dev/null", loopback_endpoint, interrupt_endpoint,
-      std::bind(&odin_worker_t::work, odin_worker_t(config), std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3));
+  prime_server::worker_t worker(context, upstream_endpoint, "ipc:///dev/null", loopback_endpoint,
+                                interrupt_endpoint,
+                                std::bind(&odin_worker_t::work, odin_worker_t(config),
+                                          std::placeholders::_1, std::placeholders::_2,
+                                          std::placeholders::_3));
   worker.work();
 
   // TODO: should we listen for SIGINT and terminate gracefully/exit(0)?

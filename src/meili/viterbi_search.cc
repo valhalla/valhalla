@@ -140,8 +140,7 @@ std::vector<StateLabel> NaiveViterbiSearch<Maximize>::InitLabels(const std::vect
   std::vector<StateLabel> labels;
   labels.reserve(column.size());
   for (const auto& stateid : column) {
-    labels.emplace_back(use_emission_cost ? EmissionCost(stateid) : kInvalidCost, stateid,
-                        StateId());
+    labels.emplace_back(use_emission_cost ? EmissionCost(stateid) : kInvalidCost, stateid, StateId());
   }
   return labels;
 }

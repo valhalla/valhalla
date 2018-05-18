@@ -78,8 +78,8 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
     return true;
   }
 
-  for (auto prev_segment = segment_begin, segment = std::next(segment_begin);
-       segment != segment_end; prev_segment = segment, segment++) {
+  for (auto prev_segment = segment_begin, segment = std::next(segment_begin); segment != segment_end;
+       prev_segment = segment, segment++) {
 
     // Successive segments must be adjacent and no loop absolutely!
     if (prev_segment->edgeid == segment->edgeid) {

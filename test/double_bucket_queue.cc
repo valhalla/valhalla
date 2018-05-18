@@ -96,8 +96,7 @@ void TryRemove(DoubleBucketQueue& dbqueue, size_t num_to_remove, const std::vect
   for (size_t i = 0; i < num_to_remove; ++i) {
     const auto top = dbqueue.pop();
     test::assert_bool(top != kInvalidLabel, "TryAddRemove: expected " +
-                                                std::to_string(num_to_remove) +
-                                                " labels to remove");
+                                                std::to_string(num_to_remove) + " labels to remove");
     const auto cost = costs[top];
     test::assert_bool(previous_cost <= cost, "TryAddRemove: expected order test failed");
     previous_cost = cost;
@@ -166,22 +165,19 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
 void TestSimulation() {
   {
     std::vector<float> costs;
-    DoubleBucketQueue dbqueue1(0, 1, 100000,
-                               [&costs](const uint32_t label) { return costs[label]; });
+    DoubleBucketQueue dbqueue1(0, 1, 100000, [&costs](const uint32_t label) { return costs[label]; });
     TrySimulation(dbqueue1, costs, 1000, 10, 1000);
   }
 
   {
     std::vector<float> costs;
-    DoubleBucketQueue dbqueue2(0, 1, 100000,
-                               [&costs](const uint32_t label) { return costs[label]; });
+    DoubleBucketQueue dbqueue2(0, 1, 100000, [&costs](const uint32_t label) { return costs[label]; });
     TrySimulation(dbqueue2, costs, 222, 40, 100);
   }
 
   {
     std::vector<float> costs;
-    DoubleBucketQueue dbqueue3(0, 1, 100000,
-                               [&costs](const uint32_t label) { return costs[label]; });
+    DoubleBucketQueue dbqueue3(0, 1, 100000, [&costs](const uint32_t label) { return costs[label]; });
     TrySimulation(dbqueue3, costs, 333, 60, 100);
   }
 

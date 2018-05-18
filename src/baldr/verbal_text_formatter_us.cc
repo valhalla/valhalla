@@ -137,10 +137,9 @@ std::string VerbalTextFormatterUs::ProcessThousandTts(const std::string& source)
   return tts;
 }
 
-std::string
-VerbalTextFormatterUs::FormThousandTts(const std::string& source,
-                                       const re::regex& thousand_regex,
-                                       const std::string& thousand_output_pattern) const {
+std::string VerbalTextFormatterUs::FormThousandTts(const std::string& source,
+                                                   const re::regex& thousand_regex,
+                                                   const std::string& thousand_output_pattern) const {
   return re::regex_replace(source, thousand_regex, thousand_output_pattern);
 }
 

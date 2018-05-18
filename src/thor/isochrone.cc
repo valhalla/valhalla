@@ -128,8 +128,8 @@ void Isochrone::ConstructIsoTile(
   shape_interval_ = grid_size * kMetersPerDegreeLat * 0.25f;
 
   // Create expanded bounds from the bounded box around the locations.
-  AABB2<PointLL> bounds(loc_bounds.minx() - dlon, loc_bounds.miny() - dlat,
-                        loc_bounds.maxx() + dlon, loc_bounds.maxy() + dlat);
+  AABB2<PointLL> bounds(loc_bounds.minx() - dlon, loc_bounds.miny() - dlat, loc_bounds.maxx() + dlon,
+                        loc_bounds.maxy() + dlat);
 
   // Create isotile (gridded data)
   isotile_.reset(new GriddedData<PointLL>(bounds, grid_size, max_minutes));
@@ -660,8 +660,9 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
         }
 
         // Look up the next departure along this edge
-        const TransitDeparture* departure = tile->GetNextDeparture(
-            directededge->lineid(), localtime, day, dow, date_before_tile, wheelchair, bicycle);
+        const TransitDeparture* departure =
+            tile->GetNextDeparture(directededge->lineid(), localtime, day, dow, date_before_tile,
+                                   wheelchair, bicycle);
         if (departure) {
           // Check if there has been a mode change
           mode_change = (mode_ == TravelMode::kPedestrian);
@@ -724,8 +725,8 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
         // Regular edge - use the appropriate costing and check if access
         // is allowed. If mode is pedestrian this will validate walking
         // distance has not been exceeded.
-        if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid,
-                                                                 0, 0)) {
+        if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0,
+                                                                 0)) {
           continue;
         }
 
@@ -740,8 +741,7 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
           // Prevent going from one egress connection directly to another
           // at a transit stop - this is like entering a station and exiting
           // without getting on transit
-          if (nodeinfo->type() == NodeType::kTransitEgress &&
-              pred.use() == Use::kEgressConnection &&
+          if (nodeinfo->type() == NodeType::kTransitEgress && pred.use() == Use::kEgressConnection &&
               directededge->use() == Use::kEgressConnection) {
             continue;
           }
@@ -754,8 +754,8 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
         // a transit line (assume the wait time is the cost)
         ; // newcost += {10.0f, 10.0f };
       } else {
-        newcost += mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge,
-                                                                              nodeinfo, pred);
+        newcost +=
+            mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
       }
 
       // Prohibit entering the same station as the prior.
@@ -794,8 +794,8 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = mmedgelabels_.size();
       *es = {EdgeSet::kTemporary, idx};
-      mmedgelabels_.emplace_back(predindex, edgeid, directededge, newcost, newcost.cost, 0.0f,
-                                 mode_, walking_distance, tripid, prior_stop, blockid, operator_id,
+      mmedgelabels_.emplace_back(predindex, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
+                                 walking_distance, tripid, prior_stop, blockid, operator_id,
                                  has_transit);
       adjacencylist_->add(idx);
     }
@@ -999,8 +999,8 @@ void Isochrone::SetOriginLocationsMM(
       uint32_t idx = mmedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-      MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d,
-                             0, GraphId(), 0, 0, false);
+      MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
+                             GraphId(), 0, 0, false);
 
       // Set the origin flag
       edge_label.set_origin();

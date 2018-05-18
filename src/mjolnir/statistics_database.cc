@@ -29,8 +29,8 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   char* err_msg = NULL;
   std::string sql;
 
-  ret = sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                        NULL);
+  ret =
+      sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("cannot open " + database);
     sqlite3_close(db_handle);
@@ -357,8 +357,8 @@ void statistics::insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt) {
       auto maxy = std::to_string(tile_geometries.at(tileid).maxy());
       auto miny = std::to_string(tile_geometries.at(tileid).miny());
       std::string polyWKT = "POLYGON ((" + minx + " " + miny + ", " + minx + " " + maxy + ", " +
-                            maxx + " " + maxy + ", " + maxx + " " + miny + ", " + minx + " " +
-                            miny + "))";
+                            maxx + " " + maxy + ", " + maxx + " " + miny + ", " + minx + " " + miny +
+                            "))";
       sqlite3_bind_text(stmt, index, polyWKT.c_str(), polyWKT.length(), SQLITE_STATIC);
     } else {
       LOG_ERROR("Geometry for tile " + std::to_string(tileid) + " not found.");

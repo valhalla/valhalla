@@ -74,15 +74,13 @@ void loki_worker_t::route(valhalla_request_t& request) {
 
     if (transit_start_end_max_distance < min_transit_walking_dis ||
         transit_start_end_max_distance > max_transit_walking_dis) {
-      throw valhalla_exception_t{155, " Min: " + std::to_string(min_transit_walking_dis) +
-                                          " Max: " + std::to_string(max_transit_walking_dis) +
-                                          " (Meters)"};
+      throw valhalla_exception_t{155, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
+                                          std::to_string(max_transit_walking_dis) + " (Meters)"};
     }
     if (transit_transfer_max_distance < min_transit_walking_dis ||
         transit_transfer_max_distance > max_transit_walking_dis) {
-      throw valhalla_exception_t{156, " Min: " + std::to_string(min_transit_walking_dis) +
-                                          " Max: " + std::to_string(max_transit_walking_dis) +
-                                          " (Meters)"};
+      throw valhalla_exception_t{156, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
+                                          std::to_string(max_transit_walking_dis) + " (Meters)"};
     }
   }
 

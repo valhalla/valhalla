@@ -121,8 +121,7 @@ void TestGridTraversal() {
                        "Sit on the rightmost grid line but it is actually outside the grid");
 
   assert_equal_squares(perfect_grid.Traverse({1, 1}, {1, 1}),
-                       std::vector<std::pair<int, int>>{{2, 2}},
-                       "Sit on the corner of SQUARE(2 2)");
+                       std::vector<std::pair<int, int>>{{2, 2}}, "Sit on the corner of SQUARE(2 2)");
 
   assert_equal_squares(perfect_grid.Traverse({1, 0}, {1, 2}),
                        std::vector<std::pair<int, int>>{{2, 0}, {2, 1}, {2, 2}},
@@ -143,8 +142,7 @@ void TestGridTraversal() {
                        std::vector<std::pair<int, int>>{}, "Parallel to horizontal grid lines");
 
   assert_equal_squares(perfect_grid.Traverse({1.25, 1}, {1.25, 1}),
-                       std::vector<std::pair<int, int>>{},
-                       "Single point sit on rightmost grid line");
+                       std::vector<std::pair<int, int>>{}, "Single point sit on rightmost grid line");
 
   // Test a grid from real world example
   meili::GridTraversal<midgard::Point2> real_grid(127.0, 36.75, 0.0005, 0.0005, 500, 500);

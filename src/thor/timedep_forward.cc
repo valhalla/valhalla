@@ -1,6 +1,6 @@
-#include "thor/timedep.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+#include "thor/timedep.h"
 #include <algorithm>
 #include <iostream> // TODO remove if not needed
 #include <map>
@@ -196,8 +196,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(),
-                          destination.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -210,8 +209,9 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   origin_tz_index_ = GetOriginTimezone(graphreader);
 
   // Set route start time (seconds from epoch)
-  uint64_t start_time = DateTime::seconds_since_epoch(
-      origin.date_time(), DateTime::get_tz_db().from_index(origin_tz_index_));
+  uint64_t start_time =
+      DateTime::seconds_since_epoch(origin.date_time(),
+                                    DateTime::get_tz_db().from_index(origin_tz_index_));
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
@@ -225,8 +225,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
     // Allow this process to be aborted
     size_t current_labels = edgelabels_.size();
     if (interrupt &&
-        total_labels / kInterruptIterationsInterval <
-            current_labels / kInterruptIterationsInterval) {
+        total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval) {
       (*interrupt)();
     }
     total_labels = current_labels;

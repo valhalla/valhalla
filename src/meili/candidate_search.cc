@@ -75,8 +75,7 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
     const bool edge_included = !edgefilter || edgefilter(edge) != 0.f;
 
     if (edge_included) {
-      std::tie(point, sq_distance, segment, offset) =
-          helpers::Project(location, shape, approximator);
+      std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
 
       if (sq_distance <= sq_search_radius) {
         const float dist = edge->forward() ? offset : 1.f - offset;
@@ -132,17 +131,15 @@ void IndexBin(const baldr::GraphTile& tile,
     // Get the right tile (edges in a bin can be in a different tile if they
     // pass through the tile but do not start or end in the tile). Skip if
     // tile is null.
-    const auto* bin_tile = edge_id.tileid() == tile.header()->graphid().tileid()
-                               ? &tile
-                               : reader.GetGraphTile(edge_id);
+    const auto* bin_tile =
+        edge_id.tileid() == tile.header()->graphid().tileid() ? &tile : reader.GetGraphTile(edge_id);
     if (bin_tile == nullptr) {
       continue;
     }
 
     // Get the edge shape and add to grid. Use lazy_shape to avoid allocations
     // NOTE: bins do not contain transition edges and transit connection edges
-    auto shape =
-        bin_tile->edgeinfo(bin_tile->directededge(edge_id)->edgeinfo_offset()).lazy_shape();
+    auto shape = bin_tile->edgeinfo(bin_tile->directededge(edge_id)->edgeinfo_offset()).lazy_shape();
     if (!shape.empty()) {
       PointLL v = shape.pop();
       while (!shape.empty()) {

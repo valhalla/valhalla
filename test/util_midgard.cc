@@ -1,7 +1,7 @@
-#include "midgard/util.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
+#include "midgard/util.h"
 #include "test.h"
 #include <cmath>
 #include <random>
@@ -189,8 +189,7 @@ void TestResample() {
        }) {
 
     // try it
-    auto input_shape =
-        decode<std::vector<PointLL>>(example.second.c_str(), example.second.length());
+    auto input_shape = decode<std::vector<PointLL>>(example.second.c_str(), example.second.length());
     auto resampled = resample_spherical_polyline(input_shape, example.first, false);
 
     // check that nothing is too far apart
@@ -265,29 +264,25 @@ void TestTrimPolyline() {
                     "Should not clip anything if range is [0, 1]");
 
   clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);
-  test::assert_bool(
-      equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.1f),
-      "10% portion should be clipped");
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.1f),
+                    "10% portion should be clipped");
 
   clip = trim_polyline(line.begin(), line.end(), 0.5f, 1.f);
-  test::assert_bool(
-      equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.5f),
-      "50% portion should be clipped");
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.5f),
+                    "50% portion should be clipped");
 
   clip = trim_polyline(line.begin(), line.end(), 0.5f, 0.7f);
-  test::assert_bool(
-      equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.2f),
-      "0.2 portion should be clipped");
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.2f),
+                    "0.2 portion should be clipped");
 
   clip = trim_polyline(line.begin(), line.end(), 0.65f, 0.7f);
-  test::assert_bool(
-      equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.05f),
-      "5% portion should be clipped");
+  test::assert_bool(equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.05f),
+                    "5% portion should be clipped");
 
   clip = trim_polyline(line.begin(), line.end(), 0.4999f, 0.5f);
-  test::assert_bool(
-      equal(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f),
-      "0.1% portion should be clipped");
+  test::assert_bool(equal(length(clip.begin(), clip.end()),
+                          length(line.begin(), line.end()) * 0.0001f),
+                    "0.1% portion should be clipped");
 
   test::assert_bool(trim_polyline(line.begin(), line.end(), 0.65f, 0.5f).empty(),
                     "nothing should be clipped since [0.65, 0.5]");

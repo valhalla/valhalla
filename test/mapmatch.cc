@@ -42,9 +42,8 @@ float round_up(float val, int multiple) {
   return int((val + multiple - 1) / multiple) * multiple;
 }
 
-std::string to_locations(const std::vector<PointLL>& shape,
-                         const std::vector<float>& accuracies,
-                         int frequency) {
+std::string
+to_locations(const std::vector<PointLL>& shape, const std::vector<float>& accuracies, int frequency) {
   std::string locations = "[";
   int freq = 0;
   for (size_t i = 0; i < shape.size(); ++i) {
@@ -198,8 +197,8 @@ void test_matcher() {
     for (const auto& edge : matched.get_child("edges"))
       matched_edges.push_back(edge.second.get<uint64_t>("id"));
     // because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
-    auto walked_it = std::search(walked_edges.begin(), walked_edges.end(),
-                                 matched_edges.begin() + 1, matched_edges.end() - 1);
+    auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() + 1,
+                                 matched_edges.end() - 1);
     if (walked_it == walked_edges.end()) {
       if (looped) {
         std::cout << "route had a possible loop" << std::endl;
@@ -417,8 +416,8 @@ void test_topk_loop_alternate() {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
-    throw std::logic_error(
-        "The second most obvious result is loop around to the right - but got: " + streets);
+    throw std::logic_error("The second most obvious result is loop around to the right - but got: " +
+                           streets);
   }
   if (alternate.get<float>("confidence_score") >= 1.0f)
     throw std::logic_error("Confidence of the second result is always less than 1");

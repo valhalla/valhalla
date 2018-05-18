@@ -32,10 +32,9 @@ configure(const boost::optional<std::string>& config = boost::none) {
       boost::optional<boost::property_tree::ptree&> logging_subtree =
           pt->get_child_optional("tyr.logging");
       if (logging_subtree) {
-        auto logging_config =
-            valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                     std::unordered_map<std::string, std::string>>(
-                logging_subtree.get());
+        auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                       std::unordered_map<std::string, std::string>>(
+            logging_subtree.get());
         valhalla::midgard::logging::Configure(logging_config);
       }
     } catch (...) { throw std::runtime_error("Failed to load config from: " + config.get()); }
@@ -68,9 +67,10 @@ BOOST_PYTHON_MODULE(valhalla) {
   boost::python::def("Configure", py_configure);
 
   // class for doing matching to traffic segments. Pass in the config to the constructor
-  boost::python::class_<valhalla::meili::TrafficSegmentMatcher, boost::noncopyable,
-                        boost::shared_ptr<valhalla::meili::TrafficSegmentMatcher>>(
-      "SegmentMatcher", boost::python::no_init)
+  boost::python::class_<
+      valhalla::meili::TrafficSegmentMatcher, boost::noncopyable,
+      boost::shared_ptr<valhalla::meili::TrafficSegmentMatcher>>("SegmentMatcher",
+                                                                 boost::python::no_init)
       .def("__init__", boost::python::make_constructor(+[]() {
              return boost::make_shared<valhalla::meili::TrafficSegmentMatcher>(configure());
            }))

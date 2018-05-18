@@ -109,8 +109,7 @@ void bin() {
     auto rc_itr = t.GetBin(i % kBinsDim, i / kBinsDim);
     if (itr.size() != idx_itr.size() || itr.size() != rc_itr.size())
       throw std::logic_error("Wrong bin!");
-    for (auto j = itr.begin(), k = idx_itr.begin(), l = rc_itr.begin(); j != itr.end();
-         ++j, ++k, ++l)
+    for (auto j = itr.begin(), k = idx_itr.begin(), l = rc_itr.begin(); j != itr.end(); ++j, ++k, ++l)
       if (*j != *k || *j != *l)
         throw std::logic_error("Wrong edge found in bin");
   }

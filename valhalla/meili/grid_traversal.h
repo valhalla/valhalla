@@ -37,8 +37,7 @@ public:
     // Division by zero is undefined in C++, here we ensure it to be
     // infinity
     const double height = dest.y() - origin.y(), width = dest.x() - origin.x(),
-                 tangent =
-                     width == 0.f ? std::numeric_limits<double>::infinity() : (height / width),
+                 tangent = width == 0.f ? std::numeric_limits<double>::infinity() : (height / width),
                  cotangent =
                      height == 0.f ? std::numeric_limits<double>::infinity() : (width / height);
 
