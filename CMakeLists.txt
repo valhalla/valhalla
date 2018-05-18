@@ -26,6 +26,27 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+
+## Get Valhalla version
+file(STRINGS "valhalla/valhalla.h.in" version_lines REGEX "VALHALLA_VERSION_(MAJOR|MINOR|PATCH)")
+foreach(line ${version_lines})
+  if("${line}" MATCHES "(VALHALLA_VERSION_(MAJOR|MINOR|PATCH))[\t ]+([0-9]+)")
+    set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3})
+  endif()
+endforeach()
+if(VALHALLA_VERSION_MAJOR)
+  set(VERSION "${VALHALLA_VERSION_MAJOR}")
+  if(VALHALLA_VERSION_MINOR)
+    set(VERSION "${VERSION}.${VALHALLA_VERSION_MINOR}")
+    if(VALHALLA_VERSION_PATCH)
+      set(VERSION "${VERSION}.${VALHALLA_VERSION_PATCH}")
+    endif()
+  endif()
+elseif()
+  message(FATAL_ERROR "No Valhalla major version")
+endif()
+
+
 ## Configure imported libraries
 set(boost_components
   date_time
@@ -160,17 +181,22 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set_target_properties(valhalla PROPERTIES
-  VERSION 2.4.9
-  SOVERSION 2
+  VERSION "${VERSION}"
+  SOVERSION "${VALHALLA_VERSION_MAJOR}"
   PUBLIC_HEADER "${valhalla_hdrs}")
 install(TARGETS valhalla
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla)
-# TODO: pkg-config
-# configure_file(libvalhalla.pc.in libvalhalla.pc @ONLY) TODO
-#install(FILES ${CMAKE_BINARY_DIR}/libvalhalla.pc
-#    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+
+## pkg-config file
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix ${CMAKE_INSTALL_PREFIX})
+set(libdir ${CMAKE_INSTALL_LIBDIR})
+set(includedir ${CMAKE_INSTALL_INCLUDEDIR}/valhalla)
+configure_file(libvalhalla.pc.in libvalhalla.pc @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/libvalhalla.pc
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
 
 ## Executable targets
 function(get_source_path PATH NAME)
