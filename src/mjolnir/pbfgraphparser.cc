@@ -428,9 +428,9 @@ public:
         w.set_hov_forward(tag.second == "true" ? true : false);
       } else if (tag.first == "moped_forward") {
         w.set_moped_forward(tag.second == "true" ? true : false);
-      else if (tag.first == "motorcycle_forward")
+      } else if (tag.first == "motorcycle_forward") {
         w.set_motorcycle_forward(tag.second == "true" ? true : false);
-      else if (tag.first == "auto_backward")
+      } else if (tag.first == "auto_backward") {
         w.set_auto_backward(tag.second == "true" ? true : false);
       } else if (tag.first == "truck_backward") {
         w.set_truck_backward(tag.second == "true" ? true : false);
@@ -444,9 +444,9 @@ public:
         w.set_hov_backward(tag.second == "true" ? true : false);
       } else if (tag.first == "moped_backward") {
         w.set_moped_backward(tag.second == "true" ? true : false);
-      else if (tag.first == "motorcycle_backward")
+      } else if (tag.first == "motorcycle_backward") {
         w.set_motorcycle_backward(tag.second == "true" ? true : false);
-      else if (tag.first == "pedestrian")
+      } else if (tag.first == "pedestrian") {
         w.set_pedestrian(tag.second == "true" ? true : false);
       } else if (tag.first == "private" && tag.second == "true") {
         // Make sure we do not unset this flag if set previously
@@ -642,7 +642,7 @@ public:
           if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                 kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          else if (tag.first == "bicycle:conditional")
+          } else if (tag.first == "bicycle:conditional") {
             mode = kBicycleAccess;
           } else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional") {
             mode = (kPedestrianAccess | kWheelchairAccess);
@@ -650,9 +650,9 @@ public:
             mode = kTruckAccess;
           } else if (tag.first == "moped:conditional" || tag.first == "mofa:conditional") {
             mode = kMopedAccess;
-          else if (tag.first == "motorcycle:conditional")
+          } else if (tag.first == "motorcycle:conditional") {
             mode = kMotorcycleAccess;
-          else if (tag.first == "psv:conditional")
+          } else if (tag.first == "psv:conditional") {
             mode = (kTaxiAccess | kBusAccess);
           } else if (tag.first == "taxi:conditional") {
             mode = kTaxiAccess;
@@ -1153,9 +1153,9 @@ public:
 
         if (tag.first == "restriction:motorcar") {
           modes |= (kAutoAccess | kMopedAccess);
-        else if (tag.first == "restriction:motorcycle")
+        } else if (tag.first == "restriction:motorcycle") {
           modes |= kMotorcycleAccess;
-        else if (tag.first == "restriction:taxi")
+        } else if (tag.first == "restriction:taxi") {
           modes |= kTaxiAccess;
         } else if (tag.first == "restriction:bus") {
           modes |= kBusAccess;
@@ -1357,9 +1357,9 @@ public:
           for (const auto& t : tokens) {
             if (t == "motorcar") {
               modes = modes & ~(kAutoAccess | kMopedAccess);
-            else if (t == "motorcycle")
+            } else if (t == "motorcycle") {
               modes = modes & ~kMotorcycleAccess;
-            else if (t == "psv")
+            } else if (t == "psv") {
               modes = modes & ~(kTaxiAccess | kBusAccess);
             } else if (t == "taxi") {
              modes = modes & ~kTaxiAccess;
