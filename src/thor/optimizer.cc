@@ -48,8 +48,7 @@ std::vector<uint32_t> Optimizer::Solve(const uint32_t count, const std::vector<f
   }
 
   // Return the best tour
-  LOG_DEBUG("Best tour cost = " + std::to_string(best_cost_) + " ntries = " +
-            std::to_string(ntry_));
+  LOG_DEBUG("Best tour cost = " + std::to_string(best_cost_) + " ntries = " + std::to_string(ntry_));
   return best_tour_;
 }
 
@@ -170,8 +169,7 @@ float Optimizer::TemperatureDifference(const std::vector<float>& costs,
 }
 
 // Get the cost for the specified tour (order of locations).
-float Optimizer::TourCost(const std::vector<float>& costs,
-                          const std::vector<uint32_t>& tour) const {
+float Optimizer::TourCost(const std::vector<float>& costs, const std::vector<uint32_t>& tour) const {
   float c = 0;
   for (uint32_t i = 0; i < count_ - 1; i++) {
     c += costs[(tour[i] * count_) + tour[i + 1]];

@@ -63,8 +63,7 @@ std::string actor_t::route(const std::string& request_str, const std::function<v
   return bytes;
 }
 
-std::string actor_t::locate(const std::string& request_str,
-                            const std::function<void()>& interrupt) {
+std::string actor_t::locate(const std::string& request_str, const std::function<void()>& interrupt) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -79,8 +78,7 @@ std::string actor_t::locate(const std::string& request_str,
   return json;
 }
 
-std::string actor_t::matrix(const std::string& request_str,
-                            const std::function<void()>& interrupt) {
+std::string actor_t::matrix(const std::string& request_str, const std::function<void()>& interrupt) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -177,8 +175,7 @@ std::string actor_t::trace_attributes(const std::string& request_str,
   return json;
 }
 
-std::string actor_t::height(const std::string& request_str,
-                            const std::function<void()>& interrupt) {
+std::string actor_t::height(const std::string& request_str, const std::function<void()>& interrupt) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request

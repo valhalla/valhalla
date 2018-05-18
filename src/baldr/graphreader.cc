@@ -358,8 +358,7 @@ bool GraphReader::AreEdgesConnectedForward(const GraphId& edge1,
 
   // Check if edge2's Id is an outgoing directed edge of the node
   const NodeInfo* node = tile->node(endnode);
-  return (node->edge_index() <= edge2.id() &&
-          edge2.id() < (node->edge_index() + node->edge_count()));
+  return (node->edge_index() <= edge2.id() && edge2.id() < (node->edge_index() + node->edge_count()));
 }
 
 // Get the shortcut edge that includes this edge.
@@ -367,8 +366,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   // Lambda to get continuing edge at a node. Skips the specified edge Id
   // transition edges, shortcut edges, and transit connections. Returns
   // nullptr if more than one edge remains or no continuing edge is found.
-  auto continuing_edge = [](const GraphTile* tile, const GraphId& edgeid,
-                            const NodeInfo* nodeinfo) {
+  auto continuing_edge = [](const GraphTile* tile, const GraphId& edgeid, const NodeInfo* nodeinfo) {
     uint32_t idx = nodeinfo->edge_index();
     const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
     const DirectedEdge* directededge = tile->directededge(idx);
@@ -506,8 +504,8 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     } // or individually on disk
   } else {
     // crack open this level of tiles directory
-    boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator +
-                                     std::to_string(level) + filesystem::path_separator);
+    boost::filesystem::path root_dir(tile_dir_ + filesystem::path_separator + std::to_string(level) +
+                                     filesystem::path_separator);
     if (boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
       // iterate over all the files in the directory and turn into GraphIds
       for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {

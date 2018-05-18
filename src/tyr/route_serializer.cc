@@ -817,9 +817,8 @@ json::ArrayPtr serialize_legs(const std::list<valhalla::odin::TripDirections>& l
       prev_ref = nr.second;
 
       // Add OSRM maneuver
-      step->emplace("maneuver",
-                    osrm_maneuver(maneuver, path_leg, shape[maneuver.begin_shape_index()], depart,
-                                  arrive, count, mode, prev_mode));
+      step->emplace("maneuver", osrm_maneuver(maneuver, path_leg, shape[maneuver.begin_shape_index()],
+                                              depart, arrive, count, mode, prev_mode));
 
       // Add destinations and exits
       std::string dest = destinations(maneuver);
@@ -1012,9 +1011,8 @@ json::MapPtr summary(const std::list<valhalla::odin::TripDirections>& legs) {
     time += static_cast<uint64_t>(leg.summary().time());
     length += leg.summary().length();
 
-    AABB2<PointLL> leg_bbox(
-        leg.summary().bbox().min_ll().lng(), leg.summary().bbox().min_ll().lat(),
-        leg.summary().bbox().max_ll().lng(), leg.summary().bbox().max_ll().lat());
+    AABB2<PointLL> leg_bbox(leg.summary().bbox().min_ll().lng(), leg.summary().bbox().min_ll().lat(),
+                            leg.summary().bbox().max_ll().lng(), leg.summary().bbox().max_ll().lat());
     bbox.Expand(leg_bbox);
   }
 
@@ -1131,9 +1129,8 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
                                            : make_pair("drive", i->second);
     }
     case TripDirections_TravelMode_kPedestrian: {
-      auto i = maneuver.has_pedestrian_type()
-                   ? pedestrian_to_string.find(maneuver.pedestrian_type())
-                   : pedestrian_to_string.cend();
+      auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
+                                              : pedestrian_to_string.cend();
       return i == pedestrian_to_string.cend() ? make_pair("pedestrian", "foot")
                                               : make_pair("pedestrian", i->second);
     }
@@ -1230,10 +1227,10 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
             // Add the exit number consecutive count only if greater than zero
             if (maneuver.sign().exit_number_elements(i).consecutive_count() > 0) {
-              exit_number_element->emplace(
-                  "consecutive_count",
-                  static_cast<uint64_t>(
-                      maneuver.sign().exit_number_elements(i).consecutive_count()));
+              exit_number_element
+                  ->emplace("consecutive_count",
+                            static_cast<uint64_t>(
+                                maneuver.sign().exit_number_elements(i).consecutive_count()));
             }
 
             exit_number_elements->emplace_back(exit_number_element);
@@ -1252,10 +1249,10 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
             // Add the exit branch consecutive count only if greater than zero
             if (maneuver.sign().exit_branch_elements(i).consecutive_count() > 0) {
-              exit_branch_element->emplace(
-                  "consecutive_count",
-                  static_cast<uint64_t>(
-                      maneuver.sign().exit_branch_elements(i).consecutive_count()));
+              exit_branch_element
+                  ->emplace("consecutive_count",
+                            static_cast<uint64_t>(
+                                maneuver.sign().exit_branch_elements(i).consecutive_count()));
             }
 
             exit_branch_elements->emplace_back(exit_branch_element);
@@ -1274,10 +1271,10 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
             // Add the exit toward consecutive count only if greater than zero
             if (maneuver.sign().exit_toward_elements(i).consecutive_count() > 0) {
-              exit_toward_element->emplace(
-                  "consecutive_count",
-                  static_cast<uint64_t>(
-                      maneuver.sign().exit_toward_elements(i).consecutive_count()));
+              exit_toward_element
+                  ->emplace("consecutive_count",
+                            static_cast<uint64_t>(
+                                maneuver.sign().exit_toward_elements(i).consecutive_count()));
             }
 
             exit_toward_elements->emplace_back(exit_toward_element);
@@ -1296,9 +1293,10 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
             // Add the exit name consecutive count only if greater than zero
             if (maneuver.sign().exit_name_elements(i).consecutive_count() > 0) {
-              exit_name_element->emplace(
-                  "consecutive_count",
-                  static_cast<uint64_t>(maneuver.sign().exit_name_elements(i).consecutive_count()));
+              exit_name_element
+                  ->emplace("consecutive_count",
+                            static_cast<uint64_t>(
+                                maneuver.sign().exit_name_elements(i).consecutive_count()));
             }
 
             exit_name_elements->emplace_back(exit_name_element);
@@ -1352,8 +1350,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
           json_transit_info->emplace("color", static_cast<uint64_t>(transit_info.color()));
         }
         if (transit_info.has_text_color()) {
-          json_transit_info->emplace("text_color",
-                                     static_cast<uint64_t>(transit_info.text_color()));
+          json_transit_info->emplace("text_color", static_cast<uint64_t>(transit_info.text_color()));
         }
         if (transit_info.has_description()) {
           json_transit_info->emplace("description", transit_info.description());
@@ -1386,8 +1383,8 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
             // onestop_id - using the station onestop_id
             if (transit_stop.has_station_onestop_id()) {
               json_transit_stop->emplace("onestop_id", transit_stop.station_onestop_id());
-              valhalla::midgard::logging::Log(
-                  "transit_stopid::" + transit_stop.station_onestop_id(), " [ANALYTICS] ");
+              valhalla::midgard::logging::Log("transit_stopid::" + transit_stop.station_onestop_id(),
+                                              " [ANALYTICS] ");
             }
 
             // name - using the station name
@@ -1464,17 +1461,16 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
                       const std::list<valhalla::odin::TripDirections>& directions_legs) {
   // build up the json object
   auto json = json::map(
-      {{"trip",
-        json::map(
-            {{"locations", locations(directions_legs)},
-             {"summary", summary(directions_legs)},
-             {"legs", legs(directions_legs)},
-             {"status_message",
-              string("Found route between points")}, // found route between points OR cannot find
-                                                     // route between points
-             {"status", static_cast<uint64_t>(0)},   // 0 success
-             {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
-             {"language", directions_options.language()}})}});
+      {{"trip", json::map({{"locations", locations(directions_legs)},
+                           {"summary", summary(directions_legs)},
+                           {"legs", legs(directions_legs)},
+                           {"status_message",
+                            string("Found route between points")}, // found route between points OR
+                                                                   // cannot find route between points
+                           {"status", static_cast<uint64_t>(0)}, // 0 success
+                           {"units", valhalla::odin::DirectionsOptions::Units_Name(
+                                         directions_options.units())},
+                           {"language", directions_options.language()}})}});
   if (directions_options.has_id()) {
     json->emplace("id", directions_options.id());
   }
@@ -2129,8 +2125,7 @@ void jsonToProtoManeuver(const rapidjson::Value& json_maneuver, Route::Maneuver*
     if (!verbal_depart_instruction_iter->value.IsString()) {
       throw std::runtime_error("verbal_depart_instruction is not a string.");
     }
-    proto_maneuver->set_verbal_depart_instruction(
-        verbal_depart_instruction_iter->value.GetString());
+    proto_maneuver->set_verbal_depart_instruction(verbal_depart_instruction_iter->value.GetString());
   }
 
   // Set the arrive_instruction
@@ -2148,8 +2143,7 @@ void jsonToProtoManeuver(const rapidjson::Value& json_maneuver, Route::Maneuver*
     if (!verbal_arrive_instruction_iter->value.IsString()) {
       throw std::runtime_error("verbal_arrive_instruction is not a string.");
     }
-    proto_maneuver->set_verbal_arrive_instruction(
-        verbal_arrive_instruction_iter->value.GetString());
+    proto_maneuver->set_verbal_arrive_instruction(verbal_arrive_instruction_iter->value.GetString());
   }
 
   // Set the transit_info

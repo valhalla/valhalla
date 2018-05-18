@@ -162,8 +162,9 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   // Parse each input file for relations
   LOG_INFO("Parsing relations...");
   for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
-                                                                     OSMPBF::Interest::CHANGESETS),
+    OSMPBF::Parser::parse(file_handle,
+                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
+                                                        OSMPBF::Interest::CHANGESETS),
                           callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) +
@@ -172,8 +173,9 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   // Parse the ways.
   LOG_INFO("Parsing ways...");
   for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
-                                                                     OSMPBF::Interest::CHANGESETS),
+    OSMPBF::Parser::parse(file_handle,
+                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
+                                                        OSMPBF::Interest::CHANGESETS),
                           callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.way_map.size()) + " ways comprised of " +
@@ -183,8 +185,9 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   // being used in a way.
   LOG_INFO("Parsing nodes...");
   for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
-                                                                     OSMPBF::Interest::CHANGESETS),
+    OSMPBF::Parser::parse(file_handle,
+                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
+                                                        OSMPBF::Interest::CHANGESETS),
                           callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes");

@@ -20,34 +20,34 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
-const std::unordered_map<int, std::string> Maneuver::relative_direction_string_ = {
-    {static_cast<int>(Maneuver::RelativeDirection::kNone), "Maneuver::RelativeDirection::kNone"},
-    {static_cast<int>(Maneuver::RelativeDirection::kKeepStraight),
-     "Maneuver::RelativeDirection::kKeepStraight"},
-    {static_cast<int>(Maneuver::RelativeDirection::kKeepRight),
-     "Maneuver::RelativeDirection::kKeepRight"},
-    {static_cast<int>(Maneuver::RelativeDirection::kRight), "Maneuver::RelativeDirection::kRight"},
-    {static_cast<int>(Maneuver::RelativeDirection::KReverse),
-     "Maneuver::RelativeDirection::KReverse"},
-    {static_cast<int>(Maneuver::RelativeDirection::kLeft), "Maneuver::RelativeDirection::kLeft"},
-    {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
-     "Maneuver::RelativeDirection::kKeepLeft"}};
+const std::unordered_map<int, std::string> Maneuver::relative_direction_string_ =
+    {{static_cast<int>(Maneuver::RelativeDirection::kNone), "Maneuver::RelativeDirection::kNone"},
+     {static_cast<int>(Maneuver::RelativeDirection::kKeepStraight),
+      "Maneuver::RelativeDirection::kKeepStraight"},
+     {static_cast<int>(Maneuver::RelativeDirection::kKeepRight),
+      "Maneuver::RelativeDirection::kKeepRight"},
+     {static_cast<int>(Maneuver::RelativeDirection::kRight), "Maneuver::RelativeDirection::kRight"},
+     {static_cast<int>(Maneuver::RelativeDirection::KReverse),
+      "Maneuver::RelativeDirection::KReverse"},
+     {static_cast<int>(Maneuver::RelativeDirection::kLeft), "Maneuver::RelativeDirection::kLeft"},
+     {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
+      "Maneuver::RelativeDirection::kKeepLeft"}};
 
 Maneuver::Maneuver()
     : type_(TripDirections_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
       turn_degree_(0), begin_relative_direction_(RelativeDirection::kNone),
-      begin_cardinal_direction_(TripDirections_Maneuver_CardinalDirection_kNorth),
-      begin_heading_(0), end_heading_(0), begin_node_index_(0), end_node_index_(0),
-      begin_shape_index_(0), end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false),
-      rail_ferry_(false), roundabout_(false), portions_toll_(false), portions_unpaved_(false),
-      portions_highway_(false), internal_intersection_(false), internal_right_turn_count_(0),
-      internal_left_turn_count_(0), roundabout_exit_count_(0),
-      travel_mode_(TripPath_TravelMode_kDrive), vehicle_type_(TripPath_VehicleType_kCar),
-      pedestrian_type_(TripPath_PedestrianType_kFoot), bicycle_type_(TripPath_BicycleType_kRoad),
-      transit_type_(TripPath_TransitType_kRail), transit_connection_(false), rail_(false),
-      bus_(false), fork_(false), begin_intersecting_edge_name_consistency_(false),
-      intersecting_forward_edge_(false), tee_(false), unnamed_walkway_(false),
-      unnamed_cycleway_(false), unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false) {
+      begin_cardinal_direction_(TripDirections_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
+      end_heading_(0), begin_node_index_(0), end_node_index_(0), begin_shape_index_(0),
+      end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
+      roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
+      internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
+      roundabout_exit_count_(0), travel_mode_(TripPath_TravelMode_kDrive),
+      vehicle_type_(TripPath_VehicleType_kCar), pedestrian_type_(TripPath_PedestrianType_kFoot),
+      bicycle_type_(TripPath_BicycleType_kRoad), transit_type_(TripPath_TransitType_kRail),
+      transit_connection_(false), rail_(false), bus_(false), fork_(false),
+      begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
+      tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
+      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false) {
   street_names_ = midgard::make_unique<StreetNames>();
   begin_street_names_ = midgard::make_unique<StreetNames>();
   cross_street_names_ = midgard::make_unique<StreetNames>();
@@ -82,8 +82,7 @@ bool Maneuver::HasSameNames(const Maneuver* other_maneuver,
 
   // Allow similar intersecting edge names
   // OR verify that there are no similar intersecting edge names
-  if (allow_begin_intersecting_edge_name_consistency ||
-      !begin_intersecting_edge_name_consistency()) {
+  if (allow_begin_intersecting_edge_name_consistency || !begin_intersecting_edge_name_consistency()) {
     // If this maneuver has street names
     // and other maneuver exists
     if (HasStreetNames() && other_maneuver) {
@@ -103,16 +102,14 @@ bool Maneuver::HasSimilarNames(const Maneuver* other_maneuver,
 
   // Allow similar intersecting edge names
   // OR verify that there are no similar intersecting edge names
-  if (allow_begin_intersecting_edge_name_consistency ||
-      !begin_intersecting_edge_name_consistency()) {
+  if (allow_begin_intersecting_edge_name_consistency || !begin_intersecting_edge_name_consistency()) {
     // If this maneuver has street names
     // and other maneuver exists
     if (HasStreetNames() && other_maneuver) {
       // other and this maneuvers have similar names
       std::unique_ptr<StreetNames> similar_street_names =
           other_maneuver->street_names().FindCommonBaseNames(street_names());
-      if (!similar_street_names->empty() &&
-          (street_names().size() == similar_street_names->size())) {
+      if (!similar_street_names->empty() && (street_names().size() == similar_street_names->size())) {
         return true;
       }
     }
@@ -338,8 +335,7 @@ void Maneuver::set_internal_intersection(bool internal_intersection) {
 
 bool Maneuver::HasUsableInternalIntersectionName() const {
   uint32_t link_count = (end_node_index_ - begin_node_index_);
-  if (internal_intersection_ && !street_names_->empty() &&
-      ((link_count == 1) || (link_count == 3))) {
+  if (internal_intersection_ && !street_names_->empty() && ((link_count == 1) || (link_count == 3))) {
     return true;
   }
   return false;
@@ -885,8 +881,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(turn_degree_);
 
   man_str += delim;
-  man_str += Maneuver::relative_direction_string_.find(static_cast<int>(begin_relative_direction_))
-                 ->second;
+  man_str +=
+      Maneuver::relative_direction_string_.find(static_cast<int>(begin_relative_direction_))->second;
 
   man_str += delim;
   man_str += "TripDirections_Maneuver_CardinalDirection_";

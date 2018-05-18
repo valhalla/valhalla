@@ -12,8 +12,7 @@ namespace valhalla {
 
 namespace meili {
 
-constexpr valhalla::sif::TravelMode kUniversalTravelMode =
-    static_cast<valhalla::sif::TravelMode>(4);
+constexpr valhalla::sif::TravelMode kUniversalTravelMode = static_cast<valhalla::sif::TravelMode>(4);
 
 valhalla::sif::cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config);
 

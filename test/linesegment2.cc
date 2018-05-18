@@ -11,10 +11,7 @@ using namespace valhalla::midgard;
 
 namespace {
 
-void TryDistance(const Point2& p,
-                 const LineSegment2<Point2>& s,
-                 const float res,
-                 const Point2& exp) {
+void TryDistance(const Point2& p, const LineSegment2<Point2>& s, const float res, const Point2& exp) {
   Point2 closest;
   float d = s.Distance(p, closest);
   if (fabs(d - res) > kEpsilon)
@@ -121,8 +118,11 @@ void TryPolyIntersect(const LineSegment2<Point2>& s1,
 void TestPolyIntersect() {
 
   // Construct a convex polygon
-  std::vector<Point2> poly = {
-      {2.0f, 2.0f}, {0.0f, 4.0f}, {-10.0f, 0.0f}, {0.0f, -4.0f}, {2.0f, -2.0f}};
+  std::vector<Point2> poly = {{2.0f, 2.0f},
+                              {0.0f, 4.0f},
+                              {-10.0f, 0.0f},
+                              {0.0f, -4.0f},
+                              {2.0f, -2.0f}};
 
   // First point inside
   LineSegment2<Point2> s1(Point2(0.0f, 0.0f), Point2(4.0f, 12.0f));

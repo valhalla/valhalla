@@ -1,6 +1,6 @@
-#include "thor/timedep.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+#include "thor/timedep.h"
 #include <algorithm>
 #include <iostream> // TODO remove if not needed
 #include <map>
@@ -96,8 +96,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
   // Adjust for time zone (if different from timezone at the destination).
   if (nodeinfo->timezone() != dest_tz_index_) {
-    DateTime::timezone_diff(false, localtime,
-                            DateTime::get_tz_db().from_index(nodeinfo->timezone()),
+    DateTime::timezone_diff(false, localtime, DateTime::get_tz_db().from_index(nodeinfo->timezone()),
                             DateTime::get_tz_db().from_index(dest_tz_index_));
   }
 
@@ -245,8 +244,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(),
-                          destination.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -262,8 +260,9 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
   ModifyHierarchyLimits(mindist, density);
 
   // Set route start time (seconds from epoch)
-  uint64_t start_time = DateTime::seconds_since_epoch(
-      destination.date_time(), DateTime::get_tz_db().from_index(dest_tz_index_));
+  uint64_t start_time =
+      DateTime::seconds_since_epoch(destination.date_time(),
+                                    DateTime::get_tz_db().from_index(dest_tz_index_));
   // Find shortest path
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
@@ -274,8 +273,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     // Allow this process to be aborted
     size_t current_labels = edgelabels_rev_.size();
     if (interrupt &&
-        total_labels / kInterruptIterationsInterval <
-            current_labels / kInterruptIterationsInterval) {
+        total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval) {
       (*interrupt)();
     }
     total_labels = current_labels;
@@ -324,8 +322,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
       if (best_path.first >= 0) {
         return FormPath(graphreader, best_path.first);
       } else {
-        LOG_ERROR("No convergence to destination after = " +
-                  std::to_string(edgelabels_rev_.size()));
+        LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_rev_.size()));
         return {};
       }
     }

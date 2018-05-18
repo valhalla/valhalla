@@ -231,8 +231,7 @@ protected:
   // Calculate the a state's costsofar based on its predecessor's
   // costsofar, transition cost from predecessor to this state,
   // and emission cost of this state
-  virtual double
-  CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const {
+  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const {
     return prev_costsofar + transition_cost + emission_cost;
   }
 

@@ -31,12 +31,11 @@ const std::vector<http_request_t> requests{
         "IxaIcF~|@cBngJiMjj@_I`HwXlJuO^kKj@gJkAeaBy`AgNoHwDkAeELwD|@uDfC_i@bq@mOjUaCvDqBrEcAbGWbG|@"
         "jVd@rPkAbGsAfDqBvCaIrFsP~RoNjWajBlnD{OtZoNfXyBtE{B~HyAtEsFhL_DvDsGrF_I`HwDpGoH|T_"
         "IzLaMzKuOrFqfAbPwCl@_h@fN}OnI\"}"),
-    http_request_t(
-        GET,
-        "/height?json={\"range\":true,\"shape\":[{\"lat\":40.712431, "
-        "\"lon\":-76.504916},{\"lat\":40.712275, \"lon\":-76.605259},{\"lat\":40.712122, "
-        "\"lon\":-76.805694},{\"lat\":40.722431, \"lon\":-76.884916},{\"lat\":40.812275, "
-        "\"lon\":-76.905259},{\"lat\":40.912122, \"lon\":-76.965694}]}"),
+    http_request_t(GET,
+                   "/height?json={\"range\":true,\"shape\":[{\"lat\":40.712431, "
+                   "\"lon\":-76.504916},{\"lat\":40.712275, \"lon\":-76.605259},{\"lat\":40.712122, "
+                   "\"lon\":-76.805694},{\"lat\":40.722431, \"lon\":-76.884916},{\"lat\":40.812275, "
+                   "\"lon\":-76.905259},{\"lat\":40.912122, \"lon\":-76.965694}]}"),
     http_request_t(
         GET,
         "/height?json={\"range\":true,\"encoded_polyline\":\"s{cplAfiz{pCa]xBxBx`AhC|gApBrz@{["
@@ -45,13 +44,12 @@ const std::vector<http_request_t> requests{
         "eZpuE_IxaIcF~|@cBngJiMjj@_I`HwXlJuO^kKj@gJkAeaBy`AgNoHwDkAeELwD|@uDfC_i@bq@"
         "mOjUaCvDqBrEcAbGWbG|@jVd@rPkAbGsAfDqBvCaIrFsP~RoNjWajBlnD{OtZoNfXyBtE{B~HyAtEsFhL_DvDsGrF_"
         "I`HwDpGoH|T_IzLaMzKuOrFqfAbPwCl@_h@fN}OnI\"}"),
-    http_request_t(
-        POST,
-        "/height",
-        "{\"shape\":[{\"lat\":40.712431, \"lon\":-76.504916},{\"lat\":40.712275, "
-        "\"lon\":-76.605259},{\"lat\":40.712122, \"lon\":-76.805694},{\"lat\":40.722431, "
-        "\"lon\":-76.884916},{\"lat\":40.812275, \"lon\":-76.905259},{\"lat\":40.912122, "
-        "\"lon\":-76.965694}]}"),
+    http_request_t(POST,
+                   "/height",
+                   "{\"shape\":[{\"lat\":40.712431, \"lon\":-76.504916},{\"lat\":40.712275, "
+                   "\"lon\":-76.605259},{\"lat\":40.712122, \"lon\":-76.805694},{\"lat\":40.722431, "
+                   "\"lon\":-76.884916},{\"lat\":40.812275, \"lon\":-76.905259},{\"lat\":40.912122, "
+                   "\"lon\":-76.965694}]}"),
     http_request_t(
         POST,
         "/height",
@@ -176,10 +174,11 @@ void create_tile() {
 
 void start_service(zmq::context_t& context) {
   // server
-  std::thread server(std::bind(
-      &http_server_t::serve,
-      http_server_t(context, "ipc:///tmp/test_skadi_server", "ipc:///tmp/test_skadi_proxy_upstream",
-                    "ipc:///tmp/test_skadi_results", "ipc:///tmp/test_skadi_interrupt")));
+  std::thread server(
+      std::bind(&http_server_t::serve,
+                http_server_t(context, "ipc:///tmp/test_skadi_server",
+                              "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results",
+                              "ipc:///tmp/test_skadi_interrupt")));
   server.detach();
 
   // load balancer
@@ -228,25 +227,26 @@ void test_requests() {
   // client makes requests and gets back responses in a batch fashion
   auto request = requests.cbegin();
   std::string request_str;
-  http_client_t client(
-      context, "ipc:///tmp/test_skadi_server",
-      [&request, &request_str]() {
-        // we dont have any more requests so bail
-        if (request == requests.cend())
-          return std::make_pair<const void*, size_t>(nullptr, 0);
-        // get the string of bytes to send formatted for http protocol
-        request_str = request->to_string();
-        ++request;
-        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
-      },
-      [&request](const void* data, size_t size) {
-        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
-        if (response.body != responses[request - requests.cbegin() - 1])
-          throw std::runtime_error("Unexpected response body: " + response.body);
+  http_client_t client(context, "ipc:///tmp/test_skadi_server",
+                       [&request, &request_str]() {
+                         // we dont have any more requests so bail
+                         if (request == requests.cend())
+                           return std::make_pair<const void*, size_t>(nullptr, 0);
+                         // get the string of bytes to send formatted for http protocol
+                         request_str = request->to_string();
+                         ++request;
+                         return std::make_pair<const void*, size_t>(request_str.c_str(),
+                                                                    request_str.size());
+                       },
+                       [&request](const void* data, size_t size) {
+                         auto response =
+                             http_response_t::from_string(static_cast<const char*>(data), size);
+                         if (response.body != responses[request - requests.cbegin() - 1])
+                           throw std::runtime_error("Unexpected response body: " + response.body);
 
-        return request != requests.cend();
-      },
-      1);
+                         return request != requests.cend();
+                       },
+                       1);
   // request and receive
   client.batch();
 }

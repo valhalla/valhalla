@@ -24,10 +24,10 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
         array->emplace_back(json::map({
             {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
-            {"side_of_street", edge.sos == PathLocation::LEFT
-                                   ? std::string("left")
-                                   : (edge.sos == PathLocation::RIGHT ? std::string("right")
-                                                                      : std::string("neither"))},
+            {"side_of_street",
+             edge.sos == PathLocation::LEFT
+                 ? std::string("left")
+                 : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
             {"percent_along", json::fp_t{edge.percent_along, 5}},
             {"distance", json::fp_t{edge.distance, 1}},
             {"minimum_reachability", static_cast<int64_t>(edge.minimum_reachability)},
@@ -42,10 +42,10 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
             {"way_id", edge_info.wayid()},
             {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
-            {"side_of_street", edge.sos == PathLocation::LEFT
-                                   ? std::string("left")
-                                   : (edge.sos == PathLocation::RIGHT ? std::string("right")
-                                                                      : std::string("neither"))},
+            {"side_of_street",
+             edge.sos == PathLocation::LEFT
+                 ? std::string("left")
+                 : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
             {"percent_along", json::fp_t{edge.percent_along, 5}},
         }));
       }

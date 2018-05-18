@@ -89,8 +89,8 @@ bool ParseArguments(int argc, char* argv[]) {
       "\n");
 
   std::string search_type;
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
       "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path),
       "Path to the json configuration file.")(
       "threads,t", boost::program_options::value<size_t>(&threads),
@@ -159,8 +159,8 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
         // TODO: actually save the result
         auto result = valhalla::loki::Search(job, reader, valhalla::loki::PassThroughEdgeFilter);
         auto end = std::chrono::high_resolution_clock::now();
-        (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true,
-                        job, cached};
+        (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
+                        cached};
       } catch (...) {
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), false,
@@ -198,9 +198,9 @@ int main(int argc, char** argv) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       pt.get_child_optional("loki.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                   std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -250,11 +250,11 @@ int main(int argc, char** argv) {
   }
 
   // do some statistics,
-  const std::vector<std::tuple<std::string, bool, bool>> stat_types = {
-      std::make_tuple("Succeeded Searches on Uncached Tiles", true, false),
-      std::make_tuple("Failed Searches on Uncached Tiles", false, false),
-      std::make_tuple("Succeeded Searches on Cached Tiles", true, true),
-      std::make_tuple("Failed Searches on Cached Tiles", false, true)};
+  const std::vector<std::tuple<std::string, bool, bool>> stat_types =
+      {std::make_tuple("Succeeded Searches on Uncached Tiles", true, false),
+       std::make_tuple("Failed Searches on Uncached Tiles", false, false),
+       std::make_tuple("Succeeded Searches on Cached Tiles", true, true),
+       std::make_tuple("Failed Searches on Cached Tiles", false, true)};
   for (const auto& stat_type : stat_types) {
     // grab the averages and the best and worst cases
     size_t count = 0;

@@ -39,8 +39,8 @@ struct Interpolation {
                  const TransitionCostModel& transition_model,
                  float gc_dist,
                  float clk_dist) const {
-    const auto transition_cost = transition_model.CalculateTransitionCost(
-        0.f, route_distance, gc_dist, route_time, clk_dist);
+    const auto transition_cost =
+        transition_model.CalculateTransitionCost(0.f, route_distance, gc_dist, route_time, clk_dist);
     const auto emission_cost = emission_model.CalculateEmissionCost(sq_distance);
     return transition_cost + emission_cost;
   }
@@ -165,9 +165,8 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
     if (interp.edgeid.Is_Valid()) {
       // dont allow subsequent points to get interpolated before this point
       // we do this by editing the route to start where this point was interpolated
-      auto itr = std::find_if(route.begin(), route.end(), [&interp](const EdgeSegment& e) {
-        return e.edgeid == interp.edgeid;
-      });
+      auto itr = std::find_if(route.begin(), route.end(),
+                              [&interp](const EdgeSegment& e) { return e.edgeid == interp.edgeid; });
       itr = std::find_if(itr, route.end(), [&interp](const EdgeSegment& e) {
         return e.edgeid == interp.edgeid && e.target > interp.edge_distance;
       });
@@ -643,8 +642,8 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   }
 
   if (!(0 < best_paths.size() && best_paths.size() <= k)) {
-    throw std::logic_error("got " + std::to_string(best_paths.size()) + " paths but k = " +
-                           std::to_string(k));
+    throw std::logic_error("got " + std::to_string(best_paths.size()) +
+                           " paths but k = " + std::to_string(k));
   }
 
   // Give back anywhere from 1 to k results
@@ -704,8 +703,8 @@ StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
     (*interrupt_)();
   }
 
-  auto sq_radius = std::min(sq_max_search_radius, std::max(measurement.sq_search_radius(),
-                                                           measurement.sq_gps_accuracy()));
+  auto sq_radius = std::min(sq_max_search_radius,
+                            std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
 
   const auto& candidates =
       candidatequery_.Query(measurement.lnglat(), sq_radius, costing()->GetEdgeFilter());

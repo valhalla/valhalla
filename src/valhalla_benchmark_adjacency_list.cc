@@ -65,9 +65,7 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
   // such that EmptyOverflow is called once
   std::vector<EdgeLabel> edgelabels;
   // Set up lambda to get sort costs
-  const auto edgecost = [&edgelabels](const uint32_t label) {
-    return edgelabels[label].sortcost();
-  };
+  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label].sortcost(); };
   start = std::clock();
   DoubleBucketQueue adjlist(0, maxcost / 2, bucketsize, edgecost);
 
@@ -102,8 +100,7 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
   // Verify order
   for (uint32_t i = 0; i < count; i++) {
     if (ordered_cost1[i] != ordered_cost2[i]) {
-      LOG_INFO("Costs: " + std::to_string(ordered_cost1[i]) + "," +
-               std::to_string(ordered_cost2[i]));
+      LOG_INFO("Costs: " + std::to_string(ordered_cost1[i]) + "," + std::to_string(ordered_cost2[i]));
     }
   }
   return 0;
@@ -121,8 +118,8 @@ int main(int argc, char* argv[]) {
       "\n"
       "\n");
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.");
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.");
 
   bpo::variables_map vm;
   try {

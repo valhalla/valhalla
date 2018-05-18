@@ -379,8 +379,7 @@ public:
    * @param  edgeid  Edge Id to which traffic segments are associated.
    * @param  segs    A vector of traffic segment associations to an edge.
    */
-  void AddTrafficSegments(const baldr::GraphId& edgeid,
-                          const std::vector<baldr::TrafficChunk>& segs);
+  void AddTrafficSegments(const baldr::GraphId& edgeid, const std::vector<baldr::TrafficChunk>& segs);
 
   /**
    * Updates a tile with traffic segment and chunk data.

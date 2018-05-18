@@ -112,9 +112,7 @@ std::string to_feature_collection(const std::unordered_map<size_t, polygon_t>& b
 polygon_t to_boundary(const std::pair<size_t, std::unordered_set<uint32_t>>& region,
                       const Tiles<PointLL>& tiles) {
   // do we have this tile in this region
-  auto member = [&region](int32_t tile) {
-    return region.second.find(tile) != region.second.cend();
-  };
+  auto member = [&region](int32_t tile) { return region.second.find(tile) != region.second.cend(); };
   // get the neighbor tile giving -1 if no neighbor
   auto neighbor = [&tiles](int32_t tile, int side) -> int32_t {
     if (tile == -1) {

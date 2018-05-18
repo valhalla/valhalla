@@ -105,20 +105,20 @@ void TestDescendingSortByConsecutiveCount_0_1_2() {
                                              signConsecutiveCount2};
 
   // Reverse order
-  TryDescendingSortByConsecutiveCount(
-      signs, {signConsecutiveCount2, signConsecutiveCount1, signConsecutiveCount0});
+  TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount2, signConsecutiveCount1,
+                                              signConsecutiveCount0});
 
   signs = {signConsecutiveCount2, signConsecutiveCount1, signConsecutiveCount0};
 
   // In order
-  TryDescendingSortByConsecutiveCount(
-      signs, {signConsecutiveCount2, signConsecutiveCount1, signConsecutiveCount0});
+  TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount2, signConsecutiveCount1,
+                                              signConsecutiveCount0});
 
   signs = {signConsecutiveCount0, signConsecutiveCount2, signConsecutiveCount1};
 
   // Mixed order
-  TryDescendingSortByConsecutiveCount(
-      signs, {signConsecutiveCount2, signConsecutiveCount1, signConsecutiveCount0});
+  TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount2, signConsecutiveCount1,
+                                              signConsecutiveCount0});
 }
 
 } // namespace

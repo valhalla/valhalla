@@ -84,9 +84,10 @@ vm::AABB2<vm::PointLL> bin_bbox(const vm::Tiles<vm::PointLL>& tiles, const vm::P
   int32_t sub_row = (pt.x() - tile_box.minx()) * row_delta;
   int32_t sub_col = (pt.y() - tile_box.miny()) * col_delta;
 
-  return vm::AABB2<vm::PointLL>(
-      tile_box.minx() + sub_row * row_delta, tile_box.miny() + sub_col * col_delta,
-      tile_box.minx() + (sub_row + 1) * row_delta, tile_box.miny() + (sub_col + 1) * col_delta);
+  return vm::AABB2<vm::PointLL>(tile_box.minx() + sub_row * row_delta,
+                                tile_box.miny() + sub_col * col_delta,
+                                tile_box.minx() + (sub_row + 1) * row_delta,
+                                tile_box.miny() + (sub_col + 1) * col_delta);
 }
 
 // return a set of bounding boxes which have been expanded as necessary to make

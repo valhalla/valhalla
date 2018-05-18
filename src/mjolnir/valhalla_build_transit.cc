@@ -305,10 +305,11 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
     */
     // we have anything we want it
     if (stations_total > 0 /* || routes_total > 0|| pairs_total > 0*/) {
-      prioritized.push(weighted_tile_t{
-          tile,
-          stations_total +
-              10 /* + routes_total * 1000 + pairs_total*/}); // TODO: factor in stop pairs as well
+      prioritized.push(
+          weighted_tile_t{tile,
+                          stations_total +
+                              10 /* + routes_total * 1000 + pairs_total*/}); // TODO: factor in stop
+                                                                             // pairs as well
       LOG_INFO(GraphTile::FileSuffix(tile) + " should have " + std::to_string(stations_total) +
                " stations " /* +
           std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs"*/);
@@ -319,11 +320,11 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   return prioritized;
 }
 
-#define set_no_null(T, pt, path, null_value, set)                                                  \
-  {                                                                                                \
-    auto value = pt.get<T>(path, null_value);                                                      \
-    if (value != null_value)                                                                       \
-      set(value);                                                                                  \
+#define set_no_null(T, pt, path, null_value, set)                                                    \
+  {                                                                                                  \
+    auto value = pt.get<T>(path, null_value);                                                        \
+    if (value != null_value)                                                                         \
+      set(value);                                                                                    \
   }
 
 void get_stop_stations(Transit& tile,
@@ -653,8 +654,7 @@ bool get_stop_pairs(Transit& tile,
     auto line_id =
         pair->origin_onestop_id() < pair->destination_onestop_id()
             ? pair->origin_onestop_id() + pair->destination_onestop_id() + route_id + frequency_time
-            : pair->destination_onestop_id() + pair->origin_onestop_id() + route_id +
-                  frequency_time;
+            : pair->destination_onestop_id() + pair->origin_onestop_id() + route_id + frequency_time;
     uniques.lock.lock();
     auto inserted = uniques.lines.insert({line_id, uniques.lines.size()});
     uniques.lock.unlock();
@@ -663,8 +663,7 @@ bool get_stop_pairs(Transit& tile,
     auto dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
     auto start_date = pair_pt.second.get<std::string>("service_start_date", "null");
     auto end_date = pair_pt.second.get<std::string>("service_end_date", "null");
-    if (origin_time == "null" || dest_time == "null" || start_date == "null" ||
-        end_date == "null") {
+    if (origin_time == "null" || dest_time == "null" || start_date == "null" || end_date == "null") {
       LOG_ERROR("Missing timing information: " + pair->origin_onestop_id() + " --> " +
                 pair->destination_onestop_id());
       tile.mutable_stop_pairs()->RemoveLast();
@@ -861,11 +860,11 @@ void fetch_tiles(const ptree& pt,
     }
 
     // pull out all operator WEBSITES
-    request = url(
-        (boost::format("/api/v1/operators?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
-         pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
-            .str(),
-        pt);
+    request =
+        url((boost::format("/api/v1/operators?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
+             pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
+                .str(),
+            pt);
     request = *request + import_level;
 
     std::unordered_map<std::string, std::string> websites;
@@ -892,13 +891,13 @@ void fetch_tiles(const ptree& pt,
     } while (request && (request = *request + api_key));
 
     // pull out all ROUTES
-    request = url(
-        (boost::format(
-             "/api/v1/"
-             "routes?total=false&include_geometry=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
-         pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
-            .str(),
-        pt);
+    request =
+        url((boost::format(
+                 "/api/v1/"
+                 "routes?total=false&include_geometry=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
+             pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
+                .str(),
+            pt);
     std::unordered_map<std::string, size_t> routes;
     request = *request + import_level;
 
@@ -916,11 +915,11 @@ void fetch_tiles(const ptree& pt,
     // pull out all the route_stop_patterns or shapes
     std::unordered_map<std::string, size_t> shapes;
     for (const auto& route : routes) {
-      request = url(
-          (boost::format("/api/v1/route_stop_patterns?total=false&per_page=100&traversed_by=%2%") %
-           pt.get<std::string>("per_page") % url_encode(route.first))
-              .str(),
-          pt);
+      request = url((boost::format(
+                         "/api/v1/route_stop_patterns?total=false&per_page=100&traversed_by=%2%") %
+                     pt.get<std::string>("per_page") % url_encode(route.first))
+                        .str(),
+                    pt);
       do {
         // grab some stuff
         response = curler(*request, "route_stop_patterns");
@@ -976,11 +975,10 @@ void fetch_tiles(const ptree& pt,
   promise.set_value(dangling);
 }
 
-std::list<GraphId>
-fetch(const ptree& pt,
-      std::priority_queue<weighted_tile_t>& tiles,
-      unsigned int thread_count = std::max(static_cast<unsigned int>(1),
-                                           std::thread::hardware_concurrency())) {
+std::list<GraphId> fetch(const ptree& pt,
+                         std::priority_queue<weighted_tile_t>& tiles,
+                         unsigned int thread_count = std::max(static_cast<unsigned int>(1),
+                                                              std::thread::hardware_concurrency())) {
   LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " +
            std::to_string(thread_count) + " threads...");
 
@@ -1019,8 +1017,7 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   lock.unlock();
-  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()),
-                                            buffer.size());
+  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
@@ -1303,8 +1300,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           // Compute the valid days
           // set the bits based on the dow.
           boost::gregorian::date start_date(
-              boost::gregorian::gregorian_calendar::from_julian_day_number(
-                  sp.service_start_date()));
+              boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_start_date()));
           boost::gregorian::date end_date(
               boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
           uint64_t days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
@@ -1331,15 +1327,13 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
           // if subtractions are between start and end date then turn off bit.
           for (const auto& x : sp.service_except_dates()) {
-            boost::gregorian::date d(
-                boost::gregorian::gregorian_calendar::from_julian_day_number(x));
+            boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
             days = DateTime::remove_service_day(days, end_date, tile_date, d);
           }
 
           // if additions are between start and end date then turn on bit.
           for (const auto& x : sp.service_added_dates()) {
-            boost::gregorian::date d(
-                boost::gregorian::gregorian_calendar::from_julian_day_number(x));
+            boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
             days = DateTime::add_service_day(days, end_date, tile_date, d);
           }
 
@@ -1425,12 +1419,12 @@ std::vector<uint32_t> AddRoutes(const Transit& transit, GraphTileBuilder& tilebu
         break;
     }
 
-    TransitRoute route(
-        route_type, tilebuilder.AddName(r.onestop_id()),
-        tilebuilder.AddName(r.operated_by_onestop_id()), tilebuilder.AddName(r.operated_by_name()),
-        tilebuilder.AddName(r.operated_by_website()), r.route_color(), r.route_text_color(),
-        tilebuilder.AddName(r.name()), tilebuilder.AddName(r.route_long_name()),
-        tilebuilder.AddName(r.route_desc()));
+    TransitRoute route(route_type, tilebuilder.AddName(r.onestop_id()),
+                       tilebuilder.AddName(r.operated_by_onestop_id()),
+                       tilebuilder.AddName(r.operated_by_name()),
+                       tilebuilder.AddName(r.operated_by_website()), r.route_color(),
+                       r.route_text_color(), tilebuilder.AddName(r.name()),
+                       tilebuilder.AddName(r.route_long_name()), tilebuilder.AddName(r.route_desc()));
     LOG_DEBUG("Route idx = " + std::to_string(i) + ": " + r.name() + "," + r.route_long_name());
     tilebuilder.AddTransitRoute(route);
 
@@ -1666,8 +1660,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         n_access &= ~s_access->second;
       }
 
-      NodeInfo station_node(station_ll, RoadClass::kServiceOther, n_access,
-                            NodeType::kTransitStation, false);
+      NodeInfo station_node(station_ll, RoadClass::kServiceOther, n_access, NodeType::kTransitStation,
+                            false);
       station_node.set_stop_index(station_pbf_id.id());
 
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
@@ -1686,8 +1680,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       }
       station_node.set_timezone(timezone);
 
-      LOG_DEBUG("Transit Platform: " + platform.name() + " index= " +
-                std::to_string(platform_index));
+      LOG_DEBUG("Transit Platform: " + platform.name() + " index= " + std::to_string(platform_index));
 
       // set the index to the first egress.
       // loop over egresses add the DE to the station from the egress
@@ -1731,8 +1724,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
           }
         }
 
-        NodeInfo egress_node(egress_ll, RoadClass::kServiceOther, n_access,
-                             NodeType::kTransitEgress, false);
+        NodeInfo egress_node(egress_ll, RoadClass::kServiceOther, n_access, NodeType::kTransitEgress,
+                             false);
         egress_node.set_stop_index(index);
         egress_node.set_timezone(timezone);
         egress_node.set_edge_index(tilebuilder_transit.directededges().size());
@@ -1756,8 +1749,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::vector<std::string> names;
         std::list<PointLL> shape = {egress_ll, station_ll};
 
-        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-            0, egress_graphid, station_graphid, 0, shape, names, 0, added);
+        uint32_t edge_info_offset =
+            tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, shape, names, 0,
+                                            added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1804,8 +1798,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::list<PointLL> shape = {station_ll, egress_ll};
 
         // TODO - these need to be valhalla graph Ids
-        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-            0, station_graphid, egress_graphid, 0, shape, names, 0, added);
+        uint32_t edge_info_offset =
+            tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, shape, names, 0,
+                                            added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1860,8 +1855,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         std::list<PointLL> shape = {station_ll, platform_ll};
 
         // TODO - these need to be valhalla graph Ids
-        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-            0, station_graphid, platform_graphid, 0, shape, names, 0, added);
+        uint32_t edge_info_offset =
+            tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, shape, names, 0,
+                                            added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -1935,8 +1931,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     std::list<PointLL> shape = {platform_ll, station_ll};
 
     // TODO - these need to be valhalla graph Ids
-    uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-        0, platform_graphid, station_graphid, 0, shape, names, 0, added);
+    uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid,
+                                                                0, shape, names, 0, added);
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(true);
 
@@ -2024,8 +2020,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       auto shape = GetShape(platform_ll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
                             transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
 
-      uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-          transitedge.routeid, platform_graphid, endnode, 0, shape, names, 0, added);
+      uint32_t edge_info_offset =
+          tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, endnode, 0, shape,
+                                          names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
@@ -2075,8 +2072,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
   // Initialize the tz DB (if it exists)
   sqlite3* tz_db_handle = GetDBHandle(*database);
   if (!tz_db_handle) {
-    LOG_WARN("Time zone db " + *database +
-             " not found.  Not saving time zone information from db.");
+    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
   }
 
   const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
@@ -2129,8 +2125,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
       // Store stop information in TransitStops
       tilebuilder_transit.AddTransitStop({tilebuilder_transit.AddName(node.onestop_id()),
-                                          tilebuilder_transit.AddName(node.name()),
-                                          node.generated(), node.traversability()});
+                                          tilebuilder_transit.AddName(node.name()), node.generated(),
+                                          node.traversability()});
     }
 
     // Get all the shapes for this tile and calculate the distances
@@ -2169,8 +2165,9 @@ void build_tiles(const boost::property_tree::ptree& pt,
     // Create a map of stop key to index in the stop vector
 
     // Process schedule stop pairs (departures)
-    std::unordered_multimap<GraphId, Departure> departures = ProcessStopPairs(
-        tilebuilder_transit, tile_creation_date, transit, stop_access, file, tile_id, lock, stats);
+    std::unordered_multimap<GraphId, Departure> departures =
+        ProcessStopPairs(tilebuilder_transit, tile_creation_date, transit, stop_access, file, tile_id,
+                         lock, stats);
 
     // Form departures and egress/station/platform hierarchy
     for (uint32_t i = 0; i < transit.nodes_size(); i++) {
@@ -2218,8 +2215,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
             // Form transit departures -- frequency departure time
             TransitDeparture td(lineid, dep.trip, dep.route, dep.blockid, dep.headsign_offset,
-                                dep.dep_time, dep.frequency_end_time, dep.frequency,
-                                dep.elapsed_time, dep.schedule_index, dep.wheelchair_accessible,
+                                dep.dep_time, dep.frequency_end_time, dep.frequency, dep.elapsed_time,
+                                dep.schedule_index, dep.wheelchair_accessible,
                                 dep.bicycle_accessible);
             tilebuilder_transit.AddTransitDeparture(std::move(td));
           }
@@ -2317,8 +2314,8 @@ void build(const ptree& pt,
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")),
-                                     std::ref(lock), std::cref(all_tiles), tile_start, tile_end,
+    threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
+                                     std::cref(all_tiles), tile_start, tile_end,
                                      std::ref(onestoptests), std::ref(results.back())));
   }
 
@@ -2357,8 +2354,8 @@ void build(const ptree& pt,
     percent *= 100;
 
     LOG_INFO("There were " + std::to_string(total_dep_count) + " departures and " +
-             std::to_string(total_midnight_dep_count) + " midnight departures were added: " +
-             std::to_string(percent) + "% increase.");
+             std::to_string(total_midnight_dep_count) +
+             " midnight departures were added: " + std::to_string(percent) + "% increase.");
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();

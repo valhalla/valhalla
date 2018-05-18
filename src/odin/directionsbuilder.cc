@@ -25,8 +25,7 @@ const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type
     {static_cast<int>(TripPath_VehicleType_kAutoBus), TripDirections_VehicleType_kAutoBus},
     {static_cast<int>(TripPath_VehicleType_kTractorTrailer),
      TripDirections_VehicleType_kTractorTrailer},
-    {static_cast<int>(TripPath_VehicleType_kMotorScooter),
-     TripDirections_VehicleType_kMotorScooter},
+    {static_cast<int>(TripPath_VehicleType_kMotorScooter), TripDirections_VehicleType_kMotorScooter},
 };
 
 const std::unordered_map<int, TripDirections_PedestrianType> translate_pedestrian_type{
@@ -125,10 +124,9 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
 
 // Returns the trip directions based on the specified directions options,
 // trip path, and maneuver list.
-TripDirections
-DirectionsBuilder::PopulateTripDirections(const DirectionsOptions& directions_options,
-                                          EnhancedTripPath* etp,
-                                          std::list<Maneuver>& maneuvers) {
+TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions& directions_options,
+                                                         EnhancedTripPath* etp,
+                                                         std::list<Maneuver>& maneuvers) {
   TripDirections trip_directions;
 
   // Populate trip and leg IDs
@@ -299,8 +297,7 @@ DirectionsBuilder::PopulateTripDirections(const DirectionsOptions& directions_op
     // Travel type
     switch (maneuver.travel_mode()) {
       case TripPath_TravelMode_kDrive: {
-        trip_maneuver->set_vehicle_type(
-            translate_vehicle_type.find(maneuver.vehicle_type())->second);
+        trip_maneuver->set_vehicle_type(translate_vehicle_type.find(maneuver.vehicle_type())->second);
         break;
       }
       case TripPath_TravelMode_kPedestrian: {
@@ -309,13 +306,11 @@ DirectionsBuilder::PopulateTripDirections(const DirectionsOptions& directions_op
         break;
       }
       case TripPath_TravelMode_kBicycle: {
-        trip_maneuver->set_bicycle_type(
-            translate_bicycle_type.find(maneuver.bicycle_type())->second);
+        trip_maneuver->set_bicycle_type(translate_bicycle_type.find(maneuver.bicycle_type())->second);
         break;
       }
       case TripPath_TravelMode_kTransit: {
-        trip_maneuver->set_transit_type(
-            translate_transit_type.find(maneuver.transit_type())->second);
+        trip_maneuver->set_transit_type(translate_transit_type.find(maneuver.transit_type())->second);
         break;
       }
     }

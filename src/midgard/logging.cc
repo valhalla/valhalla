@@ -82,18 +82,17 @@ struct EnumHasher {
     return static_cast<std::size_t>(t);
   }
 };
-const std::unordered_map<LogLevel, std::string, EnumHasher> uncolored{
-    {LogLevel::ERROR, " [ERROR] "},
-    {LogLevel::WARN, " [WARN] "},
-    {LogLevel::INFO, " [INFO] "},
-    {LogLevel::DEBUG, " [DEBUG] "},
-    {LogLevel::TRACE, " [TRACE] "}};
-const std::unordered_map<LogLevel, std::string, EnumHasher> colored{
-    {LogLevel::ERROR, " \x1b[31;1m[ERROR]\x1b[0m "},
-    {LogLevel::WARN, " \x1b[33;1m[WARN]\x1b[0m "},
-    {LogLevel::INFO, " \x1b[32;1m[INFO]\x1b[0m "},
-    {LogLevel::DEBUG, " \x1b[34;1m[DEBUG]\x1b[0m "},
-    {LogLevel::TRACE, " \x1b[37;1m[TRACE]\x1b[0m "}};
+const std::unordered_map<LogLevel, std::string, EnumHasher> uncolored{{LogLevel::ERROR, " [ERROR] "},
+                                                                      {LogLevel::WARN, " [WARN] "},
+                                                                      {LogLevel::INFO, " [INFO] "},
+                                                                      {LogLevel::DEBUG, " [DEBUG] "},
+                                                                      {LogLevel::TRACE, " [TRACE] "}};
+const std::unordered_map<LogLevel, std::string, EnumHasher>
+    colored{{LogLevel::ERROR, " \x1b[31;1m[ERROR]\x1b[0m "},
+            {LogLevel::WARN, " \x1b[33;1m[WARN]\x1b[0m "},
+            {LogLevel::INFO, " \x1b[32;1m[INFO]\x1b[0m "},
+            {LogLevel::DEBUG, " \x1b[34;1m[DEBUG]\x1b[0m "},
+            {LogLevel::TRACE, " \x1b[37;1m[TRACE]\x1b[0m "}};
 
 // logger base class, not pure virtual so you can use as a null logger if you want
 Logger::Logger(const LoggingConfig& config){};

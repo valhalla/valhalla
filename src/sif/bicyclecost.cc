@@ -49,12 +49,12 @@ constexpr float kTCUnfavorableSharp = 1.5f;
 constexpr float kTCReverse = 5.0f;
 
 // Turn costs based on side of street driving
-constexpr float kRightSideTurnCosts[] = {
-    kTCStraight, kTCFavorableSlight,  kTCFavorable,   kTCFavorableSharp,
-    kTCReverse,  kTCUnfavorableSharp, kTCUnfavorable, kTCUnfavorableSlight};
-constexpr float kLeftSideTurnCosts[] = {
-    kTCStraight, kTCUnfavorableSlight, kTCUnfavorable, kTCUnfavorableSharp,
-    kTCReverse,  kTCFavorableSharp,    kTCFavorable,   kTCFavorableSlight};
+constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCFavorableSlight,  kTCFavorable,
+                                         kTCFavorableSharp, kTCReverse,          kTCUnfavorableSharp,
+                                         kTCUnfavorable,    kTCUnfavorableSlight};
+constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCUnfavorableSlight, kTCUnfavorable,
+                                        kTCUnfavorableSharp, kTCReverse,           kTCFavorableSharp,
+                                        kTCFavorable,        kTCFavorableSlight};
 
 // Turn stress penalties for low-stress bike.
 constexpr float kTPStraight = 0.0f;
@@ -66,12 +66,14 @@ constexpr float kTPUnfavorable = 1.75f;
 constexpr float kTPUnfavorableSharp = 2.25f;
 constexpr float kTPReverse = 4.0f;
 
-constexpr float kRightSideTurnPenalties[] = {
-    kTPStraight, kTPFavorableSlight,  kTPFavorable,   kTPFavorableSharp,
-    kTPReverse,  kTPUnfavorableSharp, kTPUnfavorable, kTPUnfavorableSlight};
-constexpr float kLeftSideTurnPenalties[] = {
-    kTPStraight, kTPUnfavorableSlight, kTPUnfavorable, kTPUnfavorableSharp,
-    kTPReverse,  kTPFavorableSharp,    kTPFavorable,   kTPFavorableSlight};
+constexpr float kRightSideTurnPenalties[] = {kTPStraight,    kTPFavorableSlight,
+                                             kTPFavorable,   kTPFavorableSharp,
+                                             kTPReverse,     kTPUnfavorableSharp,
+                                             kTPUnfavorable, kTPUnfavorableSlight};
+constexpr float kLeftSideTurnPenalties[] = {kTPStraight,    kTPUnfavorableSlight,
+                                            kTPUnfavorable, kTPUnfavorableSharp,
+                                            kTPReverse,     kTPFavorableSharp,
+                                            kTPFavorable,   kTPFavorableSlight};
 
 // Additional stress factor for designated truck routes
 const float kTruckStress = 0.5f;
@@ -391,9 +393,8 @@ protected:
     // Throw back a lambda that checks the access for this type of costing
     Surface s = worst_allowed_surface_;
     return [s](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() ||
-          !(edge->forwardaccess() & kBicycleAccess) || edge->use() == Use::kSteps ||
-          edge->surface() > s) {
+      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kBicycleAccess) ||
+          edge->use() == Use::kSteps || edge->surface() > s) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -432,8 +433,8 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
   gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
   alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  country_crossing_cost_ = kCountryCrossingCostRange(
-      pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
+  country_crossing_cost_ =
+      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
   country_crossing_penalty_ = kCountryCrossingPenaltyRange(
       pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
 
@@ -463,8 +464,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
 
   minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t>(type_)];
 
-  worst_allowed_surface_ =
-      avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
+  worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
 
   // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
@@ -659,12 +659,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
   uint32_t bike_speed =
-      edge->dismount()
-          ? kDismountSpeed
-          : static_cast<uint32_t>((speed_ *
-                                   surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
-                                   kGradeBasedSpeedFactor[edge->weighted_grade()]) +
-                                  0.5f);
+      edge->dismount() ? kDismountSpeed
+                       : static_cast<uint32_t>(
+                             (speed_ * surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
+                              kGradeBasedSpeedFactor[edge->weighted_grade()]) +
+                             0.5f);
 
   // Represents how stressful a roadway is without looking at grade or cycle accommodations
   float roadway_stress = 1.0f;
@@ -721,8 +720,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     }
 
     // Add in penalization for road classification
-    roadway_stress +=
-        road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
+    roadway_stress += road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
     // Then multiply by speed so that higher classified roads are more severely punished for being
     // fast.
     roadway_stress *= speedpenalty_[road_speed];
@@ -1007,8 +1005,7 @@ BicycleCost* make_bicyclecost_from_json(const std::string& property, float testV
 std::uniform_real_distribution<float>*
 make_distributor_from_range(const ranged_default_t<float>& range) {
   float rangeLength = range.max - range.min;
-  return new std::uniform_real_distribution<float>(range.min - rangeLength,
-                                                   range.max + rangeLength);
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
 void testBicycleCostParams() {
@@ -1052,8 +1049,7 @@ void testBicycleCostParams() {
   distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("gate_cost", (*distributor)(generator)));
-    if (ctorTester->gate_cost_ < kGateCostRange.min ||
-        ctorTester->gate_cost_ > kGateCostRange.max) {
+    if (ctorTester->gate_cost_ < kGateCostRange.min || ctorTester->gate_cost_ > kGateCostRange.max) {
       throw std::runtime_error("gate_cost_ is not within it's range");
     }
   }
@@ -1081,8 +1077,7 @@ void testBicycleCostParams() {
   // country_crossing_cost_
   distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_bicyclecost_from_json("country_crossing_cost", (*distributor)(generator)));
+    ctorTester.reset(make_bicyclecost_from_json("country_crossing_cost", (*distributor)(generator)));
     if (ctorTester->country_crossing_cost_ < kCountryCrossingCostRange.min ||
         ctorTester->country_crossing_cost_ > kCountryCrossingCostRange.max) {
       throw std::runtime_error("country_crossing_cost_ is not within it's range");
@@ -1110,8 +1105,8 @@ void testBicycleCostParams() {
   }
 
   // speed_
-  constexpr ranged_default_t<float> kRoadCyclingSpeedRange{
-      kMinCyclingSpeed, kDefaultCyclingSpeed[0], kMaxCyclingSpeed};
+  constexpr ranged_default_t<float> kRoadCyclingSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[0],
+                                                           kMaxCyclingSpeed};
   distributor.reset(make_distributor_from_range(kRoadCyclingSpeedRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("cycling_speed", (*distributor)(generator)));
@@ -1125,8 +1120,7 @@ void testBicycleCostParams() {
   distributor.reset(make_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("use_ferry", (*distributor)(generator)));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min ||
-        ctorTester->use_ferry_ > kUseFerryRange.max) {
+    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
       throw std::runtime_error("use_ferry_ is not within it's range");
     }
   }
@@ -1135,8 +1129,7 @@ void testBicycleCostParams() {
   distributor.reset(make_distributor_from_range(kUseHillsRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("use_hills", (*distributor)(generator)));
-    if (ctorTester->use_hills_ < kUseHillsRange.min ||
-        ctorTester->use_hills_ > kUseHillsRange.max) {
+    if (ctorTester->use_hills_ < kUseHillsRange.min || ctorTester->use_hills_ > kUseHillsRange.max) {
       throw std::runtime_error("use_hills_ is not within it's range");
     }
   }

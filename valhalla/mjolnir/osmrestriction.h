@@ -124,9 +124,8 @@ struct OSMRestriction {
    * overloaded == operator - used to compare complex restrictions
    */
   bool operator==(const OSMRestriction& o) const {
-    return (from() == o.from() && to() == o.to() &&
-            std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0 && modes() == o.modes() &&
-            time_domain() == o.time_domain());
+    return (from() == o.from() && to() == o.to() && std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0 &&
+            modes() == o.modes() && time_domain() == o.time_domain());
   }
 
   // from is a way - uses OSM way Id.

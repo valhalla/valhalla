@@ -64,8 +64,7 @@ void TestFindCommonBaseNames() {
                          StreetNamesUs({"PA 743 North"}));
 
   TryFindCommonBaseNames(StreetNamesUs({"Hershey Road", "PA 743 North"}),
-                         StreetNamesUs({"Fishburn Road", "PA 743"}),
-                         StreetNamesUs({"PA 743 North"}));
+                         StreetNamesUs({"Fishburn Road", "PA 743"}), StreetNamesUs({"PA 743 North"}));
 
   TryFindCommonBaseNames(StreetNamesUs({"Hershey Road", "PA 743"}),
                          StreetNamesUs({"Fishburn Road", "PA 743 North"}),

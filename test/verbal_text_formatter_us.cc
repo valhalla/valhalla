@@ -203,8 +203,8 @@ void TryFormThousandTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "PA");
   string tts = formatter_test.ProcessThousandTts(source);
   if (tts != expected) {
-    throw std::runtime_error("Incorrect FormThousandTts - EXPECTED: " + expected + "  |  FORMED: " +
-                             tts);
+    throw std::runtime_error("Incorrect FormThousandTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -232,8 +232,8 @@ void TryFormHundredTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "MD");
   string tts = formatter_test.ProcessHundredTts(source);
   if (tts != expected) {
-    throw std::runtime_error("Incorrect FormHundredTts - EXPECTED: " + expected + "  |  FORMED: " +
-                             tts);
+    throw std::runtime_error("Incorrect FormHundredTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 

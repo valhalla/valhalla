@@ -62,8 +62,8 @@ BlobHeader read_header(char* buffer, std::ifstream& file, bool& finished) {
   // convert the size from network byte-order to host byte-order and check its sane
   sz = ntohl(sz);
   if (sz > MAX_BLOB_HEADER_SIZE) {
-    throw std::runtime_error("blob-header-size is bigger than allowed " + std::to_string(sz) +
-                             " > " + std::to_string(MAX_BLOB_HEADER_SIZE));
+    throw std::runtime_error("blob-header-size is bigger than allowed " + std::to_string(sz) + " > " +
+                             std::to_string(MAX_BLOB_HEADER_SIZE));
   }
 
   // grab the blob header bytes
@@ -81,8 +81,7 @@ BlobHeader read_header(char* buffer, std::ifstream& file, bool& finished) {
   return result;
 }
 
-int32_t
-read_blob(char* buffer, char* unpack_buffer, std::ifstream& file, const BlobHeader& header) {
+int32_t read_blob(char* buffer, char* unpack_buffer, std::ifstream& file, const BlobHeader& header) {
   Blob blob;
 
   // is the size of the following blob sane
@@ -169,13 +168,10 @@ void parse_primitive_block(char* unpack_buffer,
     if ((interest & NODES) == NODES) {
       // Simple Nodes
       for (const auto& node : primitive_group.nodes()) {
-        double lon =
-            0.000000001 * (primblock.lon_offset() + (primblock.granularity() * node.lon()));
-        double lat =
-            0.000000001 * (primblock.lat_offset() + (primblock.granularity() * node.lat()));
+        double lon = 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * node.lon()));
+        double lat = 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * node.lat()));
         callback.node_callback(node.id(), lon, lat, get_tags<Node>(node, primblock));
-        if (node.has_info() && node.info().has_changeset() &&
-            (interest & CHANGESETS) == CHANGESETS) {
+        if (node.has_info() && node.info().has_changeset() && (interest & CHANGESETS) == CHANGESETS) {
           callback.changeset_callback(node.info().changeset());
         }
       }
@@ -190,10 +186,10 @@ void parse_primitive_block(char* unpack_buffer,
         int current_kv = 0;
         for (int i = 0; i < dense_nodes.id_size(); ++i) {
           id += dense_nodes.id(i);
-          lon += 0.000000001 *
-                 (primblock.lon_offset() + (primblock.granularity() * dense_nodes.lon(i)));
-          lat += 0.000000001 *
-                 (primblock.lat_offset() + (primblock.granularity() * dense_nodes.lat(i)));
+          lon +=
+              0.000000001 * (primblock.lon_offset() + (primblock.granularity() * dense_nodes.lon(i)));
+          lat +=
+              0.000000001 * (primblock.lat_offset() + (primblock.granularity() * dense_nodes.lat(i)));
 
           // can't exactly preallocate because you don't know how many there are
           Tags tags;

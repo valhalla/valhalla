@@ -193,8 +193,7 @@ protected:
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    */
-  void
-  CheckForwardConnections(const uint32_t source, const sif::BDEdgeLabel& pred, const uint32_t n);
+  void CheckForwardConnections(const uint32_t source, const sif::BDEdgeLabel& pred, const uint32_t n);
 
   /**
    * Update status when a connection is found.

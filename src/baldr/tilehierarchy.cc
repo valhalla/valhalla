@@ -7,26 +7,26 @@ namespace valhalla {
 namespace baldr {
 
 // Static tile levels
-std::map<uint8_t, TileLevel> TileHierarchy::levels_ = {
-    {2, TileLevel{2, stringToRoadClass.find("ServiceOther")->second, "local",
-                  midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                   .25,
-                                                   static_cast<unsigned short>(kBinsDim)}}},
-    {1, TileLevel{1, stringToRoadClass.find("Tertiary")->second, "arterial",
-                  midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                   1,
-                                                   static_cast<unsigned short>(kBinsDim)}}},
-    {0, TileLevel{0, stringToRoadClass.find("Primary")->second, "highway",
-                  midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                   4,
-                                                   static_cast<unsigned short>(kBinsDim)}}}};
+std::map<uint8_t, TileLevel> TileHierarchy::levels_ =
+    {{2, TileLevel{2, stringToRoadClass.find("ServiceOther")->second, "local",
+                   midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                    .25,
+                                                    static_cast<unsigned short>(kBinsDim)}}},
+     {1, TileLevel{1, stringToRoadClass.find("Tertiary")->second, "arterial",
+                   midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                    1,
+                                                    static_cast<unsigned short>(kBinsDim)}}},
+     {0, TileLevel{0, stringToRoadClass.find("Primary")->second, "highway",
+                   midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                    4,
+                                                    static_cast<unsigned short>(kBinsDim)}}}};
 
 // Should we make a class lower than service other for transit?
-TileLevel TileHierarchy::transit_level_ = {
-    3, stringToRoadClass.find("ServiceOther")->second, "transit",
-    midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                     .25,
-                                     static_cast<unsigned short>(kBinsDim)}};
+TileLevel TileHierarchy::transit_level_ =
+    {3, stringToRoadClass.find("ServiceOther")->second, "transit",
+     midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                      .25,
+                                      static_cast<unsigned short>(kBinsDim)}};
 
 // Returns the GraphId of the requested tile based on a lat,lng and a level.
 // If the level is not supported an invalid id will be returned.

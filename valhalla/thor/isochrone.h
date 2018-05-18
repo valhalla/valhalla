@@ -194,10 +194,10 @@ protected:
    * @param  origin_locations  Location information for origins.
    * @param  costing           Dynamic costing.
    */
-  void SetOriginLocationsMM(
-      baldr::GraphReader& graphreader,
-      google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
-      const std::shared_ptr<sif::DynamicCost>& costing);
+  void
+  SetOriginLocationsMM(baldr::GraphReader& graphreader,
+                       google::protobuf::RepeatedPtrField<valhalla::odin::Location>& origin_locations,
+                       const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Add edge(s) at each destination location to the adjacency list.

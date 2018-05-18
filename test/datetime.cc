@@ -188,10 +188,7 @@ void TryGetServiceDays(bool check_b_date,
   }
 }
 
-void TryRejectFeed(std::string begin_date,
-                   std::string end_date,
-                   uint32_t dow_mask,
-                   uint64_t value) {
+void TryRejectFeed(std::string begin_date, std::string end_date, uint32_t dow_mask, uint64_t value) {
 
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
@@ -268,29 +265,28 @@ void TryTestDST(const bool is_depart_at,
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
   std::string iso_origin, iso_dest;
-  DateTime::seconds_to_date(is_depart_at, origin_seconds, dest_seconds, tz, tz, iso_origin,
-                            iso_dest);
+  DateTime::seconds_to_date(is_depart_at, origin_seconds, dest_seconds, tz, tz, iso_origin, iso_dest);
 
   if (iso_origin != o_value)
     throw std::runtime_error("Test origin DST failed.  Expected: " + o_value + " but received " +
                              iso_origin);
 
   if (iso_dest != d_value)
-    throw std::runtime_error("Test destination DST failed.  Expected: " + d_value +
-                             " but received " + iso_dest);
+    throw std::runtime_error("Test destination DST failed.  Expected: " + d_value + " but received " +
+                             iso_dest);
 }
 
 void TryIsRestricted(const TimeDomain td, const std::string date, const bool expected_value) {
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
-  if (DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
-                              td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
-                              td.begin_day_dow(), td.end_week(), td.end_month(), td.end_day_dow(),
+  if (DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(), td.end_mins(),
+                              td.dow(), td.begin_week(), td.begin_month(), td.begin_day_dow(),
+                              td.end_week(), td.end_month(), td.end_day_dow(),
                               DateTime::seconds_since_epoch(date, tz), tz) != expected_value) {
 
-    throw std::runtime_error("Is Restricted " + date + " test failed.  Expected: " +
-                             std::to_string(expected_value));
+    throw std::runtime_error("Is Restricted " + date +
+                             " test failed.  Expected: " + std::to_string(expected_value));
   }
 }
 
@@ -337,9 +333,9 @@ void TryConditionalRestrictions(const std::string condition,
     res.end_hrs() << " end mins " << res.end_mins() << std::endl;*/
 
     if (res.td_value() != expected_values.at(x))
-      throw std::runtime_error("Time domain " + condition + " test failed.  Expected: " +
-                               std::to_string(expected_values.at(x)) + " but received " +
-                               std::to_string(res.td_value()));
+      throw std::runtime_error("Time domain " + condition +
+                               " test failed.  Expected: " + std::to_string(expected_values.at(x)) +
+                               " but received " + std::to_string(res.td_value()));
   }
 }
 
@@ -496,8 +492,7 @@ void TestServiceDays() {
   TryGetServiceDays("2015-09-25", "2017-09-28", dow_mask, 435749860008887046);
 
   // Test weekends for 60 days plus Columbus Day
-  TryAddServiceDays(435749860008887046, "2015-09-25", "2017-09-28", "2015-10-12",
-                    435749860009018118);
+  TryAddServiceDays(435749860008887046, "2015-09-25", "2017-09-28", "2015-10-12", 435749860009018118);
 
   // Test adding 1 day where 21 and 24 already active.
   TryAddServiceDays(9, "2017-02-21", "2017-02-24", "2017-02-22", 11);
@@ -521,8 +516,7 @@ void TestServiceDays() {
   TryRemoveServiceDays(11, "2017-02-21", "2017-02-24", "2017-02-25", 11);
 
   // Try to add a date out of the date range
-  TryAddServiceDays(435749860008887046, "2015-09-25", "2017-09-28", "2018-10-12",
-                    435749860008887046);
+  TryAddServiceDays(435749860008887046, "2015-09-25", "2017-09-28", "2018-10-12", 435749860008887046);
 
   // Test weekends for 60 days remove Columbus Day
   TryRemoveServiceDays(435749860009018118, "2015-09-25", "2017-09-28", "2015-10-12",

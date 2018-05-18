@@ -77,11 +77,9 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
   float mincostf = astarheuristic_forward_.Get(origll);
-  adjacencylist_forward_.reset(
-      new DoubleBucketQueue(mincostf, range, bucketsize, forward_edgecost));
+  adjacencylist_forward_.reset(new DoubleBucketQueue(mincostf, range, bucketsize, forward_edgecost));
   float mincostr = astarheuristic_reverse_.Get(destll);
-  adjacencylist_reverse_.reset(
-      new DoubleBucketQueue(mincostr, range, bucketsize, reverse_edgecost));
+  adjacencylist_reverse_.reset(new DoubleBucketQueue(mincostr, range, bucketsize, reverse_edgecost));
   edgestatus_forward_.clear();
   edgestatus_reverse_.clear();
 
@@ -186,13 +184,13 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // Find the sort cost (with A* heuristic) using the lat,lng at the
     // end node of the directed edge.
     float dist = 0.0f;
-    float sortcost = newcost.cost +
-                     astarheuristic_forward_.Get(t2->node(directededge->endnode())->latlng(), dist);
+    float sortcost =
+        newcost.cost + astarheuristic_forward_.Get(t2->node(directededge->endnode())->latlng(), dist);
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_forward_.size();
-    edgelabels_forward_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, sortcost,
-                                     dist, mode_, tc,
+    edgelabels_forward_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, sortcost, dist,
+                                     mode_, tc,
                                      (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_forward_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
@@ -293,13 +291,13 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     // Find the sort cost (with A* heuristic) using the lat,lng at the
     // end node of the directed edge.
     float dist = 0.0f;
-    float sortcost = newcost.cost +
-                     astarheuristic_reverse_.Get(t2->node(directededge->endnode())->latlng(), dist);
+    float sortcost =
+        newcost.cost + astarheuristic_reverse_.Get(t2->node(directededge->endnode())->latlng(), dist);
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_reverse_.size();
-    edgelabels_reverse_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, sortcost,
-                                     dist, mode_, tc,
+    edgelabels_reverse_.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, sortcost, dist,
+                                     mode_, tc,
                                      (pred.not_thru_pruning() || !directededge->not_thru()));
     adjacencylist_reverse_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
@@ -322,8 +320,7 @@ BidirectionalAStar::GetBestPath(odin::Location& origin,
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(),
-                          destination.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
 
   // Set origin and destination locations - seeds the adj. lists
@@ -654,8 +651,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const odin::Lo
     uint32_t idx = edgelabels_reverse_.size();
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx,
                             graphreader.GetGraphTile(opp_edge_id));
-    edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
-                                     sortcost, dist, mode_, c, false);
+    edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
+                                     dist, mode_, c, false);
     adjacencylist_reverse_->add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru

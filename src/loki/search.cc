@@ -240,8 +240,8 @@ struct projector_t {
     // Scale longitude when finding the projection
     auto bx2 = bx * lon_scale;
     auto sq = bx2 * bx2 + by * by;
-    auto scale = (lng - u.lng()) * lon_scale * bx2 +
-                 (lat - u.lat()) * by; // only need the numerator at first
+    auto scale =
+        (lng - u.lng()) * lon_scale * bx2 + (lat - u.lat()) * by; // only need the numerator at first
 
     // projects along the ray before u
     if (scale <= 0.f) {
@@ -357,8 +357,9 @@ struct bin_handler_t {
 
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
-          PathLocation::PathEdge path_edge{
-              std::move(id), 0.f, node->latlng(), score, PathLocation::NONE, get_reach(edge)};
+          PathLocation::PathEdge path_edge{std::move(id),      0.f,
+                                           node->latlng(),     score,
+                                           PathLocation::NONE, get_reach(edge)};
           auto index = edge->forward() ? 0 : info.shape().size() - 2;
           if (heading_filter(edge, info, location, candidate.point, index)) {
             filtered.emplace_back(std::move(path_edge));
@@ -415,8 +416,12 @@ struct bin_handler_t {
       }
       // side of street
       auto side = candidate.get_side(location.latlng_, candidate.sq_distance);
-      PathLocation::PathEdge path_edge{
-          candidate.edge_id, length_ratio, candidate.point, score, side, get_reach(candidate.edge)};
+      PathLocation::PathEdge path_edge{candidate.edge_id,
+                                       length_ratio,
+                                       candidate.point,
+                                       score,
+                                       side,
+                                       get_reach(candidate.edge)};
       // correlate the edge we found
       if (heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point,
                          candidate.index)) {
@@ -428,8 +433,7 @@ struct bin_handler_t {
       const GraphTile* other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_tile);
       const DirectedEdge* other_edge;
-      if (opposing_edge_id.Is_Valid() &&
-          (other_edge = other_tile->directededge(opposing_edge_id)) &&
+      if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
           edge_filter(other_edge) != 0.0f) {
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio,
                                                candidate.point,  score,
@@ -533,8 +537,7 @@ struct bin_handler_t {
   }
 
   // handle a bin for the range of candidates that share it
-  void handle_bin(std::vector<projector_t>::iterator begin,
-                  std::vector<projector_t>::iterator end) {
+  void handle_bin(std::vector<projector_t>::iterator begin, std::vector<projector_t>::iterator end) {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);

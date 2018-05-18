@@ -58,8 +58,8 @@ std::vector<char> lzip(const std::vector<char>& in, int compression_level, algor
   int compressed_size = 0;
   switch (algorithm) {
     case algorithm_t::DEFAULT:
-      compressed_size = LZ4_compress_fast(in.data(), out.data(), in.size(), max_compressed_size,
-                                          compression_level);
+      compressed_size =
+          LZ4_compress_fast(in.data(), out.data(), in.size(), max_compressed_size, compression_level);
       break;
     case algorithm_t::HIGH:
       compressed_size =

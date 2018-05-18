@@ -219,11 +219,10 @@ void set_origin(baldr::GraphReader& reader,
 /**
  * Set destinations.
  */
-void set_destinations(
-    baldr::GraphReader& reader,
-    const std::vector<baldr::PathLocation>& destinations,
-    std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& node_dests,
-    std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& edge_dests) {
+void set_destinations(baldr::GraphReader& reader,
+                      const std::vector<baldr::PathLocation>& destinations,
+                      std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& node_dests,
+                      std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& edge_dests) {
   const baldr::GraphTile* tile = nullptr;
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
     for (const auto& edge : destinations[dest].edges) {

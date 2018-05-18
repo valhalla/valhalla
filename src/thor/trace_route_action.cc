@@ -137,9 +137,10 @@ odin::TripPath thor_worker_t::route_match(valhalla_request_t& request,
   if (RouteMatcher::FormPath(mode_costing, mode, reader, trace, request.options.locations(),
                              path_infos)) {
     // Form the trip path based on mode costing, origin, destination, and path edges
-    trip_path = thor::TripPathBuilder::Build(
-        controller, reader, mode_costing, path_infos, *request.options.mutable_locations()->begin(),
-        *request.options.mutable_locations()->rbegin(), std::list<odin::Location>{}, interrupt);
+    trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, path_infos,
+                                             *request.options.mutable_locations()->begin(),
+                                             *request.options.mutable_locations()->rbegin(),
+                                             std::list<odin::Location>{}, interrupt);
   }
 
   return trip_path;
@@ -175,8 +176,9 @@ thor_worker_t::map_match(valhalla_request_t& request,
 
     // Form the path edges based on the matched points and populate disconnected edges
     std::vector<std::pair<GraphId, GraphId>> disconnected_edges;
-    std::vector<PathInfo> path_edges = MapMatcher::FormPath(
-        matcher.get(), match_results, edge_segments, mode_costing, mode, disconnected_edges);
+    std::vector<PathInfo> path_edges =
+        MapMatcher::FormPath(matcher.get(), match_results, edge_segments, mode_costing, mode,
+                             disconnected_edges);
 
     // Throw exception if not trace attributes action and disconnected path
     if (request.options.action() == odin::DirectionsOptions::trace_route &&
@@ -210,8 +212,7 @@ thor_worker_t::map_match(valhalla_request_t& request,
           continue;
         }
         for (int j = 0;
-             j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1;
-             ++j) {
+             j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1; ++j) {
           request.options.mutable_shape(i)->mutable_path_edges()->Add();
         }
       }
@@ -391,26 +392,29 @@ thor_worker_t::map_match(valhalla_request_t& request,
     }
 
     // Set origin and destination from map matching results
-    auto first_result_with_state = std::find_if(
-        match_results.begin(), match_results.end(), [](const meili::MatchResult& result) {
-          return result.HasState() && result.edgeid.Is_Valid();
-        });
+    auto first_result_with_state =
+        std::find_if(match_results.begin(), match_results.end(),
+                     [](const meili::MatchResult& result) {
+                       return result.HasState() && result.edgeid.Is_Valid();
+                     });
 
-    auto last_result_with_state = std::find_if(
-        match_results.rbegin(), match_results.rend(), [](const meili::MatchResult& result) {
-          return result.HasState() && result.edgeid.Is_Valid();
-        });
+    auto last_result_with_state = std::find_if(match_results.rbegin(), match_results.rend(),
+                                               [](const meili::MatchResult& result) {
+                                                 return result.HasState() && result.edgeid.Is_Valid();
+                                               });
 
     if ((first_result_with_state != match_results.end()) &&
         (last_result_with_state != match_results.rend())) {
       odin::Location origin;
-      PathLocation::toPBF(
-          matcher->state_container().state(first_result_with_state->stateid).candidate(), &origin,
-          reader);
+      PathLocation::toPBF(matcher->state_container()
+                              .state(first_result_with_state->stateid)
+                              .candidate(),
+                          &origin, reader);
       odin::Location destination;
-      PathLocation::toPBF(
-          matcher->state_container().state(last_result_with_state->stateid).candidate(),
-          &destination, reader);
+      PathLocation::toPBF(matcher->state_container()
+                              .state(last_result_with_state->stateid)
+                              .candidate(),
+                          &destination, reader);
 
       bool found_origin = false;
       for (const auto& e : origin.path_edges()) {
@@ -456,17 +460,19 @@ thor_worker_t::map_match(valhalla_request_t& request,
       // destination.edges contains path_edges.back()
 
       // Form the trip path based on mode costing, origin, destination, and path edges
-      trip_path = thor::TripPathBuilder::Build(
-          controller, matcher->graphreader(), mode_costing, path_edges, origin, destination,
-          std::list<odin::Location>{}, interrupt, &route_discontinuities);
+      trip_path =
+          thor::TripPathBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges,
+                                       origin, destination, std::list<odin::Location>{}, interrupt,
+                                       &route_discontinuities);
     } else {
       throw valhalla_exception_t{442};
     }
     // Keep the result
-    map_match_results.emplace_back(
-        map_match_results.empty() ? 1.0f : std::get<kRawScoreIndex>(map_match_results.front()) /
-                                               result.score,
-        result.score, enhanced_match_results, trip_path);
+    map_match_results.emplace_back(map_match_results.empty()
+                                       ? 1.0f
+                                       : std::get<kRawScoreIndex>(map_match_results.front()) /
+                                             result.score,
+                                   result.score, enhanced_match_results, trip_path);
   }
 
   return map_match_results;

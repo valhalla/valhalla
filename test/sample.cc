@@ -92,8 +92,7 @@ void create_tile() {
 
   // write it again but this time lzipped
   auto lzipped = lzip(tile);
-  std::ofstream lzfile("test/data/samplelz/N40/N40W077.hgt.lz4",
-                       std::ios::binary | std::ios::trunc);
+  std::ofstream lzfile("test/data/samplelz/N40/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
   lzfile.write(lzipped.data(), lzipped.size());
 }
 

@@ -28,8 +28,10 @@ void TryArgCtor(const std::unordered_map<std::string, bool>& new_attributes, siz
 }
 
 void TestArgCtor() {
-  const std::unordered_map<std::string, bool> attributes = {
-      {kEdgeNames, true}, {kEdgeLength, false}, {kEdgeSpeed, true}, {kEdgeRoadClass, false}};
+  const std::unordered_map<std::string, bool> attributes = {{kEdgeNames, true},
+                                                            {kEdgeLength, false},
+                                                            {kEdgeSpeed, true},
+                                                            {kEdgeRoadClass, false}};
 
   TryArgCtor(attributes, attributes.size());
 }

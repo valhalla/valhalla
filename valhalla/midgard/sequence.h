@@ -424,9 +424,8 @@ public:
       return end();
     }
     // if we did find it return the iterator to it
-    auto* found =
-        std::lower_bound(static_cast<const T*>(memmap),
-                         static_cast<const T*>(memmap) + memmap.size(), target, predicate);
+    auto* found = std::lower_bound(static_cast<const T*>(memmap),
+                                   static_cast<const T*>(memmap) + memmap.size(), target, predicate);
     if (!(predicate(target, *found) || predicate(*found, target))) {
       return at(found - static_cast<const T*>(memmap));
     }

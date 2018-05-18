@@ -6,8 +6,7 @@ namespace valhalla {
 namespace sif {
 
 DynamicCost::DynamicCost(const boost::property_tree::ptree& pt, const TravelMode mode)
-    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
-      travel_mode_(mode) {
+    : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);

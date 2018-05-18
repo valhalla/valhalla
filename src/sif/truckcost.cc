@@ -296,9 +296,9 @@ public:
 
 // Constructor
 TruckCost::TruckCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive),
-      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
-                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
+                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
+                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
   type_ = VehicleType::kTractorTrailer;
   maneuver_penalty_ =
       kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
@@ -310,8 +310,8 @@ TruckCost::TruckCost(const boost::property_tree::ptree& pt)
   tollbooth_cost_ = kTollBoothCostRange(pt.get<float>("toll_booth_cost", kDefaultTollBoothCost));
   tollbooth_penalty_ =
       kTollBoothPenaltyRange(pt.get<float>("toll_booth_penalty", kDefaultTollBoothPenalty));
-  country_crossing_cost_ = kCountryCrossingCostRange(
-      pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
+  country_crossing_cost_ =
+      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
   country_crossing_penalty_ = kCountryCrossingPenaltyRange(
       pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
 
@@ -440,8 +440,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
-  if (!(opp_edge->forwardaccess() & kTruckAccess) ||
-      (pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!(opp_edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
@@ -690,8 +689,7 @@ TruckCost* make_truckcost_from_json(const std::string& property, float testVal) 
 std::uniform_real_distribution<float>*
 make_distributor_from_range(const ranged_default_t<float>& range) {
   float rangeLength = range.max - range.min;
-  return new std::uniform_real_distribution<float>(range.min - rangeLength,
-                                                   range.max + rangeLength);
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
 void testTruckCostParams() {
@@ -714,8 +712,7 @@ void testTruckCostParams() {
   // destination_only_penalty_
   distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_truckcost_from_json("destination_only_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_truckcost_from_json("destination_only_penalty", (*distributor)(generator)));
     if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
         ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
       throw std::runtime_error("destination_only_penalty_ is not within it's range");
@@ -736,8 +733,7 @@ void testTruckCostParams() {
   distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("gate_cost", (*distributor)(generator)));
-    if (ctorTester->gate_cost_ < kGateCostRange.min ||
-        ctorTester->gate_cost_ > kGateCostRange.max) {
+    if (ctorTester->gate_cost_ < kGateCostRange.min || ctorTester->gate_cost_ > kGateCostRange.max) {
       throw std::runtime_error("gate_cost_ is not within it's range");
     }
   }
@@ -785,8 +781,7 @@ void testTruckCostParams() {
   // country_crossing_penalty_
   distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_truckcost_from_json("country_crossing_penalty", (*distributor)(generator)));
+    ctorTester.reset(make_truckcost_from_json("country_crossing_penalty", (*distributor)(generator)));
     if (ctorTester->country_crossing_penalty_ < kCountryCrossingPenaltyRange.min ||
         ctorTester->country_crossing_penalty_ > kCountryCrossingPenaltyRange.max) {
       throw std::runtime_error("country_crossing_penalty_ is not within it's range");
@@ -807,8 +802,7 @@ void testTruckCostParams() {
   distributor.reset(make_distributor_from_range(kTruckWeightRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("weight", (*distributor)(generator)));
-    if (ctorTester->weight_ < kTruckWeightRange.min ||
-        ctorTester->weight_ > kTruckWeightRange.max) {
+    if (ctorTester->weight_ < kTruckWeightRange.min || ctorTester->weight_ > kTruckWeightRange.max) {
       throw std::runtime_error("weight_ is not within it's range");
     }
   }
@@ -827,8 +821,7 @@ void testTruckCostParams() {
   distributor.reset(make_distributor_from_range(kTruckHeightRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("height", (*distributor)(generator)));
-    if (ctorTester->height_ < kTruckHeightRange.min ||
-        ctorTester->height_ > kTruckHeightRange.max) {
+    if (ctorTester->height_ < kTruckHeightRange.min || ctorTester->height_ > kTruckHeightRange.max) {
       throw std::runtime_error("height_ is not within it's range");
     }
   }
@@ -846,8 +839,7 @@ void testTruckCostParams() {
   distributor.reset(make_distributor_from_range(kTruckLengthRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("length", (*distributor)(generator)));
-    if (ctorTester->length_ < kTruckLengthRange.min ||
-        ctorTester->length_ > kTruckLengthRange.max) {
+    if (ctorTester->length_ < kTruckLengthRange.min || ctorTester->length_ > kTruckLengthRange.max) {
       throw std::runtime_error("length_ is not within it's range");
     }
   }

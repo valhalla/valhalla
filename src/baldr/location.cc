@@ -129,9 +129,9 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   }
   float lon = midgard::circular_range_clamp<float>(pt.get<float>("lon"), -180, 180);
 
-  Location location(
-      {lon, lat},
-      (pt.get<std::string>("type", "break") == "through" ? StopType::THROUGH : StopType::BREAK));
+  Location location({lon, lat},
+                    (pt.get<std::string>("type", "break") == "through" ? StopType::THROUGH
+                                                                       : StopType::BREAK));
 
   location.name_ = pt.get<std::string>("name", "");
   location.street_ = pt.get<std::string>("street", "");

@@ -278,8 +278,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   }
 
   // lambda to expand search forward from the end node
-  std::function<void(const GraphTile*, const GraphId&, const NodeInfo*, BDEdgeLabel&,
-                     const uint32_t, const bool)>
+  std::function<void(const GraphTile*, const GraphId&, const NodeInfo*, BDEdgeLabel&, const uint32_t,
+                     const bool)>
       expand;
   expand = [&](const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
                BDEdgeLabel& pred, const uint32_t pred_idx, const bool from_transition) {
@@ -292,9 +292,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       if (directededge->IsTransition()) {
         // Do not take transition edges if this is called from a transition.
         // Also skip transition edges onto a level no longer being expanded.
-        if (from_transition ||
-            (directededge->trans_down() &&
-             hierarchy_limits[directededge->endnode().level()].StopExpanding())) {
+        if (from_transition || (directededge->trans_down() &&
+                                hierarchy_limits[directededge->endnode().level()].StopExpanding())) {
           continue;
         }
 
@@ -452,8 +451,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
           best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
           if (best_connection_[idx].threshold == 0) {
             best_connection_[idx].threshold =
-                n + GetThreshold(mode_, source_edgelabel_[source].size() +
-                                            target_edgelabel_[target].size());
+                n + GetThreshold(mode_,
+                                 source_edgelabel_[source].size() + target_edgelabel_[target].size());
           }
 
           // Update status and update threshold if this is the last location
@@ -536,8 +535,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   }
 
   // Expand from node in reverse direction.
-  std::function<void(const GraphTile*, const GraphId&, const NodeInfo*, const uint32_t,
-                     BDEdgeLabel&, const uint32_t, const DirectedEdge*, const bool)>
+  std::function<void(const GraphTile*, const GraphId&, const NodeInfo*, const uint32_t, BDEdgeLabel&,
+                     const uint32_t, const DirectedEdge*, const bool)>
       expand;
   expand = [&](const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
                const uint32_t index, BDEdgeLabel& pred, const uint32_t pred_idx,
@@ -551,9 +550,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       if (directededge->IsTransition()) {
         // Do not take transition edges if this is called from a transition.
         // Also skip transition edges onto a level no longer being expanded.
-        if (from_transition ||
-            (directededge->trans_down() &&
-             hierarchy_limits[directededge->endnode().level()].StopExpanding())) {
+        if (from_transition || (directededge->trans_down() &&
+                                hierarchy_limits[directededge->endnode().level()].StopExpanding())) {
           continue;
         }
 
@@ -649,8 +647,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       if (pred.opp_edgeid().Tile_Base() == tile->id().Tile_Base()) {
         opp_pred_edge = tile->directededge(pred.opp_edgeid().id());
       } else {
-        opp_pred_edge = graphreader.GetGraphTile(pred.opp_edgeid().Tile_Base())
-                            ->directededge(pred.opp_edgeid());
+        opp_pred_edge =
+            graphreader.GetGraphTile(pred.opp_edgeid().Tile_Base())->directededge(pred.opp_edgeid());
       }
       expand(tile, node, nodeinfo, index, pred, pred_idx, opp_pred_edge, false);
     }
@@ -713,8 +711,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d,
-                             false);
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

@@ -24,20 +24,18 @@ TrafficAlgorithm::~TrafficAlgorithm() {
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo>
-TrafficAlgorithm::GetBestPath(odin::Location& origin,
-                              odin::Location& destination,
-                              GraphReader& graphreader,
-                              const std::shared_ptr<DynamicCost>* mode_costing,
-                              const TravelMode mode) {
+std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
+                                                    odin::Location& destination,
+                                                    GraphReader& graphreader,
+                                                    const std::shared_ptr<DynamicCost>* mode_costing,
+                                                    const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(),
-                          destination.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -133,8 +131,8 @@ TrafficAlgorithm::GetBestPath(odin::Location& origin,
         edge_cost = costing_->EdgeCost(directededge);
       } else {
         // Traffic exists for this edge
-        float sec = directededge->length() * (kSecPerHour * 0.001f) /
-                    static_cast<float>(speeds[edgeid.id()]);
+        float sec =
+            directededge->length() * (kSecPerHour * 0.001f) / static_cast<float>(speeds[edgeid.id()]);
         edge_cost = {sec, sec};
 
         // For now reduce transition cost by half...thought is that traffic
