@@ -213,6 +213,7 @@ nobase_include_HEADERS = \
 	valhalla/meili/map_matcher.h \
 	valhalla/meili/map_matcher_factory.h \
 	valhalla/meili/traffic_segment_matcher.h \
+	valhalla/meili/sssp.h \
 	valhalla/skadi/sample.h \
 	valhalla/skadi/util.h \
 	valhalla/loki/worker.h \
@@ -323,6 +324,7 @@ libvalhalla_la_SOURCES = \
 	src/meili/map_matcher_factory.cc \
 	src/meili/match_route.cc \
 	src/meili/traffic_segment_matcher.cc \
+	src/meili/sssp.cc \
 	src/skadi/sample.cc \
 	src/skadi/util.cc \
 	src/loki/search.cc \
