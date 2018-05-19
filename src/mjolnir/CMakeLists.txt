@@ -95,43 +95,10 @@ target_include_directories(${library}
   PRIVATE
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/valhalla)
-target_link_libraries(${library} Spatialite::Spatialite SQLite3::SQLite3 Lua::Lua Threads::Threads  ZLIB::ZLIB)
+target_link_libraries(${library} Spatialite::Spatialite SQLite3::SQLite3 Lua::Lua Threads::Threads ZLIB::ZLIB)
 
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module})
+install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module} COMPONENT development)
 
 if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
   set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
-
-
-# add_library(${library}-obj OBJECT ${sources} ${headers})
-# target_include_directories(${library}-obj
-#   PUBLIC
-#     ${CMAKE_SOURCE_DIR}
-#     ${CMAKE_SOURCE_DIR}/valhalla
-#     ${CMAKE_BINARY_DIR}
-#     ${CMAKE_BINARY_DIR}/valhalla)
-
-# add_library(${library}-interface INTERFACE)
-# target_include_directories(${library}-interface INTERFACE
-#     ${CMAKE_SOURCE_DIR}
-#     ${CMAKE_SOURCE_DIR}/valhalla
-#     ${CMAKE_BINARY_DIR}
-#     ${CMAKE_BINARY_DIR}/valhalla)
-# target_link_libraries(${library}-interface INTERFACE
-#   Spatialite::Spatialite
-#   SQLite3::SQLite3
-#   Lua::Lua
-#   Threads::Threads
-#   ZLIB::ZLIB)
-
-# add_library(${library} INTERFACE)
-# target_sources(${library} INTERFACE ${library}-obj)
-# target_link_libraries(${library} INTERFACE ${library}-interface)
-# add_library(valhalla::${module} ALIAS ${library})
-
-# install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module})
-
-# if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
-#   set_property(TARGET ${library}-obj PROPERTY POSITION_INDEPENDENT_CODE ON)
-# endif()
