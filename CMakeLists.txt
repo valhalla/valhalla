@@ -42,7 +42,7 @@ if(VALHALLA_VERSION_MAJOR)
       set(VERSION "${VERSION}.${VALHALLA_VERSION_PATCH}")
     endif()
   endif()
-elseif()
+else()
   message(FATAL_ERROR "No Valhalla major version")
 endif()
 
@@ -98,7 +98,7 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
   endif()
 endif()
 
-if (ENABLE_SANITIZER)
+if(ENABLE_SANITIZER)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
@@ -107,7 +107,7 @@ endif()
 
 ## Custom commands for generated files
 find_program(XXD xxd)
-if (NOT XXD)
+if(NOT XXD)
   message(FATAL_ERROR "xxd executable not found")
 endif()
 
@@ -143,7 +143,7 @@ add_library(valhalla
   ${valhalla_srcs}
   ${valhalla_hdrs})
 
-if (MSVC)
+if(MSVC)
   target_compile_definitions(valhalla PRIVATE "VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI")
 endif()
 
@@ -164,7 +164,21 @@ target_link_libraries(valhalla
   valhalla::skadi
   valhalla::protobuf)
 
-if(NOT BUILD_SHARED_LIBS)
+set_target_properties(valhalla PROPERTIES
+  VERSION "${VERSION}"
+  SOVERSION "${VALHALLA_VERSION_MAJOR}")
+
+set(LIBVALHALLA_SO_LINK ${CMAKE_SHARED_LIBRARY_PREFIX}valhalla${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+install(TARGETS valhalla
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shared NAMELINK_SKIP
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT development)
+
+if(BUILD_SHARED_LIBS)
+  install(FILES COPYING ChangeLog
+    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla0"
+    COMPONENT shared)
+else()
   add_custom_command(TARGET valhalla POST_BUILD
     COMMAND ${CMAKE_AR} rc $<TARGET_FILE:valhalla>
       $<TARGET_FILE:valhalla::baldr>
@@ -178,16 +192,23 @@ if(NOT BUILD_SHARED_LIBS)
       $<TARGET_FILE:valhalla::thor>
       $<TARGET_FILE:valhalla::tyr>
       $<TARGET_FILE:valhalla::mjolnir>)
+
+  add_custom_target(${LIBVALHALLA_SO_LINK} ALL
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
 endif()
 
-set_target_properties(valhalla PROPERTIES
-  VERSION "${VERSION}"
-  SOVERSION "${VALHALLA_VERSION_MAJOR}"
-  PUBLIC_HEADER "${valhalla_hdrs}")
-install(TARGETS valhalla
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla)
+install(FILES COPYING ChangeLog README.md
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla-dev"
+  COMPONENT development)
+
+install(FILES ${CMAKE_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  COMPONENT development)
+
+install(FILES ${valhalla_hdrs}
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
+  COMPONENT development)
+
 
 ## pkg-config file
 set(prefix ${CMAKE_INSTALL_PREFIX})
@@ -196,7 +217,9 @@ set(libdir ${CMAKE_INSTALL_LIBDIR})
 set(includedir ${CMAKE_INSTALL_INCLUDEDIR}/valhalla)
 configure_file(libvalhalla.pc.in libvalhalla.pc @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/libvalhalla.pc
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
+  COMPONENT development)
+
 
 ## Executable targets
 function(get_source_path PATH NAME)
@@ -207,7 +230,7 @@ function(get_source_path PATH NAME)
   elseif(EXISTS ${CMAKE_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
     set(${PATH} ${CMAKE_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
   else()
-    message(ERROR "no source path for ${NAME}")
+    message(FATAL_ERROR "no source path for ${NAME}")
   endif()
 endfunction()
 
@@ -229,7 +252,7 @@ foreach(program ${valhalla_programs})
   get_source_path(path ${program})
   add_executable(${program} ${path})
   target_link_libraries(${program} Boost::program_options valhalla)
-  install(TARGETS ${program} DESTINATION bin)
+  install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
 endforeach()
 
 if(ENABLE_DATA_TOOLS)
@@ -237,7 +260,7 @@ if(ENABLE_DATA_TOOLS)
     get_source_path(path ${program})
     add_executable(${program} ${path})
     target_link_libraries(${program} valhalla GEOS::GEOS Boost::program_options)
-    install(TARGETS ${program} DESTINATION bin)
+    install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
   endforeach()
 
   add_executable(valhalla_build_statistics
@@ -245,17 +268,20 @@ if(ENABLE_DATA_TOOLS)
     src/mjolnir/statistics.cc
     src/mjolnir/statistics_database.cc)
   target_link_libraries(valhalla_build_statistics valhalla Boost::program_options)
-  install(TARGETS valhalla_build_statistics DESTINATION bin)
+  install(TARGETS valhalla_build_statistics DESTINATION bin COMPONENT runtime)
 endif()
 
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} ${CMAKE_SOURCE_DIR}/src/${program}.cc)
     target_link_libraries(${program} valhalla Boost::program_options)
-    install(TARGETS ${program} DESTINATION bin)
+    install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
   endforeach()
 endif()
 
+install(FILES COPYING ChangeLog
+  DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+  COMPONENT runtime)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
@@ -276,6 +302,19 @@ if(ENABLE_PYTHON_BINDINGS)
     INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
   target_link_libraries(python_valhalla valhalla ${Boost_Python_lib})
   set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  execute_process(
+    COMMAND "${PYTHON_EXECUTABLE}" -c "
+from distutils import sysconfig as sc
+print(sc.get_python_lib(prefix='', plat_specific=True))"
+    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  install(TARGETS python_valhalla
+    DESTINATION ${PYTHON_SITE_PACKAGES}
+    COMPONENT python)
+  install(FILES COPYING ChangeLog
+    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
+    COMPONENT python)
 endif()
 
 
@@ -345,23 +384,75 @@ add_custom_target(tests DEPENDS ${tests} ${cost_tests})
 
 ## Coverage report
 if(ENABLE_COVERAGE)
-  if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-    message(ERROR "ENABLE_COVERAGE=ON only make sense with a Debug build")
+  if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
+    message(WARNING "ENABLE_COVERAGE=ON only make sense with a Debug build")
+  else()
+    message(STATUS "Enabling coverage")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ftest-coverage -fprofile-arcs")
+    target_link_libraries(valhalla gcov)
+
+    # TODO: add configuration of gcov tools
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/coverage.info
+      COMMAND lcov --directory ${CMAKE_BINARY_DIR} --base-directory ${CMAKE_SOURCE_DIR} --no-external --capture --output-file ${CMAKE_BINARY_DIR}/coverage.info --no-checksum
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      DEPENDS check)
+
+    add_custom_target(coverage
+      COMMAND genhtml --prefix ${CMAKE_BINARY_DIR} --output-directory ${CMAKE_BINARY_DIR}/coverage --title "Test Coverage" --legend --show-details coverage.info
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      DEPENDS ${CMAKE_BINARY_DIR}/coverage.info)
   endif()
-  message(STATUS "Enabling coverage")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ftest-coverage -fprofile-arcs")
-  target_link_libraries(valhalla gcov)
-
-  # TODO: add configuration of gcov tools
-  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/coverage.info
-    COMMAND lcov --directory ${CMAKE_BINARY_DIR} --base-directory ${CMAKE_SOURCE_DIR} --no-external --capture --output-file ${CMAKE_BINARY_DIR}/coverage.info --no-checksum
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS check)
-
-  add_custom_target(coverage
-    COMMAND genhtml --prefix ${CMAKE_BINARY_DIR} --output-directory ${CMAKE_BINARY_DIR}/coverage --title "Test Coverage" --legend --show-details coverage.info
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS ${CMAKE_BINARY_DIR}/coverage.info)
 endif()
 
-# TODO: add packaging via CPack
+## Packaging via CPack
+include(CPackComponent)
+
+string(TOLOWER "${CMAKE_PROJECT_NAME}" CPACK_PACKAGE_NAME)
+set(CPACK_PACKAGE_VERSION_MAJOR ${VALHALLA_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${VALHALLA_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${VALHALLA_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}${CPACK_PACKAGE_VERSION_SUFFIX}")
+set(CPACK_PACKAGE_CONTACT "Team Valhalla <valhalla@mapzen.com>")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.md")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenStreetMap Routing API
+ A set of routing APIs designed around OSM map data using
+ dynamic costing and a tiled data structure")
+  set(CPACK_COMPONENT_PYHON_DESCRIPTION "OpenStreetMap Routing Python Bindings
+ A set routing APIs designed around OSM map data using
+ dynamic costing and a tiled data structure and
+ accompanying tools and services used to analyse and
+ compute routes using those APIs")
+set(CPACK_STRIP_FILES TRUE)
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "libvalhalla")
+
+if(${CPACK_GENERATOR} MATCHES "^DEB$")
+  set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/valhalla/")
+  set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+  set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
+  set(CPACK_DEBIAN_SHARED_PACKAGE_NAME "libvalhalla0")
+  set(CPACK_DEBIAN_SHARED_PACKAGE_SECTION "contrib/libs")
+
+  set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_NAME "libvalhalla-dev")
+  set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_DEPENDS "libvalhalla0 (= ${CPACK_PACKAGE_VERSION})")
+
+  set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "valhalla-bin")
+  set(CPACK_DEBIAN_RUNTIME_PACKAGE_SECTION "contrib/misc")
+  set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libvalhalla0 (= ${CPACK_PACKAGE_VERSION})")
+
+  set(CPACK_DEBIAN_PYTHON_PACKAGE_NAME "python-valhalla")
+  set(CPACK_DEBIAN_PYTHON_PACKAGE_SECTION "python")
+  set(CPACK_DEBIAN_PYTHON_PACKAGE_DEPENDS "libvalhalla0 (= ${CPACK_PACKAGE_VERSION})")
+
+  message(STATUS "Configured deb packages of ${CMAKE_CXX_LIBRARY_ARCHITECTURE} build for ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
+endif()
+
+if(BUILD_SHARED_LIBS)
+  set(CPACK_COMPONENTS_ALL "shared;runtime;python")
+else()
+  set(CPACK_COMPONENTS_ALL "development")
+endif()
+
+set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_SOURCE_DIR}/cmake/CPackConfig.cmake)
+set(CPACK_DEBIAN_PACKAGE_DEBUG OFF)
+include(CPack)

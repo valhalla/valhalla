@@ -57,7 +57,7 @@ target_include_directories(${library}
     ${CMAKE_BINARY_DIR}/valhalla)
 target_link_libraries(${library} valhalla::tyr valhalla::protobuf)
 
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module})
+install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module} COMPONENT development)
 
 if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
   set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
