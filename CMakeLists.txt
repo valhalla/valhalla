@@ -105,14 +105,9 @@ if(ENABLE_SANITIZER)
 endif()
 
 
-## Custom commands for generated files
-find_program(XXD xxd)
-if(NOT XXD)
-  message(FATAL_ERROR "xxd executable not found")
-endif()
-
 ## libvalhalla
 add_subdirectory(src)
+
 
 ## Executable targets
 function(get_source_path PATH NAME)
@@ -284,14 +279,19 @@ if(ENABLE_COVERAGE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ftest-coverage -fprofile-arcs")
     target_link_libraries(valhalla gcov)
 
-    # TODO: add configuration of gcov tools
+    find_program(LCOV_PATH NAMES lcov lcov.bat lcov.exe lcov.perl)
+    find_program(GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat)
+    if(NOT LCOV_PATH OR NOT GENHTML_PATH)
+      message(FATAL_ERROR "no lcov or genhtml installed")
+    endif()
+
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/coverage.info
-      COMMAND lcov --directory ${CMAKE_BINARY_DIR} --base-directory ${CMAKE_SOURCE_DIR} --no-external --capture --output-file ${CMAKE_BINARY_DIR}/coverage.info --no-checksum
+      COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --base-directory ${CMAKE_SOURCE_DIR} --no-external --capture --output-file ${CMAKE_BINARY_DIR}/coverage.info --no-checksum
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS check)
 
     add_custom_target(coverage
-      COMMAND genhtml --prefix ${CMAKE_BINARY_DIR} --output-directory ${CMAKE_BINARY_DIR}/coverage --title "Test Coverage" --legend --show-details coverage.info
+      COMMAND ${GENHTML_PATH} --prefix ${CMAKE_BINARY_DIR} --output-directory ${CMAKE_BINARY_DIR}/coverage --title "Test Coverage" --legend --show-details coverage.info
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS ${CMAKE_BINARY_DIR}/coverage.info)
   endif()

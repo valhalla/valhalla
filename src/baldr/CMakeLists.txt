@@ -1,5 +1,5 @@
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h
-  COMMAND ${XXD} -i -s `head -1 date_time/zonespec.csv | wc -c` date_time/zonespec.csv ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h
+  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake date_time/zonespec.csv ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h --skip 1 --raw
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
   DEPENDS ${CMAKE_SOURCE_DIR}/date_time/zonespec.csv)

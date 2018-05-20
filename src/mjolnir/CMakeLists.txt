@@ -1,6 +1,6 @@
 message(STATUS "Configuring lua/admin.lua to generate admin_lua_proc.h")
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h
-  COMMAND ${XXD} -i lua/admin.lua ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h
+  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake lua/admin.lua ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
   DEPENDS ${CMAKE_SOURCE_DIR}/lua/admin.lua
@@ -8,7 +8,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h
 
 message(STATUS "Configuring lua/graph.lua to generate graph_lua_proc.h")
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/graph_lua_proc.h
-  COMMAND ${XXD} -i lua/graph.lua ${CMAKE_BINARY_DIR}/valhalla/graph_lua_proc.h
+  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake lua/graph.lua ${CMAKE_BINARY_DIR}/valhalla/graph_lua_proc.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling lua/graph.lua to graph_lua_proc.h"
   DEPENDS ${CMAKE_SOURCE_DIR}/lua/graph.lua

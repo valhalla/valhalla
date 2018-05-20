@@ -2,12 +2,8 @@ message(STATUS "Configuring locales/*.json to generate locales.h")
 file(GLOB locale_jsons ${CMAKE_SOURCE_DIR}/locales *.json)
 set(_locales_h ${CMAKE_BINARY_DIR}/valhalla/locales.h)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/locales.h
-  COMMAND echo "#include <unordered_map>\\n" > ${_locales_h}
-  COMMAND find . -name "*.json" -exec ${XXD} -i {} \; >> ${_locales_h}
-  COMMAND echo "const std::unordered_map<std::string, std::string> locales_json = {" >> ${_locales_h}
-  COMMAND find . -name "*.json" -printf "%f\\n" | sed s/.json// | sed "p;s@[./-]@_@g" | xargs -n 2 | awk "{ printf \"    {\\\"%s\\\", {__%s_json, __%s_json + __%s_json_len}},\\n\", $1, $2, $2, $2 }"  >> ${_locales_h}
-  COMMAND echo "};\\n" >> ${_locales_h}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/locales
+  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake ${CMAKE_SOURCE_DIR}/locales/ ${CMAKE_BINARY_DIR}/valhalla/locales.h --locales
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
   DEPENDS ${locale_jsons}
   VERBATIM)
