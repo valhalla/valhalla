@@ -1,6 +1,3 @@
-set(module loki)
-set(library valhalla-${module})
-
 set(headers
   ${CMAKE_SOURCE_DIR}/valhalla/loki/worker.h
   ${CMAKE_SOURCE_DIR}/valhalla/loki/search.h
@@ -18,19 +15,18 @@ set(sources
   transit_available_action.cc
   node_search.cc)
 
-add_library(${library} STATIC ${sources} ${headers})
-add_library(valhalla::${module} ALIAS ${library})
-target_compile_definitions(${library} PUBLIC RAPIDJSON_HAS_STDSTRING)
-target_include_directories(${library}
+valhalla_module(NAME loki
+  SOURCES ${sources}
+  HEADERS ${headers}
+  INCLUDE_DIRECTORIES
   PUBLIC
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/valhalla
   PRIVATE
-    ${CMAKE_BINARY_DIR})
-target_link_libraries(${library} valhalla::tyr valhalla::skadi valhalla::baldr valhalla::protobuf libprime_server)
-
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module} COMPONENT development)
-
-if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
-  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+    ${CMAKE_BINARY_DIR}
+  DEPENDS
+    valhalla::tyr
+    valhalla::skadi
+    valhalla::baldr
+    valhalla::protobuf
+    libprime_server)

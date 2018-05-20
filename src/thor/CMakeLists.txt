@@ -1,6 +1,3 @@
-set(module thor)
-set(library valhalla-${module})
-
 set(headers
   ${CMAKE_SOURCE_DIR}/valhalla/thor/worker.h
   ${CMAKE_SOURCE_DIR}/valhalla/thor/astar.h
@@ -44,19 +41,15 @@ set(sources
   trace_attributes_action.cc
   trace_route_action.cc)
 
-add_library(${library} STATIC ${sources} ${headers})
-add_library(valhalla::${module} ALIAS ${library})
-target_compile_definitions(${library} PUBLIC RAPIDJSON_HAS_STDSTRING)
-target_include_directories(${library}
-  PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/valhalla
-  PRIVATE
-    ${CMAKE_BINARY_DIR})
-target_link_libraries(${library} valhalla::tyr valhalla::protobuf)
-
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module} COMPONENT development)
-
-if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
-  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+valhalla_module(NAME thor
+  SOURCES ${sources}
+  HEADERS ${headers}
+  INCLUDE_DIRECTORIES
+    PUBLIC
+      ${CMAKE_SOURCE_DIR}
+      ${CMAKE_SOURCE_DIR}/valhalla
+    PRIVATE
+      ${CMAKE_BINARY_DIR}
+  DEPENDS
+    valhalla::tyr
+    valhalla::protobuf)

@@ -1,6 +1,3 @@
-set(module midgard)
-set(library valhalla-${module})
-
 set(headers
   ${CMAKE_SOURCE_DIR}/valhalla/midgard/linesegment2.h
   ${CMAKE_SOURCE_DIR}/valhalla/midgard/tiles.h
@@ -33,15 +30,10 @@ set(sources
   ellipse.cc
   logging.cc)
 
-add_library(${library} STATIC ${sources} ${headers})
-add_library(valhalla::${module} ALIAS ${library})
-target_include_directories(${library}
-  PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/valhalla)
-
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module} COMPONENT development)
-
-if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
-  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+valhalla_module(NAME midgard
+  SOURCES ${sources}
+  HEADERS ${headers}
+  INCLUDE_DIRECTORIES
+    PUBLIC
+      ${CMAKE_SOURCE_DIR}
+      ${CMAKE_SOURCE_DIR}/valhalla)

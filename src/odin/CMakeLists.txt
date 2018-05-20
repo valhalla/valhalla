@@ -1,6 +1,3 @@
-set(module odin)
-set(library valhalla-${module})
-
 message(STATUS "Configuring locales/*.json to generate locales.h")
 file(GLOB locale_jsons ${CMAKE_SOURCE_DIR}/locales *.json)
 set(_locales_h ${CMAKE_BINARY_DIR}/valhalla/locales.h)
@@ -45,20 +42,16 @@ set(sources
   transitrouteinfo.cc
   worker.cc)
 
-add_library(${library} STATIC ${sources} ${headers})
-add_library(valhalla::${module} ALIAS ${library})
-target_compile_definitions(${library} PUBLIC RAPIDJSON_HAS_STDSTRING)
-target_include_directories(${library}
-  PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/valhalla
-  PRIVATE
-    ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/valhalla)
-target_link_libraries(${library} valhalla::tyr valhalla::protobuf)
-
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module} COMPONENT development)
-
-if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
-  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+valhalla_module(NAME odin
+  SOURCES ${sources}
+  HEADERS ${headers}
+  INCLUDE_DIRECTORIES
+    PUBLIC
+      ${CMAKE_SOURCE_DIR}
+      ${CMAKE_SOURCE_DIR}/valhalla
+    PRIVATE
+      ${CMAKE_BINARY_DIR}
+      ${CMAKE_BINARY_DIR}/valhalla
+  DEPENDS
+    valhalla::tyr
+    valhalla::protobuf)

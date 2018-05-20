@@ -1,6 +1,3 @@
-set(module meili)
-set(library valhalla-${module})
-
 set(headers
   ${CMAKE_SOURCE_DIR}/valhalla/meili/universal_cost.h
   ${CMAKE_SOURCE_DIR}/valhalla/meili/candidate_search.h
@@ -33,17 +30,12 @@ set(sources
   match_route.cc
   traffic_segment_matcher.cc)
 
-add_library(${library} STATIC ${sources} ${headers})
-add_library(valhalla::${module} ALIAS ${library})
-target_include_directories(${library}
-  PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/valhalla
-  PRIVATE
-    ${CMAKE_BINARY_DIR})
-
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module} COMPONENT development)
-
-if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
-  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+valhalla_module(NAME meili
+  SOURCES ${sources}
+  HEADERS ${headers}
+  INCLUDE_DIRECTORIES
+    PUBLIC
+      ${CMAKE_SOURCE_DIR}
+      ${CMAKE_SOURCE_DIR}/valhalla
+    PRIVATE
+      ${CMAKE_BINARY_DIR})

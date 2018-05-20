@@ -112,114 +112,7 @@ if(NOT XXD)
 endif()
 
 ## libvalhalla
-add_subdirectory(proto ${CMAKE_BINARY_DIR}/valhalla/proto)
-add_subdirectory(src/baldr)
-add_subdirectory(src/loki)
-add_subdirectory(src/meili)
-add_subdirectory(src/midgard)
-add_subdirectory(src/mjolnir)
-add_subdirectory(src/odin)
-add_subdirectory(src/sif)
-add_subdirectory(src/skadi)
-add_subdirectory(src/thor)
-add_subdirectory(src/tyr)
-
-message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/valhalla.h")
-configure_file(${CMAKE_SOURCE_DIR}/valhalla/valhalla.h.in ${CMAKE_BINARY_DIR}/valhalla/valhalla.h @ONLY)
-
-message(STATUS "Generating  ${CMAKE_BINARY_DIR}/valhalla/config.h")
-configure_file(${CMAKE_SOURCE_DIR}/valhalla/config.h.cmake ${CMAKE_BINARY_DIR}/valhalla/config.h @ONLY)
-
-message(STATUS "Configuring valhalla library target")
-set(valhalla_hdrs
-  ${CMAKE_BINARY_DIR}/valhalla/valhalla.h
-  ${CMAKE_SOURCE_DIR}/valhalla/exception.h
-  ${CMAKE_SOURCE_DIR}/valhalla/worker.h)
-
-set(valhalla_srcs
-  ${CMAKE_SOURCE_DIR}/src/worker.cc)
-
-add_library(valhalla
-  ${valhalla_srcs}
-  ${valhalla_hdrs})
-
-if(MSVC)
-  target_compile_definitions(valhalla PRIVATE "VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI")
-endif()
-
-target_include_directories(valhalla
-  PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/valhalla
-    ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/valhalla)
-
-target_link_libraries(valhalla
-  valhalla::mjolnir
-  valhalla::baldr
-  valhalla::tyr
-  valhalla::midgard
-  valhalla::meili
-  valhalla::sif
-  valhalla::skadi
-  valhalla::protobuf)
-
-set_target_properties(valhalla PROPERTIES
-  VERSION "${VERSION}"
-  SOVERSION "${VALHALLA_VERSION_MAJOR}")
-
-set(LIBVALHALLA_SO_LINK ${CMAKE_SHARED_LIBRARY_PREFIX}valhalla${CMAKE_SHARED_LIBRARY_SUFFIX})
-
-install(TARGETS valhalla
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT shared NAMELINK_SKIP
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT development)
-
-if(BUILD_SHARED_LIBS)
-  install(FILES COPYING ChangeLog
-    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla0"
-    COMPONENT shared)
-else()
-  add_custom_command(TARGET valhalla POST_BUILD
-    COMMAND ${CMAKE_AR} rc $<TARGET_FILE:valhalla>
-      $<TARGET_FILE:valhalla::baldr>
-      $<TARGET_FILE:valhalla::loki>
-      $<TARGET_FILE:valhalla::meili>
-      $<TARGET_FILE:valhalla::midgard>
-      $<TARGET_FILE:valhalla::mjolnir>
-      $<TARGET_FILE:valhalla::odin>
-      $<TARGET_FILE:valhalla::sif>
-      $<TARGET_FILE:valhalla::skadi>
-      $<TARGET_FILE:valhalla::thor>
-      $<TARGET_FILE:valhalla::tyr>
-      $<TARGET_FILE:valhalla::mjolnir>)
-
-  add_custom_target(${LIBVALHALLA_SO_LINK} ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
-endif()
-
-install(FILES COPYING ChangeLog README.md
-  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla-dev"
-  COMPONENT development)
-
-install(FILES ${CMAKE_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  COMPONENT development)
-
-install(FILES ${valhalla_hdrs}
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
-  COMPONENT development)
-
-
-## pkg-config file
-set(prefix ${CMAKE_INSTALL_PREFIX})
-set(exec_prefix ${CMAKE_INSTALL_PREFIX})
-set(libdir ${CMAKE_INSTALL_LIBDIR})
-set(includedir ${CMAKE_INSTALL_INCLUDEDIR}/valhalla)
-configure_file(libvalhalla.pc.in libvalhalla.pc @ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/libvalhalla.pc
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
-  COMPONENT development)
-
+add_subdirectory(src)
 
 ## Executable targets
 function(get_source_path PATH NAME)
@@ -240,7 +133,7 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
   valhalla_path_comparison valhalla_export_edges valhalla_pack_elevation)
 
 ## Valhalla data tools
-set(valhalla_data_tools valhalla_ways_to_edges valhalla_validate_transit
+set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins	valhalla_build_connectivity	valhalla_build_tiles
   valhalla_build_admins valhalla_build_transit valhalla_fetch_transit valhalla_query_transit
   valhalla_build_speeds  valhalla_associate_segments)
@@ -259,16 +152,16 @@ if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} valhalla GEOS::GEOS Boost::program_options)
+    target_link_libraries(${program} valhalla Boost::program_options)
     install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
   endforeach()
 
-  add_executable(valhalla_build_statistics
-    src/mjolnir/valhalla_build_statistics.cc
-    src/mjolnir/statistics.cc
-    src/mjolnir/statistics_database.cc)
-  target_link_libraries(valhalla_build_statistics valhalla Boost::program_options)
-  install(TARGETS valhalla_build_statistics DESTINATION bin COMPONENT runtime)
+  # Target-specific depedencies
+  target_link_libraries(valhalla_build_admins GEOS::GEOS)
+  target_sources(valhalla_build_statistics
+    PUBLIC
+      src/mjolnir/statistics.cc
+      src/mjolnir/statistics_database.cc)
 endif()
 
 if(ENABLE_SERVICES)
