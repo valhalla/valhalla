@@ -1,6 +1,3 @@
-set(module mjolnir)
-set(library valhalla-${module})
-
 message(STATUS "Configuring lua/admin.lua to generate admin_lua_proc.h")
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h
   COMMAND ${XXD} -i lua/admin.lua ${CMAKE_BINARY_DIR}/valhalla/admin_lua_proc.h
@@ -86,19 +83,19 @@ set(sources
   util.cc
   validatetransit.cc)
 
-add_library(${library} STATIC ${sources} ${headers})
-add_library(valhalla::${module} ALIAS ${library})
-target_include_directories(${library}
-  PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/valhalla
-  PRIVATE
-    ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/valhalla)
-target_link_libraries(${library} Spatialite::Spatialite SQLite3::SQLite3 Lua::Lua Threads::Threads ZLIB::ZLIB)
-
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${module} COMPONENT development)
-
-if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
-  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+valhalla_module(NAME mjolnir
+  SOURCES ${sources}
+  HEADERS ${headers}
+  INCLUDE_DIRECTORIES
+    PUBLIC
+      ${CMAKE_SOURCE_DIR}
+      ${CMAKE_SOURCE_DIR}/valhalla
+    PRIVATE
+      ${CMAKE_BINARY_DIR}
+      ${CMAKE_BINARY_DIR}/valhalla
+  DEPENDS
+    Spatialite::Spatialite
+    SQLite3::SQLite3
+    Lua::Lua
+    Threads::Threads
+    ZLIB::ZLIB)
