@@ -1160,6 +1160,7 @@ void enhance(const boost::property_tree::ptree& pt,
                      ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
                      ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
                      ((forward & kMopedAccess) && !(reverse & kMopedAccess)) ||
+                     ((forward & kMotorcycleAccess) && !(reverse & kMotorcycleAccess)) ||
                      ((forward & kBusAccess) && !(reverse & kBusAccess)));
 
                 bool r_oneway_vehicle =
@@ -1169,6 +1170,7 @@ void enhance(const boost::property_tree::ptree& pt,
                      (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
                      (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
                      (!(forward & kMopedAccess) && (reverse & kMopedAccess)) ||
+                     (!(forward & kMotorcycleAccess) && (reverse & kMotorcycleAccess)) ||
                      (!(forward & kBusAccess) && (reverse & kBusAccess)));
 
                 bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));

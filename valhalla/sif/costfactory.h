@@ -7,6 +7,7 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
+#include <valhalla/sif/motorcyclecost.h>
 #include <valhalla/sif/motorscootercost.h>
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/sif/transitcost.h>

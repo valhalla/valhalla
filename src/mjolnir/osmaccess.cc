@@ -105,5 +105,13 @@ bool OSMAccess::motorroad_tag() const {
   return attributes_.fields.motorroad_tag;
 }
 
+// Set motorcycle tag flag.
+void OSMAccess::set_motorcycle_tag(const bool motorcycle_tag) {
+  attributes_.fields.motorcycle_tag = motorcycle_tag;
+}
+// Get motorcycle tag flag.
+bool OSMAccess::motorcycle_tag() const {
+  return attributes_.fields.motorcycle_tag;
+}
 } // namespace mjolnir
 } // namespace valhalla
