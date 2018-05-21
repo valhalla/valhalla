@@ -16,19 +16,17 @@ json::MapPtr bike_network_json(uint8_t mask) {
 }
 
 json::MapPtr access_json(uint32_t access) {
-  return json::map({
-    {"bicycle", static_cast<bool>(access & kBicycleAccess)},
-    {"bus", static_cast<bool>(access & kBusAccess)},
-    {"car", static_cast<bool>(access & kAutoAccess)},
-    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
-    {"HOV", static_cast<bool>(access & kHOVAccess)},
-    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
-    {"taxi", static_cast<bool>(access & kTaxiAccess)},
-    {"truck", static_cast<bool>(access & kTruckAccess)},
-    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)},
-    {"moped", static_cast<bool>(access & kMopedAccess)},
-    {"motorcycle", static_cast<bool>(access & kMotorcycleAccess)}
-  });
+  return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
+                    {"bus", static_cast<bool>(access & kBusAccess)},
+                    {"car", static_cast<bool>(access & kAutoAccess)},
+                    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
+                    {"HOV", static_cast<bool>(access & kHOVAccess)},
+                    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
+                    {"taxi", static_cast<bool>(access & kTaxiAccess)},
+                    {"truck", static_cast<bool>(access & kTruckAccess)},
+                    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)},
+                    {"moped", static_cast<bool>(access & kMopedAccess)},
+                    {"motorcycle", static_cast<bool>(access & kMotorcycleAccess)}});
 }
 
 /**

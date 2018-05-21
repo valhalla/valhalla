@@ -3,8 +3,8 @@
 
 #include <cstdint>
 
-#include <valhalla/sif/dynamiccost.h>
 #include <boost/property_tree/ptree.hpp>
+#include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
 namespace sif {
@@ -15,8 +15,7 @@ namespace sif {
  * and the tendency to avoid hills
  */
 cost_ptr_t CreateMotorcycleCost(const boost::property_tree::ptree& config);
-
 }
 }
 
-#endif  // VALHALLA_SIF_MOTORCYCLECOST_H_
+#endif // VALHALLA_SIF_MOTORCYCLECOST_H_

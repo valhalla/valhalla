@@ -108,16 +108,13 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.moped_forward() && !forward) || (way.moped_backward() && forward)) {
     reverse_access |= kMopedAccess;
   }
-  if ((way.motorcycle_forward()  &&  forward) ||
-      (way.motorcycle_backward() && !forward)) {
+  if ((way.motorcycle_forward() && forward) || (way.motorcycle_backward() && !forward)) {
     forward_access |= kMotorcycleAccess;
   }
-  if ((way.motorcycle_forward() && !forward) ||
-      (way.motorcycle_backward() && forward)) {
+  if ((way.motorcycle_forward() && !forward) || (way.motorcycle_backward() && forward)) {
     reverse_access |= kMotorcycleAccess;
   }
-  if ((way.emergency_forward()  &&  forward) ||
-      (way.emergency_backward() && !forward)) {
+  if ((way.emergency_forward() && forward) || (way.emergency_backward() && !forward)) {
     forward_access |= kEmergencyAccess;
   }
   if ((way.emergency_forward() && !forward) || (way.emergency_backward() && forward)) {

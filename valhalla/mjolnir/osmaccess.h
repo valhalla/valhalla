@@ -150,16 +150,16 @@ struct OSMAccess {
   // Access attributes
   union AccessAttributes {
     struct Fields {
-      uint16_t auto_tag         :1;
-      uint16_t bike_tag         :1;
-      uint16_t bus_tag          :1;
-      uint16_t foot_tag         :1;
-      uint16_t truck_tag        :1;
-      uint16_t hov_tag          :1;
-      uint16_t motorroad_tag    :1;
-      uint16_t moped_tag        :1;
-      uint16_t motorcycle_tag   :1;
-      uint16_t spare            :7;
+      uint16_t auto_tag : 1;
+      uint16_t bike_tag : 1;
+      uint16_t bus_tag : 1;
+      uint16_t foot_tag : 1;
+      uint16_t truck_tag : 1;
+      uint16_t hov_tag : 1;
+      uint16_t motorroad_tag : 1;
+      uint16_t moped_tag : 1;
+      uint16_t motorcycle_tag : 1;
+      uint16_t spare : 7;
     } fields;
     uint32_t v;
   };

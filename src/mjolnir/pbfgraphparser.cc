@@ -384,12 +384,10 @@ public:
       } else if (tag.first == "moped_tag") {
         access.set_moped_tag(true);
         has_user_tags = true;
-      }
-      else if (tag.first == "motorcycle_tag") {
+      } else if (tag.first == "motorcycle_tag") {
         access.set_motorcycle_tag(true);
         has_user_tags = true;
-      }
-      else if (tag.first == "hov_tag") {
+      } else if (tag.first == "hov_tag") {
         access.set_hov_tag(true);
         has_user_tags = true;
       } else if (tag.first == "motorroad_tag") {
@@ -618,14 +616,14 @@ public:
 
       // motor_vehicle:conditional=no @ (16:30-07:00)
       else if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional" ||
-            tag.first == "bicycle:conditional" || tag.first == "motorcycle:conditional" ||
-            tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
-            tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
-            tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
-            tag.first == "taxi:conditional" || tag.first == "bus:conditional" ||
-            tag.first == "hov:conditional" || tag.first == "emergency:conditional") {
+               tag.first == "bicycle:conditional" || tag.first == "motorcycle:conditional" ||
+               tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
+               tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
+               tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
+               tag.first == "taxi:conditional" || tag.first == "bus:conditional" ||
+               tag.first == "hov:conditional" || tag.first == "emergency:conditional") {
 
-        std::vector<std::string> tokens = GetTagTokens(tag.second,'@');
+        std::vector<std::string> tokens = GetTagTokens(tag.second, '@');
         std::string tmp = tokens.at(0);
         boost::algorithm::trim(tmp);
 
@@ -641,7 +639,7 @@ public:
           uint16_t mode = 0;
           if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
-                kHOVAccess | kMopedAccess | kMotorcycleAccess);
+                    kHOVAccess | kMopedAccess | kMotorcycleAccess);
           } else if (tag.first == "bicycle:conditional") {
             mode = kBicycleAccess;
           } else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional") {
@@ -1139,13 +1137,12 @@ public:
         name = tag.second;
       } else if (tag.first == "except") {
         except = tag.second;
-      }
-      else if ((tag.first == "restriction" || tag.first == "restriction:motorcar" ||
-          tag.first == "restriction:motorcycle" || tag.first == "restriction:taxi" ||
-          tag.first == "restriction:bus" || tag.first == "restriction:bicycle" ||
-          tag.first == "restriction:hgv" || tag.first == "restriction:hazmat" ||
-          tag.first == "restriction:emergency") &&
-          !tag.second.empty()) {
+      } else if ((tag.first == "restriction" || tag.first == "restriction:motorcar" ||
+                  tag.first == "restriction:motorcycle" || tag.first == "restriction:taxi" ||
+                  tag.first == "restriction:bus" || tag.first == "restriction:bicycle" ||
+                  tag.first == "restriction:hgv" || tag.first == "restriction:hazmat" ||
+                  tag.first == "restriction:emergency") &&
+                 !tag.second.empty()) {
         isRestriction = true;
         if (tag.first != "restriction") {
           isTypeRestriction = true;
@@ -1350,7 +1347,7 @@ public:
         // restriction key
         if (!isTypeRestriction) {
 
-          modes = (kAutoAccess |  kMopedAccess | kTaxiAccess | kBusAccess | kBicycleAccess |
+          modes = (kAutoAccess | kMopedAccess | kTaxiAccess | kBusAccess | kBicycleAccess |
                    kTruckAccess | kEmergencyAccess | kMotorcycleAccess);
           // remove access as the restriction does not apply to these modes.
           std::vector<std::string> tokens = GetTagTokens(except);
@@ -1362,7 +1359,7 @@ public:
             } else if (t == "psv") {
               modes = modes & ~(kTaxiAccess | kBusAccess);
             } else if (t == "taxi") {
-             modes = modes & ~kTaxiAccess;
+              modes = modes & ~kTaxiAccess;
             } else if (t == "bus") {
               modes = modes & ~kBusAccess;
             } else if (t == "bicycle") {

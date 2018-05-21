@@ -13,8 +13,8 @@
 #include "midgard/logging.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
-#include "sif/motorscootercost.h"
 #include "sif/motorcyclecost.h"
+#include "sif/motorscootercost.h"
 #include "sif/pedestriancost.h"
 #include "tyr/actor.h"
 
@@ -201,7 +201,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config)
   max_best_paths_shape = config.get<size_t>("service_limits.trace.max_best_paths_shape");
 
   // Register edge/node costing methods
-  // TODO: move this into the loop above      
+  // TODO: move this into the loop above
   factory.Register("auto", sif::CreateAutoCost);
   factory.Register("auto_shorter", sif::CreateAutoShorterCost);
   factory.Register("bus", sif::CreateBusCost);

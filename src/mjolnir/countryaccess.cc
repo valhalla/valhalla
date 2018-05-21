@@ -66,7 +66,7 @@ uint32_t GetAccess(const uint32_t current_access,
   }
 
   if (!user_access.motorcycle_tag())
-    new_access = ProcessAccess(new_access,country_access,kMotorcycleAccess);
+    new_access = ProcessAccess(new_access, country_access, kMotorcycleAccess);
 
   return new_access;
 }
@@ -80,22 +80,22 @@ void SetCountryAccess(DirectedEdge& directededge,
   uint32_t reverse = directededge.reverseaccess();
 
   bool f_oneway_vehicle = (((forward & kAutoAccess) && !(reverse & kAutoAccess)) ||
-      ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
-      ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
-      ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
-      ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
-      ((forward & kMopedAccess) && !(reverse & kMopedAccess)) ||
-      ((forward & kMotorcycleAccess) && !(reverse & kMotorcycleAccess)) ||
-      ((forward & kBusAccess) && !(reverse & kBusAccess)));
+                           ((forward & kTruckAccess) && !(reverse & kTruckAccess)) ||
+                           ((forward & kEmergencyAccess) && !(reverse & kEmergencyAccess)) ||
+                           ((forward & kTaxiAccess) && !(reverse & kTaxiAccess)) ||
+                           ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
+                           ((forward & kMopedAccess) && !(reverse & kMopedAccess)) ||
+                           ((forward & kMotorcycleAccess) && !(reverse & kMotorcycleAccess)) ||
+                           ((forward & kBusAccess) && !(reverse & kBusAccess)));
 
   bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
-      (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
-      (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
-      (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
-      (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
-      (!(forward & kMopedAccess) && (reverse & kMopedAccess)) ||
-      (!(forward & kMotorcycleAccess) && (reverse & kMotorcycleAccess)) ||
-      (!(forward & kBusAccess) && (reverse & kBusAccess)));
+                           (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
+                           (!(forward & kEmergencyAccess) && (reverse & kEmergencyAccess)) ||
+                           (!(forward & kTaxiAccess) && (reverse & kTaxiAccess)) ||
+                           (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
+                           (!(forward & kMopedAccess) && (reverse & kMopedAccess)) ||
+                           (!(forward & kMotorcycleAccess) && (reverse & kMotorcycleAccess)) ||
+                           (!(forward & kBusAccess) && (reverse & kBusAccess)));
 
   bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
   bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));

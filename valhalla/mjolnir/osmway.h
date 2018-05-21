@@ -1163,22 +1163,22 @@ struct OSMWay {
   // Access
   union WayAccess {
     struct Fields {
-      uint16_t auto_forward         :1;
-      uint16_t bus_forward          :1;
-      uint16_t taxi_forward         :1;
-      uint16_t truck_forward        :1;
-      uint16_t motorcycle_forward   :1;
-      uint16_t emergency_forward    :1;
-      uint16_t hov_forward          :1;
-      uint16_t moped_forward        :1;
-      uint16_t auto_backward        :1;
-      uint16_t bus_backward         :1;
-      uint16_t taxi_backward        :1;
-      uint16_t truck_backward       :1;
-      uint16_t motorcycle_backward  :1;
-      uint16_t emergency_backward   :1;
-      uint16_t hov_backward         :1;
-      uint16_t moped_backward       :1;
+      uint16_t auto_forward : 1;
+      uint16_t bus_forward : 1;
+      uint16_t taxi_forward : 1;
+      uint16_t truck_forward : 1;
+      uint16_t motorcycle_forward : 1;
+      uint16_t emergency_forward : 1;
+      uint16_t hov_forward : 1;
+      uint16_t moped_forward : 1;
+      uint16_t auto_backward : 1;
+      uint16_t bus_backward : 1;
+      uint16_t taxi_backward : 1;
+      uint16_t truck_backward : 1;
+      uint16_t motorcycle_backward : 1;
+      uint16_t emergency_backward : 1;
+      uint16_t hov_backward : 1;
+      uint16_t moped_backward : 1;
     } fields;
     uint16_t v;
   };
@@ -1187,17 +1187,17 @@ struct OSMWay {
   // Attributes specific to biking
   union BikeInfo {
     struct Fields {
-      uint16_t cycle_lane_right          :2;
-      uint16_t cycle_lane_left           :2;
-      uint16_t cycle_lane_right_opposite :1;
-      uint16_t cycle_lane_left_opposite  :1;
-      uint16_t shoulder_right            :1;
-      uint16_t shoulder_left             :1;
-      uint16_t dismount                  :1;
-      uint16_t use_sidepath              :1;
-      uint16_t bike_forward              :1;
-      uint16_t bike_backward             :1;
-      uint16_t spare                     :4;
+      uint16_t cycle_lane_right : 2;
+      uint16_t cycle_lane_left : 2;
+      uint16_t cycle_lane_right_opposite : 1;
+      uint16_t cycle_lane_left_opposite : 1;
+      uint16_t shoulder_right : 1;
+      uint16_t shoulder_left : 1;
+      uint16_t dismount : 1;
+      uint16_t use_sidepath : 1;
+      uint16_t bike_forward : 1;
+      uint16_t bike_backward : 1;
+      uint16_t spare : 4;
     } fields;
     uint16_t v;
   };

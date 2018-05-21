@@ -113,6 +113,5 @@ void OSMAccess::set_motorcycle_tag(const bool motorcycle_tag) {
 bool OSMAccess::motorcycle_tag() const {
   return attributes_.fields.motorcycle_tag;
 }
-
 }
 }
