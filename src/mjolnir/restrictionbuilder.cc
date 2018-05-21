@@ -293,9 +293,11 @@ void build(const std::string& complex_restriction_file,
 
           OSMRestriction target_res{e_offset.wayid()}; // this is our from way id
           OSMRestriction restriction{};
-          sequence<OSMRestriction>::iterator res_it = complex_restrictions.find(
-              target_res,
-              [](const OSMRestriction& a, const OSMRestriction& b) { return a.from() < b.from(); });
+          sequence<OSMRestriction>::iterator res_it =
+              complex_restrictions.find(target_res,
+                                        [](const OSMRestriction& a, const OSMRestriction& b) {
+                                          return a.from() < b.from();
+                                        });
           while (res_it != complex_restrictions.end() &&
                  (restriction = *res_it).from() == e_offset.wayid() && restriction.vias().size()) {
 
@@ -336,8 +338,7 @@ void build(const std::string& complex_restriction_file,
 
                 // if via = restriction.to then don't add to the res_way_ids vector.  This happens
                 // when we have a restriction:<type> with a via as a node in the osm data.
-                if (restriction.vias().size() == 1 &&
-                    restriction.vias().at(0) != restriction.to()) {
+                if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to()) {
                   for (const auto& v : temp_vias) {
                     res_way_ids.push_back(v);
                   }
@@ -424,10 +425,11 @@ void build(const std::string& complex_restriction_file,
 
               OSMRestriction target_res{it->second}; // this is our from way id
               OSMRestriction restriction{};
-              sequence<OSMRestriction>::iterator res_it = complex_restrictions.find(
-                  target_res, [](const OSMRestriction& a, const OSMRestriction& b) {
-                    return a.from() < b.from();
-                  });
+              sequence<OSMRestriction>::iterator res_it =
+                  complex_restrictions.find(target_res,
+                                            [](const OSMRestriction& a, const OSMRestriction& b) {
+                                              return a.from() < b.from();
+                                            });
               while (res_it != complex_restrictions.end() &&
                      (restriction = *res_it).from() == it->second && restriction.vias().size()) {
 

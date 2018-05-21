@@ -62,8 +62,7 @@ private:
 
   float max_grid_cache_size_;
 
-  sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request,
-                              const std::string& costing);
+  sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request, const std::string& costing);
 };
 
 } // namespace meili

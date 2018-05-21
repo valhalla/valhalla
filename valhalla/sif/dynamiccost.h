@@ -253,9 +253,8 @@ public:
     auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
       // Get the next predecessor - make sure it is valid. Continue to get
       // the next predecessor if the edge is a transition edge.
-      const EdgeLabel* next_pred = (label->predecessor() == baldr::kInvalidLabel)
-                                       ? label
-                                       : &edge_labels[label->predecessor()];
+      const EdgeLabel* next_pred =
+          (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
       while (next_pred->use() == baldr::Use::kTransitionUp &&
              next_pred->predecessor() != baldr::kInvalidLabel) {
         next_pred = &edge_labels[next_pred->predecessor()];
@@ -303,11 +302,12 @@ public:
                       (!forward && next_pred->edgeid() == cr->to_graphid()))) {
 
           if (current_time && cr->has_dt()) {
-            if (baldr::DateTime::is_restricted(
-                    cr->dt_type(), cr->begin_hrs(), cr->begin_mins(), cr->end_hrs(), cr->end_mins(),
-                    cr->dow(), cr->begin_week(), cr->begin_month(), cr->begin_day_dow(),
-                    cr->end_week(), cr->end_month(), cr->end_day_dow(), current_time,
-                    baldr::DateTime::get_tz_db().from_index(tz_index))) {
+            if (baldr::DateTime::is_restricted(cr->dt_type(), cr->begin_hrs(), cr->begin_mins(),
+                                               cr->end_hrs(), cr->end_mins(), cr->dow(),
+                                               cr->begin_week(), cr->begin_month(),
+                                               cr->begin_day_dow(), cr->end_week(), cr->end_month(),
+                                               cr->end_day_dow(), current_time,
+                                               baldr::DateTime::get_tz_db().from_index(tz_index))) {
               return true;
             }
             continue;
@@ -331,10 +331,11 @@ public:
                     const uint32_t tz_index) const {
 
     baldr::TimeDomain td(restriction);
-    return baldr::DateTime::is_restricted(
-        td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(), td.end_mins(), td.dow(),
-        td.begin_week(), td.begin_month(), td.begin_day_dow(), td.end_week(), td.end_month(),
-        td.end_day_dow(), current_time, baldr::DateTime::get_tz_db().from_index(tz_index));
+    return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
+                                          td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
+                                          td.begin_day_dow(), td.end_week(), td.end_month(),
+                                          td.end_day_dow(), current_time,
+                                          baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
   /**

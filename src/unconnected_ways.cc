@@ -37,10 +37,10 @@ int main(int argc, char* argv[]) {
       "\n");
 
   std::string minll, maxll, config;
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
-      "min,n", boost::program_options::value<std::string>(&minll), "minll: lat,lng")(
-      "max,x", boost::program_options::value<std::string>(&maxll), "maxll: lat,lng")
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
+      "min,n", boost::program_options::value<std::string>(&minll),
+      "minll: lat,lng")("max,x", boost::program_options::value<std::string>(&maxll), "maxll: lat,lng")
       // positional arguments
       ("config,c", bpo::value<std::string>(&config), "Valhalla configuration file");
 
@@ -90,9 +90,9 @@ int main(int argc, char* argv[]) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       pt.get_child_optional("thor.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                   std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 

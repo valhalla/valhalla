@@ -210,27 +210,27 @@ void generateJson(std::vector<std::string>& countries,
   std::ofstream out("road_data.json");
   json::MapPtr map = json::map({});
   for (size_t i = 0; i < countries.size(); ++i) {
-    map->emplace(
-        countries[i],
-        json::map(
-            {{"iso2", countries[i]},
-             {"classinfo", json::map({{classes[0], json::fp_t{data[countries[i]][0]}},
-                                      {classes[1], json::fp_t{data[countries[i]][1]}},
-                                      {classes[2], json::fp_t{data[countries[i]][2]}},
-                                      {classes[3], json::fp_t{data[countries[i]][3]}},
-                                      {classes[4], json::fp_t{data[countries[i]][4]}},
-                                      {classes[5], json::fp_t{data[countries[i]][5]}},
-                                      {classes[6], json::fp_t{data[countries[i]][6]}},
-                                      {classes[7], json::fp_t{data[countries[i]][7]}},
-                                      {classes[8], json::fp_t{data[countries[i]][8]}}})},
-             {"maxspeed", json::map({{maxClasses[0], json::fp_t{maxSpeedInfo[countries[i]][0]}},
-                                     {maxClasses[1], json::fp_t{maxSpeedInfo[countries[i]][1]}},
-                                     {maxClasses[2], json::fp_t{maxSpeedInfo[countries[i]][2]}},
-                                     {maxClasses[3], json::fp_t{maxSpeedInfo[countries[i]][3]}}})},
-             {"named", json::map({
-                           {namedClasses[0], json::fp_t{namedInfo[countries[i]][0]}},
-                           {namedClasses[1], json::fp_t{namedInfo[countries[i]][1]}},
-                       })}}));
+    map->emplace(countries[i],
+                 json::map(
+                     {{"iso2", countries[i]},
+                      {"classinfo", json::map({{classes[0], json::fp_t{data[countries[i]][0]}},
+                                               {classes[1], json::fp_t{data[countries[i]][1]}},
+                                               {classes[2], json::fp_t{data[countries[i]][2]}},
+                                               {classes[3], json::fp_t{data[countries[i]][3]}},
+                                               {classes[4], json::fp_t{data[countries[i]][4]}},
+                                               {classes[5], json::fp_t{data[countries[i]][5]}},
+                                               {classes[6], json::fp_t{data[countries[i]][6]}},
+                                               {classes[7], json::fp_t{data[countries[i]][7]}},
+                                               {classes[8], json::fp_t{data[countries[i]][8]}}})},
+                      {"maxspeed",
+                       json::map({{maxClasses[0], json::fp_t{maxSpeedInfo[countries[i]][0]}},
+                                  {maxClasses[1], json::fp_t{maxSpeedInfo[countries[i]][1]}},
+                                  {maxClasses[2], json::fp_t{maxSpeedInfo[countries[i]][2]}},
+                                  {maxClasses[3], json::fp_t{maxSpeedInfo[countries[i]][3]}}})},
+                      {"named", json::map({
+                                    {namedClasses[0], json::fp_t{namedInfo[countries[i]][0]}},
+                                    {namedClasses[1], json::fp_t{namedInfo[countries[i]][1]}},
+                                })}}));
   }
   out << *map << std::endl;
 

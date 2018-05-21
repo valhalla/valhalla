@@ -212,9 +212,8 @@ bool IsUnroutableNode(const GraphTile& tile,
   size_t inbound = 0, outbound = 0;
   // Check all the edges from the current node and count inbound and outbound edges
   for (size_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
-    if (diredge->IsTransition() || diredge->shortcut() ||
-        diredge->use() == Use::kTransitConnection || diredge->use() == Use::kEgressConnection ||
-        diredge->use() == Use::kPlatformConnection) {
+    if (diredge->IsTransition() || diredge->shortcut() || diredge->use() == Use::kTransitConnection ||
+        diredge->use() == Use::kEgressConnection || diredge->use() == Use::kPlatformConnection) {
       continue;
     }
     if ((diredge->forwardaccess() & kAutoAccess)) {
@@ -478,8 +477,8 @@ void build(const boost::property_tree::ptree& pt,
 
         // Statistics
         if (valid_length) {
-          AddStatistics(stats, *directededge, tileid, begin_node_iso, hgv, *tile, graph_reader,
-                        node, *nodeinfo, j);
+          AddStatistics(stats, *directededge, tileid, begin_node_iso, hgv, *tile, graph_reader, node,
+                        *nodeinfo, j);
         }
       }
     }
@@ -576,10 +575,12 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 
 bool ParseArguments(int argc, char* argv[]) {
   bpo::options_description options("Usage: valhalla_build_statistics --config conf/valhalla.json");
-  options.add_options()("help,h", "Print this help message")(
-      "config,c",
-      boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
-      "Path to the json configuration file.");
+  options.add_options()("help,h",
+                        "Print this help message")("config,c",
+                                                   boost::program_options::value<
+                                                       boost::filesystem::path>(&config_file_path)
+                                                       ->required(),
+                                                   "Path to the json configuration file.");
   bpo::variables_map vm;
   try {
     bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
@@ -617,9 +618,9 @@ int main(int argc, char** argv) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
-    auto loggin_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                  std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto loggin_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(loggin_config);
   }
 

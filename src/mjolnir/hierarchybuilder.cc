@@ -51,8 +51,7 @@ struct OldToNewNodes {
                 const GraphId& arterial,
                 const GraphId& local,
                 const uint32_t d)
-      : node_id(node), highway_node(highway), arterial_node(arterial), local_node(local),
-        density(d) {
+      : node_id(node), highway_node(highway), arterial_node(arterial), local_node(local), density(d) {
   }
 };
 
@@ -117,8 +116,9 @@ void SortSequences() {
 OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& node) {
   GraphId dmy;
   OldToNewNodes target(node, dmy, dmy, dmy, 0);
-  auto iter = old_to_new.find(
-      target, [](const OldToNewNodes& a, const OldToNewNodes& b) { return a.node_id < b.node_id; });
+  auto iter = old_to_new.find(target, [](const OldToNewNodes& a, const OldToNewNodes& b) {
+    return a.node_id < b.node_id;
+  });
   if (iter == old_to_new.end()) {
     throw std::runtime_error("Didn't find node!");
   } else {
@@ -274,8 +274,8 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       if (directededge->access_restriction()) {
         auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {
-          tilebuilder->AddAccessRestriction(AccessRestriction(
-              tilebuilder->directededges().size(), res.type(), res.modes(), res.value()));
+          tilebuilder->AddAccessRestriction(AccessRestriction(tilebuilder->directededges().size(),
+                                                              res.type(), res.modes(), res.value()));
         }
       }
 

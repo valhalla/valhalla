@@ -344,16 +344,16 @@ public:
 
 // Constructor
 MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive),
-      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
-                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
+                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
+                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
   maneuver_penalty_ =
       kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
   gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
   gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
   alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  country_crossing_cost_ = kCountryCrossingCostRange(
-      pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
+  country_crossing_cost_ =
+      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
   country_crossing_penalty_ = kCountryCrossingPenaltyRange(
       pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
 
@@ -676,8 +676,7 @@ make_real_distributor_from_range(const ranged_default_t<T>& range) {
 }
 
 template <typename T>
-std::uniform_int_distribution<T>*
-make_int_distributor_from_range(const ranged_default_t<T>& range) {
+std::uniform_int_distribution<T>* make_int_distributor_from_range(const ranged_default_t<T>& range) {
   T rangeLength = range.max - range.min;
   return new std::uniform_int_distribution<T>(range.min - rangeLength, range.max + rangeLength);
 }
@@ -693,8 +692,7 @@ void testMotorScooterCostParams() {
   // maneuver_penalty_
   fDistributor.reset(make_real_distributor_from_range(kManeuverPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(
-        make_motorscootercost_from_json("maneuver_penalty", (*fDistributor)(generator)));
+    ctorTester.reset(make_motorscootercost_from_json("maneuver_penalty", (*fDistributor)(generator)));
     if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
         ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
       throw std::runtime_error("maneuver_penalty_ is not within it's range");
@@ -705,8 +703,7 @@ void testMotorScooterCostParams() {
   fDistributor.reset(make_real_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("gate_cost", (*fDistributor)(generator)));
-    if (ctorTester->gate_cost_ < kGateCostRange.min ||
-        ctorTester->gate_cost_ > kGateCostRange.max) {
+    if (ctorTester->gate_cost_ < kGateCostRange.min || ctorTester->gate_cost_ > kGateCostRange.max) {
       throw std::runtime_error("gate_cost_ is not within it's range");
     }
   }
@@ -767,8 +764,7 @@ void testMotorScooterCostParams() {
   fDistributor.reset(make_real_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("use_ferry", (*fDistributor)(generator)));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min ||
-        ctorTester->use_ferry_ > kUseFerryRange.max) {
+    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
       throw std::runtime_error("use_ferry_ is not within it's range");
     }
   }
@@ -777,8 +773,7 @@ void testMotorScooterCostParams() {
   iDistributor.reset(make_int_distributor_from_range(kTopSpeedRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("top_speed", (*iDistributor)(generator)));
-    if (ctorTester->top_speed_ < kTopSpeedRange.min ||
-        ctorTester->top_speed_ > kTopSpeedRange.max) {
+    if (ctorTester->top_speed_ < kTopSpeedRange.min || ctorTester->top_speed_ > kTopSpeedRange.max) {
       throw std::runtime_error("top_speed_ is not within it's range");
     }
   }
@@ -787,8 +782,7 @@ void testMotorScooterCostParams() {
   fDistributor.reset(make_real_distributor_from_range(kUseHillsRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorscootercost_from_json("use_hills", (*fDistributor)(generator)));
-    if (ctorTester->use_hills_ < kUseHillsRange.min ||
-        ctorTester->use_hills_ > kUseHillsRange.max) {
+    if (ctorTester->use_hills_ < kUseHillsRange.min || ctorTester->use_hills_ > kUseHillsRange.max) {
       throw std::runtime_error("use_hills_ is not within it's range");
     }
   }

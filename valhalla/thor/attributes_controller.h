@@ -88,8 +88,7 @@ const std::string kNodeTransitPlatformInfoArrivalDateTime =
     "node.transit_platform_info.arrival_date_time";
 const std::string kNodeTransitPlatformInfoDepartureDateTime =
     "node.transit_platform_info.departure_date_time";
-const std::string kNodeTransitPlatformInfoIsParentStop =
-    "node.transit_platform_info.is_parent_stop";
+const std::string kNodeTransitPlatformInfoIsParentStop = "node.transit_platform_info.is_parent_stop";
 const std::string kNodeTransitPlatformInfoAssumedSchedule =
     "node.transit_platform_info.assumed_schedule";
 const std::string kNodeTransitPlatformInfoLatLon = "node.transit_platform_info.lat_lon";

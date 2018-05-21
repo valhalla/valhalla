@@ -340,8 +340,7 @@ void NarrativeDictionary::Load(StartSubset& start_handle,
   Load(static_cast<PhraseSet&>(start_handle), start_subset_pt);
 
   // Populate cardinal_directions
-  start_handle.cardinal_directions =
-      as_vector<std::string>(start_subset_pt, kCardinalDirectionsKey);
+  start_handle.cardinal_directions = as_vector<std::string>(start_subset_pt, kCardinalDirectionsKey);
 
   // Populate empty_street_name_labels
   start_handle.empty_street_name_labels =
@@ -489,13 +488,12 @@ void NarrativeDictionary::Load(TransitStopSubset& transit_stop_handle,
   Load(static_cast<TransitSubset&>(transit_stop_handle), transit_stop_subset_pt);
 
   // Populate transit_stop_count_labels
-  transit_stop_handle.transit_stop_count_labels = as_unordered_map<std::string, std::string>(
-      transit_stop_subset_pt, kTransitStopCountLabelsKey);
+  transit_stop_handle.transit_stop_count_labels =
+      as_unordered_map<std::string, std::string>(transit_stop_subset_pt, kTransitStopCountLabelsKey);
 }
 
-void NarrativeDictionary::Load(
-    PostTransitionVerbalSubset& post_transition_verbal_handle,
-    const boost::property_tree::ptree& post_transition_verbal_subset_pt) {
+void NarrativeDictionary::Load(PostTransitionVerbalSubset& post_transition_verbal_handle,
+                               const boost::property_tree::ptree& post_transition_verbal_subset_pt) {
 
   // Populate phrases
   Load(static_cast<PhraseSet&>(post_transition_verbal_handle), post_transition_verbal_subset_pt);

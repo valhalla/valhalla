@@ -407,8 +407,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
 }
 
 // Add edges at the origin to the adjacency list
-void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
-                                            const odin::Location& origin) {
+void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),

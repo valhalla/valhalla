@@ -58,9 +58,9 @@ int main(int argc, char** argv) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       config.get_child_optional("tyr.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                   std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -72,9 +72,9 @@ int main(int argc, char** argv) {
 
   // setup the cluster within this process
   zmq::context_t context;
-  std::thread server_thread = std::thread(
-      std::bind(&http_server_t::serve,
-                http_server_t(context, listen, loki_proxy + "_in", loopback, interrupt, true)));
+  std::thread server_thread =
+      std::thread(std::bind(&http_server_t::serve, http_server_t(context, listen, loki_proxy + "_in",
+                                                                 loopback, interrupt, true)));
 
   // loki layer
   std::thread loki_proxy_thread(

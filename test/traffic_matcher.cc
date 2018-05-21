@@ -61,8 +61,7 @@ std::vector<std::pair<std::string, ots_matches_t>> test_cases{
     // partial, full, partial
     std::make_pair(
         R"({"trace":[{"lon":-76.376045,"lat":40.539207,"time":0},{"lon":-76.351089,"lat":40.541504,"time":300}],"match_options":{"breakage_distance":10000}})",
-        ots_matches_t{ots_t{sid_t(0), -1, 0, 110.f, 0, -1},
-                      ots_t{sid_t(0), 110.f, 0, 250.f, 0, 1000},
+        ots_matches_t{ots_t{sid_t(0), -1, 0, 110.f, 0, -1}, ots_t{sid_t(0), 110.f, 0, 250.f, 0, 1000},
                       ots_t{sid_t(0), 250.f, 0, -1, 1, -1}}),
     // partial, full, full, full
     std::make_pair(

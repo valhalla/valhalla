@@ -50,8 +50,8 @@ template <class coord_t> AABB2<coord_t> AABB2<coord_t>::Intersection(const AABB2
   if (!Intersects(bbox)) {
     return {0.0f, 0.0f, 0.0f, 0.0f};
   }
-  return {std::max(minx(), bbox.minx()), std::max(miny(), bbox.miny()),
-          std::min(maxx(), bbox.maxx()), std::min(maxy(), bbox.maxy())};
+  return {std::max(minx(), bbox.minx()), std::max(miny(), bbox.miny()), std::min(maxx(), bbox.maxx()),
+          std::min(maxy(), bbox.maxy())};
 }
 
 // Tests whether the segment intersects the bounding box.

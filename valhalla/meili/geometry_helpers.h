@@ -76,8 +76,7 @@ Project(const coord_t& p,
   // the closest point on LineString to the given Point, as a fraction
   // of total 2d line length.
   closest_partial_length += shape[closest_segment].Distance(closest_point);
-  float offset =
-      total_length > 0.f ? static_cast<float>(closest_partial_length / total_length) : 0.f;
+  float offset = total_length > 0.f ? static_cast<float>(closest_partial_length / total_length) : 0.f;
   offset = std::max(0.f, std::min(offset, 1.f));
 
   // Snapp to vertices if it's close

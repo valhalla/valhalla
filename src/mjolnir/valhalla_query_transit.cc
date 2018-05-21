@@ -38,8 +38,7 @@ Transit read_pbf(const std::string& file_name) {
     throw std::runtime_error("Couldn't load " + file_name);
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()),
-                                            buffer.size());
+  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
@@ -206,14 +205,13 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
                 boost::gregorian::gregorian_calendar::from_julian_day_number(
                     sp.service_start_date()));
             boost::gregorian::date end_date(
-                boost::gregorian::gregorian_calendar::from_julian_day_number(
-                    sp.service_end_date()));
+                boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
 
-            LOG_INFO(" Route: " + std::to_string(sp.route_index()) + " Trip: " +
-                     std::to_string(sp.trip_id()) + " Dep Time: " + ss.str() + " DOW: " + dow +
-                     " Added dates: " + added_dates + " Start Date: " +
-                     to_iso_extended_string(start_date) + " End Date: " +
-                     to_iso_extended_string(end_date));
+            LOG_INFO(" Route: " + std::to_string(sp.route_index()) +
+                     " Trip: " + std::to_string(sp.trip_id()) + " Dep Time: " + ss.str() +
+                     " DOW: " + dow + " Added dates: " + added_dates +
+                     " Start Date: " + to_iso_extended_string(start_date) +
+                     " End Date: " + to_iso_extended_string(end_date));
           }
         }
       }
@@ -317,9 +315,9 @@ void LogSchedule(const std::string& transit_dir,
                 originid = GraphId(sp.destination_graphid());
 
                 LOG_INFO("Tile : " + std::to_string(orig_graphid.tileid()) + "\tTrip:\t" +
-                         sp.trip_headsign() + "\tDep Time:\t" + time + "\tArr Time:\t" +
-                         origin_time + "\tOrigin ----> Dest\t" + sp.origin_onestop_id() +
-                         " ----> " + sp.destination_onestop_id());
+                         sp.trip_headsign() + "\tDep Time:\t" + time + "\tArr Time:\t" + origin_time +
+                         "\tOrigin ----> Dest\t" + sp.origin_onestop_id() + " ----> " +
+                         sp.destination_onestop_id());
                 if (destid == originid) { // we are done.
                   originid = GraphId();
                   origin_time = "";
@@ -374,17 +372,27 @@ int main(int argc, char* argv[]) {
   std::string config, o_onestop_id, d_onestop_id, time;
   float o_lat, o_lng, d_lat, d_lng;
   int tripid = 0;
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
-      "o_lat,o_y", boost::program_options::value<float>(&o_lat))(
-      "o_lng,o_x", boost::program_options::value<float>(&o_lng))(
-      "d_lat,d_y", boost::program_options::value<float>(&d_lat))(
-      "d_lng,d_x", boost::program_options::value<float>(&d_lng))(
-      "o_onestop_id,o", boost::program_options::value<std::string>(&o_onestop_id))(
-      "d_onestop_id,d", boost::program_options::value<std::string>(&d_onestop_id))(
-      "tripid,i", boost::program_options::value<int>(&tripid))(
-      "time,t", boost::program_options::value<std::string>(&time))(
-      "conf,c", bpo::value<std::string>(&config), "Valhalla configuration file");
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
+      "o_lat,o_y",
+      boost::program_options::value<float>(
+          &o_lat))("o_lng,o_x",
+                   boost::program_options::value<float>(
+                       &o_lng))("d_lat,d_y",
+                                boost::program_options::value<float>(
+                                    &d_lat))("d_lng,d_x",
+                                             boost::program_options::value<float>(
+                                                 &d_lng))("o_onestop_id,o",
+                                                          boost::program_options::value<std::string>(
+                                                              &o_onestop_id))(
+      "d_onestop_id,d",
+      boost::program_options::value<std::string>(
+          &d_onestop_id))("tripid,i",
+                          boost::program_options::value<int>(
+                              &tripid))("time,t",
+                                        boost::program_options::value<std::string>(
+                                            &time))("conf,c", bpo::value<std::string>(&config),
+                                                    "Valhalla configuration file");
 
   bpo::variables_map vm;
   try {

@@ -47,9 +47,8 @@ GraphTile::GraphTile()
       edge_bins_(nullptr), complex_restriction_forward_(nullptr),
       complex_restriction_reverse_(nullptr), edgeinfo_(nullptr), textlist_(nullptr),
       complex_restriction_forward_size_(0), complex_restriction_reverse_size_(0), edgeinfo_size_(0),
-      textlist_size_(0), traffic_segments_(nullptr), traffic_chunks_(nullptr),
-      traffic_chunk_size_(0), lane_connectivity_(nullptr), lane_connectivity_size_(0),
-      edge_elevation_(nullptr) {
+      textlist_size_(0), traffic_segments_(nullptr), traffic_chunks_(nullptr), traffic_chunk_size_(0),
+      lane_connectivity_(nullptr), lane_connectivity_size_(0), edge_elevation_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -61,8 +60,7 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
   }
 
   // Open to the end of the file so we can immediately get size;
-  std::string file_location =
-      tile_dir + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
+  std::string file_location = tile_dir + filesystem::path_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
@@ -317,8 +315,8 @@ std::string GraphTile::FileSuffix(const GraphId& graphid) {
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  const std::unordered_set<std::string::value_type> allowed{
-      filesystem::path_separator, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+  const std::unordered_set<std::string::value_type>
+      allowed{filesystem::path_separator, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
   // we require slashes
   auto pos = fname.find_last_of(filesystem::path_separator);
   if (pos == fname.npos) {
@@ -429,10 +427,10 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) 
     const auto* edge = directededge(nodeinfo.edge_index());
     return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
   }
-  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                           std::to_string(node.tileid()) + "," + std::to_string(node.level()) +
-                           "," + std::to_string(node.id()) + " nodecount= " +
-                           std::to_string(header_->nodecount()));
+  throw std::runtime_error(
+      "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+      std::to_string(node.level()) + "," + std::to_string(node.id()) +
+      " nodecount= " + std::to_string(header_->nodecount()));
 }
 
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) const {
@@ -441,10 +439,10 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
     const auto* edge = directededge(nodeinfo.edge_index());
     return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
   }
-  throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                           std::to_string(header_->graphid().tileid()) + "," +
-                           std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
-                           " nodecount= " + std::to_string(header_->nodecount()));
+  throw std::runtime_error(
+      "GraphTile NodeInfo index out of bounds: " + std::to_string(header_->graphid().tileid()) + "," +
+      std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+      " nodecount= " + std::to_string(header_->nodecount()));
 }
 
 // Get a pointer to edge info.
@@ -481,9 +479,8 @@ GraphTile::GetRestrictions(const bool forward, const GraphId id, const uint64_t 
 }
 
 // Get the directed edges outbound from the specified node index.
-const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
-                                                uint32_t& count,
-                                                uint32_t& edge_index) const {
+const DirectedEdge*
+GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const {
   const NodeInfo* nodeinfo = node(node_index);
   count = nodeinfo->edge_count();
   edge_index = nodeinfo->edge_index();
@@ -680,18 +677,19 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
           (!bicycle || departures_[found].bicycle_accessible())) {
 
         const auto& d = departures_[found];
-        const TransitDeparture* dep = new TransitDeparture(
-            d.lineid(), d.tripid(), d.routeid(), d.blockid(), d.headsign_offset(), departure_time,
-            d.end_time(), d.frequency(), d.elapsed_time(), d.schedule_index(),
-            d.wheelchair_accessible(), d.bicycle_accessible());
+        const TransitDeparture* dep =
+            new TransitDeparture(d.lineid(), d.tripid(), d.routeid(), d.blockid(),
+                                 d.headsign_offset(), departure_time, d.end_time(), d.frequency(),
+                                 d.elapsed_time(), d.schedule_index(), d.wheelchair_accessible(),
+                                 d.bicycle_accessible());
         return dep;
       }
     }
   }
 
   // TODO - maybe wrap around, try next day?
-  LOG_DEBUG("No more departures found for lineid = " + std::to_string(lineid) + " current_time = " +
-            std::to_string(current_time));
+  LOG_DEBUG("No more departures found for lineid = " + std::to_string(lineid) +
+            " current_time = " + std::to_string(current_time));
   return nullptr;
 }
 
@@ -743,17 +741,18 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
 
       if (departure_time >= current_time && departure_time < end_time) {
         const auto& d = departures_[found];
-        const TransitDeparture* dep = new TransitDeparture(
-            d.lineid(), d.tripid(), d.routeid(), d.blockid(), d.headsign_offset(), departure_time,
-            d.end_time(), d.frequency(), d.elapsed_time(), d.schedule_index(),
-            d.wheelchair_accessible(), d.bicycle_accessible());
+        const TransitDeparture* dep =
+            new TransitDeparture(d.lineid(), d.tripid(), d.routeid(), d.blockid(),
+                                 d.headsign_offset(), departure_time, d.end_time(), d.frequency(),
+                                 d.elapsed_time(), d.schedule_index(), d.wheelchair_accessible(),
+                                 d.bicycle_accessible());
         return dep;
       }
     }
   }
 
-  LOG_INFO("No departures found for lineid = " + std::to_string(lineid) + " and tripid = " +
-           std::to_string(tripid));
+  LOG_INFO("No departures found for lineid = " + std::to_string(lineid) +
+           " and tripid = " + std::to_string(tripid));
   return nullptr;
 }
 

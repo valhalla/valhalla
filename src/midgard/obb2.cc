@@ -19,10 +19,7 @@ OBB2<coord_t>::OBB2(const coord_t& a0, const coord_t& a1, const coord_t& a2, con
 // the average of the 4 vertex positions and the axes of the OBB are formed
 // by a vector from a0 to a1 and the other by a vector from a1 to a2.
 template <class coord_t>
-void OBB2<coord_t>::Set(const coord_t& a0,
-                        const coord_t& a1,
-                        const coord_t& a2,
-                        const coord_t& a3) {
+void OBB2<coord_t>::Set(const coord_t& a0, const coord_t& a1, const coord_t& a2, const coord_t& a3) {
   // Find center positions of each bounding box
   center_.Set((a0.x() + a1.x() + a2.x() + a3.x()) * 0.25f,
               (a0.y() + a1.y() + a2.y() + a3.y()) * 0.25f);

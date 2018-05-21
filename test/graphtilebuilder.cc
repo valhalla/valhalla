@@ -134,8 +134,8 @@ void TestAddBins() {
    */
   // this will grab the 2 smallest tiles from you new tile set and make them the new test tiles
   // note the names of the new tiles and update the list with path and index in the list just below
-  for (const auto& test_tile : std::list<std::pair<std::string, size_t>>{{"744/881.gph", 744881},
-                                                                         {"744/885.gph", 744885}}) {
+  for (const auto& test_tile :
+       std::list<std::pair<std::string, size_t>>{{"744/881.gph", 744881}, {"744/885.gph", 744885}}) {
 
     // load a tile
     GraphId id(test_tile.second, 2, 0);

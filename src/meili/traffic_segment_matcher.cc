@@ -65,8 +65,7 @@ void clean_edges(std::vector<valhalla::meili::EdgeSegment>& edges) {
 
 // is this edge considered an internal type, an edge that can be ignored for the purposes of ots's
 bool is_internal(const valhalla::baldr::DirectedEdge* edge) {
-  return edge->roundabout() || edge->internal() ||
-         edge->use() == valhalla::baldr::Use::kTurnChannel;
+  return edge->roundabout() || edge->internal() || edge->use() == valhalla::baldr::Use::kTurnChannel;
 }
 bool is_turn_channel(const valhalla::baldr::DirectedEdge* edge) {
   return edge->use() == valhalla::baldr::Use::kTurnChannel;
@@ -174,9 +173,7 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
     matcher.reset(matcher_factory.Create(match_config));
     default_accuracy = matcher->config().get<float>("gps_accuracy");
     default_search_radius = matcher->config().get<float>("search_radius");
-  } catch (...) {
-    throw std::runtime_error("Couldn't create traffic matcher using configuration.");
-  }
+  } catch (...) { throw std::runtime_error("Couldn't create traffic matcher using configuration."); }
 
   // Populate a measurement measurements to pass to the map matcher
   auto measurements = parse_measurements(request, default_accuracy, default_search_radius);
@@ -205,10 +202,10 @@ std::string TrafficSegmentMatcher::match(const std::string& json) {
   return serialize(traffic_segments);
 }
 
-std::list<std::vector<interpolation_t>> TrafficSegmentMatcher::interpolate_matches(
-    const std::vector<MatchResult>& matches,
-    std::vector<EdgeSegment>& edges,
-    const std::shared_ptr<meili::MapMatcher>& matcher) const {
+std::list<std::vector<interpolation_t>>
+TrafficSegmentMatcher::interpolate_matches(const std::vector<MatchResult>& matches,
+                                           std::vector<EdgeSegment>& edges,
+                                           const std::shared_ptr<meili::MapMatcher>& matcher) const {
 
   // get all of the edges along the path from the state info
   clean_edges(edges);
@@ -253,9 +250,9 @@ std::list<std::vector<interpolation_t>> TrafficSegmentMatcher::interpolate_match
           break;
         }
         // it was the right thing we were looking for
-        interpolated.emplace_back(interpolation_t{
-            segment->edgeid, matches[idx].distance_along * edge_length + total_length,
-            matches[idx].distance_along, idx, matches[idx].epoch_time});
+        interpolated.emplace_back(
+            interpolation_t{segment->edgeid, matches[idx].distance_along * edge_length + total_length,
+                            matches[idx].distance_along, idx, matches[idx].epoch_time});
         last_idx = idx;
       }
       // add the end node of the edge
@@ -393,8 +390,7 @@ TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t
       auto prev = segment->end_percent_ == right->edge_distance ? right : std::prev(right);
       if (segment->ends_segment_ && prev->epoch_time != -1 && right->epoch_time != -1) {
         float end_diff = right->edge_distance - prev->edge_distance;
-        float ratio =
-            end_diff > 0.f ? (segment->end_percent_ - prev->edge_distance) / end_diff : 0.f;
+        float ratio = end_diff > 0.f ? (segment->end_percent_ - prev->edge_distance) / end_diff : 0.f;
         end_length = prev->total_distance + (right->total_distance - prev->total_distance) * ratio;
         end_time = prev->epoch_time + (right->epoch_time - prev->epoch_time) * ratio;
       }
@@ -432,15 +428,15 @@ TrafficSegmentMatcher::form_segments(const std::list<std::vector<interpolation_t
       prior_end_acc_length = end_length;     // right->total_distance;
 
       // compute queue length (skip if this is a partial segment)
-      int queue_length =
-          (length == -1) ? 0 : compute_queue_length(left, right, kQueueSpeedThreshold);
+      int queue_length = (length == -1) ? 0 : compute_queue_length(left, right, kQueueSpeedThreshold);
 
       // this is what we know so far
       // NOTE: in both cases we take the left most value for the shape index in an effort to be
       // conservative
-      traffic_segments.emplace_back(traffic_segment_t{
-          segment->segment_id_, start_time, left->original_index, end_time, prev->original_index,
-          length, queue_length, segment.internal, segment.way_ids});
+      traffic_segments.emplace_back(traffic_segment_t{segment->segment_id_, start_time,
+                                                      left->original_index, end_time,
+                                                      prev->original_index, length, queue_length,
+                                                      segment.internal, segment.way_ids});
 
       // print(traffic_segments.back());
 
@@ -497,8 +493,8 @@ TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree& req
     }
   }
   // same time different place?
-  auto remove_itr = std::remove_if(
-      measurements.begin(), measurements.end(), [&measurements](const Measurement& m) {
+  auto remove_itr =
+      std::remove_if(measurements.begin(), measurements.end(), [&measurements](const Measurement& m) {
         return &measurements.back() != &m && m.epoch_time() == (&m + 1)->epoch_time();
       });
   measurements.erase(remove_itr, measurements.end());
@@ -506,8 +502,7 @@ TrafficSegmentMatcher::parse_measurements(const boost::property_tree::ptree& req
   return measurements;
 }
 
-std::string
-TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t>& traffic_segments) {
+std::string TrafficSegmentMatcher::serialize(const std::vector<traffic_segment_t>& traffic_segments) {
   auto segments = baldr::json::array({});
   for (const auto& seg : traffic_segments) {
     auto segment =

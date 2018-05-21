@@ -124,9 +124,8 @@ float PointLL::Heading(const PointLL& ll2) const {
 // Finds the closest point to the supplied polyline as well as the distance
 // squared to that point and the index of the segment where the closest point
 // lies.
-std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>& pts,
-                                                      size_t begin_index,
-                                                      float dist_cutoff) const {
+std::tuple<PointLL, float, int>
+PointLL::ClosestPoint(const std::vector<PointLL>& pts, size_t begin_index, float dist_cutoff) const {
   PointLL closest{};
   int closest_segment = -1;
   float mindistsqr = std::numeric_limits<float>::max();
@@ -191,8 +190,7 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
     }
 
     // Check if we should bail early because of looking at too much shape
-    if (dist_cutoff != std::numeric_limits<float>::infinity() &&
-        (dist_cutoff -= u.Distance(v)) < 0) {
+    if (dist_cutoff != std::numeric_limits<float>::infinity() && (dist_cutoff -= u.Distance(v)) < 0) {
       break;
     }
   }

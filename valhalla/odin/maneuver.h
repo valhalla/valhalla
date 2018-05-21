@@ -175,8 +175,7 @@ public:
   bool HasVerbalPreTransitionInstruction() const;
 
   const std::string& verbal_post_transition_instruction() const;
-  void
-  set_verbal_post_transition_instruction(const std::string& verbal_post_transition_instruction);
+  void set_verbal_post_transition_instruction(const std::string& verbal_post_transition_instruction);
   void set_verbal_post_transition_instruction(std::string&& verbal_post_transition_instruction);
   bool HasVerbalPostTransitionInstruction() const;
 
@@ -223,8 +222,7 @@ public:
   void set_transit_connection_egress_info(const TransitEgressInfo& transit_connection_egress_info);
 
   const TransitStationInfo& transit_connection_station_info() const;
-  void
-  set_transit_connection_station_info(const TransitStationInfo& transit_connection_station_info);
+  void set_transit_connection_station_info(const TransitStationInfo& transit_connection_station_info);
 
   const TransitPlatformInfo& transit_connection_platform_info() const;
   void

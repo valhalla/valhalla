@@ -317,8 +317,8 @@ void GraphTileBuilder::StoreTileData() {
         static_cast<uint32_t>(in_mem.tellp()) + static_cast<uint32_t>(sizeof(GraphTileHeader));
     if (header_builder_.end_offset() != curr) {
       LOG_ERROR("Mismatch in end offset " + std::to_string(header_builder_.end_offset()) +
-                " vs in_mem stream " + std::to_string(curr) + " padding = " +
-                std::to_string(padding));
+                " vs in_mem stream " + std::to_string(curr) +
+                " padding = " + std::to_string(padding));
     }
 
     LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset "
@@ -537,15 +537,14 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
   added = false;
   return existing_edge_offset_item->second;
 }
-template uint32_t
-GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint32_t edgeindex,
-                                                    const GraphId&,
-                                                    const baldr::GraphId&,
-                                                    const uint64_t,
-                                                    const std::vector<PointLL>&,
-                                                    const std::vector<std::string>&,
-                                                    const uint16_t,
-                                                    bool&);
+template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint32_t edgeindex,
+                                                                      const GraphId&,
+                                                                      const baldr::GraphId&,
+                                                                      const uint64_t,
+                                                                      const std::vector<PointLL>&,
+                                                                      const std::vector<std::string>&,
+                                                                      const uint16_t,
+                                                                      bool&);
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32_t edgeindex,
                                                                     const GraphId&,
                                                                     const baldr::GraphId&,
@@ -769,8 +768,8 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
   // each edge please
   std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
   const auto* start_edge = tile->directededge(0);
-  for (const DirectedEdge* edge = start_edge;
-       edge < start_edge + tile->header()->directededgecount(); ++edge) {
+  for (const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount();
+       ++edge) {
     // dont bin these
     if (edge->is_shortcut() || edge->IsTransition() || edge->use() == Use::kTransitConnection ||
         edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection) {
@@ -845,10 +844,8 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   // NOTE: if format changes to add more things here we need to make a change here as well
   GraphTileHeader header = *tile->header();
   header.set_edge_bin_offsets(offsets);
-  header.set_complex_restriction_forward_offset(header.complex_restriction_forward_offset() +
-                                                shift);
-  header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() +
-                                                shift);
+  header.set_complex_restriction_forward_offset(header.complex_restriction_forward_offset() + shift);
+  header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() + shift);
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
   header.set_traffic_segmentid_offset(header.traffic_segmentid_offset() + shift);
@@ -966,9 +963,9 @@ void GraphTileBuilder::AddTrafficSegments(const baldr::GraphId& edgeid,
 void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
   // Get the number of new segments and chunks added with this call.
   uint32_t new_segments = traffic_segment_builder_.size() - header_->traffic_id_count();
-  uint32_t new_chunks = traffic_chunk_builder_.size() -
-                        (header_->lane_connectivity_offset() - header_->traffic_chunk_offset()) /
-                            sizeof(TrafficChunk);
+  uint32_t new_chunks =
+      traffic_chunk_builder_.size() -
+      (header_->lane_connectivity_offset() - header_->traffic_chunk_offset()) / sizeof(TrafficChunk);
 
   // Update header to include the traffic segment count and update the
   // offset to chunks (based on size of traffic segments).
@@ -1014,8 +1011,7 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
 
     // Write rest of the stuff after traffic chunks (includes lane connectivity
     // and edge elevation...so far).
-    const auto* begin =
-        reinterpret_cast<const char*>(header_) + header_->lane_connectivity_offset();
+    const auto* begin = reinterpret_cast<const char*>(header_) + header_->lane_connectivity_offset();
     const auto* end = reinterpret_cast<const char*>(header_) + header_->end_offset();
     file.write(begin, end - begin);
 

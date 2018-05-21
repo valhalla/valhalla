@@ -179,9 +179,8 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
       if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
           de->length() < length_comparison(length, true)) {
         // Update the elapsed time based on transition cost
-        elapsed_time += mode_costing[static_cast<int>(mode)]
-                            ->TransitionCost(de, node_info, prev_edge_label)
-                            .secs;
+        elapsed_time +=
+            mode_costing[static_cast<int>(mode)]->TransitionCost(de, node_info, prev_edge_label).secs;
 
         // Update the elapsed time based on edge cost
         elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de).secs;
@@ -315,14 +314,13 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
 
           // Update the elapsed time based on transition cost
-          elapsed_time +=
-              mode_costing[static_cast<int>(mode)]
-                  ->TransitionCost(end_de, end_edge_tile->node(n->first), prev_edge_label)
-                  .secs;
+          elapsed_time += mode_costing[static_cast<int>(mode)]
+                              ->TransitionCost(end_de, end_edge_tile->node(n->first), prev_edge_label)
+                              .secs;
 
           // Update the elapsed time based on edge cost
-          elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(end_de).secs *
-                          end_edge.percent_along();
+          elapsed_time +=
+              mode_costing[static_cast<int>(mode)]->EdgeCost(end_de).secs * end_edge.percent_along();
 
           // Add end edge
           path_infos.emplace_back(mode, elapsed_time, end_edge_graphid, 0);

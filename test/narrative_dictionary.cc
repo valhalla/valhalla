@@ -14,259 +14,256 @@ namespace {
 // Expected strings
 const std::vector<std::string> kExpectedEmptyStreetNameLabels = {"the walkway", "the cycleway",
                                                                  "the mountain bike trail"};
-const std::vector<std::string> kExpectedCardinalDirections = {
-    "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"};
+const std::vector<std::string> kExpectedCardinalDirections = {"north",     "northeast", "east",
+                                                              "southeast", "south",     "southwest",
+                                                              "west",      "northwest"};
 const std::vector<std::string> kExpectedMetricLengths = {"<KILOMETERS> kilometers", "1 kilometer",
                                                          "a half kilometer", "<METERS> meters",
                                                          "less than 10 meters"};
-const std::vector<std::string> kExpectedUsCustomaryLengths = {
-    "<MILES> miles",     "1 mile",      "a half mile",      "<TENTHS_OF_MILE> tenths of a mile",
-    "1 tenth of a mile", "<FEET> feet", "less than 10 feet"};
+const std::vector<std::string> kExpectedUsCustomaryLengths =
+    {"<MILES> miles",     "1 mile",      "a half mile",      "<TENTHS_OF_MILE> tenths of a mile",
+     "1 tenth of a mile", "<FEET> feet", "less than 10 feet"};
 const std::vector<std::string> kExpectedRelativeTwoDirections = {"left", "right"};
 const std::vector<std::string> kExpectedRelativeThreeDirections = {"left", "straight", "right"};
 const std::vector<std::string> kExpectedOrdinalValues = {"1st", "2nd", "3rd", "4th", "5th",
                                                          "6th", "7th", "8th", "9th", "10th"};
 const std::string kExpectedFerryLabel = "Ferry";
 const std::string kExpectedStationLabel = "Station";
-const std::vector<std::string> kExpectedEmptyTransitNameLabels = {
-    "tram", "metro", "train", "bus", "ferry", "cable car", "gondola", "funicular"};
+const std::vector<std::string> kExpectedEmptyTransitNameLabels = {"tram",    "metro",    "train",
+                                                                  "bus",     "ferry",    "cable car",
+                                                                  "gondola", "funicular"};
 const std::map<std::string, std::string> kExpectedTransitStopCountLabels = {{"one", "stop"},
                                                                             {"other", "stops"}};
 
 // Expected phrases
-const std::map<std::string, std::string> kExpectedStartPhrases = {
-    {"0", "Head <CARDINAL_DIRECTION>."},
-    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"4", "Drive <CARDINAL_DIRECTION>."},
-    {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"8", "Walk <CARDINAL_DIRECTION>."},
-    {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"16", "Bike <CARDINAL_DIRECTION>."},
-    {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedStartPhrases =
+    {{"0", "Head <CARDINAL_DIRECTION>."},
+     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"4", "Drive <CARDINAL_DIRECTION>."},
+     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"8", "Walk <CARDINAL_DIRECTION>."},
+     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"16", "Bike <CARDINAL_DIRECTION>."},
+     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedStartVerbalPhrases = {
-    {"0", "Head <CARDINAL_DIRECTION> for <LENGTH>."},
-    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"4", "Drive <CARDINAL_DIRECTION> for <LENGTH>."},
-    {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-    {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"8", "Walk <CARDINAL_DIRECTION> for <LENGTH>."},
-    {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-    {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"16", "Bike <CARDINAL_DIRECTION> for <LENGTH>."},
-    {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-    {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedStartVerbalPhrases =
+    {{"0", "Head <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"4", "Drive <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"8", "Walk <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"16", "Bike <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedExitPhrases = {
-    {"0", "Take the exit on the <RELATIVE_DIRECTION>."},
-    {"1", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."},
-    {"2", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."},
-    {"3", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
-    {"4", "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"5", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"6", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"7", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
-          "<TOWARD_SIGN>."},
-    {"8", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."},
-    {"10", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
-    {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
+const std::map<std::string, std::string> kExpectedExitPhrases =
+    {{"0", "Take the exit on the <RELATIVE_DIRECTION>."},
+     {"1", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."},
+     {"2", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."},
+     {"3", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
+     {"4", "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"5", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"6", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"7", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
+           "<TOWARD_SIGN>."},
+     {"8", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."},
+     {"10", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
+     {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
+            "<TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedExitVerbalPhrases =
+    {{"0", "Take the exit on the <RELATIVE_DIRECTION>."},
+     {"1", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."},
+     {"2", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."},
+     {"3", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
+     {"4", "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"5", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"6", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"7", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
+           "<TOWARD_SIGN>."},
+     {"8", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."},
+     {"10", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
+     {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
+            "<TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedKeepPhrases =
+    {{"0", "Keep <RELATIVE_DIRECTION> at the fork."},
+     {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."},
+     {"2", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."},
+     {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."},
+     {"4", "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"5", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."},
+     {"6", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."},
+     {"7", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward "
            "<TOWARD_SIGN>."}};
 
-const std::map<std::string, std::string> kExpectedExitVerbalPhrases = {
-    {"0", "Take the exit on the <RELATIVE_DIRECTION>."},
-    {"1", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."},
-    {"2", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION>."},
-    {"3", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
-    {"4", "Take the exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"5", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"6", "Take the <BRANCH_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"7", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
-          "<TOWARD_SIGN>."},
-    {"8", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION>."},
-    {"10", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN>."},
-    {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
+const std::map<std::string, std::string> kExpectedKeepVerbalPhrases =
+    {{"0", "Keep <RELATIVE_DIRECTION> at the fork."},
+     {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."},
+     {"2", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."},
+     {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."},
+     {"4", "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
+     {"5", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."},
+     {"6", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."},
+     {"7", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward "
            "<TOWARD_SIGN>."}};
 
-const std::map<std::string, std::string> kExpectedKeepPhrases = {
-    {"0", "Keep <RELATIVE_DIRECTION> at the fork."},
-    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."},
-    {"2", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."},
-    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."},
-    {"4", "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"5", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."},
-    {"6", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."},
-    {"7", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward "
-          "<TOWARD_SIGN>."}};
+const std::map<std::string, std::string> kExpectedKeepToStayOnPhrases =
+    {{"0", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+     {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."},
+     {"2", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."},
+     {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward "
+           "<TOWARD_SIGN>."}};
 
-const std::map<std::string, std::string> kExpectedKeepVerbalPhrases = {
-    {"0", "Keep <RELATIVE_DIRECTION> at the fork."},
-    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN>."},
-    {"2", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>."},
-    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES>."},
-    {"4", "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
-    {"5", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."},
-    {"6", "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>."},
-    {"7", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward "
-          "<TOWARD_SIGN>."}};
+const std::map<std::string, std::string> kExpectedKeepToStayOnVerbalPhrases =
+    {{"0", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+     {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."},
+     {"2", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."},
+     {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward "
+           "<TOWARD_SIGN>."}};
 
-const std::map<std::string, std::string> kExpectedKeepToStayOnPhrases = {
-    {"0", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
-    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."},
-    {"2", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."},
-    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward "
-          "<TOWARD_SIGN>."}};
+const std::map<std::string, std::string> kExpectedMergePhrases = {{"0", "Merge."},
+                                                                  {"1",
+                                                                   "Merge onto <STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedKeepToStayOnVerbalPhrases = {
-    {"0", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
-    {"1", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES>."},
-    {"2", "Keep <RELATIVE_DIRECTION> to stay on <STREET_NAMES> toward <TOWARD_SIGN>."},
-    {"3", "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> to stay on <STREET_NAMES> toward "
-          "<TOWARD_SIGN>."}};
+const std::map<std::string, std::string> kExpectedMergeVerbalPhrases =
+    {{"0", "Merge."}, {"1", "Merge onto <STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedMergePhrases = {
-    {"0", "Merge."},
-    {"1", "Merge onto <STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases =
+    {{"0", "Enter the roundabout."},
+     {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."}};
 
-const std::map<std::string, std::string> kExpectedMergeVerbalPhrases = {
-    {"0", "Merge."},
-    {"1", "Merge onto <STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedEnterRoundaboutVerbalPhrases =
+    {{"0", "Enter the roundabout."},
+     {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."}};
 
-const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases = {
-    {"0", "Enter the roundabout."},
-    {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."}};
+const std::map<std::string, std::string> kExpectedExitRoundaboutPhrases =
+    {{"0", "Exit the roundabout."},
+     {"1", "Exit the roundabout onto <STREET_NAMES>."},
+     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedEnterRoundaboutVerbalPhrases = {
-    {"0", "Enter the roundabout."},
-    {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."}};
+const std::map<std::string, std::string> kExpectedExitRoundaboutVerbalPhrases =
+    {{"0", "Exit the roundabout."},
+     {"1", "Exit the roundabout onto <STREET_NAMES>."},
+     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedExitRoundaboutPhrases = {
-    {"0", "Exit the roundabout."},
-    {"1", "Exit the roundabout onto <STREET_NAMES>."},
-    {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedEnterFerryPhrases =
+    {{"0", "Take the Ferry."},
+     {"1", "Take the <STREET_NAMES>."},
+     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedExitRoundaboutVerbalPhrases = {
-    {"0", "Exit the roundabout."},
-    {"1", "Exit the roundabout onto <STREET_NAMES>."},
-    {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedEnterFerryVerbalPhrases =
+    {{"0", "Take the Ferry."},
+     {"1", "Take the <STREET_NAMES>."},
+     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedEnterFerryPhrases = {
-    {"0", "Take the Ferry."},
-    {"1", "Take the <STREET_NAMES>."},
-    {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
+const std::map<std::string, std::string> kExpectedExitFerryPhrases =
+    {{"0", "Head <CARDINAL_DIRECTION>."},
+     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"4", "Drive <CARDINAL_DIRECTION>."},
+     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"8", "Walk <CARDINAL_DIRECTION>."},
+     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"16", "Bike <CARDINAL_DIRECTION>."},
+     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedEnterFerryVerbalPhrases = {
-    {"0", "Take the Ferry."},
-    {"1", "Take the <STREET_NAMES>."},
-    {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
+const std::map<std::string, std::string> kExpectedExitFerryVerbalPhrases =
+    {{"0", "Head <CARDINAL_DIRECTION>."},
+     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"4", "Drive <CARDINAL_DIRECTION>."},
+     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"8", "Walk <CARDINAL_DIRECTION>."},
+     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"16", "Bike <CARDINAL_DIRECTION>."},
+     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedExitFerryPhrases = {
-    {"0", "Head <CARDINAL_DIRECTION>."},
-    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"4", "Drive <CARDINAL_DIRECTION>."},
-    {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"8", "Walk <CARDINAL_DIRECTION>."},
-    {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"16", "Bike <CARDINAL_DIRECTION>."},
-    {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedTransitConnectionStartPhrases =
+    {{"0", "Enter the station."},
+     {"1", "Enter the <TRANSIT_STOP>."},
+     {"2", "Enter the <TRANSIT_STOP> <STATION_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedExitFerryVerbalPhrases = {
-    {"0", "Head <CARDINAL_DIRECTION>."},
-    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"4", "Drive <CARDINAL_DIRECTION>."},
-    {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"8", "Walk <CARDINAL_DIRECTION>."},
-    {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"16", "Bike <CARDINAL_DIRECTION>."},
-    {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedTransitConnectionStartVerbalPhrases =
+    {{"0", "Enter the station."},
+     {"1", "Enter the <TRANSIT_STOP>."},
+     {"2", "Enter the <TRANSIT_STOP> <STATION_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedTransitConnectionStartPhrases = {
-    {"0", "Enter the station."},
-    {"1", "Enter the <TRANSIT_STOP>."},
-    {"2", "Enter the <TRANSIT_STOP> <STATION_LABEL>."}};
+const std::map<std::string, std::string> kExpectedTransitConnectionTransferPhrases =
+    {{"0", "Transfer at the station."},
+     {"1", "Transfer at the <TRANSIT_STOP>."},
+     {"2", "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedTransitConnectionStartVerbalPhrases = {
-    {"0", "Enter the station."},
-    {"1", "Enter the <TRANSIT_STOP>."},
-    {"2", "Enter the <TRANSIT_STOP> <STATION_LABEL>."}};
+const std::map<std::string, std::string> kExpectedTransitConnectionTransferVerbalPhrases =
+    {{"0", "Transfer at the station."},
+     {"1", "Transfer at the <TRANSIT_STOP>."},
+     {"2", "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedTransitConnectionTransferPhrases = {
-    {"0", "Transfer at the station."},
-    {"1", "Transfer at the <TRANSIT_STOP>."},
-    {"2", "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."}};
+const std::map<std::string, std::string> kExpectedTransitConnectionDestinationPhrases =
+    {{"0", "Exit the station."},
+     {"1", "Exit the <TRANSIT_STOP>."},
+     {"2", "Exit the <TRANSIT_STOP> <STATION_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedTransitConnectionTransferVerbalPhrases = {
-    {"0", "Transfer at the station."},
-    {"1", "Transfer at the <TRANSIT_STOP>."},
-    {"2", "Transfer at the <TRANSIT_STOP> <STATION_LABEL>."}};
+const std::map<std::string, std::string> kExpectedTransitConnectionDestinationVerbalPhrases =
+    {{"0", "Exit the station."},
+     {"1", "Exit the <TRANSIT_STOP>."},
+     {"2", "Exit the <TRANSIT_STOP> <STATION_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedTransitConnectionDestinationPhrases = {
-    {"0", "Exit the station."},
-    {"1", "Exit the <TRANSIT_STOP>."},
-    {"2", "Exit the <TRANSIT_STOP> <STATION_LABEL>."}};
+const std::map<std::string, std::string> kExpectedDepartPhrases =
+    {{"0", "Depart: <TIME>."}, {"1", "Depart: <TIME> from <TRANSIT_STOP>."}};
 
-const std::map<std::string, std::string> kExpectedTransitConnectionDestinationVerbalPhrases = {
-    {"0", "Exit the station."},
-    {"1", "Exit the <TRANSIT_STOP>."},
-    {"2", "Exit the <TRANSIT_STOP> <STATION_LABEL>."}};
+const std::map<std::string, std::string> kExpectedDepartVerbalPhrases =
+    {{"0", "Depart at <TIME>."}, {"1", "Depart at <TIME> from <TRANSIT_STOP>."}};
 
-const std::map<std::string, std::string> kExpectedDepartPhrases = {
-    {"0", "Depart: <TIME>."},
-    {"1", "Depart: <TIME> from <TRANSIT_STOP>."}};
+const std::map<std::string, std::string> kExpectedArrivePhrases =
+    {{"0", "Arrive: <TIME>."}, {"1", "Arrive: <TIME> at <TRANSIT_STOP>."}};
 
-const std::map<std::string, std::string> kExpectedDepartVerbalPhrases = {
-    {"0", "Depart at <TIME>."},
-    {"1", "Depart at <TIME> from <TRANSIT_STOP>."}};
+const std::map<std::string, std::string> kExpectedArriveVerbalPhrases =
+    {{"0", "Arrive at <TIME>."}, {"1", "Arrive at <TIME> at <TRANSIT_STOP>."}};
 
-const std::map<std::string, std::string> kExpectedArrivePhrases = {
-    {"0", "Arrive: <TIME>."},
-    {"1", "Arrive: <TIME> at <TRANSIT_STOP>."}};
+const std::map<std::string, std::string> kExpectedPostTransitConnectionDestinationPhrases =
+    {{"0", "Head <CARDINAL_DIRECTION>."},
+     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"4", "Drive <CARDINAL_DIRECTION>."},
+     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"8", "Walk <CARDINAL_DIRECTION>."},
+     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"16", "Bike <CARDINAL_DIRECTION>."},
+     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedArriveVerbalPhrases = {
-    {"0", "Arrive at <TIME>."},
-    {"1", "Arrive at <TIME> at <TRANSIT_STOP>."}};
-
-const std::map<std::string, std::string> kExpectedPostTransitConnectionDestinationPhrases = {
-    {"0", "Head <CARDINAL_DIRECTION>."},
-    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"4", "Drive <CARDINAL_DIRECTION>."},
-    {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"8", "Walk <CARDINAL_DIRECTION>."},
-    {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-    {"16", "Bike <CARDINAL_DIRECTION>."},
-    {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
-
-const std::map<std::string, std::string> kExpectedPostTransitConnectionDestinationVerbalPhrases = {
-    {"0", "Head <CARDINAL_DIRECTION>."},
-    {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"4", "Drive <CARDINAL_DIRECTION>."},
-    {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"8", "Walk <CARDINAL_DIRECTION>."},
-    {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-    {"16", "Bike <CARDINAL_DIRECTION>."},
-    {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-    {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
+const std::map<std::string, std::string> kExpectedPostTransitConnectionDestinationVerbalPhrases =
+    {{"0", "Head <CARDINAL_DIRECTION>."},
+     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"4", "Drive <CARDINAL_DIRECTION>."},
+     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"8", "Walk <CARDINAL_DIRECTION>."},
+     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"16", "Bike <CARDINAL_DIRECTION>."},
+     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -286,8 +283,7 @@ void validate(const std::string& test_target, const std::string& expected) {
   }
 }
 
-void validate(const std::vector<std::string>& test_target,
-              const std::vector<std::string>& expected) {
+void validate(const std::vector<std::string>& test_target, const std::vector<std::string>& expected) {
   if (test_target.size() != expected.size()) {
     throw std::runtime_error("Invalid item count: " + std::to_string(test_target.size()) +
                              "  |  expected: " + std::to_string(expected.size()));
@@ -296,8 +292,8 @@ void validate(const std::vector<std::string>& test_target,
   for (auto test_target_item = test_target.begin(), expected_item = expected.begin();
        test_target_item != test_target.end(); ++test_target_item, ++expected_item) {
     if ((*test_target_item) != (*expected_item)) {
-      throw std::runtime_error("Invalid entry: " + (*test_target_item) + "  |  expected: " +
-                               (*expected_item));
+      throw std::runtime_error("Invalid entry: " + (*test_target_item) +
+                               "  |  expected: " + (*expected_item));
     }
   }
 }
@@ -308,8 +304,8 @@ void validate(const std::unordered_map<std::string, std::string>& test_target,
   for (const auto& expected_phrase : expected) {
     const auto& test_target_item = test_target.at(expected_phrase.first);
     if (test_target_item != expected_phrase.second) {
-      throw std::runtime_error("Invalid entry: " + test_target_item + "  |  expected: " +
-                               expected_phrase.second);
+      throw std::runtime_error("Invalid entry: " + test_target_item +
+                               "  |  expected: " + expected_phrase.second);
     }
   }
 }
@@ -624,9 +620,8 @@ void test_en_US_sharp() {
 
   // "2": "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
   const auto& phrase_2 = dictionary.sharp_subset.phrases.at("2");
-  validate(
-      phrase_2,
-      "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
+  validate(phrase_2,
+           "Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
 
   // "3": "Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
   const auto& phrase_3 = dictionary.sharp_subset.phrases.at("3");
@@ -810,8 +805,7 @@ void test_en_US_ramp() {
 
   // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   const auto& phrase_3 = dictionary.ramp_subset.phrases.at("3");
-  validate(phrase_3,
-           "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.");
+  validate(phrase_3, "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.");
 
   // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
   const auto& phrase_4 = dictionary.ramp_subset.phrases.at("4");
@@ -860,8 +854,7 @@ void test_en_US_ramp_verbal() {
 
   // "3": "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
   const auto& phrase_3 = dictionary.ramp_verbal_subset.phrases.at("3");
-  validate(phrase_3,
-           "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.");
+  validate(phrase_3, "Take the <BRANCH_SIGN> ramp on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.");
 
   // "4": "Take the <NAME_SIGN> ramp on the <RELATIVE_DIRECTION>.",
   const auto& phrase_4 = dictionary.ramp_verbal_subset.phrases.at("4");
@@ -1013,8 +1006,7 @@ void test_en_US_enter_roundabout_verbal() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   // Validate enter_roundabout_verbal phrases
-  validate(dictionary.enter_roundabout_verbal_subset.phrases,
-           kExpectedEnterRoundaboutVerbalPhrases);
+  validate(dictionary.enter_roundabout_verbal_subset.phrases, kExpectedEnterRoundaboutVerbalPhrases);
 
   // ordinal_values: "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"
   const auto& ordinal_values = dictionary.enter_roundabout_verbal_subset.ordinal_values;
@@ -1099,8 +1091,7 @@ void test_en_US_exit_ferry_verbal() {
   validate(cardinal_directions, kExpectedCardinalDirections);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
-  const auto& empty_street_name_labels =
-      dictionary.exit_ferry_verbal_subset.empty_street_name_labels;
+  const auto& empty_street_name_labels = dictionary.exit_ferry_verbal_subset.empty_street_name_labels;
   validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
@@ -1145,8 +1136,7 @@ void test_en_US_transit_connection_transfer_verbal() {
            kExpectedTransitConnectionTransferVerbalPhrases);
 
   // Station label
-  validate(dictionary.transit_connection_transfer_verbal_subset.station_label,
-           kExpectedStationLabel);
+  validate(dictionary.transit_connection_transfer_verbal_subset.station_label, kExpectedStationLabel);
 }
 
 void test_en_US_transit_connection_destination() {
@@ -1272,9 +1262,8 @@ void test_en_US_transit_transfer() {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
   const auto& phrase_0 = dictionary.transit_transfer_subset.phrases.at("0");
-  validate(
-      phrase_0,
-      "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
+  validate(phrase_0,
+           "Transfer to take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)");
 
   const auto& phrase_1 = dictionary.transit_transfer_subset.phrases.at("1");
   validate(phrase_1, "Transfer to take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. "

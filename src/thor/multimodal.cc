@@ -126,8 +126,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(),
-                          destination.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new, costing);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -174,8 +173,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
     // Allow this process to be aborted
     size_t current_labels = edgelabels_.size();
     if (interrupt &&
-        total_labels / kInterruptIterationsInterval <
-            current_labels / kInterruptIterationsInterval) {
+        total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval) {
       (*interrupt)();
     }
     total_labels = current_labels;
@@ -358,8 +356,9 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
         }
 
         // Look up the next departure along this edge
-        const TransitDeparture* departure = tile->GetNextDeparture(
-            directededge->lineid(), localtime, day, dow, date_before_tile, wheelchair, bicycle);
+        const TransitDeparture* departure =
+            tile->GetNextDeparture(directededge->lineid(), localtime, day, dow, date_before_tile,
+                                   wheelchair, bicycle);
         if (departure) {
           // Check if there has been a mode change
           mode_change = (mode_ == TravelMode::kPedestrian);
@@ -422,8 +421,8 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
         // Regular edge - use the appropriate costing and check if access
         // is allowed. If mode is pedestrian this will validate walking
         // distance has not been exceeded.
-        if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid,
-                                                                 0, 0)) {
+        if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0,
+                                                                 0)) {
           continue;
         }
 
@@ -438,8 +437,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
           // Prevent going from one transit connection directly to another
           // at a transit stop - this is like entering a station and exiting
           // without getting on transit
-          if (nodeinfo->type() == NodeType::kTransitEgress &&
-              pred.use() == Use::kTransitConnection &&
+          if (nodeinfo->type() == NodeType::kTransitEgress && pred.use() == Use::kTransitConnection &&
               directededge->use() == Use::kTransitConnection) {
             continue;
           }
@@ -452,8 +450,8 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
         // a transit line (assume the wait time is the cost)
         ; // newcost += {10.0f, 10.0f };
       } else {
-        newcost += mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge,
-                                                                              nodeinfo, pred);
+        newcost +=
+            mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
       }
 
       // If this edge is a destination, subtract the partial/remainder cost
@@ -497,9 +495,8 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
       float sortcost = newcost.cost;
       if (p == destinations_.end()) {
         // Get the end node, skip if the end node tile is not found
-        const GraphTile* endtile = (directededge->leaves_tile())
-                                       ? graphreader.GetGraphTile(directededge->endnode())
-                                       : tile;
+        const GraphTile* endtile =
+            (directededge->leaves_tile()) ? graphreader.GetGraphTile(directededge->endnode()) : tile;
         if (endtile == nullptr) {
           continue;
         }
@@ -677,9 +674,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
 
   // Set up lambda to get sort costs (use the local edgelabels, not the class
   // member!)
-  const auto edgecost = [&edgelabels](const uint32_t label) {
-    return edgelabels[label].sortcost();
-  };
+  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label].sortcost(); };
 
   // Use a simple Dijkstra method - no need to recover the path just need to
   // make sure we can get to a transit stop within the specified max. walking
@@ -810,9 +805,8 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
     }
   }
 
-// Reverse the list and return
-std:
-  reverse(path.begin(), path.end());
+  // Reverse the list and return
+  std::reverse(path.begin(), path.end());
   return path;
 }
 

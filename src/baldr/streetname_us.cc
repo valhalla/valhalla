@@ -8,10 +8,12 @@
 namespace valhalla {
 namespace baldr {
 
-const std::vector<std::string> StreetNameUs::pre_dirs_{
-    "North ", "East ", "South ", "West ", "Northeast ", "Southeast ", "Southwest ", "Northwest "};
-const std::vector<std::string> StreetNameUs::post_dirs_{
-    " North", " East", " South", " West", " Northeast", " Southeast", " Southwest", " Northwest"};
+const std::vector<std::string> StreetNameUs::pre_dirs_{"North ",     "East ",      "South ",
+                                                       "West ",      "Northeast ", "Southeast ",
+                                                       "Southwest ", "Northwest "};
+const std::vector<std::string> StreetNameUs::post_dirs_{" North",     " East",      " South",
+                                                        " West",      " Northeast", " Southeast",
+                                                        " Southwest", " Northwest"};
 const std::vector<std::string> StreetNameUs::post_cardinal_dirs_{" North", " East", " South",
                                                                  " West"};
 

@@ -249,8 +249,7 @@ AStarPathAlgorithm::GetBestPath(odin::Location& origin,
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
   PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  PointLL destination_new(destination.path_edges(0).ll().lng(),
-                          destination.path_edges(0).ll().lat());
+  PointLL destination_new(destination.path_edges(0).ll().lng(), destination.path_edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -271,8 +270,7 @@ AStarPathAlgorithm::GetBestPath(odin::Location& origin,
     // Allow this process to be aborted
     size_t current_labels = edgelabels_.size();
     if (interrupt &&
-        total_labels / kInterruptIterationsInterval <
-            current_labels / kInterruptIterationsInterval) {
+        total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval) {
       (*interrupt)();
     }
     total_labels = current_labels;
@@ -504,9 +502,8 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
     }
   }
 
-// Reverse the list and return
-std:
-  reverse(path.begin(), path.end());
+  // Reverse the list and return
+  std::reverse(path.begin(), path.end());
   return path;
 }
 

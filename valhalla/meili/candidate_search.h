@@ -78,8 +78,7 @@ private:
                         const midgard::Tiles<midgard::PointLL>& tiles,
                         const midgard::Tiles<midgard::PointLL>& bins) const;
 
-  std::unordered_set<baldr::GraphId>
-  RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
+  std::unordered_set<baldr::GraphId> RangeQuery(const midgard::AABB2<midgard::PointLL>& range) const;
 
   uint32_t bin_level_;
 

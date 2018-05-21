@@ -60,8 +60,8 @@ class PathStatistics {
 
 public:
   PathStatistics(std::pair<float, float> p1, std::pair<float, float> p2)
-      : origin(p1), destination(p2), success("false"), passes(0), runtime(), trip_time(),
-        trip_dist(), arc_dist(), manuevers() {
+      : origin(p1), destination(p2), success("false"), passes(0), runtime(), trip_time(), trip_dist(),
+        arc_dist(), manuevers() {
   }
 
   void setSuccess(std::string s) {
@@ -173,8 +173,7 @@ TripPath PathTest(GraphReader& reader,
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
     std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-    const auto projections =
-        Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+    const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
     std::vector<PathLocation> path_location;
     valhalla::odin::DirectionsOptions directions_options;
     for (const auto& loc : locations) {
@@ -313,22 +312,22 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
   valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
-  valhalla::midgard::logging::Log("==============================================",
-                                  " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
   for (int i = 0; i < trip_directions.maneuver_size(); ++i) {
     const auto& maneuver = trip_directions.maneuver(i);
 
     // Depart instruction
     if (maneuver.has_depart_instruction()) {
-      valhalla::midgard::logging::Log(
-          (boost::format("   %s") % maneuver.depart_instruction()).str(), " [NARRATIVE] ");
+      valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.depart_instruction()).str(),
+                                      " [NARRATIVE] ");
     }
 
     // Verbal depart instruction
     if (maneuver.has_verbal_depart_instruction()) {
-      valhalla::midgard::logging::Log(
-          (boost::format("   VERBAL_DEPART: %s") % maneuver.verbal_depart_instruction()).str(),
-          " [NARRATIVE] ");
+      valhalla::midgard::logging::Log((boost::format("   VERBAL_DEPART: %s") %
+                                       maneuver.verbal_depart_instruction())
+                                          .str(),
+                                      " [NARRATIVE] ");
     }
 
     // Instruction
@@ -339,38 +338,40 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
 
     // Verbal transition alert instruction
     if (maneuver.has_verbal_transition_alert_instruction()) {
-      valhalla::midgard::logging::Log(
-          (boost::format("   VERBAL_ALERT: %s") % maneuver.verbal_transition_alert_instruction())
-              .str(),
-          " [NARRATIVE] ");
+      valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
+                                       maneuver.verbal_transition_alert_instruction())
+                                          .str(),
+                                      " [NARRATIVE] ");
     }
 
     // Verbal pre transition instruction
     if (maneuver.has_verbal_pre_transition_instruction()) {
-      valhalla::midgard::logging::Log(
-          (boost::format("   VERBAL_PRE: %s") % maneuver.verbal_pre_transition_instruction()).str(),
-          " [NARRATIVE] ");
+      valhalla::midgard::logging::Log((boost::format("   VERBAL_PRE: %s") %
+                                       maneuver.verbal_pre_transition_instruction())
+                                          .str(),
+                                      " [NARRATIVE] ");
     }
 
     // Verbal post transition instruction
     if (maneuver.has_verbal_post_transition_instruction()) {
-      valhalla::midgard::logging::Log(
-          (boost::format("   VERBAL_POST: %s") % maneuver.verbal_post_transition_instruction())
-              .str(),
-          " [NARRATIVE] ");
+      valhalla::midgard::logging::Log((boost::format("   VERBAL_POST: %s") %
+                                       maneuver.verbal_post_transition_instruction())
+                                          .str(),
+                                      " [NARRATIVE] ");
     }
 
     // Arrive instruction
     if (maneuver.has_arrive_instruction()) {
-      valhalla::midgard::logging::Log(
-          (boost::format("   %s") % maneuver.arrive_instruction()).str(), " [NARRATIVE] ");
+      valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.arrive_instruction()).str(),
+                                      " [NARRATIVE] ");
     }
 
     // Verbal arrive instruction
     if (maneuver.has_verbal_arrive_instruction()) {
-      valhalla::midgard::logging::Log(
-          (boost::format("   VERBAL_ARRIVE: %s") % maneuver.verbal_arrive_instruction()).str(),
-          " [NARRATIVE] ");
+      valhalla::midgard::logging::Log((boost::format("   VERBAL_ARRIVE: %s") %
+                                       maneuver.verbal_arrive_instruction())
+                                          .str(),
+                                      " [NARRATIVE] ");
     }
 
     if (i < trip_directions.maneuver_size() - 1) {
@@ -378,13 +379,13 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
                                       " [NARRATIVE] ");
     }
   }
-  valhalla::midgard::logging::Log("==============================================",
+  valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("Total time: " + GetFormattedTime(trip_directions.summary().time()),
                                   " [NARRATIVE] ");
-  valhalla::midgard::logging::Log(
-      "Total time: " + GetFormattedTime(trip_directions.summary().time()), " [NARRATIVE] ");
-  valhalla::midgard::logging::Log(
-      (boost::format("Total length: %.1f %s") % trip_directions.summary().length() % units).str(),
-      " [NARRATIVE] ");
+  valhalla::midgard::logging::Log((boost::format("Total length: %.1f %s") %
+                                   trip_directions.summary().length() % units)
+                                      .str(),
+                                  " [NARRATIVE] ");
   if (origin.date_time_) {
     valhalla::midgard::logging::Log("Departed at: " + *origin.date_time_, " [NARRATIVE] ");
   }
@@ -427,8 +428,8 @@ int main(int argc, char* argv[]) {
   connectivity = multi_run = match_test = false;
   uint32_t iterations;
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
       "origin,o", boost::program_options::value<std::string>(&origin),
       "Origin: "
       "lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/"
@@ -566,9 +567,9 @@ int main(int argc, char* argv[]) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       pt.get_child_optional("thor.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                   std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -644,8 +645,8 @@ int main(int argc, char* argv[]) {
   if (connectivity) {
     std::unordered_map<size_t, size_t> color_counts;
     connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
-    auto colors = connectivity_map.get_colors(TileHierarchy::levels().rbegin()->first,
-                                              path_location.back(), 0);
+    auto colors =
+        connectivity_map.get_colors(TileHierarchy::levels().rbegin()->first, path_location.back(), 0);
     for (auto color : colors) {
       auto itr = color_counts.find(color);
       if (itr == color_counts.cend()) {
@@ -722,8 +723,8 @@ int main(int argc, char* argv[]) {
     if (trip_path.node().size() > 0) {
       // Try the the directions
       t1 = std::chrono::high_resolution_clock::now();
-      TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
-                                                      path_location[i], path_location[i + 1], data);
+      TripDirections trip_directions =
+          DirectionsTest(directions_options, trip_path, path_location[i], path_location[i + 1], data);
       t2 = std::chrono::high_resolution_clock::now();
       msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 

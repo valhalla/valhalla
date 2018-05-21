@@ -94,23 +94,24 @@ boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
                                            const boost::local_time::time_zone_ptr& time_zone) {
 
   boost::posix_time::time_duration td = time_duration;
-  boost::local_time::local_date_time in_local_time(
-      date, td, time_zone, boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
+  boost::local_time::local_date_time
+      in_local_time(date, td, time_zone, boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
 
   // create not-a-date-time if invalid (eg: in dst transition)
   if (in_local_time.is_not_a_date_time()) {
 
     if (time_zone->dst_local_start_time(date.year()).date() == date) {
       td += time_zone->dst_offset(); // clocks ahead.
-      in_local_time = boost::local_time::local_date_time(
-          date, td, time_zone, boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
+      in_local_time = boost::local_time::
+          local_date_time(date, td, time_zone,
+                          boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
     } else {
       // Daylight Savings Results are ambiguous: time given: 2016-Nov-06 01:00:00
       boost::posix_time::time_duration time_dur = time_zone->dst_offset();
 
-      in_local_time = boost::local_time::local_date_time(
-          date, td + time_dur, time_zone,
-          boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
+      in_local_time = boost::local_time::
+          local_date_time(date, td + time_dur, time_zone,
+                          boost::local_time::local_date_time::NOT_DATE_TIME_ON_ERROR);
       in_local_time -= time_dur;
     }
   }
@@ -1028,18 +1029,18 @@ bool is_restricted(const bool type,
       }
 
       if (b_week && b_week <= 5) { // kNthDow
-        boost::gregorian::nth_day_of_the_week_in_month nthdow(
-            static_cast<boost::gregorian::nth_day_of_the_week_in_month::week_num>(b_week),
-            b_day_dow - 1, b_month);
+        boost::gregorian::nth_day_of_the_week_in_month
+            nthdow(static_cast<boost::gregorian::nth_day_of_the_week_in_month::week_num>(b_week),
+                   b_day_dow - 1, b_month);
         begin_date = nthdow.get_date(b_year);
       } else { // YMD
         begin_date = boost::gregorian::date(b_year, b_month, b_day_dow);
       }
 
       if (e_week && e_week <= 5) { // kNthDow
-        boost::gregorian::nth_day_of_the_week_in_month nthdow(
-            static_cast<boost::gregorian::nth_day_of_the_week_in_month::week_num>(e_week),
-            e_day_dow - 1, e_month);
+        boost::gregorian::nth_day_of_the_week_in_month
+            nthdow(static_cast<boost::gregorian::nth_day_of_the_week_in_month::week_num>(e_week),
+                   e_day_dow - 1, e_month);
         end_date = nthdow.get_date(e_year);
       } else {                                                         // YMD
         end_date = boost::gregorian::date(e_year, e_month, e_day_dow); // Dec 5 to Mar 3
@@ -1223,8 +1224,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     boost::algorithm::trim(condition);
 
     // Holidays and school hours skip for now
-    if (condition.size() >= 2 &&
-        (condition.substr(0, 2) == "PH" || condition.substr(0, 2) == "SH")) {
+    if (condition.size() >= 2 && (condition.substr(0, 2) == "PH" || condition.substr(0, 2) == "SH")) {
       return time_domains;
     }
 
@@ -1288,21 +1288,21 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
           } else {
 
             // Feb 16-Oct 15 09:00-18:30
-            regex = re::regex(
-                "(?:(January|February|March|April|May|June|July|"
-                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})",
-                re::regex_constants::icase);
+            regex = re::
+                regex("(?:(January|February|March|April|May|June|July|"
+                      "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                      "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})",
+                      re::regex_constants::icase);
 
             if (RegexFound(condition, regex)) {
               condition = FormatCondition(condition, regex, "$1#$2");
             } else {
               // Feb 2-14
-              regex = re::regex(
-                  "(?:(January|February|March|April|May|June|July|"
-                  "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                  "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})-(\\d{1,2})",
-                  re::regex_constants::icase);
+              regex = re::
+                  regex("(?:(January|February|March|April|May|June|July|"
+                        "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                        "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})-(\\d{1,2})",
+                        re::regex_constants::icase);
 
               if (RegexFound(condition, regex)) {
                 condition = FormatCondition(condition, regex, "$1#$2-$1#$3");

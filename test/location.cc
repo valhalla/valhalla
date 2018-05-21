@@ -174,8 +174,9 @@ void test_from_json() {
       throw std::runtime_error("Json location parsing failed: Test state");
 
     // Test postal code
-    loc = from_json(
-        make_json(lat, lng, type_default, boost::none, name, street, city, state, postal_code), m);
+    loc = from_json(make_json(lat, lng, type_default, boost::none, name, street, city, state,
+                              postal_code),
+                    m);
     if ((loc.zip_ != postal_code))
       throw std::runtime_error("Json location parsing failed: Test postal code postal_code");
     if (loc.way_id_)
@@ -203,8 +204,8 @@ void test_from_json() {
       throw std::runtime_error("Json location parsing failed: Test wrong thing is always break");
 
     // Test everything
-    loc = from_json(make_json(lat, lng, type_default, heading, name, street, city, state,
-                              postal_code, country, boost::none, date_time),
+    loc = from_json(make_json(lat, lng, type_default, heading, name, street, city, state, postal_code,
+                              country, boost::none, date_time),
                     m);
     if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat) ||
         !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng) ||

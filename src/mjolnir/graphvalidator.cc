@@ -147,8 +147,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
     if (edge.use() == Use::kTransitConnection || directededge->use() == Use::kTransitConnection) {
       continue;
     }
-    if ((edge.use() == Use::kPlatformConnection &&
-         directededge->use() == Use::kPlatformConnection) ||
+    if ((edge.use() == Use::kPlatformConnection && directededge->use() == Use::kPlatformConnection) ||
         (edge.use() == Use::kEgressConnection && directededge->use() == Use::kEgressConnection)) {
       auto shape1 = tile->edgeinfo(edge.edgeinfo_offset()).shape();
       auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset()).shape();
@@ -214,8 +213,8 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
           if (edge.is_shortcut()) {
             std::vector<std::string> names = tile->edgeinfo(edge.edgeinfo_offset()).GetNames();
             std::string name = (names.size() > 0) ? names[0] : "unnamed";
-            LOG_DEBUG("Duplicate shortcut for " + name + " at LL = " +
-                      std::to_string(nodeinfo->latlng().lat()) + "," +
+            LOG_DEBUG("Duplicate shortcut for " + name +
+                      " at LL = " + std::to_string(nodeinfo->latlng().lat()) + "," +
                       std::to_string(nodeinfo->latlng().lng()));
           } else {
             LOG_DEBUG("Potential duplicate: wayids " + std::to_string(wayid) + " and " +
@@ -273,12 +272,11 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       directededge = end_tile->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
         if (edge.is_shortcut() == directededge->is_shortcut()) {
-          LOG_WARN(
-              (boost::format("    Length = %1% Endnode: %2% WayId = %3% EdgeInfoOffset = %4%") %
-               directededge->length() % directededge->endnode() %
-               end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid() %
-               directededge->edgeinfo_offset())
-                  .str());
+          LOG_WARN((boost::format("    Length = %1% Endnode: %2% WayId = %3% EdgeInfoOffset = %4%") %
+                    directededge->length() % directededge->endnode() %
+                    end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid() %
+                    directededge->edgeinfo_offset())
+                       .str());
           n++;
         }
       }
@@ -436,9 +434,8 @@ void validate(
         // node. Set the deadend flag and internal flag (if the opposing
         // edge is internal then make sure this edge is as well)
         std::string end_node_iso;
-        uint64_t wayid = directededge.IsTransition()
-                             ? 0
-                             : tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
+        uint64_t wayid =
+            directededge.IsTransition() ? 0 : tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
         uint32_t opp_index =
             GetOpposingEdgeIndex(node, directededge, wayid, tile, endnode_tile, problem_ways,
                                  dupcount, end_node_iso, transit_level);
@@ -534,8 +531,7 @@ void validate(
       }*/
 
   // Fill promise with return data
-  result.set_value(
-      std::make_tuple(std::move(duplicates), std::move(densities), std::move(tweeners)));
+  result.set_value(std::make_tuple(std::move(duplicates), std::move(densities), std::move(tweeners)));
 }
 
 // take tweeners from different tiles' perspectives and merge into a single tweener
@@ -679,8 +675,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       sum += density;
     }
     float average_density = sum / densities[level].size();
-    LOG_DEBUG("Average density = " + std::to_string(average_density) + " max = " +
-              std::to_string(max_density));
+    LOG_DEBUG("Average density = " + std::to_string(average_density) +
+              " max = " + std::to_string(max_density));
   }
 }
 } // namespace mjolnir

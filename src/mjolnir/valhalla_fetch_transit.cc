@@ -256,10 +256,11 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
     */
     // we have anything we want it
     if (stops_total > 0 /* || routes_total > 0|| pairs_total > 0*/) {
-      prioritized.push(weighted_tile_t{
-          tile,
-          stops_total +
-              10 /* + routes_total * 1000 + pairs_total*/}); // TODO: factor in stop pairs as well
+      prioritized.push(
+          weighted_tile_t{tile,
+                          stops_total +
+                              10 /* + routes_total * 1000 + pairs_total*/}); // TODO: factor in stop
+                                                                             // pairs as well
       LOG_INFO(GraphTile::FileSuffix(tile) + " should have " + std::to_string(stops_total) +
                " stops " /* +
           std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs"*/);
@@ -270,11 +271,11 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   return prioritized;
 }
 
-#define set_no_null(T, pt, path, null_value, set)                                                  \
-  {                                                                                                \
-    auto value = pt.get<T>(path, null_value);                                                      \
-    if (value != null_value)                                                                       \
-      set(value);                                                                                  \
+#define set_no_null(T, pt, path, null_value, set)                                                    \
+  {                                                                                                  \
+    auto value = pt.get<T>(path, null_value);                                                        \
+    if (value != null_value)                                                                         \
+      set(value);                                                                                    \
   }
 
 void get_stops(Transit_Fetch& tile,
@@ -496,8 +497,7 @@ bool get_stop_pairs(Transit_Fetch& tile,
     auto line_id =
         pair->origin_onestop_id() < pair->destination_onestop_id()
             ? pair->origin_onestop_id() + pair->destination_onestop_id() + route_id + frequency_time
-            : pair->destination_onestop_id() + pair->origin_onestop_id() + route_id +
-                  frequency_time;
+            : pair->destination_onestop_id() + pair->origin_onestop_id() + route_id + frequency_time;
     uniques.lock.lock();
     auto inserted = uniques.lines.insert({line_id, uniques.lines.size()});
     uniques.lock.unlock();
@@ -506,8 +506,7 @@ bool get_stop_pairs(Transit_Fetch& tile,
     auto dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
     auto start_date = pair_pt.second.get<std::string>("service_start_date", "null");
     auto end_date = pair_pt.second.get<std::string>("service_end_date", "null");
-    if (origin_time == "null" || dest_time == "null" || start_date == "null" ||
-        end_date == "null") {
+    if (origin_time == "null" || dest_time == "null" || start_date == "null" || end_date == "null") {
       LOG_ERROR("Missing timing information: " + pair->origin_onestop_id() + " --> " +
                 pair->destination_onestop_id());
       tile.mutable_stop_pairs()->RemoveLast();
@@ -645,8 +644,7 @@ void fetch_tiles(const ptree& pt,
   if (!database) {
     LOG_WARN("Time zone db not found.  Not saving time zone information from db.");
   } else if (!tz_db_handle) {
-    LOG_WARN("Time zone db " + *database +
-             " not found.  Not saving time zone information from db.");
+    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
   }
 
   // for each tile
@@ -698,11 +696,11 @@ void fetch_tiles(const ptree& pt,
 
     // pull out all the STOPS (you see what we did there?)
     std::unordered_map<std::string, uint64_t> stops;
-    boost::optional<std::string> request = url(
-        (boost::format("/api/v1/stops?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
-         pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
-            .str(),
-        pt);
+    boost::optional<std::string> request =
+        url((boost::format("/api/v1/stops?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
+             pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
+                .str(),
+            pt);
     request = *request + import_level;
 
     do {
@@ -721,11 +719,11 @@ void fetch_tiles(const ptree& pt,
     }
 
     // pull out all operator WEBSITES
-    request = url(
-        (boost::format("/api/v1/operators?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
-         pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
-            .str(),
-        pt);
+    request =
+        url((boost::format("/api/v1/operators?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
+             pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
+                .str(),
+            pt);
     request = *request + import_level;
 
     std::unordered_map<std::string, std::string> websites;
@@ -752,13 +750,13 @@ void fetch_tiles(const ptree& pt,
     } while (request && (request = *request + api_key));
 
     // pull out all ROUTES
-    request = url(
-        (boost::format(
-             "/api/v1/"
-             "routes?total=false&include_geometry=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
-         pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
-            .str(),
-        pt);
+    request =
+        url((boost::format(
+                 "/api/v1/"
+                 "routes?total=false&include_geometry=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%") %
+             pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
+                .str(),
+            pt);
     std::unordered_map<std::string, size_t> routes;
     request = *request + import_level;
 
@@ -776,11 +774,11 @@ void fetch_tiles(const ptree& pt,
     // pull out all the route_stop_patterns or shapes
     std::unordered_map<std::string, size_t> shapes;
     for (const auto& route : routes) {
-      request = url(
-          (boost::format("/api/v1/route_stop_patterns?total=false&per_page=100&traversed_by=%2%") %
-           pt.get<std::string>("per_page") % url_encode(route.first))
-              .str(),
-          pt);
+      request = url((boost::format(
+                         "/api/v1/route_stop_patterns?total=false&per_page=100&traversed_by=%2%") %
+                     pt.get<std::string>("per_page") % url_encode(route.first))
+                        .str(),
+                    pt);
       do {
         // grab some stuff
         response = curler(*request, "route_stop_patterns");
@@ -835,11 +833,10 @@ void fetch_tiles(const ptree& pt,
   promise.set_value(dangling);
 }
 
-std::list<GraphId>
-fetch(const ptree& pt,
-      std::priority_queue<weighted_tile_t>& tiles,
-      unsigned int thread_count = std::max(static_cast<unsigned int>(1),
-                                           std::thread::hardware_concurrency())) {
+std::list<GraphId> fetch(const ptree& pt,
+                         std::priority_queue<weighted_tile_t>& tiles,
+                         unsigned int thread_count = std::max(static_cast<unsigned int>(1),
+                                                              std::thread::hardware_concurrency())) {
   LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " +
            std::to_string(thread_count) + " threads...");
 
@@ -878,8 +875,7 @@ Transit_Fetch read_pbf(const std::string& file_name, std::mutex& lock) {
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   lock.unlock();
-  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()),
-                                            buffer.size());
+  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);

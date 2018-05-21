@@ -55,16 +55,13 @@ statistics::statistics()
     : tile_lengths(), country_lengths(), tile_int_edges(), country_int_edges(), tile_one_way(),
       country_one_way(), tile_speed_info(), country_speed_info(), tile_named(), country_named(),
       tile_truck_route(), country_truck_route(), tile_hazmat(), country_hazmat(), tile_height(),
-      country_height(), tile_width(), country_width(), tile_length(), country_length(),
-      tile_weight(), country_weight(), tile_axle_load(), country_axle_load(), tile_exit_signs(),
-      tile_fork_signs(), ctry_exit_signs(), ctry_fork_signs(), tile_exit_count(), tile_fork_count(),
-      ctry_exit_count(), ctry_fork_count(), tile_areas(), tile_geometries(), iso_codes(),
-      tile_ids() {
+      country_height(), tile_width(), country_width(), tile_length(), country_length(), tile_weight(),
+      country_weight(), tile_axle_load(), country_axle_load(), tile_exit_signs(), tile_fork_signs(),
+      ctry_exit_signs(), ctry_fork_signs(), tile_exit_count(), tile_fork_count(), ctry_exit_count(),
+      ctry_fork_count(), tile_areas(), tile_geometries(), iso_codes(), tile_ids() {
 }
 
-void statistics::add_tile_road(const uint64_t& tile_id,
-                               const RoadClass& rclass,
-                               const float length) {
+void statistics::add_tile_road(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_ids.insert(tile_id);
   tile_lengths[tile_id][rclass] += length;
 }
@@ -247,8 +244,7 @@ const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statisti
 statistics::get_tile_lengths() const {
   return tile_lengths;
 }
-const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_lengths() const {
   return country_lengths;
 }
@@ -267,8 +263,7 @@ const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statisti
 statistics::get_tile_one_way() const {
   return tile_one_way;
 }
-const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_one_way() const {
   return country_one_way;
 }
@@ -277,8 +272,7 @@ const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statisti
 statistics::get_tile_speed_info() const {
   return tile_speed_info;
 }
-const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_speed_info() const {
   return country_speed_info;
 }
@@ -287,8 +281,7 @@ const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statisti
 statistics::get_tile_named() const {
   return tile_named;
 }
-const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_named() const {
   return country_named;
 }
@@ -297,8 +290,7 @@ const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statisti
 statistics::get_tile_hazmat() const {
   return tile_hazmat;
 }
-const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_hazmat() const {
   return country_hazmat;
 }
@@ -307,8 +299,7 @@ const std::unordered_map<uint64_t, std::unordered_map<RoadClass, float, statisti
 statistics::get_tile_truck_route() const {
   return tile_truck_route;
 }
-const std::unordered_map<std::string,
-                         std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
+const std::unordered_map<std::string, std::unordered_map<RoadClass, float, statistics::rclassHasher>>&
 statistics::get_country_truck_route() const {
   return country_truck_route;
 }
@@ -520,12 +511,12 @@ void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& 
        {"properties",
         json::map(
             {{"instructions",
-              json::map({{"Loop", std::string("This one way road loops back on itself. Edit it so "
-                                              "that the road is properly accessible")},
-                         {"Node",
-                          std::string(
-                              "This node is either unreachable or unleavable. Edit the surrounding "
-                              "roads so that the node can be accessed properly")}})}})}});
+              json::map(
+                  {{"Loop", std::string("This one way road loops back on itself. Edit it so "
+                                        "that the road is properly accessible")},
+                   {"Node",
+                    std::string("This node is either unreachable or unleavable. Edit the surrounding "
+                                "roads so that the node can be accessed properly")}})}})}});
   // write out to a file
   if (boost::filesystem::exists("maproulette_tasks.geojson")) {
     boost::filesystem::remove("maproulette_tasks.geojson");

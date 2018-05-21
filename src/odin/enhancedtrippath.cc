@@ -814,8 +814,7 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
         if (xedge_traversable_outbound) {
           ++xedge_counts.right_traversable_outbound;
         }
-      } else if ((intersecting_turn_degree < path_turn_degree) &&
-                 (intersecting_turn_degree > 180)) {
+      } else if ((intersecting_turn_degree < path_turn_degree) && (intersecting_turn_degree > 180)) {
         ++xedge_counts.left;
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree, false)) {
           ++xedge_counts.left_similar;
@@ -839,8 +838,7 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
         if (xedge_traversable_outbound) {
           ++xedge_counts.right_traversable_outbound;
         }
-      } else if ((intersecting_turn_degree < path_turn_degree) ||
-                 (intersecting_turn_degree > 180)) {
+      } else if ((intersecting_turn_degree < path_turn_degree) || (intersecting_turn_degree > 180)) {
         ++xedge_counts.left;
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree, false)) {
           ++xedge_counts.left_similar;
