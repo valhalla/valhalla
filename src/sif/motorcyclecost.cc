@@ -303,7 +303,7 @@ public:
   float use_highways_;   // Preference to use highways. Is a value from 0 to 1
   float highway_factor_; // Factor applied when road is a motorway or trunk
   float surface_factor_; // How much the surface factors are applied
-  float use_trails_; // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
+  float use_trails_;     // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -318,9 +318,9 @@ public:
 
 // Constructor
 MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive),
-      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
-                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
+                                                                 1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
+                                                                 2.5f, 2.8f, 3.1f, 3.5f} {
 
   surface_factor_ = 0.5f;
   // Get the vehicle type - enter as string and convert to enum
@@ -344,8 +344,8 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
   gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
   alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
-  country_crossing_cost_ = kCountryCrossingCostRange(
-      pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
+  country_crossing_cost_ =
+      kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
   country_crossing_penalty_ = kCountryCrossingPenaltyRange(
       pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
 
@@ -394,7 +394,7 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   // start to increase the differences.
   road_factor_ = (use_primary_ >= 0.5f) ? 1.5f - use_primary_ : 3.0f - use_primary_ * 5.0f;
 }
-}
+} // namespace
 
 // Destructor
 MotorcycleCost::~MotorcycleCost() {
@@ -633,8 +633,8 @@ uint8_t MotorcycleCost::travel_type() const {
 cost_ptr_t CreateMotorcycleCost(const boost::property_tree::ptree& config) {
   return std::make_shared<MotorcycleCost>(config);
 }
-}
-}
+} // namespace sif
+} // namespace valhalla
 
 /**********************************************************************************************/
 
@@ -661,8 +661,7 @@ make_real_distributor_from_range(const ranged_default_t<T>& range) {
 }
 
 template <typename T>
-std::uniform_int_distribution<T>*
-make_int_distributor_from_range(const ranged_default_t<T>& range) {
+std::uniform_int_distribution<T>* make_int_distributor_from_range(const ranged_default_t<T>& range) {
   T rangeLength = range.max - range.min;
   return new std::uniform_int_distribution<T>(range.min - rangeLength, range.max + rangeLength);
 }
@@ -689,8 +688,7 @@ void testMotorcycleCostParams() {
   fDistributor.reset(make_real_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("gate_cost", (*fDistributor)(generator)));
-    if (ctorTester->gate_cost_ < kGateCostRange.min ||
-        ctorTester->gate_cost_ > kGateCostRange.max) {
+    if (ctorTester->gate_cost_ < kGateCostRange.min || ctorTester->gate_cost_ > kGateCostRange.max) {
       throw std::runtime_error("gate_cost_ is not within it's range");
     }
   }
@@ -751,8 +749,7 @@ void testMotorcycleCostParams() {
   fDistributor.reset(make_real_distributor_from_range(kUseFerryRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("use_ferry", (*fDistributor)(generator)));
-    if (ctorTester->use_ferry_ < kUseFerryRange.min ||
-        ctorTester->use_ferry_ > kUseFerryRange.max) {
+    if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
       throw std::runtime_error("use_ferry_ is not within it's range");
     }
   }
@@ -767,7 +764,7 @@ void testMotorcycleCostParams() {
     }
   }
 }
-}
+} // namespace
 
 int main() {
   test::suite suite("costing");

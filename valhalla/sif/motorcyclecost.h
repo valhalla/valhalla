@@ -15,7 +15,7 @@ namespace sif {
  * and the tendency to avoid hills
  */
 cost_ptr_t CreateMotorcycleCost(const boost::property_tree::ptree& config);
-}
-}
+} // namespace sif
+} // namespace valhalla
 
 #endif // VALHALLA_SIF_MOTORCYCLECOST_H_
