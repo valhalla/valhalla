@@ -72,9 +72,8 @@ std::string serializeHeight(const valhalla_request_t& request,
 
   // get the distances between the postings
   if (ranges.size()) {
-    json =
-        json::map({{"range_height",
-                    serialize_range_height(ranges, heights, skadi::sample::get_no_data_value())}});
+    json = json::map({{"range_height",
+                       serialize_range_height(ranges, heights, skadi::sample::get_no_data_value())}});
   } // just the postings
   else {
     json = json::map({{"height", serialize_height(heights, skadi::sample::get_no_data_value())}});

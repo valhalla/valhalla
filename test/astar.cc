@@ -118,8 +118,8 @@ void make_tile() {
   auto add_edge = [&](const std::pair<vb::GraphId, vm::PointLL>& u,
                       const std::pair<vb::GraphId, vm::PointLL>& v, const uint32_t name,
                       const uint32_t opposing, const bool forward) {
-    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
-                                     1, {}, {}, 0, false, 0, 0);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, 1,
+                                     {}, {}, 0, false, 0, 0);
     edge_builder.set_opp_index(opposing);
     edge_builder.set_forwardaccess(vb::kAllAccess);
     std::vector<vm::PointLL> shape = {u.second, u.second.MidPoint(v.second), v.second};
@@ -192,9 +192,7 @@ void write_config(const std::string& filename) {
 }
 
 // check that a path from origin to dest goes along the edge with expected_edge_index
-void assert_is_trivial_path(vo::Location& origin,
-                            vo::Location& dest,
-                            uint32_t expected_edge_index) {
+void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t expected_edge_index) {
 
   // make the config file
   std::stringstream json;
@@ -309,9 +307,9 @@ void trivial_path_no_uturns(const std::string& config_file) {
   std::string way_nodes_file = "test_way_nodes_trivial.bin";
   std::string access_file = "test_access_trivial.bin";
   std::string restriction_file = "test_complex_restrictions_trivial.bin";
-  auto osmdata = vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                                           {"test/data/utrecht_netherlands.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file, restriction_file);
+  auto osmdata =
+      vj::PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"},
+                                ways_file, way_nodes_file, access_file, restriction_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
   vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, restriction_file);
   // Enhance the local level of the graph. This adds information to the local
@@ -356,9 +354,10 @@ void trivial_path_no_uturns(const std::string& config_file) {
                         *directions_options.mutable_locations(1), graph_reader, mode_costing, mode);
 
   vt::AttributesController controller;
-  vo::TripPath trip_path = vt::TripPathBuilder::Build(
-      controller, graph_reader, mode_costing, path, *directions_options.mutable_locations(0),
-      *directions_options.mutable_locations(1), std::list<vo::Location>{});
+  vo::TripPath trip_path =
+      vt::TripPathBuilder::Build(controller, graph_reader, mode_costing, path,
+                                 *directions_options.mutable_locations(0),
+                                 *directions_options.mutable_locations(1), std::list<vo::Location>{});
   // really could of got the total of the elapsed_time.
   vo::DirectionsBuilder directions;
   vo::TripDirections trip_directions = directions.Build(directions_options, trip_path);

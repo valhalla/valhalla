@@ -77,8 +77,8 @@ edge_t opposing(GraphReader& reader, const GraphTile* tile, const DirectedEdge* 
   // Check for invalid opposing index
   if (edge->opp_index() == kMaxEdgesPerNode) {
     PointLL ll = t->node(edge->endnode())->latlng();
-    LOG_ERROR("Invalid edge opp index = " + std::to_string(edge->opp_index()) + " LL = " +
-              std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+    LOG_ERROR("Invalid edge opp index = " + std::to_string(edge->opp_index()) +
+              " LL = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
     return {id, nullptr};
   }
   return {id, t->directededge(id)};
@@ -164,8 +164,8 @@ int main(int argc, char* argv[]) {
                                    "\n"
                                    "\n");
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
       "column,c", bpo::value<std::string>(&column_separator),
       "What separator to use between columns [default=\\0].")(
       "row,r", bpo::value<std::string>(&column_separator),

@@ -310,8 +310,8 @@ template std::vector<double> sample::get_all<std::list<std::pair<double, double>
     const std::list<std::pair<double, double>>&) const;
 template std::vector<double> sample::get_all<std::vector<std::pair<double, double>>>(
     const std::vector<std::pair<double, double>>&) const;
-template std::vector<double> sample::get_all<std::list<std::pair<float, float>>>(
-    const std::list<std::pair<float, float>>&) const;
+template std::vector<double>
+sample::get_all<std::list<std::pair<float, float>>>(const std::list<std::pair<float, float>>&) const;
 template std::vector<double> sample::get_all<std::vector<std::pair<float, float>>>(
     const std::vector<std::pair<float, float>>&) const;
 template std::vector<double>

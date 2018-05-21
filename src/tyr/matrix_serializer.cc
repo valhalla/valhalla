@@ -98,17 +98,15 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
     // check to make sure a route was found; if not, return null for distance & time in matrix
     // result
     if (tds[i].time != kMaxCost) {
-      row->emplace_back(
-          json::map({{"from_index", static_cast<uint64_t>(source_index)},
-                     {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-                     {"time", static_cast<uint64_t>(tds[i].time)},
-                     {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}}));
+      row->emplace_back(json::map({{"from_index", static_cast<uint64_t>(source_index)},
+                                   {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
+                                   {"time", static_cast<uint64_t>(tds[i].time)},
+                                   {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}}));
     } else {
-      row->emplace_back(
-          json::map({{"from_index", static_cast<uint64_t>(source_index)},
-                     {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-                     {"time", static_cast<std::nullptr_t>(nullptr)},
-                     {"distance", static_cast<std::nullptr_t>(nullptr)}}));
+      row->emplace_back(json::map({{"from_index", static_cast<uint64_t>(source_index)},
+                                   {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
+                                   {"time", static_cast<std::nullptr_t>(nullptr)},
+                                   {"distance", static_cast<std::nullptr_t>(nullptr)}}));
     }
   }
   return row;
@@ -119,9 +117,9 @@ json::MapPtr serialize(const valhalla_request_t& request,
                        double distance_scale) {
   json::ArrayPtr matrix = json::array({});
   for (size_t source_index = 0; source_index < request.options.sources_size(); ++source_index) {
-    matrix->emplace_back(
-        serialize_row(time_distances, source_index * request.options.targets_size(),
-                      request.options.targets_size(), source_index, 0, distance_scale));
+    matrix->emplace_back(serialize_row(time_distances, source_index * request.options.targets_size(),
+                                       request.options.targets_size(), source_index, 0,
+                                       distance_scale));
   }
   auto json = json::map({
       {"sources_to_targets", matrix},

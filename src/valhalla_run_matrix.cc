@@ -76,9 +76,9 @@ void LogResults(const std::string& matrixtype,
     uint32_t idx2 = 0;
     uint32_t nlocs = path_locations.size();
     for (auto& td : res) {
-      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) + ": Distance= " +
-               std::to_string(td.dist) + " Time= " + GetFormattedTime(td.time) + " secs = " +
-               std::to_string(td.time));
+      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
+               ": Distance= " + std::to_string(td.dist) + " Time= " + GetFormattedTime(td.time) +
+               " secs = " + std::to_string(td.time));
       idx2++;
       if (idx2 == nlocs) {
         idx2 = 0;
@@ -107,8 +107,8 @@ void LogResults(const std::string& matrixtype,
   } else {
     uint32_t idx = 0;
     for (auto& td : res) {
-      LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) + " Time= " +
-               GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
+      LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) +
+               " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
       idx++;
     }
   }
@@ -131,8 +131,8 @@ int main(int argc, char* argv[]) {
   std::string matrixtype = "one_to_many";
   uint32_t iterations = 1;
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
       "type,t", boost::program_options::value<std::string>(&routetype),
       "Route Type: auto|bicycle|pedestrian|auto-shorter")(
       "matrixtype,m", boost::program_options::value<std::string>(&matrixtype),
@@ -201,9 +201,9 @@ int main(int argc, char* argv[]) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       pt.get_child_optional("thor.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                   std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -298,8 +298,8 @@ int main(int argc, char* argv[]) {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
-      max_matrix_distance.emplace(
-          kv.first, pt.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
+      max_matrix_distance.emplace(kv.first, pt.get<float>("service_limits." + kv.first +
+                                                          ".max_matrix_distance"));
     }
   }
 

@@ -107,9 +107,9 @@ memory_status::memory_status(const std::unordered_set<std::string>& interest) {
         continue;
       }
       // try to get the number of bytes
-      line.erase(
-          std::remove_if(line.begin(), line.end(), [](const char c) { return !std::isdigit(c); }),
-          line.end());
+      line.erase(std::remove_if(line.begin(), line.end(),
+                                [](const char c) { return !std::isdigit(c); }),
+                 line.end());
       if (line.size() == 0) {
         continue;
       }
@@ -167,9 +167,8 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
     // double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * RAD_PER_DEG - lat2) /
     // 2.0), 2.0) + cos(resampled.back().second * RAD_PER_DEG) * cos(lat2)
     // *pow(sin((resampled.back().first * -RAD_PER_DEG - lon2) / 2.0), 2.0)));
-    auto d =
-        acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-             cos(last.second * RAD_PER_DEG) * cos(lat2) * cos(last.first * -RAD_PER_DEG - lon2));
+    auto d = acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
+                  cos(last.second * RAD_PER_DEG) * cos(lat2) * cos(last.first * -RAD_PER_DEG - lon2));
     // keep placing points while we can fit them
     while (d > remaining) {
       // some precomputed stuff

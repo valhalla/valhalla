@@ -180,10 +180,11 @@ public:
     }
 
     // find a node we need to update
-    current_way_node_index_ = way_nodes_->find_first_of(
-        OSMWayNode{{osmid}},
-        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid == b.node.osmid; },
-        current_way_node_index_);
+    current_way_node_index_ = way_nodes_->find_first_of(OSMWayNode{{osmid}},
+                                                        [](const OSMWayNode& a, const OSMWayNode& b) {
+                                                          return a.node.osmid == b.node.osmid;
+                                                        },
+                                                        current_way_node_index_);
     // we found the first one
     if (current_way_node_index_ < way_nodes_->size()) {
       // update all the nodes that match it
@@ -949,8 +950,7 @@ public:
 
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
-      if (results.find("sac_scale") != results.end() ||
-          results.find("mtb:scale") != results.end() ||
+      if (results.find("sac_scale") != results.end() || results.find("mtb:scale") != results.end() ||
           results.find("mtb:scale:imba") != results.end() ||
           results.find("mtb:scale:uphill") != results.end() ||
           results.find("mtb:description") != results.end()) {
@@ -1301,9 +1301,11 @@ public:
       }
 
       if (from_way_id && to_way_id) {
-        osmdata_.lane_connectivity_map.insert(OSMLaneConnectivityMultiMap::value_type(
-            to_way_id, OSMLaneConnectivity{to_way_id, from_way_id, std::max(to, to_lanes),
-                                           std::max(from, from_lanes)}));
+        osmdata_.lane_connectivity_map.insert(
+            OSMLaneConnectivityMultiMap::value_type(to_way_id,
+                                                    OSMLaneConnectivity{to_way_id, from_way_id,
+                                                                        std::max(to, to_lanes),
+                                                                        std::max(from, from_lanes)}));
       }
     } else if (isRestriction && hasRestriction) {
       std::vector<uint64_t> vias;
@@ -1562,8 +1564,9 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
-                                                                     OSMPBF::Interest::CHANGESETS),
+    OSMPBF::Parser::parse(file_handle,
+                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
+                                                        OSMPBF::Interest::CHANGESETS),
                           callback);
   }
   callback.output_loops();
@@ -1582,8 +1585,9 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
-                                                                     OSMPBF::Interest::CHANGESETS),
+    OSMPBF::Parser::parse(file_handle,
+                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
+                                                        OSMPBF::Interest::CHANGESETS),
                           callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
@@ -1595,8 +1599,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Sorting complex restrictions by from id...");
   {
     sequence<OSMRestriction> complex_restrictions(complex_restriction_file, false);
-    complex_restrictions.sort(
-        [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
+    complex_restrictions.sort([](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
   }
 
   // we need to sort the refs so that we can easily (sequentially) update them
@@ -1620,8 +1623,9 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
-                                                                     OSMPBF::Interest::CHANGESETS),
+    OSMPBF::Parser::parse(file_handle,
+                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
+                                                        OSMPBF::Interest::CHANGESETS),
                           callback);
   }
   callback.reset(nullptr, nullptr, nullptr, nullptr);

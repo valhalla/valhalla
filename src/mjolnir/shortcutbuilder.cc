@@ -156,8 +156,7 @@ GraphId GetOpposingEdge(const GraphId& node,
         directededge->use() == Use::kPlatformConnection) {
       continue;
     }
-    if (directededge->endnode() == node &&
-        directededge->classification() == edge->classification() &&
+    if (directededge->endnode() == node && directededge->classification() == edge->classification() &&
         directededge->length() == edge->length() &&
         ((directededge->link() && edge->link()) || (directededge->use() == edge->use())) &&
         wayid == tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
@@ -279,8 +278,7 @@ bool CanContract(GraphReader& reader,
 
   // Do not allow a shortcut on a ramp crossing at a traffic signal or where
   // more than 3 edges meet.
-  if (edge1->link() && edge2->link() &&
-      (nodeinfo->traffic_signal() || nodeinfo->edge_count() > 3)) {
+  if (edge1->link() && edge2->link() && (nodeinfo->traffic_signal() || nodeinfo->edge_count() > 3)) {
     return false;
   }
 
@@ -364,9 +362,7 @@ uint32_t ConnectEdges(GraphReader& reader,
 }
 
 // Check if the edge is entering a contracted node
-bool IsEnteringEdgeOfContractedNode(GraphReader& reader,
-                                    const GraphId& nodeid,
-                                    const GraphId& edge) {
+bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, const GraphId& edge) {
   EdgePairs edgepairs;
   const GraphTile* tile = reader.GetGraphTile(nodeid);
   bool c = CanContract(reader, tile, nodeid, edgepairs);
@@ -616,8 +612,9 @@ uint32_t FormShortcuts(GraphReader& reader,
           if (directededge->access_restriction()) {
             auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
             for (const auto& res : restrictions) {
-              tilebuilder.AddAccessRestriction(AccessRestriction(
-                  tilebuilder.directededges().size(), res.type(), res.modes(), res.value()));
+              tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
+                                                                 res.type(), res.modes(),
+                                                                 res.value()));
             }
           }
 
@@ -638,10 +635,12 @@ uint32_t FormShortcuts(GraphReader& reader,
           // edges that have the same end nodes are differentiated (this
           // should be a valid key since tile sizes aren't changed)
           auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-          uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(
-              directededge->edgeinfo_offset(), node_id, directededge->endnode(), edgeinfo.wayid(),
-              edgeinfo.encoded_shape(), tile->GetNames(directededge->edgeinfo_offset()),
-              tile->GetTypes(directededge->edgeinfo_offset()), added);
+          uint32_t edge_info_offset =
+              tilebuilder.AddEdgeInfo(directededge->edgeinfo_offset(), node_id,
+                                      directededge->endnode(), edgeinfo.wayid(),
+                                      edgeinfo.encoded_shape(),
+                                      tile->GetNames(directededge->edgeinfo_offset()),
+                                      tile->GetTypes(directededge->edgeinfo_offset()), added);
           newedge.set_edgeinfo_offset(edge_info_offset);
 
           // Set the superseded mask - this is the shortcut mask that
@@ -702,8 +701,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   GraphReader reader(pt.get_child("mjolnir"));
 
   // Crack open some elevation data if its there
-  boost::optional<std::string> elevation =
-      pt.get_optional<std::string>("additional_data.elevation");
+  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   std::unique_ptr<const skadi::sample> sample;
   if (elevation && boost::filesystem::exists(*elevation)) {
     sample.reset(new skadi::sample(*elevation));

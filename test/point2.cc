@@ -119,8 +119,11 @@ void TryWithinConvexPolygonList(const std::list<Point2>& pts, const Point2& p, c
 
 void TestWithinConvexPolygon() {
   // Construct a convex polygon
-  std::vector<Point2> pts = {
-      {2.0f, 2.0f}, {0.0f, 4.0f}, {-10.0f, 0.0f}, {0.0f, -4.0f}, {2.0f, -2.0f}};
+  std::vector<Point2> pts = {{2.0f, 2.0f},
+                             {0.0f, 4.0f},
+                             {-10.0f, 0.0f},
+                             {0.0f, -4.0f},
+                             {2.0f, -2.0f}};
 
   // Inside
   TryWithinConvexPolygon(pts, Point2(0.0f, 0.0f), true);
@@ -135,8 +138,11 @@ void TestWithinConvexPolygon() {
   TryWithinConvexPolygon(pts, Point2(-3.0f, 3.0f), false);
   TryWithinConvexPolygon(pts, Point2(1.0f, -3.5f), false);
 
-  std::list<Point2> ptslist = {
-      {2.0f, 2.0f}, {0.0f, 4.0f}, {-10.0f, 0.0f}, {0.0f, -4.0f}, {2.0f, -2.0f}};
+  std::list<Point2> ptslist = {{2.0f, 2.0f},
+                               {0.0f, 4.0f},
+                               {-10.0f, 0.0f},
+                               {0.0f, -4.0f},
+                               {2.0f, -2.0f}};
   TryWithinConvexPolygonList(ptslist, Point2(0.0f, 0.0f), true);
 }
 

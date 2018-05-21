@@ -15,8 +15,7 @@ namespace valhalla {
 namespace midgard {
 
 bool Point2::ApproximatelyEqual(const Point2& p) const {
-  return equal<first_type>(first, p.first, EPSILON) &&
-         equal<second_type>(second, p.second, EPSILON);
+  return equal<first_type>(first, p.first, EPSILON) && equal<second_type>(second, p.second, EPSILON);
 }
 
 float Point2::DistanceSquared(const Point2& p) const {

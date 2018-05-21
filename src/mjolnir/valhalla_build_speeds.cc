@@ -63,8 +63,8 @@ bool ParseArguments(int argc, char* argv[]) {
       "\n"
       "\n");
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
       "config,c",
       boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
       "Path to the json configuration file.")

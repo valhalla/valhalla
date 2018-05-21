@@ -295,8 +295,7 @@ template <class coord_t> int32_t Tiles<coord_t>::LeftNeighbor(const int32_t tile
 // The method finds the center tile and spirals out by finding neighbors
 // and recursively checking if tile is inside and checking/adding
 // neighboring tiles
-template <class coord_t>
-std::vector<int> Tiles<coord_t>::TileList(const AABB2<coord_t>& bbox) const {
+template <class coord_t> std::vector<int> Tiles<coord_t>::TileList(const AABB2<coord_t>& bbox) const {
   // Check if x range needs to be split
   std::vector<AABB2<coord_t>> bboxes;
   if (wrapx_) {

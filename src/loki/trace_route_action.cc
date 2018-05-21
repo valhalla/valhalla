@@ -51,8 +51,9 @@ void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& sh
     throw valhalla_exception_t{154};
   };
 
-  valhalla::midgard::logging::Log(
-      "location_distance::" + std::to_string(crow_distance * kKmPerMeter) + "km", " [ANALYTICS] ");
+  valhalla::midgard::logging::Log("location_distance::" +
+                                      std::to_string(crow_distance * kKmPerMeter) + "km",
+                                  " [ANALYTICS] ");
 }
 
 void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
@@ -97,8 +98,8 @@ void check_search_radius(const float input_search_radius, const float max_search
     throw valhalla_exception_t{158};
   };
 
-  valhalla::midgard::logging::Log(
-      "search_radius::" + std::to_string(input_search_radius) + "meters", " [ANALYTICS] ");
+  valhalla::midgard::logging::Log("search_radius::" + std::to_string(input_search_radius) + "meters",
+                                  " [ANALYTICS] ");
 }
 
 void check_turn_penalty_factor(const float input_turn_penalty_factor) {
@@ -185,10 +186,10 @@ void loki_worker_t::locations_from_shape(valhalla_request_t& request) {
   try {
     auto projections = loki::Search(locations, reader, edge_filter, node_filter);
     request.options.clear_locations();
-    PathLocation::toPBF(projections.at(locations.front()),
-                        request.options.mutable_locations()->Add(), reader);
-    PathLocation::toPBF(projections.at(locations.back()),
-                        request.options.mutable_locations()->Add(), reader);
+    PathLocation::toPBF(projections.at(locations.front()), request.options.mutable_locations()->Add(),
+                        reader);
+    PathLocation::toPBF(projections.at(locations.back()), request.options.mutable_locations()->Add(),
+                        reader);
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }
 

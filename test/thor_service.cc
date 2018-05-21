@@ -108,8 +108,8 @@ void test_failure_requests() {
       throw std::logic_error(
           "This cant be intermediate right now we are only testing error scenarios");
     if (result.messages.front() != response_str)
-      throw std::runtime_error("Expected Response: '" + response_str + ",\n\n Actual Response: " +
-                               result.messages.front());
+      throw std::runtime_error("Expected Response: '" + response_str +
+                               ",\n\n Actual Response: " + result.messages.front());
   }
 }
 

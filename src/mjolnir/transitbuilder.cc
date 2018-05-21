@@ -206,8 +206,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
-      uint32_t edge_info_offset = tilebuilder_local.AddEdgeInfo(
-          0, conn.osm_node, endnode, conn.wayid, conn.shape, conn.names, 0, added);
+      uint32_t edge_info_offset = tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid,
+                                                                conn.shape, conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -327,8 +327,9 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         bool added = false;
         std::list<PointLL> r_shape = conn.shape;
         std::reverse(r_shape.begin(), r_shape.end());
-        uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(
-            0, origin_node, conn.osm_node, conn.wayid, r_shape, conn.names, 0, added);
+        uint32_t edge_info_offset =
+            tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, r_shape,
+                                            conn.names, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
@@ -444,8 +445,8 @@ void FindOSMConnection(const PointLL& stop_ll,
             // use the new wayid
 
             wayid = edgeinfo.wayid();
-            startnode = {newtile->header()->graphid().tileid(),
-                         newtile->header()->graphid().level(), i};
+            startnode = {newtile->header()->graphid().tileid(), newtile->header()->graphid().level(),
+                         i};
             endnode = directededge->endnode();
             mindist = std::get<1>(this_closest);
             closest = this_closest;
@@ -515,8 +516,8 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
       const AABB2<PointLL>& aabb = tile->BoundingBox();
 
-      LOG_ERROR("No closest edge found for this stop: " + stop_name + " way Id = " +
-                std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
+      LOG_ERROR("No closest edge found for this stop: " + stop_name +
+                " way Id = " + std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
                 std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) + ", " +
                 std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ", " +
                 std::to_string(aabb.maxy()));
@@ -567,14 +568,14 @@ void AddOSMConnection(const GraphId& transit_stop_node,
 
   // Check for errors
   if (length != 0.0f && length2 != 0.0 && (length + length2) < edgelength - 1) {
-    LOG_ERROR("EdgeLength= " + std::to_string(edgelength) + " < connection lengths: " +
-              std::to_string(length) + "," + std::to_string(length2) + " when connecting to stop " +
-              stop_name);
+    LOG_ERROR("EdgeLength= " + std::to_string(edgelength) +
+              " < connection lengths: " + std::to_string(length) + "," + std::to_string(length2) +
+              " when connecting to stop " + stop_name);
   }
   if (conn_count == 0) {
-    LOG_ERROR("Stop " + stop_name + " has no connections to OSM!" + " Start Node Tile: " +
-              std::to_string(startnode.tileid()) + " End Node Tile: " +
-              std::to_string(endnode.tileid()));
+    LOG_ERROR("Stop " + stop_name + " has no connections to OSM!" +
+              " Start Node Tile: " + std::to_string(startnode.tileid()) +
+              " End Node Tile: " + std::to_string(endnode.tileid()));
   }
 }
 

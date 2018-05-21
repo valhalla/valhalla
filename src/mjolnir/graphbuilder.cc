@@ -422,8 +422,8 @@ void BuildTileSet(const std::string& ways_file,
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t, float, float,
-                                          float, float, float>>
+  std::unordered_map<
+      uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t, float, float, float, float, float>>
       geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
@@ -445,8 +445,7 @@ void BuildTileSet(const std::string& ways_file,
       std::unordered_map<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       if (admin_db_handle) {
-        admin_polys =
-            GetAdminInfo(admin_db_handle, drive_on_right, tiling.TileBounds(id), graphtile);
+        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiling.TileBounds(id), graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;
@@ -537,15 +536,15 @@ void BuildTileSet(const std::string& ways_file,
 
           uint32_t speed_limit = static_cast<uint32_t>(w.speed_limit());
           if (speed_limit > kMaxSpeedKph) {
-            LOG_WARN("Speed limit = " + std::to_string(speed_limit) + " wayId= " +
-                     std::to_string(w.way_id()));
+            LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
+                     " wayId= " + std::to_string(w.way_id()));
             speed_limit = kMaxSpeedKph;
           }
 
           uint32_t truck_speed = static_cast<uint32_t>(w.truck_speed());
           if (truck_speed > kMaxSpeedKph) {
-            LOG_WARN("Truck Speed = " + std::to_string(truck_speed) + " wayId= " +
-                     std::to_string(w.way_id()));
+            LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
+                     " wayId= " + std::to_string(w.way_id()));
             truck_speed = kMaxSpeedKph;
           }
 
@@ -568,12 +567,12 @@ void BuildTileSet(const std::string& ways_file,
           // traffic signal exists at a non-intersection node
           // forward signal must exist if forward direction and vice versa.
           // if forward and backward signal flags are not set then only set for oneways.
-          bool has_signal = (!forward && node.traffic_signal()) ||
-                            ((edge.attributes.traffic_signal) &&
-                             ((forward && edge.attributes.forward_signal) ||
-                              (!forward && edge.attributes.backward_signal) ||
-                              (w.oneway() && !edge.attributes.forward_signal &&
-                               !edge.attributes.backward_signal)));
+          bool has_signal =
+              (!forward && node.traffic_signal()) ||
+              ((edge.attributes.traffic_signal) &&
+               ((forward && edge.attributes.forward_signal) ||
+                (!forward && edge.attributes.backward_signal) ||
+                (w.oneway() && !edge.attributes.forward_signal && !edge.attributes.backward_signal)));
 
           auto bike = osmdata.bike_relations.equal_range(w.way_id());
           uint32_t bike_network = 0;
@@ -690,9 +689,9 @@ void BuildTileSet(const std::string& ways_file,
             auto inserted = geo_attribute_cache.insert(
                 {edge_info_offset,
                  std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade, reverse_grade,
-                                 curvature, std::get<1>(forward_grades),
-                                 std::get<2>(forward_grades), std::get<1>(reverse_grades),
-                                 std::get<2>(reverse_grades), std::get<3>(forward_grades))});
+                                 curvature, std::get<1>(forward_grades), std::get<2>(forward_grades),
+                                 std::get<1>(reverse_grades), std::get<2>(reverse_grades),
+                                 std::get<3>(forward_grades))});
 
             found = inserted.first;
 
@@ -709,8 +708,7 @@ void BuildTileSet(const std::string& ways_file,
           // ferry speed override.  duration is set on the way
           if (w.ferry() && w.duration()) {
             // convert to kph
-            uint32_t spd =
-                static_cast<uint32_t>((std::get<0>(found->second) * 3.6f) / w.duration());
+            uint32_t spd = static_cast<uint32_t>((std::get<0>(found->second) * 3.6f) / w.duration());
             speed = (spd == 0) ? 1 : spd;
           }
 
@@ -770,8 +768,7 @@ void BuildTileSet(const std::string& ways_file,
           // Edge elevation
           if (sample) {
             float max_up_slope = forward ? std::get<4>(found->second) : std::get<6>(found->second);
-            float max_down_slope =
-                forward ? std::get<5>(found->second) : std::get<7>(found->second);
+            float max_down_slope = forward ? std::get<5>(found->second) : std::get<7>(found->second);
             graphtile.edge_elevations().emplace_back(std::get<8>(found->second), max_up_slope,
                                                      max_down_slope);
           }
@@ -832,10 +829,11 @@ void BuildTileSet(const std::string& ways_file,
 
               OSMRestriction target_res{it->second}; // this is our from way id
               OSMRestriction restriction{};
-              sequence<OSMRestriction>::iterator res_it = complex_restrictions.find(
-                  target_res, [](const OSMRestriction& a, const OSMRestriction& b) {
-                    return a.from() < b.from();
-                  });
+              sequence<OSMRestriction>::iterator res_it =
+                  complex_restrictions.find(target_res,
+                                            [](const OSMRestriction& a, const OSMRestriction& b) {
+                                              return a.from() < b.from();
+                                            });
 
               while (res_it != complex_restrictions.end() &&
                      (restriction = *res_it).from() == it->second) {
@@ -851,9 +849,11 @@ void BuildTileSet(const std::string& ways_file,
           // grab all the modes if this way starts at a restriction(s)
           OSMRestriction target_res{w.way_id()}; // this is our to way id
           OSMRestriction restriction{};
-          sequence<OSMRestriction>::iterator res_it = complex_restrictions.find(
-              target_res,
-              [](const OSMRestriction& a, const OSMRestriction& b) { return a.from() < b.from(); });
+          sequence<OSMRestriction>::iterator res_it =
+              complex_restrictions.find(target_res,
+                                        [](const OSMRestriction& a, const OSMRestriction& b) {
+                                          return a.from() < b.from();
+                                        });
 
           while (res_it != complex_restrictions.end() &&
                  (restriction = *res_it).from() == w.way_id()) {
@@ -1032,11 +1032,12 @@ void BuildLocalTiles(const unsigned int thread_count,
     // Where the range ends
     std::advance(tile_end, tile_count);
     // Make the thread
-    threads[i].reset(new std::thread(
-        BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file), std::cref(nodes_file),
-        std::cref(edges_file), std::cref(complex_restriction_file), std::cref(tile_dir),
-        std::cref(osmdata), std::cref(sample), tile_start, tile_end, tile_creation_date,
-        std::cref(pt.get_child("mjolnir")), std::ref(results[i])));
+    threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
+                                     std::cref(nodes_file), std::cref(edges_file),
+                                     std::cref(complex_restriction_file), std::cref(tile_dir),
+                                     std::cref(osmdata), std::cref(sample), tile_start, tile_end,
+                                     tile_creation_date, std::cref(pt.get_child("mjolnir")),
+                                     std::ref(results[i])));
   }
 
   // Join all the threads to wait for them to finish up their work
@@ -1109,8 +1110,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                              static_cast<uint32_t>(rc), stats);
 
   // Crack open some elevation data if its there
-  boost::optional<std::string> elevation =
-      pt.get_optional<std::string>("additional_data.elevation");
+  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
   std::unique_ptr<const skadi::sample> sample;
   if (elevation && boost::filesystem::exists(*elevation)) {
     sample.reset(new skadi::sample(*elevation));
@@ -1251,8 +1251,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     if (node.exit_to() && !fork) {
       std::string tmp;
       std::size_t pos;
-      std::vector<std::string> exit_tos =
-          GetTagTokens(osmdata.node_exit_to.find(node.osmid)->second);
+      std::vector<std::string> exit_tos = GetTagTokens(osmdata.node_exit_to.find(node.osmid)->second);
       for (auto& exit_to : exit_tos) {
 
         tmp = exit_to;

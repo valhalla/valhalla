@@ -110,8 +110,7 @@ void invalidFields() {
     throw std::runtime_error("Proto trip is missing units");
   }
   if (trip.units() != "km") {
-    throw std::runtime_error("Units parsed incorrectly. units: " + trip.units() +
-                             " | Expected: km");
+    throw std::runtime_error("Units parsed incorrectly. units: " + trip.units() + " | Expected: km");
   }
 
   if (trip.has_language()) {
@@ -334,8 +333,7 @@ void testLocation() {
   }
 
   if (location.lon() != -12.733452f) {
-    throw std::runtime_error("lon is: " + std::to_string(location.lon()) +
-                             " | Expected: -12.733452");
+    throw std::runtime_error("lon is: " + std::to_string(location.lon()) + " | Expected: -12.733452");
   }
 
   if (location.type() != "break") {
@@ -343,8 +341,7 @@ void testLocation() {
   }
 
   if (location.heading() != 25) {
-    throw std::runtime_error("heading is: " + std::to_string(location.heading()) +
-                             " | Expected: 25");
+    throw std::runtime_error("heading is: " + std::to_string(location.heading()) + " | Expected: 25");
   }
 
   if (location.name() != "start") {
@@ -833,8 +830,8 @@ void testManeuver() {
   }
 
   if (maneuver.begin_shape_index() != 2086) {
-    throw std::runtime_error("begin_shape_index is: " +
-                             std::to_string(maneuver.begin_shape_index()) + " | Expected: 2086");
+    throw std::runtime_error("begin_shape_index is: " + std::to_string(maneuver.begin_shape_index()) +
+                             " | Expected: 2086");
   }
 
   if (maneuver.end_shape_index() != 2111) {
@@ -851,15 +848,15 @@ void testManeuver() {
   }
 
   if (maneuver.verbal_transition_alert_instruction() != "Take exit 1 on the right.") {
-    throw std::runtime_error("verbal_transition_alert_instruction is: " +
-                             maneuver.verbal_transition_alert_instruction() +
-                             " | Expected: Take exit 1 on the right.");
+    throw std::runtime_error(
+        "verbal_transition_alert_instruction is: " + maneuver.verbal_transition_alert_instruction() +
+        " | Expected: Take exit 1 on the right.");
   }
 
   if (maneuver.verbal_pre_transition_instruction() != "Take exit 1 on the right.") {
-    throw std::runtime_error("verbal_pre_transition_instruction is: " +
-                             maneuver.verbal_pre_transition_instruction() +
-                             " | Expected: Take exit 1 on the right.");
+    throw std::runtime_error(
+        "verbal_pre_transition_instruction is: " + maneuver.verbal_pre_transition_instruction() +
+        " | Expected: Take exit 1 on the right.");
   }
 
   if (maneuver.verbal_post_transition_instruction() != "end") {
@@ -900,8 +897,8 @@ void testManeuver() {
   }
 
   if (maneuver.verbal_depart_instruction() != "leave now") {
-    throw std::runtime_error("verbal_depart_instruction is: " +
-                             maneuver.verbal_depart_instruction() + " | Expected: leave now");
+    throw std::runtime_error("verbal_depart_instruction is: " + maneuver.verbal_depart_instruction() +
+                             " | Expected: leave now");
   }
 
   if (maneuver.arrive_instruction() != "arrived") {
@@ -910,8 +907,8 @@ void testManeuver() {
   }
 
   if (maneuver.verbal_arrive_instruction() != "arrived at spot") {
-    throw std::runtime_error("verbal_arrive_instruction is: " +
-                             maneuver.verbal_arrive_instruction() + " | Expected: arrived at spot");
+    throw std::runtime_error("verbal_arrive_instruction is: " + maneuver.verbal_arrive_instruction() +
+                             " | Expected: arrived at spot");
   }
 
   if (!maneuver.has_transit_info()) {
@@ -1529,13 +1526,11 @@ void testTransitStop() {
   }
 
   if (transit_stop.lat() != 13.892f) {
-    throw std::runtime_error("lat is: " + std::to_string(transit_stop.lat()) +
-                             " | Expected: 13.892");
+    throw std::runtime_error("lat is: " + std::to_string(transit_stop.lat()) + " | Expected: 13.892");
   }
 
   if (transit_stop.lon() != 19.12f) {
-    throw std::runtime_error("lon is: " + std::to_string(transit_stop.lon()) +
-                             " | Expected: 19.12");
+    throw std::runtime_error("lon is: " + std::to_string(transit_stop.lon()) + " | Expected: 19.12");
   }
 
   // Test throwing runtime errors
@@ -1698,8 +1693,8 @@ void testSignElements() {
   }
 
   if (element.consecutive_count() != 2) {
-    throw std::runtime_error("consecutive_count is: " +
-                             std::to_string(element.consecutive_count()) + " | Expected: 2");
+    throw std::runtime_error("consecutive_count is: " + std::to_string(element.consecutive_count()) +
+                             " | Expected: 2");
   }
 
   // Test throwing runtime errors

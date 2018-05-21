@@ -71,8 +71,8 @@ bool ParseArguments(int argc, char* argv[]) {
       "\n"
       "\n");
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
       "config,c",
       boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
       "Path to the json configuration file.")
@@ -161,8 +161,7 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   for (unsigned i = 0; i < merged->size(); ++i) {
     std::unique_ptr<LineString> pline((*merged)[i]);
     if (pline->getNumPoints() > 3 && pline->isClosed()) {
-      polys[totalpolys].polygon =
-          gf->createPolygon(gf->createLinearRing(pline->getCoordinates()), 0);
+      polys[totalpolys].polygon = gf->createPolygon(gf->createLinearRing(pline->getCoordinates()), 0);
       polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates());
       polys[totalpolys].area = polys[totalpolys].polygon->getArea();
       polys[totalpolys].iscontained = 0;
@@ -512,8 +511,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           }
           LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
           LOG_ERROR("sqlite3_step() Name: " + osmdata.name_offset_map.name(admin.name_index()));
-          LOG_ERROR("sqlite3_step() Name:en: " +
-                    osmdata.name_offset_map.name(admin.name_en_index()));
+          LOG_ERROR("sqlite3_step() Name:en: " + osmdata.name_offset_map.name(admin.name_en_index()));
           LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
           LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
         }
@@ -667,9 +665,9 @@ int main(int argc, char** argv) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                   std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 

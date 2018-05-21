@@ -35,8 +35,7 @@ void TestAddRemove() {
 
   Add(adjlist, costs);
   TryRemove(adjlist, costs.size(), costs);
-  test::assert_bool(adjlist.pop() == baldr::kInvalidLabel,
-                    "TestAddRemove: expect list to be empty");
+  test::assert_bool(adjlist.pop() == baldr::kInvalidLabel, "TestAddRemove: expect list to be empty");
 
   // Test add randomly and remove
   costs.clear();
@@ -50,8 +49,7 @@ void TestAddRemove() {
   baldr::DoubleBucketQueue adjlist2(0, 10000, 1, labelcost);
   Add(adjlist2, costs);
   TryRemove(adjlist2, costs.size(), costs);
-  test::assert_bool(adjlist.pop() == baldr::kInvalidLabel,
-                    "TestAddRemove: expect list to be empty");
+  test::assert_bool(adjlist.pop() == baldr::kInvalidLabel, "TestAddRemove: expect list to be empty");
 
   // Construct a new adjlist
   costs.resize(5);
@@ -198,8 +196,7 @@ void TestRoutePathIterator() {
 
   test::assert_bool(std::next(it4, 2) == the_end, "TestRoutePathIterator: wrong forwarding 4");
 
-  test::assert_bool(it4->predecessor() == 1,
-                    "TestRoutePathIterator: wrong dereferencing pointer 2");
+  test::assert_bool(it4->predecessor() == 1, "TestRoutePathIterator: wrong dereferencing pointer 2");
 
   test::assert_bool((it5++)->predecessor() == 3, "TestRoutePathIterator: wrong postfix increment");
 

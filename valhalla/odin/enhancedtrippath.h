@@ -113,8 +113,8 @@ protected:
   std::string
   ListToString(const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
 
-  std::string ListToParameterString(
-      const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
+  std::string
+  ListToParameterString(const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
 };
 
 class EnhancedTripPath_IntersectingEdge : public TripPath_IntersectingEdge {
@@ -191,9 +191,8 @@ public:
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
-  uint32_t
-  GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
-                                                      const TripPath_TravelMode travel_mode);
+  uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
+                                                               const TripPath_TravelMode travel_mode);
 
   // Type
   bool IsStreetIntersection() const;

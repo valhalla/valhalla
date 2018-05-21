@@ -29,12 +29,13 @@ int main(int argc, char** argv) {
       "valhalla_build_tiles is a program that creates the route graph from an osm.pbf "
       "extract. Sample json configs are located in ../conf directory.\n\n");
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
       "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path),
-      "Path to the json configuration file.")(
-      "inline-config,i", boost::program_options::value<std::string>(&inline_config),
-      "Inline json config.")
+      "Path to the json configuration file.")("inline-config,i",
+                                              boost::program_options::value<std::string>(
+                                                  &inline_config),
+                                              "Inline json config.")
       // positional arguments
       ("input_files",
        boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
@@ -83,9 +84,9 @@ int main(int argc, char** argv) {
   boost::optional<boost::property_tree::ptree&> logging_subtree =
       pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                   std::unordered_map<std::string, std::string>>(
-        logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 

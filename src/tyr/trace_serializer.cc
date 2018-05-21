@@ -178,8 +178,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         edge_map->emplace("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
       }
       if (edge.has_road_class()) {
-        edge_map->emplace("road_class",
-                          to_string(static_cast<baldr::RoadClass>(edge.road_class())));
+        edge_map->emplace("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
       }
       if (edge.has_speed()) {
         edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
@@ -197,12 +196,11 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.traffic_segment().size() > 0) {
         auto segments_array = json::array({});
         for (const auto& segment : edge.traffic_segment()) {
-          json::MapPtr segmap =
-              json::map({{"segment_id", segment.segment_id()},
-                         {"begin_percent", json::fp_t{segment.begin_percent(), 3}},
-                         {"end_percent", json::fp_t{segment.end_percent(), 3}},
-                         {"starts_segment", segment.starts_segment()},
-                         {"ends_segment", segment.ends_segment()}});
+          json::MapPtr segmap = json::map({{"segment_id", segment.segment_id()},
+                                           {"begin_percent", json::fp_t{segment.begin_percent(), 3}},
+                                           {"end_percent", json::fp_t{segment.end_percent(), 3}},
+                                           {"starts_segment", segment.starts_segment()},
+                                           {"ends_segment", segment.ends_segment()}});
           segments_array->emplace_back(segmap);
         }
         edge_map->emplace("traffic_segments", segments_array);
@@ -266,8 +264,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
             if (xedge.has_cyclability() && (xedge.cyclability() != TripPath_Traversability_kNone)) {
               xedge_map->emplace("cyclability", to_string(xedge.cyclability()));
             }
-            if (xedge.has_driveability() &&
-                (xedge.driveability() != TripPath_Traversability_kNone)) {
+            if (xedge.has_driveability() && (xedge.driveability() != TripPath_Traversability_kNone)) {
               xedge_map->emplace("driveability", to_string(xedge.driveability()));
             }
             xedge_map->emplace("from_edge_name_consistency",

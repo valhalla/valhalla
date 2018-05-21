@@ -75,9 +75,8 @@ Tags LuaTagTransform::Transform(OSMType type, const Tags& maptags) {
 
   // grab the proper function out of the lua code
   Tags result;
-  const std::string& lua_func = type == OSMType::kNode
-                                    ? LUA_NODE_PROC
-                                    : (type == OSMType::kWay ? LUA_WAY_PROC : LUA_REL_PROC);
+  const std::string& lua_func =
+      type == OSMType::kNode ? LUA_NODE_PROC : (type == OSMType::kWay ? LUA_WAY_PROC : LUA_REL_PROC);
 
   try {
     // grab the function

@@ -67,8 +67,8 @@ void TestFindCommonBaseNames() {
                          StreetNames({"Fishburn Road", "PA 743 North"}),
                          StreetNames({"PA 743 North"}));
 
-  TryFindCommonBaseNames(StreetNames({"Unter den Linden", "B 2", "B 5"}),
-                         StreetNames({"B 2", "B 5"}), StreetNames({"B 2", "B 5"}));
+  TryFindCommonBaseNames(StreetNames({"Unter den Linden", "B 2", "B 5"}), StreetNames({"B 2", "B 5"}),
+                         StreetNames({"B 2", "B 5"}));
 }
 
 } // namespace

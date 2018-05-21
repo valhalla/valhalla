@@ -341,8 +341,7 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
 
   rail_factor_ = (use_rail_ >= 0.5f) ? 1.5f - use_rail_ : 5.0f - use_rail_ * 8.0f;
 
-  transfer_factor_ =
-      (use_transfers_ >= 0.5f) ? 1.5f - use_transfers_ : 5.0f - use_transfers_ * 8.0f;
+  transfer_factor_ = (use_transfers_ >= 0.5f) ? 1.5f - use_transfers_ : 5.0f - use_transfers_ * 8.0f;
 
   transfer_cost_ = kTransferCostRange(pt.get<float>("transfer_cost", kDefaultTransferCost));
   transfer_penalty_ =
@@ -512,8 +511,8 @@ bool TransitCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::Directe
 // This method acts like an allowed function; however, it uses the exclude list to
 // determine if we should not route through this node.
 bool TransitCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) {
-  return (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level,
-                                      node->stop_index())) != exclude_stops_.end());
+  return (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level, node->stop_index())) !=
+          exclude_stops_.end());
 }
 
 // Get the access mode used by this costing method.
@@ -664,8 +663,7 @@ TransitCost* make_transitcost_from_json(const std::string& property, float testV
 std::uniform_real_distribution<float>*
 make_distributor_from_range(const ranged_default_t<float>& range) {
   float rangeLength = range.max - range.min;
-  return new std::uniform_real_distribution<float>(range.min - rangeLength,
-                                                   range.max + rangeLength);
+  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
 void testTransitCostParams() {

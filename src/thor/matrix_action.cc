@@ -28,9 +28,9 @@ std::string thor_worker_t::matrix(valhalla_request_t& request) {
   auto costing = parse_costing(request);
 
   if (!request.options.do_not_track()) {
-    valhalla::midgard::logging::Log(
-        "matrix_type::" + odin::DirectionsOptions::Action_Name(request.options.action()),
-        " [ANALYTICS] ");
+    valhalla::midgard::logging::Log("matrix_type::" + odin::DirectionsOptions::Action_Name(
+                                                          request.options.action()),
+                                    " [ANALYTICS] ");
   }
 
   // Parse out units; if none specified, use kilometers

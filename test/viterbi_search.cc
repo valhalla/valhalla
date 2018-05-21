@@ -170,9 +170,8 @@ Column generate_column(size_t num_states,
   return states;
 }
 
-std::vector<size_t>
-generate_column_counts(size_t column_length,
-                       std::uniform_int_distribution<size_t> count_distribution) {
+std::vector<size_t> generate_column_counts(size_t column_length,
+                                           std::uniform_int_distribution<size_t> count_distribution) {
   std::vector<size_t> counts;
 
   for (size_t i = 0; i < column_length; i++) {
@@ -182,10 +181,9 @@ generate_column_counts(size_t column_length,
   return counts;
 }
 
-std::vector<Column>
-generate_columns(std::uniform_int_distribution<int> transition_cost_distribution,
-                 std::uniform_int_distribution<int> emission_cost_distribution,
-                 std::vector<size_t> column_counts) {
+std::vector<Column> generate_columns(std::uniform_int_distribution<int> transition_cost_distribution,
+                                     std::uniform_int_distribution<int> emission_cost_distribution,
+                                     std::vector<size_t> column_counts) {
   std::vector<Column> columns;
 
   for (const auto count : column_counts) {
@@ -228,8 +226,8 @@ void test_viterbi_search(const std::vector<Column>& columns) {
       test::assert_bool(na.AccumulatedCost(na_winner) == vs.AccumulatedCost(vs_winner),
                         "costs should be both optimal"
                         "but got na = " +
-                            std::to_string(na.AccumulatedCost(na_winner)) + " and vs = " +
-                            std::to_string(vs.AccumulatedCost(vs_winner)));
+                            std::to_string(na.AccumulatedCost(na_winner)) +
+                            " and vs = " + std::to_string(vs.AccumulatedCost(vs_winner)));
     } else {
       test::assert_bool(!vs_winner.IsValid(), "both winners should not be found");
     }
@@ -388,9 +386,8 @@ std::vector<PathWithCost> sort_all_paths(const std::vector<Column>& columns,
     }
   }
 
-  std::sort(pcs.begin(), pcs.end(), [](const PathWithCost& lhs, const PathWithCost& rhs) {
-    return lhs.cost() < rhs.cost();
-  });
+  std::sort(pcs.begin(), pcs.end(),
+            [](const PathWithCost& lhs, const PathWithCost& rhs) { return lhs.cost() < rhs.cost(); });
 
   return pcs;
 }
@@ -407,8 +404,7 @@ void validate_path(const std::vector<Column>& columns, const std::vector<StateId
 
     test::assert_bool(path[time].id() < columns[time].size(),
                       "stateid id must be < columns[time] but got " +
-                          std::to_string(path[time].time()) + "/" +
-                          std::to_string(path[time].id()));
+                          std::to_string(path[time].time()) + "/" + std::to_string(path[time].id()));
 
     if (0 < time) {
       const auto& prev_state = get_state(columns, path[time - 1]);

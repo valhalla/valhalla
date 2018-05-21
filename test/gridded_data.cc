@@ -32,8 +32,7 @@ void test_gridded() {
   // because of the pattern above we should end up with concentric circles
   // every ring should have all smaller rings inside it
   size_t rings = 0;
-  for (auto collection = std::next(contours.rbegin()); collection != contours.rend();
-       ++collection) {
+  for (auto collection = std::next(contours.rbegin()); collection != contours.rend(); ++collection) {
     // nothing here
     auto& contour = collection->second.front();
     if (contour.empty())
@@ -42,8 +41,7 @@ void test_gridded() {
     // if this is a ring the iso lines with lesser units should be contained within it
     for (const auto& p : std::prev(collection)->second.front().front()) {
       if (!p.WithinPolygon(contour.front()))
-        throw std::logic_error("Ring " + std::to_string(collection->first) +
-                               " should contain ring " +
+        throw std::logic_error("Ring " + std::to_string(collection->first) + " should contain ring " +
                                std::to_string(std::prev(collection)->first));
     }
   }

@@ -48,10 +48,10 @@ constexpr double kMilePerMeter = 0.000621371;
 namespace valhalla {
 namespace thor {
 
-const std::unordered_map<std::string, thor_worker_t::SHAPE_MATCH> thor_worker_t::STRING_TO_MATCH{
-    {"edge_walk", thor_worker_t::EDGE_WALK},
-    {"map_snap", thor_worker_t::MAP_SNAP},
-    {"walk_or_snap", thor_worker_t::WALK_OR_SNAP}};
+const std::unordered_map<std::string, thor_worker_t::SHAPE_MATCH>
+    thor_worker_t::STRING_TO_MATCH{{"edge_walk", thor_worker_t::EDGE_WALK},
+                                   {"map_snap", thor_worker_t::MAP_SNAP},
+                                   {"walk_or_snap", thor_worker_t::WALK_OR_SNAP}};
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config)
     : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config),
@@ -75,16 +75,15 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config)
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
-  auto conf_algorithm =
-      config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
+  auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius") {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
-      max_matrix_distance.emplace(
-          kv.first, config.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
+      max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
+                                                              ".max_matrix_distance"));
     }
   }
 
@@ -203,11 +202,12 @@ void run_service(const boost::property_tree::ptree& config) {
   // listen for requests
   zmq::context_t context;
   thor_worker_t thor_worker(config);
-  prime_server::worker_t worker(
-      context, upstream_endpoint, downstream_endpoint, loopback_endpoint, interrupt_endpoint,
-      std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3),
-      std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
+  prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
+                                interrupt_endpoint,
+                                std::bind(&thor_worker_t::work, std::ref(thor_worker),
+                                          std::placeholders::_1, std::placeholders::_2,
+                                          std::placeholders::_3),
+                                std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
   worker.work();
 
   // TODO: should we listen for SIGINT and terminate gracefully/exit(0)?

@@ -675,8 +675,8 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
 
   // Fall back to A* shortest path to form the path edges
   if (segment.lrps(0).at_node() && segment.lrps(size - 1).at_node()) {
-    LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) + " value = " +
-              std::to_string(segment_id.value));
+    LOG_DEBUG("Fall back to A*: " + std::to_string(segment_id) +
+              " value = " + std::to_string(segment_id.value));
   } else {
     LOG_DEBUG("Fall back to A* - LRPs are not at nodes: " + std::to_string(segment_id) +
               " value = " + std::to_string(segment_id.value));
@@ -772,11 +772,11 @@ bool edge_association::match_segment(vb::GraphId segment_id,
   if (edges.empty()) {
     size_t n = segment.lrps_size();
     if (segment.lrps(0).at_node() && segment.lrps(n - 1).at_node()) {
-      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) + " value = " +
-                std::to_string(segment_id.value));
+      LOG_DEBUG("No match from nodes: " + std::to_string(segment_id) +
+                " value = " + std::to_string(segment_id.value));
     } else {
-      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) + " value = " +
-                std::to_string(segment_id.value));
+      LOG_DEBUG("No match along edge: " + std::to_string(segment_id) +
+                " value = " + std::to_string(segment_id.value));
     }
     return false;
   }
@@ -787,8 +787,7 @@ bool edge_association::match_segment(vb::GraphId segment_id,
     // Form association for this edge. First edge "starts"
     // the traffic segment and the last edge ends the segment.
     const auto& edge = edges[i];
-    vb::TrafficChunk assoc(segment_id, edge.start_pct, edge.end_pct, i == 0,
-                           i == (edges.size() - 1));
+    vb::TrafficChunk assoc(segment_id, edge.start_pct, edge.end_pct, i == 0, i == (edges.size() - 1));
     // Full edge.
     if (edge.start_pct == 0.0f && edge.end_pct == 1.0f) {
       // Store the local segment and leave the non local for later
@@ -962,10 +961,11 @@ int main(int argc, char** argv) {
       "\n"
       "\n");
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
-      "osmlr-tile-dir,t", bpo::value<std::string>(&tile_dir), "Location of traffic segment tiles.")(
-      "concurrency,j", bpo::value<unsigned int>(&num_threads), "Number of threads to use.")
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
+      "osmlr-tile-dir,t", bpo::value<std::string>(&tile_dir),
+      "Location of traffic segment tiles.")("concurrency,j", bpo::value<unsigned int>(&num_threads),
+                                            "Number of threads to use.")
       // positional arguments
       ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
 
@@ -1104,8 +1104,8 @@ int main(int argc, char** argv) {
     LOG_INFO("Path = " + std::to_string(x.second) + " at level " + std::to_string(x.first));
   }
 
-  LOG_INFO("Leftovers = " + std::to_string(leftover_count) + " Chunks = " +
-           std::to_string(chunk_count));
+  LOG_INFO("Leftovers = " + std::to_string(leftover_count) +
+           " Chunks = " + std::to_string(chunk_count));
 
   LOG_INFO("Associating neighbouring traffic segments with " + std::to_string(num_threads) +
            " threads");

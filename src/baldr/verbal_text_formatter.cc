@@ -47,8 +47,8 @@ std::string VerbalTextFormatter::ProcessNumberSplitMatch(const re::smatch& m) co
 std::string VerbalTextFormatter::FormNumberSplitTts(const std::string& source) const {
 
   std::string tts;
-  for (re::sregex_iterator it(source.begin(), source.end(), kNumberSplitRegex), end_it;
-       it != end_it; ++it) {
+  for (re::sregex_iterator it(source.begin(), source.end(), kNumberSplitRegex), end_it; it != end_it;
+       ++it) {
     tts += ProcessNumberSplitMatch(*it);
   }
   return tts.empty() ? source : tts;

@@ -11,15 +11,13 @@ using namespace valhalla::midgard;
 namespace {
 
 void TestMaxId() {
-  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .25) !=
-      1036799)
+  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .25) != 1036799)
     throw std::runtime_error("Unexpected maxid result");
   if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1) != 64799)
     throw std::runtime_error("Unexpected maxid result");
   if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 4) != 4049)
     throw std::runtime_error("Unexpected maxid result");
-  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .33) !=
-      595685)
+  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .33) != 595685)
     throw std::runtime_error("Unexpected maxid result");
 }
 
@@ -146,9 +144,7 @@ void TileList() {
 }
 
 using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short>>;
-void assert_answer(const Tiles<Point2>& g,
-                   const std::list<Point2>& l,
-                   const intersect_t& expected) {
+void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const intersect_t& expected) {
   auto answer = g.Intersect(l);
   // wrong number of tiles
   if (answer.size() > expected.size())
@@ -162,8 +158,7 @@ void assert_answer(const Tiles<Point2>& g,
     // wrong number of subdivisions
     if (t.second.size() > i->second.size())
       throw std::logic_error("in tile " + std::to_string(t.first) + " expected no more than " +
-                             std::to_string(i->second.size()) +
-                             " intersected subdivisions but got " +
+                             std::to_string(i->second.size()) + " intersected subdivisions but got " +
                              std::to_string(t.second.size()));
     // missing subdivision
     for (const auto& s : t.second)
@@ -186,40 +181,48 @@ void test_intersect_linestring() {
   assert_answer(t, {{-1, -1}, {-1, -1}}, intersect_t{{5, {18}}});
 
   // horizontal
-  assert_answer(t, {{-4.9, -4.9}, {4.9, -4.9}}, intersect_t{{0, {0, 1, 2, 3, 4}},
-                                                            {1, {0, 1, 2, 3, 4}},
-                                                            {2, {0, 1, 2, 3, 4}},
-                                                            {3, {0, 1, 2, 3, 4}}});
-  assert_answer(t, {{-5.9, -4.9}, {5.9, -4.9}}, intersect_t{{0, {0, 1, 2, 3, 4}},
-                                                            {1, {0, 1, 2, 3, 4}},
-                                                            {2, {0, 1, 2, 3, 4}},
-                                                            {3, {0, 1, 2, 3, 4}}});
-  assert_answer(t, {{-4.9, 4.9}, {4.9, 4.9}}, intersect_t{{12, {20, 21, 22, 23, 24}},
-                                                          {13, {20, 21, 22, 23, 24}},
-                                                          {14, {20, 21, 22, 23, 24}},
-                                                          {15, {20, 21, 22, 23, 24}}});
-  assert_answer(t, {{-5.9, 4.9}, {5.9, 4.9}}, intersect_t{{12, {20, 21, 22, 23, 24}},
-                                                          {13, {20, 21, 22, 23, 24}},
-                                                          {14, {20, 21, 22, 23, 24}},
-                                                          {15, {20, 21, 22, 23, 24}}});
+  assert_answer(t, {{-4.9, -4.9}, {4.9, -4.9}},
+                intersect_t{{0, {0, 1, 2, 3, 4}},
+                            {1, {0, 1, 2, 3, 4}},
+                            {2, {0, 1, 2, 3, 4}},
+                            {3, {0, 1, 2, 3, 4}}});
+  assert_answer(t, {{-5.9, -4.9}, {5.9, -4.9}},
+                intersect_t{{0, {0, 1, 2, 3, 4}},
+                            {1, {0, 1, 2, 3, 4}},
+                            {2, {0, 1, 2, 3, 4}},
+                            {3, {0, 1, 2, 3, 4}}});
+  assert_answer(t, {{-4.9, 4.9}, {4.9, 4.9}},
+                intersect_t{{12, {20, 21, 22, 23, 24}},
+                            {13, {20, 21, 22, 23, 24}},
+                            {14, {20, 21, 22, 23, 24}},
+                            {15, {20, 21, 22, 23, 24}}});
+  assert_answer(t, {{-5.9, 4.9}, {5.9, 4.9}},
+                intersect_t{{12, {20, 21, 22, 23, 24}},
+                            {13, {20, 21, 22, 23, 24}},
+                            {14, {20, 21, 22, 23, 24}},
+                            {15, {20, 21, 22, 23, 24}}});
 
   // vertical
-  assert_answer(t, {{-4.9, 4.9}, {-4.9, -4.9}}, intersect_t{{0, {0, 5, 10, 15, 20}},
-                                                            {4, {0, 5, 10, 15, 20}},
-                                                            {8, {0, 5, 10, 15, 20}},
-                                                            {12, {0, 5, 10, 15, 20}}});
-  assert_answer(t, {{-4.9, 5.9}, {-4.9, -5.9}}, intersect_t{{0, {0, 5, 10, 15, 20}},
-                                                            {4, {0, 5, 10, 15, 20}},
-                                                            {8, {0, 5, 10, 15, 20}},
-                                                            {12, {0, 5, 10, 15, 20}}});
-  assert_answer(t, {{4.9, 4.9}, {4.9, -4.9}}, intersect_t{{3, {4, 9, 14, 19, 24}},
-                                                          {7, {4, 9, 14, 19, 24}},
-                                                          {11, {4, 9, 14, 19, 24}},
-                                                          {15, {4, 9, 14, 19, 24}}});
-  assert_answer(t, {{4.9, 5.9}, {4.9, -5.9}}, intersect_t{{3, {4, 9, 14, 19, 24}},
-                                                          {7, {4, 9, 14, 19, 24}},
-                                                          {11, {4, 9, 14, 19, 24}},
-                                                          {15, {4, 9, 14, 19, 24}}});
+  assert_answer(t, {{-4.9, 4.9}, {-4.9, -4.9}},
+                intersect_t{{0, {0, 5, 10, 15, 20}},
+                            {4, {0, 5, 10, 15, 20}},
+                            {8, {0, 5, 10, 15, 20}},
+                            {12, {0, 5, 10, 15, 20}}});
+  assert_answer(t, {{-4.9, 5.9}, {-4.9, -5.9}},
+                intersect_t{{0, {0, 5, 10, 15, 20}},
+                            {4, {0, 5, 10, 15, 20}},
+                            {8, {0, 5, 10, 15, 20}},
+                            {12, {0, 5, 10, 15, 20}}});
+  assert_answer(t, {{4.9, 4.9}, {4.9, -4.9}},
+                intersect_t{{3, {4, 9, 14, 19, 24}},
+                            {7, {4, 9, 14, 19, 24}},
+                            {11, {4, 9, 14, 19, 24}},
+                            {15, {4, 9, 14, 19, 24}}});
+  assert_answer(t, {{4.9, 5.9}, {4.9, -5.9}},
+                intersect_t{{3, {4, 9, 14, 19, 24}},
+                            {7, {4, 9, 14, 19, 24}},
+                            {11, {4, 9, 14, 19, 24}},
+                            {15, {4, 9, 14, 19, 24}}});
 
   // diagonal
   assert_answer(t, {{-4.9, -4.9}, {4.9, 4.9}},
@@ -269,10 +272,8 @@ void test_intersect_linestring() {
 
   // random slopes
   t = Tiles<Point2>(AABB2<Point2>{0, 0, 6, 6}, 6, 6);
-  assert_answer(t, {{0.5, 0.5}, {5.5, 4.5}},
-                intersect_t{{0, {0, 1, 7, 8, 14, 15, 21, 22, 28, 29}}});
-  assert_answer(t, {{5.5, 4.5}, {0.5, 0.5}},
-                intersect_t{{0, {0, 1, 7, 8, 14, 15, 21, 22, 28, 29}}});
+  assert_answer(t, {{0.5, 0.5}, {5.5, 4.5}}, intersect_t{{0, {0, 1, 7, 8, 14, 15, 21, 22, 28, 29}}});
+  assert_answer(t, {{5.5, 4.5}, {0.5, 0.5}}, intersect_t{{0, {0, 1, 7, 8, 14, 15, 21, 22, 28, 29}}});
   assert_answer(t, {{5.5, 0.5}, {0.5, 2.5}}, intersect_t{{0, {4, 5, 7, 8, 9, 10, 12, 13}}});
   assert_answer(t, {{0.5, 2.5}, {5.5, 0.5}}, intersect_t{{0, {4, 5, 7, 8, 9, 10, 12, 13}}});
   assert_answer(t, {{-1, -2}, {4, 8}}, intersect_t{{0, {0, 6, 7, 12, 13, 19, 20, 25, 26, 32, 33}}});
@@ -330,8 +331,7 @@ int32_t to_global_sub(std::tuple<int32_t, unsigned short, float> tile, const Til
   return xy.second * (t.ncolumns() * t.nsubdivisions()) + xy.first;
 }
 
-template <class coord_t>
-coord_t dist(int32_t sub, const Tiles<coord_t>& tiles, const coord_t& seed) {
+template <class coord_t> coord_t dist(int32_t sub, const Tiles<coord_t>& tiles, const coord_t& seed) {
   auto subcols = tiles.ncolumns() * tiles.nsubdivisions();
   auto x = sub % subcols;
   auto x0 = tiles.TileBounds().minx() + x * tiles.SubdivisionSize();
@@ -437,8 +437,12 @@ void test_closest_first() {
 
   // try planar coordinate system
   Tiles<Point2> tp(AABB2<Point2>{-10, -10, 10, 10}, 1, 5);
-  for (const auto& p : std::list<Point2>{
-           {0, 0}, {-1.99, -1.99}, {-.03, 1.21}, {7.23, -3.332}, {.04, 8.76}, {9.99, 9.99}})
+  for (const auto& p : std::list<Point2>{{0, 0},
+                                         {-1.99, -1.99},
+                                         {-.03, 1.21},
+                                         {7.23, -3.332},
+                                         {.04, 8.76},
+                                         {9.99, 9.99}})
     test_point(tp, p);
 
   // try spherical coordinate system
@@ -488,9 +492,8 @@ void test_intersect_bbox_single() {
   AABB2<PointLL> single_box{1, 1, 2, 2};
   auto intersection = t.Intersect(single_box);
   if (intersection.size() != 1) {
-    throw std::runtime_error(
-        "Expected one tile returned from world-spanning intersection, but got " +
-        std::to_string(intersection.size()) + " instead.");
+    throw std::runtime_error("Expected one tile returned from world-spanning intersection, but got " +
+                             std::to_string(intersection.size()) + " instead.");
   }
   auto tile_id = intersection.begin()->first;
   auto bins = intersection.begin()->second;
