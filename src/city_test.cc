@@ -222,11 +222,7 @@ int main(int argc, char* argv[]) {
   //  return EXIT_SUCCESS;
 
   CostFactory<DynamicCost> factory;
-  factory.Register("auto", CreateAutoCost);
-  factory.Register("auto_shorter", CreateAutoShorterCost);
-  factory.Register("bus", CreateBusCost);
-  factory.Register("bicycle", CreateBicycleCost);
-  factory.Register("pedestrian", CreatePedestrianCost);
+  factory.RegisterStandardCostingModels();
 
   // Figure out the route type
   std::string routetype = "auto";

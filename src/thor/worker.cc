@@ -34,10 +34,10 @@ namespace {
 // may want to do this in loki. At this point in thor the costing method
 // has not yet been constructed.
 const std::unordered_map<std::string, float> kMaxDistances = {
-    {"auto_", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
-    {"bus", 43200.0f},        {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
-    {"motorcycle", 14400.0f}, {"multimodal", 7200.0f},    {"pedestrian", 7200.0f},
-    {"transit", 14400.0f},    {"truck", 43200.0f},
+    {"auto_", 43200.0f},         {"auto_data_fix", 43200.0f}, {"auto_shorter", 43200.0f},
+    {"bicycle", 7200.0f},        {"bus", 43200.0f},           {"hov", 43200.0f},
+    {"motor_scooter", 14400.0f}, {"motorcycle", 14400.0f},    {"multimodal", 7200.0f},
+    {"pedestrian", 7200.0f},     {"transit", 14400.0f},       {"truck", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
@@ -57,17 +57,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config)
     : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config),
       reader(matcher_factory.graphreader()),
       long_request(config.get<float>("thor.logging.long_request")) {
-  // Register edge/node costing methods
-  factory.Register("auto", sif::CreateAutoCost);
-  factory.Register("auto_shorter", sif::CreateAutoShorterCost);
-  factory.Register("bus", sif::CreateBusCost);
-  factory.Register("bicycle", sif::CreateBicycleCost);
-  factory.Register("hov", sif::CreateHOVCost);
-  factory.Register("motor_scooter", sif::CreateMotorScooterCost);
-  factory.Register("motorcycle", sif::CreateMotorcycleCost);
-  factory.Register("pedestrian", sif::CreatePedestrianCost);
-  factory.Register("transit", sif::CreateTransitCost);
-  factory.Register("truck", sif::CreateTruckCost);
+  // Register standard edge/node costing methods
+  factory.RegisterStandardCostingModels();
 
   for (const auto& item : config.get_child("meili.customizable")) {
     trace_customizable.insert(item.second.get_value<std::string>());
