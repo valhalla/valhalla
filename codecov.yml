@@ -1,0 +1,6 @@
+coverage:
+
+  ignore:
+    - rapidjson/.*
+
+comment: off

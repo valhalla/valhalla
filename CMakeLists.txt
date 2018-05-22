@@ -270,31 +270,25 @@ string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
 
-## Coverage report
+## Coverage report targets
 if(ENABLE_COVERAGE)
-  if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-    message(WARNING "ENABLE_COVERAGE=ON only make sense with a Debug build")
-  else()
-    message(STATUS "Enabling coverage")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ftest-coverage -fprofile-arcs")
-    target_link_libraries(valhalla gcov)
-
-    find_program(LCOV_PATH NAMES lcov lcov.bat lcov.exe lcov.perl)
-    find_program(GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat)
-    if(NOT LCOV_PATH OR NOT GENHTML_PATH)
-      message(FATAL_ERROR "no lcov or genhtml installed")
-    endif()
-
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/coverage.info
-      COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --base-directory ${CMAKE_SOURCE_DIR} --no-external --capture --output-file ${CMAKE_BINARY_DIR}/coverage.info --no-checksum
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      DEPENDS check)
-
-    add_custom_target(coverage
-      COMMAND ${GENHTML_PATH} --prefix ${CMAKE_BINARY_DIR} --output-directory ${CMAKE_BINARY_DIR}/coverage --title "Test Coverage" --legend --show-details coverage.info
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      DEPENDS ${CMAKE_BINARY_DIR}/coverage.info)
+  find_program(LCOV_PATH NAMES lcov lcov.bat lcov.exe lcov.perl)
+  find_program(GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat)
+  if(NOT LCOV_PATH OR NOT GENHTML_PATH)
+    message(FATAL_ERROR "no lcov or genhtml installed")
   endif()
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/coverage.info
+    COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --base-directory ${CMAKE_SOURCE_DIR} --no-external --capture --output-file ${CMAKE_BINARY_DIR}/coverage.info --no-checksum
+    COMMAND ${LCOV_PATH} --remove ${CMAKE_BINARY_DIR}/coverage.info '/usr/*' --output-file ${CMAKE_BINARY_DIR}/coverage.info
+    COMMAND ${LCOV_PATH} --list ${CMAKE_BINARY_DIR}/coverage.info
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS check)
+
+  add_custom_target(coverage
+    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_BINARY_DIR} --output-directory ${CMAKE_BINARY_DIR}/coverage --title "Test Coverage" --legend --show-details coverage.info
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS ${CMAKE_BINARY_DIR}/coverage.info)
 endif()
 
 ## Packaging via CPack

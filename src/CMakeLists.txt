@@ -10,6 +10,10 @@ function(valhalla_module)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES})
   target_link_libraries(${library} ${MODULE_DEPENDS})
 
+  if(ENABLE_COVERAGE)
+    target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
+  endif()
+
   install(FILES ${MODULE_HEADERS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${MODULE_NAME}
     COMPONENT development)
@@ -66,6 +70,10 @@ target_link_libraries(valhalla
   valhalla::sif
   valhalla::skadi
   valhalla::protobuf)
+
+if(ENABLE_COVERAGE)
+  target_link_libraries(valhalla gcov)
+endif()
 
 set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"
