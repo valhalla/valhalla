@@ -321,12 +321,12 @@ bool OSMWay::truck_forward() const {
 
 // Set bike forward flag.
 void OSMWay::set_bike_forward(const bool bike_forward) {
-  access_.fields.bike_forward = bike_forward;
+  bike_info_.fields.bike_forward = bike_forward;
 }
 
 // Get the bike forward flag.
 bool OSMWay::bike_forward() const {
-  return access_.fields.bike_forward;
+  return bike_info_.fields.bike_forward;
 }
 
 // Set emergency forward flag.
@@ -347,6 +347,16 @@ void OSMWay::set_moped_forward(const bool moped_forward) {
 // Get the moped forward flag
 bool OSMWay::moped_forward() const {
   return access_.fields.moped_forward;
+}
+
+// Set the motorcycle forward flag
+void OSMWay::set_motorcycle_forward(const bool motorcycle_forward) {
+  access_.fields.motorcycle_forward = motorcycle_forward;
+}
+
+// Get the motorcycle forward flag
+bool OSMWay::motorcycle_forward() const {
+  return access_.fields.motorcycle_forward;
 }
 
 // Set auto backward flag.
@@ -401,12 +411,12 @@ bool OSMWay::truck_backward() const {
 
 // Set bike backward flag.
 void OSMWay::set_bike_backward(const bool bike_backward) {
-  access_.fields.bike_backward = bike_backward;
+  bike_info_.fields.bike_backward = bike_backward;
 }
 
 // Get the bike backward flag.
 bool OSMWay::bike_backward() const {
-  return access_.fields.bike_backward;
+  return bike_info_.fields.bike_backward;
 }
 
 // Set emergency backward flag.
@@ -427,6 +437,16 @@ void OSMWay::set_moped_backward(const bool moped_backward) {
 // Get the moped backward flag
 bool OSMWay::moped_backward() const {
   return access_.fields.moped_backward;
+}
+
+// Set the motorcycle backward flag
+void OSMWay::set_motorcycle_backward(const bool motorcycle_backward) {
+  access_.fields.motorcycle_backward = motorcycle_backward;
+}
+
+// Get the motorcycle backward flag
+bool OSMWay::motorcycle_backward() const {
+  return access_.fields.motorcycle_backward;
 }
 
 // Set destination only/private flag.

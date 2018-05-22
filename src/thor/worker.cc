@@ -34,10 +34,10 @@ namespace {
 // may want to do this in loki. At this point in thor the costing method
 // has not yet been constructed.
 const std::unordered_map<std::string, float> kMaxDistances = {
-    {"auto_", 43200.0f},     {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
-    {"bus", 43200.0f},       {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
-    {"multimodal", 7200.0f}, {"pedestrian", 7200.0f},    {"transit", 14400.0f},
-    {"truck", 43200.0f},
+    {"auto_", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
+    {"bus", 43200.0f},        {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
+    {"motorcycle", 14400.0f}, {"multimodal", 7200.0f},    {"pedestrian", 7200.0f},
+    {"transit", 14400.0f},    {"truck", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
@@ -64,6 +64,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config)
   factory.Register("bicycle", sif::CreateBicycleCost);
   factory.Register("hov", sif::CreateHOVCost);
   factory.Register("motor_scooter", sif::CreateMotorScooterCost);
+  factory.Register("motorcycle", sif::CreateMotorcycleCost);
   factory.Register("pedestrian", sif::CreatePedestrianCost);
   factory.Register("transit", sif::CreateTransitCost);
   factory.Register("truck", sif::CreateTruckCost);

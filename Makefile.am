@@ -189,6 +189,7 @@ nobase_include_HEADERS = \
 	valhalla/sif/autocost.h \
 	valhalla/sif/bicyclecost.h \
 	valhalla/sif/motorscootercost.h \
+	valhalla/sif/motorcyclecost.h \
 	valhalla/sif/pedestriancost.h \
 	valhalla/sif/transitcost.h \
 	valhalla/sif/truckcost.h \
@@ -309,6 +310,7 @@ libvalhalla_la_SOURCES = \
 	src/sif/autocost.cc \
 	src/sif/bicyclecost.cc \
 	src/sif/motorscootercost.cc \
+	src/sif/motorcyclecost.cc \
 	src/sif/pedestriancost.cc \
 	src/sif/transitcost.cc \
 	src/sif/truckcost.cc \
@@ -658,6 +660,7 @@ check_PROGRAMS = \
 	test/traffic_matcher \
 	test/autocost \
 	test/motorscootercost \
+	test/motorcyclecost \
 	test/bicyclecost \
 	test/pedestriancost \
 	test/transitcost \
@@ -855,6 +858,9 @@ test_autocost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_
 test_motorscootercost_SOURCES = src/sif/motorscootercost.cc test/test.cc
 test_motorscootercost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_motorscootercost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_motorcyclecost_SOURCES = src/sif/motorcyclecost.cc test/test.cc
+test_motorcyclecost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_motorcyclecost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_bicyclecost_SOURCES = src/sif/bicyclecost.cc test/test.cc
 test_bicyclecost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_bicyclecost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

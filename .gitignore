@@ -73,6 +73,8 @@ py-compile
 libvalhalla.la
 date_time_zonespec.csv
 valhalla/valhalla.h
+mason/
+mason_packages/
 
 # tests
 test/*.log
@@ -177,6 +179,7 @@ test/attributes_controller
 test/edge_elevation
 test/autocost
 test/bicyclecost
+test/motorcyclecost
 test/motorscootercost
 test/pedestriancost
 test/transitcost

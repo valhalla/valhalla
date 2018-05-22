@@ -13,6 +13,7 @@
 #include "midgard/logging.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
+#include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/pedestriancost.h"
 #include "tyr/actor.h"
@@ -206,6 +207,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config)
   factory.Register("bicycle", sif::CreateBicycleCost);
   factory.Register("hov", sif::CreateHOVCost);
   factory.Register("motor_scooter", sif::CreateMotorScooterCost);
+  factory.Register("motorcycle", sif::CreateMotorcycleCost);
   factory.Register("pedestrian", sif::CreatePedestrianCost);
   factory.Register("truck", sif::CreateTruckCost);
   factory.Register("transit", sif::CreateTransitCost);
