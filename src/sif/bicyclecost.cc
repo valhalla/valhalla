@@ -223,13 +223,17 @@ public:
    */
   BicycleCost(const boost::property_tree::ptree& config);
 
-  virtual ~BicycleCost();
+  // virtual destructor
+  virtual ~BicycleCost() {
+  }
 
   /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const {
+    return kBicycleAccess;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -285,7 +289,9 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & kBicycleAccess);
+  }
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
@@ -330,13 +336,18 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const;
+  virtual float AStarCostFactor() const {
+    // Assume max speed of 2 * the average speed set for costing
+    return speedfactor_[2 * static_cast<uint32_t>(speed_)];
+  }
 
   /**
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const;
+  virtual uint8_t travel_type() const {
+    return static_cast<uint8_t>(type_);
+  }
 
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
@@ -536,15 +547,6 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 }
 
-// Destructor
-BicycleCost::~BicycleCost() {
-}
-
-// Get the access mode used by this costing method.
-uint32_t BicycleCost::access_mode() const {
-  return kBicycleAccess;
-}
-
 // Check if access is allowed on the specified edge.
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
@@ -631,11 +633,6 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
   // Prohibit certain roads based on surface type and bicycle type
   return opp_edge->surface() <= worst_allowed_surface_;
-}
-
-// Check if access is allowed at the specified node.
-bool BicycleCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & kBicycleAccess);
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time
@@ -958,24 +955,6 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
   // Return cost (time and penalty)
   return {(seconds * (turn_stress + 1.0f)) + penalty, seconds};
-}
-
-/**
- * Get the cost factor for A* heuristics. This factor is multiplied
- * with the distance to the destination to produce an estimate of the
- * minimum cost to the destination. The A* heuristic must underestimate the
- * cost to the destination. So a time based estimate based on speed should
- * assume the maximum speed is used to the destination such that the time
- * estimate is less than the least possible time along roads.
- */
-float BicycleCost::AStarCostFactor() const {
-  // Assume max speed of 2 * the average speed set for costing
-  return speedfactor_[2 * static_cast<uint32_t>(speed_)];
-}
-
-// Returns the current travel type.
-uint8_t BicycleCost::travel_type() const {
-  return static_cast<uint8_t>(type_);
 }
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
