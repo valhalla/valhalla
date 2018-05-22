@@ -1,6 +1,6 @@
 valhalla_module(NAME tyr
   SOURCES
-    ${CMAKE_SOURCE_DIR}/src/worker.cc
+    ${VALHALLA_SOURCE_DIR}/src/worker.cc
     serializers.cc
     isochrone_serializer.cc
     matrix_serializer.cc
@@ -12,13 +12,13 @@ valhalla_module(NAME tyr
     navigator.cc
     actor.cc
   HEADERS
-    ${CMAKE_SOURCE_DIR}/valhalla/tyr/serializers.h
-    ${CMAKE_SOURCE_DIR}/valhalla/tyr/navigator.h
-    ${CMAKE_SOURCE_DIR}/valhalla/tyr/actor.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/tyr/serializers.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/tyr/navigator.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/tyr/actor.h
   INCLUDE_DIRECTORIES
     PUBLIC
-      ${CMAKE_SOURCE_DIR}
-      ${CMAKE_SOURCE_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}
+      ${VALHALLA_SOURCE_DIR}/valhalla
     PRIVATE
       ${CMAKE_BINARY_DIR}
   DEPENDS

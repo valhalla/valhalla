@@ -1,58 +1,61 @@
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h
-  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake date_time/zonespec.csv ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h --skip 1 --raw
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
+  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+      ${VALHALLA_SOURCE_DIR}/date_time/zonespec.csv
+      ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
+      --variable-name date_time_zonespec_csv --skip 1 --raw
+  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Compiling date_time/zonespec.csv to date_time_zonespec.h"
-  DEPENDS ${CMAKE_SOURCE_DIR}/date_time/zonespec.csv)
+  DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/zonespec.csv)
 
 set(headers
-  ${CMAKE_BINARY_DIR}/valhalla/date_time_zonespec.h
+  ${CMAKE_CURRENT_BINARY_DIR}/date_time_zonespec.h
 
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/accessrestriction.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/admin.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/admininfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/complexrestriction.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/connectivity_map.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/curler.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/datetime.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/directededge.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/double_bucket_queue.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/edge_elevation.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/edgeinfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/filesystem_utils.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphconstants.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphid.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphreader.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphtile.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/graphtileheader.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/json.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/nodeinfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/location.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/pathlocation.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/rapidjson_utils.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/sign.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/signinfo.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/tilehierarchy.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/turn.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetname.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetnames.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetnames_factory.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetname_us.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/streetnames_us.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/trafficassociation.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transitdeparture.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transitroute.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transitschedule.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transitstop.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/transittransfer.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/laneconnectivity.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us_co.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us_tx.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_factory.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/reutil.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/edgetracker.h
-  ${CMAKE_SOURCE_DIR}/valhalla/baldr/merge.h)
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/accessrestriction.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/admin.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/admininfo.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/complexrestriction.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/connectivity_map.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/curler.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/datetime.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/directededge.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/double_bucket_queue.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/edge_elevation.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/edgeinfo.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/filesystem_utils.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/graphconstants.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/graphid.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/graphreader.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/graphtile.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/graphtileheader.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/json.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/nodeinfo.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/location.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/pathlocation.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/rapidjson_utils.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/sign.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/signinfo.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/tilehierarchy.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/turn.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/streetname.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/streetnames.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/streetnames_factory.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/streetname_us.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/streetnames_us.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/trafficassociation.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/transitdeparture.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/transitroute.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/transitschedule.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/transitstop.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/transittransfer.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/laneconnectivity.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us_co.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_us_tx.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/verbal_text_formatter_factory.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/reutil.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/edgetracker.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/baldr/merge.h)
 
 valhalla_module(NAME baldr
   SOURCES
@@ -94,11 +97,10 @@ valhalla_module(NAME baldr
     ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
-      ${CMAKE_SOURCE_DIR}
-      ${CMAKE_SOURCE_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}
+      ${VALHALLA_SOURCE_DIR}/valhalla
     PRIVATE
-      ${CMAKE_BINARY_DIR}
-      ${CMAKE_BINARY_DIR}/valhalla
+      ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
     valhalla::midgard
     Boost::date_time

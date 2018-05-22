@@ -10,10 +10,10 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
-include(FindPkgConfig)
 include(GNUInstallDirs)
 
-list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
+set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
@@ -25,68 +25,6 @@ option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-
-
-## Get Valhalla version
-file(STRINGS "valhalla/valhalla.h.in" version_lines REGEX "VALHALLA_VERSION_(MAJOR|MINOR|PATCH)")
-foreach(line ${version_lines})
-  if("${line}" MATCHES "(VALHALLA_VERSION_(MAJOR|MINOR|PATCH))[\t ]+([0-9]+)")
-    set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3})
-  endif()
-endforeach()
-if(VALHALLA_VERSION_MAJOR)
-  set(VERSION "${VALHALLA_VERSION_MAJOR}")
-  if(VALHALLA_VERSION_MINOR)
-    set(VERSION "${VERSION}.${VALHALLA_VERSION_MINOR}")
-    if(VALHALLA_VERSION_PATCH)
-      set(VERSION "${VERSION}.${VALHALLA_VERSION_PATCH}")
-    endif()
-  endif()
-else()
-  message(FATAL_ERROR "No Valhalla major version")
-endif()
-
-
-## Configure imported libraries
-set(boost_components
-  date_time
-  filesystem
-  iostreams
-  program_options
-  regex
-  system)
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  list(APPEND boost_components zlib)
-endif()
-find_package(Boost 1.51 REQUIRED COMPONENTS ${boost_components})
-
-find_package(CURL REQUIRED)
-add_library(CURL::CURL INTERFACE IMPORTED)
-set_target_properties(CURL::CURL PROPERTIES
-  INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
-  INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-  INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
-
-find_package(Lua REQUIRED)
-add_library(Lua::Lua INTERFACE IMPORTED)
-set_target_properties(Lua::Lua PROPERTIES
-  INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
-  INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
-
-find_package(ZLIB REQUIRED)
-find_package(LZ4 REQUIRED)
-find_package(SQLite3 REQUIRED)
-find_package(SpatiaLite)
-find_package(GEOS)
-find_package(Threads REQUIRED)
-add_library(libprime_server INTERFACE IMPORTED)
-if(ENABLE_SERVICES)
-  pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
-  set_target_properties(libprime_server PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
-    INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
-endif()
 
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
@@ -110,13 +48,16 @@ add_subdirectory(src)
 
 
 ## Executable targets
+find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
+find_package(GEOS)
+
 function(get_source_path PATH NAME)
-  if(EXISTS ${CMAKE_SOURCE_DIR}/src/${NAME}.cc)
-    set(${PATH} ${CMAKE_SOURCE_DIR}/src/${NAME}.cc PARENT_SCOPE)
-  elseif(EXISTS ${CMAKE_SOURCE_DIR}/src/meili/${NAME}.cc)
-    set(${PATH} ${CMAKE_SOURCE_DIR}/src/meili/${NAME}.cc PARENT_SCOPE)
-  elseif(EXISTS ${CMAKE_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
-    set(${PATH} ${CMAKE_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
+  if(EXISTS ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc)
+    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc PARENT_SCOPE)
+  elseif(EXISTS ${VALHALLA_SOURCE_DIR}/src/meili/${NAME}.cc)
+    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/meili/${NAME}.cc PARENT_SCOPE)
+  elseif(EXISTS ${VALHALLA_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
+    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
   else()
     message(FATAL_ERROR "no source path for ${NAME}")
   endif()
@@ -161,7 +102,7 @@ endif()
 
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
-    add_executable(${program} ${CMAKE_SOURCE_DIR}/src/${program}.cc)
+    add_executable(${program} src/${program}.cc)
     target_link_libraries(${program} valhalla Boost::program_options)
     install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
   endforeach()
@@ -243,12 +184,14 @@ foreach(test ${cost_tests})
 endforeach()
 
 # Test-specific data, properties and dependencies
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}' test/data/utrecht_netherlands.osm.pbf
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph
+  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      test/data/utrecht_netherlands.osm.pbf
+  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Building Utrecht Tiles..."
-  DEPENDS valhalla_build_tiles ${CMAKE_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
-add_custom_target(utrecht_tiles DEPENDS ${CMAKE_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph)
+  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
+add_custom_target(utrecht_tiles DEPENDS ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph)
 
 set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
@@ -258,12 +201,12 @@ endif()
 
 # Test run targets
 foreach(test ${tests} ${cost_tests})
-  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/unit_tests/${test}.log
-    COMMAND LOCPATH=locales /bin/bash -c -o pipefail "${CMAKE_BINARY_DIR}/unit_tests/${test} | tee ${CMAKE_BINARY_DIR}/unit_tests/${test}.log"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log
+    COMMAND LOCPATH=locales /bin/bash -c -o pipefail "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} | tee ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log"
+    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
     DEPENDS ${test}
     VERBATIM)
-  add_custom_target(run-${test} DEPENDS ${CMAKE_BINARY_DIR}/unit_tests/${test}.log)
+  add_custom_target(run-${test} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log)
 endforeach()
 
 string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
@@ -278,17 +221,17 @@ if(ENABLE_COVERAGE)
     message(FATAL_ERROR "no lcov or genhtml installed")
   endif()
 
-  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/coverage.info
-    COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --base-directory ${CMAKE_SOURCE_DIR} --no-external --capture --output-file ${CMAKE_BINARY_DIR}/coverage.info --no-checksum
-    COMMAND ${LCOV_PATH} --remove ${CMAKE_BINARY_DIR}/coverage.info '/usr/*' --output-file ${CMAKE_BINARY_DIR}/coverage.info
-    COMMAND ${LCOV_PATH} --list ${CMAKE_BINARY_DIR}/coverage.info
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
+    COMMAND ${LCOV_PATH} --directory . --base-directory ${VALHALLA_SOURCE_DIR} --no-external --capture --output-file coverage.info --no-checksum
+    COMMAND ${LCOV_PATH} --remove coverage.info '/usr/*' --output-file coverage.info
+    COMMAND ${LCOV_PATH} --list coverage.info
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS check)
 
   add_custom_target(coverage
-    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_BINARY_DIR} --output-directory ${CMAKE_BINARY_DIR}/coverage --title "Test Coverage" --legend --show-details coverage.info
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS ${CMAKE_BINARY_DIR}/coverage.info)
+    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
 endif()
 
 ## Packaging via CPack
@@ -300,7 +243,7 @@ set(CPACK_PACKAGE_VERSION_MINOR ${VALHALLA_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${VALHALLA_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}${CPACK_PACKAGE_VERSION_SUFFIX}")
 set(CPACK_PACKAGE_CONTACT "Team Valhalla <valhalla@mapzen.com>")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${VALHALLA_SOURCE_DIR}/LICENSE.md")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenStreetMap Routing API
  A set of routing APIs designed around OSM map data using
  dynamic costing and a tiled data structure")
@@ -340,6 +283,6 @@ else()
   set(CPACK_COMPONENTS_ALL "development")
 endif()
 
-set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_SOURCE_DIR}/cmake/CPackConfig.cmake)
+set(CPACK_PROJECT_CONFIG_FILE ${VALHALLA_SOURCE_DIR}/cmake/CPackConfig.cmake)
 set(CPACK_DEBIAN_PACKAGE_DEBUG OFF)
 include(CPack)
