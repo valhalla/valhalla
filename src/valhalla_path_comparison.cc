@@ -85,15 +85,7 @@ void walk_edges(const std::string& shape,
                 boost::property_tree::ptree& pt) {
   // Register edge/node costing methods
   CostFactory<DynamicCost> factory;
-  factory.Register("auto", CreateAutoCost);
-  factory.Register("auto_shorter", CreateAutoShorterCost);
-  factory.Register("bus", CreateBusCost);
-  factory.Register("bicycle", CreateBicycleCost);
-  factory.Register("hov", CreateHOVCost);
-  factory.Register("motor_scooter", CreateMotorScooterCost);
-  factory.Register("pedestrian", CreatePedestrianCost);
-  factory.Register("transit", CreateTransitCost);
-  factory.Register("truck", CreateTruckCost);
+  factory.RegisterStandardCostingModels();
 
   std::string method_options = "costing_options." + routetype;
   auto costing_options = pt.get_child(method_options, {});
@@ -265,10 +257,7 @@ int main(int argc, char* argv[]) {
 
   // Construct costing
   CostFactory<DynamicCost> factory;
-  factory.Register("auto", CreateAutoCost);
-  factory.Register("bicycle", CreateBicycleCost);
-  factory.Register("pedestrian", CreatePedestrianCost);
-  factory.Register("motor_scooter", CreateMotorScooterCost);
+  factory.RegisterStandardCostingModels();
   std::string method_options = "costing_options." + routetype;
   auto costing_options = json_ptree.get_child(method_options, {});
   cost_ptr_t costing = factory.Create(routetype, costing_options);

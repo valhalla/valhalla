@@ -159,20 +159,26 @@ public:
    */
   MotorScooterCost(const boost::property_tree::ptree& config);
 
-  virtual ~MotorScooterCost();
+  // virtual destructor
+  virtual ~MotorScooterCost() {
+  }
 
   /**
    * Does the costing method allow multiple passes (with relaxed hierarchy
    * limits).
    * @return  Returns true if the costing model allows multiple passes.
    */
-  virtual bool AllowMultiPass() const;
+  virtual bool AllowMultiPass() const {
+    return true;
+  }
 
   /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const {
+    return kMopedAccess;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -228,7 +234,9 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & kMopedAccess);
+  }
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
@@ -273,14 +281,17 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const;
+  virtual float AStarCostFactor() const {
+    return speedfactor_[kMaxSpeedKph];
+  }
 
   /**
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const;
-
+  virtual uint8_t travel_type() const {
+    return static_cast<uint8_t>(VehicleType::kMotorScooter);
+  }
   /**
    * Returns a function/functor to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
@@ -406,21 +417,6 @@ MotorScooterCost::MotorScooterCost(const boost::property_tree::ptree& pt)
   road_factor_ = (use_primary_ >= 0.5f) ? 1.5f - use_primary_ : 3.0f - use_primary_ * 5.0f;
 }
 
-// Destructor
-MotorScooterCost::~MotorScooterCost() {
-}
-
-// Does the costing method allow multiple passes (with relaxed hierarchy
-// limits).
-bool MotorScooterCost::AllowMultiPass() const {
-  return true;
-}
-
-// Get the access mode for motor scooter
-uint32_t MotorScooterCost::access_mode() const {
-  return kMopedAccess;
-}
-
 // Check if access is allowed on the specified edge.
 bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const EdgeLabel& pred,
@@ -496,11 +492,6 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
     }
   }
   return opp_edge->surface() <= kMinimumScooterSurface;
-}
-
-// Check if access is allowed at the specified node.
-bool MotorScooterCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & kMopedAccess);
 }
 
 Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
@@ -627,21 +618,6 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
 
   // Return cost (time and penalty)
   return {seconds + penalty, seconds};
-}
-
-// Get the cost factor for A* heuristics. This factor is multiplied
-// with the distance to the destination to produce an estimate of the
-// minimum cost to the destination. The A* heuristic must underestimate the
-// cost to the destination. So a time based estimate based on speed should
-// assume the maximum speed is used to the destination such that the time
-// estimate is less than the least possible time along roads.
-float MotorScooterCost::AStarCostFactor() const {
-  return speedfactor_[kMaxSpeedKph];
-}
-
-// Returns the current travel type.
-uint8_t MotorScooterCost::travel_type() const {
-  return static_cast<uint8_t>(VehicleType::kMotorScooter);
 }
 
 cost_ptr_t CreateMotorScooterCost(const boost::property_tree::ptree& config) {

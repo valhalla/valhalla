@@ -67,9 +67,25 @@ public:
     config.Accept(writer);
     boost::property_tree::ptree pt;
     std::istringstream is(buffer.GetString());
-    ;
     boost::property_tree::read_json(is, pt);
     return Create(name, pt);
+  }
+
+  /**
+   * Convenience method to register all of the standard costing models.
+   */
+  void RegisterStandardCostingModels() {
+    Register("auto", CreateAutoCost);
+    Register("auto_data_fix", CreateAutoDataFixCost);
+    Register("auto_shorter", CreateAutoShorterCost);
+    Register("bicycle", CreateBicycleCost);
+    Register("bus", CreateBusCost);
+    Register("hov", CreateHOVCost);
+    Register("motor_scooter", CreateMotorScooterCost);
+    Register("motorcycle", CreateMotorScooterCost);
+    Register("pedestrian", CreatePedestrianCost);
+    Register("truck", CreateTruckCost);
+    Register("transit", CreateTransitCost);
   }
 
 private:
