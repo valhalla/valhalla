@@ -23,6 +23,14 @@ cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config);
 cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config);
 
 /**
+ * Create an auto costing method for data fixing. This is derived from auto
+ * costing but overrides Allowed rules to allow driving against oneway and
+ * it ignores turn restrictions. his can be useful for map-matching traces
+ * when trying data that may have incorrect restrictions or oneway information.
+ */
+cost_ptr_t CreateAutoDataFixCost(const boost::property_tree::ptree& config);
+
+/**
  * Create a bus cost method. This is derived from auto costing and
  * uses the same rules except for using the bus access flag instead
  * of the auto access flag.

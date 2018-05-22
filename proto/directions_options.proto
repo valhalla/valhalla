@@ -38,6 +38,7 @@ message DirectionsOptions {
     transit = 8;
     truck = 9;
     motorcycle = 10;
+    auto_data_fix = 11;
   }  
   
   enum DateTimeType {

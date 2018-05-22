@@ -120,20 +120,25 @@ public:
    */
   AutoCost(const boost::property_tree::ptree& config);
 
-  virtual ~AutoCost();
+  virtual ~AutoCost() {
+  }
 
   /**
    * Does the costing method allow multiple passes (with relaxed hierarchy
    * limits).
    * @return  Returns true if the costing model allows multiple passes.
    */
-  virtual bool AllowMultiPass() const;
+  virtual bool AllowMultiPass() const {
+    return true;
+  }
 
   /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const {
+    return kAutoAccess;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -189,7 +194,9 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & kAutoAccess);
+  }
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
@@ -234,13 +241,17 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const;
+  virtual float AStarCostFactor() const {
+    return speedfactor_[kMaxSpeedKph];
+  }
 
   /**
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const;
+  virtual uint8_t travel_type() const {
+    return static_cast<uint8_t>(type_);
+  }
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -383,21 +394,6 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   }
 }
 
-// Destructor
-AutoCost::~AutoCost() {
-}
-
-// Does the costing method allow multiple passes (with relaxed hierarchy
-// limits).
-bool AutoCost::AllowMultiPass() const {
-  return true;
-}
-
-// Get the access mode used by this costing method.
-uint32_t AutoCost::access_mode() const {
-  return kAutoAccess;
-}
-
 // Check if access is allowed on the specified edge.
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
@@ -474,11 +470,6 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
     }
   }
   return true;
-}
-
-// Check if access is allowed at the specified node.
-bool AutoCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & kAutoAccess);
 }
 
 // Get the cost to traverse the edge in seconds
@@ -612,21 +603,6 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   return {seconds + penalty, seconds};
 }
 
-// Get the cost factor for A* heuristics. This factor is multiplied
-// with the distance to the destination to produce an estimate of the
-// minimum cost to the destination. The A* heuristic must underestimate the
-// cost to the destination. So a time based estimate based on speed should
-// assume the maximum speed is used to the destination such that the time
-// estimate is less than the least possible time along roads.
-float AutoCost::AStarCostFactor() const {
-  return speedfactor_[kMaxSpeedKph];
-}
-
-// Returns the current travel type.
-uint8_t AutoCost::travel_type() const {
-  return static_cast<uint8_t>(type_);
-}
-
 cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoCost>(config);
 }
@@ -640,11 +616,19 @@ public:
   /**
    * Construct auto costing for shorter (not absolute shortest) path.
    * Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * @param  pt  Property tree with configuration/options.
    */
-  AutoShorterCost(const boost::property_tree::ptree& config);
+  AutoShorterCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
+    // Create speed cost table that reduces the impact of speed
+    adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
+    for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
+      adjspeedfactor_[s] = (kSecPerHour * 0.001f) / sqrtf(static_cast<float>(s));
+    }
+  }
 
-  virtual ~AutoShorterCost();
+  // virtual destructor
+  virtual ~AutoShorterCost() {
+  }
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
@@ -652,7 +636,11 @@ public:
    * @param  edge     Pointer to a directed edge.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const {
+    float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : 1.0f;
+    return Cost(edge->length() * adjspeedfactor_[edge->speed()] * factor,
+                edge->length() * speedfactor_[edge->speed()]);
+  }
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -662,36 +650,13 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const;
+  virtual float AStarCostFactor() const {
+    return adjspeedfactor_[kMaxSpeedKph];
+  }
 
 protected:
   float adjspeedfactor_[kMaxSpeedKph + 1];
 };
-
-// Constructor
-AutoShorterCost::AutoShorterCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
-  // Create speed cost table that reduces the impact of speed
-  adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
-  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-    adjspeedfactor_[s] = (kSecPerHour * 0.001f) / sqrtf(static_cast<float>(s));
-  }
-}
-
-// Destructor
-AutoShorterCost::~AutoShorterCost() {
-}
-
-// Returns the cost to traverse the edge and an estimate of the actual time
-// (in seconds) to traverse the edge.
-Cost AutoShorterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
-  float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : 1.0f;
-  return Cost(edge->length() * adjspeedfactor_[edge->speed()] * factor,
-              edge->length() * speedfactor_[edge->speed()]);
-}
-
-float AutoShorterCost::AStarCostFactor() const {
-  return adjspeedfactor_[kMaxSpeedKph];
-}
 
 cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoShorterCost>(config);
@@ -705,17 +670,23 @@ public:
   /**
    * Construct bus costing.
    * Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const boost::property_tree::ptree& config);
+  BusCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
+    type_ = VehicleType::kBus;
+  }
 
-  virtual ~BusCost();
+  /// virtual destructor
+  virtual ~BusCost() {
+  }
 
   /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const {
+    return kBusAccess;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -771,7 +742,9 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & kBusAccess);
+  }
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -802,20 +775,6 @@ public:
     return [](const baldr::NodeInfo* node) { return !(node->access() & kBusAccess); };
   }
 };
-
-// Constructor
-BusCost::BusCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
-  type_ = VehicleType::kBus;
-}
-
-// Destructor
-BusCost::~BusCost() {
-}
-
-// Get the access mode used by this costing method.
-uint32_t BusCost::access_mode() const {
-  return kBusAccess;
-}
 
 // Check if access is allowed on the specified edge.
 bool BusCost::Allowed(const baldr::DirectedEdge* edge,
@@ -864,8 +823,6 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::GraphId& opp_edgeid,
                              const uint32_t current_time,
                              const uint32_t tz_index) const {
-  // TODO - obtain and check the access restrictions.
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
@@ -897,11 +854,6 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return true;
 }
 
-// Check if access is allowed at the specified node.
-bool BusCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & kBusAccess);
-}
-
 cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config) {
   return std::make_shared<BusCost>(config);
 }
@@ -915,17 +867,21 @@ public:
   /**
    * Construct hov costing.
    * Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * @param  pt  Property tree with configuration/options.
    */
-  HOVCost(const boost::property_tree::ptree& config);
+  HOVCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
+  }
 
-  virtual ~HOVCost();
+  virtual ~HOVCost() {
+  }
 
   /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const {
+    return kHOVAccess;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -980,7 +936,14 @@ public:
    * @param  edge     Pointer to a directed edge.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const {
+    float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
+    if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
+      factor *= kHOVFactor;
+    }
+    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    return Cost(sec * factor, sec);
+  }
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -988,7 +951,9 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & kHOVAccess);
+  }
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -1019,19 +984,6 @@ public:
     return [](const baldr::NodeInfo* node) { return !(node->access() & kHOVAccess); };
   }
 };
-
-// Constructor
-HOVCost::HOVCost(const boost::property_tree::ptree& pt) : AutoCost(pt) {
-}
-
-// Destructor
-HOVCost::~HOVCost() {
-}
-
-// Get the access mode used by this costing method.
-uint32_t HOVCost::access_mode() const {
-  return kHOVAccess;
-}
 
 // Check if access is allowed on the specified edge.
 bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
@@ -1114,27 +1066,83 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return true;
 }
 
-// Returns the cost to traverse the edge and an estimate of the actual time
-// (in seconds) to traverse the edge.
-Cost HOVCost::EdgeCost(const baldr::DirectedEdge* edge) const {
-
-  float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
-
-  if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
-    factor *= kHOVFactor;
-  }
-
-  float sec = (edge->length() * speedfactor_[edge->speed()]);
-  return Cost(sec * factor, sec);
-}
-
-// Check if access is allowed at the specified node.
-bool HOVCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & kHOVAccess);
-}
-
 cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
   return std::make_shared<HOVCost>(config);
+}
+
+/**
+ * Derived class providing an alternate costing for driving that is ignores
+ * oneways and turn restrictions. This can be useful for map-matching traces
+ * when trying data that may have incorrect restrictions or oneway information.
+ */
+class AutoDataFix : public AutoCost {
+public:
+  /**
+   * Construct auto data fix costing.
+   * Pass in configuration using property tree.
+   * @param  pt  Property tree with configuration/options.
+   */
+  AutoDataFix(const boost::property_tree::ptree& pt) : AutoCost(pt) {
+  }
+
+  virtual ~AutoDataFix() {
+  }
+
+  /**
+   * Checks if access is allowed for the provided directed edge.
+   * This is generally based on mode of travel and the access modes
+   * allowed on the edge. However, it can be extended to exclude access
+   * based on other parameters such as conditional restrictions and
+   * conditional access that can depend on time and travel mode.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  tile           Current tile.
+   * @param  edgeid         GraphId of the directed edge.
+   * @param  current_time   Current time (seconds since epoch). A value of 0
+   *                        indicates the route is not time dependent.
+   * @param  tz_index       timezone index for the node
+   * @return Returns true if access is allowed, false if not.
+   */
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const EdgeLabel& pred,
+                       const baldr::GraphTile*& tile,
+                       const baldr::GraphId& edgeid,
+                       const uint32_t current_time,
+                       const uint32_t tz_index) const {
+    // Check access and return false (not allowed if no auto access is allowed in either
+    // direction. Also disallow simple U-turns except at dead-end nodes.
+    if (!((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess)) ||
+        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+        edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
+        (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude and allow ranking results from the search by looking at each
+   * edges attribution and suitability for use as a location by the travel
+   * mode used by the costing method. Function/functor is also used to filter
+   * edges not usable / inaccessible by auto in either direction.
+   */
+  virtual const EdgeFilter GetEdgeFilter() const {
+    // Throw back a lambda that checks the access for this type of costing
+    return [](const baldr::DirectedEdge* edge) {
+      // Do not allow transition edges and edges with no auto access in either direction
+      if (edge->IsTransition() ||
+          !((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess))) {
+        return 0.0f;
+      } else {
+        return 1.0f;
+      }
+    };
+  }
+};
+
+cost_ptr_t CreateAutoDataFixCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<AutoDataFix>(config);
 }
 
 } // namespace sif
