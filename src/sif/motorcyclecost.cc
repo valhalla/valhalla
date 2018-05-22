@@ -264,8 +264,8 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) ||
-          edge->surface() > kMinimumMotorcycleSurface)
+      if (edge->IsTransition() || edge->is_shortcut() ||
+          !(edge->forwardaccess() & kMotorcycleAccess) || edge->surface() > kMinimumMotorcycleSurface)
         return 0.0f;
       else {
         // TODO - use classification/use to alter the factor
@@ -281,7 +281,7 @@ public:
    */
   virtual const NodeFilter GetNodeFilter() const {
     // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kAutoAccess); };
+    return [](const baldr::NodeInfo* node) { return !(node->access() & kMotorcycleAccess); };
   }
 
   // Hidden in source file so we don't need it to be protected
@@ -408,7 +408,7 @@ bool MotorcycleCost::AllowMultiPass() const {
 
 // Get the access mode for motorcycle
 uint32_t MotorcycleCost::access_mode() const {
-  return kAutoAccess;
+  return kMotorcycleAccess;
 }
 
 // Check if access is allowed on the specified edge.
@@ -420,7 +420,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(edge->forwardaccess() & kAutoAccess) ||
+  if (!(edge->forwardaccess() & kMotorcycleAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
@@ -428,7 +428,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
   }
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), kAutoAccess);
+        tile->GetAccessRestrictions(edgeid.id(), kMotorcycleAccess);
     for (const auto& restriction : restrictions) {
       if (restriction.type() == AccessType::kTimedAllowed) {
         // allowed at this range or allowed all the time
@@ -459,7 +459,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kAutoAccess) ||
+  if (!(opp_edge->forwardaccess() & kMotorcycleAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
@@ -468,7 +468,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(opp_edgeid.id(), kAutoAccess);
+        tile->GetAccessRestrictions(opp_edgeid.id(), kMotorcycleAccess);
     for (const auto& restriction : restrictions) {
       if (restriction.type() == AccessType::kTimedAllowed) {
         // allowed at this range or allowed all the time
@@ -490,7 +490,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 // Check if access is allowed at the specified node.
 bool MotorcycleCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & kAutoAccess);
+  return (node->access() & kMotorcycleAccess);
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
