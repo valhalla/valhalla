@@ -1,12 +1,12 @@
+#include "baldr/predicted_traffic.h"
 #include <cmath>
 #include <valhalla/midgard/logging.h>
-#include "baldr/predicted_traffic.h"
 
 namespace valhalla {
 namespace baldr {
 
 // Constructor with arguments.
-PredictedTraffic:: PredictedTraffic(const float constrained_speed, const uint32_t compressed_offset) {
+PredictedTraffic::PredictedTraffic(const float constrained_speed, const uint32_t compressed_offset) {
   set_constrained_speed(constrained_speed);
   set_compressed_offset(compressed_offset_);
 }
@@ -32,5 +32,5 @@ void PredictedTraffic::set_compressed_offset(const uint32_t compressed_offset) {
   }
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

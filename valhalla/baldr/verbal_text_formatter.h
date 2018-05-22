@@ -15,9 +15,8 @@ const re::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
  * a text-to-speech engine.
  */
 class VerbalTextFormatter {
- public:
-  VerbalTextFormatter(const std::string& country_code,
-                      const std::string& state_code);
+public:
+  VerbalTextFormatter(const std::string& country_code, const std::string& state_code);
 
   virtual ~VerbalTextFormatter();
 
@@ -29,7 +28,7 @@ class VerbalTextFormatter {
    */
   virtual std::string Format(const std::string& text) const;
 
- protected:
+protected:
   virtual std::string ProcessNumberSplitMatch(const re::smatch& m) const;
 
   virtual std::string FormNumberSplitTts(const std::string& source) const;
@@ -37,10 +36,9 @@ class VerbalTextFormatter {
   // TODO - if not needed for special case logic then remove
   std::string country_code_;
   std::string state_code_;
-
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
+#endif // VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_

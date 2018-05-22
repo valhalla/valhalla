@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MIDGARD_GRIDDEDDATA_H_
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
-#include <valhalla/midgard/tiles.h>
-#include <vector>
-#include <map>
 #include <limits>
 #include <list>
+#include <map>
+#include <valhalla/midgard/tiles.h>
+#include <vector>
 
 namespace valhalla {
 namespace midgard {
@@ -18,17 +18,15 @@ constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
  * Class to store data in a gridded/tiled data structure. Contains methods
  * to mark each tile with data using a compare operator.
  */
-template <class coord_t>
-class GriddedData : public Tiles<coord_t> {
- public:
+template <class coord_t> class GriddedData : public Tiles<coord_t> {
+public:
   /**
    * Constructor.
    * @param   bounds    Bounding box
    * @param   tilesize  Tile size
    * @param   value     Value to initialize data with.
    */
-  GriddedData(const AABB2<coord_t>& bounds, const float tilesize,
-              const float value);
+  GriddedData(const AABB2<coord_t>& bounds, const float tilesize, const float value);
 
   /**
    * Set the value at a specified point. Verifies that the point is within the
@@ -64,10 +62,10 @@ class GriddedData : public Tiles<coord_t> {
    */
   const std::vector<float>& data() const;
 
-
   using contour_t = std::list<coord_t>;
   using feature_t = std::list<contour_t>;
-  using contours_t = std::map<float, std::list<feature_t>, std::function<bool(const float, const float)> >;
+  using contours_t =
+      std::map<float, std::list<feature_t>, std::function<bool(const float, const float)>>;
   /**
    * TODO: implement two versions of this, leave this one for linestring contours
    * and make another for polygons
@@ -86,15 +84,17 @@ class GriddedData : public Tiles<coord_t> {
    *
    * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
-  contours_t GenerateContours(const std::vector<float>& contour_intervals, const bool rings_only = false,
-    const float denoise = 1.f, const float generalize = 200.f) const;
+  contours_t GenerateContours(const std::vector<float>& contour_intervals,
+                              const bool rings_only = false,
+                              const float denoise = 1.f,
+                              const float generalize = 200.f) const;
 
- protected:
-  float max_value_;             // Maximum value stored in the tile
-  std::vector<float> data_;     // Data value within each tile
+protected:
+  float max_value_;         // Maximum value stored in the tile
+  std::vector<float> data_; // Data value within each tile
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_GRIDDEDDATA_H_
+#endif // VALHALLA_MIDGARD_GRIDDEDDATA_H_

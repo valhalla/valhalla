@@ -11,7 +11,7 @@ namespace baldr {
  * Structure to store the predicted traffic information for an edge.
  */
 class PredictedTraffic {
- public:
+public:
   /**
    * Constructor with arguments.
    * @param  constrained_speed  Constrained speed
@@ -49,12 +49,12 @@ class PredictedTraffic {
    */
   void set_compressed_offset(const uint32_t compressed_offset);
 
- protected:
-  uint32_t compressed_offset_   : 24; // Offset to compressed data.
-  uint32_t constrained_speed_   : 8;  // Speed (kph)
+protected:
+  uint32_t compressed_offset_ : 24; // Offset to compressed data.
+  uint32_t constrained_speed_ : 8;  // Speed (kph)
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_PREDICTEDTRAFFIC_H_
+#endif // VALHALLA_BALDR_PREDICTEDTRAFFIC_H_

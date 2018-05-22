@@ -1,10 +1,10 @@
-#include <string.h>
 #include "baldr/graphtileheader.h"
-#include "baldr/nodeinfo.h"
+#include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
-#include "baldr/datetime.h"
+#include "baldr/nodeinfo.h"
 #include "config.h"
+#include <string.h>
 
 using namespace valhalla::baldr;
 
@@ -32,7 +32,7 @@ void GraphTileHeader::set_date_created(const uint32_t date) {
 // Set the version string.
 void GraphTileHeader::set_version(const std::string& version) {
   strncpy(version_, version.c_str(), kMaxVersionSize);
-  version_[kMaxVersionSize-1] = 0;
+  version_[kMaxVersionSize - 1] = 0;
 }
 
 // Set the data set Id (latest OSM changeset Id).
@@ -79,8 +79,7 @@ void GraphTileHeader::set_signcount(const uint32_t count) {
 void GraphTileHeader::set_departurecount(const uint32_t departures) {
   // Check against limit
   if (departures > kMaxTransitDepartures) {
-    throw std::runtime_error(
-        "Exceeding maximum number of transit departures per tile");
+    throw std::runtime_error("Exceeding maximum number of transit departures per tile");
   }
   departurecount_ = departures;
 }
@@ -89,8 +88,7 @@ void GraphTileHeader::set_departurecount(const uint32_t departures) {
 void GraphTileHeader::set_stopcount(const uint32_t stops) {
   // Check against limit
   if (stops > kMaxTransitStops) {
-    throw std::runtime_error(
-        "Exceeding maximum number of transit stops per tile");
+    throw std::runtime_error("Exceeding maximum number of transit stops per tile");
   }
   stopcount_ = stops;
 }
@@ -99,8 +97,7 @@ void GraphTileHeader::set_stopcount(const uint32_t stops) {
 void GraphTileHeader::set_routecount(const uint32_t routes) {
   // Check against limit
   if (routes > kMaxTransitRoutes) {
-    throw std::runtime_error(
-        "Exceeding maximum number of transit routes per tile");
+    throw std::runtime_error("Exceeding maximum number of transit routes per tile");
   }
   routecount_ = routes;
 }
@@ -109,8 +106,7 @@ void GraphTileHeader::set_routecount(const uint32_t routes) {
 void GraphTileHeader::set_schedulecount(const uint32_t schedules) {
   // Check against limit
   if (schedules > kMaxTransitSchedules) {
-    throw std::runtime_error(
-        "Exceeding maximum number of transit schedule entries per tile");
+    throw std::runtime_error("Exceeding maximum number of transit schedule entries per tile");
   }
   schedulecount_ = schedules;
 }
@@ -119,8 +115,7 @@ void GraphTileHeader::set_schedulecount(const uint32_t schedules) {
 void GraphTileHeader::set_transfercount(const uint32_t transfers) {
   // Check against limit
   if (transfers > kMaxTransfers) {
-    throw std::runtime_error(
-     "Exceeding maximum number of transit transfer entries per tile");
+    throw std::runtime_error("Exceeding maximum number of transit transfer entries per tile");
   }
   transfercount_ = transfers;
 }
@@ -167,8 +162,9 @@ std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t column, size_t 
 
 // Get the offsets to the given bin in the 5x5 grid.
 std::pair<uint32_t, uint32_t> GraphTileHeader::bin_offset(size_t index) const {
-  if(index < kBinCount)
+  if (index < kBinCount) {
     return std::make_pair(index == 0 ? 0 : bin_offsets_[index - 1], bin_offsets_[index]);
+  }
   throw std::runtime_error("Bin out of bounds");
 }
 
@@ -215,5 +211,5 @@ void GraphTileHeader::set_end_offset(uint32_t offset) {
   }
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

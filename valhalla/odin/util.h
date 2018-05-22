@@ -2,16 +2,16 @@
 #define VALHALLA_ODIN_UTIL_H_
 
 #include <cstdint>
-#include <vector>
+#include <locale>
 #include <string>
 #include <unordered_map>
-#include <locale>
+#include <vector>
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/odin/narrative_dictionary.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/odin/narrative_dictionary.h>
+#include <valhalla/proto/directions_options.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -24,7 +24,8 @@ namespace odin {
 std::string GetQuotedString(const std::string& item);
 
 bool IsSimilarTurnDegree(uint32_t path_turn_degree,
-                         uint32_t intersecting_turn_degree, bool is_right,
+                         uint32_t intersecting_turn_degree,
+                         bool is_right,
                          uint32_t turn_degree_threshold = 30);
 
 /**
@@ -34,8 +35,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
  * @param   locale locale
  * @return  Returns the formatted time based on the locale.
  */
-std::string get_localized_time(const std::string& date_time,
-                               const std::locale& locale);
+std::string get_localized_time(const std::string& date_time, const std::locale& locale);
 
 /**
  * Get the date from the inputed date.
@@ -44,10 +44,9 @@ std::string get_localized_time(const std::string& date_time,
  * @param   locale locale
  * @return  Returns the formatted date based on the locale.
  */
-std::string get_localized_date(const std::string& date_time,
-                               const std::locale& locale);
+std::string get_localized_date(const std::string& date_time, const std::locale& locale);
 
-using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<NarrativeDictionary> >;
+using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<NarrativeDictionary>>;
 /**
  * Returns locale strings mapped to NarrativeDictionaries containing parsed narrative information
  *
@@ -62,6 +61,6 @@ const locales_singleton_t& get_locales();
  */
 const std::unordered_map<std::string, std::string>& get_locales_json();
 
-}
-}
-#endif  // VALHALLA_ODIN_UTIL_H_
+} // namespace odin
+} // namespace valhalla
+#endif // VALHALLA_ODIN_UTIL_H_

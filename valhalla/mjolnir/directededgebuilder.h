@@ -2,9 +2,9 @@
 #define VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 
 #include <cstdint>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/mjolnir/osmway.h>
 
 using namespace valhalla::baldr;
@@ -16,7 +16,7 @@ namespace mjolnir {
  * Derived class to build a directed edge given OSM way and other properties.
  */
 class DirectedEdgeBuilder : public baldr::DirectedEdge {
- public:
+public:
   /**
    * Constructor with arguments.
    * @param  way            OSM way info generated from parsing OSM tags with Lua.
@@ -32,17 +32,22 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    *                        of this directed edge.
    * @param  bike_network   Mask of bike_networks from relations.
    */
-  DirectedEdgeBuilder(const OSMWay& way, const baldr::GraphId& endnode,
-                      const bool forward, const uint32_t length,
-                      const uint32_t speed, const uint32_t speed_limit,
+  DirectedEdgeBuilder(const OSMWay& way,
+                      const baldr::GraphId& endnode,
+                      const bool forward,
+                      const uint32_t length,
+                      const uint32_t speed,
+                      const uint32_t speed_limit,
                       const uint32_t truck_speed,
-                      const baldr::Use use, const baldr::RoadClass rc,
-                      const uint32_t localidx, const bool signal,
-                      const uint32_t restrictions, const uint32_t bike_network);
+                      const baldr::Use use,
+                      const baldr::RoadClass rc,
+                      const uint32_t localidx,
+                      const bool signal,
+                      const uint32_t restrictions,
+                      const uint32_t bike_network);
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
-
+#endif // VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_

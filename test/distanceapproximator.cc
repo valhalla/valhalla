@@ -23,7 +23,7 @@ void TryDistanceSquaredFromTestPt(const PointLL& testpt, const PointLL& p, const
   // Test if distance is within 2% of the spherical distance
   DistanceApproximator approx(testpt);
   float d = sqrtf(approx.DistanceSquared(p));
-  //std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
+  // std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
   if (fabs(d - d2) / d2 > 0.02f)
     throw runtime_error("DistanceSquared from point test failed");
 }
@@ -37,7 +37,7 @@ void TestDistanceSquaredFromTestPt() {
 void TryDistanceSquared(const PointLL& a, const PointLL& b, const float d2) {
   // Test if distance is > 2% the spherical distance
   float d = sqrtf(DistanceApproximator::DistanceSquared(a, b));
-  //std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
+  // std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
   if (fabs(d - d2) / d2 > 2.0f)
     throw runtime_error("DistanceSquared between 2 points test failed");
 }
@@ -48,7 +48,7 @@ void TestDistanceSquared() {
   TryDistanceSquaredFromTestPt(a, b, a.Distance(b));
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("distanceapproximator");

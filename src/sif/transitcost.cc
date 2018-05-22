@@ -6,8 +6,8 @@
 
 #ifdef INLINE_TEST
 #include "test/test.h"
-#include <random>
 #include <boost/property_tree/json_parser.hpp>
+#include <random>
 #endif
 
 using namespace valhalla::baldr;
@@ -19,8 +19,8 @@ namespace sif {
 namespace {
 constexpr uint32_t kUnitSize = 1;
 
-constexpr float kModeFactor             = 1.0f; // Favor this mode?
-constexpr float kDefaultTransferCost    = 15.0f;
+constexpr float kModeFactor = 1.0f; // Favor this mode?
+constexpr float kDefaultTransferCost = 15.0f;
 constexpr float kDefaultTransferPenalty = 300.0f;
 
 // User propensity to use buses. Range of values from 0 (avoid buses) to
@@ -35,7 +35,7 @@ constexpr float kDefaultUseRail = 0.6f;
 // (avoid transfers) to 1 (totally comfortable with transfers).
 constexpr float kDefaultUseTransfers = 0.3f;
 
-Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
+Cost kImpossibleCost = {10000000.0f, 10000000.0f};
 
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
@@ -52,14 +52,14 @@ constexpr ranged_default_t<float> kUseTransfersRange{0, kDefaultUseTransfers, 1.
 constexpr ranged_default_t<float> kTransferCostRange{0, kDefaultTransferCost, kMaxSeconds};
 constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenalty, kMaxSeconds};
 
-}
+} // namespace
 
 /**
  * Derived class providing dynamic edge costing for transit parts
  * of multi-modal routes.
  */
 class TransitCost : public DynamicCost {
- public:
+public:
   /**
    * Constructor. Configuration / options for pedestrian costing are provided
    * via a property tree (JSON).
@@ -221,11 +221,10 @@ class TransitCost : public DynamicCost {
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() ||
-          edge->use() >= Use::kFerry ||
-         !(edge->forwardaccess() & kPedestrianAccess))
+      if (edge->IsTransition() || edge->is_shortcut() || edge->use() >= Use::kFerry ||
+          !(edge->forwardaccess() & kPedestrianAccess)) {
         return 0.0f;
-      else {
+      } else {
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }
@@ -238,10 +237,8 @@ class TransitCost : public DynamicCost {
    * @return Function/functor to be used in filtering out nodes
    */
   virtual const NodeFilter GetNodeFilter() const {
-    //throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node){
-      return !(node->access() & kPedestrianAccess);
-    };
+    // throw back a lambda that checks the access for this type of costing
+    return [](const baldr::NodeInfo* node) { return !(node->access() & kPedestrianAccess); };
   }
 
   /**This method adds to the exclude list based on the
@@ -253,17 +250,15 @@ class TransitCost : public DynamicCost {
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile,
-                          const baldr::DirectedEdge* edge);
+  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge);
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile,
-                          const baldr::NodeInfo* node);
+  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node);
 
- public:
+public:
   // Are wheelchair or bicycle required
   bool wheelchair_;
   bool bicycle_;
@@ -286,8 +281,8 @@ class TransitCost : public DynamicCost {
   float use_transfers_;
   float transfer_factor_;
 
-  float transfer_cost_;     // Transfer cost
-  float transfer_penalty_;  // Transfer penalty
+  float transfer_cost_;    // Transfer cost
+  float transfer_penalty_; // Transfer penalty
 
   // TODO - compute transit tile level based on tile specification?
   float transit_tile_level = 3;
@@ -322,80 +317,66 @@ class TransitCost : public DynamicCost {
 TransitCost::TransitCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPublicTransit) {
 
-  mode_factor_ = kModeFactorRange(
-    pt.get<float>("mode_factor", kModeFactor)
-  );
+  mode_factor_ = kModeFactorRange(pt.get<float>("mode_factor", kModeFactor));
 
   wheelchair_ = pt.get<bool>("wheelchair", false);
   bicycle_ = pt.get<bool>("bicycle", false);
 
   // Willingness to use buses. Make sure this is within range [0, 1]
   // Otherwise it will default
-  use_bus_ = kUseBusRange(
-    pt.get<float>("use_bus", kDefaultUseBus)
-  );
+  use_bus_ = kUseBusRange(pt.get<float>("use_bus", kDefaultUseBus));
 
   // Willingness to use rail. Make sure this is within range [0, 1].
   // Otherwise it will default
-  use_rail_ = kUseRailRange(
-    pt.get<float>("use_rail", kDefaultUseRail)
-  );
+  use_rail_ = kUseRailRange(pt.get<float>("use_rail", kDefaultUseRail));
 
   // Willingness to make transfers. Make sure this is within range [0, 1].
   // Otherwise it will default
-  use_transfers_ = kUseTransfersRange(
-    pt.get<float>("use_transfers", kDefaultUseTransfers)
-  );
+  use_transfers_ = kUseTransfersRange(pt.get<float>("use_transfers", kDefaultUseTransfers));
 
   // Set the factors. The factors above 0.5 start to reduce the weight
   // for this mode while factors below 0.5 start to increase the weight for
   // this mode.
-  bus_factor_ = (use_bus_ >= 0.5f) ?
-                 1.5f - use_bus_ :
-                 5.0f - use_bus_ * 8.0f;
+  bus_factor_ = (use_bus_ >= 0.5f) ? 1.5f - use_bus_ : 5.0f - use_bus_ * 8.0f;
 
-  rail_factor_ = (use_rail_ >= 0.5f) ?
-                 1.5f - use_rail_ :
-                 5.0f - use_rail_ * 8.0f;
+  rail_factor_ = (use_rail_ >= 0.5f) ? 1.5f - use_rail_ : 5.0f - use_rail_ * 8.0f;
 
-  transfer_factor_ = (use_transfers_ >= 0.5f) ?
-                     1.5f - use_transfers_ :
-                     5.0f - use_transfers_ * 8.0f;
+  transfer_factor_ = (use_transfers_ >= 0.5f) ? 1.5f - use_transfers_ : 5.0f - use_transfers_ * 8.0f;
 
-  transfer_cost_ = kTransferCostRange(
-    pt.get<float>("transfer_cost", kDefaultTransferCost)
-  );
-  transfer_penalty_ = kTransferPenaltyRange(
-    pt.get<float>("transfer_penalty", kDefaultTransferPenalty)
-  );
+  transfer_cost_ = kTransferCostRange(pt.get<float>("transfer_cost", kDefaultTransferCost));
+  transfer_penalty_ =
+      kTransferPenaltyRange(pt.get<float>("transfer_penalty", kDefaultTransferPenalty));
 
   std::string stop_action = pt.get("filters.stops.action", "");
   if (stop_action.size()) {
     for (const auto& kv : pt.get_child("filters.stops.ids")) {
-      if (stop_action == "exclude")
+      if (stop_action == "exclude") {
         stop_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (stop_action == "include")
+      } else if (stop_action == "include") {
         stop_include_onestops_.emplace(kv.second.get_value<std::string>());
+      }
     }
   }
 
   std::string operator_action = pt.get("filters.operators.action", "");
   if (operator_action.size()) {
     for (const auto& kv : pt.get_child("filters.operators.ids")) {
-      if (operator_action == "exclude")
+      if (operator_action == "exclude") {
         oper_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (operator_action == "include")
+      } else if (operator_action == "include") {
         oper_include_onestops_.emplace(kv.second.get_value<std::string>());
+      }
     }
   }
 
   std::string routes_action = pt.get("filters.routes.action", "");
   if (routes_action.size()) {
     for (const auto& kv : pt.get_child("filters.routes.ids")) {
-      if (routes_action == "exclude")
+      if (routes_action == "exclude") {
         route_exclude_onestops_.emplace(kv.second.get_value<std::string>());
-      else if (routes_action == "include")
+      } else if (routes_action == "include") {
         route_include_onestops_.emplace(kv.second.get_value<std::string>());
+      }
     }
   }
 
@@ -436,78 +417,83 @@ float TransitCost::GetModeFactor() {
 // The exclude_onestops and include_onestops lists are set by the user.
 void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 
-  //do we have stop work to do?
+  // do we have stop work to do?
   if (stop_exclude_onestops_.size() || stop_include_onestops_.size()) {
-    const std::unordered_map<std::string, GraphId> stop_onestops =
-        tile->GetStopOneStops();
+    const std::unordered_map<std::string, GraphId>& stop_onestops = tile->GetStopOneStops();
 
-    //avoid these operators
+    // avoid these operators
     if (stop_onestops.size()) {
-      for (const auto& e : stop_exclude_onestops_ ) {
+      for (const auto& e : stop_exclude_onestops_) {
         const auto& one_stop = stop_onestops.find(e);
-        if (one_stop != stop_onestops.end())
+        if (one_stop != stop_onestops.end()) {
           exclude_stops_.emplace(one_stop->second);
+        }
       }
 
-      //exclude all operators but the ones the users wants to use
+      // exclude all operators but the ones the users wants to use
       if (stop_include_onestops_.size()) {
-        for(auto const& onestop: stop_onestops) {
-          if (stop_include_onestops_.find(onestop.first) == stop_include_onestops_.end())
+        for (auto const& onestop : stop_onestops) {
+          if (stop_include_onestops_.find(onestop.first) == stop_include_onestops_.end()) {
             exclude_stops_.emplace(onestop.second);
-        }
-      }
-    }
-  }
-
-  //do we have operator work to do?
-  if (oper_exclude_onestops_.size() || oper_include_onestops_.size()) {
-    const std::unordered_map<std::string, std::list<GraphId>> oper_onestops =
-        tile->GetOperatorOneStops();
-
-    //avoid these operators
-    if (oper_onestops.size()) {
-      for (const auto& e : oper_exclude_onestops_ ) {
-        const auto& one_stop = oper_onestops.find(e);
-        if (one_stop != oper_onestops.end()) {
-          for (const auto& tls : one_stop->second)
-            exclude_routes_.emplace(tls);
-        }
-      }
-
-      //exclude all operators but the ones the users wants to use
-      if (oper_include_onestops_.size()) {
-        for(auto const& onestop: oper_onestops) {
-          if (oper_include_onestops_.find(onestop.first) == oper_include_onestops_.end()) {
-            for (const auto& tls : onestop.second)
-              exclude_routes_.emplace(tls);
           }
         }
       }
     }
   }
 
-  //do we have route work to do?
-  if (route_exclude_onestops_.size() || route_include_onestops_.size()) {
+  // do we have operator work to do?
+  if (oper_exclude_onestops_.size() || oper_include_onestops_.size()) {
+    const std::unordered_map<std::string, std::list<GraphId>>& oper_onestops =
+        tile->GetOperatorOneStops();
 
-    const std::unordered_map<std::string, std::list<GraphId>> route_onestops =
-        tile->GetRouteOneStops();
-
-    //avoid these routes
-    if (route_onestops.size()) {
-      for (const auto& e : route_exclude_onestops_ ) {
-        const auto& one_stop = route_onestops.find(e);
-        if (one_stop != route_onestops.end()) {
-          for (const auto& tls : one_stop->second)
+    // avoid these operators
+    if (oper_onestops.size()) {
+      for (const auto& e : oper_exclude_onestops_) {
+        const auto& one_stop = oper_onestops.find(e);
+        if (one_stop != oper_onestops.end()) {
+          for (const auto& tls : one_stop->second) {
             exclude_routes_.emplace(tls);
+          }
         }
       }
 
-      //exclude all routes but the ones the users wants to use
-      if (route_include_onestops_.size()) {
-        for(auto const& onestop: route_onestops) {
-          if (route_include_onestops_.find(onestop.first) == route_include_onestops_.end()) {
-            for (const auto& tls : onestop.second)
+      // exclude all operators but the ones the users wants to use
+      if (oper_include_onestops_.size()) {
+        for (auto const& onestop : oper_onestops) {
+          if (oper_include_onestops_.find(onestop.first) == oper_include_onestops_.end()) {
+            for (const auto& tls : onestop.second) {
               exclude_routes_.emplace(tls);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // do we have route work to do?
+  if (route_exclude_onestops_.size() || route_include_onestops_.size()) {
+
+    const std::unordered_map<std::string, std::list<GraphId>>& route_onestops =
+        tile->GetRouteOneStops();
+
+    // avoid these routes
+    if (route_onestops.size()) {
+      for (const auto& e : route_exclude_onestops_) {
+        const auto& one_stop = route_onestops.find(e);
+        if (one_stop != route_onestops.end()) {
+          for (const auto& tls : one_stop->second) {
+            exclude_routes_.emplace(tls);
+          }
+        }
+      }
+
+      // exclude all routes but the ones the users wants to use
+      if (route_include_onestops_.size()) {
+        for (auto const& onestop : route_onestops) {
+          if (route_include_onestops_.find(onestop.first) == route_include_onestops_.end()) {
+            for (const auto& tls : onestop.second) {
+              exclude_routes_.emplace(tls);
+            }
           }
         }
       }
@@ -517,18 +503,16 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 
 // This method acts like an allowed function; however, it uses the exclude list to
 // determine if we should not route on a line.
-bool TransitCost::IsExcluded(const baldr::GraphTile*& tile,
-                             const baldr::DirectedEdge* edge) {
-  return (exclude_routes_.find(GraphId(tile->id().tileid(), transit_tile_level,
-          edge->lineid())) != exclude_routes_.end());
+bool TransitCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) {
+  return (exclude_routes_.find(GraphId(tile->id().tileid(), transit_tile_level, edge->lineid())) !=
+          exclude_routes_.end());
 }
 
 // This method acts like an allowed function; however, it uses the exclude list to
 // determine if we should not route through this node.
-bool TransitCost::IsExcluded(const baldr::GraphTile*& tile,
-                             const baldr::NodeInfo* node) {
-  return (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level,
-          node->stop_index())) != exclude_stops_.end());
+bool TransitCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) {
+  return (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level, node->stop_index())) !=
+          exclude_stops_.end());
 }
 
 // Get the access mode used by this costing method.
@@ -549,8 +533,10 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
     // may be in another tile, skip if it is as will will check it later.
     if (edge->endnode().tileid() == tile->id().tileid()) {
       if (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level,
-                tile->node(edge->endnode())->stop_index())) != exclude_stops_.end())
+                                      tile->node(edge->endnode())->stop_index())) !=
+          exclude_stops_.end()) {
         return false;
+      }
     }
   }
 
@@ -565,12 +551,12 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
 // Checks if access is allowed for an edge on the reverse path (from
 // destination towards origin). Both opposing edges are provided.
 bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
-               const EdgeLabel& pred,
-               const baldr::DirectedEdge* opp_edge,
-               const baldr::GraphTile*& tile,
-               const baldr::GraphId& opp_edgeid,
-               const uint64_t current_time,
-               const uint32_t tz_index) const {
+                                 const EdgeLabel& pred,
+                                 const baldr::DirectedEdge* opp_edge,
+                                 const baldr::GraphTile*& tile,
+                                 const baldr::GraphId& opp_edgeid,
+                                 const uint64_t current_time,
+                                 const uint32_t tz_index) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;
@@ -585,7 +571,7 @@ bool TransitCost::Allowed(const baldr::NodeInfo* node) const {
 // (in seconds) to traverse the edge.
 Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   LOG_ERROR("Wrong transit edge cost called");
-  return { 0.0f, 0.0f };
+  return {0.0f, 0.0f};
 }
 
 // Get the cost to traverse the specified directed edge using a transit
@@ -605,8 +591,7 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->use() == Use::kRail) {
     weight *= rail_factor_;
   }
-  return { wait_time + (departure->elapsed_time() * weight),
-           wait_time + departure->elapsed_time() };
+  return {wait_time + (departure->elapsed_time() * weight), wait_time + departure->elapsed_time()};
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -617,24 +602,23 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?
     if (edge->use() == Use::kBus) {
-      return { (0.5f + bus_factor_), 0.0f };
+      return {(0.5f + bus_factor_), 0.0f};
     } else if (edge->use() == Use::kRail) {
-      return { (0.5f + rail_factor_), 0.0f };
+      return {(0.5f + rail_factor_), 0.0f};
     }
   }
-  return { 0.0f, 0.0f };
+  return {0.0f, 0.0f};
 }
 
 // Returns the transfer cost between 2 transit stops.
 Cost TransitCost::TransferCost() const {
   // Defaults...15 seconds for in station transfer and 1 minute otherwise
-  return { (transfer_cost_ +  transfer_penalty_) * transfer_factor_,
-            transfer_cost_ * 4.0f};
+  return {(transfer_cost_ + transfer_penalty_) * transfer_factor_, transfer_cost_ * 4.0f};
 }
 
 // Returns the default transfer cost between 2 transit lines.
 Cost TransitCost::DefaultTransferCost() const {
-  return { transfer_cost_ +  transfer_penalty_ , transfer_cost_ };
+  return {transfer_cost_ + transfer_penalty_, transfer_cost_};
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied
@@ -656,8 +640,8 @@ cost_ptr_t CreateTransitCost(const boost::property_tree::ptree& config) {
   return std::make_shared<TransitCost>(config);
 }
 
-}
-}
+} // namespace sif
+} // namespace valhalla
 
 /**********************************************************************************************/
 
@@ -676,7 +660,8 @@ TransitCost* make_transitcost_from_json(const std::string& property, float testV
   return new TransitCost(costing_ptree);
 }
 
-std::uniform_real_distribution<float>* make_distributor_from_range (const ranged_default_t<float>& range) {
+std::uniform_real_distribution<float>*
+make_distributor_from_range(const ranged_default_t<float>& range) {
   float rangeLength = range.max - range.min;
   return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
@@ -694,7 +679,7 @@ void testTransitCostParams() {
     ctorTester.reset(make_transitcost_from_json("mode_factor", (*distributor)(generator)));
     if (ctorTester->mode_factor_ < kModeFactorRange.min ||
         ctorTester->mode_factor_ > kModeFactorRange.max) {
-      throw std::runtime_error ("mode_factor_ is not within it's range");
+      throw std::runtime_error("mode_factor_ is not within it's range");
     }
   }
 
@@ -702,9 +687,8 @@ void testTransitCostParams() {
   distributor.reset(make_distributor_from_range(kUseBusRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_bus", (*distributor)(generator)));
-    if (ctorTester->use_bus_ < kUseBusRange.min ||
-        ctorTester->use_bus_ > kUseBusRange.max) {
-      throw std::runtime_error ("use_bus_ is not within it's range");
+    if (ctorTester->use_bus_ < kUseBusRange.min || ctorTester->use_bus_ > kUseBusRange.max) {
+      throw std::runtime_error("use_bus_ is not within it's range");
     }
   }
 
@@ -712,9 +696,8 @@ void testTransitCostParams() {
   distributor.reset(make_distributor_from_range(kUseRailRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_rail", (*distributor)(generator)));
-    if (ctorTester->use_rail_ < kUseRailRange.min ||
-        ctorTester->use_rail_ > kUseRailRange.max) {
-      throw std::runtime_error ("use_rail_ is not within it's range");
+    if (ctorTester->use_rail_ < kUseRailRange.min || ctorTester->use_rail_ > kUseRailRange.max) {
+      throw std::runtime_error("use_rail_ is not within it's range");
     }
   }
 
@@ -724,7 +707,7 @@ void testTransitCostParams() {
     ctorTester.reset(make_transitcost_from_json("use_transfers", (*distributor)(generator)));
     if (ctorTester->use_transfers_ < kUseTransfersRange.min ||
         ctorTester->use_transfers_ > kUseTransfersRange.max) {
-      throw std::runtime_error ("use_transfers_ is not within it's range");
+      throw std::runtime_error("use_transfers_ is not within it's range");
     }
   }
 
@@ -734,7 +717,7 @@ void testTransitCostParams() {
     ctorTester.reset(make_transitcost_from_json("transfer_cost", (*distributor)(generator)));
     if (ctorTester->transfer_cost_ < kTransferCostRange.min ||
         ctorTester->transfer_cost_ > kTransferCostRange.max) {
-      throw std::runtime_error ("transfer_cost_ is not within it's range");
+      throw std::runtime_error("transfer_cost_ is not within it's range");
     }
   }
 
@@ -744,11 +727,11 @@ void testTransitCostParams() {
     ctorTester.reset(make_transitcost_from_json("transfer_penalty", (*distributor)(generator)));
     if (ctorTester->transfer_penalty_ < kTransferPenaltyRange.min ||
         ctorTester->transfer_penalty_ > kTransferPenaltyRange.max) {
-      throw std::runtime_error ("transfer_penalty_ is not within it's range");
+      throw std::runtime_error("transfer_penalty_ is not within it's range");
     }
   }
 }
-}
+} // namespace
 
 int main() {
   test::suite suite("costing");
@@ -759,4 +742,3 @@ int main() {
 }
 
 #endif
-

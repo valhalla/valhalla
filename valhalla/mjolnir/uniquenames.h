@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_UNIQUENAMES_H
 #define VALHALLA_MJOLNIR_UNIQUENAMES_H
 
+#include <algorithm>
 #include <cstdint>
 #include <string>
-#include <vector>
-#include <algorithm>
 #include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {
@@ -16,7 +16,7 @@ using NamesMap = std::unordered_map<std::string, uint32_t>;
  * Class to hold a list of unique names and indexes to them.
  */
 class UniqueNames {
- public:
+public:
   /**
    * Constructor.
    */
@@ -53,7 +53,7 @@ class UniqueNames {
    */
   void Log() const;
 
- protected:
+protected:
   // Map of names to indexes
   NamesMap names_;
 
@@ -62,7 +62,7 @@ class UniqueNames {
   std::vector<nameiter> indexes_;
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_UNIQUENAMES_H
+#endif // VALHALLA_MJOLNIR_UNIQUENAMES_H

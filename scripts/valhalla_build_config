@@ -14,6 +14,7 @@ config = {
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
+    'transit_bounding_box': None,
     'hierarchy': True,
     'shortcuts': True,
     'include_driveways': True,
@@ -156,6 +157,12 @@ config = {
       'max_matrix_distance': 200000.0,
       'max_matrix_locations': 50
     },
+    'motorcycle': {
+      'max_distance': 500000.0,
+      'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+      'max_matrix_locations': 50
+    },
     'bicycle': {
       'max_distance': 500000.0,
       'max_locations': 50,
@@ -213,6 +220,7 @@ help_text = {
     'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
     'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
     'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
+    'transit_bounding_box': 'Add comma separated bounding box values to only download transit data inside the given bounding box',
     'hierarchy': 'bool indicating whether road hierarchy is to be built - default to True',
     'shortcuts': 'bool indicating whether shortcuts are to be built - default to True',
     'include_driveways': 'bool indicating whether driveways are included - default to True',
@@ -350,6 +358,12 @@ help_text = {
       'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
     'motor_scooter': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
+    },
+    'motorcycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',

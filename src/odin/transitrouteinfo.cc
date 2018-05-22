@@ -49,5 +49,5 @@ std::string TransitRouteInfo::ToParameterString() const {
   return str;
 }
 
-}
-}
+} // namespace odin
+} // namespace valhalla

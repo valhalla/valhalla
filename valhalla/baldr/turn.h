@@ -11,7 +11,7 @@ namespace baldr {
  * Defines the turn type based on turn degrees.
  */
 class Turn {
- public:
+public:
   enum class Type : uint8_t {
     kStraight = 0,
     kSlightRight = 1,
@@ -35,10 +35,9 @@ class Turn {
    * @return the turn type based on the specified turn degree.
    */
   static Turn::Type GetType(uint32_t turn_degree);
-
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_TURN_H_
+#endif // VALHALLA_BALDR_TURN_H_

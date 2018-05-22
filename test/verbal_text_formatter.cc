@@ -1,6 +1,6 @@
-#include "test.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -9,24 +9,22 @@ namespace {
 
 // Sub class to test protected methods
 class VerbalTextFormatterTest : public VerbalTextFormatter {
- public:
-  VerbalTextFormatterTest(const std::string& country_code,
-                          const std::string& state_code)
+public:
+  VerbalTextFormatterTest(const std::string& country_code, const std::string& state_code)
       : VerbalTextFormatter(country_code, state_code) {
   }
 
   std::string FormNumberSplitTts(const std::string& source) const {
     return VerbalTextFormatter::FormNumberSplitTts(source);
   }
-
 };
 
 void TryFormNumberSplitTtsString(string source, string expected) {
   VerbalTextFormatterTest formatter_test("US", "PA");
   string tts = formatter_test.FormNumberSplitTts(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormNumberSplitTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect FormNumberSplitTts - EXPECTED: " + expected +
+                             "  |  FORMED: " + tts);
   }
 }
 
@@ -63,8 +61,7 @@ void TryFormat(string source, string expected) {
   VerbalTextFormatterTest formatter_test("US", "PA");
   string tts = formatter_test.Format(source);
   if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
+    throw std::runtime_error("Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 
@@ -82,7 +79,7 @@ void TestFormat() {
   TryFormat("US 422 Business Alternate", "US 4 22 Business Alternate");
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("verbal_text_formatter");

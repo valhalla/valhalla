@@ -158,6 +158,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/nodeinfo.h \
 	valhalla/baldr/location.h \
 	valhalla/baldr/pathlocation.h \
+        valhalla/baldr/predicted_traffic.h \
 	valhalla/baldr/rapidjson_utils.h \
 	valhalla/baldr/sign.h \
 	valhalla/baldr/signinfo.h \
@@ -189,6 +190,7 @@ nobase_include_HEADERS = \
 	valhalla/sif/autocost.h \
 	valhalla/sif/bicyclecost.h \
 	valhalla/sif/motorscootercost.h \
+	valhalla/sif/motorcyclecost.h \
 	valhalla/sif/pedestriancost.h \
 	valhalla/sif/transitcost.h \
 	valhalla/sif/truckcost.h \
@@ -287,6 +289,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
 	src/baldr/pathlocation.cc \
+        src/baldr/predicted_traffic.cc \
 	src/baldr/tilehierarchy.cc \
 	src/baldr/turn.cc \
 	src/baldr/streetname.cc \
@@ -309,6 +312,7 @@ libvalhalla_la_SOURCES = \
 	src/sif/autocost.cc \
 	src/sif/bicyclecost.cc \
 	src/sif/motorscootercost.cc \
+	src/sif/motorcyclecost.cc \
 	src/sif/pedestriancost.cc \
 	src/sif/transitcost.cc \
 	src/sif/truckcost.cc \
@@ -546,7 +550,8 @@ bin_PROGRAMS += \
 	valhalla_ways_to_edges \
 	valhalla_build_speeds \
 	valhalla_build_statistics \
-	valhalla_associate_segments
+	valhalla_associate_segments \
+	valhalla_add_predicted_traffic
 valhalla_benchmark_admins_SOURCES = src/mjolnir/valhalla_benchmark_admins.cc
 valhalla_benchmark_admins_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_benchmark_admins_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite $(BOOST_LIBS) libvalhalla.la
@@ -580,6 +585,9 @@ valhalla_build_speeds_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ 
 valhalla_build_statistics_SOURCES = src/mjolnir/valhalla_build_statistics.cc src/mjolnir/statistics.cc src/mjolnir/statistics_database.cc src/mjolnir/statistics.h
 valhalla_build_statistics_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_build_statistics_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ @PROTOC_LIBS@ -lz $(BOOST_LIBS) libvalhalla.la
+valhalla_add_predicted_traffic_SOURCES = src/mjolnir/valhalla_add_predicted_traffic.cc
+valhalla_add_predicted_traffic_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+valhalla_add_predicted_traffic_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 valhalla_associate_segments_SOURCES = src/valhalla_associate_segments.cc src/proto/segment.pb.cc src/proto/tile.pb.cc
 valhalla_associate_segments_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 valhalla_associate_segments_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
@@ -658,6 +666,7 @@ check_PROGRAMS = \
 	test/traffic_matcher \
 	test/autocost \
 	test/motorscootercost \
+	test/motorcyclecost \
 	test/bicyclecost \
 	test/pedestriancost \
 	test/transitcost \
@@ -855,6 +864,9 @@ test_autocost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_
 test_motorscootercost_SOURCES = src/sif/motorscootercost.cc test/test.cc
 test_motorscootercost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_motorscootercost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_motorcyclecost_SOURCES = src/sif/motorcyclecost.cc test/test.cc
+test_motorcyclecost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
+test_motorcyclecost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_bicyclecost_SOURCES = src/sif/bicyclecost.cc test/test.cc
 test_bicyclecost_CPPFLAGS = -DINLINE_TEST $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@
 test_bicyclecost_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

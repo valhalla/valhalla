@@ -1,9 +1,9 @@
-#include <iostream> // TODO remove if not needed
-#include <map>
-#include <algorithm>
 #include "thor/trafficalgorithm.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+#include <algorithm>
+#include <iostream> // TODO remove if not needed
+#include <map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -15,8 +15,7 @@ namespace valhalla {
 namespace thor {
 
 // Default constructor
-TrafficAlgorithm::TrafficAlgorithm()
-    : AStarPathAlgorithm() {
+TrafficAlgorithm::TrafficAlgorithm() : AStarPathAlgorithm() {
 }
 
 // Destructor
@@ -26,9 +25,10 @@ TrafficAlgorithm::~TrafficAlgorithm() {
 
 // Calculate best path. This method is single mode, not time-dependent.
 std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
-             odin::Location& destination, GraphReader& graphreader,
-             const std::shared_ptr<DynamicCost>* mode_costing,
-             const TravelMode mode) {
+                                                    odin::Location& destination,
+                                                    GraphReader& graphreader,
+                                                    const std::shared_ptr<DynamicCost>* mode_costing,
+                                                    const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -45,17 +45,16 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
   SetOrigin(graphreader, origin, destination);
 
   // Find shortest path
-  uint32_t nc = 0;       // Count of iterations with no convergence
-                         // towards destination
+  uint32_t nc = 0; // Count of iterations with no convergence
+                   // towards destination
   const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
-      LOG_ERROR("Route failed after iterations = " +
-                     std::to_string(edgelabels_.size()));
-      return { };
+      LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
+      return {};
     }
 
     // Copy the EdgeLabel for use in costing. Check if this is a destination
@@ -86,8 +85,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
       mindist = dist2dest;
       nc = 0;
     } else if (nc++ > 500000) {
-      LOG_ERROR("No convergence to destination after = " +
-                           std::to_string(edgelabels_.size()));
+      LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
       return {};
     }
 
@@ -111,8 +109,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count();
-                i++, directededge++, ++edgeid, ++es) {
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
       // Disable upward transitions for traffic...for now only support traffic
       // for short routes since no shortcuts have traffic yet
       if (directededge->trans_up()) {
@@ -123,7 +120,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
       // this directed edge) or if no access is allowed to this edge (based
       // on costing method)
       if (es->set() == EdgeSet::kPermanent ||
-         !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
+          !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0)) {
         continue;
       }
 
@@ -134,9 +131,9 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
         edge_cost = costing_->EdgeCost(directededge);
       } else {
         // Traffic exists for this edge
-        float sec = directededge->length() * (kSecPerHour * 0.001f) /
-                static_cast<float>(speeds[edgeid.id()]);
-        edge_cost = { sec, sec };
+        float sec =
+            directededge->length() * (kSecPerHour * 0.001f) / static_cast<float>(speeds[edgeid.id()]);
+        edge_cost = {sec, sec};
 
         // For now reduce transition cost by half...thought is that traffic
         // will account for some of the transition cost
@@ -159,7 +156,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
       // by the difference in real cost (A* heuristic doesn't change)
       if (es->set() == EdgeSet::kTemporary) {
         EdgeLabel& lab = edgelabels_[es->index()];
-        if (newcost.cost <  lab.cost().cost) {
+        if (newcost.cost < lab.cost().cost) {
           float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
           adjacencylist_->decrease(es->index(), newsortcost);
           lab.Update(predindex, newcost, newsortcost);
@@ -173,28 +170,26 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
       float dist = 0.0f;
       float sortcost = newcost.cost;
       if (p == destinations_.end()) {
-        const GraphTile* t2 = directededge->leaves_tile() ?
-            graphreader.GetGraphTile(directededge->endnode()) : tile;
+        const GraphTile* t2 =
+            directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
         if (t2 == nullptr) {
           continue;
         }
-        sortcost += astarheuristic_.Get(
-                    t2->node(directededge->endnode())->latlng(), dist);
+        sortcost += astarheuristic_.Get(t2->node(directededge->endnode())->latlng(), dist);
       }
 
       // Add to the adjacency list and edge labels.
       uint32_t idx = edgelabels_.size();
-      edgelabels_.emplace_back(predindex, edgeid, directededge,
-                          newcost, sortcost, dist, mode_, 0);
-      *es = { EdgeSet::kTemporary, idx };
+      edgelabels_.emplace_back(predindex, edgeid, directededge, newcost, sortcost, dist, mode_, 0);
+      *es = {EdgeSet::kTemporary, idx};
       adjacencylist_->add(idx);
     }
   }
-  return {};      // Should never get here
+  return {}; // Should never get here
 }
 
 std::vector<uint8_t>& TrafficAlgorithm::GetRealTimeSpeeds(const uint32_t tileid,
-                               GraphReader& graphreader) {
+                                                          GraphReader& graphreader) {
   // Check if this tile has real-time speeds
   auto rts = real_time_speeds_.find(tileid);
   if (rts == real_time_speeds_.end()) {
@@ -220,6 +215,5 @@ std::vector<uint8_t>& TrafficAlgorithm::GetRealTimeSpeeds(const uint32_t tileid,
   }
 }
 
-
-}
-}
+} // namespace thor
+} // namespace valhalla

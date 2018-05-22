@@ -7,12 +7,9 @@ namespace valhalla {
 
 namespace meili {
 
-
-class UniversalCost : public sif::DynamicCost
-{
- public:
-  UniversalCost(const boost::property_tree::ptree& pt)
-      : DynamicCost(pt, kUniversalTravelMode) {
+class UniversalCost : public sif::DynamicCost {
+public:
+  UniversalCost(const boost::property_tree::ptree& pt) : DynamicCost(pt, kUniversalTravelMode) {
   }
 
   bool Allowed(const baldr::DirectedEdge* edge,
@@ -48,7 +45,7 @@ class UniversalCost : public sif::DynamicCost
 
   sif::Cost EdgeCost(const baldr::DirectedEdge* edge) const override {
     float length = edge->length();
-    return { length, length };
+    return {length, length};
   }
 
   // Disable astar
@@ -57,8 +54,8 @@ class UniversalCost : public sif::DynamicCost
   }
 
   virtual const sif::EdgeFilter GetEdgeFilter() const override {
-    //throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge){
+    // throw back a lambda that checks the access for this type of costing
+    return [](const baldr::DirectedEdge* edge) {
       // Disable transit lines
       if (edge->IsTransitLine()) {
         return 0.f;
@@ -68,19 +65,18 @@ class UniversalCost : public sif::DynamicCost
   }
 
   virtual const sif::NodeFilter GetNodeFilter() const override {
-    //throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node){
+    // throw back a lambda that checks the access for this type of costing
+    return [](const baldr::NodeInfo* node) {
       // Do not filter any nodes
       return false;
     };
   }
 };
 
-
 sif::cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config) {
   return std::make_shared<UniversalCost>(config);
 }
 
-}
+} // namespace meili
 
-}
+} // namespace valhalla

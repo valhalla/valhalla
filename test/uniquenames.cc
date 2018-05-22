@@ -1,5 +1,5 @@
-#include <cstdint>
 #include "test.h"
+#include <cstdint>
 
 #include "mjolnir/uniquenames.h"
 
@@ -20,7 +20,7 @@ void TestSize() {
   names.index("MD-32");
   names.index("First Avenue");
   if (names.Size() != 5)
-      throw runtime_error("UniqueNames Size test failed");
+    throw runtime_error("UniqueNames Size test failed");
 }
 
 void TestAddAndIndex() {
@@ -41,15 +41,15 @@ void TestAddAndIndex() {
   if (names.name(index1) != "I-95")
     throw runtime_error("UniqueNames: name given an index failed");
   if (names.name(index2) != "I-95 S")
-      throw runtime_error("UniqueNames: name given an index failed");
+    throw runtime_error("UniqueNames: name given an index failed");
   if (names.name(index3) != "I-95 N")
-      throw runtime_error("UniqueNames: name given an index failed");
+    throw runtime_error("UniqueNames: name given an index failed");
   if (names.name(index4) != "Interstate 95")
-      throw runtime_error("UniqueNames: name given an index failed");
+    throw runtime_error("UniqueNames: name given an index failed");
   if (names.name(index5) != "I-95")
-      throw runtime_error("UniqueNames: name given an index failed");
+    throw runtime_error("UniqueNames: name given an index failed");
   if (names.name(index6) != "I-95 N")
-      throw runtime_error("UniqueNames: name given an index failed");
+    throw runtime_error("UniqueNames: name given an index failed");
 }
 
 int main() {

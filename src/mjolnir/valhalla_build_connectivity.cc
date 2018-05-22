@@ -11,12 +11,12 @@
 
 using namespace valhalla::baldr;
 
-#include <ostream>
-#include <boost/program_options.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <ostream>
 
 namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
@@ -30,39 +30,39 @@ struct PPMObject {
   char* m_image;
 };
 
-bool ParseArguments(int argc, char *argv[]) {
+bool ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
-    "connectivitymap " VERSION "\n"
-    "\n"
-    " Usage: connectivitymap [options]\n"
-    "\n"
-    "connectivitymap is a program that creates a PPM image file representing "
-    "the connectivity between tiles."
-    "\n"
-    "\n");
+      "connectivitymap " VERSION "\n"
+      "\n"
+      " Usage: connectivitymap [options]\n"
+      "\n"
+      "connectivitymap is a program that creates a PPM image file representing "
+      "the connectivity between tiles."
+      "\n"
+      "\n");
 
-  options.add_options()
-      ("help,h", "Print this help message.")
-      ("version,v", "Print the version of this software.")
-      ("config,c",
-        boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
-        "Path to the json configuration file.")
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
+      "config,c",
+      boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+      "Path to the json configuration file.")
       // positional arguments
-      ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
+      ("input_files",
+       boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
 
   bpo::positional_options_description pos_options;
   pos_options.add("input_files", 16);
 
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+               vm);
     bpo::notify(vm);
 
-  } catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what()
-      << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-      << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return false;
   }
 
@@ -77,10 +77,11 @@ bool ParseArguments(int argc, char *argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path))
+    if (boost::filesystem::is_regular_file(config_file_path)) {
       return true;
-    else
+    } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+    }
   }
 
   return false;
@@ -91,15 +92,12 @@ struct RGB {
   uint8_t green;
   uint8_t blue;
 
-  RGB() : red(0), green(0), blue(0) {}
+  RGB() : red(0), green(0), blue(0) {
+  }
 
-  RGB(uint8_t r, uint8_t g, uint8_t b)
-    : red(r),
-      green(g),
-      blue(b) {
+  RGB(uint8_t r, uint8_t g, uint8_t b) : red(r), green(g), blue(b) {
   }
 };
-
 
 // NOTE: a PPM image can be converted to png and flipped
 // using ImageMagick: e.g.,
@@ -108,8 +106,9 @@ struct RGB {
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
   // Parse command line arguments
-  if (!ParseArguments(argc, argv))
+  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
+  }
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
@@ -144,11 +143,11 @@ int main(int argc, char** argv) {
     uint32_t width, height;
     if (level == transit_level) {
       auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
-      width  = tiles.ncolumns();
+      width = tiles.ncolumns();
       height = tiles.nrows();
     } else {
       auto tiles = TileHierarchy::levels().find(level)->second.tiles;
-      width  = tiles.ncolumns();
+      width = tiles.ncolumns();
       height = tiles.nrows();
     }
 
@@ -170,16 +169,15 @@ int main(int argc, char** argv) {
         ppm.push_back(color->second);
       }
     }
-    assert(ppm.size() == height*width) ;
+    assert(ppm.size() == height * width);
 
     std::string tmp;
     outfile << "P6" << std::endl; //  << “# foreground “ << std::endl;
     outfile << std::to_string(width) << " " << std::to_string(height) << std::endl;
     outfile << std::to_string(255) << std::endl;
-    outfile.write(reinterpret_cast<char*>(ppm.data()), height*width*3);
+    outfile.write(reinterpret_cast<char*>(ppm.data()), height * width * 3);
     outfile.close();
   }
 
   return EXIT_SUCCESS;
 }
-

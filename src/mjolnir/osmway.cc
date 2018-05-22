@@ -1,15 +1,14 @@
 #include "mjolnir/osmway.h"
 #include "mjolnir/util.h"
 
-#include <iostream>
 #include "midgard/logging.h"
+#include <iostream>
 
 using namespace valhalla::baldr;
 
 namespace {
 
 constexpr uint32_t kMaxNodesPerWay = 65535;
-
 }
 
 namespace valhalla {
@@ -260,12 +259,12 @@ uint32_t OSMWay::bike_local_ref_index() const {
   return bike_local_ref_index_;
 }
 
-//Sets the duration for ferries.
+// Sets the duration for ferries.
 void OSMWay::set_duration(const uint32_t duration) {
   duration_ = duration;
 }
 
-//Gets the duration for ferries.
+// Gets the duration for ferries.
 uint32_t OSMWay::duration() const {
   return duration_;
 }
@@ -322,12 +321,12 @@ bool OSMWay::truck_forward() const {
 
 // Set bike forward flag.
 void OSMWay::set_bike_forward(const bool bike_forward) {
-  access_.fields.bike_forward = bike_forward;
+  bike_info_.fields.bike_forward = bike_forward;
 }
 
 // Get the bike forward flag.
 bool OSMWay::bike_forward() const {
-  return access_.fields.bike_forward;
+  return bike_info_.fields.bike_forward;
 }
 
 // Set emergency forward flag.
@@ -348,6 +347,16 @@ void OSMWay::set_moped_forward(const bool moped_forward) {
 // Get the moped forward flag
 bool OSMWay::moped_forward() const {
   return access_.fields.moped_forward;
+}
+
+// Set the motorcycle forward flag
+void OSMWay::set_motorcycle_forward(const bool motorcycle_forward) {
+  access_.fields.motorcycle_forward = motorcycle_forward;
+}
+
+// Get the motorcycle forward flag
+bool OSMWay::motorcycle_forward() const {
+  return access_.fields.motorcycle_forward;
 }
 
 // Set auto backward flag.
@@ -402,12 +411,12 @@ bool OSMWay::truck_backward() const {
 
 // Set bike backward flag.
 void OSMWay::set_bike_backward(const bool bike_backward) {
-  access_.fields.bike_backward = bike_backward;
+  bike_info_.fields.bike_backward = bike_backward;
 }
 
 // Get the bike backward flag.
 bool OSMWay::bike_backward() const {
-  return access_.fields.bike_backward;
+  return bike_info_.fields.bike_backward;
 }
 
 // Set emergency backward flag.
@@ -428,6 +437,16 @@ void OSMWay::set_moped_backward(const bool moped_backward) {
 // Get the moped backward flag
 bool OSMWay::moped_backward() const {
   return access_.fields.moped_backward;
+}
+
+// Set the motorcycle backward flag
+void OSMWay::set_motorcycle_backward(const bool motorcycle_backward) {
+  access_.fields.motorcycle_backward = motorcycle_backward;
+}
+
+// Get the motorcycle backward flag
+bool OSMWay::motorcycle_backward() const {
+  return access_.fields.motorcycle_backward;
 }
 
 // Set destination only/private flag.
@@ -476,7 +495,7 @@ void OSMWay::set_oneway(const bool oneway) {
 }
 
 // Get the oneway flag.
-bool OSMWay::oneway() const{
+bool OSMWay::oneway() const {
   return attributes_.fields.oneway;
 }
 
@@ -531,14 +550,12 @@ Surface OSMWay::surface() const {
 }
 
 // Set the sac scale.
-void OSMWay::set_sac_scale(const SacScale sac_scale)
-{
+void OSMWay::set_sac_scale(const SacScale sac_scale) {
   attributes_.fields.sac_scale = static_cast<uint8_t>(sac_scale);
 }
 
 // Get the sac scale.
-SacScale OSMWay::sac_scale() const
-{
+SacScale OSMWay::sac_scale() const {
   return static_cast<SacScale>(attributes_.fields.sac_scale);
 }
 
@@ -554,7 +571,7 @@ CycleLane OSMWay::cyclelane_right() const {
 
 // Set the left cycle lane.
 void OSMWay::set_cyclelane_left(const CycleLane cyclelane) {
-  bike_info_.fields.cycle_lane_left= static_cast<uint8_t>(cyclelane);
+  bike_info_.fields.cycle_lane_left = static_cast<uint8_t>(cyclelane);
 }
 
 // Get the left cycle lane.
@@ -742,12 +759,12 @@ bool OSMWay::drive_on_right() const {
   return attributes_.fields.drive_on_right;
 }
 
-//Sets the bike network mask
+// Sets the bike network mask
 void OSMWay::set_bike_network(const uint32_t bikenetwork) {
   attributes_.fields.bike_network = bikenetwork;
 }
 
-//Get the bike network mask
+// Get the bike network mask
 uint32_t OSMWay::bike_network() const {
   return attributes_.fields.bike_network;
 }
@@ -763,62 +780,62 @@ bool OSMWay::exit() const {
 }
 
 // Sets the tagged_speed flag.
-void  OSMWay::set_tagged_speed(const bool tagged_speed) {
+void OSMWay::set_tagged_speed(const bool tagged_speed) {
   attributes_.fields.tagged_speed = tagged_speed;
 }
 
 // Get the tagged_speed flag.
-bool  OSMWay::tagged_speed() const {
+bool OSMWay::tagged_speed() const {
   return attributes_.fields.tagged_speed;
 }
 
 // Sets the tagged_forward speed flag.
-void  OSMWay::set_forward_tagged_speed(const bool forward_tagged_speed) {
+void OSMWay::set_forward_tagged_speed(const bool forward_tagged_speed) {
   attributes_.fields.forward_tagged_speed = forward_tagged_speed;
 }
 
 // Get the tagged_forward_speed flag.
-bool  OSMWay::forward_tagged_speed() const {
+bool OSMWay::forward_tagged_speed() const {
   return attributes_.fields.forward_tagged_speed;
 }
 
 // Sets the tagged_backward speed flag.
-void  OSMWay::set_backward_tagged_speed(const bool backward_tagged_speed) {
+void OSMWay::set_backward_tagged_speed(const bool backward_tagged_speed) {
   attributes_.fields.backward_tagged_speed = backward_tagged_speed;
 }
 
 // Get the tagged_backward_speed flag.
-bool  OSMWay::backward_tagged_speed() const {
+bool OSMWay::backward_tagged_speed() const {
   return attributes_.fields.backward_tagged_speed;
 }
 
 // Sets the tagged_lanes flag.
-void  OSMWay::set_tagged_lanes(const bool tagged_lanes) {
+void OSMWay::set_tagged_lanes(const bool tagged_lanes) {
   attributes_.fields.tagged_lanes = tagged_lanes;
 }
 
 // Get the tagged_lanes flag.
-bool  OSMWay::tagged_lanes() const {
+bool OSMWay::tagged_lanes() const {
   return attributes_.fields.tagged_lanes;
 }
 
 // Sets the tagged_forward lanes flag.
-void  OSMWay::set_forward_tagged_lanes(const bool forward_tagged_lanes) {
+void OSMWay::set_forward_tagged_lanes(const bool forward_tagged_lanes) {
   attributes_.fields.forward_tagged_lanes = forward_tagged_lanes;
 }
 
 // Get the tagged_forward_lanes flag.
-bool  OSMWay::forward_tagged_lanes() const {
+bool OSMWay::forward_tagged_lanes() const {
   return attributes_.fields.forward_tagged_lanes;
 }
 
 // Sets the tagged_forward lanes flag.
-void  OSMWay::set_backward_tagged_lanes(const bool backward_tagged_lanes) {
+void OSMWay::set_backward_tagged_lanes(const bool backward_tagged_lanes) {
   attributes_.fields.backward_tagged_lanes = backward_tagged_lanes;
 }
 
 // Get the tagged_backward_speed flag.
-bool  OSMWay::backward_tagged_lanes() const {
+bool OSMWay::backward_tagged_lanes() const {
   return attributes_.fields.backward_tagged_lanes;
 }
 
@@ -883,15 +900,16 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
 
   std::vector<std::string> names;
   // Process motorway and trunk refs
-  if ((ref_index_ != 0 || !ref.empty())
-      && ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway)
-          || (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
+  if ((ref_index_ != 0 || !ref.empty()) &&
+      ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway) ||
+       (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens;
 
-    if (!ref.empty())
-      tokens = GetTagTokens(ref);// use updated refs from relations.
-    else
+    if (!ref.empty()) {
+      tokens = GetTagTokens(ref); // use updated refs from relations.
+    } else {
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+    }
 
     for (const auto& t : tokens) {
       types |= static_cast<uint64_t>(1) << location;
@@ -910,13 +928,15 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   }
 
   // Process non limited access refs
-  if (ref_index_ != 0 && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
-      && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
+  if (ref_index_ != 0 &&
+      (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway) &&
+      (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens;
-    if (!ref.empty())
-      tokens = GetTagTokens(ref);// use updated refs from relations.
-    else
+    if (!ref.empty()) {
+      tokens = GetTagTokens(ref); // use updated refs from relations.
+    } else {
       tokens = GetTagTokens(ref_offset_map.name(ref_index_));
+    }
 
     for (const auto& t : tokens) {
       types |= static_cast<uint64_t>(1) << location;
@@ -927,23 +947,19 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   }
 
   // Process alt_name
-  if (alt_name_index_ != 0 &&
-      alt_name_index_ != name_index_) {
+  if (alt_name_index_ != 0 && alt_name_index_ != name_index_) {
     names.emplace_back(name_offset_map.name(alt_name_index_));
     location++;
   }
   // Process official_name
-  if (official_name_index_ != 0 &&
-      official_name_index_ != name_index_ &&
+  if (official_name_index_ != 0 && official_name_index_ != name_index_ &&
       official_name_index_ != alt_name_index_) {
     names.emplace_back(name_offset_map.name(official_name_index_));
     location++;
   }
   // Process name_en_
   // TODO: process country specific names
-  if (name_en_index_ != 0 &&
-      name_en_index_ != name_index_ &&
-      name_en_index_ != alt_name_index_ &&
+  if (name_en_index_ != 0 && name_en_index_ != name_index_ && name_en_index_ != alt_name_index_ &&
       name_en_index_ != official_name_index_) {
     names.emplace_back(name_offset_map.name(name_en_index_));
     location++;
@@ -951,5 +967,5 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   return names;
 }
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla

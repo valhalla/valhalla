@@ -29,7 +29,7 @@ constexpr size_t kBinCount = kBinsDim * kBinsDim;
  * information and offsets to the various types of data.
  */
 class GraphTileHeader {
- public:
+public:
   /**
    * Constructor
    */
@@ -39,7 +39,7 @@ class GraphTileHeader {
    * Get the GraphId (tileid and level) of this tile.
    * @return  Returns the graph Id.
    */
-  const baldr::GraphId& graphid() const{
+  const baldr::GraphId& graphid() const {
     return graphid_;
   }
 
@@ -249,7 +249,7 @@ class GraphTileHeader {
    * Gets the number of transit transfers in this tile.
    * @return  Returns the number of transit transfers.
    */
-  uint32_t transfercount() const  {
+  uint32_t transfercount() const {
     return transfercount_;
   }
 
@@ -436,7 +436,7 @@ class GraphTileHeader {
    * segment Ids and "weights".
    * @return  Returns the number of bytes to offset to the traffic chunks.
    */
-  uint32_t traffic_chunk_offset() const  {
+  uint32_t traffic_chunk_offset() const {
     return traffic_chunk_offset_;
   }
 
@@ -500,7 +500,7 @@ class GraphTileHeader {
    */
   void set_end_offset(uint32_t offset);
 
- protected:
+protected:
   // GraphId (tileid and level) of this tile
   GraphId graphid_;
 
@@ -511,41 +511,41 @@ class GraphTileHeader {
   uint64_t dataset_id_;
 
   // Quality metrics. These are 4 bit (0-15) relative quality indicators.
-  uint64_t density_       : 4;
-  uint64_t name_quality_  : 4;
+  uint64_t density_ : 4;
+  uint64_t name_quality_ : 4;
   uint64_t speed_quality_ : 4;
-  uint64_t exit_quality_  : 4;
-  uint64_t spare1_        : 48;
+  uint64_t exit_quality_ : 4;
+  uint64_t spare1_ : 48;
 
   // Number of transit records
   uint64_t departurecount_ : 24;
-  uint64_t stopcount_      : 16;
-  uint64_t routecount_     : 12;
-  uint64_t schedulecount_  : 12;
+  uint64_t stopcount_ : 16;
+  uint64_t routecount_ : 12;
+  uint64_t schedulecount_ : 12;
 
   // Number of transit transfers and number of traffic segment Ids (
   // generally the same as the number of directed edges but can be 0)
-  uint64_t transfercount_         : 16;
-  uint64_t traffic_id_count_      : 24;
-  uint64_t has_edge_elevation_    : 1;
+  uint64_t transfercount_ : 16;
+  uint64_t traffic_id_count_ : 24;
+  uint64_t has_edge_elevation_ : 1;
   uint64_t has_predicted_traffic_ : 1;
-  uint64_t spare2_                : 22;
+  uint64_t spare2_ : 22;
 
   // Date the tile was created. Days since pivot date.
   uint32_t date_created_;
 
   // Record counts (for fixed size records)
-  uint32_t nodecount_;                  // Number of nodes
-  uint32_t directededgecount_;          // Number of directed edges
-  uint32_t signcount_;                  // Number of signs
-  uint32_t access_restriction_count_;   // Number of access restriction records
-  uint32_t admincount_;                 // Number of admin records
+  uint32_t nodecount_;                // Number of nodes
+  uint32_t directededgecount_;        // Number of directed edges
+  uint32_t signcount_;                // Number of signs
+  uint32_t access_restriction_count_; // Number of access restriction records
+  uint32_t admincount_;               // Number of admin records
 
   // Offsets to beginning of data (for variable size records)
   uint32_t complex_restriction_forward_offset_; // Offset to complex restriction list
   uint32_t complex_restriction_reverse_offset_; // Offset to complex restriction list
-  uint32_t edgeinfo_offset_;            // Offset to edge info
-  uint32_t textlist_offset_;            // Offset to text list
+  uint32_t edgeinfo_offset_;                    // Offset to edge info
+  uint32_t textlist_offset_;                    // Offset to text list
 
   // Offsets for each bin of the 5x5 grid (for search/lookup)
   uint32_t bin_offsets_[kBinCount];
@@ -574,7 +574,7 @@ class GraphTileHeader {
   uint32_t empty_slots_[kEmptySlots];
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_GRAPHTILEHEADER_H_
+#endif // VALHALLA_BALDR_GRAPHTILEHEADER_H_

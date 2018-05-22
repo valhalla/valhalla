@@ -1,19 +1,19 @@
-#include <cstdint>
-#include <cmath>
-#include "midgard/logging.h"
 #include "baldr/graphreader.h"
+#include "midgard/logging.h"
 #include "mjolnir/graphtilebuilder.h"
+#include <cmath>
+#include <cstdint>
 
-#include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <deque>
-#include <thread>
+#include <future>
 #include <mutex>
 #include <queue>
-#include <future>
+#include <thread>
 
 #include "config.h"
 #include "segment.pb.h"
@@ -39,9 +39,11 @@ struct stats {
   }
 };
 
-void add_predicted_traffic(const bpt::ptree &pt, std::deque<std::string>& traffic_tiles,
+void add_predicted_traffic(const bpt::ptree& pt,
+                           std::deque<std::string>& traffic_tiles,
                            std::queue<vb::GraphId>& tilequeue,
-                           std::mutex& lock, std::promise<stats>& result) {
+                           std::mutex& lock,
+                           std::promise<stats>& result) {
 
   stats stat;
 
@@ -66,10 +68,9 @@ void add_predicted_traffic(const bpt::ptree &pt, std::deque<std::string>& traffi
 
       // Go through directed edges and add predicted traffic
       const DirectedEdge* edges = tile_builder.directededges(nodeinfo.edge_index());
-      for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
-        DirectedEdge& directededge =
-            tile_builder.directededge_builder(nodeinfo.edge_index() + j);
-        tile_builder.predicted_traffic().emplace_back(0,0);
+      for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
+        DirectedEdge& directededge = tile_builder.directededge_builder(nodeinfo.edge_index() + j);
+        tile_builder.predicted_traffic().emplace_back(0, 0);
         stat.count++;
       }
     }
@@ -93,26 +94,24 @@ int main(int argc, char** argv) {
                                    "\n"
                                    "\n");
 
-  options.add_options()
-        ("help,h", "Print this help message.")
-        ("version,v", "Print the version of this software.")
-        ("traffic-tile-dir,t", bpo::value<std::string>(&tile_dir), "Location of traffic csv tiles.")
-        ("concurrency,j", bpo::value<unsigned int>(&num_threads), "Number of threads to use.")
-        // positional arguments
-        ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
-
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
+      "traffic-tile-dir,t", bpo::value<std::string>(&tile_dir),
+      "Location of traffic csv tiles.")("concurrency,j", bpo::value<unsigned int>(&num_threads),
+                                        "Number of threads to use.")
+      // positional arguments
+      ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+               vm);
     bpo::notify(vm);
-  }
-  catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what()
-                  << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-                  << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
@@ -131,7 +130,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  //queue up all the work we'll be doing
+  // queue up all the work we'll be doing
   std::deque<std::string> traffic_tiles;
   auto itr = bfs::recursive_directory_iterator(tile_dir);
   auto end = bfs::recursive_directory_iterator();
@@ -147,25 +146,25 @@ int main(int argc, char** argv) {
 
   // Shuffle the list to minimize the chance of adjacent tiles being access
   // by different threads at the same time
-  //std::random_shuffle(traffic_tiles.begin(), traffic_tiles.end());
+  // std::random_shuffle(traffic_tiles.begin(), traffic_tiles.end());
 
-  //configure logging
-  vm::logging::Configure({{"type","std_err"},{"color","true"}});
+  // configure logging
+  vm::logging::Configure({{"type", "std_err"}, {"color", "true"}});
 
-  //parse the config
+  // parse the config
   bpt::ptree pt;
   bpt::read_json(config.c_str(), pt);
 
-  //fire off some threads to do the work
+  // fire off some threads to do the work
   LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
-  std::vector<std::shared_ptr<std::thread> > threads(num_threads);
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
 
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
   auto level = TileHierarchy::levels().rbegin();
   uint32_t total_count = 0;
 
-  for ( ; level != TileHierarchy::levels().rend(); ++level) {
+  for (; level != TileHierarchy::levels().rend(); ++level) {
     // Create a randomized queue of tiles to work from
     auto tile_level = level->second;
     std::deque<vb::GraphId> tempqueue;
@@ -177,7 +176,7 @@ int main(int argc, char** argv) {
     std::queue<vb::GraphId> tilequeue(tempqueue);
 
     // A place to hold the results of those threads (exceptions, stats)
-    std::list<std::promise<stats> > results;
+    std::list<std::promise<stats>> results;
 
     std::mutex lock;
     for (auto& thread : threads) {
@@ -187,7 +186,7 @@ int main(int argc, char** argv) {
                                    std::ref(tilequeue), std::ref(lock), std::ref(results.back())));
     }
 
-    //wait for it to finish
+    // wait for it to finish
     for (auto& thread : threads)
       thread->join();
 
@@ -195,14 +194,12 @@ int main(int argc, char** argv) {
       try {
         auto thread_stats = result.get_future().get();
         total_count += thread_stats.count;
-      }
-      catch(std::exception& e) {
-        //TODO: throw further up the chain?
+      } catch (std::exception& e) {
+        // TODO: throw further up the chain?
       }
     }
   }
   LOG_INFO("Finished");
   LOG_INFO("Added " + std::to_string(total_count) + " predicted traffic records");
   return EXIT_SUCCESS;
-
 }

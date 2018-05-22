@@ -13,7 +13,7 @@ namespace thor {
  * improve performance.
  */
 class TimeDepForward : public AStarPathAlgorithm {
- public:
+public:
   /**
    * Constructor.
    */
@@ -36,11 +36,12 @@ class TimeDepForward : public AStarPathAlgorithm {
    *          each edge).
    */
   virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-          odin::Location& dest, baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+                                            odin::Location& dest,
+                                            baldr::GraphReader& graphreader,
+                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                                            const sif::TravelMode mode);
 
- protected:
+protected:
   uint32_t origin_tz_index_;
 
   /**
@@ -60,9 +61,12 @@ class TimeDepForward : public AStarPathAlgorithm {
    *                      EdgeLabels and the cost.
    */
   void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node, const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx, const bool from_transition,
-                     uint64_t localtime, const odin::Location& dest,
+                     const baldr::GraphId& node,
+                     const sif::EdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const bool from_transition,
+                     uint64_t localtime,
+                     const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
   /**
@@ -81,7 +85,7 @@ class TimeDepForward : public AStarPathAlgorithm {
  * performance.
  */
 class TimeDepReverse : public AStarPathAlgorithm {
- public:
+public:
   /**
    * Constructor.
    */
@@ -104,11 +108,12 @@ class TimeDepReverse : public AStarPathAlgorithm {
    *          each edge).
    */
   virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-          odin::Location& dest, baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode);
+                                            odin::Location& dest,
+                                            baldr::GraphReader& graphreader,
+                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                                            const sif::TravelMode mode);
 
- protected:
+protected:
   uint32_t dest_tz_index_;
 
   // Access mode used by the costing method
@@ -143,11 +148,13 @@ class TimeDepReverse : public AStarPathAlgorithm {
    *                      EdgeLabels and the cost.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node, const sif::BDEdgeLabel& pred,
+                     const baldr::GraphId& node,
+                     const sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     uint64_t localtime, const odin::Location& dest,
+                     uint64_t localtime,
+                     const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
   /**
@@ -165,8 +172,8 @@ class TimeDepReverse : public AStarPathAlgorithm {
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
-  void SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin,
-                 odin::Location& destination);
+  void
+  SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin, odin::Location& destination);
 
   /**
    * The destination of the reverse path is the origin location. Set the
@@ -190,7 +197,7 @@ class TimeDepReverse : public AStarPathAlgorithm {
   std::vector<PathInfo> FormPath(baldr::GraphReader& graphreader, const uint32_t dest);
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_TIMEDEP_H_
+#endif // VALHALLA_THOR_TIMEDEP_H_

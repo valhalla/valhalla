@@ -2,14 +2,14 @@
 #ifndef VALHALLA_MIDGARD_TILES_H_
 #define VALHALLA_MIDGARD_TILES_H_
 
-#include <list>
-#include <unordered_set>
-#include <unordered_map>
 #include <cstdint>
 #include <functional>
+#include <list>
+#include <unordered_map>
+#include <unordered_set>
 
-#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
 
 namespace valhalla {
 namespace midgard {
@@ -27,9 +27,8 @@ namespace midgard {
  * are also provided. Also includes a method to get a list of tiles covering
  * a bounding box.
  */
-template <class coord_t>
-class Tiles {
- public:
+template <class coord_t> class Tiles {
+public:
   /**
    * Constructor.  A bounding box and tile size is specified.
    * Sets class data members and computes the number of rows and columns
@@ -37,7 +36,9 @@ class Tiles {
    * @param   bounds    Bounding box
    * @param   tilesize  Tile size
    */
-  Tiles(const AABB2<coord_t>& bounds, const float tilesize, const unsigned short subdivisions = 1,
+  Tiles(const AABB2<coord_t>& bounds,
+        const float tilesize,
+        const unsigned short subdivisions = 1,
         bool wrapx = true);
 
   /**
@@ -146,7 +147,7 @@ class Tiles {
    * @return  Returns a pair indicating {row, col}
    */
   std::pair<int32_t, int32_t> GetRowColumn(const int32_t tileid) const {
-    return { tileid / ncolumns_, tileid % ncolumns_ };
+    return {tileid / ncolumns_, tileid % ncolumns_};
   }
 
   /**
@@ -155,8 +156,7 @@ class Tiles {
    * @param tile_size   the size of a tile within the region
    * @return the highest tile number within the region
    */
-  static uint32_t MaxTileId(const AABB2<coord_t>& bounds,
-                            const float tile_size);
+  static uint32_t MaxTileId(const AABB2<coord_t>& bounds, const float tile_size);
 
   /**
    * Get the base x,y of a specified tile.
@@ -200,17 +200,19 @@ class Tiles {
     return initial_tile + (delta_rows * ncolumns_) + delta_cols;
   }
 
-   /**
-    * Get the tile offsets (row,column) between the previous tile Id and
-    * a new tileid.  The offsets are returned through arguments (references).
-    * Offsets can be positive or negative or 0.
-    * @param   initial_tileid     Original tile.
-    * @param   newtileid      Tile to which relative offset is desired.
-    * @param   delta_rows    Return: Relative number of rows.
-    * @param   delta_cols    Return: Relative number of columns.
-    */
-   void TileOffsets(const int32_t initial_tileid, const int32_t newtileid,
-                       int32_t& delta_rows, int32_t& delta_cols) const;
+  /**
+   * Get the tile offsets (row,column) between the previous tile Id and
+   * a new tileid.  The offsets are returned through arguments (references).
+   * Offsets can be positive or negative or 0.
+   * @param   initial_tileid     Original tile.
+   * @param   newtileid      Tile to which relative offset is desired.
+   * @param   delta_rows    Return: Relative number of rows.
+   * @param   delta_cols    Return: Relative number of columns.
+   */
+  void TileOffsets(const int32_t initial_tileid,
+                   const int32_t newtileid,
+                   int32_t& delta_rows,
+                   int32_t& delta_cols) const;
 
   /**
    * Get the number of tiles in the tiling system.
@@ -239,8 +241,7 @@ class Tiles {
    *          if tile Id is on the top row (no neighbor to the north).
    */
   int32_t TopNeighbor(const int32_t tileid) const {
-    return (tileid < static_cast<int32_t>((TileCount() - ncolumns_))) ?
-                tileid + ncolumns_ : tileid;
+    return (tileid < static_cast<int32_t>((TileCount() - ncolumns_))) ? tileid + ncolumns_ : tileid;
   }
 
   /**
@@ -260,9 +261,7 @@ class Tiles {
    * @return  Returns true if tile id1 and id2 are neighbors, false if not.
    */
   bool AreNeighbors(const uint32_t id1, const uint32_t id2) const {
-    return (id2 == TopNeighbor(id1) ||
-            id2 == RightNeighbor(id1) ||
-            id2 == BottomNeighbor(id1) ||
+    return (id2 == TopNeighbor(id1) || id2 == RightNeighbor(id1) || id2 == BottomNeighbor(id1) ||
             id2 == LeftNeighbor(id1));
   };
 
@@ -286,10 +285,12 @@ class Tiles {
   /**
    * Intersect the linestring with the tiles to see which tiles and sub cells it intersects
    * @param line_string  the linestring to be tested against the cells
-   * @return             the map of each tile intersected to a list of its intersected sub cell indices
+   * @return             the map of each tile intersected to a list of its intersected sub cell
+   * indices
    */
   template <class container_t>
-  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const container_t& line_string) const;
+  std::unordered_map<int32_t, std::unordered_set<unsigned short>>
+  Intersect(const container_t& line_string) const;
 
   /**
    * Intersect the bounding box with the tiles to see which tiles and sub-cells
@@ -299,18 +300,19 @@ class Tiles {
    * @param box the bounding box to be tested.
    * @return    a map of tile IDs to a set of bin IDs with that tile.
    */
-  std::unordered_map<int32_t, std::unordered_set<uint16_t> > Intersect(const AABB2<coord_t> &box) const;
+  std::unordered_map<int32_t, std::unordered_set<uint16_t>>
+  Intersect(const AABB2<coord_t>& box) const;
 
   /**
-   * Returns a functor which returns subdivisions close to the original point on each invocation in a best first fashion
-   * If the functor can't expand any further (no more subdivisions) it will throw
+   * Returns a functor which returns subdivisions close to the original point on each invocation in
+   * a best first fashion If the functor can't expand any further (no more subdivisions) it will
+   * throw
    * @param seed   the point at for which we measure 'closeness'
    * @return       the functor to be called
    */
-  std::function<std::tuple<int32_t, unsigned short, float>() > ClosestFirst(const coord_t& seed) const;
+  std::function<std::tuple<int32_t, unsigned short, float>()> ClosestFirst(const coord_t& seed) const;
 
-
- protected:
+protected:
   // Does the tile bounds wrap in the x direction (e.g. at longitude = 180)
   bool wrapx_;
 
@@ -332,7 +334,7 @@ class Tiles {
   float subdivision_size_;
 };
 
-}
-}
+} // namespace midgard
+} // namespace valhalla
 
-#endif  // VALHALLA_MIDGARD_TILES_H_
+#endif // VALHALLA_MIDGARD_TILES_H_

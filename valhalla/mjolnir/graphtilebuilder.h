@@ -1,24 +1,22 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 #define VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 
-#include <cstdint>
+#include <algorithm>
 #include <boost/functional/hash.hpp>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <list>
-#include <utility>
-#include <algorithm>
-#include <string>
 #include <memory>
-#include <list>
-#include <unordered_set>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
 
 #include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileheader.h>
-
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -39,8 +37,7 @@ using edge_tuple = std::tuple<uint32_t, baldr::GraphId, baldr::GraphId>;
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
 class GraphTileBuilder : public baldr::GraphTile {
- public:
-
+public:
   /**
    * Constructor given an existing tile. This is used to read in the tile
    * data and then add to it (e.g. adding node connections between hierarchy
@@ -52,9 +49,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  deserialize  If true the existing objects in the tile are
    *                      converted into builders so they can be added to.
    */
-  GraphTileBuilder(const std::string& tile_dir,
-                   const GraphId& graphid,
-                   const bool deserialize);
+  GraphTileBuilder(const std::string& tile_dir, const GraphId& graphid, const bool deserialize);
 
   /**
    * Output the tile to file. Stores as binary data.
@@ -71,8 +66,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(const std::vector<NodeInfo>& nodes,
-              const std::vector<DirectedEdge>& directededges);
+  void Update(const std::vector<NodeInfo>& nodes, const std::vector<DirectedEdge>& directededges);
 
   /**
    * Get the current list of node builders.
@@ -127,8 +121,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  idx  Directed edge index.
    * @param  signs  Sign information.
    */
-  void AddSigns(const uint32_t idx,
-                const std::vector<baldr::SignInfo>& signs);
+  void AddSigns(const uint32_t idx, const std::vector<baldr::SignInfo>& signs);
 
   /**
    * Add lane connectivity information.
@@ -164,8 +157,10 @@ class GraphTileBuilder : public baldr::GraphTile {
    *
    * @return            The edge info offset that will be stored in the directed edge.
    */
-  bool HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
-                       const baldr::GraphId& nodeb, uint32_t& edge_info_offset);
+  bool HasEdgeInfo(const uint32_t edgeindex,
+                   const baldr::GraphId& nodea,
+                   const baldr::GraphId& nodeb,
+                   uint32_t& edge_info_offset);
 
   /**
    * Add the edge info to the tile.
@@ -189,7 +184,8 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @return  The edge info offset that will be stored in the directed edge.
    */
   template <class shape_container_t>
-  uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
+  uint32_t AddEdgeInfo(const uint32_t edgeindex,
+                       const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
                        const uint64_t wayid,
                        const shape_container_t& lls,
@@ -219,8 +215,10 @@ class GraphTileBuilder : public baldr::GraphTile {
    *
    * @return  The edge info offset that will be stored in the directed edge.
    */
-  uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
-                       const baldr::GraphId& nodeb, const uint64_t wayid,
+  uint32_t AddEdgeInfo(const uint32_t edgeindex,
+                       const baldr::GraphId& nodea,
+                       const baldr::GraphId& nodeb,
+                       const uint64_t wayid,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const uint16_t types,
@@ -244,8 +242,10 @@ class GraphTileBuilder : public baldr::GraphTile {
    *                        you ISO3166-2 for state.
    * @return  The admin offset that will be stored on the node.
    */
-  uint32_t AddAdmin(const std::string& country_name, const std::string& state_name,
-                    const std::string& country_iso, const std::string& state_iso);
+  uint32_t AddAdmin(const std::string& country_name,
+                    const std::string& state_name,
+                    const std::string& country_iso,
+                    const std::string& state_iso);
 
   /**
    * Gets a reference to the header builder.
@@ -338,8 +338,9 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param tile       the tile whose edges need the binned
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
-  using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount> >;
-  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const GraphTile* tile, tweeners_t& tweeners);
+  using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
+  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const GraphTile* tile,
+                                                              tweeners_t& tweeners);
 
   /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts
@@ -370,8 +371,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  edgeid  Edge Id to which traffic segment is associated.
    * @param  seg     Traffic segment associated to this edge.
    */
-  void AddTrafficSegment(const baldr::GraphId& edgeid,
-                         const baldr::TrafficChunk& seg);
+  void AddTrafficSegment(const baldr::GraphId& edgeid, const baldr::TrafficChunk& seg);
 
   /**
    * Add a traffic segment association - used when an edge associates to
@@ -379,8 +379,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  edgeid  Edge Id to which traffic segments are associated.
    * @param  segs    A vector of traffic segment associations to an edge.
    */
-  void AddTrafficSegments(const baldr::GraphId& edgeid,
-                          const std::vector<baldr::TrafficChunk>& segs);
+  void AddTrafficSegments(const baldr::GraphId& edgeid, const std::vector<baldr::TrafficChunk>& segs);
 
   /**
    * Updates a tile with traffic segment and chunk data.
@@ -390,6 +389,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   void UpdateTrafficSegments(const bool update_dir_edges);
 
   /**
+<<<<<<< HEAD
    * Updates a tile with predictive traffic data.
    */
   void UpdatePedictedTraffic();
@@ -406,8 +406,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   std::vector<PredictedTraffic>& predicted_traffic();
 
- protected:
-
+protected:
   struct EdgeTupleHasher {
     std::size_t operator()(const edge_tuple& k) const {
       std::size_t seed = 13;
@@ -416,17 +415,17 @@ class GraphTileBuilder : public baldr::GraphTile {
       boost::hash_combine(seed, id_hasher(std::get<2>(k)));
       return seed;
     }
-    //function to hash each id
+    // function to hash each id
     std::hash<uint32_t> index_hasher;
     std::hash<valhalla::baldr::GraphId> id_hasher;
   };
 
   // Edge tuple for sharing edges that have common nodes and edgeindex
   static edge_tuple EdgeTuple(const uint32_t edgeindex,
-                       const valhalla::baldr::GraphId& nodea,
-                       const valhalla::baldr::GraphId& nodeb) {
-    return (nodea < nodeb) ? std::make_tuple(edgeindex, nodea, nodeb):
-        std::make_tuple(edgeindex, nodeb, nodea);
+                              const valhalla::baldr::GraphId& nodea,
+                              const valhalla::baldr::GraphId& nodeb) {
+    return (nodea < nodeb) ? std::make_tuple(edgeindex, nodea, nodeb)
+                           : std::make_tuple(edgeindex, nodeb, nodea);
   }
 
   // Write all edgeinfo items to specified stream
@@ -474,7 +473,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   std::vector<Admin> admins_builder_;
 
   // Admin info offset
-  std::unordered_map<std::string,size_t> admin_info_offset_map_;
+  std::unordered_map<std::string, size_t> admin_info_offset_map_;
 
   // The forward complex restriction list
   std::vector<ComplexRestrictionBuilder> complex_restriction_forward_builder_;
@@ -515,8 +514,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   uint32_t lane_connectivity_offset_ = 0;
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
-
+#endif // VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_

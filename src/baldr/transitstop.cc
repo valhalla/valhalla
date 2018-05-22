@@ -1,5 +1,5 @@
-#include <string.h>
 #include "baldr/transitstop.h"
+#include <string.h>
 
 namespace valhalla {
 namespace baldr {
@@ -45,5 +45,5 @@ Traversability TransitStop::traversability() const {
   return static_cast<Traversability>(traversability_);
 }
 
-}
-}
+} // namespace baldr
+} // namespace valhalla

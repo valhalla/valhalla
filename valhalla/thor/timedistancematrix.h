@@ -2,58 +2,56 @@
 #define VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 
 #include <cstdint>
-#include <vector>
 #include <map>
+#include <memory>
 #include <unordered_map>
 #include <utility>
-#include <memory>
+#include <vector>
 
+#include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/thor/astar.h>
+#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/thor/costmatrix.h>
-#include <valhalla/thor/astar.h>
 
 namespace valhalla {
 namespace thor {
 
 // These cost thresholds are in addition to the distance
 // thresholds for quick rejection
-constexpr float kTimeDistCostThresholdAutoDivisor = 112.0f; // 400 km distance threshold will result in a cost threshold of ~2600 (1 hour)
-constexpr float kTimeDistCostThresholdBicycleDivisor = 19.0f; // 200 km distance threshold will result in a cost threshold of ~10800 (3 hours)
-constexpr float kTimeDistCostThresholdPedestrianDivisor = 7.0f; // 200 km distance threshold will result in a cost threshold of ~28800 (8 hours)
+constexpr float kTimeDistCostThresholdAutoDivisor =
+    112.0f; // 400 km distance threshold will result in a cost threshold of ~2600 (1 hour)
+constexpr float kTimeDistCostThresholdBicycleDivisor =
+    19.0f; // 200 km distance threshold will result in a cost threshold of ~10800 (3 hours)
+constexpr float kTimeDistCostThresholdPedestrianDivisor =
+    7.0f; // 200 km distance threshold will result in a cost threshold of ~28800 (8 hours)
 
 // Structure to hold information about each destination.
 struct Destination {
-  bool settled;         // Has the best time/distance to this destination
-                        // been found?
-  sif::Cost best_cost;  // Current best cost to this destination
-  uint32_t distance;    // Path distance for the best cost path
-  float threshold;      // Threshold above current best cost where no longer
-                        // need to search for this destination.
+  bool settled;        // Has the best time/distance to this destination
+                       // been found?
+  sif::Cost best_cost; // Current best cost to this destination
+  uint32_t distance;   // Path distance for the best cost path
+  float threshold;     // Threshold above current best cost where no longer
+                       // need to search for this destination.
 
   // Potential edges for this destination (and their partial distance)
   std::unordered_map<uint64_t, float> dest_edges;
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.
-  Destination()
-      : settled(false),
-        best_cost{ kMaxCost, kMaxCost },
-        distance(0),
-        threshold(0.0f) {
+  Destination() : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f) {
   }
 };
 
 // Class to compute time + distance matrices among locations.
 class TimeDistanceMatrix {
- public:
-
+public:
   /**
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
@@ -71,11 +69,13 @@ class TimeDistanceMatrix {
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
-  std::vector<TimeDistance> OneToMany(const odin::Location& origin,
-          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
-          baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+  std::vector<TimeDistance>
+  OneToMany(const odin::Location& origin,
+            const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+            baldr::GraphReader& graphreader,
+            const std::shared_ptr<sif::DynamicCost>* mode_costing,
+            const sif::TravelMode mode,
+            const float max_matrix_distance);
 
   /**
    * Many to one time and distance cost matrix. Computes time and distance
@@ -88,11 +88,13 @@ class TimeDistanceMatrix {
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance to the destination index from all other locations
    */
-  std::vector<TimeDistance> ManyToOne(const odin::Location& dest,
-          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
-          baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+  std::vector<TimeDistance>
+  ManyToOne(const odin::Location& dest,
+            const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+            baldr::GraphReader& graphreader,
+            const std::shared_ptr<sif::DynamicCost>* mode_costing,
+            const sif::TravelMode mode,
+            const float max_matrix_distance);
 
   /**
    * Many to many time and distance cost matrix. Computes time and distance
@@ -104,11 +106,12 @@ class TimeDistanceMatrix {
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance between all pairs of locations
    */
-  std::vector<TimeDistance> ManyToMany(
-          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
-          baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+  std::vector<TimeDistance>
+  ManyToMany(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+             baldr::GraphReader& graphreader,
+             const std::shared_ptr<sif::DynamicCost>* mode_costing,
+             const sif::TravelMode mode,
+             const float max_matrix_distance);
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -121,12 +124,13 @@ class TimeDistanceMatrix {
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
-  std::vector<TimeDistance> SourceToTarget(
-          const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
-          const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
-          baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
-          const sif::TravelMode mode, const float max_matrix_distance);
+  std::vector<TimeDistance>
+  SourceToTarget(const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
+                 const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
+                 baldr::GraphReader& graphreader,
+                 const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                 const sif::TravelMode mode,
+                 const float max_matrix_distance);
 
   /**
    * Clear the temporary information generated during time+distance
@@ -134,7 +138,7 @@ class TimeDistanceMatrix {
    */
   void Clear();
 
- protected:
+protected:
   // Number of destinations that have been found and settled (least cost path
   // computed).
   uint32_t settled_count_;
@@ -177,8 +181,10 @@ class TimeDistanceMatrix {
    * @param  from_transition True if this method is called from a transition
    *                         edge.
    */
-  void ExpandForward(baldr::GraphReader& graphreader, const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred, const uint32_t pred_idx,
+  void ExpandForward(baldr::GraphReader& graphreader,
+                     const baldr::GraphId& node,
+                     const sif::EdgeLabel& pred,
+                     const uint32_t pred_idx,
                      const bool from_transition);
 
   /**
@@ -194,8 +200,10 @@ class TimeDistanceMatrix {
    *                         edge.
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
-           const baldr::GraphId& node, const sif::EdgeLabel& pred,
-           const uint32_t pred_idx, const bool from_transition);
+                     const baldr::GraphId& node,
+                     const sif::EdgeLabel& pred,
+                     const uint32_t pred_idx,
+                     const bool from_transition);
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -209,16 +217,14 @@ class TimeDistanceMatrix {
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin        Origin location information.
    */
-  void SetOriginOneToMany(baldr::GraphReader& graphreader,
-                          const odin::Location& origin);
+  void SetOriginOneToMany(baldr::GraphReader& graphreader, const odin::Location& origin);
 
   /**
    * Sets the origin for a many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  dest          Destination
    */
-  void SetOriginManyToOne(baldr::GraphReader& graphreader,
-                          const odin::Location& dest);
+  void SetOriginManyToOne(baldr::GraphReader& graphreader, const odin::Location& dest);
 
   /**
    * Add destinations.
@@ -234,7 +240,7 @@ class TimeDistanceMatrix {
    * @param  locations     List of locations.
    */
   void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-            const google::protobuf::RepeatedPtrField<odin::Location>& locations);
+                                const google::protobuf::RepeatedPtrField<odin::Location>& locations);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -261,7 +267,7 @@ class TimeDistanceMatrix {
   std::vector<TimeDistance> FormTimeDistanceMatrix();
 };
 
-}
-}
+} // namespace thor
+} // namespace valhalla
 
-#endif  // VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
+#endif // VALHALLA_THOR_TIMEDISTANCEMATRIX_H_

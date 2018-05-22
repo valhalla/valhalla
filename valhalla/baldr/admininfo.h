@@ -1,9 +1,9 @@
 #ifndef VALHALLA_BALDR_ADMININFO_H_
 #define VALHALLA_BALDR_ADMININFO_H_
 
-#include <valhalla/baldr/admin.h>
-#include <iostream>
 #include <boost/functional/hash.hpp>
+#include <iostream>
+#include <valhalla/baldr/admin.h>
 
 namespace valhalla {
 namespace baldr {
@@ -13,7 +13,7 @@ namespace baldr {
  * Encapsulates the country and state text.
  */
 class AdminInfo {
- public:
+public:
   /**
    * Constructor.
    * @param  country_text country text string.
@@ -21,12 +21,12 @@ class AdminInfo {
    * @param  country_iso  country iso string.
    * @param  state_iso    state iso string.
    */
-  AdminInfo(const std::string& country_text, const std::string& state_text,
-            const std::string& country_iso, const std::string& state_iso)
-     : country_text_(country_text),
-       state_text_(state_text),
-       country_iso_(country_iso),
-       state_iso_(state_iso) {
+  AdminInfo(const std::string& country_text,
+            const std::string& state_text,
+            const std::string& country_iso,
+            const std::string& state_iso)
+      : country_text_(country_text), state_text_(state_text), country_iso_(country_iso),
+        state_iso_(state_iso) {
   }
 
   /**
@@ -34,11 +34,9 @@ class AdminInfo {
    * @param  rhs  the specified object to compare against this object.
    * @return true if the specified object is equal to this object.
    */
-  bool operator ==(const AdminInfo& rhs) const {
-    return (country_iso_ == rhs.country_iso_ &&
-            country_text_ == rhs.country_text_ &&
-            state_iso_ == rhs.state_iso_ &&
-            state_text_ == rhs.state_text_);
+  bool operator==(const AdminInfo& rhs) const {
+    return (country_iso_ == rhs.country_iso_ && country_text_ == rhs.country_text_ &&
+            state_iso_ == rhs.state_iso_ && state_text_ == rhs.state_text_);
   }
 
   /**
@@ -82,18 +80,18 @@ class AdminInfo {
       boost::hash_combine(seed, string_hasher(ai.state_text_));
       return seed;
     }
-    //function to hash string
+    // function to hash string
     std::hash<std::string> string_hasher;
   };
 
- protected:
+protected:
   std::string country_text_;
   std::string state_text_;
   std::string country_iso_;
   std::string state_iso_;
 };
 
-}
-}
+} // namespace baldr
+} // namespace valhalla
 
-#endif  // VALHALLA_BALDR_ADMININFO_H_
+#endif // VALHALLA_BALDR_ADMININFO_H_

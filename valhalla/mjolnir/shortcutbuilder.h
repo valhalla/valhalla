@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MJOLNIR_SHORTCUTBUILDER_H
 #define VALHALLA_MJOLNIR_SHORTCUTBUILDER_H
 
-#include <cstdint>
 #include <boost/property_tree/ptree.hpp>
+#include <cstdint>
 
 namespace valhalla {
 namespace mjolnir {
@@ -11,15 +11,14 @@ namespace mjolnir {
  * Class used to build shortcut edges.
  */
 class ShortcutBuilder {
- public:
-
+public:
   /**
    * Build the shortcut edges.
    */
   static void Build(const boost::property_tree::ptree& pt);
 };
 
-}
-}
+} // namespace mjolnir
+} // namespace valhalla
 
-#endif  // VALHALLA_MJOLNIR_SHORTCUTBUILDER_H
+#endif // VALHALLA_MJOLNIR_SHORTCUTBUILDER_H

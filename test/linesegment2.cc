@@ -11,20 +11,18 @@ using namespace valhalla::midgard;
 
 namespace {
 
-void TryDistance(const Point2& p, const LineSegment2<Point2>& s, const float res,
-                 const Point2& exp) {
+void TryDistance(const Point2& p, const LineSegment2<Point2>& s, const float res, const Point2& exp) {
   Point2 closest;
   float d = s.Distance(p, closest);
   if (fabs(d - res) > kEpsilon)
     throw runtime_error("Distance test failed - incorrect distance");
-  if ((fabs(closest.x() - exp.x()) > kEpsilon ||
-       fabs(closest.y() - exp.y()) > kEpsilon))
+  if ((fabs(closest.x() - exp.x()) > kEpsilon || fabs(closest.y() - exp.y()) > kEpsilon))
     throw runtime_error("Distance test failed - incorrect closest point");
 }
 void TestDistance() {
   // Test segment
   Point2 a(-2.0f, -2.0f);
-  Point2 b( 4.0f, 4.0f);
+  Point2 b(4.0f, 4.0f);
   LineSegment2<Point2> s1(a, b);
 
   // Case 1 - point is "before start" of segment. a is closest
@@ -37,25 +35,29 @@ void TestDistance() {
   TryDistance(Point2(0.0f, 2.0f), s1, sqrtf(2.0f), Point2(1.0f, 1.0f));
 }
 
-void TryIntersect(const LineSegment2<Point2>& s1, const LineSegment2<Point2>& s2,
-                  const bool res, const Point2& exp) {
+void TryIntersect(const LineSegment2<Point2>& s1,
+                  const LineSegment2<Point2>& s2,
+                  const bool res,
+                  const Point2& exp) {
   Point2 intersect;
   bool doesintersect = s1.Intersect(s2, intersect);
   if (doesintersect != res)
     throw runtime_error("Intersect test failed - intersects is incorrect");
-  if (doesintersect && (fabs(intersect.x() - exp.x()) > kEpsilon ||
-          fabs(intersect.y() - exp.y()) > kEpsilon))
+  if (doesintersect &&
+      (fabs(intersect.x() - exp.x()) > kEpsilon || fabs(intersect.y() - exp.y()) > kEpsilon))
     throw runtime_error("Intersect test failed - intersection point is incorrect");
 }
 
-void TryIntersectLL(const LineSegment2<PointLL>& s1, const LineSegment2<PointLL>& s2,
-                  const bool res, const PointLL& exp) {
+void TryIntersectLL(const LineSegment2<PointLL>& s1,
+                    const LineSegment2<PointLL>& s2,
+                    const bool res,
+                    const PointLL& exp) {
   PointLL intersect;
   bool doesintersect = s1.Intersect(s2, intersect);
   if (doesintersect != res)
     throw runtime_error("Intersect test failed - intersects is incorrect");
-  if (doesintersect && (fabs(intersect.x() - exp.x()) > kEpsilon ||
-          fabs(intersect.y() - exp.y()) > kEpsilon))
+  if (doesintersect &&
+      (fabs(intersect.x() - exp.x()) > kEpsilon || fabs(intersect.y() - exp.y()) > kEpsilon))
     throw runtime_error("Intersect test failed - intersection point is incorrect");
 }
 
@@ -105,7 +107,8 @@ void TestIntersect() {
   TryIntersectLL(s1ll, s6ll, true, PointLL(0.0f, 0.0f));
 }
 
-void TryPolyIntersect(const LineSegment2<Point2>& s1, const std::vector<Point2>& poly,
+void TryPolyIntersect(const LineSegment2<Point2>& s1,
+                      const std::vector<Point2>& poly,
                       const bool res) {
   if (s1.Intersect(poly) != res) {
     throw runtime_error("Polygon Intersect test failed");
@@ -115,13 +118,11 @@ void TryPolyIntersect(const LineSegment2<Point2>& s1, const std::vector<Point2>&
 void TestPolyIntersect() {
 
   // Construct a convex polygon
-  std::vector<Point2> poly = {
-    {   2.0f,  2.0f },
-    {   0.0f,  4.0f },
-    { -10.0f,  0.0f },
-    {   0.0f, -4.0f },
-    {   2.0f, -2.0f }
-  };
+  std::vector<Point2> poly = {{2.0f, 2.0f},
+                              {0.0f, 4.0f},
+                              {-10.0f, 0.0f},
+                              {0.0f, -4.0f},
+                              {2.0f, -2.0f}};
 
   // First point inside
   LineSegment2<Point2> s1(Point2(0.0f, 0.0f), Point2(4.0f, 12.0f));
@@ -157,7 +158,7 @@ void TryIsLeft(const Point2& p, const LineSegment2<Point2>& s, const int res) {
     throw runtime_error("IsLeft test failed - should be right of the segment");
   }
   if (res == 1 && d < kEpsilon) {
-      throw runtime_error("IsLeft test failed - should be right of the segment");
+    throw runtime_error("IsLeft test failed - should be right of the segment");
   }
 }
 void TestIsLeft() {
@@ -169,7 +170,7 @@ void TestIsLeft() {
   TryIsLeft(Point2(2.0f, 0.0f), s, -1); // Should be right of the segment
 }
 
-}
+} // namespace
 
 int main() {
   test::suite suite("point2");

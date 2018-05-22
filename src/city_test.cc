@@ -1,31 +1,31 @@
+#include <boost/format.hpp>
+#include <boost/optional.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/tokenizer.hpp>
 #include <cstdint>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <queue>
 #include <string>
 #include <vector>
-#include <queue>
-#include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/optional.hpp>
-#include <boost/format.hpp>
-#include <boost/tokenizer.hpp>
 
 #include "config.h"
 
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
 #include "loki/search.h"
-#include "sif/costfactory.h"
+#include "midgard/logging.h"
+#include "mjolnir/util.h"
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
-#include "mjolnir/util.h"
-#include "proto/trippath.pb.h"
-#include "proto/tripdirections.pb.h"
 #include "proto/directions_options.pb.h"
-#include "midgard/logging.h"
-#include "thor/pathalgorithm.h"
+#include "proto/tripdirections.pb.h"
+#include "proto/trippath.pb.h"
+#include "sif/costfactory.h"
 #include "thor/bidirectional_astar.h"
+#include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
 
 using namespace valhalla::midgard;
@@ -42,12 +42,12 @@ struct City {
   std::string city;
   PointLL latlng;
 
-  bool operator < (const City& other) const {
+  bool operator<(const City& other) const {
     return country < other.country;
   }
 };
 
-// City file can be found: 
+// City file can be found:
 // https://github.com/bahar/WorldCityLocations/blob/master/World_Cities_Location_table.csv
 std::vector<City> ParseCityFile(const std::string& filename) {
   typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
@@ -63,27 +63,27 @@ std::vector<City> ParseCityFile(const std::string& filename) {
       tokenizer tok{line, sep};
       uint32_t field_num = 0;
       City city{};
-      for (const auto &t : tok) {
+      for (const auto& t : tok) {
         switch (field_num) {
-        case 0:
-        case 5:
-          break;
-        case 1:
-          // Country (remove first and last char)
-          city.country = remove_double_quotes(t);
-          break;
-        case 2:
-          // City
-          city.city = remove_double_quotes(t);
-          break;
-        case 3:
-          // Latitude
-          lat = std::atof(remove_double_quotes(t).c_str());
-          break;
-        case 4:
-          // Longitude
-          lng = std::atof(remove_double_quotes(t).c_str());
-          break;
+          case 0:
+          case 5:
+            break;
+          case 1:
+            // Country (remove first and last char)
+            city.country = remove_double_quotes(t);
+            break;
+          case 2:
+            // City
+            city.city = remove_double_quotes(t);
+            break;
+          case 3:
+            // Latitude
+            lat = std::atof(remove_double_quotes(t).c_str());
+            break;
+          case 4:
+            // Longitude
+            lng = std::atof(remove_double_quotes(t).c_str());
+            break;
         }
         field_num++;
       }
@@ -98,8 +98,7 @@ std::vector<City> ParseCityFile(const std::string& filename) {
   return cities;
 }
 
-std::vector<City> GetCities(const std::string& ctry,
-                            std::vector<City>& all_cities) {
+std::vector<City> GetCities(const std::string& ctry, std::vector<City>& all_cities) {
   std::vector<City> cities;
   City test_ctry;
   test_ctry.country = ctry;
@@ -131,29 +130,32 @@ std::string GetJSONRequest(const Location& originloc, const Location& destloc) {
   str += "\"}],";
 
   // Add costing and return string
-  str += "\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}' --config ../conf/valhalla.json\n";
+  str += "\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}' --config "
+         "../conf/valhalla.json\n";
   return str;
 }
 
 // Main method for testing city to city routing
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   bpo::options_description options("citytest " VERSION "\n"
-  "\n"
-  " Usage: citytest [options]\n"
-  "\n"
-  "citytest is a simple command line test tool for shortest path routing between cities within a single country. "
-  "\n"
-  "Use the -c option to specify a country. "
-  "\n"
-  "\n");
+                                   "\n"
+                                   " Usage: citytest [options]\n"
+                                   "\n"
+                                   "citytest is a simple command line test tool for shortest path "
+                                   "routing between cities within a single country. "
+                                   "\n"
+                                   "Use the -c option to specify a country. "
+                                   "\n"
+                                   "\n");
 
   std::string config = "conf/planet.json";
   std::string filename = "World_Cities_Location_table.csv";
 
   std::string ctry;
-  options.add_options()
-      ("help,h", "Print this help message.")
-      ("country,c", boost::program_options::value<std::string>(&ctry), "Country");
+  options.add_options()("help,h",
+                        "Print this help message.")("country,c",
+                                                    boost::program_options::value<std::string>(&ctry),
+                                                    "Country");
 
   bpo::variables_map vm;
   try {
@@ -163,10 +165,9 @@ int main(int argc, char *argv[]) {
     } else {
       LOG_ERROR("Country was not set");
     }
-  } catch (std::exception &e) {
-    std::cerr << "Unable to parse command line options because: " << e.what()
-              << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-              << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
@@ -176,11 +177,11 @@ int main(int argc, char *argv[]) {
 
   // Configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =
-            pt.get_child_optional("thor.logging");
+      pt.get_child_optional("thor.logging");
   if (logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<
-        const boost::property_tree::ptree&,
-        std::unordered_map<std::string, std::string> >(logging_subtree.get());
+    auto logging_config =
+        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -192,10 +193,10 @@ int main(int argc, char *argv[]) {
   std::sort(all_cities.begin(), all_cities.end());
   std::vector<City> cities = GetCities(ctry, all_cities);
   std::cout << ctry << " has: " << cities.size() << " cities" << std::endl;
-  if (cities.size()> 0) {
+  if (cities.size() > 0) {
     // Create test file
     std::string testfilename = ctry + "_routes.txt";
-    std::ofstream testfile(testfilename, std::ios::out | std::ios::trunc );
+    std::ofstream testfile(testfilename, std::ios::out | std::ios::trunc);
     if (testfile.is_open()) {
       std::cout << "Open " << testfilename << std::endl;
       for (uint32_t l0 = 0; l0 < cities.size() - 1; l0++) {
@@ -218,7 +219,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Exit here or continue and run routes?
-//  return EXIT_SUCCESS;
+  //  return EXIT_SUCCESS;
 
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
@@ -229,7 +230,7 @@ int main(int argc, char *argv[]) {
 
   // Figure out the route type
   std::string routetype = "auto";
-  for (auto & c : routetype)
+  for (auto& c : routetype)
     c = std::tolower(c);
 
   LOG_INFO("routetype: " + routetype);
@@ -248,23 +249,22 @@ int main(int argc, char *argv[]) {
       // have changed hierarchy_limits. Also, this simulates how the service
       // works
       cost_ptr_t mode_costing[4];
-      cost_ptr_t cost = factory.Create(
-          routetype, pt.get_child("costing_options." + routetype));
+      cost_ptr_t cost = factory.Create(routetype, pt.get_child("costing_options." + routetype));
       TravelMode mode = cost->travelmode();
       mode_costing[static_cast<uint32_t>(mode)] = cost;
-
 
       Location originloc(cities[l0].latlng);
       Location destloc(cities[l1].latlng);
 
       // Use Loki to get location information
       PathLocation origin = Search(originloc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
-      PathLocation dest   = Search(destloc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+      PathLocation dest = Search(destloc, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
 
       // TODO - maybe later use different path algorithms
       uint32_t np = 0;
       PathAlgorithm pathalgorithm;
-      std::vector<PathInfo> pathedges = pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
+      std::vector<PathInfo> pathedges =
+          pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
       if (pathedges.size() == 0) {
         // 2nd pass - increase hierarchy limits, 3rd pass disable highway
         // transitions
@@ -292,8 +292,8 @@ int main(int argc, char *argv[]) {
       // TODO - perhaps walk the edges to find total length?
     }
   }
-  LOG_INFO(std::to_string(success_count) + " out of " +
-           std::to_string(success_count+error_count) + " succeeded");
+  LOG_INFO(std::to_string(success_count) + " out of " + std::to_string(success_count + error_count) +
+           " succeeded");
   LOG_INFO("Success on first pass: " + std::to_string(npasses[0]));
   LOG_INFO("Success on second pass: " + std::to_string(npasses[1]));
   LOG_INFO("Success on third pass: " + std::to_string(npasses[2]));
@@ -304,4 +304,3 @@ int main(int argc, char *argv[]) {
 
   return EXIT_SUCCESS;
 }
-

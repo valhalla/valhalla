@@ -2,34 +2,31 @@
 #define VALHALLA_MIDGARD_UTIL_H_
 
 #include <cstdint>
-#include <string>
+#include <limits>
+#include <memory>
+#include <ostream>
+#include <random>
 #include <stdexcept>
 #include <string>
-#include <ostream>
-#include <utility>
 #include <unordered_map>
 #include <unordered_set>
-#include <memory>
-#include <limits>
+#include <utility>
 #include <vector>
-#include <random>
 
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
-
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace midgard {
 
 // Holds a range plus a default value for that range
-template <class T>
-struct ranged_default_t {
+template <class T> struct ranged_default_t {
   T min, def, max;
 
   // Returns the value snapped to the default if outside of the range
-  T operator() (const T& value) const {
+  T operator()(const T& value) const {
     if (value < min || value > max) {
       return def;
     }
@@ -38,12 +35,7 @@ struct ranged_default_t {
 };
 
 // Intersection cases.
-enum IntersectCase {
-  kWithin,
-  kContains,
-  kOutside,
-  kIntersects
-};
+enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
 
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
@@ -52,8 +44,7 @@ enum IntersectCase {
  * @return the computed time in seconds.
  */
 inline int GetTime(const float length, const float speed) {
-  return (speed > 0.0f) ?
-          static_cast<int>((length / (speed * kHourPerSec) + 0.5f)) : 0;
+  return (speed > 0.0f) ? static_cast<int>((length / (speed * kHourPerSec) + 0.5f)) : 0;
 }
 
 /**
@@ -64,8 +55,7 @@ inline int GetTime(const float length, const float speed) {
  * @return the computed turn degree. For example, if one would make a perfect
  *         right turn - the returned value would be 90.
  */
-inline uint32_t GetTurnDegree(const uint32_t from_heading,
-                              const uint32_t to_heading) {
+inline uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading) {
   return (((to_heading - from_heading) + 360) % 360);
 }
 
@@ -97,11 +87,11 @@ inline AABB2<PointLL> ExpandMeters(const AABB2<PointLL>& box, const float meters
 
   // Find the delta latitude and delta longitude (max of the delta at the
   // minimum and maximum latitude)
-  float dlat  = meters / kMetersPerDegreeLat;
+  float dlat = meters / kMetersPerDegreeLat;
   float dlng1 = (meters / DistanceApproximator::MetersPerLngDegree(box.miny()));
   float dlng2 = (meters / DistanceApproximator::MetersPerLngDegree(box.maxy()));
   float dlng = std::max(dlng1, dlng2);
-  return { box.minx() - dlng, box.miny() - dlat, box.maxx() + dlng, box.maxy() + dlat };
+  return {box.minx() - dlng, box.miny() - dlat, box.maxx() + dlng, box.maxy() + dlat};
 }
 
 /**
@@ -120,12 +110,11 @@ inline AABB2<PointLL> ExpandMeters(const PointLL& pt, const float meters) {
   float dlng = meters / DistanceApproximator::MetersPerLngDegree(pt.lat());
   PointLL minpt(pt.lng() - dlng, pt.lat() - dlat);
   PointLL maxpt(pt.lng() + dlng, pt.lat() + dlat);
-  return { minpt, maxpt };
+  return {minpt, maxpt};
 }
 
 // Convenience method.
-template<class T>
-T sqr(const T a) {
+template <class T> T sqr(const T a) {
   return a * a;
 }
 
@@ -142,12 +131,12 @@ inline float normalize(const float num, const float den) {
 // Compute the length of the polyline represented by a set of lat,lng points.
 // Avoids having to copy the points into a polyline, polyline should really just extend
 // A container class like vector or list
-template <class container_t>
-float length(const container_t& pts) {
- float length = 0.0f;
- for(auto p = std::next(pts.cbegin()); p != pts.end(); ++p)
-   length += p->Distance(*std::prev(p));
- return length;
+template <class container_t> float length(const container_t& pts) {
+  float length = 0.0f;
+  for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
+    length += p->Distance(*std::prev(p));
+  }
+  return length;
 }
 
 /**
@@ -156,8 +145,7 @@ float length(const container_t& pts) {
  * @param  end    Ending point (iterator) within the polyline container.
  * @return Returns the length of the polyline.
  */
-template <typename iterator_t>
-float length(const iterator_t& begin, const iterator_t& end) {
+template <typename iterator_t> float length(const iterator_t& begin, const iterator_t& end) {
   if (begin == end) {
     return 0.0f;
   }
@@ -180,8 +168,8 @@ float length(const iterator_t& begin, const iterator_t& end) {
  * @return Returns a new polyline.
  */
 template <typename iterator_t>
-std::vector<typename iterator_t::value_type> trim_polyline(const iterator_t& begin,
-               const iterator_t& end, float source, float target) {
+std::vector<typename iterator_t::value_type>
+trim_polyline(const iterator_t& begin, const iterator_t& end, float source, float target) {
   // Detect invalid cases
   if (target < source || target < 0.f || 1.f < source || begin == end) {
     return {};
@@ -191,10 +179,8 @@ std::vector<typename iterator_t::value_type> trim_polyline(const iterator_t& beg
   source = std::min(std::max(source, 0.f), 1.f);
   target = std::min(std::max(target, 0.f), 1.f);
 
-  float total_length = length(begin, end),
-  prev_vertex_length = 0.f,
-       source_length = total_length * source,
-       target_length = total_length * target;
+  float total_length = length(begin, end), prev_vertex_length = 0.f,
+        source_length = total_length * source, target_length = total_length * target;
 
   // An state indicating if the position of current vertex is larger
   // than source and smaller than target
@@ -205,7 +191,7 @@ std::vector<typename iterator_t::value_type> trim_polyline(const iterator_t& beg
   iterator_t prev_vertex = begin;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
     const auto segment_length = prev_vertex->Distance(*vertex),
-                vertex_length = prev_vertex_length + segment_length;
+               vertex_length = prev_vertex_length + segment_length;
 
     // Open if source is located at current segment
     if (!open && source_length < vertex_length) {
@@ -254,31 +240,30 @@ std::vector<typename iterator_t::value_type> trim_polyline(const iterator_t& beg
  * @return Returns a list of points along the supplied polyline. The total
  *         length of the returned polyline is dist.
  */
-template <class container_t>
-container_t trim_front(container_t& pts, const float dist);
+template <class container_t> container_t trim_front(container_t& pts, const float dist);
 
-//useful in converting from one iteratable map to another
-//for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string> >(some_ptree)
+// useful in converting from one iteratable map to another
+// for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
+// >(some_ptree)
 /*
  * @param inmap the map to be converted
  * @return the converted map of another type
  */
-template <class T1, class T2>
-inline T2 ToMap(const T1& inmap) {
+template <class T1, class T2> inline T2 ToMap(const T1& inmap) {
   T2 outmap;
-  for(const auto& key_value : inmap)
+  for (const auto& key_value : inmap) {
     outmap[key_value.first] = key_value.second.data();
+  }
   return outmap;
 }
 
-//useful in converting from one iterable set to another
-//for example ToSet<boost::property_tree::ptree, std::unordered_set<std::string> >(some_ptree)
+// useful in converting from one iterable set to another
+// for example ToSet<boost::property_tree::ptree, std::unordered_set<std::string> >(some_ptree)
 /*
  * @param inset the set to be converted
  * @return the converted set of another type
  */
-template <class T1, class T2>
-inline T2 ToSet(const T1& inset) {
+template <class T1, class T2> inline T2 ToSet(const T1& inset) {
   T2 outset;
   for (const auto& item : inset) {
     outset.emplace(item.second.template get_value<typename T2::value_type>());
@@ -292,22 +277,24 @@ inline T2 ToSet(const T1& inset) {
  * @param b second operand
  * @param epsilon to help with approximate equality
  */
-template <class T>
-bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
-  if(epsilon < static_cast<T>(0))
+template <class T> bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
+  if (epsilon < static_cast<T>(0)) {
     throw std::logic_error("Using a negative epsilon is not supported");
+  }
   T diff = a - b;
-  //if its non-negative it better be less than epsilon, if its negative then it better be bigger than epsilon
+  // if its non-negative it better be less than epsilon, if its negative then it better be bigger
+  // than epsilon
   bool negative = diff < static_cast<T>(0);
   return (!negative && diff <= epsilon) || (negative && diff >= -epsilon);
 }
 
-template <class T>
-bool similar(const T a, const T b, const double similarity = .99) {
-  if(a == 0 || b == 0)
+template <class T> bool similar(const T a, const T b, const double similarity = .99) {
+  if (a == 0 || b == 0) {
     return a == b;
-  if((a < 0) != (b < 0))
+  }
+  if ((a < 0) != (b < 0)) {
     return false;
+  }
   return (double)std::min(a, b) / (double)std::max(a, b) >= similarity;
 }
 
@@ -316,9 +303,9 @@ bool similar(const T a, const T b, const double similarity = .99) {
  */
 struct memory_status {
   memory_status() = delete;
-  memory_status(const std::unordered_set<std::string> interest = std::unordered_set<std::string>{});
+  memory_status(const std::unordered_set<std::string>& interest = std::unordered_set<std::string>{});
 
-  std::unordered_map<std::string, std::pair<double, std::string> > metrics;
+  std::unordered_map<std::string, std::pair<double, std::string>> metrics;
 
   static bool supported();
 
@@ -329,32 +316,32 @@ std::ostream& operator<<(std::ostream& stream, const memory_status& s);
 /**
  * Implement the missing make_unique for C++11.
  */
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
+template <typename T, typename... Args> std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>{new T{std::forward<Args>(args)...}};
 }
 
 /* circular range clamp
  */
-template <class T>
-T circular_range_clamp(T value, T lower, T upper) {
-  //yeah..
-  if(lower >= upper)
+template <class T> T circular_range_clamp(T value, T lower, T upper) {
+  // yeah..
+  if (lower >= upper) {
     throw std::runtime_error("invalid range for clamp");
+  }
 
-  //easy case
-  if(lower <= value && value <= upper)
+  // easy case
+  if (lower <= value && value <= upper) {
     return value;
+  }
 
-  //see how far off the bottom of the range it is
+  // see how far off the bottom of the range it is
   auto i = upper - lower;
-  if(value < lower) {
+  if (value < lower) {
     auto d = lower - value;
     d -= (static_cast<int>(d / i) * i);
     return upper - d;
   }
 
-  //its past the top of the range
+  // its past the top of the range
   auto d = value - upper;
   d -= (static_cast<int>(d / i) * i);
   return lower + d;
@@ -363,19 +350,20 @@ T circular_range_clamp(T value, T lower, T upper) {
 /**
  * standard clamp
  */
-template <class T>
-T clamp(T value, T lower, T upper) {
+template <class T> T clamp(T value, T lower, T upper) {
   return std::max(std::min(value, upper), lower);
 }
 
 /**
- * Resample a polyline in spherical coordinates to specified resolution optionally keeping all original points in the line
+ * Resample a polyline in spherical coordinates to specified resolution optionally keeping all
+ * original points in the line
  * @param polyline     the list/vector of points in the line
  * @param resolution   maximum distance between any two points in the resampled line
  * @param preserve     keep input points in resampled line or not
  */
-template<class container_t>
-container_t resample_spherical_polyline(const container_t& polyline, double resolution, bool preserve = false);
+template <class container_t>
+container_t
+resample_spherical_polyline(const container_t& polyline, double resolution, bool preserve = false);
 
 /**
  * A class to wrap a primitive array in something iterable which is useful for loops mostly
@@ -384,17 +372,27 @@ container_t resample_spherical_polyline(const container_t& polyline, double reso
  *
  * TODO: reverse iteration
  */
-template <class T>
-struct iterable_t {
- public:
+template <class T> struct iterable_t {
+public:
   using iterator = T*;
-  iterable_t(T* first, size_t size): head(first), tail(first + size), count(size){}
-  iterable_t(T* first, T* end): head(first), tail(end), count(end - first){}
-  T* begin() { return head; }
-  T* end() { return tail; }
-  T& operator[](size_t index){ return *(head + index); }
-  size_t size() const { return count; }
- protected:
+  iterable_t(T* first, size_t size) : head(first), tail(first + size), count(size) {
+  }
+  iterable_t(T* first, T* end) : head(first), tail(end), count(end - first) {
+  }
+  T* begin() {
+    return head;
+  }
+  T* end() {
+    return tail;
+  }
+  T& operator[](size_t index) {
+    return *(head + index);
+  }
+  size_t size() const {
+    return count;
+  }
+
+protected:
   T* head;
   T* tail;
   size_t count;
@@ -420,7 +418,8 @@ bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord
  * @return x component (or NaN if parallel) of the intercept of uv with the horizontal line
  */
 template <class coord_t>
-typename coord_t::first_type y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y = 0);
+typename coord_t::first_type
+y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y = 0);
 /**
  * Return the intercept of the line passing through uv with the vertical line defined by x
  * @param u  first point on line
@@ -429,7 +428,8 @@ typename coord_t::first_type y_intercept(const coord_t& u, const coord_t& v, con
  * @return y component (or NaN if parallel) of the intercept of uv with the vertical line
  */
 template <class coord_t>
-typename coord_t::first_type x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x = 0);
+typename coord_t::first_type
+x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x = 0);
 
 /**
  * Compute the area of a polygon. If your polygon is not twisted or self intersecting
@@ -442,58 +442,78 @@ typename coord_t::first_type x_intercept(const coord_t& u, const coord_t& v, con
  * @param polygon   the list of points comprising the polygon
  * @return the area of the polygon
  */
-template <class container_t>
-float polygon_area(const container_t& polygon);
+template <class container_t> float polygon_area(const container_t& polygon);
 
-template <typename T>
-struct ring_queue_t {
-  ring_queue_t(size_t limit):limit(limit), i(0) {
+template <typename T> struct ring_queue_t {
+  ring_queue_t(size_t limit) : limit(limit), i(0) {
     v.reserve(limit);
   }
-  void emplace_back(T&& t){
-    if(v.size() < limit) v.emplace_back(t);
-    else v[i] = t;
+  void emplace_back(T&& t) {
+    if (v.size() < limit) {
+      v.emplace_back(t);
+    } else {
+      v[i] = t;
+    }
     i = (i + 1) % limit;
   };
-  const T& front() const { return i < v.size() ? v[i] : v[0]; }
-  const T& back() const { return v[i - 1]; }
-  size_t size() const { return v.size(); }
-  bool full() const { return v.size() == limit; }
+  const T& front() const {
+    return i < v.size() ? v[i] : v[0];
+  }
+  const T& back() const {
+    return v[i - 1];
+  }
+  size_t size() const {
+    return v.size();
+  }
+  bool full() const {
+    return v.size() == limit;
+  }
 
   size_t limit, i;
   std::vector<T> v;
 
   using iterator = typename std::vector<T>::iterator;
   using const_iterator = typename std::vector<T>::const_iterator;
-  iterator begin() { return v.begin(); }
-  const_iterator begin() const { return v.begin(); }
-  iterator end() { return v.end(); }
-  const_iterator end() const { return v.end(); }
+  iterator begin() {
+    return v.begin();
+  }
+  const_iterator begin() const {
+    return v.begin();
+  }
+  iterator end() {
+    return v.end();
+  }
+  const_iterator end() const {
+    return v.end();
+  }
 };
 
 struct gps_segment_t {
   std::vector<midgard::PointLL> shape;
-  float speed; //in meters/second
+  float speed; // in meters/second
 };
 
 /**
  * Generate a gps path from an original path (with speeds) adding in some random noise
  *
- * @param segments    The representation of the segments of the original path including a speed per segment
- *                    this is usually maneuvers or edges in a route path generated by thor
- * @param accuracies  The returned minimum accuracy per simulated point, that is the simulated point should
- *                    be no more than accuracy from the original point (after resampling, see below)
- * @param smoothing   Controls the variability of adjacent simulated points by smoothing the error over a
- *                    window of simulated points. In this case smoothing determines the window size
- * @param accuracy    The maximum noise (arc distance) an one simulated point can exhibit with respect to
- *                    the original point (after resampling, see below)
+ * @param segments    The representation of the segments of the original path including a speed per
+ * segment this is usually maneuvers or edges in a route path generated by thor
+ * @param accuracies  The returned minimum accuracy per simulated point, that is the simulated point
+ * should be no more than accuracy from the original point (after resampling, see below)
+ * @param smoothing   Controls the variability of adjacent simulated points by smoothing the error
+ * over a window of simulated points. In this case smoothing determines the window size
+ * @param accuracy    The maximum noise (arc distance) an one simulated point can exhibit with
+ * respect to the original point (after resampling, see below)
  * @param sample_rate The final sample rate for the returned points. The determines how much time,
- *                    as a function of the segments speed, passes between individual simulated points
+ *                    as a function of the segments speed, passes between individual simulated
+ * points
  */
-std::vector<midgard::PointLL> simulate_gps(
-    const std::vector<gps_segment_t>& segments, std::vector<float>& accuracies,
-    float smoothing = 30, float accuracy = 10.f, size_t sample_rate = 1);
+std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& segments,
+                                           std::vector<float>& accuracies,
+                                           float smoothing = 30,
+                                           float accuracy = 10.f,
+                                           size_t sample_rate = 1);
 
-}
-}
-#endif  // VALHALLA_MIDGARD_UTIL_H_
+} // namespace midgard
+} // namespace valhalla
+#endif // VALHALLA_MIDGARD_UTIL_H_

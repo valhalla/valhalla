@@ -1,16 +1,16 @@
 #include <iostream>
 #include <list>
 
-#include "midgard/util.h"
-#include "midgard/logging.h"
-#include "midgard/constants.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
+#include "midgard/constants.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
 
+#include "odin/maneuver.h"
+#include "proto/directions_options.pb.h"
 #include "proto/tripcommon.pb.h"
 #include "proto/tripdirections.pb.h"
-#include "proto/directions_options.pb.h"
-#include "odin/maneuver.h"
 
 #include "odin/transitrouteinfo.h"
 
@@ -21,64 +21,33 @@ namespace valhalla {
 namespace odin {
 
 const std::unordered_map<int, std::string> Maneuver::relative_direction_string_ =
-    { { static_cast<int>(Maneuver::RelativeDirection::kNone),
-        "Maneuver::RelativeDirection::kNone" }, {
-        static_cast<int>(Maneuver::RelativeDirection::kKeepStraight),
-        "Maneuver::RelativeDirection::kKeepStraight" }, {
-        static_cast<int>(Maneuver::RelativeDirection::kKeepRight),
-        "Maneuver::RelativeDirection::kKeepRight" }, {
-        static_cast<int>(Maneuver::RelativeDirection::kRight),
-        "Maneuver::RelativeDirection::kRight" }, {
-        static_cast<int>(Maneuver::RelativeDirection::KReverse),
-        "Maneuver::RelativeDirection::KReverse" }, {
-        static_cast<int>(Maneuver::RelativeDirection::kLeft),
-        "Maneuver::RelativeDirection::kLeft" }, {
-        static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
-        "Maneuver::RelativeDirection::kKeepLeft" } };
+    {{static_cast<int>(Maneuver::RelativeDirection::kNone), "Maneuver::RelativeDirection::kNone"},
+     {static_cast<int>(Maneuver::RelativeDirection::kKeepStraight),
+      "Maneuver::RelativeDirection::kKeepStraight"},
+     {static_cast<int>(Maneuver::RelativeDirection::kKeepRight),
+      "Maneuver::RelativeDirection::kKeepRight"},
+     {static_cast<int>(Maneuver::RelativeDirection::kRight), "Maneuver::RelativeDirection::kRight"},
+     {static_cast<int>(Maneuver::RelativeDirection::KReverse),
+      "Maneuver::RelativeDirection::KReverse"},
+     {static_cast<int>(Maneuver::RelativeDirection::kLeft), "Maneuver::RelativeDirection::kLeft"},
+     {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
+      "Maneuver::RelativeDirection::kKeepLeft"}};
 
 Maneuver::Maneuver()
-    : type_(TripDirections_Maneuver_Type_kNone),
-      length_(0.0f),
-      time_(0),
-      basic_time_(0),
-      turn_degree_(0),
-      begin_relative_direction_(RelativeDirection::kNone),
-      begin_cardinal_direction_(
-          TripDirections_Maneuver_CardinalDirection_kNorth),
-      begin_heading_(0),
-      end_heading_(0),
-      begin_node_index_(0),
-      end_node_index_(0),
-      begin_shape_index_(0),
-      end_shape_index_(0),
-      ramp_(false),
-      turn_channel_(false),
-      ferry_(false),
-      rail_ferry_(false),
-      roundabout_(false),
-      portions_toll_(false),
-      portions_unpaved_(false),
-      portions_highway_(false),
-      internal_intersection_(false),
-      internal_right_turn_count_(0),
-      internal_left_turn_count_(0),
-      roundabout_exit_count_(0),
-      travel_mode_(TripPath_TravelMode_kDrive),
-      vehicle_type_(TripPath_VehicleType_kCar),
-      pedestrian_type_(TripPath_PedestrianType_kFoot),
-      bicycle_type_(TripPath_BicycleType_kRoad),
-      transit_type_(TripPath_TransitType_kRail),
-      transit_connection_(false),
-      rail_(false),
-      bus_(false),
-      fork_(false),
-      begin_intersecting_edge_name_consistency_(false),
-      intersecting_forward_edge_(false),
-      tee_(false),
-      unnamed_walkway_(false),
-      unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false),
-      verbal_multi_cue_(false) {
+    : type_(TripDirections_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
+      turn_degree_(0), begin_relative_direction_(RelativeDirection::kNone),
+      begin_cardinal_direction_(TripDirections_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
+      end_heading_(0), begin_node_index_(0), end_node_index_(0), begin_shape_index_(0),
+      end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
+      roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
+      internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
+      roundabout_exit_count_(0), travel_mode_(TripPath_TravelMode_kDrive),
+      vehicle_type_(TripPath_VehicleType_kCar), pedestrian_type_(TripPath_PedestrianType_kFoot),
+      bicycle_type_(TripPath_BicycleType_kRoad), transit_type_(TripPath_TransitType_kRail),
+      transit_connection_(false), rail_(false), bus_(false), fork_(false),
+      begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
+      tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
+      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false) {
   street_names_ = midgard::make_unique<StreetNames>();
   begin_street_names_ = midgard::make_unique<StreetNames>();
   cross_street_names_ = midgard::make_unique<StreetNames>();
@@ -108,22 +77,19 @@ bool Maneuver::HasStreetNames() const {
   return (!street_names_->empty());
 }
 
-bool Maneuver::HasSameNames(
-    const Maneuver* other_maneuver,
-    bool allow_begin_intersecting_edge_name_consistency) const {
+bool Maneuver::HasSameNames(const Maneuver* other_maneuver,
+                            bool allow_begin_intersecting_edge_name_consistency) const {
 
   // Allow similar intersecting edge names
   // OR verify that there are no similar intersecting edge names
-  if (allow_begin_intersecting_edge_name_consistency
-      || !begin_intersecting_edge_name_consistency()) {
+  if (allow_begin_intersecting_edge_name_consistency || !begin_intersecting_edge_name_consistency()) {
     // If this maneuver has street names
     // and other maneuver exists
     if (HasStreetNames() && other_maneuver) {
       // other and this maneuvers have same names
-      std::unique_ptr<StreetNames> same_street_names = other_maneuver
-          ->street_names().FindCommonStreetNames(street_names());
-      if (!same_street_names->empty()
-          && (street_names().size() == same_street_names->size())) {
+      std::unique_ptr<StreetNames> same_street_names =
+          other_maneuver->street_names().FindCommonStreetNames(street_names());
+      if (!same_street_names->empty() && (street_names().size() == same_street_names->size())) {
         return true;
       }
     }
@@ -131,22 +97,19 @@ bool Maneuver::HasSameNames(
   return false;
 }
 
-bool Maneuver::HasSimilarNames(
-    const Maneuver* other_maneuver,
-    bool allow_begin_intersecting_edge_name_consistency) const {
+bool Maneuver::HasSimilarNames(const Maneuver* other_maneuver,
+                               bool allow_begin_intersecting_edge_name_consistency) const {
 
   // Allow similar intersecting edge names
   // OR verify that there are no similar intersecting edge names
-  if (allow_begin_intersecting_edge_name_consistency
-      || !begin_intersecting_edge_name_consistency()) {
+  if (allow_begin_intersecting_edge_name_consistency || !begin_intersecting_edge_name_consistency()) {
     // If this maneuver has street names
     // and other maneuver exists
     if (HasStreetNames() && other_maneuver) {
       // other and this maneuvers have similar names
-      std::unique_ptr<StreetNames> similar_street_names = other_maneuver
-          ->street_names().FindCommonBaseNames(street_names());
-      if (!similar_street_names->empty()
-          && (street_names().size() == similar_street_names->size())) {
+      std::unique_ptr<StreetNames> similar_street_names =
+          other_maneuver->street_names().FindCommonBaseNames(street_names());
+      if (!similar_street_names->empty() && (street_names().size() == similar_street_names->size())) {
         return true;
       }
     }
@@ -162,8 +125,7 @@ void Maneuver::set_begin_street_names(const std::vector<std::string>& names) {
   begin_street_names_ = midgard::make_unique<StreetNamesUs>(names);
 }
 
-void Maneuver::set_begin_street_names(
-    std::unique_ptr<StreetNames>&& begin_street_names) {
+void Maneuver::set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names) {
   begin_street_names_ = std::move(begin_street_names);
 }
 
@@ -179,8 +141,7 @@ void Maneuver::set_cross_street_names(const std::vector<std::string>& names) {
   cross_street_names_ = midgard::make_unique<StreetNamesUs>(names);
 }
 
-void Maneuver::set_cross_street_names(
-    std::unique_ptr<StreetNames>&& cross_street_names) {
+void Maneuver::set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names) {
   cross_street_names_ = std::move(cross_street_names);
 }
 
@@ -239,8 +200,7 @@ Maneuver::RelativeDirection Maneuver::begin_relative_direction() const {
   return begin_relative_direction_;
 }
 
-void Maneuver::set_begin_relative_direction(
-    RelativeDirection begin_relative_direction) {
+void Maneuver::set_begin_relative_direction(RelativeDirection begin_relative_direction) {
   begin_relative_direction_ = begin_relative_direction;
 }
 
@@ -375,8 +335,7 @@ void Maneuver::set_internal_intersection(bool internal_intersection) {
 
 bool Maneuver::HasUsableInternalIntersectionName() const {
   uint32_t link_count = (end_node_index_ - begin_node_index_);
-  if (internal_intersection_ && !street_names_->empty()
-      && ((link_count == 1) || (link_count == 3))) {
+  if (internal_intersection_ && !street_names_->empty() && ((link_count == 1) || (link_count == 3))) {
     return true;
   }
   return false;
@@ -414,8 +373,7 @@ uint32_t Maneuver::internal_right_turn_count() const {
   return internal_right_turn_count_;
 }
 
-void Maneuver::set_internal_right_turn_count(
-    uint32_t internal_right_turn_count) {
+void Maneuver::set_internal_right_turn_count(uint32_t internal_right_turn_count) {
   internal_right_turn_count_ = internal_right_turn_count;
 }
 
@@ -449,8 +407,7 @@ bool Maneuver::begin_intersecting_edge_name_consistency() const {
 
 void Maneuver::set_begin_intersecting_edge_name_consistency(
     bool begin_intersecting_edge_name_consistency) {
-  begin_intersecting_edge_name_consistency_ =
-      begin_intersecting_edge_name_consistency;
+  begin_intersecting_edge_name_consistency_ = begin_intersecting_edge_name_consistency;
 }
 
 bool Maneuver::intersecting_forward_edge() const {
@@ -472,8 +429,7 @@ void Maneuver::set_verbal_transition_alert_instruction(
 
 void Maneuver::set_verbal_transition_alert_instruction(
     std::string&& verbal_transition_alert_instruction) {
-  verbal_transition_alert_instruction_ = std::move(
-      verbal_transition_alert_instruction);
+  verbal_transition_alert_instruction_ = std::move(verbal_transition_alert_instruction);
 }
 
 bool Maneuver::HasVerbalTransitionAlertInstruction() const {
@@ -491,8 +447,7 @@ void Maneuver::set_verbal_pre_transition_instruction(
 
 void Maneuver::set_verbal_pre_transition_instruction(
     std::string&& verbal_pre_transition_instruction) {
-  verbal_pre_transition_instruction_ = std::move(
-      verbal_pre_transition_instruction);
+  verbal_pre_transition_instruction_ = std::move(verbal_pre_transition_instruction);
 }
 
 bool Maneuver::HasVerbalPreTransitionInstruction() const {
@@ -510,8 +465,7 @@ void Maneuver::set_verbal_post_transition_instruction(
 
 void Maneuver::set_verbal_post_transition_instruction(
     std::string&& verbal_post_transition_instruction) {
-  verbal_post_transition_instruction_ = std::move(
-      verbal_post_transition_instruction);
+  verbal_post_transition_instruction_ = std::move(verbal_post_transition_instruction);
 }
 
 bool Maneuver::HasVerbalPostTransitionInstruction() const {
@@ -650,9 +604,9 @@ void Maneuver::set_bus(bool bus) {
 }
 
 bool Maneuver::IsTransit() const {
-  return ((type_ == TripDirections_Maneuver_Type_kTransit)
-      || (type_ == TripDirections_Maneuver_Type_kTransitTransfer)
-      || (type_ == TripDirections_Maneuver_Type_kTransitRemainOn));
+  return ((type_ == TripDirections_Maneuver_Type_kTransit) ||
+          (type_ == TripDirections_Maneuver_Type_kTransitTransfer) ||
+          (type_ == TripDirections_Maneuver_Type_kTransitRemainOn));
 }
 
 const TransitRouteInfo& Maneuver::transit_info() const {
@@ -676,15 +630,14 @@ const std::list<TransitPlatformInfo>& Maneuver::GetTransitStops() const {
 }
 
 size_t Maneuver::GetTransitStopCount() const {
-  return
-      (transit_info_.transit_stops.size() > 0) ?
-          (transit_info_.transit_stops.size() - 1) : 0;
+  return (transit_info_.transit_stops.size() > 0) ? (transit_info_.transit_stops.size() - 1) : 0;
 }
 
 void Maneuver::InsertTransitStop(const TransitPlatformInfo& transit_platform) {
   transit_info_.transit_stops.push_front(transit_platform);
-  //TODO
-//  LOG_TRACE("InsertTransitPlatform=" + transit_info_.transit_platforms.front().ToParameterString());
+  // TODO
+  //  LOG_TRACE("InsertTransitPlatform=" +
+  //  transit_info_.transit_platforms.front().ToParameterString());
 }
 
 const std::string& Maneuver::depart_instruction() const {
@@ -739,11 +692,9 @@ const VerbalTextFormatter* Maneuver::verbal_formatter() const {
   return verbal_formatter_.get();
 }
 
-void Maneuver::set_verbal_formatter(
-    std::unique_ptr<VerbalTextFormatter>&& verbal_formatter) {
+void Maneuver::set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter) {
   verbal_formatter_ = std::move(verbal_formatter);
 }
-
 
 std::string Maneuver::ToString() const {
   std::string man_str;
@@ -888,11 +839,11 @@ std::string Maneuver::ToString() const {
 
   // TODO: transit_connection_stop
   // TODO: transit_route_info
-//TODO
-//  std::string depart_instruction_;
-//  std::string verbal_depart_instruction_;
-//  std::string arrive_instruction_;
-//  std::string verbal_arrive_instruction_;
+  // TODO
+  //  std::string depart_instruction_;
+  //  std::string verbal_depart_instruction_;
+  //  std::string arrive_instruction_;
+  //  std::string verbal_arrive_instruction_;
 
   return man_str;
 }
@@ -904,8 +855,7 @@ std::string Maneuver::ToParameterString() const {
   man_str.reserve(256);
 
   man_str += "TripDirections_Maneuver_Type_";
-  man_str += TripDirections_Maneuver_Type_descriptor()->FindValueByNumber(type_)
-      ->name();
+  man_str += TripDirections_Maneuver_Type_descriptor()->FindValueByNumber(type_)->name();
 
   man_str += delim;
   man_str += street_names_->ToParameterString();
@@ -931,13 +881,14 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(turn_degree_);
 
   man_str += delim;
-  man_str += Maneuver::relative_direction_string_.find(
-      static_cast<int>(begin_relative_direction_))->second;
+  man_str +=
+      Maneuver::relative_direction_string_.find(static_cast<int>(begin_relative_direction_))->second;
 
   man_str += delim;
   man_str += "TripDirections_Maneuver_CardinalDirection_";
   man_str += TripDirections_Maneuver_CardinalDirection_descriptor()
-      ->FindValueByNumber(begin_cardinal_direction_)->name();
+                 ->FindValueByNumber(begin_cardinal_direction_)
+                 ->name();
 
   man_str += delim;
   man_str += std::to_string(begin_heading_);
@@ -1038,30 +989,29 @@ std::string Maneuver::ToParameterString() const {
   man_str += delim;
   man_str += std::to_string(verbal_multi_cue_);
 
-//  man_str += delim;
-//  man_str += "TripPath_TravelMode_";
-//  man_str += TripPath_TravelMode_descriptor()
-//      ->FindValueByNumber(travel_mode_)->name();
-//  bool rail_;
-//  bool bus_;
+  //  man_str += delim;
+  //  man_str += "TripPath_TravelMode_";
+  //  man_str += TripPath_TravelMode_descriptor()
+  //      ->FindValueByNumber(travel_mode_)->name();
+  //  bool rail_;
+  //  bool bus_;
 
   // TODO Travel Types
 
   // Transit TODO
   // Transit connection flag and the associated stop
-//  transit_connection_;
-//  TransitPlatformInfo transit_connection_stop_;
+  //  transit_connection_;
+  //  TransitPlatformInfo transit_connection_stop_;
 
   // The transit info including list of stops
-//  TransitInfo transit_info_;
-//  std::string depart_instruction_;
-//  std::string verbal_depart_instruction_;
-//  std::string arrive_instruction_;
-//  std::string verbal_arrive_instruction_;
+  //  TransitInfo transit_info_;
+  //  std::string depart_instruction_;
+  //  std::string verbal_depart_instruction_;
+  //  std::string arrive_instruction_;
+  //  std::string verbal_arrive_instruction_;
 
   return man_str;
 }
 
-}
-}
-
+} // namespace odin
+} // namespace valhalla

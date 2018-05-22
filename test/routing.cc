@@ -1,22 +1,21 @@
 #include <cstdint>
 // -*- mode: c++ -*-
-#include "test.h"
 #include "meili/routing.h"
+#include "test.h"
 
 using namespace valhalla;
 using namespace valhalla::meili;
 
-void Add(baldr::DoubleBucketQueue &adjlist, const std::vector<float>& costs)
-{
+void Add(baldr::DoubleBucketQueue& adjlist, const std::vector<float>& costs) {
   uint32_t idx = 0;
   for (const auto cost : costs) {
     adjlist.add(idx++);
   }
 }
 
-
-void TryRemove(baldr::DoubleBucketQueue &adjlist, size_t num_to_remove, const std::vector<float>& costs)
-{
+void TryRemove(baldr::DoubleBucketQueue& adjlist,
+               size_t num_to_remove,
+               const std::vector<float>& costs) {
   auto previous_cost = -std::numeric_limits<float>::infinity();
   for (size_t i = 0; i < num_to_remove; ++i) {
     const auto top = adjlist.pop();
@@ -26,23 +25,17 @@ void TryRemove(baldr::DoubleBucketQueue &adjlist, size_t num_to_remove, const st
   }
 }
 
-
-void TestAddRemove()
-{
+void TestAddRemove() {
   // Test add and remove
-  std::vector<float> costs = { 67, 325, 25, 466, 1000, 10000, 758, 167,
-                               258, 16442, 278 };
+  std::vector<float> costs = {67, 325, 25, 466, 1000, 10000, 758, 167, 258, 16442, 278};
 
-  const auto labelcost = [&costs](const uint32_t label) {
-    return costs[label];
-  };
+  const auto labelcost = [&costs](const uint32_t label) { return costs[label]; };
 
   baldr::DoubleBucketQueue adjlist(0, 100000, 1, labelcost);
 
   Add(adjlist, costs);
   TryRemove(adjlist, costs.size(), costs);
   test::assert_bool(adjlist.pop() == baldr::kInvalidLabel, "TestAddRemove: expect list to be empty");
-
 
   // Test add randomly and remove
   costs.clear();
@@ -78,19 +71,16 @@ void TestAddRemove()
   costs[3] = 3;
   uint32_t lab = adjlist3.pop();
   test::assert_bool(lab == 3,
-                    "TestAddRemove: After decrease the lowest cost label must be label 3, top = " + std::to_string(lab));
+                    "TestAddRemove: After decrease the lowest cost label must be label 3, top = " +
+                        std::to_string(lab));
 }
 
-
-void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_increment_cost)
-{
+void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_increment_cost) {
   std::vector<float> costs;
   // Track all label indexes in the adjlist
   std::unordered_set<uint32_t> track;
 
-  const auto labelcost = [&costs](const uint32_t label) {
-    return costs[label];
-  };
+  const auto labelcost = [&costs](const uint32_t label) { return costs[label]; };
 
   baldr::DoubleBucketQueue adjlist(0, 100000, 1, labelcost);
 
@@ -118,8 +108,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
         if (newcost < costs[idx]) {
           adjlist.decrease(idx, newcost);
           costs[idx] = newcost;
-          test::assert_bool(labelcost(idx) == newcost,
-                            "failed to decrease cost");
+          test::assert_bool(labelcost(idx) == newcost, "failed to decrease cost");
         } /*else {
           // Assert that it must fail to decrease since costs[idx] <= newcost
           test::assert_throw<std::runtime_error>([&adjlist, idx, newcost](){
@@ -140,18 +129,14 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
   test::assert_bool(adjlist.pop() == baldr::kInvalidLabel, "Simulation: expect list to be empty");
 }
 
-
-void TestSimulation()
-{
+void TestSimulation() {
   TrySimulation(1000, 40, 100);
-  TrySimulation( 222, 40, 100);
-  TrySimulation( 333, 60, 100);
-  TrySimulation( 333, 60, 100);
+  TrySimulation(222, 40, 100);
+  TrySimulation(333, 60, 100);
+  TrySimulation(333, 60, 100);
 }
 
-
-void Benchmark()
-{
+void Benchmark() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::vector<float> costs;
@@ -160,9 +145,7 @@ void Benchmark()
     costs.push_back(std::floor(test::rand01(gen) * N));
   }
 
-  const auto labelcost = [&costs](const uint32_t label) {
-    return costs[label];
-  };
+  const auto labelcost = [&costs](const uint32_t label) { return costs[label]; };
 
   std::clock_t start = std::clock();
   baldr::DoubleBucketQueue adjlist5(0, N, 1, labelcost);
@@ -172,9 +155,7 @@ void Benchmark()
   std::cout << ms << std::endl;
 }
 
-
-void TestRoutePathIterator()
-{
+void TestRoutePathIterator() {
   meili::LabelSet labelset(100);
   // Travel mode is insignificant in the tests
   sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
@@ -189,79 +170,47 @@ void TestRoutePathIterator()
   labelset.put(0, travelmode, nullptr);
   labelset.put(1, travelmode, nullptr);
   labelset.put(2, travelmode, nullptr);
-  labelset.put(3, baldr::GraphId(),
-               0.f, 1.f,
-               {0.f, 0.0f}, 0.f, 0.f,
-               1, &de, travelmode);
-  labelset.put(4, baldr::GraphId(),
-               0.f, 1.f,
-               {0.f, 0.0f}, 0.f, 0.f,
-               1, &de, travelmode);
-  labelset.put(5, baldr::GraphId(),
-               0.f, 1.f,
-               {0.f, 0.0f}, 0.f, 0.f,
-               3, &de, travelmode);
-  labelset.put(6, baldr::GraphId(),
-               0.f, 1.f,
-               {0.f, 0.0f}, 0.f, 0.f,
-               3, &de, travelmode);
+  labelset.put(3, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 1, &de, travelmode);
+  labelset.put(4, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 1, &de, travelmode);
+  labelset.put(5, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 3, &de, travelmode);
+  labelset.put(6, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 3, &de, travelmode);
 
-  meili::RoutePathIterator the_end(&labelset, baldr::kInvalidLabel),
-      it0(&labelset, 0),
-      it1(&labelset, 1),
-      it2(&labelset, 2),
-      it3(&labelset, 3),
-      it4(&labelset, 4),
-      it5(&labelset, 5),
+  meili::RoutePathIterator the_end(&labelset, baldr::kInvalidLabel), it0(&labelset, 0),
+      it1(&labelset, 1), it2(&labelset, 2), it3(&labelset, 3), it4(&labelset, 4), it5(&labelset, 5),
       it6(&labelset, 6);
 
-  test::assert_bool(it0 != the_end,
-                    "TestRoutePathIterator: wrong equality testing");
+  test::assert_bool(it0 != the_end, "TestRoutePathIterator: wrong equality testing");
 
-  test::assert_bool(&(*it0) == &labelset.label(0),
-                    "TestRoutePathIterator: wrong dereferencing");
+  test::assert_bool(&(*it0) == &labelset.label(0), "TestRoutePathIterator: wrong dereferencing");
 
   test::assert_bool(it0->predecessor() == baldr::kInvalidLabel,
                     "TestRoutePathIterator: wrong dereferencing pointer");
 
-  test::assert_bool(++it0 == the_end,
-                    "TestRoutePathIterator: wrong prefix increment");
+  test::assert_bool(++it0 == the_end, "TestRoutePathIterator: wrong prefix increment");
 
-  test::assert_bool(std::next(it3) == it1,
-                    "TestRoutePathIterator: wrong forwarding");
+  test::assert_bool(std::next(it3) == it1, "TestRoutePathIterator: wrong forwarding");
 
-  test::assert_bool(std::next(it3, 2) == the_end,
-                    "TestRoutePathIterator: wrong forwarding 2");
+  test::assert_bool(std::next(it3, 2) == the_end, "TestRoutePathIterator: wrong forwarding 2");
 
-  test::assert_bool(std::next(it4) == it1,
-                    "TestRoutePathIterator: wrong forwarding 3");
+  test::assert_bool(std::next(it4) == it1, "TestRoutePathIterator: wrong forwarding 3");
 
-  test::assert_bool(std::next(it4, 2) == the_end,
-                    "TestRoutePathIterator: wrong forwarding 4");
+  test::assert_bool(std::next(it4, 2) == the_end, "TestRoutePathIterator: wrong forwarding 4");
 
-  test::assert_bool(it4->predecessor() == 1,
-                    "TestRoutePathIterator: wrong dereferencing pointer 2");
+  test::assert_bool(it4->predecessor() == 1, "TestRoutePathIterator: wrong dereferencing pointer 2");
 
-  test::assert_bool((it5++)->predecessor() == 3,
-                    "TestRoutePathIterator: wrong postfix increment");
+  test::assert_bool((it5++)->predecessor() == 3, "TestRoutePathIterator: wrong postfix increment");
 
-  test::assert_bool(it5 == it3,
-                    "TestRoutePathIterator: wrong after postfix increment");
+  test::assert_bool(it5 == it3, "TestRoutePathIterator: wrong after postfix increment");
 
-  test::assert_bool(++it5 == it1,
-                    "TestRoutePathIterator: wrong prefix increment");
+  test::assert_bool(++it5 == it1, "TestRoutePathIterator: wrong prefix increment");
 
-  test::assert_bool(it5 == it1,
-                    "TestRoutePathIterator: wrong after prefix increment");
+  test::assert_bool(it5 == it1, "TestRoutePathIterator: wrong after prefix increment");
 
   std::advance(it5, 1);
-  test::assert_bool(it5 == the_end,
-                    "TestRoutePathIterator: wrong advance");
+  test::assert_bool(it5 == the_end, "TestRoutePathIterator: wrong advance");
 }
 
-
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
   test::suite suite("routing");
 
   suite.test(TEST_CASE(TestAddRemove));
