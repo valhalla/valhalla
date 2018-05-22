@@ -157,14 +157,18 @@ public:
    */
   PedestrianCost(const boost::property_tree::ptree& pt);
 
-  virtual ~PedestrianCost();
+  // virtual destructor
+  virtual ~PedestrianCost() {
+  }
 
   /**
    * Does the costing method allow multiple passes (with relaxed hierarchy
    * limits).
    * @return  Returns true if the costing model allows multiple passes.
    */
-  virtual bool AllowMultiPass() const;
+  virtual bool AllowMultiPass() const {
+    return true;
+  }
 
   /**
    * This method overrides the max_distance with the max_distance_mm per segment
@@ -173,26 +177,34 @@ public:
    * meters per segment (e.g. from origin to a transit stop or from the last
    * transit stop to the destination).
    */
-  virtual void UseMaxMultiModalDistance();
+  virtual void UseMaxMultiModalDistance() {
+    max_distance_ = transit_start_end_max_distance_;
+  }
 
   /**
    * Returns the maximum transfer distance between stops that you are willing
    * to travel for this mode.  In this case, it is the max walking
    * distance you are willing to walk between transfers.
    */
-  virtual uint32_t GetMaxTransferDistanceMM();
+  virtual uint32_t GetMaxTransferDistanceMM() {
+    return transit_transfer_max_distance_;
+  }
 
   /**
    * This method overrides the factor for this mode.  The higher the value
    * the more the mode is favored.
    */
-  virtual float GetModeFactor();
+  virtual float GetModeFactor() {
+    return mode_factor_;
+  }
 
   /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const {
+    return access_mask_;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -248,7 +260,9 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & access_mask_);
+  }
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
@@ -295,13 +309,24 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const;
+  virtual float AStarCostFactor() const {
+    // On first pass use the walking speed plus a small factor to account for
+    // favoring walkways, on the second pass use the the maximum ferry speed.
+    if (pass_ == 0) {
+      return (kSecPerHour * 0.001f) /
+             (kDefaultSpeedFoot * std::min(walkway_factor_, sidewalk_factor_));
+    } else {
+      return (kSecPerHour * 0.001f) / static_cast<float>(kMaxFerrySpeedKph);
+    }
+  }
 
   /**
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const;
+  virtual uint8_t travel_type() const {
+    return static_cast<uint8_t>(type_);
+  }
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -464,42 +489,6 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   speedfactor_ = (kSecPerHour * 0.001f) / speed_;
 }
 
-// Destructor
-PedestrianCost::~PedestrianCost() {
-}
-
-// Allow multiple passes when ferries are on initial path.
-bool PedestrianCost::AllowMultiPass() const {
-  return true;
-}
-
-// This method overrides the max_distance with the max_distance_mm per segment
-// distance. An example is a pure walking route may have a max distance of
-// 10000 meters (10km) but for a multi-modal route a lower limit of 5000
-// meters per segment (e.g. from origin to a transit stop or from the last
-// transit stop to the destination).
-void PedestrianCost::UseMaxMultiModalDistance() {
-  max_distance_ = transit_start_end_max_distance_;
-}
-
-// Returns the maximum transfer distance between stops that you are willing
-// to travel for this mode.  In this case, it is the max walking
-// distance you are willing to walk between transfers.
-uint32_t PedestrianCost::GetMaxTransferDistanceMM() {
-  return transit_transfer_max_distance_;
-}
-
-// This method overrides the factor for this mode.  The lower the value
-// the more the mode is favored.
-float PedestrianCost::GetModeFactor() {
-  return mode_factor_;
-}
-
-// Get the access mode used by this costing method.
-uint32_t PedestrianCost::access_mode() const {
-  return access_mask_;
-}
-
 // Check if access is allowed on the specified edge. Disallow if no
 // access for this pedestrian type, if surface type exceeds (worse than)
 // the minimum allowed surface type, or if max grade is exceeded.
@@ -588,11 +577,6 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return true;
 }
 
-// Check if access is allowed at the specified node.
-bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & access_mask_);
-}
-
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
@@ -603,8 +587,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
     return {sec * ferry_factor_, sec};
   }
 
+  // TODO - consider using an array of "use factors" to avoid this conditional
   float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())];
-
   if (edge->use() == Use::kFootway) {
     factor *= walkway_factor_;
   } else if (edge->use() == Use::kAlley) {
@@ -702,28 +686,6 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     seconds += kCrossingCosts[edge->stopimpact(idx)];
   }
   return {seconds + penalty, seconds};
-}
-
-// Get the cost factor for A* heuristics. This factor is multiplied
-// with the distance to the destination to produce an estimate of the
-// minimum cost to the destination. The A* heuristic must underestimate the
-// cost to the destination. So a time based estimate based on speed should
-// assume the maximum speed is used to the destination such that the time
-// estimate is less than the least possible time along roads.
-float PedestrianCost::AStarCostFactor() const {
-  // On first pass use the walking speed plus a small factor to account for
-  // favoring walkways, on the second pass use the the maximum ferry speed.
-  if (pass_ == 0) {
-    float speed = kDefaultSpeedFoot * std::min(walkway_factor_, sidewalk_factor_);
-    return (kSecPerHour * 0.001f) / static_cast<float>(speed);
-  } else {
-    return (kSecPerHour * 0.001f) / static_cast<float>(kMaxFerrySpeedKph);
-  }
-}
-
-// Returns the current travel type.
-uint8_t PedestrianCost::travel_type() const {
-  return static_cast<uint8_t>(type_);
 }
 
 cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
