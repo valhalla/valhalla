@@ -1,9 +1,8 @@
 message(STATUS "Configuring locales/*.json to generate locales.h")
-file(GLOB locale_jsons ${CMAKE_SOURCE_DIR}/locales *.json)
-set(_locales_h ${CMAKE_BINARY_DIR}/valhalla/locales.h)
+file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales *.json)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/locales.h
-  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake ${CMAKE_SOURCE_DIR}/locales/ ${CMAKE_BINARY_DIR}/valhalla/locales.h --locales
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_BINARY_DIR}/valhalla/locales.h --locales
+  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
   DEPENDS ${locale_jsons}
   VERBATIM)
@@ -11,18 +10,18 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/locales.h
 set(headers
   ${CMAKE_BINARY_DIR}/valhalla/locales.h
 
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/worker.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/directionsbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/maneuversbuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/narrative_dictionary.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/narrative_builder_factory.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/narrativebuilder.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/enhancedtrippath.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/maneuver.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/sign.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/signs.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/util.h
-  ${CMAKE_SOURCE_DIR}/valhalla/odin/transitrouteinfo.h)
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/worker.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/directionsbuilder.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/maneuversbuilder.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/narrative_dictionary.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/narrative_builder_factory.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/narrativebuilder.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/enhancedtrippath.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/maneuver.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/sign.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/signs.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/util.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/odin/transitrouteinfo.h)
 
 set(sources
   directionsbuilder.cc
@@ -43,8 +42,8 @@ valhalla_module(NAME odin
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
-      ${CMAKE_SOURCE_DIR}
-      ${CMAKE_SOURCE_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}
+      ${VALHALLA_SOURCE_DIR}/valhalla
     PRIVATE
       ${CMAKE_BINARY_DIR}
       ${CMAKE_BINARY_DIR}/valhalla

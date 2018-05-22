@@ -42,6 +42,7 @@ endif()
 
 add_library(valhalla-protobuf STATIC ${protobuff_srcs} ${protobuff_hdrs})
 add_library(valhalla::protobuf ALIAS valhalla-protobuf)
+target_include_directories(valhalla-protobuf PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(valhalla-protobuf protobuf::libprotobuf)
 
 if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)

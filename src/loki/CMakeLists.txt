@@ -1,7 +1,7 @@
 set(headers
-  ${CMAKE_SOURCE_DIR}/valhalla/loki/worker.h
-  ${CMAKE_SOURCE_DIR}/valhalla/loki/search.h
-  ${CMAKE_SOURCE_DIR}/valhalla/loki/node_search.h)
+  ${VALHALLA_SOURCE_DIR}/valhalla/loki/worker.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/loki/search.h
+  ${VALHALLA_SOURCE_DIR}/valhalla/loki/node_search.h)
 
 set(sources
   search.cc
@@ -20,8 +20,8 @@ valhalla_module(NAME loki
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
   PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/valhalla
+    ${VALHALLA_SOURCE_DIR}
+    ${VALHALLA_SOURCE_DIR}/valhalla
   PRIVATE
     ${CMAKE_BINARY_DIR}
   DEPENDS
