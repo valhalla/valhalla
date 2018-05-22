@@ -325,6 +325,7 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
   // Also they must be a road use (not footway, cycleway, etc.).
   // TODO - consider whether alleys, cul-de-sacs, and other road uses
   // are candidates to be marked as internal intersection edges.
+  // Returns false if any connecting edge is a roundabout.
   if (directededge.length() > kMaxInternalLength || directededge.roundabout() ||
       directededge.use() > Use::kCycleway) {
     return false;
@@ -341,10 +342,26 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
            turn_types.find(Turn::Type::kSharpLeft) != turn_types.end();
   };
 
+  // Get the tile at the startnode
+  const GraphTile* tile = start_tile;
+
+  // Exclude trivial "loops" where only 2 edges at start of candidate edge and
+  // the end of the candidate edge is the start of the incoming edge to the
+  // candidate
+  if (startnodeinfo.edge_count() == 2) {
+    const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
+    for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+      // This is a loop if the non-candidate edge ends at the end node of the
+      // candidate directed edge
+      if (i != idx && diredge->endnode() == directededge.endnode()) {
+        return false;
+      }
+    }
+  }
+
   // Iterate through inbound edges and get turn degrees from driveable inbound
   // edges onto the candidate edge.
   bool oneway_inbound = false;
-  const GraphTile* tile = start_tile;
   uint32_t heading = startnodeinfo.heading(idx);
   std::set<Turn::Type> incoming_turn_type;
   const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
@@ -353,6 +370,11 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
     // that are not driveable inbound.
     if (i == idx || diredge->use() != Use::kRoad || !(diredge->reverseaccess() & kAutoAccess)) {
       continue;
+    }
+
+    // Return false if this is a roundabout connection.
+    if (diredge->roundabout()) {
+      return false;
     }
 
     // Store the turn type of incoming driveable edges.
@@ -413,6 +435,11 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
       continue;
     }
 
+    // Return false if this is a roundabout connection.
+    if (diredge->roundabout()) {
+      return false;
+    }
+
     // Get the heading of the outbound edge (unfortunately GraphEnhancer may
     // not have yet computed and stored headings for this node).
     auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
@@ -442,9 +469,11 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
   }
 
   // A further rejection case is if there are incoming edges that
-  // have "opposite" turn degrees than outgoing edges
+  // have "opposite" turn degrees than outgoing edges or if the outgoing
+  // edges have opposing turn degrees.
   if ((has_turn_left(incoming_turn_type) && has_turn_right(outgoing_turn_type)) ||
-      (has_turn_right(incoming_turn_type) && has_turn_left(outgoing_turn_type))) {
+      (has_turn_right(incoming_turn_type) && has_turn_left(outgoing_turn_type)) ||
+      (has_turn_left(outgoing_turn_type) && has_turn_right(outgoing_turn_type))) {
     return false;
   }
 
