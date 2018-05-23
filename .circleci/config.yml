@@ -58,7 +58,7 @@ jobs:
       - run: make -C build install
       - run: make -C build package
       - run: make -C build coverage
-      # - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+      - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
       - save_cache:
           key: ccache
           paths:
@@ -83,6 +83,28 @@ jobs:
       - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+
+  build-osx:
+    macos:
+      xcode: "9.2.0"
+    steps:
+      - run: brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl czmq lz4
+      - checkout
+      - run: git submodule sync && git submodule update --init
+      - run: cd locales && for loc in $(jq ".posix_locale" *.json | sed -e 's/"//g'); do localedef -i "${loc%.*}" -f "${loc##*.}" "./${loc}" ; done
+      - restore_cache:
+          keys:
+            - ccache
+      - run: mkdir build
+      - run: cd build && cmake ..
+      - run: make -C build -j4
+      - run: make -C build -j2 tests
+      - run: make -C build -j2 check
+      - run: make -C build install
       - save_cache:
           key: ccache
           paths:
