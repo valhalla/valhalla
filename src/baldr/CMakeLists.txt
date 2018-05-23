@@ -99,6 +99,7 @@ valhalla_module(NAME baldr
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
