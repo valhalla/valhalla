@@ -1,4 +1,5 @@
-// Note: keep include boost/python.hpp first - fixes https://bugs.python.org/issue10910 on FreeBSD/macOS
+// Note: keep include boost/python.hpp first - fixes https://bugs.python.org/issue10910 on
+// FreeBSD/macOS
 #include <boost/python.hpp>
 
 #include <boost/make_shared.hpp>
