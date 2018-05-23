@@ -38,4 +38,6 @@ valhalla_module(NAME meili
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
     PRIVATE
-      ${CMAKE_BINARY_DIR})
+      ${CMAKE_BINARY_DIR}
+  DEPENDS
+    valhalla::baldr)
