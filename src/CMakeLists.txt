@@ -5,7 +5,6 @@ include(GNUInstallDirs)
 set(LIBVALHALLA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 if(NOT VALHALLA_SOURCE_DIR)
   set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
-  message("${VALHALLA_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
 ## Get Valhalla version
@@ -55,9 +54,8 @@ set_target_properties(Lua::Lua PROPERTIES
 
 find_package(ZLIB REQUIRED)
 find_package(LZ4 REQUIRED)
-find_package(SQLite3 REQUIRED)
-find_package(SpatiaLite)
 find_package(Threads REQUIRED)
+
 add_library(libprime_server INTERFACE IMPORTED)
 if(ENABLE_SERVICES)
   pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
@@ -101,20 +99,19 @@ add_subdirectory(baldr)
 add_subdirectory(loki)
 add_subdirectory(meili)
 add_subdirectory(midgard)
-add_subdirectory(mjolnir)
 add_subdirectory(odin)
 add_subdirectory(sif)
 add_subdirectory(skadi)
 add_subdirectory(thor)
 add_subdirectory(tyr)
 
-message(STATUS "Generating  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h")
-configure_file(../valhalla/valhalla.h.in ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h @ONLY)
+if(ENABLE_DATA_TOOLS)
+  add_subdirectory(mjolnir)
+endif()
 
-message(STATUS "Generating  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h")
+configure_file(../valhalla/valhalla.h.in ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h @ONLY)
 configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h @ONLY)
 
-message(STATUS "Configuring valhalla library target")
 set(valhalla_hdrs
   ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
   ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h
@@ -124,31 +121,28 @@ set(valhalla_hdrs
 
 add_library(valhalla worker.cc ${valhalla_hdrs})
 
-if(MSVC)
-  target_compile_definitions(valhalla PRIVATE "VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI")
-endif()
+target_compile_definitions(valhalla PRIVATE
+  $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">)
 
 target_include_directories(valhalla
   PUBLIC
     ${VALHALLA_SOURCE_DIR}
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${LIBVALHALLA_BINARY_DIR}
-    ${LIBVALHALLA_BINARY_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+    ${LIBVALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     )
 
 target_link_libraries(valhalla
-  valhalla::mjolnir
+  $<$<BOOL:${ENABLE_DATA_TOOLS}>:valhalla::mjolnir>
   valhalla::baldr
   valhalla::tyr
   valhalla::midgard
   valhalla::meili
   valhalla::sif
   valhalla::skadi
-  valhalla::protobuf)
-
-if(ENABLE_COVERAGE)
-  target_link_libraries(valhalla gcov)
-endif()
+  valhalla::protobuf
+  $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
+  Threads::Threads)
 
 set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"
@@ -167,17 +161,16 @@ if(BUILD_SHARED_LIBS)
 else()
   add_custom_command(TARGET valhalla POST_BUILD
     COMMAND ${CMAKE_AR} rc $<TARGET_FILE:valhalla>
+      $<$<BOOL:${ENABLE_DATA_TOOLS}>:$<TARGET_FILE:valhalla::mjolnir>>
       $<TARGET_FILE:valhalla::baldr>
       $<TARGET_FILE:valhalla::loki>
       $<TARGET_FILE:valhalla::meili>
       $<TARGET_FILE:valhalla::midgard>
-      $<TARGET_FILE:valhalla::mjolnir>
       $<TARGET_FILE:valhalla::odin>
       $<TARGET_FILE:valhalla::sif>
       $<TARGET_FILE:valhalla::skadi>
       $<TARGET_FILE:valhalla::thor>
-      $<TARGET_FILE:valhalla::tyr>
-      $<TARGET_FILE:valhalla::mjolnir>)
+      $<TARGET_FILE:valhalla::tyr>)
 
   add_custom_target(${LIBVALHALLA_SO_LINK} ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})

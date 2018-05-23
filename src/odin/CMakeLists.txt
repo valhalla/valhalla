@@ -1,14 +1,13 @@
-message(STATUS "Configuring locales/*.json to generate locales.h")
 file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales *.json)
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/valhalla/locales.h
-  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_BINARY_DIR}/valhalla/locales.h --locales
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
+  COMMAND ${CMAKE_COMMAND} -P cmake/Binary2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
-  COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
+  COMMENT "Compiling locales/*.json to locales.h"
   DEPENDS ${locale_jsons}
   VERBATIM)
 
 set(headers
-  ${CMAKE_BINARY_DIR}/valhalla/locales.h
+  ${CMAKE_CURRENT_BINARY_DIR}/locales.h
 
   ${VALHALLA_SOURCE_DIR}/valhalla/odin/worker.h
   ${VALHALLA_SOURCE_DIR}/valhalla/odin/directionsbuilder.h
@@ -45,8 +44,7 @@ valhalla_module(NAME odin
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
     PRIVATE
-      ${CMAKE_BINARY_DIR}
-      ${CMAKE_BINARY_DIR}/valhalla
+      ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
     valhalla::tyr
     valhalla::protobuf)

@@ -61,6 +61,10 @@ find_package_handle_standard_args(SQLITE3
 
 mark_as_advanced(SQLITE3_LIBRARY SQLITE3_INCLUDE_DIR SQLITE3_LIBRARIES)
 
+if(NOT SQLite3_FIND_QUIETLY)
+  message(STATUS "Found SQLite3: ${SQLITE3_LIBRARY}")
+endif(NOT SQLite3_FIND_QUIETLY)
+
 add_library(SQLite3::SQLite3 INTERFACE IMPORTED)
 set_target_properties(SQLite3::SQLite3 PROPERTIES
   INTERFACE_LINK_LIBRARIES "${SQLITE3_LIBRARIES}"
