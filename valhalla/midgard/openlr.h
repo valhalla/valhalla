@@ -1,182 +1,219 @@
 #ifndef VALHALLA_MIDGARD_OPENLR_H_
 #define VALHALLA_MIDGARD_OPENLR_H_
 
-#include "pointll.h"
-#include "base64.h"
+#include <valhalla/midgard/pointll.h>
+
+#include <assert.h>
+#include <bitset>
 
 namespace valhalla {
 namespace midgard {
-
 namespace OpenLR {
 
 namespace {
-    constexpr double BEARING_BUCKET_SIZE = 360. / 255.;
 
-    // Used to fill in bits for 24 and 16 bit signed integers
-    constexpr uint64_t COMPLEMENT_MASK [] = {0xffffffff, 0xfffffffe, 0xfffffffc,
-                        0xfffffff8, 0xfffffff0, 0xffffffe0, 0xffffffc0, 0xffffff80,
-                        0xffffff00, 0xfffffe00, 0xfffffc00, 0xfffff800, 0xfffff000,
-                        0xffffe000, 0xffffc000, 0xffff8000, 0xffff0000, 0xfffe0000,
-                        0xfffc0000, 0xfff80000, 0xfff00000, 0xffe00000, 0xffc00000,
-                        0xff800000, 0xff000000, 0xfe000000, 0xfc000000, 0xf8000000,
-                        0xf0000000, 0xe0000000, 0xc0000000, 0x80000000, 0x00000000 };
+template <typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+inline int sgn(const T val) {
+  return (T(0) < val) - (val < T(0));
 }
 
-// Specify 1-byte padding for this struct
-#pragma pack(push, 1)
-struct TwoPointLinearReference  {
-    using byte = uint8_t;
+template <typename T, unsigned B> inline T signextend(const T x) {
+  struct {
+    T x : B;
+  } s;
+  return s.x = x;
+}
 
-    // Byte 0
-    byte unused_1 : 1;
-    bool ArF1 : 1;
-    bool no_point : 1;
-    bool ArF0 : 1;
-    bool has_attributes : 1;
-    byte version  : 3;
+template <typename T, unsigned B> inline double fixed(const unsigned char*& raw) {
+  T value = std::uint8_t(*raw++);
+  for (unsigned i = 1; i < B; ++i) {
+    value = (value << 8) | std::uint8_t(*raw++);
+  }
+  return signextend<T, B * 8>(value);
+}
 
-    // Note: wire-format is big-endian (MSB first)
-    // Bytes 1-6
-    byte fixed_longitude[3];
-    byte fixed_latitude[3];
+inline std::int32_t
+decimal2integer(const double value) { // p. 44 Equation 1:  Transformation from decimal coordinates
+                                      // into integer values (Binary)
+  return static_cast<std::int32_t>(sgn(value) * 0.5 + value * (std::int32_t(1) << 24) / 360.);
+}
 
-    // Byte 7
-    bool unused_2 : 2;
-    byte first_frc : 3;
-    byte first_fow : 3;
+inline double
+integer2decimal(const std::int32_t value) { // p. 45 Equation 2: Transformation from integer values
+                                            // into decimal coordinates (Binary)
+  return (value - sgn(value) * 0.5) * 360. / (std::int32_t(1) << 24);
+}
 
-    // Byte 8
-    byte lowest_frc_next_point : 3;
-    byte first_bearing : 5;
+inline std::int32_t
+bearing2integer(const float value) { // p. 48 Equation 6: Calculation of the bearing value (Binary)
+  return static_cast<std::int32_t>(value / 11.25f);
+}
 
-    // Byte 9
-    byte dist_to_next;
+inline float integer2bearing(
+    const std::int32_t value) { // p. 48 Equation 6: Calculation of the bearing value (Binary)
+  return value * 11.25f + 11.25f / 2.f;
+}
 
-    // Bytes 10-13
-    byte relative_longitude[2];
-    byte relative_latitude[2];
+inline std::int32_t
+distance2integer(const float value) { // p. 48 Equation 7: Calculation of the DNP value (Binary)
+  return static_cast<std::int32_t>(value / 58.6f);
+}
 
-    // Byte 14
-    bool unused_3 : 2;
-    byte last_frc : 3;
-    byte last_fow : 3;
+inline float integer2distance(
+    const std::uint32_t value) { // p. 48 Equation 7: Calculation of the DNP value (Binary)
+  return value * 58.6f;
+}
 
-    // Byte 15
-    bool unused_4 : 1;
-    bool has_positive_offset : 1;
-    bool has_negative_offset : 1;
-    byte last_bearing : 5;
+} // namespace
 
-    // TODO: initialize everything
-    TwoPointLinearReference() {
-        version = 0b11;
-        first_frc = 0;
-        last_frc = 0;
-        first_fow = 0;
-        last_fow = 0;
-        has_positive_offset = false;
-        has_negative_offset = false;
-    }
+// Reference: OpenLR™ White Paper Version: 1.5 revision 2
+// http://www.openlr.org/data/docs/OpenLR-Whitepaper_v1.5.pdf
 
-    // C++ implementation of https://en.wikipedia.org/wiki/Sign_function
-    template <typename T> int sgn(const T val) const {
-        return (T(0) < val) - (val < T(0));
-    }
+// Location Reference Point, p.35, section 5.4
+struct LocationReferencePoint {
 
-    // Inverse of fixed2deg - convert a decimal degrees value into
-    // a signed integer, according to the OpenLR conversion formula
-    int32_t deg2fixed(double deg) const {
-        return sgn(deg) * 0.5 + (deg * std::pow(2, 24) / 360);
-    }
-
-    // Convert a big-endian sequence of bites into a signed integer
-    int32_t bytes2fixed(const byte bytes[], const int count) const {
-        int32_t value = 0;
-        for (int i=0; i<count; i++) {
-            value += bytes[count-i-1] << (i*8);
-        }
-
-        // If MSB is set, number is negative, so we need to fill
-        // in all the upper bits in the target int32_t to convert
-        // to a two's complement value
-        if ((bytes[0] & 0x80) == 0x80) {
-            // Convert value to two's complement negative
-            value |= COMPLEMENT_MASK[count * 8];
-        }
-        return value;
-    }
-
-    // Convert a signed integer into a decimal degree value, according
-    // to the OpenLR conversion formula.
-    double fixed2deg(const int value) const {
-        return ((value - sgn(value) * 0.5) * 360) / std::pow(2,24);
-    }
-
-/*
-    TODO:
-    void setFirstCoordinate(const midgard::PointLL &p) {
-        fixed_latitude = deg2fixed(p.lat());
-        fixed_longitude = deg2fixed(p.lng());
-    }
-    */
-
-    midgard::PointLL getFirstCoordinate() const {
-        return midgard::PointLL(
-            fixed2deg(bytes2fixed(fixed_longitude,3)),
-            fixed2deg(bytes2fixed(fixed_latitude,3))
-        );
-    }
-
-/*
-    TODO:
-    // Precondition: setFirstCoordinate already called
-    void setLastCoordinate(const midgard::PointLL &p) {
-        relative_longitude = deg2fixed(p.lng()) - fixed_longitude;
-        relative_latitude = deg2fixed(p.lat()) - fixed_latitude;
-    }
-    */
-
-    midgard::PointLL getLastCoordinate() const {
-        return midgard::PointLL(
-            fixed2deg(bytes2fixed(fixed_longitude,3)) + bytes2fixed(relative_longitude,2) / 100000.,
-            fixed2deg(bytes2fixed(fixed_latitude,3)) + bytes2fixed(relative_latitude,2) / 100000.
-        );
-    }
-
-    unsigned getFirstFOW() const { return first_fow; }
-    void setFirstFOW(unsigned fow_) { first_fow = fow_; }
-    unsigned getFirstFRC() const { return first_frc; }
-    void setFirstFRC(unsigned frc_) { first_frc = frc_; }
-
-    unsigned getLastFOW() const { return last_fow; }
-    void setLastFOW(unsigned fow_) { last_fow = fow_; }
-    unsigned getLastFRC() const { return last_frc; }
-    void setLastFRC(unsigned frc_) { last_frc = frc_; }
-
-    void setFirstBearing(double bearing_) { first_bearing = static_cast<uint8_t>(std::floor(bearing_ / 11.25)); }
-    double getFirstBearing() const { return first_bearing * 11.25 + 11.25/2; }
-
-    void setLastBearing(double bearing_) { last_bearing = static_cast<uint8_t>(std::floor(bearing_ / 11.25)); }
-    double getLastBearing() const { return last_bearing * 11.25 + 11.25/2; }
-
-    void setLength(double length) { dist_to_next = length / 58.6; }
-    double getLength() const { return dist_to_next * 58.6; }
-
-    static TwoPointLinearReference fromBase64(const std::string &base64) {
-        std::string binary;
-        Base64::Decode(base64, &binary);
-
-        assert(sizeof(TwoPointLinearReference) <= binary.size());
-
-        TwoPointLinearReference *tmp = reinterpret_cast<TwoPointLinearReference *>(const_cast<char *>(binary.data()));
-        return *tmp; // Be sure to return a copy
-    }
-
+  enum FormOfWay : unsigned char {
+    UNDEFINED = 0,
+    MOTORWAY,
+    MULTIPLE_CARRIAGEWAY,
+    SINGLE_CARRIAGEWAY,
+    ROUNDABOUT,
+    TRAFFICSQUARE,
+    SLIPROAD,
+    OTHER
+  };
+  double longitude;
+  double latitude;
+  float bearing;        // 5.2.4. Bearing
+  float distance;       // 5.2.5. Distance to next LR-point
+  unsigned char frc;    // 5.2.2. Functional Road Class: 0 – Main road,  1 – First class road, ...
+  unsigned char lfrcnp; // 5.2.6. Lowest FRC to next LR-point
+  FormOfWay fow;        // 5.2.3. Form of way
 };
-#pragma pack(pop)
 
-} // OpenLR
-} // midgard
-} // valhalla
+// Line locations, p.19, section 3.1
+// Only line location with 2 location reference points are supported
+struct LineLocation {
+  LineLocation(const std::string& reference) {
+    //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
+    if (reference.size() < 16)
+      throw std::invalid_argument("OpenLR reference is too small");
+    if (reference.size() > 18)
+      throw std::invalid_argument("OpenLR references with only 2 LRP are supported");
 
-#endif // VALHALLA_MIDGARD_OPENLR_H_
+    auto raw = reinterpret_cast<const unsigned char*>(reference.data());
+
+    // Status
+    auto status = *raw++ & 0x7f;
+    (void)status;
+    assert(status == 0x0b); // version 3, has attributes, ArF 'Circle or no area location'
+
+    // First location reference point
+    auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw));
+    auto latitude = integer2decimal(fixed<std::int32_t, 3>(raw));
+    auto attribute1 = *raw++;
+    auto attribute2 = *raw++;
+    auto distance = *raw++;
+
+    first = LocationReferencePoint{longitude,
+                                   latitude,
+                                   integer2bearing(attribute2 & 0x1f),
+                                   integer2distance(distance),
+                                   static_cast<unsigned char>((attribute1 >> 3) & 0x07),
+                                   static_cast<unsigned char>((attribute2 >> 5) & 0x07),
+                                   static_cast<LocationReferencePoint::FormOfWay>(attribute1 & 0x07)};
+
+    // Last location reference point
+    longitude += fixed<std::int32_t, 2>(raw) / 100000;
+    latitude += fixed<std::int32_t, 2>(raw) / 100000;
+    attribute1 = *raw++;
+    auto attribute4 = *raw++;
+
+    last = LocationReferencePoint{longitude,
+                                  latitude,
+                                  integer2bearing(attribute4 & 0x1f),
+                                  0.f,
+                                  static_cast<unsigned char>((attribute1 >> 3) & 0x07),
+                                  0,
+                                  static_cast<LocationReferencePoint::FormOfWay>(attribute1 & 0x07)};
+
+    // Offsets
+    // TODO: add out-of-bounds checks and clarify if noff location is 17th byte
+    std::bitset<8> flags(attribute4);
+    poff = flags[6] ? first.distance * (*raw++) / 256 : 0.f;
+    noff = flags[5] ? first.distance * (*raw++) / 256 : 0.f;
+  }
+
+  PointLL getFirstCoordinate() const {
+    return {first.longitude, first.latitude};
+  }
+
+  PointLL getLastCoordinate() const {
+    return {last.longitude, last.latitude};
+  }
+
+  std::string to_binary() const {
+    std::string result;
+
+    // Status
+    result.push_back(0b00001011);
+
+    // First longitude
+    auto longitude = decimal2integer(first.longitude);
+    result.push_back((longitude >> 16) & 0xff);
+    result.push_back((longitude >> 8) & 0xff);
+    result.push_back(longitude & 0xff);
+
+    // First latitude
+    auto latitude = decimal2integer(first.latitude);
+    result.push_back((latitude >> 16) & 0xff);
+    result.push_back((latitude >> 8) & 0xff);
+    result.push_back(latitude & 0xff);
+
+    // Attributes
+    result.push_back(((first.frc & 0x7) << 3) | (first.fow & 0x7));
+    result.push_back(((first.lfrcnp & 0x7) << 5) | bearing2integer(first.bearing) & 0x1f);
+    result.push_back(distance2integer(first.distance));
+
+    // Last longitude
+    auto relative_longitude =
+        static_cast<std::int32_t>(std::round(100000 * (last.longitude - first.longitude)));
+    result.push_back((relative_longitude >> 8) & 0xff);
+    result.push_back(relative_longitude & 0xff);
+
+    // Last latitude
+    auto relative_latitude =
+        static_cast<std::int32_t>(std::round(100000 * (last.latitude - first.latitude)));
+    result.push_back((relative_latitude >> 8) & 0xff);
+    result.push_back(relative_latitude & 0xff);
+
+    // Attributes
+    result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
+
+    auto pofff = poff != 0.f;
+    auto nofff = noff != 0.f;
+    result.push_back((pofff << 6) | (nofff << 5) | bearing2integer(last.bearing) & 0x1f);
+
+    // Offsets
+    if (pofff) {
+      result.push_back(static_cast<std::int32_t>(256 * poff / first.distance) & 0xff);
+    }
+
+    if (nofff) {
+      result.push_back(static_cast<std::int32_t>(256 * noff / first.distance) & 0xff);
+    }
+
+    return result;
+  }
+
+  LocationReferencePoint first;
+  LocationReferencePoint last;
+  float poff; // 5.2.9.1 Positive offset
+  float noff; // 5.2.9.2 Negative offset
+};
+
+} // namespace OpenLR
+} // namespace midgard
+} // namespace valhalla
+
+#endif
