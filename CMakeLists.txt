@@ -49,7 +49,6 @@ add_subdirectory(src)
 
 ## Executable targets
 find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
-find_package(GEOS)
 
 function(get_source_path PATH NAME)
   if(EXISTS ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc)
@@ -93,6 +92,7 @@ if(ENABLE_DATA_TOOLS)
   endforeach()
 
   # Target-specific depedencies
+  find_package(GEOS)
   target_link_libraries(valhalla_build_admins GEOS::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
@@ -148,7 +148,7 @@ endif()
 
 
 ## Tests TODO: move to own namespace
-set(tests aabb2 actor admin astar attributes_controller datetime directededge
+set(tests aabb2 actor admin attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
   enhancedtrippath factory graphid graphreader graphtile gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
@@ -159,7 +159,7 @@ set(tests aabb2 actor admin astar attributes_controller datetime directededge
   verbal_text_formatter_us_tx viterbi_search)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder
+  list(APPEND tests astar countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder
     idtable mapmatch matrix names node_search refs search signinfo uniquenames utrecht)
 endif()
 

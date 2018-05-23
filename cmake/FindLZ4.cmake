@@ -32,12 +32,6 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(
     LZ4 DEFAULT_MSG
     LZ4_LIBRARY LZ4_INCLUDE_DIR LZ4_GOOD_VERSION)
 
-if (NOT LZ4_FOUND)
-  message(STATUS "Using third-party bundled LZ4")
-else()
-  message(STATUS "Found LZ4: ${LZ4_LIBRARY}")
-endif (NOT LZ4_FOUND)
-
 mark_as_advanced(LZ4_INCLUDE_DIR LZ4_LIBRARY)
 
 add_library(LZ4::LZ4 INTERFACE IMPORTED)
