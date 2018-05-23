@@ -2,10 +2,7 @@ version: 2
 jobs:
   lint:
     docker:
-      - image: ubuntu:16.04
-        environment:
-          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-          LD_LIBRARY_PATH: /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+      - image: valhalla/docker:build-2.5.0
     steps:
       - checkout
       - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git
@@ -14,10 +11,7 @@ jobs:
 
   build:
     docker:
-      - image: ubuntu:16.04
-        environment:
-          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-          LD_LIBRARY_PATH: /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+      - image: valhalla/docker:build-2.5.0
     steps:
       - checkout
       - run: apt-get update && apt-get -y install git && git submodule sync && git submodule update --init
@@ -42,7 +36,7 @@ jobs:
 
   build-debug:
     docker:
-      - image: oxidase/valhalla-build-primary:1.0.0
+      - image: valhalla/docker:build-2.5.0
     steps:
       - checkout
       - run: git submodule sync && git submodule update --init
@@ -66,7 +60,7 @@ jobs:
 
   build-release:
     docker:
-      - image: oxidase/valhalla-build-primary:1.0.0
+      - image: valhalla/docker:build-2.5.0
     steps:
       - checkout
       - run: git submodule sync && git submodule update --init
