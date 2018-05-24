@@ -1432,11 +1432,6 @@ function filter_tags_generic(kv)
         kv["truck_backward"] = "false"
       end
 
-      if (kv["bus_tag"] == nil) then
-        kv["bus_forward"] = "false"
-        kv["bus_backward"] = "false"
-      end
-
       if (kv["foot_tag"] == nil) then
         kv["pedestrian"] = "false"
       end
