@@ -89,9 +89,9 @@ find_package_handle_standard_args(SQLITE3
 
 mark_as_advanced(SQLITE3_LIBRARY SQLITE3_INCLUDE_DIR SQLITE3_LIBRARIES)
 
-if(NOT SQLITE3_FIND_QUIETLY)
+if(NOT SQLite3_FIND_QUIETLY)
   message(STATUS "Found SQLite3: ${SQLITE3_LIBRARY}")
-endif(NOT SQLITE3_FIND_QUIETLY)
+endif(NOT SQLite3_FIND_QUIETLY)
 
 check_library_exists("${SQLITE3_LIBRARY}" sqlite3_enable_load_extension "" SQLITE3_LOAD_EXTENSION)
 IF (NOT SQLITE3_LOAD_EXTENSION)
