@@ -1450,17 +1450,6 @@ function filter_tags_generic(kv)
         kv["bike_forward"] = "false"
         kv["bike_backward"] = "false"
       end
-
-      if (kv["moped_tag"] == nil) then
-        kv["moped_forward"] = "false"
-        kv["moped_backward"] = "false"
-      end
-
-      if (kv["motorcycle_tag"] == nil) then
-        kv["motorcycle_forward"] = "false"
-        kv["motorcycle_backward"] = "false"
-      end
-
     end
   end
 
