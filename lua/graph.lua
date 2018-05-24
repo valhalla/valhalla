@@ -1417,11 +1417,21 @@ function filter_tags_generic(kv)
 
   end
 
+  -- hov restrictions
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
 
     kv["hov_tag"] = "true"
 
-    if (kv["hov"] == "designated") then
+    local only_hov_allowed = kv["hov"] == "designated"
+    if only_hov_allowed then
+      for lane in (kv["hov:lanes"] .. '|'):gmatch("([^|]*)|") do
+        if lane and lane ~= "designated" then
+          only_hov_allowed = false
+        end
+      end
+    end
+
+    if only_hov_allowed then
       if (kv["auto_tag"] == nil) then
         kv["auto_forward"] = "false"
         kv["auto_backward"] = "false"
