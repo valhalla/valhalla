@@ -1,9 +1,12 @@
+// Note: keep include boost/python.hpp first - fixes https://bugs.python.org/issue10910 on
+// FreeBSD/macOS
+#include <boost/python.hpp>
+
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/python.hpp>
 #include <boost/shared_ptr.hpp>
 #include <sstream>
 #include <string>

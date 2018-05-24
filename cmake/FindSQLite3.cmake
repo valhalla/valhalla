@@ -14,10 +14,7 @@
 #
 ###############################################################################
 
-find_path(SQLITE3_INCLUDE_DIR
-  NAMES sqlite3.h
-  PATH_PREFIXES sqlite sqlite3
-  PATHS
+set(SQLITE3_INCLUDE_SEARCH_PATHS
   /usr/include
   /usr/local/include
   $ENV{LIB_DIR}/include
@@ -31,10 +28,8 @@ find_path(SQLITE3_INCLUDE_DIR
   ${SQLITE_ROOT_DIR}/include
   $ENV{OSGEO4W_ROOT}/include)
 
-set(SQLITE3_NAMES sqlite3_i sqlite3)
-find_library(SQLITE3_LIBRARY
-  NAMES ${SQLITE3_NAMES}
-  PATHS
+
+set(SQLITE3_LIB_SEARCH_PATHS
   /usr/lib
   /usr/local/lib
   $ENV{LIB_DIR}/lib
@@ -46,11 +41,44 @@ find_library(SQLITE3_LIBRARY
   ${SQLITE_ROOT_DIR}/lib
   $ENV{OSGEO4W_ROOT}/lib)
 
+if (APPLE)
+  # on macOS, we try hard to prefer aftermarket sqlite3 installations, as the system sqlite3
+  # disables extension loading, which breaks use of spatialite later on
+  list(INSERT SQLITE3_INCLUDE_SEARCH_PATHS 0 /usr/local/opt/sqlite3/include /usr/local/include)
+  find_path(SQLITE3_INCLUDE_DIR
+    NAMES sqlite3.h
+    PATHS ${SQLITE3_INCLUDE_SEARCH_PATHS}
+    NO_DEFAULT_PATH)
+else()
+  find_path(SQLITE3_INCLUDE_DIR
+    NAMES sqlite3.h
+    PATHS ${SQLITE3_INCLUDE_SEARCH_PATHS})
+endif()
+
+IF (NOT SQLITE3_INCLUDE_DIR)
+     MESSAGE(FATAL_ERROR "Could not find sqlite3.h in ${SQLITE3_INCLUDE_SEARCH_PATHS}")
+ENDIF (NOT SQLITE3_INCLUDE_DIR)
+
+set(SQLITE3_NAMES sqlite3_i sqlite3)
+
+if (APPLE)
+  # on macOS, we try hard to prefer aftermarket sqlite3 installations, as the system sqlite3
+  # disables extension loading, which breaks use of spatialite later on
+  list(INSERT SQLITE3_LIB_SEARCH_PATHS 0 /usr/local/opt/sqlite3/lib /usr/local/lib)
+  find_library(SQLITE3_LIBRARY
+    NAMES ${SQLITE3_NAMES}
+    PATHS ${SQLITE3_LIB_SEARCH_PATHS}
+    NO_DEFAULT_PATH)
+else()
+  find_library(SQLITE3_LIBRARY
+    NAMES ${SQLITE3_NAMES}
+    PATHS ${SQLITE3_LIB_SEARCH_PATHS})
+endif()
+
 set(SQLITE3_LIBRARIES
   ${SQLITE3_LIBRARIES}
   ${SQLITE3_LIBRARY})
 
-#message(STATUS ${SQLITE3_LIBRARY})
 # Handle the QUIETLY and REQUIRED arguments and set SQLITE3_FOUND to TRUE
 # if all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
@@ -64,6 +92,15 @@ mark_as_advanced(SQLITE3_LIBRARY SQLITE3_INCLUDE_DIR SQLITE3_LIBRARIES)
 if(NOT SQLite3_FIND_QUIETLY)
   message(STATUS "Found SQLite3: ${SQLITE3_LIBRARY}")
 endif(NOT SQLite3_FIND_QUIETLY)
+
+check_library_exists("${SQLITE3_LIBRARY}" sqlite3_enable_load_extension "" SQLITE3_LOAD_EXTENSION)
+IF (NOT SQLITE3_LOAD_EXTENSION)
+    if (APPLE)
+        MESSAGE(FATAL_ERROR "Found sqlite, but the sqlite3_enable_load_extension is disabled.  On macOS, you should `brew install sqlite3` as the system sqlite3 library disables extension loading by default for security reasons.")
+    else()
+        MESSAGE(FATAL_ERROR "Found sqlite, but the sqlite3_enable_load_extension is disabled")
+    endif()
+ENDIF (NOT SQLITE3_LOAD_EXTENSION)
 
 add_library(SQLite3::SQLite3 INTERFACE IMPORTED)
 set_target_properties(SQLite3::SQLite3 PROPERTIES
