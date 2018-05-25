@@ -60,10 +60,6 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config)
   // Register standard edge/node costing methods
   factory.RegisterStandardCostingModels();
 
-  for (const auto& item : config.get_child("meili.customizable")) {
-    trace_customizable.insert(item.second.get_value<std::string>());
-  }
-
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
   auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
@@ -283,7 +279,7 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
 void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
   // Create a matcher
   try {
-    matcher.reset(matcher_factory.Create(trace_config));
+    matcher.reset(matcher_factory.Create(request.document));
   } catch (const std::invalid_argument& ex) { throw std::runtime_error(std::string(ex.what())); }
 
   // we require locations
@@ -297,35 +293,6 @@ void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
                                             pt.time()});
     }
   } catch (...) { throw valhalla_exception_t{424}; }
-}
-
-void thor_worker_t::parse_trace_config(const valhalla_request_t& request) {
-  auto costing = rapidjson::get<std::string>(request.document, "/costing");
-  trace_config.put<std::string>("mode", costing);
-
-  if (trace_customizable.empty()) {
-    return;
-  }
-
-  auto trace_options =
-      rapidjson::get_optional<rapidjson::Value::ConstObject>(request.document, "/trace_options");
-  if (!trace_options) {
-    return;
-  }
-
-  for (const auto& pair : *trace_options) {
-    std::string name = pair.name.GetString();
-    if (trace_customizable.find(name) != trace_customizable.end()) {
-      try {
-        // Possibly throw std::invalid_argument or std::out_of_range
-        trace_config.put<float>(name, pair.value.GetFloat());
-      } catch (const std::invalid_argument& ex) {
-        throw std::invalid_argument("Invalid argument: unable to parse " + name + " to float");
-      } catch (const std::out_of_range& ex) {
-        throw std::out_of_range("Invalid argument: " + name + " is out of float range");
-      }
-    }
-  }
 }
 
 void thor_worker_t::log_admin(const valhalla::odin::TripPath& trip_path) {
