@@ -620,6 +620,7 @@ check_PROGRAMS = \
 	test/edgecollapser \
 	test/laneconnectivity \
 	test/graphid \
+	test/graphtileheader \
 	test/tilehierarchy \
 	test/graphtile \
 	test/nodeinfo \
@@ -738,6 +739,9 @@ test_laneconnectivity_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) li
 test_graphid_SOURCES = test/graphid.cc test/test.cc
 test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
 test_graphid_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
+test_graphtileheader_SOURCES = test/graphtileheader.cc test/test.cc
+test_graphtileheader_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
+test_graphtileheader_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la
 test_tilehierarchy_SOURCES = test/tilehierarchy.cc test/test.cc
 test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS)
 test_tilehierarchy_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) $(BOOST_LIBS) libvalhalla.la

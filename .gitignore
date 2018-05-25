@@ -107,6 +107,7 @@ test/double_bucket_queue
 test/edgecollapser
 test/laneconnectivity
 test/graphid
+test/graphtileheader
 test/tilehierarchy
 test/graphtile
 test/nodeinfo
