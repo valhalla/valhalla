@@ -74,7 +74,10 @@ function(valhalla_module)
   set(library valhalla-${MODULE_NAME})
   add_library(${library} STATIC ${MODULE_SOURCES} ${MODULE_HEADERS})
   add_library(valhalla::${MODULE_NAME} ALIAS ${library})
-  target_compile_definitions(${library} PUBLIC RAPIDJSON_HAS_STDSTRING)
+  target_compile_definitions(${library}
+    PUBLIC
+      RAPIDJSON_HAS_STDSTRING
+      $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
        ${LIBVALHALLA_BINARY_DIR}
