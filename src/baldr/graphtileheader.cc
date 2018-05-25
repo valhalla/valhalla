@@ -57,7 +57,7 @@ void GraphTileHeader::set_speed_quality(const uint32_t speed_quality) {
 
 // Set the relative quality of exit signs for this tile.
 void GraphTileHeader::set_exit_quality(const uint32_t exit_quality) {
-  exit_quality_ = (exit_quality <= kMaxQualityMeasure) ? exit_quality : kMaxQualityMeasure;;
+  exit_quality_ = (exit_quality <= kMaxQualityMeasure) ? exit_quality : kMaxQualityMeasure;
 }
 
 // Sets the number of nodes in this tile.

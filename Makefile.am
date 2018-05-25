@@ -906,6 +906,7 @@ TEST_CLEANFILES += test/data/utrecht_tiles
 check_PROGRAMS += \
 	test/mapmatch \
 	test/utrecht \
+	test/access_restriction \
 	test/edgeinfobuilder \
 	test/uniquenames \
 	test/idtable \
@@ -926,6 +927,9 @@ test_mapmatch_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
+test_access_restriction_SOURCES = test/access_restriction.cc test/test.cc
+test_access_restriction_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
+test_access_restriction_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
 test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(SERVICE_DEPS_CFLAGS) @BOOST_CPPFLAGS@ @RAPIDJSON_CPPFLAGS@
 test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(SERVICE_DEPS_LIBS) @BOOST_LDFLAGS@ $(BOOST_LIBS) libvalhalla.la

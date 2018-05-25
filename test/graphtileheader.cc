@@ -5,7 +5,7 @@
 using namespace std;
 using namespace valhalla::baldr;
 
-// Expected size is 48 bytes. We want to alert if somehow any change grows
+// Expected size is 264 bytes. We want to alert if somehow any change grows
 // this structure size as that indicates incompatible tiles.
 constexpr size_t kGraphTileHeaderExpectedSize = 264;
 
@@ -22,7 +22,7 @@ void TestWriteRead() {
   // Test building a directed edge and reading back values
   GraphTileHeader hdr;
 
-  GraphId tile_id(2, 555, 0);
+  GraphId tile_id(2555, 2, 0);
   hdr.set_graphid(tile_id);
   if (hdr.graphid() != tile_id) {
     throw runtime_error("Header graphId test failed");
