@@ -1424,9 +1424,11 @@ function filter_tags_generic(kv)
 
     local only_hov_allowed = kv["hov"] == "designated"
     if only_hov_allowed then
-      for lane in (kv["hov:lanes"] .. '|'):gmatch("([^|]*)|") do
-        if lane and lane ~= "designated" then
-          only_hov_allowed = false
+      if kv["hov:lanes"] then
+        for lane in (kv["hov:lanes"] .. '|'):gmatch("([^|]*)|") do
+          if lane and lane ~= "designated" then
+            only_hov_allowed = false
+          end
         end
       end
     end
