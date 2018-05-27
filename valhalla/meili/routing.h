@@ -225,6 +225,12 @@ public:
   uint32_t pop();
 
   /**
+   * Get the label list.
+   */
+  const std::vector<Label>& labels() const
+  { return labels_; }
+
+  /**
    * Get a reference to a Label given its index.
    * @param label_idx  Label index.
    * @return  Returns a const reference to the label.
@@ -273,6 +279,63 @@ find_shortest_path(baldr::GraphReader& reader,
                    const float max_dist,
                    const float max_time);
 
+template <typename container_t>
+class TreeIterator: public std::iterator<std::forward_iterator_tag, typename container_t::value_type>
+{
+ public:
+  // Construct a route path iterator.
+  TreeIterator(const container_t& container, const typename container_t::size_type idx)
+      : container_(container),
+        idx_(idx) {}
+
+  // Construct a tail iterator.
+  TreeIterator(const container_t& container)
+      : container_(container),
+        idx_(baldr::kInvalidLabel) {}
+
+  // Postfix increment.
+  TreeIterator operator++(int) {
+    if (idx_ != baldr::kInvalidLabel) {
+      auto clone = *this;
+      idx_ = container_[idx_].predecessor();
+      return clone;
+    }
+    return *this;
+  }
+
+  // Prefix increment.
+  TreeIterator& operator++() {
+    if (idx_ != baldr::kInvalidLabel) {
+      idx_ = container_[idx_].predecessor();
+    }
+    return *this;
+  }
+
+  // Equality operator.
+  bool operator==(const TreeIterator& other) const {
+    return idx_ == other.idx_ && &container_ == &(other.container_);
+  }
+
+  // Inequality operator.
+  bool operator!=(const TreeIterator& other) const {
+    return !(*this == other);
+  }
+
+  // Dereference
+  typename container_t::value_type& operator*() const {
+    return container_[idx_];
+  }
+
+  // Pointer dereference
+  typename container_t::value_type* operator->() const {
+    return &(container_[idx_]);
+  }
+
+ private:
+  const container_t container_;
+  typename container_t::size_type idx_;
+};
+
 // Route path iterator. Methods to assist recovering route paths from Labels.
 class RoutePathIterator : public std::iterator<std::forward_iterator_tag, const Label> {
 public:
@@ -284,10 +347,6 @@ public:
   // Construct a tail iterator.
   RoutePathIterator(const LabelSet* labelset)
       : labelset_(labelset), label_idx_(baldr::kInvalidLabel) {
-  }
-
-  // Construct an invalid iterator.
-  RoutePathIterator() : labelset_(nullptr), label_idx_(baldr::kInvalidLabel) {
   }
 
   // Postfix increment.
