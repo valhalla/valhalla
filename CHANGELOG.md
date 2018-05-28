@@ -1,4 +1,6 @@
-## Release Date: UNRELEASED Valhalla 2.6.0
+## Release Date: UNRELEASED Valhalla 2.7.0
+
+## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:
    * CHANGED: Update cmake buildsystem to replace autoconf [#1272](https://github.com/valhalla/valhalla/pull/1272)
 * **API**:
