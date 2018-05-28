@@ -8,7 +8,7 @@ var has_errors = false;
 linereader.on('line', function(line) {
     linenum += 1;
     // Only validate the `# UNRELEASED` section
-    if (line.match(/^# [^U]/)) done = true;
+    if (line.match(/^## Release Date: [^U]/)) done = true;
     if (done) return;
 
     var line_errors = [];
