@@ -218,19 +218,20 @@ add_custom_target(utrecht_tiles DEPENDS ${VALHALLA_SOURCE_DIR}/test/data/utrecht
 
 set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
-if(ENABLE_DATA_TOOLS)
-  add_dependencies(mapmatch utrecht_tiles)
-endif()
-
 # Test run targets
 foreach(test ${tests} ${cost_tests})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log
-    COMMAND LOCPATH=locales /bin/bash -c -o pipefail "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} | tee ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log"
+    COMMAND LOCPATH=locales /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log && echo PASS ${test} || (exit=$? ; echo FAIL with exit code $exit ; cat ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log ; exit $exit)"
     WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
     DEPENDS ${test}
     VERBATIM)
   add_custom_target(run-${test} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log)
 endforeach()
+
+if(ENABLE_DATA_TOOLS)
+  add_dependencies(run-mapmatch utrecht_tiles)
+  add_dependencies(run-matrix utrecht_tiles)
+endif()
 
 string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
 add_custom_target(check DEPENDS ${test_targets})
