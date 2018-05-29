@@ -506,13 +506,15 @@ struct gps_segment_t {
  * respect to the original point (after resampling, see below)
  * @param sample_rate The final sample rate for the returned points. The determines how much time,
  *                    as a function of the segments speed, passes between individual simulated
+ * @param seed        The seed to use for random number generation
  * points
  */
 std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& segments,
                                            std::vector<float>& accuracies,
                                            float smoothing = 30,
                                            float accuracy = 10.f,
-                                           size_t sample_rate = 1);
+                                           size_t sample_rate = 1,
+                                           unsigned seed = 0);
 
 } // namespace midgard
 } // namespace valhalla
