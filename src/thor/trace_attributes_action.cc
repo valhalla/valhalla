@@ -74,7 +74,6 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   // Parse request
   parse_locations(request);
   parse_costing(request);
-  parse_trace_config(request);
   parse_measurements(request);
 
   /*
