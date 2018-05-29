@@ -552,6 +552,8 @@ json::MapPtr DirectedEdge::json() const {
       {"end_node", endnode().json()},
       {"speed", static_cast<uint64_t>(speed_)},
       {"speed_limit", static_cast<uint64_t>(speed_limit_)},
+      {"free_flow_speed", static_cast<uint64_t>(free_flow_speed_)},
+      {"constrained_flow_speed", static_cast<uint64_t>(constrained_flow_speed_)},
       //{"opp_index", static_cast<bool>(opp_index_)},
       //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
       //{"restrictions", restrictions_},
