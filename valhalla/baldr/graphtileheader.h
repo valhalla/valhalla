@@ -20,6 +20,9 @@ constexpr size_t kEmptySlots = 13;
 // character array so the GraphTileHeader size remains fixed).
 constexpr size_t kMaxVersionSize = 16;
 
+// Maximum value used for quality metrics
+constexpr uint32_t kMaxQualityMeasure = 15;
+
 // Total number of binned edge bins in the tile
 constexpr size_t kBinsDim = 5;
 constexpr size_t kBinCount = kBinsDim * kBinsDim;
