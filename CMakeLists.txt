@@ -64,10 +64,6 @@ if(ENABLE_SANITIZER)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
 endif()
 
-if(USE_STD_REGEX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_STD_REGEX=1")
-endif()
-
 ## libvalhalla
 add_subdirectory(src)
 
