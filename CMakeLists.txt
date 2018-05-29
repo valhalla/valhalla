@@ -26,6 +26,27 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+# Explicitly set the build type to Release if no other type is specified
+# on the command line.  Without this, cmake defaults to an unoptimized,
+# non-debug build, which almost nobody wants.
+if(NOT CMAKE_BUILD_TYPE)
+  message(STATUS "No build type specified, defaulting to Release")
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  message(STATUS "Configuring in debug mode")
+elseif(CMAKE_BUILD_TYPE MATCHES Release)
+  message(STATUS "Configuring in release mode")
+elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+  message(STATUS "Configuring in release mode with debug flags")
+elseif(CMAKE_BUILD_TYPE MATCHES MinRelSize)
+  message(STATUS "Configuring in release mode with minimized size")
+else()
+  message(STATUS "Unrecognized build type - will use cmake defaults")
+endif()
+
+
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)

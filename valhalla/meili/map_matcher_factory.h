@@ -6,6 +6,7 @@
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
+#include <rapidjson/rapidjson.h>
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/costconstants.h>
@@ -38,6 +39,8 @@ public:
   MapMatcher* Create(const std::string& name, const boost::property_tree::ptree& preferences);
 
   MapMatcher* Create(const boost::property_tree::ptree&);
+
+  MapMatcher* Create(const rapidjson::Value&);
 
   boost::property_tree::ptree MergeConfig(const std::string&, const boost::property_tree::ptree&);
 
