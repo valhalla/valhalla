@@ -300,12 +300,13 @@ std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& seg
                                            std::vector<float>& accuracies,
                                            float smoothing,
                                            float accuracy,
-                                           size_t sample_rate) {
+                                           size_t sample_rate,
+                                           unsigned seed) {
   // resample the coords along a given edge at one second intervals
   auto resampled = resample_at_1hz(segments);
 
   // a way to get noise but only allow for slow change
-  std::default_random_engine generator(0);
+  std::minstd_rand0 generator(seed);
   std::uniform_real_distribution<float> distribution(-1, 1);
   ring_queue_t<std::pair<float, float>> noises(smoothing);
   auto get_noise = [&]() {

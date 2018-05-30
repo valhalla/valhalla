@@ -13,7 +13,17 @@ using namespace std;
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
 
+// Expected size is 8 bytes. We want to alert if somehow any change grows
+// this structure size as that indicates incompatible tiles.
+constexpr size_t kSignExpectedSize = 8;
+
 namespace {
+
+void test_sizeof() {
+  if (sizeof(valhalla::baldr::Sign) != kSignExpectedSize)
+    throw std::runtime_error("Sign size should be " + std::to_string(kSignExpectedSize) + " bytes" +
+                             " but is " + std::to_string(sizeof(valhalla::baldr::Sign)));
+}
 
 void TryCtor(const std::string& text) {
   valhalla::odin::Sign sign(text);
@@ -128,6 +138,9 @@ int main() {
 
   // Constructor
   suite.test(TEST_CASE(TestCtor));
+
+  // Test sizeof the structure
+  suite.test(TEST_CASE(test_sizeof));
 
   // DescendingSortByConsecutiveCount_0_1
   suite.test(TEST_CASE(TestDescendingSortByConsecutiveCount_0_1));

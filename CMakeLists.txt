@@ -169,9 +169,9 @@ endif()
 
 
 ## Tests TODO: move to own namespace
-set(tests aabb2 actor admin attributes_controller datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
-  enhancedtrippath factory graphid graphreader graphtile gridded_data grid_range_query grid_traversal
+  enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
   narrativebuilder narrative_dictionary navigator nodeinfo obb2 optimizer  point2 pointll
   polyline2 queue routing sample sequence serializers sign signs streetname streetnames streetnames_factory

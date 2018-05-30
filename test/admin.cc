@@ -10,7 +10,17 @@
 using namespace std;
 using namespace valhalla::baldr;
 
+// Expected size is 16 bytes. We want to alert if somehow any change grows
+// this structure size as that indicates incompatible tiles.
+constexpr size_t kAdminExpectedSize = 16;
+
 namespace {
+
+void test_sizeof() {
+  if (sizeof(Admin) != kAdminExpectedSize)
+    throw std::runtime_error("Admin size should be " + std::to_string(kAdminExpectedSize) + " bytes" +
+                             " but is " + std::to_string(sizeof(Admin)));
+}
 
 void TestWriteRead() {
   // Make an admin record
@@ -44,7 +54,13 @@ void TestWriteRead() {
 int main() {
   test::suite suite("admin");
 
-  // Write to file and read into EdgeInfo
+  // Test sizeof the structure
+  suite.test(TEST_CASE(test_sizeof));
+
+  // Test structure size
+  suite.test(TEST_CASE(TestWriteRead));
+
+  // Write to file and read into Admin records
   suite.test(TEST_CASE(TestWriteRead));
 
   return suite.tear_down();
