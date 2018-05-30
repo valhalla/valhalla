@@ -1,22 +1,4 @@
-set(headers
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/universal_cost.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/candidate_search.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/geometry_helpers.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/grid_range_query.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/emission_cost_model.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/transition_cost_model.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/priority_queue.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/routing.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/stateid.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/viterbi_search.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/topk_search.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/measurement.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/match_result.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/grid_traversal.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/state.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/map_matcher.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/map_matcher_factory.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/meili/traffic_segment_matcher.h)
+file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/meili/*.h)
 
 set(sources
   universal_cost.cc

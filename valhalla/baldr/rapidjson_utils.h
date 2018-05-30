@@ -8,6 +8,7 @@
 #include <boost/optional.hpp>
 
 // rapidjson loves to assert and crash programs, its more useful to throw and catch
+#undef RAPIDJSON_ASSERT
 #define RAPIDJSON_ASSERT(x)                                                                          \
   if (!(x))                                                                                          \
   throw std::logic_error(RAPIDJSON_STRINGIFY(x))

@@ -73,6 +73,7 @@ test/sequence
 test/grid
 test/gridded_data
 test/location
+test/access_restrictions
 test/admin
 test/datetime
 test/directededge
@@ -80,6 +81,7 @@ test/double_bucket_queue
 test/edgecollapser
 test/laneconnectivity
 test/graphid
+test/graphtileheader
 test/tilehierarchy
 test/graphtile
 test/nodeinfo
