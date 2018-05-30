@@ -6,23 +6,11 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
   DEPENDS ${locale_jsons}
   VERBATIM)
 
-set(headers
-  ${CMAKE_CURRENT_BINARY_DIR}/locales.h
-
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/worker.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/directionsbuilder.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/maneuversbuilder.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/narrative_dictionary.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/narrative_builder_factory.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/narrativebuilder.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/enhancedtrippath.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/maneuver.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/sign.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/signs.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/util.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/odin/transitrouteinfo.h)
+file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/odin/*.h)
 
 set(sources
+  ${CMAKE_CURRENT_BINARY_DIR}/locales.h
+
   directionsbuilder.cc
   maneuversbuilder.cc
   narrative_dictionary.cc

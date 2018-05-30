@@ -131,6 +131,14 @@ if(ENABLE_SERVICES)
   endforeach()
 endif()
 
+install(
+  FILES
+    scripts/valhalla_build_config
+    scripts/valhalla_build_elevation
+    scripts/valhalla_build_timezones
+  DESTINATION bin
+  COMPONENT runtime)
+
 install(FILES COPYING ChangeLog
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
