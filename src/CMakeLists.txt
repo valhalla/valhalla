@@ -15,11 +15,11 @@ foreach(line ${version_lines})
     set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3} PARENT_SCOPE)
   endif()
 endforeach()
-if(VALHALLA_VERSION_MAJOR)
+if(DEFINED VALHALLA_VERSION_MAJOR)
   set(VERSION "${VALHALLA_VERSION_MAJOR}")
-  if(VALHALLA_VERSION_MINOR)
+  if(DEFINED VALHALLA_VERSION_MINOR)
     set(VERSION "${VERSION}.${VALHALLA_VERSION_MINOR}")
-    if(VALHALLA_VERSION_PATCH)
+    if(DEFINED VALHALLA_VERSION_PATCH)
       set(VERSION "${VERSION}.${VALHALLA_VERSION_PATCH}")
     endif()
   endif()
@@ -117,12 +117,11 @@ configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/c
 
 set(valhalla_hdrs
   ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
-  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h
 
   ${VALHALLA_SOURCE_DIR}/valhalla/exception.h
   ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
 
-add_library(valhalla worker.cc ${valhalla_hdrs})
+add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs})
 
 target_compile_definitions(valhalla PRIVATE
   $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">)

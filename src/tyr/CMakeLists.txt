@@ -1,3 +1,5 @@
+file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/tyr/*.h)
+
 valhalla_module(NAME tyr
   SOURCES
     ${VALHALLA_SOURCE_DIR}/src/worker.cc
@@ -12,9 +14,7 @@ valhalla_module(NAME tyr
     navigator.cc
     actor.cc
   HEADERS
-    ${VALHALLA_SOURCE_DIR}/valhalla/tyr/serializers.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/tyr/navigator.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/tyr/actor.h
+    ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}

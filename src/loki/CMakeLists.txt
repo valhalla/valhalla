@@ -1,7 +1,4 @@
-set(headers
-  ${VALHALLA_SOURCE_DIR}/valhalla/loki/worker.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/loki/search.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/loki/node_search.h)
+file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/loki/*.h)
 
 set(sources
   search.cc
