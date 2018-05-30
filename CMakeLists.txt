@@ -10,6 +10,10 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
+if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+  message(FATAL_ERROR "In-source builds are not allowed.")
+endif()
+
 include(GNUInstallDirs)
 
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
