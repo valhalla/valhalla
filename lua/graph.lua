@@ -33,7 +33,7 @@ highway = {
 }
 
 road_class = {
-["motorway"] = 0, 
+["motorway"] = 0,
 ["motorway_link"] = 0,
 ["trunk"] = 1,
 ["trunk_link"] = 1,
@@ -41,10 +41,10 @@ road_class = {
 ["primary_link"] = 2,
 ["secondary"] = 3,
 ["secondary_link"] = 3,
-["tertiary"] = 4, 
-["tertiary_link"] = 4, 
-["unclassified"] = 5, 
-["residential"] = 6, 
+["tertiary"] = 4,
+["tertiary_link"] = 4,
+["unclassified"] = 5,
+["residential"] = 6,
 ["residential_link"] = 6
 }
 
@@ -61,7 +61,7 @@ restriction = {
 ["no_turn"] = 9
 }
 
---the default speed for tracks is lowered after 
+--the default speed for tracks is lowered after
 --the call to default_speed
 default_speed = {
 [0] = 105,
@@ -603,11 +603,11 @@ function numeric_prefix(num_str, allow_decimals)
   local index = 0
   for c in num_str:gmatch"." do
     if tonumber(c) == nil then
-      if c == "." then 
+      if c == "." then
         if allow_decimals == false then
            break
         end
-      else 
+      else
         break
       end
     end
@@ -629,12 +629,12 @@ function normalize_speed(speed)
   local num = numeric_prefix(speed, false)
 
   --check if the rest of the string ends in "mph" convert to kph
-  if num then 
+  if num then
     if speed:sub(-3) == "mph" then
       num = round(num * 1.609344)
     end
 
-    --if num > 150kph or num < 10kph....toss    
+    --if num > 150kph or num < 10kph....toss
     if num > 150 or num < 10 then
       return nil
     end
@@ -651,11 +651,11 @@ function normalize_weight(weight)
     local num = numeric_prefix(w, true)
 
     if num then
-      if w:sub(-1) == "t" or w:sub(-5) == "tonne" or w:sub(-6) == "tonnes" then 
+      if w:sub(-1) == "t" or w:sub(-5) == "tonne" or w:sub(-6) == "tonnes" then
         if (num .. "t" == w) or (num .. "tonne" == w) or (num .. "tonnes" == w) then
           return round(num,2)
         end
-      end 
+      end
 
       if w:sub(-3) == "ton" or w:sub(-4) == "tons" then
          if (num .. "ton" == w) or (num .. "tons" == w) then
@@ -683,7 +683,7 @@ end
 function normalize_measurement(measurement)
 
   if measurement then
-     
+
     local m = measurement:gsub("%s+", "")
     --7'6" or 7ft6in
     --7m
@@ -691,7 +691,7 @@ function normalize_measurement(measurement)
     --grab the number prefix
     local num = numeric_prefix(m, true)
     if num then
-      if m:sub(-1) == "m" or m:sub(-5) == "meter" or m:sub(-6) == "meters" then 
+      if m:sub(-1) == "m" or m:sub(-5) == "meter" or m:sub(-6) == "meters" then
         if (num .. "m" == m) or (num .. "meter" == m) or (num .. "meters" == m) then
           return round(num,2)
         end
@@ -724,7 +724,7 @@ function normalize_measurement(measurement)
       elseif m:sub(-2) == "ft" or m:sub(-1) == "\'" or m:sub(-4) == "feet" then
         feet = num
         num = round((feet * 0.3048),2)
-      else 
+      else
         feet = num
         m = string.sub(measurement, string.len(tostring(feet))+1)
 
@@ -740,11 +740,11 @@ function normalize_measurement(measurement)
 --crappy data case.  7'6 or 7ft6
           m = m:sub(index+1)
           inches = numeric_prefix(m, true)
-          if inches then 
+          if inches then
             num = round((feet * 0.3048) + (inches * 0.0254),2)
-          else 
+          else
             num = round((feet * 0.3048),2)
-          end 
+          end
         end
       end
       return round(num,2)
@@ -770,12 +770,12 @@ function filter_tags_generic(kv)
   kv["emergency_backward"] = "false"
 
   if (ferry == true or rail == true or kv["highway"]) then
-    
+
     if (kv["access"] == "emergency" or kv["emergency"] == "yes" or kv["service"] == "emergency_access") then
       kv["emergency_forward"] = "true"
       kv["emergency_tag"] = "true"
     end
-    
+
     if kv["emergency"] == "no" then
       kv["emergency_tag"] = "false"
     end
@@ -831,7 +831,7 @@ function filter_tags_generic(kv)
     kv["bus_tag"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for ped overrides
-    kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"] 
+    kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"]
     kv["foot_tag"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or nil
 
     --check for bike_forward overrides
@@ -860,7 +860,7 @@ function filter_tags_generic(kv)
     end
 
   else
-    --if its a ferry and these tags dont show up we want to set them to true 
+    --if its a ferry and these tags dont show up we want to set them to true
     local default_val = tostring(ferry)
 
     if ferry == false and rail == true then
@@ -916,7 +916,7 @@ function filter_tags_generic(kv)
       --check for motorcycle forward overrides
       kv["motorcycle_forward"] = motor_vehicle[kv["motorcycle"]] or motor_vehicle[kv["motor_vehicle"]] or default_val
       kv["motorcycle_tag"] = motor_vehicle[kv["motorcycle"]] or motor_vehicle[kv["motor_vehicle"]] or nil
-      
+
       if kv["bike_tag"] == nil then
         if kv["sac_scale"] == "hiking" then
           kv["bike_forward"] = "true"
@@ -934,7 +934,7 @@ function filter_tags_generic(kv)
 
   --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
   if ((kv["access"] == "permissive" or kv["access"] == "hov") and kv["oneway"] == "reversible") then
-   
+
     -- for now enable only for buses if the tag exists and they are allowed.
     if (kv["bus_forward"] == "true") then
       kv["auto_forward"] = "false"
@@ -1028,8 +1028,8 @@ function filter_tags_generic(kv)
     kv["auto_backward"] = "false"
     kv["truck_backward"] = "false"
     kv["emergency_backward"] = "false"
- 
-    if kv["bike_backward"] == "true" then 
+
+    if kv["bike_backward"] == "true" then
       if (oneway_bike == "true") then --bike only in reverse on a bike path.
         kv["bike_forward"] = "false"
       elseif oneway_bike == "false" then --bike in both directions on a bike path.
@@ -1063,12 +1063,12 @@ function filter_tags_generic(kv)
     kv["truck_backward"] = kv["truck_forward"]
     kv["emergency_backward"] = kv["emergency_forward"]
 
-    if (kv["bike_backward"] == "false" and kv["oneway:bicycle"] ~= "-1" and 
+    if (kv["bike_backward"] == "false" and kv["oneway:bicycle"] ~= "-1" and
        (kv["oneway:bicycle"] == nil or oneway[kv["oneway:bicycle"]] == false or kv["oneway:bicycle"] == "no")) then
       kv["bike_backward"] = kv["bike_forward"]
     end
 
-    if (kv["bus_backward"] == "false" and kv["oneway:bus"] ~= "-1" and 
+    if (kv["bus_backward"] == "false" and kv["oneway:bus"] ~= "-1" and
        (kv["oneway:bus"] == nil or oneway[kv["oneway:bus"]] == false)) then
       kv["bus_backward"] = kv["bus_forward"]
     end
@@ -1086,7 +1086,7 @@ function filter_tags_generic(kv)
 
   --Bike forward / backward overrides.
   if ((shared[kv["cycleway:both"]] or separated[kv["cycleway:both"]] or dedicated[kv["cycleway:both"]]) or
-      ((shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]]) and 
+      ((shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]]) and
        (shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]]))) then
     kv["bike_forward"] = "true"
     kv["bike_backward"] = "true"
@@ -1099,7 +1099,7 @@ function filter_tags_generic(kv)
 
   kv["oneway_reverse"] = "false"
 
-  --flip the onewayness 
+  --flip the onewayness
   if oneway_reverse == "-1" then
     kv["oneway_reverse"] = "true"
     local forwards = kv["auto_forward"]
@@ -1148,17 +1148,17 @@ function filter_tags_generic(kv)
   if kv["lanes:bus"] == "1" then
     kv["bus_forward"] = "true"
     kv["bus_backward"] = "false"
-  elseif kv["lanes:bus"] == "2" then  
+  elseif kv["lanes:bus"] == "2" then
     kv["bus_forward"] = "true"
     kv["bus_backward"] = "true"
-  end 
+  end
 
-  --if none of the modes were set we are done looking at this  
+  --if none of the modes were set we are done looking at this
   if kv["auto_forward"] == "false" and kv["truck_forward"] == "false" and kv["bus_forward"] == "false" and
-     kv["bike_forward"] == "false" and kv["emergency_forward"] == "false" and kv["moped_forward"] == "false" and 
+     kv["bike_forward"] == "false" and kv["emergency_forward"] == "false" and kv["moped_forward"] == "false" and
      kv["motorcycle_forward"] == "false" and
-     kv["auto_backward"] == "false" and kv["truck_backward"] == "false" and kv["bus_backward"] == "false" and 
-     kv["bike_backward"] == "false" and kv["emergency_backward"] == "false" and kv["moped_backward"] == "false" and 
+     kv["auto_backward"] == "false" and kv["truck_backward"] == "false" and kv["bus_backward"] == "false" and
+     kv["bike_backward"] == "false" and kv["emergency_backward"] == "false" and kv["moped_backward"] == "false" and
      kv["motorcycle_backward"] == "false" and kv["pedestrian"] == "false" then
        if kv["highway"] ~= "bridleway" then --save bridleways for country access logic.
          return 1
@@ -1182,11 +1182,11 @@ function filter_tags_generic(kv)
   if kv["highway"] == nil and ferry then
     road_class = 2 --TODO:  can we weight based on ferry types?
   elseif kv["highway"] == nil and (kv["railway"] or kv["route"] == "shuttle_train") then
-    road_class = 2 --TODO:  can we weight based on rail types?    
+    road_class = 2 --TODO:  can we weight based on rail types?
   elseif road_class == nil then --service and other = 7
     road_class = 7
-  end 
-  
+  end
+
   kv["road_class"] = road_class
 
   kv["default_speed"] = default_speed[kv["road_class"]]
@@ -1212,7 +1212,7 @@ function filter_tags_generic(kv)
      elseif kv["highway"] == "footway" then
         use = 25
      elseif kv["highway"] == "steps" then
-        use = 26 --steps/stairs     
+        use = 26 --steps/stairs
      elseif kv["highway"] == "path" then
         use = 27
      elseif kv["highway"] == "pedestrian" then
@@ -1337,7 +1337,7 @@ function filter_tags_generic(kv)
   kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
 
 
-  if kv["highway"] and string.find(kv["highway"], "_link") then --*_link 
+  if kv["highway"] and string.find(kv["highway"], "_link") then --*_link
      kv["link"] = "true"  --do we need to add more?  turnlane?
      kv["link_type"] = kv["link_type"]
   end
@@ -1401,7 +1401,7 @@ function filter_tags_generic(kv)
   kv["backward_lanes"] = lane_count
 
   kv["bridge"] = bridge[kv["bridge"]] or "false"
-  
+
   -- TODO access:conditional
   if kv["seasonal"] and kv["seasonal"] ~= "no" then
     kv["seasonal"] = "true"
@@ -1417,11 +1417,23 @@ function filter_tags_generic(kv)
 
   end
 
+  -- hov restrictions
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
 
     kv["hov_tag"] = "true"
 
-    if (kv["hov"] == "designated") then
+    local only_hov_allowed = kv["hov"] == "designated"
+    if only_hov_allowed then
+      if kv["hov:lanes"] then
+        for lane in (kv["hov:lanes"] .. '|'):gmatch("([^|]*)|") do
+          if lane and lane ~= "designated" then
+            only_hov_allowed = false
+          end
+        end
+      end
+    end
+
+    if only_hov_allowed then
       if (kv["auto_tag"] == nil) then
         kv["auto_forward"] = "false"
         kv["auto_backward"] = "false"
@@ -1432,11 +1444,6 @@ function filter_tags_generic(kv)
         kv["truck_backward"] = "false"
       end
 
-      if (kv["bus_tag"] == nil) then
-        kv["bus_forward"] = "false"
-        kv["bus_backward"] = "false"
-      end
-
       if (kv["foot_tag"] == nil) then
         kv["pedestrian"] = "false"
       end
@@ -1445,17 +1452,6 @@ function filter_tags_generic(kv)
         kv["bike_forward"] = "false"
         kv["bike_backward"] = "false"
       end
-
-      if (kv["moped_tag"] == nil) then
-        kv["moped_forward"] = "false"
-        kv["moped_backward"] = "false"
-      end
-
-      if (kv["motorcycle_tag"] == nil) then
-        kv["motorcycle_forward"] = "false"
-        kv["motorcycle_backward"] = "false"
-      end
-
     end
   end
 
@@ -1474,15 +1470,15 @@ function filter_tags_generic(kv)
   kv["maxheight"] = normalize_measurement(kv["maxheight"]) or normalize_measurement(kv["maxheight:physical"])
   kv["maxwidth"] = normalize_measurement(kv["maxwidth"]) or normalize_measurement(kv["maxwidth:physical"])
   kv["maxlength"] = normalize_measurement(kv["maxlength"])
-  
+
   kv["maxweight"] = normalize_weight(kv["maxweight"])
   kv["maxaxleload"] = normalize_weight(kv["maxaxleload"])
 
   --TODO: hazmat really should have subcategories
-  kv["hazmat"] = hazmat[kv["hazmat"]] or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat[kv["hazmat:B"]] or 
-                 hazmat[kv["hazmat:C"]] or hazmat[kv["hazmat:D"]] or hazmat[kv["hazmat:E"]] 
+  kv["hazmat"] = hazmat[kv["hazmat"]] or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat[kv["hazmat:B"]] or
+                 hazmat[kv["hazmat:C"]] or hazmat[kv["hazmat:D"]] or hazmat[kv["hazmat:E"]]
   kv["maxspeed:hgv"] = normalize_speed(kv["maxspeed:hgv"])
-  
+
   if (kv["hgv:national_network"] or kv["hgv:state_network"] or kv["hgv"] == "local" or kv["hgv"] == "designated") then
     kv["truck_route"] = "true"
   end
@@ -1518,7 +1514,7 @@ function nodes_proc (kv, nokeys)
 
   if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
     access = "false"
-  end 
+  end
 
   local hov_tag = nil
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
@@ -1569,7 +1565,7 @@ function nodes_proc (kv, nokeys)
     motorcycle_tag = 0
   end
 
-  local emergency_tag --implies nil 
+  local emergency_tag --implies nil
   if kv["access"] == "emergency" or kv["emergency"] == "yes" or kv["service"] == "emergency_access" then
      emergency_tag = 16
   end
@@ -1581,7 +1577,7 @@ function nodes_proc (kv, nokeys)
 
   --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated" or kv["vehicle"] == "no")
   local auto = auto_tag or 1
-  local truck = truck_tag or 8 
+  local truck = truck_tag or 8
   local bus = bus_tag or 64
   local foot = foot_tag or 2
   local wheelchair = wheelchair_tag or 256
@@ -1608,10 +1604,10 @@ function nodes_proc (kv, nokeys)
     motorcycle = motorcycle_tag or 0
     emergency = emergency_tag or 0
     hov = hov_tag or 0
-  end 
+  end
 
   --check for gates and bollards
-  local gate = kv["barrier"] == "gate" or kv["barrier"] == "lift_gate" 
+  local gate = kv["barrier"] == "gate" or kv["barrier"] == "lift_gate"
   local bollard = false
   if gate == false then
     --if there was a bollard cars can't get through it
@@ -1622,7 +1618,7 @@ function nodes_proc (kv, nokeys)
       gate = true
       bollard = false
     end
-   
+
     --bollard = true shuts off access unless the tag exists.
     if bollard == true then
       auto = auto_tag or 0
@@ -1639,8 +1635,8 @@ function nodes_proc (kv, nokeys)
   end
 
   --if nothing blocks access at this node assume access is allowed.
-  if gate == false and bollard == false and access == "true" then    
-    if kv["highway"] == "crossing" or kv["railway"] == "crossing" or 
+  if gate == false and bollard == false and access == "true" then
+    if kv["highway"] == "crossing" or kv["railway"] == "crossing" or
        kv["footway"] == "crossing" or kv["cycleway"] == "crossing" or
        kv["foot"] == "crossing" or kv["bicycle"] == "crossing" or
        kv["pedestrian"] == "crossing" or kv["crossing"] then
@@ -1672,12 +1668,12 @@ function nodes_proc (kv, nokeys)
 
   --assume cash for toll, toll:*, and fee
   local cash =  toll[kv["toll"]] or toll[kv["toll:hgv"]] or toll[kv["toll:bicycle"]] or toll[kv["toll:hov"]] or
-                toll[kv["toll:motorcar"]] or toll[kv["toll:motor_vehicle"]] or toll[kv["toll:bus"]] or 
+                toll[kv["toll:motorcar"]] or toll[kv["toll:motor_vehicle"]] or toll[kv["toll:bus"]] or
                 toll[kv["toll:motorcycle"]] or toll[kv["payment:cash"]] or toll[kv["fee"]] or "false"
-  
+
   local etc = toll[kv["payment:e_zpass"]] or toll[kv["payment:e_zpass:name"]] or
               toll[kv["payment:pikepass"]] or toll[kv["payment:via_verde"]] or "false"
-  
+
   local cash_payment = 0
 
   if (cash == "true" or (coins == "true" and notes == "true")) then
@@ -1690,11 +1686,11 @@ function nodes_proc (kv, nokeys)
 
   local etc_payment = 0
 
-  if etc == "true" then 
+  if etc == "true" then
     etc_payment = 4
   end
 
-  --store a mask denoting payment type 
+  --store a mask denoting payment type
   kv["payment_mask"] = bit32.bor(cash_payment, etc_payment)
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
@@ -1708,7 +1704,7 @@ function nodes_proc (kv, nokeys)
   if kv["traffic_signals:direction"] == "backward" then
     kv["backward_signal"] = "true"
   end
- 
+
   --store a mask denoting access
   kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle)
 
@@ -1741,7 +1737,7 @@ function rels_proc (kv, nokeys)
      local restrict_type = restriction[kv["restriction:hgv"]] or restriction[kv["restriction:emergency"]] or
                            restriction[kv["restriction:taxi"]] or restriction[kv["restriction:motorcar"]] or
                            restriction[kv["restriction:bus"]] or restriction[kv["restriction:bicycle"]] or
-                           restriction[kv["restriction:hazmat"]] or restriction[kv["restriction:motorcycle"]] 
+                           restriction[kv["restriction:hazmat"]] or restriction[kv["restriction:motorcycle"]]
 
      --restrictions with type win over just restriction key.  people enter both.
      if restrict_type ~= nil then
@@ -1773,7 +1769,7 @@ function rels_proc (kv, nokeys)
        end
        return 0, kv
      elseif kv["route"] == "bicycle" or kv["route"] == "mtb" then
-       
+
        local bike_mask = 0
 
        if kv["network"] == "mtb" or kv["route"] == "mtb" then
@@ -1792,12 +1788,12 @@ function rels_proc (kv, nokeys)
 
        kv["day_on"] = nil
        kv["day_off"] = nil
-       kv["restriction"] = nil       
-  
+       kv["restriction"] = nil
+
        return 0, kv
   --has a restiction but type is not restriction...ignore
      elseif restrict ~= nil then
-       return 1, kv    
+       return 1, kv
      else
        kv["day_on"] = nil
        kv["day_off"] = nil

@@ -1,22 +1,4 @@
-set(headers
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/worker.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/astar.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/astarheuristic.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/bidirectional_astar.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/costmatrix.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/edgestatus.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/isochrone.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/optimizer.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/map_matcher.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/match_result.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/multimodal.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/pathalgorithm.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/pathinfo.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/route_matcher.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/trippathbuilder.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/attributes_controller.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/trafficalgorithm.h
-  ${VALHALLA_SOURCE_DIR}/valhalla/thor/timedistancematrix.h)
+file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/thor/*.h)
 
 set(sources
   astar.cc

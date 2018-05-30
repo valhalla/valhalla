@@ -48,3 +48,7 @@ target_link_libraries(valhalla-protobuf protobuf::libprotobuf)
 if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
   set_property(TARGET valhalla-protobuf PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
+
+install(FILES ${protobuff_hdrs}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/valhalla/proto
+  COMPONENT development)

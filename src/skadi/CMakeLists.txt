@@ -1,10 +1,11 @@
+file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/skadi/*.h)
+
 valhalla_module(NAME skadi
   SOURCES
     sample.cc
     util.cc
   HEADERS
-    ${VALHALLA_SOURCE_DIR}/valhalla/skadi/sample.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/skadi/util.h
+    ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}

@@ -5,7 +5,8 @@ jobs:
       - image: valhalla/docker:build-2.5.0
     steps:
       - checkout
-      - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git
+      - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git nodejs
+      - run: nodejs ./scripts/validate_changelog.js
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
