@@ -1,0 +1,26 @@
+{
+  "name": "valhalla",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valhalla/valhalla.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/valhalla/valhalla/issues"
+  },
+  "homepage": "https://github.com/valhalla/valhalla#readme",
+  "dependencies": {
+    "node-gyp": "^3.6.2"
+  }
+}
