@@ -4,28 +4,6 @@
 namespace valhalla {
 namespace midgard {
 
-// Default constructor.
-template <class coord_t> LineSegment2<coord_t>::LineSegment2() {
-  a_.Set(0.0f, 0.0f);
-  b_.Set(0.0f, 0.0f);
-}
-
-// Constructor given 2 points.
-template <class coord_t> LineSegment2<coord_t>::LineSegment2(const coord_t& p1, const coord_t& p2) {
-  a_ = p1;
-  b_ = p2;
-}
-
-// Get the first point of the segment.
-template <class coord_t> coord_t LineSegment2<coord_t>::a() const {
-  return a_;
-}
-
-// Get the second point of the segment.
-template <class coord_t> coord_t LineSegment2<coord_t>::b() const {
-  return b_;
-}
-
 // Finds the distance squared of a specified point from the line segment
 // and the closest point on the segment to the specified point.
 template <class coord_t>
@@ -53,13 +31,6 @@ float LineSegment2<coord_t>::DistanceSquared(const coord_t& p, coord_t& closest)
     }
   }
   return closest.DistanceSquared(p);
-}
-
-// Finds the distance of a specified point from the line segment
-// and the closest point on the segment to the specified point.
-template <class coord_t>
-float LineSegment2<coord_t>::Distance(const coord_t& p, coord_t& closest) const {
-  return sqrtf(DistanceSquared(p, closest));
 }
 
 // Determines if the current segment intersects the specified segment.
@@ -206,11 +177,6 @@ bool LineSegment2<coord_t>::ClipToPolygon(const std::vector<coord_t>& poly,
   // If candidate interval is not empty then set the clip segment
   clip_segment = {a_ + c * t_in, a_ + c * t_out};
   return true;
-}
-
-// Tests if a point is to left, right, or on the line segment.
-template <class coord_t> float LineSegment2<coord_t>::IsLeft(const coord_t& p) const {
-  return (b_.x() - a_.x()) * (p.y() - a_.y()) - (p.x() - a_.x()) * (b_.y() - a_.y());
 }
 
 // Explicit instantiation
