@@ -5,9 +5,10 @@
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 
+#include <iomanip>
+#include <sstream>
 #include <string>
 
-using namespace std;
 using namespace valhalla::midgard::OpenLR;
 
 std::string decode64(const std::string& val) {
@@ -21,6 +22,13 @@ std::string encode64(const std::string& val) {
   using It = base64_from_binary<transform_width<std::string::const_iterator, 6, 8>>;
   auto tmp = std::string(It(std::begin(val)), It(std::end(val)));
   return tmp.append((3 - val.size() % 3) % 3, '=');
+}
+
+std::string to_hex(const std::string& value) {
+  std::stringstream s;
+  for (auto c : value)
+    s << " " << std::setw(2) << std::setfill('0') << std::hex << (int)((unsigned char)c);
+  return s.str();
 }
 
 struct testfixture {
@@ -56,9 +64,10 @@ const testfixture testfixtures[] = {{"CwOa9yUQACODBQEqAL4jEw==", 5.069987, 52.11
 namespace {
 
 bool check_close(double value, double expected, const std::string& message, double abstol = 1e-5) {
-  if (std::abs(value - expected) > abstol)
-    throw runtime_error(message + "  Was " + std::to_string(value) + ", expected " +
-                        std::to_string(expected));
+  if (std::abs(value - expected) > abstol) {
+    throw std::runtime_error(message + "  Was " + std::to_string(value) + ", expected " +
+                             std::to_string(expected));
+  }
 }
 
 void test_decode() {
@@ -83,11 +92,86 @@ void test_decode() {
     check_close(locRef.poff, fixture.expectedPoff, "Positive offset incorrect.", 1e-3);
     check_close(locRef.noff, fixture.expectedNoff, "Negative offset incorrect.", 1e-3);
 
-    if (encode64(locRef.to_binary()) != fixture.descriptor) {
-      throw runtime_error("Incorrectly encoded reference " + encode64(locRef.to_binary()) +
-                          ", expected " + fixture.descriptor);
+    if (encode64(locRef.toBinary()) != fixture.descriptor) {
+      throw std::runtime_error("Incorrectly encoded reference " + encode64(locRef.toBinary()) +
+                               ", expected " + fixture.descriptor);
     }
   }
+}
+
+void test_internal_reference_points() {
+  auto location = "CwG1ASK3PhD82sz0CIAQ89r83hRxEAM=";
+
+  auto locRef = LineLocation(decode64(location));
+
+  if (encode64(locRef.toBinary()) != location) {
+    throw std::runtime_error("Incorrectly encoded reference " + encode64(locRef.toBinary()) +
+                             ", expected " + location);
+  }
+
+  if (locRef.intermediate.size() != 1) {
+    throw std::runtime_error("Incorrectly number of intermediate LRP");
+  }
+
+  check_close(locRef.getFirstCoordinate().lng(), 2.400523, "First coordinate longitude incorrect.");
+  check_close(locRef.getFirstCoordinate().lat(), 48.819069, "First coordinate latitude incorrect.");
+  check_close(locRef.first.bearing, 320.625, "First bearing incorrect.");
+  check_close(locRef.first.distance, 12774.8, "Distance incorrect.", 1e-3);
+
+  check_close(locRef.intermediate[0].longitude, 2.269843, "First coordinate longitude incorrect.");
+  check_close(locRef.intermediate[0].latitude, 48.840829, "First coordinate latitude incorrect.");
+  check_close(locRef.intermediate[0].bearing, 219.375, "First bearing incorrect.");
+  check_close(locRef.intermediate[0].distance, 12774.8, "Distance incorrect.", 1e-3);
+
+  check_close(locRef.getLastCoordinate().lng(), 2.261823, "Last coordinate longitude incorrect.");
+  check_close(locRef.getLastCoordinate().lat(), 48.893158, "Last coordinate latitude incorrect.");
+  check_close(locRef.last.bearing, 39.375, "Last bearing incorrect.");
+
+  check_close(locRef.getLength(), 2 * 12774.8, "Distance incorrect.", 1e-3);
+  check_close(locRef.poff, 0, "Positive offset incorrect.", 1e-3);
+  check_close(locRef.noff, 0, "Negative offset incorrect.", 1e-3);
+
+  for (float poff = 0; poff < locRef.first.distance; poff += locRef.first.distance / 3) {
+    for (float noff = 0; noff < locRef.intermediate[0].distance;
+         noff += locRef.intermediate[0].distance / 3) {
+      locRef.poff = poff;
+      locRef.noff = noff;
+      LineLocation tryRef(locRef.toBinary());
+
+      check_close(tryRef.getLength(), 2 * 12774.8, "Distance incorrect.", 1e-3);
+      check_close(tryRef.poff, locRef.poff, "Positive offset incorrect.", 58.6);
+      check_close(tryRef.noff, locRef.noff, "Negative offset incorrect.", 58.6);
+    }
+  }
+
+  locRef.intermediate.push_back(locRef.intermediate.front());
+  locRef.intermediate.push_back(locRef.intermediate.front());
+  locRef.intermediate.push_back(locRef.intermediate.front());
+  check_close(locRef.getLength(), 5 * 12774.8, "Distance incorrect.", 1e-3);
+
+  auto hex = " 0b 01 b5 01 22 b7 3e 10 fc da cc f4 08 80 10 f3 da "
+             "00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 aa aa";
+  if (to_hex(locRef.toBinary()) != hex) {
+    throw std::runtime_error("Incorrectly encoded reference " + to_hex(locRef.toBinary()) +
+                             ", expected " + hex);
+  }
+}
+
+void test_offsets_overrun() {
+  auto location = "CwG1ASK3PhD82sz0CIAQ89oAAAAAEPPa/N4UcRBj";
+  auto locRef = LineLocation(decode64(location));
+  if (locRef.poff != 0.f || locRef.noff != 0.f) {
+    throw std::runtime_error("Non-zero positive " + std::to_string(locRef.poff) +
+                             " or negative offset " + std::to_string(locRef.noff));
+  }
+}
+
+void test_too_small_reference() {
+  auto location = "CwG1ASK3PhD82=";
+  try {
+    auto locRef = LineLocation(decode64(location));
+  } catch (const std::invalid_argument& e) { return; }
+  throw std::runtime_error("No error returned");
 }
 
 } // namespace
@@ -96,6 +180,9 @@ int main(void) {
   test::suite suite("openlr");
 
   suite.test(TEST_CASE(test_decode));
+  suite.test(TEST_CASE(test_internal_reference_points));
+  suite.test(TEST_CASE(test_offsets_overrun));
+  suite.test(TEST_CASE(test_too_small_reference));
 
   return suite.tear_down();
 }
