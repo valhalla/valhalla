@@ -234,9 +234,9 @@ set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 foreach(test ${tests} ${cost_tests})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log
     COMMAND LOCPATH=locales /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log \
-      && echo $(tput setaf 2)PASS$(tput sgr0) ${test} \
+      && echo $(tput setaf 2)$(tput bold)[PASS]$(tput sgr0) ${test} \
       || ( exit=$? ; \
-           echo $(tput setaf 1)$(tput bold)FAIL$(tput sgr0) with exit code $exit ; \
+           echo $(tput setaf 1)$(tput bold)[FAIL]$(tput sgr0) ${test} ; \
            cat ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log ; \
            exit $exit )"
     WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
