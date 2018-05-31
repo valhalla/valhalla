@@ -190,7 +190,7 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
   }
 
   // give back what we found
-  return std::make_tuple(std::move(closest), sqrt(mindistsqr), closest_segment);
+  return std::make_tuple(std::move(closest), std::sqrt(mindistsqr), closest_segment);
 }
 
 // Calculate the heading from the start index within a polyline of lat,lng
