@@ -1,6 +1,7 @@
 #include "midgard/pointll.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <algorithm>
 #include <cmath>
 
 #include "test.h"
@@ -133,33 +134,56 @@ void TestHeadingAtEndOfPolyline() {
       30.0f, 266);
 }
 
-void TryClosestPoint(const std::vector<PointLL>& pts,
+void TryClosestPoint(std::vector<PointLL> pts,
                      const PointLL& pt,
                      const PointLL& expected_pt,
                      float expected_dist,
                      int expected_idx,
-                     size_t begin_index = 0) {
-  auto result = pt.ClosestPoint(pts, begin_index);
-  PointLL result_pt = std::get<0>(result);
+                     int begin_idx = 0) {
 
-  // Test expected closest point
-  if (!result_pt.ApproximatelyEqual(expected_pt))
-    throw runtime_error(
-        "TryClosestPoint point test failed - found: " + std::to_string(result_pt.lat()) + "," +
-        std::to_string(result_pt.lng()) + " | expected: " + std::to_string(expected_pt.lat()) + "," +
-        std::to_string(expected_pt.lng()));
+  // do forwards and backwards searches
+  for (int reverse = 0; reverse < 2; ++reverse) {
 
-  // Test expected distance
-  if (!valhalla::midgard::equal<float>(std::get<1>(result), expected_dist, 0.5f))
-    throw runtime_error(
-        "TryClosestPoint distance test failed - found: " + std::to_string(std::get<1>(result)) +
-        " | expected: " + std::to_string(expected_dist));
+    // if we are doing a backwards search we will just flip
+    // the direction of the line string and invert the indices
+    // inverting them gets tricky at the boundaries :o(
+    float forward = std::numeric_limits<float>::infinity();
+    float backward = 0;
+    if (reverse) {
+      std::reverse(pts.begin(), pts.end());
+      if (pts.size() > 1) {
+        begin_idx = (pts.size() - 1) - begin_idx;
+        if (expected_idx != -1)
+          expected_idx = (pts.size() - 1) - expected_idx;
+        if (expected_idx > 0)
+          --expected_idx;
+      }
+      std::swap(forward, backward);
+    }
 
-  // Test expected index
-  if (std::get<2>(result) != expected_idx)
-    throw runtime_error(
-        "TryClosestPoint index test failed - found: " + std::to_string(std::get<2>(result)) +
-        " | expected: " + std::to_string(expected_idx));
+    // look for the closest point
+    auto result = pt.ClosestPoint(pts, begin_idx, forward, backward);
+    PointLL result_pt = std::get<0>(result);
+
+    // Test expected closest point
+    if (!result_pt.ApproximatelyEqual(expected_pt))
+      throw runtime_error(
+          "TryClosestPoint point test failed - found: " + std::to_string(result_pt.lat()) + "," +
+          std::to_string(result_pt.lng()) + " | expected: " + std::to_string(expected_pt.lat()) +
+          "," + std::to_string(expected_pt.lng()));
+
+    // Test expected distance
+    if (!valhalla::midgard::equal<float>(std::get<1>(result), expected_dist, 0.5f))
+      throw runtime_error(
+          "TryClosestPoint distance test failed - found: " + std::to_string(std::get<1>(result)) +
+          " | expected: " + std::to_string(expected_dist));
+
+    // Test expected index
+    if (std::get<2>(result) != expected_idx)
+      throw runtime_error(
+          "TryClosestPoint index test failed - found: " + std::to_string(std::get<2>(result)) +
+          " | expected: " + std::to_string(expected_idx));
+  }
 }
 
 void TryClosestPointNoDistance(const std::vector<PointLL>& pts,
@@ -208,7 +232,7 @@ void TestClosestPoint() {
   TryClosestPoint(pts, PointLL(-76.298477f, 40.042645f), PointLL(-76.298470f, 40.042595f), 5.592f, 1);
 
   // Closest to third shape point
-  TryClosestPoint(pts, PointLL(-76.297806f, 40.042671f), PointLL(-76.297806f, 40.042671f), 0.f, 1);
+  TryClosestPoint(pts, PointLL(-76.297806f, 40.042671f), PointLL(-76.297806f, 40.042671f), 0.f, 2);
 
   // Closest along the 3rd segment
   TryClosestPoint(pts, PointLL(-76.297752f, 40.042183f), PointLL(-76.297722f, 40.042187f), 2.592f, 2);
