@@ -5,6 +5,8 @@
 
 #include <assert.h>
 #include <bitset>
+#include <numeric>
+#include <vector>
 
 namespace valhalla {
 namespace midgard {
@@ -24,10 +26,10 @@ template <typename T, unsigned B> inline T signextend(const T x) {
   return s.x = x;
 }
 
-template <typename T, unsigned B> inline double fixed(const unsigned char*& raw) {
-  T value = std::uint8_t(*raw++);
+template <typename T, unsigned B> inline double fixed(const unsigned char* raw, std::size_t& index) {
+  T value = std::uint8_t(raw[index++]);
   for (unsigned i = 1; i < B; ++i) {
-    value = (value << 8) | std::uint8_t(*raw++);
+    value = (value << 8) | std::uint8_t(raw[index++]);
   }
   return signextend<T, B * 8>(value);
 }
@@ -82,6 +84,30 @@ struct LocationReferencePoint {
     SLIPROAD,
     OTHER
   };
+
+  LocationReferencePoint() = default;
+
+  LocationReferencePoint(double longitude,
+                         double latitude,
+                         unsigned char attribute1,
+                         unsigned char attribute2,
+                         unsigned char attribute3)
+      : longitude(longitude), latitude(latitude), bearing(integer2bearing(attribute2 & 0x1f)),
+        distance(integer2distance(attribute3)),
+        frc(static_cast<unsigned char>((attribute1 >> 3) & 0x07)),
+        lfrcnp(static_cast<unsigned char>((attribute2 >> 5) & 0x07)),
+        fow(static_cast<LocationReferencePoint::FormOfWay>(attribute1 & 0x07)) {
+  }
+
+  LocationReferencePoint(double longitude,
+                         double latitude,
+                         unsigned char attribute1,
+                         unsigned char attribute4)
+      : longitude(longitude), latitude(latitude), bearing(integer2bearing(attribute4 & 0x1f)),
+        distance(0.f), frc(static_cast<unsigned char>((attribute1 >> 3) & 0x07)), lfrcnp(0),
+        fow(static_cast<LocationReferencePoint::FormOfWay>(attribute1 & 0x07)) {
+  }
+
   double longitude;
   double latitude;
   float bearing;        // 5.2.4. Bearing
@@ -98,50 +124,48 @@ struct LineLocation {
     //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
     if (reference.size() < 16)
       throw std::invalid_argument("OpenLR reference is too small");
-    if (reference.size() > 18)
-      throw std::invalid_argument("OpenLR references with only 2 LRP are supported");
 
-    auto raw = reinterpret_cast<const unsigned char*>(reference.data());
+    const auto raw = reinterpret_cast<const unsigned char*>(reference.data());
+    const auto size = reference.size();
+    std::size_t index = 0;
 
     // Status
-    auto status = *raw++ & 0x7f;
+    auto status = raw[index++] & 0x7f;
     (void)status;
     assert(status == 0x0b); // version 3, has attributes, ArF 'Circle or no area location'
 
     // First location reference point
-    auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw));
-    auto latitude = integer2decimal(fixed<std::int32_t, 3>(raw));
-    auto attribute1 = *raw++;
-    auto attribute2 = *raw++;
-    auto distance = *raw++;
+    auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
+    auto latitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
+    auto attribute1 = raw[index++];
+    auto attribute2 = raw[index++];
+    auto attribute3 = raw[index++];
 
-    first = LocationReferencePoint{longitude,
-                                   latitude,
-                                   integer2bearing(attribute2 & 0x1f),
-                                   integer2distance(distance),
-                                   static_cast<unsigned char>((attribute1 >> 3) & 0x07),
-                                   static_cast<unsigned char>((attribute2 >> 5) & 0x07),
-                                   static_cast<LocationReferencePoint::FormOfWay>(attribute1 & 0x07)};
+    first = {longitude, latitude, attribute1, attribute2, attribute3};
+
+    // Intermediate location reference points
+    while (index + 7 + 6 <= size) {
+      longitude += fixed<std::int32_t, 2>(raw, index) / 100000;
+      latitude += fixed<std::int32_t, 2>(raw, index) / 100000;
+      attribute1 = raw[index++];
+      attribute2 = raw[index++];
+      attribute3 = raw[index++];
+
+      intermediate.push_back({longitude, latitude, attribute1, attribute2, attribute3});
+    }
 
     // Last location reference point
-    longitude += fixed<std::int32_t, 2>(raw) / 100000;
-    latitude += fixed<std::int32_t, 2>(raw) / 100000;
-    attribute1 = *raw++;
-    auto attribute4 = *raw++;
+    longitude += fixed<std::int32_t, 2>(raw, index) / 100000;
+    latitude += fixed<std::int32_t, 2>(raw, index) / 100000;
+    attribute1 = raw[index++];
+    auto attribute4 = raw[index++];
 
-    last = LocationReferencePoint{longitude,
-                                  latitude,
-                                  integer2bearing(attribute4 & 0x1f),
-                                  0.f,
-                                  static_cast<unsigned char>((attribute1 >> 3) & 0x07),
-                                  0,
-                                  static_cast<LocationReferencePoint::FormOfWay>(attribute1 & 0x07)};
+    last = {longitude, latitude, attribute1, attribute4};
 
     // Offsets
-    // TODO: add out-of-bounds checks and clarify if noff location is 17th byte
     std::bitset<8> flags(attribute4);
-    poff = flags[6] ? first.distance * (*raw++) / 256 : 0.f;
-    noff = flags[5] ? first.distance * (*raw++) / 256 : 0.f;
+    poff = (index < size) && flags[6] ? first.distance * raw[index++] / 256 : 0.f;
+    noff = (index < size) && flags[5] ? first.distance * raw[index++] / 256 : 0.f;
   }
 
   PointLL getFirstCoordinate() const {
@@ -152,46 +176,57 @@ struct LineLocation {
     return {last.longitude, last.latitude};
   }
 
-  std::string to_binary() const {
+  float getLength() const {
+    return std::accumulate(intermediate.begin(), intermediate.end(), first.distance,
+                           [](float distance, const LocationReferencePoint& lrp) {
+                             return distance + lrp.distance;
+                           });
+  }
+
+  std::string toBinary() const {
     std::string result;
+
+    const auto append2 = [&result](std::int32_t value) {
+      result.push_back((value >> 8) & 0xff);
+      result.push_back(value & 0xff);
+    };
+
+    const auto append3 = [&result](std::int32_t value) {
+      result.push_back((value >> 16) & 0xff);
+      result.push_back((value >> 8) & 0xff);
+      result.push_back(value & 0xff);
+    };
 
     // Status
     result.push_back(0b00001011);
 
-    // First longitude
-    auto longitude = decimal2integer(first.longitude);
-    result.push_back((longitude >> 16) & 0xff);
-    result.push_back((longitude >> 8) & 0xff);
-    result.push_back(longitude & 0xff);
-
-    // First latitude
-    auto latitude = decimal2integer(first.latitude);
-    result.push_back((latitude >> 16) & 0xff);
-    result.push_back((latitude >> 8) & 0xff);
-    result.push_back(latitude & 0xff);
-
-    // Attributes
+    // First location reference point
+    auto longitude = first.longitude;
+    auto latitude = first.latitude;
+    append3(decimal2integer(longitude));
+    append3(decimal2integer(latitude));
     result.push_back(((first.frc & 0x7) << 3) | (first.fow & 0x7));
     result.push_back(((first.lfrcnp & 0x7) << 5) | bearing2integer(first.bearing) & 0x1f);
     result.push_back(distance2integer(first.distance));
 
-    // Last longitude
-    auto relative_longitude =
-        static_cast<std::int32_t>(std::round(100000 * (last.longitude - first.longitude)));
-    result.push_back((relative_longitude >> 8) & 0xff);
-    result.push_back(relative_longitude & 0xff);
+    for (const auto& lrp : intermediate) {
+      // First longitude
+      append2(static_cast<std::int32_t>(std::round(100000 * (lrp.longitude - longitude))));
+      append2(static_cast<std::int32_t>(std::round(100000 * (lrp.latitude - latitude))));
+      result.push_back(((lrp.frc & 0x7) << 3) | (lrp.fow & 0x7));
+      result.push_back(((lrp.lfrcnp & 0x7) << 5) | bearing2integer(lrp.bearing) & 0x1f);
+      result.push_back(distance2integer(lrp.distance));
 
-    // Last latitude
-    auto relative_latitude =
-        static_cast<std::int32_t>(std::round(100000 * (last.latitude - first.latitude)));
-    result.push_back((relative_latitude >> 8) & 0xff);
-    result.push_back(relative_latitude & 0xff);
+      longitude = lrp.longitude;
+      latitude = lrp.latitude;
+    }
 
-    // Attributes
+    // Last location reference point
+    const auto pofff = poff != 0.f;
+    const auto nofff = noff != 0.f;
+    append2(static_cast<std::int32_t>(std::round(100000 * (last.longitude - longitude))));
+    append2(static_cast<std::int32_t>(std::round(100000 * (last.latitude - latitude))));
     result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
-
-    auto pofff = poff != 0.f;
-    auto nofff = noff != 0.f;
     result.push_back((pofff << 6) | (nofff << 5) | bearing2integer(last.bearing) & 0x1f);
 
     // Offsets
@@ -208,6 +243,7 @@ struct LineLocation {
 
   LocationReferencePoint first;
   LocationReferencePoint last;
+  std::vector<LocationReferencePoint> intermediate;
   float poff; // 5.2.9.1 Positive offset
   float noff; // 5.2.9.2 Negative offset
 };
