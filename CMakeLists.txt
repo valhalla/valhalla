@@ -25,6 +25,7 @@ option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(USE_STD_REGEX "Use std::regex instead of boost::regex" OFF)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 
@@ -68,7 +69,6 @@ if(ENABLE_SANITIZER)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
 endif()
-
 
 ## libvalhalla
 add_subdirectory(src)

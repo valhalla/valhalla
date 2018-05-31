@@ -77,6 +77,8 @@ function(valhalla_module)
   target_compile_definitions(${library}
     PUBLIC
       RAPIDJSON_HAS_STDSTRING
+    PRIVATE
+      $<$<BOOL:${USE_STD_REGEX}>:USE_STD_REGEX=1>
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
