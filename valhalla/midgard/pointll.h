@@ -117,13 +117,17 @@ public:
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
-   * to that point and the index of the segment where the closest
-   * point lies.
-   * @param  pts          List of points on the polyline.
-   * @param  begin_index  Index where the processing of closest point should start.
-   *                      Default value is 0.
-   * @param  dist_cutoff  Minimum linear distance along pts that should be considered
-   *                      before giving up.
+   * to that point and the (floor) index of the segment where the closest
+   * point lies. In the case of a tie where the closest point is a point in the
+   * linestring, the most extreme index (closest to the end of the linestring
+   * in the direction (forward/reverse) of the search) will win
+   * @param  pts                  List of points on the polyline.
+   * @param  pivot_index          Index where the processing of closest point should start.
+   *                              Default value is 0.
+   * @param  forward_dist_cutoff  Minimum linear distance along pts that should be considered
+   *                              before giving up.
+   * @param  reverse_dist_cutoff  Minimum linear distance along pts that should be considered
+   *                              before giving up.
    *
    * @return tuple of <Closest point along the polyline,
    *                   Distance in meters of the closest point,
@@ -131,8 +135,9 @@ public:
    */
   std::tuple<PointLL, float, int>
   ClosestPoint(const std::vector<PointLL>& pts,
-               size_t begin_index = 0,
-               float dist_cutoff = std::numeric_limits<float>::infinity()) const;
+               int pivot_index = 0,
+               float forward_dist_cutoff = std::numeric_limits<float>::infinity(),
+               float reverse_dist_cutoff = 0) const;
 
   /**
    * Calculate the heading from the start index within a polyline of lng,lat
