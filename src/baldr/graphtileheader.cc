@@ -47,17 +47,17 @@ void GraphTileHeader::set_density(const uint32_t density) {
 
 // Set the relative quality of name assignment for this tile.
 void GraphTileHeader::set_name_quality(const uint32_t name_quality) {
-  name_quality_ = name_quality;
+  name_quality_ = (name_quality <= kMaxQualityMeasure) ? name_quality : kMaxQualityMeasure;
 }
 
 // Set the relative quality of speed assignment for this tile.
 void GraphTileHeader::set_speed_quality(const uint32_t speed_quality) {
-  speed_quality_ = speed_quality;
+  speed_quality_ = (speed_quality <= kMaxQualityMeasure) ? speed_quality : kMaxQualityMeasure;
 }
 
 // Set the relative quality of exit signs for this tile.
 void GraphTileHeader::set_exit_quality(const uint32_t exit_quality) {
-  exit_quality_ = exit_quality;
+  exit_quality_ = (exit_quality <= kMaxQualityMeasure) ? exit_quality : kMaxQualityMeasure;
 }
 
 // Sets the number of nodes in this tile.

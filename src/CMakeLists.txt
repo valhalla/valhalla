@@ -15,11 +15,11 @@ foreach(line ${version_lines})
     set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3} PARENT_SCOPE)
   endif()
 endforeach()
-if(VALHALLA_VERSION_MAJOR)
+if(DEFINED VALHALLA_VERSION_MAJOR)
   set(VERSION "${VALHALLA_VERSION_MAJOR}")
-  if(VALHALLA_VERSION_MINOR)
+  if(DEFINED VALHALLA_VERSION_MINOR)
     set(VERSION "${VERSION}.${VALHALLA_VERSION_MINOR}")
-    if(VALHALLA_VERSION_PATCH)
+    if(DEFINED VALHALLA_VERSION_PATCH)
       set(VERSION "${VERSION}.${VALHALLA_VERSION_PATCH}")
     endif()
   endif()
@@ -74,7 +74,12 @@ function(valhalla_module)
   set(library valhalla-${MODULE_NAME})
   add_library(${library} STATIC ${MODULE_SOURCES} ${MODULE_HEADERS})
   add_library(valhalla::${MODULE_NAME} ALIAS ${library})
-  target_compile_definitions(${library} PUBLIC RAPIDJSON_HAS_STDSTRING)
+  target_compile_definitions(${library}
+    PUBLIC
+      RAPIDJSON_HAS_STDSTRING
+    PRIVATE
+      $<$<BOOL:${USE_STD_REGEX}>:USE_STD_REGEX=1>
+      $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
        ${LIBVALHALLA_BINARY_DIR}
@@ -114,12 +119,11 @@ configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/c
 
 set(valhalla_hdrs
   ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
-  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h
 
   ${VALHALLA_SOURCE_DIR}/valhalla/exception.h
   ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
 
-add_library(valhalla worker.cc ${valhalla_hdrs})
+add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs})
 
 target_compile_definitions(valhalla PRIVATE
   $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">)

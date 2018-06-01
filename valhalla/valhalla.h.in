@@ -2,7 +2,7 @@
 #define __VALHALLA_VERSION_H__
 
 #define VALHALLA_VERSION_MAJOR 2
-#define VALHALLA_VERSION_MINOR 5
+#define VALHALLA_VERSION_MINOR 6
 #define VALHALLA_VERSION_PATCH 0
 
 //whether the API was configured with http service support or not

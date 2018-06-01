@@ -10,6 +10,10 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
+if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+  message(FATAL_ERROR "In-source builds are not allowed.")
+endif()
+
 include(GNUInstallDirs)
 
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -21,6 +25,9 @@ option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(USE_STD_REGEX "Use std::regex instead of boost::regex" OFF)
+set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
+set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -62,7 +69,6 @@ if(ENABLE_SANITIZER)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
 endif()
-
 
 ## libvalhalla
 add_subdirectory(src)
@@ -129,6 +135,14 @@ if(ENABLE_SERVICES)
   endforeach()
 endif()
 
+install(
+  FILES
+    scripts/valhalla_build_config
+    scripts/valhalla_build_elevation
+    scripts/valhalla_build_timezones
+  DESTINATION bin
+  COMPONENT runtime)
+
 install(FILES COPYING ChangeLog
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
@@ -169,9 +183,9 @@ endif()
 
 
 ## Tests TODO: move to own namespace
-set(tests aabb2 actor admin attributes_controller datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
-  enhancedtrippath factory graphid graphreader graphtile gridded_data grid_range_query grid_traversal
+  enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
   narrativebuilder narrative_dictionary navigator nodeinfo obb2 optimizer  point2 pointll
   polyline2 queue routing sample sequence serializers sign signs streetname streetnames streetnames_factory
@@ -216,19 +230,25 @@ add_custom_target(utrecht_tiles DEPENDS ${VALHALLA_SOURCE_DIR}/test/data/utrecht
 
 set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
-if(ENABLE_DATA_TOOLS)
-  add_dependencies(mapmatch utrecht_tiles)
-endif()
-
 # Test run targets
 foreach(test ${tests} ${cost_tests})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log
-    COMMAND LOCPATH=locales /bin/bash -c -o pipefail "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} | tee ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log"
+    COMMAND LOCPATH=locales /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log \
+      && echo $(tput setaf 2)$(tput bold)[PASS]$(tput sgr0) ${test} \
+      || ( exit=$? ; \
+           echo $(tput setaf 1)$(tput bold)[FAIL]$(tput sgr0) ${test} ; \
+           cat ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log ; \
+           exit $exit )"
     WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
     DEPENDS ${test}
     VERBATIM)
   add_custom_target(run-${test} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log)
 endforeach()
+
+if(ENABLE_DATA_TOOLS)
+  add_dependencies(run-mapmatch utrecht_tiles)
+  add_dependencies(run-matrix utrecht_tiles)
+endif()
 
 string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
 add_custom_target(check DEPENDS ${test_targets})

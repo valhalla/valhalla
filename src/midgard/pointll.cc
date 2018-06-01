@@ -124,76 +124,75 @@ float PointLL::Heading(const PointLL& ll2) const {
 // Finds the closest point to the supplied polyline as well as the distance
 // squared to that point and the index of the segment where the closest point
 // lies.
-std::tuple<PointLL, float, int>
-PointLL::ClosestPoint(const std::vector<PointLL>& pts, size_t begin_index, float dist_cutoff) const {
-  PointLL closest{};
-  int closest_segment = -1;
-  float mindistsqr = std::numeric_limits<float>::max();
-  size_t process_size = 0;
+std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>& pts,
+                                                      int pivot_index,
+                                                      float forward_dist_cutoff,
+                                                      float reverse_dist_cutoff) const {
 
-  if (begin_index < pts.size()) {
-    process_size = (pts.size() - begin_index);
-  }
+  // setup
+  if (pts.empty() || pivot_index < 0 || pivot_index > pts.size() - 1)
+    return std::make_tuple(PointLL(), std::numeric_limits<float>::max(), -1);
 
-  // If there are no points to process we are done
-  if (process_size == 0) {
-    return std::make_tuple(std::move(closest), std::move(mindistsqr), std::move(closest_segment));
-  }
-
-  // If there is one point to process we are done
-  if (process_size == 1) {
-    return std::make_tuple(pts[begin_index], std::sqrt(DistanceSquared(pts[begin_index])),
-                           begin_index);
-  }
-
-  // Longitude (x) is scaled by the cos of the latitude so that distances are
-  // correct in lat,lon space
-  float lon_scale = cosf(lat() * kRadPerDeg);
-
+  int closest_segment = pivot_index;
+  PointLL closest = pts[pivot_index];
   DistanceApproximator approx(*this);
-  PointLL point;
-  for (size_t index = begin_index; index < pts.size() - 1; ++index) {
-    // Get the current segment
-    const PointLL& u = pts[index];
-    const PointLL& v = pts[index + 1];
+  float mindistsqr = approx.DistanceSquared(closest);
 
-    // Project a onto b where b is the origin vector representing this segment
-    // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
-    auto bx = v.lng() - u.lng();
-    auto by = v.lat() - u.lat();
+  // start going backwards, then go forwards
+  for (int reverse = 0; reverse < 2; ++reverse) {
+    // get the range and distance for this direction
+    auto dist_cutoff = reverse ? reverse_dist_cutoff : forward_dist_cutoff;
+    int increment = reverse ? -1 : 1;
+    int indices = reverse ? pivot_index : (pts.size() - 1) - pivot_index;
 
-    // Scale longitude when finding the projection. Only need the numerator
-    // at first, saving the division for the case where the lat,lon projects
-    // along the current segment.
-    auto bx2 = bx * lon_scale;
-    auto sq = bx2 * bx2 + by * by;
-    auto scale = (lng() - u.lng()) * lon_scale * bx2 + (lat() - u.lat()) * by;
+    PointLL point;
+    for (int index = pivot_index - reverse; indices > 0 && dist_cutoff > 0.f;
+         index += increment, --indices) {
+      // Get the current segment
+      const PointLL& u = pts[index];
+      const PointLL& v = pts[index + 1];
 
-    // Projects along the ray before u
-    if (scale <= 0.f) {
-      point = {u.lng(), u.lat()};
-    } // Projects along the ray after v
-    else if (scale >= sq) {
-      point = {v.lng(), v.lat()};
-    } // Projects along the ray between u and v
-    else {
-      scale /= sq;
-      point = {u.lng() + bx * scale, u.lat() + by * scale};
-    }
+      // Project a onto b where b is the origin vector representing this segment
+      // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
+      auto bx = v.lng() - u.lng();
+      auto by = v.lat() - u.lat();
 
-    // Check if this point is better
-    const auto sq_distance = approx.DistanceSquared(point);
-    if (sq_distance < mindistsqr) {
-      closest_segment = static_cast<int>(index);
-      mindistsqr = sq_distance;
-      closest = std::move(point);
-    }
+      // Scale longitude when finding the projection. Avoid divided-by-zero
+      // which gives a NaN scale, otherwise comparisons below will fail
+      auto bx2 = bx * approx.GetLngScale();
+      auto sq = bx2 * bx2 + by * by;
+      auto scale =
+          sq > 0 ? (((lng() - u.lng()) * approx.GetLngScale() * bx2 + (lat() - u.lat()) * by) / sq)
+                 : 0.f;
 
-    // Check if we should bail early because of looking at too much shape
-    if (dist_cutoff != std::numeric_limits<float>::infinity() && (dist_cutoff -= u.Distance(v)) < 0) {
-      break;
+      // Projects along the ray before u
+      bool right_most = false;
+      if (scale <= 0.f) {
+        point = {u.lng(), u.lat()};
+      } // Projects along the ray after v
+      else if (scale >= 1.f) {
+        point = {v.lng(), v.lat()};
+        right_most = true;
+      } // Projects along the ray between u and v
+      else {
+        point = {u.lng() + bx * scale, u.lat() + by * scale};
+      }
+
+      // Check if this point is better
+      const auto sq_distance = approx.DistanceSquared(point);
+      if (sq_distance < mindistsqr) {
+        closest_segment = index + right_most;
+        mindistsqr = sq_distance;
+        closest = std::move(point);
+      }
+
+      // Check if we should bail early because of looking at too much shape
+      if (dist_cutoff != std::numeric_limits<float>::infinity())
+        dist_cutoff -= u.Distance(v);
     }
   }
+
+  // give back what we found
   return std::make_tuple(std::move(closest), std::sqrt(mindistsqr), closest_segment);
 }
 
