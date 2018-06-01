@@ -236,13 +236,12 @@ install(FILES ${valhalla_hdrs}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
   COMPONENT development)
 
-
 ## pkg-config file
-set(prefix ${CMAKE_INSTALL_PREFIX})
-set(exec_prefix ${CMAKE_INSTALL_PREFIX})
-set(libdir ${CMAKE_INSTALL_LIBDIR})
-set(includedir ${CMAKE_INSTALL_INCLUDEDIR})
-configure_file(../libvalhalla.pc.in libvalhalla.pc @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libvalhalla.pc
+set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${PROJECT_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
+
+add_executable(libvalhalla.pc ../libvalhalla.pc.in)
+target_link_libraries(libvalhalla.pc valhalla)
+set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
+install(TARGETS libvalhalla.pc
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
   COMPONENT development)

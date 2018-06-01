@@ -6,5 +6,5 @@ includedir=${prefix}/@includedir@
 Name: libvalhalla
 Description: valhalla c++ library
 Version: @VERSION@
-Libs: -L${libdir} -lvalhalla
+Libs: -L${libdir} -lvalhalla @deplibs@
 Cflags: -I${includedir}
