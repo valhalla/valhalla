@@ -28,7 +28,6 @@ set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBU
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
 # colorize output
 include(CheckCXXCompilerFlag)
@@ -170,7 +169,6 @@ add_subdirectory(test)
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
   add_subdirectory(src/bindings/python)
-
   install(FILES COPYING ChangeLog
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)

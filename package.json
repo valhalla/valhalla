@@ -7,8 +7,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/nodejs/*.test.js",
     "install": "./scripts/node_install.sh"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   },
   "repository": {
     "type": "git",
@@ -22,6 +25,16 @@
   },
   "homepage": "https://github.com/valhalla/valhalla#readme",
   "dependencies": {
-    "node-gyp": "^3.6.2"
+    "node-cmake": "^2.5.1",
+    "node-gyp": "^3.6.2",
+    "node-pre-gyp": "^0.10.0",
+    "tape": "^4.9.0"
+  },
+  "binary": {
+    "module_name": "node_valhalla",
+    "module_path": "./lib/binding/",
+    "host": "https://mapbox-node-binary.s3.amazonaws.com",
+    "remote_path": "./{name}/v{version}/{configuration}/",
+    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
   }
 }
