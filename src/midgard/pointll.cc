@@ -146,10 +146,11 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
     int indices = reverse ? pivot_index : (pts.size() - 1) - pivot_index;
 
     PointLL point;
-    for (int index = pivot_index; indices > 0 && dist_cutoff > 0.f; index += increment, --indices) {
+    for (int index = pivot_index - reverse; indices > 0 && dist_cutoff > 0.f;
+         index += increment, --indices) {
       // Get the current segment
       const PointLL& u = pts[index];
-      const PointLL& v = pts[index + increment];
+      const PointLL& v = pts[index + 1];
 
       // Project a onto b where b is the origin vector representing this segment
       // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
@@ -165,11 +166,13 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
                  : 0.f;
 
       // Projects along the ray before u
+      bool right_most = false;
       if (scale <= 0.f) {
         point = {u.lng(), u.lat()};
       } // Projects along the ray after v
       else if (scale >= 1.f) {
         point = {v.lng(), v.lat()};
+        right_most = true;
       } // Projects along the ray between u and v
       else {
         point = {u.lng() + bx * scale, u.lat() + by * scale};
@@ -177,8 +180,8 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
 
       // Check if this point is better
       const auto sq_distance = approx.DistanceSquared(point);
-      if (sq_distance <= mindistsqr) {
-        closest_segment = index - reverse;
+      if (sq_distance < mindistsqr) {
+        closest_segment = index + right_most;
         mindistsqr = sq_distance;
         closest = std::move(point);
       }
