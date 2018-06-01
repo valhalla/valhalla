@@ -52,6 +52,32 @@ set_target_properties(Lua::Lua PROPERTIES
   INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
   INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
 
+find_package(Protobuf REQUIRED)
+# TODO: remove after switching to CMake >= 3.7
+if(NOT TARGET protobuf::libprotobuf)
+  if(PROTOBUF_LIBRARY)
+    add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
+    set_target_properties(protobuf::libprotobuf PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
+    if(EXISTS "${PROTOBUF_LIBRARY}")
+      set_target_properties(protobuf::libprotobuf PROPERTIES
+        IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
+    endif()
+    if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
+      set_property(TARGET protobuf::libprotobuf APPEND PROPERTY
+        IMPORTED_CONFIGURATIONS RELEASE)
+      set_target_properties(protobuf::libprotobuf PROPERTIES
+        IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
+    endif()
+    if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
+      set_property(TARGET protobuf::libprotobuf APPEND PROPERTY
+        IMPORTED_CONFIGURATIONS DEBUG)
+      set_target_properties(protobuf::libprotobuf PROPERTIES
+        IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
+    endif()
+  endif()
+endif()
+
 find_package(ZLIB REQUIRED)
 find_package(LZ4 REQUIRED)
 find_package(Threads REQUIRED)
@@ -65,14 +91,26 @@ if(ENABLE_SERVICES)
     INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
 endif()
 
-## Define libvalhalla sub-modules
+
+## Define libvalhalla sub-modules as OBJECT libraries
+
+# TODO: Remove workaround after switching to CMake 3.11
+# with fixed  https://gitlab.kitware.com/cmake/cmake/issues/14778
+# and merged https://gitlab.kitware.com/cmake/cmake/merge_requests/1524
+# Check the commit message for the fix patch that removes cache internal variables
+# and adds target_link_libraries(${library} ${MODULE_DEPENDS}) again
+set(libvalhalla_compile_definitions "" CACHE INTERNAL "")
+set(libvalhalla_include_directories "" CACHE INTERNAL "")
+set(libvalhalla_link_objects "" CACHE INTERNAL  "")
+set(libvalhalla_link_libraries "" CACHE INTERNAL  "")
+
 function(valhalla_module)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES HEADERS DEPENDS INCLUDE_DIRECTORIES)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(library valhalla-${MODULE_NAME})
-  add_library(${library} STATIC ${MODULE_SOURCES} ${MODULE_HEADERS})
+  add_library(${library} OBJECT ${MODULE_SOURCES} ${MODULE_HEADERS})
   add_library(valhalla::${MODULE_NAME} ALIAS ${library})
   target_compile_definitions(${library}
     PUBLIC
@@ -84,7 +122,6 @@ function(valhalla_module)
      PRIVATE
        ${LIBVALHALLA_BINARY_DIR}
        ${LIBVALHALLA_BINARY_DIR}/valhalla)
-  target_link_libraries(${library} ${MODULE_DEPENDS})
 
   if(ENABLE_COVERAGE)
     target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
@@ -97,6 +134,23 @@ function(valhalla_module)
   if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
     set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
   endif()
+
+  ## Save properties of external dependencies and target objects to propagate to valhalla target
+  string(REGEX REPLACE "(valhalla::[^;]+)" "" external_module_depends "${MODULE_DEPENDS}")
+  string(REGEX REPLACE "([^;]+)" "$<TARGET_PROPERTY:\\1,INTERFACE_COMPILE_DEFINITIONS>" external_compile_definitions "${external_module_depends}")
+  string(REGEX REPLACE "([^;]+)" "$<TARGET_PROPERTY:\\1,INTERFACE_INCLUDE_DIRECTORIES>" external_include_directories "${external_module_depends}")
+  target_compile_definitions(${library} PRIVATE ${external_compile_definitions})
+  target_include_directories(${library} PRIVATE ${external_include_directories})
+  foreach(dep "${MODULE_DEPENDS}")
+    if("${dep}" MATCHES "^valhalla::")
+      add_dependencies(${library} ${dep})
+    endif()
+  endforeach()
+
+  set(libvalhalla_compile_definitions "${libvalhalla_compile_definitions};$<TARGET_PROPERTY:${library},COMPILE_DEFINITIONS>" CACHE INTERNAL "")
+  set(libvalhalla_include_directories "${libvalhalla_include_directories};$<TARGET_PROPERTY:${library},INCLUDE_DIRECTORIES>" CACHE INTERNAL "")
+  set(libvalhalla_link_objects "${libvalhalla_link_objects};$<TARGET_OBJECTS:${library}>" CACHE INTERNAL "")
+  set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
 endfunction()
 
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
@@ -111,9 +165,12 @@ add_subdirectory(thor)
 add_subdirectory(tyr)
 
 if(ENABLE_DATA_TOOLS)
+  find_package(SQLite3 REQUIRED)
+  find_package(SpatiaLite REQUIRED)
   add_subdirectory(mjolnir)
 endif()
 
+## libvalhalla
 configure_file(../valhalla/valhalla.h.in ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h @ONLY)
 configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h @ONLY)
 
@@ -123,10 +180,12 @@ set(valhalla_hdrs
   ${VALHALLA_SOURCE_DIR}/valhalla/exception.h
   ${VALHALLA_SOURCE_DIR}/valhalla/worker.h)
 
-add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs})
+add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs} ${libvalhalla_link_objects})
 
-target_compile_definitions(valhalla PRIVATE
-  $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">)
+target_compile_definitions(valhalla
+  PRIVATE
+    ${libvalhalla_compile_definitions}
+    $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">)
 
 target_include_directories(valhalla
   PUBLIC
@@ -134,19 +193,15 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${LIBVALHALLA_BINARY_DIR}
     ${LIBVALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    )
+  PRIVATE
+    ${libvalhalla_include_directories})
 
 target_link_libraries(valhalla
-  $<$<BOOL:${ENABLE_DATA_TOOLS}>:valhalla::mjolnir>
-  valhalla::baldr
-  valhalla::tyr
-  valhalla::midgard
-  valhalla::meili
-  valhalla::sif
-  valhalla::skadi
-  valhalla::protobuf
-  $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
-  Threads::Threads)
+  PUBLIC
+    ${libvalhalla_link_libraries}
+  PRIVATE
+    $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
+    Threads::Threads)
 
 set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"
@@ -163,19 +218,6 @@ if(BUILD_SHARED_LIBS)
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla0"
     COMPONENT shared)
 else()
-  add_custom_command(TARGET valhalla POST_BUILD
-    COMMAND ${CMAKE_AR} rc $<TARGET_FILE:valhalla>
-      $<$<BOOL:${ENABLE_DATA_TOOLS}>:$<TARGET_FILE:valhalla::mjolnir>>
-      $<TARGET_FILE:valhalla::baldr>
-      $<TARGET_FILE:valhalla::loki>
-      $<TARGET_FILE:valhalla::meili>
-      $<TARGET_FILE:valhalla::midgard>
-      $<TARGET_FILE:valhalla::odin>
-      $<TARGET_FILE:valhalla::sif>
-      $<TARGET_FILE:valhalla::skadi>
-      $<TARGET_FILE:valhalla::thor>
-      $<TARGET_FILE:valhalla::tyr>)
-
   add_custom_target(${LIBVALHALLA_SO_LINK} ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
 endif()

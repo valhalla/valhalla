@@ -34,5 +34,5 @@ valhalla_module(NAME odin
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
-    valhalla::tyr
-    valhalla::protobuf)
+    valhalla::proto
+    libprime_server)

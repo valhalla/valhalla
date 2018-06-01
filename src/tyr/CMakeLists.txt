@@ -2,7 +2,6 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/tyr/*.h)
 
 valhalla_module(NAME tyr
   SOURCES
-    ${VALHALLA_SOURCE_DIR}/src/worker.cc
     serializers.cc
     isochrone_serializer.cc
     matrix_serializer.cc

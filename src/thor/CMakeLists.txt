@@ -33,5 +33,5 @@ valhalla_module(NAME thor
     PRIVATE
       ${CMAKE_BINARY_DIR}
   DEPENDS
-    valhalla::tyr
-    valhalla::protobuf)
+    valhalla::proto
+    libprime_server)
