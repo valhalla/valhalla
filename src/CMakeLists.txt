@@ -100,6 +100,7 @@ endif()
 # Check the commit message for the fix patch that removes cache internal variables
 # and adds target_link_libraries(${library} ${MODULE_DEPENDS}) again
 set(libvalhalla_compile_definitions "" CACHE INTERNAL "")
+set(libvalhalla_compile_options "" CACHE INTERNAL "")
 set(libvalhalla_include_directories "" CACHE INTERNAL "")
 set(libvalhalla_link_objects "" CACHE INTERNAL  "")
 set(libvalhalla_link_libraries "" CACHE INTERNAL  "")
@@ -148,6 +149,7 @@ function(valhalla_module)
   endforeach()
 
   set(libvalhalla_compile_definitions "${libvalhalla_compile_definitions};$<TARGET_PROPERTY:${library},COMPILE_DEFINITIONS>" CACHE INTERNAL "")
+  set(libvalhalla_compile_options "${libvalhalla_compile_options};$<TARGET_PROPERTY:${library},COMPILE_OPTIONS>" CACHE INTERNAL "")
   set(libvalhalla_include_directories "${libvalhalla_include_directories};$<TARGET_PROPERTY:${library},INCLUDE_DIRECTORIES>" CACHE INTERNAL "")
   set(libvalhalla_link_objects "${libvalhalla_link_objects};$<TARGET_OBJECTS:${library}>" CACHE INTERNAL "")
   set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
@@ -187,6 +189,10 @@ target_compile_definitions(valhalla
     $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">
   PRIVATE
     ${libvalhalla_compile_definitions})
+
+target_compile_options(valhalla
+  PUBLIC
+    ${libvalhalla_compile_options})
 
 target_include_directories(valhalla
   PUBLIC
