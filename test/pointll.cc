@@ -1,6 +1,7 @@
 #include "midgard/pointll.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <algorithm>
 #include <cmath>
 
 #include "test.h"
@@ -133,33 +134,54 @@ void TestHeadingAtEndOfPolyline() {
       30.0f, 266);
 }
 
-void TryClosestPoint(const std::vector<PointLL>& pts,
+void TryClosestPoint(std::vector<PointLL> pts,
                      const PointLL& pt,
                      const PointLL& expected_pt,
                      float expected_dist,
                      int expected_idx,
-                     size_t begin_index = 0) {
-  auto result = pt.ClosestPoint(pts, begin_index);
-  PointLL result_pt = std::get<0>(result);
+                     int expected_inverse_idx,
+                     int begin_idx = 0) {
 
-  // Test expected closest point
-  if (!result_pt.ApproximatelyEqual(expected_pt))
-    throw runtime_error(
-        "TryClosestPoint point test failed - found: " + std::to_string(result_pt.lat()) + "," +
-        std::to_string(result_pt.lng()) + " | expected: " + std::to_string(expected_pt.lat()) + "," +
-        std::to_string(expected_pt.lng()));
+  // do forwards and backwards searches
+  for (int reverse = 0; reverse < 2; ++reverse) {
 
-  // Test expected distance
-  if (!valhalla::midgard::equal<float>(std::get<1>(result), expected_dist, 0.5f))
-    throw runtime_error(
-        "TryClosestPoint distance test failed - found: " + std::to_string(std::get<1>(result)) +
-        " | expected: " + std::to_string(expected_dist));
+    // if we are doing a backwards search we will just flip
+    // the direction of the line string and invert the indices
+    // inverting them gets tricky at the boundaries :o(
+    float forward = std::numeric_limits<float>::infinity();
+    float backward = 0;
+    if (reverse) {
+      std::reverse(pts.begin(), pts.end());
+      if (pts.size() > 1) {
+        begin_idx = (pts.size() - 1) - begin_idx;
+      }
+      std::swap(forward, backward);
+      expected_idx = expected_inverse_idx;
+    }
 
-  // Test expected index
-  if (std::get<2>(result) != expected_idx)
-    throw runtime_error(
-        "TryClosestPoint index test failed - found: " + std::to_string(std::get<2>(result)) +
-        " | expected: " + std::to_string(expected_idx));
+    // look for the closest point
+    auto result = pt.ClosestPoint(pts, begin_idx, forward, backward);
+    PointLL result_pt = std::get<0>(result);
+
+    // Test expected closest point
+    if (!result_pt.ApproximatelyEqual(expected_pt))
+      throw runtime_error(
+          "TryClosestPoint point test failed - found: " + std::to_string(result_pt.lat()) + "," +
+          std::to_string(result_pt.lng()) + " | expected: " + std::to_string(expected_pt.lat()) +
+          "," + std::to_string(expected_pt.lng()));
+
+    // Test expected distance
+    if (!valhalla::midgard::equal<float>(std::get<1>(result), expected_dist, 0.5f))
+      throw runtime_error(
+          "TryClosestPoint distance test failed - found: " + std::to_string(std::get<1>(result)) +
+          " | expected: " + std::to_string(expected_dist));
+
+    // Test expected index
+    if (std::get<2>(result) != expected_idx)
+      throw runtime_error(
+          "TryClosestPoint index test failed - found: " + std::to_string(std::get<2>(result)) +
+          " | expected: " + std::to_string(expected_idx));
+  }
 }
 
 void TryClosestPointNoDistance(const std::vector<PointLL>& pts,
@@ -187,11 +209,11 @@ void TestClosestPoint() {
   // Test no points
   std::vector<PointLL> pts0;
   TryClosestPoint(pts0, PointLL(-76.299179f, 40.042572f), PointLL(),
-                  std::numeric_limits<float>::max(), -1);
+                  std::numeric_limits<float>::max(), -1, -1);
 
   // Test one point - should fail then update code to do sqrt
   std::vector<PointLL> pts1 = {{-76.299171f, 40.042519f}};
-  TryClosestPoint(pts1, PointLL(-76.299179f, 40.042572f), PointLL(-76.299171f, 40.042519f), 5.933f,
+  TryClosestPoint(pts1, PointLL(-76.299179f, 40.042572f), PointLL(-76.299171f, 40.042519f), 5.933f, 0,
                   0);
 
   // Construct a simple polyline
@@ -202,34 +224,39 @@ void TestClosestPoint() {
                               {-76.296837f, 40.042099f}};
 
   // Closest to the 1st point
-  TryClosestPoint(pts, PointLL(-76.299179f, 40.042572f), PointLL(-76.299171f, 40.042519f), 5.933f, 0);
+  TryClosestPoint(pts, PointLL(-76.299179f, 40.042572f), PointLL(-76.299171f, 40.042519f), 5.933f, 0,
+                  4);
 
   // Closest along the 2nd segment
-  TryClosestPoint(pts, PointLL(-76.298477f, 40.042645f), PointLL(-76.298470f, 40.042595f), 5.592f, 1);
+  TryClosestPoint(pts, PointLL(-76.298477f, 40.042645f), PointLL(-76.298470f, 40.042595f), 5.592f, 1,
+                  2);
 
   // Closest to third shape point
-  TryClosestPoint(pts, PointLL(-76.297806f, 40.042671f), PointLL(-76.297806f, 40.042671f), 0.f, 1);
+  TryClosestPoint(pts, PointLL(-76.297806f, 40.042671f), PointLL(-76.297806f, 40.042671f), 0.f, 2, 2);
 
   // Closest along the 3rd segment
-  TryClosestPoint(pts, PointLL(-76.297752f, 40.042183f), PointLL(-76.297722f, 40.042187f), 2.592f, 2);
+  TryClosestPoint(pts, PointLL(-76.297752f, 40.042183f), PointLL(-76.297722f, 40.042187f), 2.592f, 2,
+                  1);
 
   // Closest along the 3rd segment with begin_index = 2
   TryClosestPoint(pts, PointLL(-76.297752f, 40.042183f), PointLL(-76.297722f, 40.042187f), 2.592f, 2,
-                  2);
+                  1, 2);
 
   // Closest along the 4th segment
-  TryClosestPoint(pts, PointLL(-76.297020f, 40.042133f), PointLL(-76.297012f, 40.042084f), 5.491f, 3);
+  TryClosestPoint(pts, PointLL(-76.297020f, 40.042133f), PointLL(-76.297012f, 40.042084f), 5.491f, 3,
+                  0);
 
   // Closest to the last point
-  TryClosestPoint(pts, PointLL(-76.296700f, 40.042114f), PointLL(-76.296837f, 40.042099f), 11.78f, 3);
+  TryClosestPoint(pts, PointLL(-76.296700f, 40.042114f), PointLL(-76.296837f, 40.042099f), 11.78f, 4,
+                  0);
 
   // Closest to the last point with begin_index = 4 - therefore, special case of one point
   TryClosestPoint(pts, PointLL(-76.296700f, 40.042114f), PointLL(-76.296837f, 40.042099f), 11.78f, 4,
-                  4);
+                  0, 4);
 
   // Invalid begin_index of 5
   TryClosestPoint(pts, PointLL(-76.299179f, 40.042572f), PointLL(), std::numeric_limits<float>::max(),
-                  -1, 5);
+                  -1, -1, 5);
 
   // Try at high latitude where we need to properly project the closest point
   std::vector<PointLL> shape = {{-97.2987f, 50.4072f}, {-97.3208f, 50.4265f}};
