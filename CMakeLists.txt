@@ -264,7 +264,8 @@ if(ENABLE_COVERAGE)
 
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
     COMMAND ${LCOV_PATH} --directory . --base-directory ${VALHALLA_SOURCE_DIR} --no-external --capture --output-file coverage.info --no-checksum
-    COMMAND ${LCOV_PATH} --remove coverage.info '/usr/*' --output-file coverage.info
+    COMMAND ${LCOV_PATH} --remove coverage.info '*/third_party/*' --output-file coverage.info
+    COMMAND ${LCOV_PATH} --remove coverage.info '${CMAKE_CURRENT_BINARY_DIR}/*' --output-file coverage.info
     COMMAND ${LCOV_PATH} --list coverage.info
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS check)
