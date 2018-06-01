@@ -30,61 +30,81 @@ public:
    * Get the route type.
    * @return  Returns the route type.
    */
-  TransitType route_type() const;
+  TransitType route_type() const {
+    return static_cast<TransitType>(route_type_);
+  }
 
   /**
    * Get the TransitLand one stop Id offset for this route.
    * @return  Returns the TransitLand one-stop Id offset.
    */
-  uint32_t one_stop_offset() const;
+  uint32_t one_stop_offset() const {
+    return one_stop_offset_;
+  }
 
   /**
    * Get the TransitLand operator one stop Id offset for this route.
    * @return  Returns the TransitLand operator one-stop Id offset.
    */
-  uint32_t op_by_onestop_id_offset() const;
+  uint32_t op_by_onestop_id_offset() const {
+    return op_by_onestop_id_offset_;
+  }
 
   /**
    * Get the TransitLand operator name offset for this route.
    * @return  Returns the TransitLand operator name offset.
    */
-  uint32_t op_by_name_offset() const;
+  uint32_t op_by_name_offset() const {
+    return op_by_name_offset_;
+  }
 
   /**
    * Get the TransitLand operator website offset for this route.
    * @return  Returns the TransitLand operator website offset.
    */
-  uint32_t op_by_website_offset() const;
+  uint32_t op_by_website_offset() const {
+    return op_by_website_offset_;
+  }
 
   /**
    * Get the route color route.
    * @return  Returns the route color.
    */
-  uint32_t route_color() const;
+  uint32_t route_color() const {
+    return route_color_;
+  }
 
   /**
    * Get the route text color route.
    * @return  Returns the route text color.
    */
-  uint32_t route_text_color() const;
+  uint32_t route_text_color() const {
+    return route_text_color_;
+  }
 
   /**
    * Get the text/name offset for the short route name.
    * @return  Returns the short name offset in the text/name list.
    */
-  uint32_t short_name_offset() const;
+  uint32_t short_name_offset() const {
+    return short_name_offset_;
+  }
 
   /**
    * Get the text/name offset for the long route name.
    * @return  Returns the short name offset in the text/name list.
    */
-  uint32_t long_name_offset() const;
+  uint32_t long_name_offset() const {
+    return long_name_offset_;
+  }
 
   /**
    * Get the text/name offset for the route description.
    * @return  Returns the description offset in the text/name list.
    */
-  uint32_t desc_offset() const;
+  uint32_t desc_offset() const {
+    return desc_offset_;
+  }
 
   /**
    * operator < - for sorting. Sort by route Id.
