@@ -16,11 +16,12 @@ valhalla_module(NAME loki
   SOURCES ${sources}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
-  PUBLIC
-    ${VALHALLA_SOURCE_DIR}
-    ${VALHALLA_SOURCE_DIR}/valhalla
-  PRIVATE
-    ${CMAKE_BINARY_DIR}
+    PUBLIC
+      ${VALHALLA_SOURCE_DIR}
+      ${VALHALLA_SOURCE_DIR}/valhalla
+    PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${CMAKE_BINARY_DIR}
   DEPENDS
     valhalla::skadi
     valhalla::baldr

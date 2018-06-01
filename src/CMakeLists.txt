@@ -183,9 +183,10 @@ set(valhalla_hdrs
 add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${valhalla_hdrs} ${libvalhalla_link_objects})
 
 target_compile_definitions(valhalla
+  PUBLIC
+    $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">
   PRIVATE
-    ${libvalhalla_compile_definitions}
-    $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">)
+    ${libvalhalla_compile_definitions})
 
 target_include_directories(valhalla
   PUBLIC
@@ -193,6 +194,7 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${LIBVALHALLA_BINARY_DIR}
     ${LIBVALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+    ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
   PRIVATE
     ${libvalhalla_include_directories})
 
