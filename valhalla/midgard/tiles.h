@@ -188,19 +188,6 @@ public:
   coord_t Center(const int32_t tileid) const;
 
   /**
-   * Get the tile Id given a previous tile and a row, column offset.
-   * @param   initial_tile      Id of the tile to offset from.
-   * @param   delta_rows    Number of rows to offset (can be negative).
-   * @param   delta_cols    Number of columns to offset (can be negative).
-   * @return  Tile Id of the new tile.
-   */
-  int32_t GetRelativeTileId(const int32_t initial_tile,
-                            const int32_t delta_rows,
-                            const int32_t delta_cols) const {
-    return initial_tile + (delta_rows * ncolumns_) + delta_cols;
-  }
-
-  /**
    * Get the tile offsets (row,column) between the previous tile Id and
    * a new tileid.  The offsets are returned through arguments (references).
    * Offsets can be positive or negative or 0.

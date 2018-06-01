@@ -86,7 +86,7 @@ void TryClosestPoint(const std::vector<Point2>& pts,
                      const float res) {
   auto result = p.ClosestPoint(pts);
   if (fabs(std::get<1>(result) - res) > kEpsilon)
-    throw runtime_error("ClosestPoint test failed - distance squared is wrong");
+    throw runtime_error("ClosestPoint test failed - distance is wrong");
   if (idx != std::get<2>(result))
     throw runtime_error("ClosestPoint test failed -index of closest segment is wrong");
   if (fabs(c.x() - std::get<0>(result).x()) > kEpsilon ||
@@ -94,17 +94,27 @@ void TryClosestPoint(const std::vector<Point2>& pts,
     throw runtime_error("ClosestPoint test failed - closest point is wrong");
 }
 void TestClosestPoint() {
-  // Construct a simple polyline
-  std::vector<Point2> pts = {{0.0f, 0.0f}, {2.0f, 2.0f}, {4.0f, 2.0f}, {4.0f, 0.0f}, {12.0f, 0.0f}};
+  // Construct a simple polyline (duplicate a point to make sure it is properly skipped)
+  std::vector<Point2> pts = {{0.0f, 0.0f}, {2.0f, 2.0f}, {4.0f, 2.0f},
+                             {4.0f, 0.0f}, {4.0f, 0.0f}, {12.0f, 0.0f}};
 
   // Closest to the first point
   TryClosestPoint(pts, Point2(-4.0f, 0.0f), Point2(0.0f, 0.0f), 0, 4.0f);
 
   // Closest along the last segment
-  TryClosestPoint(pts, Point2(10.0f, -4.0f), Point2(10.0f, 0.0f), 3, 4.0f);
+  TryClosestPoint(pts, Point2(10.0f, -4.0f), Point2(10.0f, 0.0f), 4, 4.0f);
 
   // Closest to the last point
-  TryClosestPoint(pts, Point2(15.0f, 4.0f), Point2(12.0f, 0.0f), 3, 5.0f);
+  TryClosestPoint(pts, Point2(15.0f, 4.0f), Point2(12.0f, 0.0f), 4, 5.0f);
+
+  // Test ClosestPoint with empty vector
+  std::vector<Point2> empty_pts;
+  TryClosestPoint(empty_pts, Point2(5.0f, 0.0f), Point2(0.0f, 0.0f), 0,
+                  std::numeric_limits<float>::max());
+
+  // Test ClosestPoint with only 1 point in the list
+  std::vector<Point2> pts1 = {{1.0f, 0.0f}};
+  TryClosestPoint(pts1, Point2(5.0f, 0.0f), Point2(1.0f, 0.0f), 0, 4.0f);
 }
 
 void TryWithinConvexPolygon(const std::vector<Point2>& pts, const Point2& p, const bool res) {
