@@ -56,17 +56,35 @@ boost::property_tree::ptree make_conf() {
 napi_value Route(napi_env env, napi_callback_info info) {
     napi_status status;
     napi_value myStr;
-        
+
+    size_t argc = 1;
+    napi_value argv[1];
+
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to parse arguments");
+    }
+
+    char buffer[1024];
+    size_t out;
+
+    status = napi_get_value_string_utf8(env, argv[0], buffer, 1024, &out);
+
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to parse first argument to string");
+    }
+    std::string reqString(buffer, out);
+
     auto conf = make_conf();
     valhalla::tyr::actor_t actor(conf);
-    auto route_json = actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
-          {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
+    auto route_json = actor.route(reqString);
     actor.cleanup();
 
-    const char* buffer = route_json.c_str();
-    const auto nchars = route_json.size() ;
-    
-    status = napi_create_string_utf8(env, buffer, nchars, &myStr);
+    const char* outBuff = route_json.c_str();
+    const auto nchars = route_json.size();
+
+    status = napi_create_string_utf8(env, outBuff, nchars, &myStr);
     return myStr;
 }
 
@@ -83,7 +101,7 @@ napi_value Init(napi_env env, napi_value exports) {
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Unable to populate exports");
     }
-    
+
     return exports;
 }
 
