@@ -248,8 +248,8 @@ set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_D
 add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
 target_link_libraries(libvalhalla.pc valhalla)
 set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
-install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target libvalhalla.pc OUTPUT_QUIET ERROR_VARIABLE _err RESULT_VARIABLE _res)")
-install(CODE "If (NOT \${_res} EQUAL 0)
+install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target libvalhalla.pc OUTPUT_QUIET ERROR_VARIABLE _err RESULT_VARIABLE _res)
+if(NOT \${_res} EQUAL 0)
   message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")
 endif()")
 install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc

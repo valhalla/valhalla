@@ -219,6 +219,8 @@ foreach(test ${cost_tests})
 endforeach()
 
 # Test-specific data, properties and dependencies
+set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
+
 add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph
   COMMAND ${CMAKE_CURRENT_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
@@ -228,7 +230,16 @@ add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/1
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
 add_custom_target(utrecht_tiles DEPENDS ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph)
 
-set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
+add_custom_command(OUTPUT test/.locales.timestamp
+  COMMAND /bin/bash -c "for loc in $(jq --raw-output \".posix_locale\" *.json); do \
+       localedef --inputfile=$\{loc\%.\*\} --charmap=$\{loc\#\#\*.\} ./$\{loc\} ; \
+     done \
+     && touch ${CMAKE_CURRENT_BINARY_DIR}/test/.locales.timestamp"
+  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
+  DEPENDS locales/*.json
+  COMMENT "Compile locale definition files..."
+  VERBATIM)
+add_custom_target(localedef DEPENDS test/.locales.timestamp)
 
 # Test run targets
 foreach(test ${tests} ${cost_tests})
@@ -245,6 +256,9 @@ foreach(test ${tests} ${cost_tests})
   add_custom_target(run-${test} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log)
 endforeach()
 
+# Run test dependencies
+add_dependencies(run-util_odin localedef)
+add_dependencies(run-narrativebuilder localedef)
 if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
