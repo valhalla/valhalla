@@ -10,13 +10,17 @@
 #include "meili/universal_cost.h"
 #include "test.h"
 
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
 using namespace valhalla;
 
 using ptree = boost::property_tree::ptree;
 
 void TestMapMatcherFactory() {
   ptree root;
-  boost::property_tree::read_json("test/valhalla.json", root);
+  boost::property_tree::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {
@@ -142,7 +146,7 @@ void TestMapMatcherFactory() {
 
 void TestMapMatcher() {
   ptree root;
-  boost::property_tree::read_json("test/valhalla.json", root);
+  boost::property_tree::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
 
   // Nothing special to test for the moment
 

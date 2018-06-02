@@ -7,6 +7,10 @@
 
 #include "tyr/actor.h"
 
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
 using namespace valhalla;
 
 namespace {
@@ -21,7 +25,7 @@ boost::property_tree::ptree json_to_pt(const std::string& json) {
 
 boost::property_tree::ptree make_conf() {
   // fake up config against pine grove traffic extract
-  return json_to_pt(R"({
+  auto conf = json_to_pt(R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "loki":{
         "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available"],
@@ -51,6 +55,9 @@ boost::property_tree::ptree make_conf() {
         "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
       }
     })");
+
+  conf.get_child("mjolnir").put("tile_dir", VALHALLA_SOURCE_DIR "test/traffic_matcher_tiles");
+  return conf;
 }
 
 void test_actor() {

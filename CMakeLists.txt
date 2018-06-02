@@ -28,6 +28,7 @@ set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBU
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
@@ -205,7 +206,8 @@ endif()
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL	test/${test}.cc test/test.cc)
   set_target_properties(${test} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY unit_tests)
+    RUNTIME_OUTPUT_DIRECTORY unit_tests
+    COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   target_link_libraries(${test} valhalla)
 endforeach()
 
@@ -221,14 +223,13 @@ endforeach()
 # Test-specific data, properties and dependencies
 set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
-add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph
+add_custom_command(OUTPUT test/data/utrecht_tiles/0/003/196.gph
   COMMAND ${CMAKE_CURRENT_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
-      test/data/utrecht_netherlands.osm.pbf
-  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+      ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
   COMMENT "Building Utrecht Tiles..."
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
-add_custom_target(utrecht_tiles DEPENDS ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph)
+add_custom_target(utrecht_tiles DEPENDS test/data/utrecht_tiles/0/003/196.gph)
 
 add_custom_command(OUTPUT test/.locales.timestamp
   COMMAND /bin/bash -c "for loc in $(jq --raw-output \".posix_locale\" *.json); do \
@@ -243,14 +244,15 @@ add_custom_target(localedef DEPENDS test/.locales.timestamp)
 
 # Test run targets
 foreach(test ${tests} ${cost_tests})
-  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log
-    COMMAND LOCPATH=locales /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log \
+  add_custom_command(OUTPUT unit_tests/${test}.log
+    COMMAND
+      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
+      /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log \
       && echo $(tput setaf 2)$(tput bold)[PASS]$(tput sgr0) ${test} \
       || ( exit=$? ; \
            echo $(tput setaf 1)$(tput bold)[FAIL]$(tput sgr0) ${test} ; \
            cat ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log ; \
            exit $exit )"
-    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
     DEPENDS ${test}
     VERBATIM)
   add_custom_target(run-${test} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log)
