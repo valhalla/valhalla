@@ -31,6 +31,10 @@
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
 namespace bpt = boost::property_tree;
 
 namespace vm = valhalla::midgard;
@@ -184,8 +188,8 @@ void write_config(const std::string& filename) {
       \"mjolnir\": { \
       \"concurrency\": 1, \
        \"tile_dir\": \"test/data/trivial_tiles\", \
-        \"admin\": \"test/data/netherlands_admin.sqlite\", \
-         \"timezone\": \"test/data/not_needed.sqlite\" \
+        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
+         \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
       } \
     }";
   } catch (...) {}
@@ -197,7 +201,7 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
 
   // make the config file
   std::stringstream json;
-  json << "{ \"tile_dir\": \"test/fake_tiles_astar\" }";
+  json << "{ \"tile_dir\": \"" VALHALLA_SOURCE_DIR "test/fake_tiles_astar\" }";
   bpt::ptree conf;
   bpt::json_parser::read_json(json, conf);
 
@@ -309,7 +313,8 @@ void trivial_path_no_uturns(const std::string& config_file) {
   std::string access_file = "test_access_trivial.bin";
   std::string restriction_file = "test_complex_restrictions_trivial.bin";
   auto osmdata =
-      vj::PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"},
+      vj::PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
                                 ways_file, way_nodes_file, access_file, restriction_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
   vj::GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, restriction_file);

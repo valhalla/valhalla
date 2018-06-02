@@ -9,6 +9,10 @@
 #include "baldr/graphreader.h"
 #include "meili/traffic_segment_matcher.h"
 
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
 using namespace valhalla;
 
 namespace {
@@ -106,6 +110,7 @@ void test_matcher() {
     })";
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_json, conf);
+  conf.get_child("mjolnir").put("tile_dir", VALHALLA_SOURCE_DIR "test/traffic_matcher_tiles");
 
   // find me a find, catch me a catch
   testable_matcher matcher(conf);
