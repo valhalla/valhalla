@@ -2,6 +2,7 @@
 find_package(Protobuf REQUIRED)
 
 protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
+  directions.proto
   directions_options.proto
   navigator.proto
   route.proto
