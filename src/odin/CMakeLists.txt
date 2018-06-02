@@ -32,7 +32,8 @@ valhalla_module(NAME odin
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
     PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
-    valhalla::tyr
-    valhalla::protobuf)
+    valhalla::proto
+    libprime_server)

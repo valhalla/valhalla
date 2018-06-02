@@ -10,10 +10,6 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
-if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
-  message(FATAL_ERROR "In-source builds are not allowed.")
-endif()
-
 include(GNUInstallDirs)
 
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -107,7 +103,7 @@ foreach(program ${valhalla_programs})
   get_source_path(path ${program})
   add_executable(${program} ${path})
   target_link_libraries(${program} Boost::program_options valhalla)
-  install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
+  install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
 endforeach()
 
 if(ENABLE_DATA_TOOLS)
@@ -115,7 +111,7 @@ if(ENABLE_DATA_TOOLS)
     get_source_path(path ${program})
     add_executable(${program} ${path})
     target_link_libraries(${program} valhalla Boost::program_options)
-    install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
+    install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
   # Target-specific depedencies
@@ -131,7 +127,7 @@ if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} src/${program}.cc)
     target_link_libraries(${program} valhalla Boost::program_options)
-    install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
+    install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
 
@@ -140,7 +136,11 @@ install(
     scripts/valhalla_build_config
     scripts/valhalla_build_elevation
     scripts/valhalla_build_timezones
-  DESTINATION bin
+  DESTINATION "${CMAKE_INSTALL_BINDIR}"
+  PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
   COMPONENT runtime)
 
 install(FILES COPYING ChangeLog
@@ -174,7 +174,7 @@ print(sc.get_python_lib(prefix='', plat_specific=True))"
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
     OUTPUT_STRIP_TRAILING_WHITESPACE)
   install(TARGETS python_valhalla
-    DESTINATION ${PYTHON_SITE_PACKAGES}
+    DESTINATION "${PYTHON_SITE_PACKAGES}"
     COMPONENT python)
   install(FILES COPYING ChangeLog
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
