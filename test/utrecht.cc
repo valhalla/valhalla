@@ -12,6 +12,10 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
 using namespace std;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
@@ -47,9 +51,9 @@ OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
 void Parse() {
   boost::property_tree::ptree conf;
   conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
-  auto osmdata =
-      PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/utrecht_netherlands.osm.pbf"},
-                            ways_file, way_nodes_file, access_file, restriction_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                                       {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
+                                       ways_file, way_nodes_file, access_file, restriction_file);
 }
 
 void TestBike() {
