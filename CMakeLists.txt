@@ -74,6 +74,7 @@ add_subdirectory(src)
 
 ## Executable targets
 find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
+find_package(Threads REQUIRED)
 
 function(get_source_path PATH NAME)
   if(EXISTS ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc)
@@ -104,7 +105,7 @@ set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker
 foreach(program ${valhalla_programs})
   get_source_path(path ${program})
   add_executable(${program} ${path})
-  target_link_libraries(${program} Boost::program_options valhalla)
+  target_link_libraries(${program} Boost::program_options valhalla Threads::Threads)
   install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
 endforeach()
 
@@ -112,7 +113,7 @@ if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} valhalla Boost::program_options)
+    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
@@ -128,7 +129,7 @@ endif()
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} src/${program}.cc)
-    target_link_libraries(${program} valhalla Boost::program_options)
+    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -167,8 +168,8 @@ if(ENABLE_PYTHON_BINDINGS)
   python_add_module(python_valhalla src/bindings/python/python.cc)
   set_target_properties(python_valhalla PROPERTIES
     OUTPUT_NAME valhalla
-    LINK_LIBRARIES ${PYTHON_LIBRARIES}
-    INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
+    LINK_LIBRARIES "${PYTHON_LIBRARIES}"
+    INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIRS}")
   target_link_libraries(python_valhalla valhalla ${Boost_Python_lib})
   set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -249,6 +250,10 @@ if(${CPACK_GENERATOR} MATCHES "^DEB$")
   set(CPACK_DEBIAN_PYTHON_PACKAGE_NAME "python-valhalla")
   set(CPACK_DEBIAN_PYTHON_PACKAGE_SECTION "python")
   set(CPACK_DEBIAN_PYTHON_PACKAGE_DEPENDS "libvalhalla0 (= ${CPACK_PACKAGE_VERSION})")
+
+  if("${CMAKE_CXX_LIBRARY_ARCHITECTURE}" MATCHES "arm-linux-gnueabihf")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE armhf)
+  endif()
 
   message(STATUS "Configured deb packages of ${CMAKE_CXX_LIBRARY_ARCHITECTURE} build for ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
 endif()

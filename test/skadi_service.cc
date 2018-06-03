@@ -1,14 +1,15 @@
-#include "test.h"
-
-#include <boost/property_tree/ptree.hpp>
-#include <fstream>
-#include <prime_server/http_protocol.hpp>
-#include <prime_server/prime_server.hpp>
-#include <thread>
-#include <unistd.h>
-
 #include "loki/worker.h"
 #include "pixels.h"
+#include "test.h"
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <prime_server/http_protocol.hpp>
+#include <prime_server/prime_server.hpp>
+
+#include <fstream>
+#include <thread>
+#include <unistd.h>
 
 using namespace valhalla;
 using namespace prime_server;
@@ -167,9 +168,13 @@ void create_tile() {
   std::vector<int16_t> tile(3601 * 3601, 0);
   for (const auto& p : pixels)
     tile[p.first] = p.second;
+  boost::filesystem::create_directories("test/data/service");
   std::ofstream file("test/data/service/N40W077.hgt", std::ios::binary | std::ios::trunc);
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
+  if (!file.good()) {
+    throw std::runtime_error("File stream is not good");
+  }
 }
 
 void start_service(zmq::context_t& context) {
@@ -194,10 +199,11 @@ void start_service(zmq::context_t& context) {
       "mjolnir": { "tile_dir": "test/tiles" },
       "loki": { "actions": [ "height" ],
                   "logging": { "long_request": 100.0 },
-                  "service": { "proxy": "ipc:///tmp/test_skadi_proxy" }, 
+                  "service": { "proxy": "ipc:///tmp/test_skadi_proxy" },
                 "service_defaults": { "minimum_reachability": 50, "radius": 0} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_skadi_thor_proxy" } },
-      "httpd": { "service": { "loopback": "ipc:///tmp/test_skadi_results", "interrupt": "ipc:///tmp/test_skadi_interrupt" } }, 
+      "httpd": { "service": { "loopback": "ipc:///tmp/test_skadi_results", "interrupt": "ipc:///tmp/test_skadi_interrupt" } },
+      "additional_data": { "elevation": "test/data/service" },
       "service_limits": {
         "skadi": { "max_shape": 100, "min_resample": "10"},
         "auto": { "max_distance": 5000000.0, "max_locations": 20,
