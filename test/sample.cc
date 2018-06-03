@@ -5,14 +5,14 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 
+#include <boost/filesystem/operations.hpp>
+
 #include <cmath>
 #include <fstream>
 #include <list>
 #include <lz4.h>
 #include <lz4hc.h>
 #include <zlib.h>
-
-#include <boost/filesystem/operations.hpp>
 
 using namespace valhalla;
 
