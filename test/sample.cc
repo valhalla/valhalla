@@ -5,8 +5,6 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 
-#include <boost/filesystem/operations.hpp>
-
 #include <cmath>
 #include <fstream>
 #include <list>
@@ -84,20 +82,17 @@ void create_tile() {
   for (const auto& p : pixels) {
     tile[p.first] = p.second;
   }
-  boost::filesystem::create_directories("test/data/sample/N40");
   std::ofstream file("test/data/sample/N40/N40W077.hgt", std::ios::binary | std::ios::trunc);
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
 
   // write it again but this time gzipped
   auto gzipped = gzip(tile);
-  boost::filesystem::create_directories("test/data/samplegz/N40");
   std::ofstream gzfile("test/data/samplegz/N40/N40W077.hgt.gz", std::ios::binary | std::ios::trunc);
   gzfile.write(static_cast<const char*>(static_cast<void*>(gzipped.data())), gzipped.size());
 
   // write it again but this time lzipped
   auto lzipped = lzip(tile);
-  boost::filesystem::create_directories("test/data/samplelz/N40");
   std::ofstream lzfile("test/data/samplelz/N40/N40W077.hgt.lz4", std::ios::binary | std::ios::trunc);
   lzfile.write(lzipped.data(), lzipped.size());
 }
@@ -179,10 +174,7 @@ void edges() {
 
 void lazy_load() {
   // make sure there is no data there
-  {
-    boost::filesystem::create_directories("test/data/sample/N00");
-    std::ofstream file("test/data/sample/N00/N00E000.hgt", std::ios::binary | std::ios::trunc);
-  }
+  { std::ofstream file("test/data/sample/N00/N00E000.hgt", std::ios::binary | std::ios::trunc); }
   skadi::sample s("test/data/sample");
   if (s.get(std::make_pair(0.503915, 0.678783)) != skadi::sample::get_no_data_value())
     throw std::logic_error("Asked for point with no data should be no data value");
@@ -206,7 +198,6 @@ void lazy_load() {
 } // namespace
 
 int main() {
-
   test::suite suite("sample");
 
   suite.test(TEST_CASE(no_data));
