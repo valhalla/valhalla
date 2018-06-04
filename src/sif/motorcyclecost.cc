@@ -207,9 +207,10 @@ public:
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const float speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -493,7 +494,7 @@ bool MotorcycleCost::Allowed(const baldr::NodeInfo* node) const {
   return (node->access() & kMotorcycleAccess);
 }
 
-Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge, const float speed) const {
 
   if (edge->use() == Use::kFerry) {
     float sec = (edge->length() * speedfactor_[edge->speed()]);

@@ -202,9 +202,10 @@ public:
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const float speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -473,7 +474,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 // Get the cost to traverse the edge in seconds
-Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
+Cost AutoCost::EdgeCost(const DirectedEdge* edge, const float speed) const {
   float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
 
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
@@ -936,7 +937,7 @@ public:
    * @param  edge     Pointer to a directed edge.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const float speed) const {
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kHOVFactor;
