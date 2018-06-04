@@ -49,7 +49,7 @@ message Sign {
 }
 
 message Lane {
-  optional bool valid = 1;
+  optional bool is_valid = 1;
   repeated string indications = 2;
 }
 
@@ -61,8 +61,8 @@ message Maneuver {
   repeated StreetName street_names = 5; // street names at the transition
   optional Sign sign = 6;
   optional Lane lane = 7;
-  optional bool obvious = 8;            // true if transition is obvious, might not need announced
-  optional bool verbal_multi_cue = 9;   // true if the pre transition also announces the next transition alert
+  optional bool is_obvious = 8;         // true if transition is obvious, might not need announced
+  optional bool is_verbal_multi_cue = 9;// true if the pre transition also announces the next transition alert
   optional string text_instruction = 10;
 }
 
