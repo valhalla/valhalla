@@ -61,13 +61,13 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
       // Get time along the edge, handling partial distance along
       // the first and last edge
-      elapsed_time +=
-          costing->EdgeCost(directededge).secs * (edge_segment.target - edge_segment.source);
+      elapsed_time += costing->EdgeCost(directededge, directededge->speed()).secs *
+                      (edge_segment.target - edge_segment.source);
     } else {
       // Get time along the edge, handling partial distance along
       // the first and last edge
-      elapsed_time +=
-          costing->EdgeCost(directededge).secs * (edge_segment.target - edge_segment.source);
+      elapsed_time += costing->EdgeCost(directededge, directededge->speed()).secs *
+                      (edge_segment.target - edge_segment.source);
     }
 
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)

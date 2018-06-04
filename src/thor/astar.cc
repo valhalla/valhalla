@@ -168,7 +168,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     shortcuts |= directededge->shortcut();
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge) +
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, directededge->speed()) +
                    costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // If this edge is a destination, subtract the partial/remainder cost
@@ -384,7 +384,8 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge) * (1.0f - edge.percent_along());
+    Cost cost =
+        costing_->EdgeCost(directededge, directededge->speed()) * (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -407,9 +408,10 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
-            Cost dest_cost =
-                costing_->EdgeCost(tile->directededge(GraphId(destination_edge.graph_id()))) *
-                (1.0f - destination_edge.percent_along());
+            GraphId id(destination_edge.graph_id());
+            const DirectedEdge* dest_diredge = tile->directededge(id);
+            Cost dest_cost = costing_->EdgeCost(dest_diredge, dest_diredge->speed()) *
+                             (1.0f - destination_edge.percent_along());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
             cost.cost += destination_edge.distance();
@@ -473,7 +475,8 @@ uint32_t AStarPathAlgorithm::SetDestination(GraphReader& graphreader, const odin
     GraphId id(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(id);
     destinations_[edge.graph_id()] =
-        costing_->EdgeCost(tile->directededge(id)) * (1.0f - edge.percent_along());
+        costing_->EdgeCost(tile->directededge(id), tile->directededge(id)->speed()) *
+        (1.0f - edge.percent_along());
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 

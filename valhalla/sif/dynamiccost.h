@@ -174,14 +174,6 @@ public:
   virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
   /**
-   * Get the cost to traverse the specified directed edge. Cost includes
-   * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @return  Returns the cost and time (seconds)
-   */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const = 0;
-
-  /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
    * the time (seconds) to traverse the edge.
@@ -193,6 +185,15 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TransitDeparture* departure,
                         const uint32_t curr_time) const;
+
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
+   * @return  Returns the cost and speed.
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const float speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.

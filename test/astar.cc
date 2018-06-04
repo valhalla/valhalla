@@ -226,7 +226,8 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
     time += p.elapsed_time;
   }
 
-  auto cost = pedestrian->EdgeCost(tile->directededge(expected_edge_index));
+  auto cost = pedestrian->EdgeCost(tile->directededge(expected_edge_index),
+                                   tile->directededge(expected_edge_index)->speed());
   uint32_t expected_time = cost.cost;
   if (time != expected_time) {
     std::ostringstream ostr;
