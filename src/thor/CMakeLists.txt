@@ -31,7 +31,8 @@ valhalla_module(NAME thor
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
     PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   DEPENDS
-    valhalla::tyr
-    valhalla::protobuf)
+    valhalla::proto
+    libprime_server)
