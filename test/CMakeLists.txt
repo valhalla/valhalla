@@ -57,7 +57,19 @@ add_custom_command(OUTPUT .locales.timestamp
   VERBATIM)
 add_custom_target(localedef DEPENDS .locales.timestamp)
 
-# Test run targets
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/test/data)
+add_custom_command(OUTPUT test/data/sample/N00
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/sample/N00
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/sample/N40
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/samplegz/N40
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/samplelz/N40
+  COMMAND ${CMAKE_COMMAND} -E make_directory test/data/service
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMENT "Creating test directories")
+add_custom_target(test_directories DEPENDS test/data/sample/N00)
+
+
+## Test run targets
 foreach(test ${tests} ${cost_tests})
   add_custom_command(OUTPUT ${test}.log
     COMMAND
@@ -74,14 +86,20 @@ foreach(test ${tests} ${cost_tests})
   add_custom_target(run-${test} DEPENDS ${test}.log)
 endforeach()
 
-# Run test dependencies
+## Run test dependencies
 add_dependencies(run-util_odin localedef)
 add_dependencies(run-narrativebuilder localedef)
+add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
 endif()
 
+if(ENABLE_SERVICES)
+  add_dependencies(run-skadi_service test_directories)
+endif()
+
+## High-level targets
 string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
