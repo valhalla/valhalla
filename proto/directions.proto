@@ -62,7 +62,8 @@ message Maneuver {
   optional Sign sign = 6;
   optional Lane lane = 7;
   optional bool obvious = 8;            // true if transition is obvious, might not need announced
-  optional string text_instruction = 9;
+  optional bool verbal_multi_cue = 9;   // true if the pre transition also announces the next transition alert
+  optional string text_instruction = 10;
 }
 
 message Leg {
