@@ -168,11 +168,9 @@ void test_offsets_overrun() {
 
 void test_too_small_reference() {
   auto location = "CwG1ASK3PhD82=";
-  try{
+  try {
     auto locRef = LineLocation(decode64(location));
-  } catch (const std::invalid_argument& e) {
-    return;
-  }
+  } catch (const std::invalid_argument& e) { return; }
   throw std::runtime_error("No error returned");
 }
 
