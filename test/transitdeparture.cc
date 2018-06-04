@@ -120,6 +120,9 @@ void TestWriteReadFreq() {
   if (dep.end_time() != 18000) {
     throw runtime_error("TransitDeparture end_time failed");
   }
+  if (dep.frequency() != 600) {
+    throw runtime_error("TransitDeparture frequency failed");
+  }
   if (dep.elapsed_time() != 90) {
     throw runtime_error("TransitDeparture elapsed_time failed");
   }
@@ -182,6 +185,36 @@ void TestWriteReadFreq() {
     throw runtime_error("TransitDeparture elapsed_time clamping failed");
   }
 }
+
+void TestSort() {
+  // Equal line Id, type, and trip Id. Sort by departure time
+  TransitDeparture dep1(111, 222, 333, 444, 555, 9000, 90, 23, false, true);
+  TransitDeparture dep2(111, 222, 333, 444, 555, 10000, 90, 23, false, true);
+  if (!(dep1 < dep2)) {
+    throw runtime_error("TransitDeparture sort (1) failed");
+  }
+
+  // Equal line Id, and type (both of these are fixed) - sort bu trip Id
+  TransitDeparture dep3(111, 222, 333, 444, 555, 9000, 90, 23, false, true);
+  TransitDeparture dep4(111, 2222, 333, 444, 555, 9000, 90, 23, false, true);
+  if (!(dep3 < dep4)) {
+    throw runtime_error("TransitDeparture sort (2) failed");
+  }
+
+  // Equal line Id, sort by type (fixed before frequency)
+  TransitDeparture dep5(111, 222, 333, 444, 555, 9000, 90, 23, false, true);
+  TransitDeparture dep6(111, 222, 333, 444, 555, 9000, 18000, 600, 90, 23, false, true);
+  if (!(dep5 < dep6)) {
+    throw runtime_error("TransitDeparture sort (3) failed");
+  }
+
+  // Should sort by line Id
+  TransitDeparture dep7(111, 222, 333, 444, 555, 9000, 18000, 600, 90, 23, false, true);
+  TransitDeparture dep8(1111, 222, 333, 444, 555, 9000, 18000, 600, 90, 23, false, true);
+  if (!(dep7 < dep8)) {
+    throw runtime_error("TransitDeparture sort (4) failed");
+  }
+}
 } // namespace
 
 int main(void) {
@@ -194,6 +227,9 @@ int main(void) {
 
   // Write to file and read into frequency based transit departure
   suite.test(TEST_CASE(TestWriteReadFreq));
+
+  // Test sorting
+  suite.test(TEST_CASE(TestSort));
 
   return suite.tear_down();
 }
