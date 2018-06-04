@@ -2,7 +2,6 @@
 #include "pixels.h"
 #include "test.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
@@ -168,7 +167,6 @@ void create_tile() {
   std::vector<int16_t> tile(3601 * 3601, 0);
   for (const auto& p : pixels)
     tile[p.first] = p.second;
-  boost::filesystem::create_directories("test/data/service");
   std::ofstream file("test/data/service/N40W077.hgt", std::ios::binary | std::ios::trunc);
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
