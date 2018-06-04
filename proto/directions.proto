@@ -89,6 +89,7 @@ message Directions {
   optional BoundingBox bounding_box = 3; // bounding box for all routes
   optional string language_code = 4;
   optional string units = 5;
-  optional string code = 6;              // string indicating the state of the response
-  optional uint32 uuid = 7;
+  optional uint32 status_code = 6;
+  optional string status_message = 7;
+  optional uint32 uuid = 8;
 }
