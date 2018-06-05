@@ -59,15 +59,42 @@ void TestWriteRead() {
     // Successfully caught exception indicating the bounds is checked
   }
 }
+
+void TestSort() {
+  // Sort with same days and same days of week
+  TransitSchedule sched1(15, 0x15, 10);
+  TransitSchedule sched2(15, 0x15, 30);
+  if (!(sched1 < sched2)) {
+    throw runtime_error("TransitDeparture sorting (1) failed");
+  }
+
+  // Sort with same days, different dow
+  TransitSchedule sched3(15, 15, 10);
+  TransitSchedule sched4(15, 20, 30);
+  if (!(sched3 < sched4)) {
+    throw runtime_error("TransitDeparture sorting (2)failed");
+  }
+
+  // Sort with different days
+  TransitSchedule sched5(15, 15, 10);
+  TransitSchedule sched6(25, 20, 30);
+  if (!(sched5 < sched6)) {
+    throw runtime_error("TransitDeparture sorting (3) failed");
+  }
+}
 } // namespace
 
 int main(void) {
   test::suite suite("transitschedule");
 
+  // Test structure size
   suite.test(TEST_CASE(test_sizeof));
 
   // Write to file and read into TransitSchedule
   suite.test(TEST_CASE(TestWriteRead));
+
+  // Test sorting method
+  suite.test(TEST_CASE(TestSort));
 
   return suite.tear_down();
 }

@@ -31,18 +31,5 @@ TransitSchedule::TransitSchedule(const uint64_t days, const uint32_t dow, const 
   }
 }
 
-// For sorting so we can make unique list of schedule records per tile
-bool TransitSchedule::operator<(const TransitSchedule& other) const {
-  if (days_ == other.days_) {
-    if (days_of_week_ == other.days_of_week_) {
-      return end_day_ < other.end_day_;
-    } else {
-      return days_of_week_ < other.days_of_week_;
-    }
-  } else {
-    return days_ < other.days_;
-  }
-}
-
 } // namespace baldr
 } // namespace valhalla
