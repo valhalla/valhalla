@@ -27,8 +27,8 @@ message Step {
   optional uint32 duration = 2;
   optional uint32 geometry_index_begin = 3;      // begin geometry inclusive index
   optional uint32 geometry_index_end = 4;        // end geometry inclusive index
-  optional uint32 maneuver_index_begin = 5;      // the index of the maneuver at the start of the step
-  optional uint32 maneuver_index_end = 6;        // the index of the maneuver at the end of the step
+  optional uint32 incoming_maneuver_index = 5;   // the index of the maneuver at the start of the step
+  optional uint32 outgoing_maneuver_index = 6;   // the index of the maneuver at the end of the step
   repeated StreetName street_names = 7;          // consistent street names for the entire step
   optional string travel_mode = 8;               // travel mode 
   optional string travel_mode_type = 9;          // travel type
