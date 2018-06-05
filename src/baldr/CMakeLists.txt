@@ -39,7 +39,6 @@ valhalla_module(NAME baldr
     transitdeparture.cc
     transitroute.cc
     transitschedule.cc
-    transitstop.cc
     transittransfer.cc
     laneconnectivity.cc
     verbal_text_formatter.cc
