@@ -42,10 +42,10 @@ message SignElement {
 }
 
 message Sign {
-  repeated SignElement exit_number_elements = 1;  // The list of exit numbers, example: 67B
-  repeated SignElement exit_branch_elements = 2;  // The list of exit branch street names, example: I 95 North
-  repeated SignElement exit_toward_elements = 3;  // The list of exit toward locations, example: New York
-  repeated SignElement exit_name_elements   = 4;  // The list of exit names - not used much in US, example: Gettysburg Pike
+  repeated SignElement exit_numbers = 1;          // The list of exit numbers, example: 67B
+  repeated SignElement exit_onto_streets = 2;     // The list of exit branch street names, example: I 95 North
+  repeated SignElement exit_toward_locations = 3; // The list of exit toward locations, examples: New York or I 395 South
+  repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
 }
 
 message Lane {
