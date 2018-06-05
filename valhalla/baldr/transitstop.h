@@ -19,16 +19,14 @@ public:
               const uint32_t name_offset,
               const bool generated,
               const uint32_t traversability)
-      : spare_(0),
-        generated_ (generated),
-        traversability_(traversability) {
+      : spare_(0), generated_(generated), traversability_(traversability) {
     if (one_stop_offset > kMaxNameOffset) {
-    throw std::runtime_error("TransitStop: Exceeded maximum name offset");
+      throw std::runtime_error("TransitStop: Exceeded maximum name offset");
     }
     one_stop_offset_ = one_stop_offset;
 
     if (name_offset > kMaxNameOffset) {
-    throw std::runtime_error("TransitStop: Exceeded maximum name offset");
+      throw std::runtime_error("TransitStop: Exceeded maximum name offset");
     }
     name_offset_ = name_offset;
   }

@@ -60,7 +60,6 @@ void TestWriteRead() {
   }
 }
 
-
 void TestSort() {
   // Sort with same days and same days of week
   TransitSchedule sched1(15, 0x15, 10);
