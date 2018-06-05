@@ -32,7 +32,6 @@ using namespace std;
 
 namespace {
 
-
 namespace valhalla_serializers {
 /*
 valhalla output looks like this:

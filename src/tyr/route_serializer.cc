@@ -12,14 +12,14 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/turn.h"
 #include "exception.h"
-#include "route_serializer_osrm.cc"
-#include "route_serializer_valhalla.cc"
 #include "midgard/aabb2.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/util.h"
+#include "route_serializer_osrm.cc"
+#include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"
 
 #include <valhalla/proto/directions_options.pb.h>
@@ -33,7 +33,6 @@ using namespace valhalla::tyr;
 using namespace std;
 
 namespace {
-
 
 void jsonToProtoLocation(const rapidjson::Value& json_location, Route::Location* proto_location) {
   // Set the lat
