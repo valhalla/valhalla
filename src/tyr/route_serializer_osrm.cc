@@ -1,7 +1,3 @@
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <functional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -9,21 +5,15 @@
 #include <vector>
 
 #include "baldr/json.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/turn.h"
-#include "exception.h"
-#include "midgard/aabb2.h"
 #include "midgard/encoded.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
 #include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::odin;

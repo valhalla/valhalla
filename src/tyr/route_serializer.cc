@@ -1,21 +1,9 @@
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
 #include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
-#include "baldr/json.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/turn.h"
-#include "exception.h"
-#include "midgard/aabb2.h"
 #include "midgard/encoded.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/util.h"
 #include "route_serializer_osrm.cc"
