@@ -195,10 +195,13 @@ if(ENABLE_PYTHON_BINDINGS)
     target_link_libraries(python_valhalla valhalla Boost::${Boost_Python_lib})
     set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+    if (APPLE)
+      set(get_python_lib "sc.get_python_lib(plat_specific=True)")
+    else()
+      set(get_python_lib "sc.get_python_lib(prefix='', plat_specific=True)")
+    endif()
     execute_process(
-      COMMAND "${PYTHON_EXECUTABLE}" -c "
-from distutils import sysconfig as sc
-print(sc.get_python_lib(prefix='', plat_specific=True))"
+      COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils import sysconfig as sc; print(${get_python_lib})"
       OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
       OUTPUT_STRIP_TRAILING_WHITESPACE)
     install(TARGETS python_valhalla
