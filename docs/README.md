@@ -7,17 +7,16 @@ This folder contains the technical documentation and API reference for valhalla.
 
 ## API
 
-- [Route API Reference](./turn-by-turn/api-reference.md) - The structure of API requests and responses to a Valhalla routing service is described here. This shows the JSON inputs and describes the JSON responses to form routes and directions.
+- [Route API Reference](./api/turn-by-turn/api-reference.md) - The structure of API requests and responses to a Valhalla routing service is described here. This shows the JSON inputs and describes the JSON responses to form routes and directions.
 - [Map Matching API Reference](./map-matching/api-reference.md) - The structure of API requests and responses to a Valhalla map matching service is described here. This shows the JSON inputs and describes the JSON responses to perform map-matching. There are two flavors: 1) `trace_route`: froms a route result from the path that matches the input geometry, and 2) `trace_attributes`: returns detailed attribution along the path that matches the input geometry.
-- [Locate API Reference](./locate/api-reference.md) - The structure of API requests and responses to a Valhalla locate service is described here. This shows the JSON inputs and describes the JSON responses to get detailed information about streets and interesections near a location.
-- [Matrix API Reference](./matrix/api-reference.md) - The structure of API requests and responses to a Valhalla time distance matrix service is described here. This shows the JSON inputs and describes the JSON responses to retrieve times and distances between locations.
-- [Optimized Route API Reference](./optimized/api-reference.md) - The structure of API requests and responses to a Valhalla optimized route service is described here. This shows the JSON inputs and describes the JSON responses to retrieve the route which optimizes the path through the input locations. This is essentially the Traveling Salesman Problem (TSP)
-- [Elevation API Reference](./elevation/api-reference.md) - The structure of API requests and responses to a Valhalla elevation service is described here. This shows the JSON inputs and describes the JSON responses to query elevation at specific locations.
-- [Isochrone API Reference](./isochrone/api-reference.md) - The structure of API requests and responses to a Valhalla isochrone service is described here. This shows the JSON inputs and describes the JSON responses to query accessibility polygons around specific locations.
+- [Locate API Reference](./api/locate/api-reference.md) - The structure of API requests and responses to a Valhalla locate service is described here. This shows the JSON inputs and describes the JSON responses to get detailed information about streets and interesections near a location.
+- [Matrix API Reference](./api/matrix/api-reference.md) - The structure of API requests and responses to a Valhalla time distance matrix service is described here. This shows the JSON inputs and describes the JSON responses to retrieve times and distances between locations.
+- [Optimized Route API Reference](./api/optimized/api-reference.md) - The structure of API requests and responses to a Valhalla optimized route service is described here. This shows the JSON inputs and describes the JSON responses to retrieve the route which optimizes the path through the input locations. This is essentially the Traveling Salesman Problem (TSP)
+- [Elevation API Reference](./api/elevation/api-reference.md) - The structure of API requests and responses to a Valhalla elevation service is described here. This shows the JSON inputs and describes the JSON responses to query elevation at specific locations.
+- [Isochrone API Reference](./api/isochrone/api-reference.md) - The structure of API requests and responses to a Valhalla isochrone service is described here. This shows the JSON inputs and describes the JSON responses to query accessibility polygons around specific locations.
 
 ## Technical documentation
 
-- [Add Routing to a Map](./add-routing-to-a-map.md) - A tutorial showing how to add Valhalla routing to web based maps using the Leaflet Routing Machine with Valhalla plugins.
 - [Decoding Shape](./decoding.md) - Describes how to decode the route path's shape (returned as an encoded polyline). Contains sample code in several languages.
 - [Tile Description](./tiles.md) - Describes the tiling system used within Valhalla. Discusses the road hierarchy and tile numbering system.
 - [Speed information](./speeds.md) - Describes the use of speed information and how OpenStreetMap tags impact speeds.
