@@ -139,7 +139,7 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
   float mindistsqr = approx.DistanceSquared(closest);
 
   // start going backwards, then go forwards
-  for (int reverse = 0; reverse < 2; ++reverse) {
+  for (bool reverse : {true, false}) {
     // get the range and distance for this direction
     auto dist_cutoff = reverse ? reverse_dist_cutoff : forward_dist_cutoff;
     int increment = reverse ? -1 : 1;
