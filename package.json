@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "node test/nodejs/*.test.js",
-    "install": "./scripts/node_install.sh"
+    "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
   },
   "engines": {
     "node": ">=8.0.0"

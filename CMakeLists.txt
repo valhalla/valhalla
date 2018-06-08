@@ -21,6 +21,7 @@ option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(USE_STD_REGEX "Use std::regex instead of boost::regex" OFF)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -172,6 +173,11 @@ if(ENABLE_PYTHON_BINDINGS)
   install(FILES COPYING ChangeLog
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
+endif()
+
+# NodeJS Bindings
+if (ENABLE_NODE_BINDINGS)
+  add_subdirectory(src/bindings/node)
 endif()
 
 

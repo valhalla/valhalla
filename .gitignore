@@ -63,3 +63,4 @@ scripts/gdal-2.0.0.tar.gz
 
 # nodejs
 node_modules
+lib/binding/node_valhalla.node

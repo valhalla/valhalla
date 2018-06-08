@@ -10,7 +10,7 @@ Pull requests against master are still welcome, though one may need to pay extra
      ██▒   █▓ ▄▄▄       ██▓     ██░ ██  ▄▄▄       ██▓     ██▓    ▄▄▄      
     ▓██░   █▒▒████▄    ▓██▒    ▓██░ ██▒▒████▄    ▓██▒    ▓██▒   ▒████▄    
      ▓██  █▒░▒██  ▀█▄  ▒██░    ▒██▀▀██░▒██  ▀█▄  ▒██░    ▒██░   ▒██  ▀█▄  
-      ▒██ █░░░██▄▄▄▄██ ▒██░    ░▓█ ░██ ░██▄▄▄▄██ ▒██░    ▒██░   ░██▄▄▄▄██ 
+      ▒██ █░░░██▄▄▄▄██ ▒██░    ░▓█ ░██ ░██▄▄▄▄██ ▒██░    ▒██░   ░██▄▄▄▄██
        ▒▀█░   ▓█   ▓██▒░██████▒░▓█▒░██▓ ▓█   ▓██▒░██████▒░██████▒▓█   ▓██▒
        ░ ▐░   ▒▒   ▓▒█░░ ▒░▓  ░ ▒ ░░▒░▒ ▒▒   ▓▒█░░ ▒░▓  ░░ ▒░▓  ░▒▒   ▓▒█░
        ░ ░░    ▒   ▒▒ ░░ ░ ▒  ░ ▒ ░▒░ ░  ▒   ▒▒ ░░ ░ ▒  ░░ ░ ▒  ░ ▒   ▒▒ ░
@@ -118,6 +118,8 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 sudo make install
+// to install with node bindings
+make copy_node_artifacts
 ```
 
 Important build options include:
@@ -128,6 +130,7 @@ Important build options include:
 | `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
 | `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
 | `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
+| `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
 
 For more build options run the interactive GUI:
 
