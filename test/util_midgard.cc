@@ -159,14 +159,14 @@ void TestClamp() {
   try {
     circular_range_clamp<float>(739, -8, -45);
     throw std::runtime_error("should throw exception (lower > upper)");
-  } catch(...) {}
+  } catch (...) {}
 
   // Make sure get_turn_degree180 throws an exception if inbound and outbound
   // degrees are not clamped to 0,360
   try {
     get_turn_degree180(420, 580);
     throw std::runtime_error("get_turn_degree should throw exception (inputs not in 0,360 range)");
-  } catch(...) {}
+  } catch (...) {}
 }
 
 void TestResample() {
@@ -393,7 +393,7 @@ void TestExpandLocation() {
   try {
     AABB2<PointLL> box = ExpandMeters(loc, -10.0f);
     throw std::logic_error("ExpandLocation: should throw exception with negative meters supplied");
-  } catch(...) {}
+  } catch (...) {}
 }
 
 void TestSimilarAndEqual() {
@@ -401,7 +401,7 @@ void TestSimilarAndEqual() {
   try {
     equal<float>(10.0f, 10.0f, -0.0001f);
     throw std::logic_error("Equal test fails to throw exception for negative epsilon");
-  } catch(...) {}
+  } catch (...) {}
 
   // Test the equality case
   if (!similar<float>(45.0f, 45.0f, 0.0001f)) {

@@ -3,8 +3,8 @@
 #include "test.h"
 
 #include <list>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include "midgard/vector2.h"
 
