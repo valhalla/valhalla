@@ -56,14 +56,17 @@ message Lane {
 message Maneuver {
   optional string type = 1;
   optional uint32 geometry_index = 2;
-  optional uint32 incoming_bearing = 3;     // incoming bearing at transition
-  optional uint32 outgoing_bearing = 4;     // outgoing bearing at transition
-  repeated StreetName street_names = 5;     // street names at the transition
+  optional uint32 incoming_bearing = 3;                    // incoming bearing at transition
+  optional uint32 outgoing_bearing = 4;                    // outgoing bearing at transition
+  repeated StreetName street_names = 5;                    // street names at the transition
   optional Sign sign = 6;
   optional Lane lane = 7;
-  optional bool is_obvious = 8;             // true if transition is obvious, might not need announced
-  optional bool is_verbal_multi_cue = 9;    // true if the pre transition also announces the next transition alert
-  optional string text_instruction = 10;
+  optional bool is_obvious = 8;                            // true if transition is obvious, might not need announced
+  optional bool is_verbal_multi_cue = 9;                   // true if the pre transition also announces the next transition alert
+  optional string text_instruction = 10;                   // text instruction
+  optional string verbal_transition_alert_instruction = 11;// verbal transition alert instruction
+  optional string verbal_pre_transition_instruction = 12;  // verbal pre-transition instruction
+  optional string verbal_post_transition_instruction = 13; // verbal post-transition instruction
 }
 
 message Leg {
