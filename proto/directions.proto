@@ -18,7 +18,7 @@ message BoundingBox {
 }
 
 message StreetName {
-  optional string text = 1;          // Text of street name, examples: MD 43 East, White Marsh Boulevard 
+  optional string text = 1;          // Text of street name, examples: MD 43 East, White Marsh Boulevard
   optional bool is_route_number = 2; // true if street name is a reference route number such as: I 95 South or MD 43 East
 }
 
