@@ -408,8 +408,9 @@ void TestSimilarAndEqual() {
     throw std::logic_error("Similar test fails for equal values");
   }
 
-  // Test case where signs are different
-  if (similar<float>(45.0f, -45.0f, 0.0001f)) {
+  // Test case where signs are different - if opposing signs the values should not
+  // be similar regardless of difference
+  if (similar<float>(0.00001f, -0.00001f, 0.0001f)) {
     throw std::logic_error("Similar test fails for values with opposing signs");
   }
 }
