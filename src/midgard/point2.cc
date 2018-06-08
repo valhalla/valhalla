@@ -48,12 +48,11 @@ Vector2 Point2::operator-(const Point2& p) const {
 
 std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& pts) const {
   Point2 closest;
-  int idx;
   float mindist = std::numeric_limits<float>::max();
 
   // If there are no points we are done
   if (pts.size() == 0) {
-    return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
+    return std::make_tuple(std::move(closest), std::move(mindist), 0);
   }
   // If there is one point we are done
   if (pts.size() == 1) {
@@ -62,6 +61,7 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
 
   // Iterate through the pts
   bool beyond_end = true; // Need to test past the end point?
+  int idx;                // Index of closest segment so far
   Vector2 v1;             // Segment vector (v1)
   Vector2 v2;             // Vector from origin to target (v2)
   Point2 projpt;          // Projected point along v1

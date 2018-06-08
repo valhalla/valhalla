@@ -614,10 +614,6 @@ void BuildTileSet(const std::string& ways_file,
             }
           }
 
-          if ((bike_network & kMcn) || (w.bike_network() & kMcn)) {
-            use = Use::kMountainBike;
-          }
-
           // Check for updated ref from relations.
           std::string ref;
           auto iter = osmdata.way_ref.find(w.way_id());
@@ -927,6 +923,13 @@ void BuildTileSet(const std::string& ways_file,
                                             static_cast<uint8_t>(directededge.cyclelane()))) {
               directededge.set_cyclelane(w.cyclelane_left());
             }
+          }
+
+          // Downgrade classification of any footways that are not kServiceOther
+          if ((directededge.use() == Use::kFootway || directededge.use() == Use::kSteps ||
+               directededge.use() == Use::kSidewalk || directededge.use() == Use::kPedestrian) &&
+              directededge.classification() != RoadClass::kServiceOther) {
+            directededge.set_classification(RoadClass::kServiceOther);
           }
 
           // Increment the directed edge index within the tile

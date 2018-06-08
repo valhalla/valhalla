@@ -10,10 +10,6 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
-if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
-  message(FATAL_ERROR "In-source builds are not allowed.")
-endif()
-
 include(GNUInstallDirs)
 
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -32,6 +28,7 @@ set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBU
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
@@ -70,12 +67,14 @@ if(ENABLE_SANITIZER)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
 endif()
 
+
 ## libvalhalla
 add_subdirectory(src)
 
 
 ## Executable targets
 find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
+find_package(Threads REQUIRED)
 
 function(get_source_path PATH NAME)
   if(EXISTS ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc)
@@ -106,16 +105,16 @@ set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker
 foreach(program ${valhalla_programs})
   get_source_path(path ${program})
   add_executable(${program} ${path})
-  target_link_libraries(${program} Boost::program_options valhalla)
-  install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
+  target_link_libraries(${program} Boost::program_options valhalla Threads::Threads)
+  install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
 endforeach()
 
 if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} valhalla Boost::program_options)
-    install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
+    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
+    install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
   # Target-specific depedencies
@@ -130,8 +129,8 @@ endif()
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} src/${program}.cc)
-    target_link_libraries(${program} valhalla Boost::program_options)
-    install(TARGETS ${program} DESTINATION bin COMPONENT runtime)
+    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
+    install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
 
@@ -140,12 +139,19 @@ install(
     scripts/valhalla_build_config
     scripts/valhalla_build_elevation
     scripts/valhalla_build_timezones
-  DESTINATION bin
+  DESTINATION "${CMAKE_INSTALL_BINDIR}"
+  PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
   COMPONENT runtime)
 
 install(FILES COPYING ChangeLog
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
+
+add_subdirectory(test)
+
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
@@ -162,8 +168,8 @@ if(ENABLE_PYTHON_BINDINGS)
   python_add_module(python_valhalla src/bindings/python/python.cc)
   set_target_properties(python_valhalla PROPERTIES
     OUTPUT_NAME valhalla
-    LINK_LIBRARIES ${PYTHON_LIBRARIES}
-    INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
+    LINK_LIBRARIES "${PYTHON_LIBRARIES}"
+    INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIRS}")
   target_link_libraries(python_valhalla valhalla ${Boost_Python_lib})
   set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -174,85 +180,13 @@ print(sc.get_python_lib(prefix='', plat_specific=True))"
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
     OUTPUT_STRIP_TRAILING_WHITESPACE)
   install(TARGETS python_valhalla
-    DESTINATION ${PYTHON_SITE_PACKAGES}
+    DESTINATION "${PYTHON_SITE_PACKAGES}"
     COMPONENT python)
   install(FILES COPYING ChangeLog
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
 endif()
 
-
-## Tests TODO: move to own namespace
-set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
-  distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
-  enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
-  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
-  narrativebuilder narrative_dictionary navigator nodeinfo obb2 optimizer  point2 pointll
-  polyline2 queue routing sample sequence serializers sign signs streetname streetnames streetnames_factory
-  streetnames_us streetname_us tilehierarchy tiles traffic_matcher  turn util_midgard
-  util_odin util_skadi vector2 verbal_text_formatter verbal_text_formatter_us verbal_text_formatter_us_co
-  verbal_text_formatter_us_tx viterbi_search)
-
-if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder
-    idtable mapmatch matrix names node_search refs search signinfo uniquenames utrecht)
-endif()
-
-if(ENABLE_SERVICES)
-  list(APPEND tests loki_service skadi_service thor_service)
-endif()
-
-foreach(test ${tests})
-  add_executable(${test} EXCLUDE_FROM_ALL	test/${test}.cc test/test.cc)
-  set_target_properties(${test} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY unit_tests)
-  target_link_libraries(${test} valhalla)
-endforeach()
-
-set(cost_tests autocost bicyclecost motorscootercost pedestriancost transitcost truckcost)
-foreach(test ${cost_tests})
-  add_executable(${test} EXCLUDE_FROM_ALL	src/sif/${test}.cc test/test.cc)
-  set_target_properties(${test} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY unit_tests
-    COMPILE_DEFINITIONS INLINE_TEST)
-  target_link_libraries(${test} valhalla)
-endforeach()
-
-# Test-specific data, properties and dependencies
-add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph
-  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
-      test/data/utrecht_netherlands.osm.pbf
-  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
-  COMMENT "Building Utrecht Tiles..."
-  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
-add_custom_target(utrecht_tiles DEPENDS ${VALHALLA_SOURCE_DIR}/test/data/utrecht_tiles/0/003/196.gph)
-
-set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
-
-# Test run targets
-foreach(test ${tests} ${cost_tests})
-  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log
-    COMMAND LOCPATH=locales /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log \
-      && echo $(tput setaf 2)$(tput bold)[PASS]$(tput sgr0) ${test} \
-      || ( exit=$? ; \
-           echo $(tput setaf 1)$(tput bold)[FAIL]$(tput sgr0) ${test} ; \
-           cat ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log ; \
-           exit $exit )"
-    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
-    DEPENDS ${test}
-    VERBATIM)
-  add_custom_target(run-${test} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/unit_tests/${test}.log)
-endforeach()
-
-if(ENABLE_DATA_TOOLS)
-  add_dependencies(run-mapmatch utrecht_tiles)
-  add_dependencies(run-matrix utrecht_tiles)
-endif()
-
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
-add_custom_target(check DEPENDS ${test_targets})
-add_custom_target(tests DEPENDS ${tests} ${cost_tests})
 
 ## Coverage report targets
 if(ENABLE_COVERAGE)
@@ -264,7 +198,8 @@ if(ENABLE_COVERAGE)
 
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
     COMMAND ${LCOV_PATH} --directory . --base-directory ${VALHALLA_SOURCE_DIR} --no-external --capture --output-file coverage.info --no-checksum
-    COMMAND ${LCOV_PATH} --remove coverage.info '/usr/*' --output-file coverage.info
+    COMMAND ${LCOV_PATH} --remove coverage.info '*/third_party/*' --output-file coverage.info
+    COMMAND ${LCOV_PATH} --remove coverage.info '${CMAKE_CURRENT_BINARY_DIR}/*' --output-file coverage.info
     COMMAND ${LCOV_PATH} --list coverage.info
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS check)
@@ -274,6 +209,7 @@ if(ENABLE_COVERAGE)
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
 endif()
+
 
 ## Packaging via CPack
 include(CPackComponent)
@@ -314,6 +250,10 @@ if(${CPACK_GENERATOR} MATCHES "^DEB$")
   set(CPACK_DEBIAN_PYTHON_PACKAGE_NAME "python-valhalla")
   set(CPACK_DEBIAN_PYTHON_PACKAGE_SECTION "python")
   set(CPACK_DEBIAN_PYTHON_PACKAGE_DEPENDS "libvalhalla0 (= ${CPACK_PACKAGE_VERSION})")
+
+  if("${CMAKE_CXX_LIBRARY_ARCHITECTURE}" MATCHES "arm-linux-gnueabihf")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE armhf)
+  endif()
 
   message(STATUS "Configured deb packages of ${CMAKE_CXX_LIBRARY_ARCHITECTURE} build for ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
 endif()

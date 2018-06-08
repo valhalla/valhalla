@@ -9,6 +9,11 @@
 #include <streambuf>
 #include <string>
 #include <vector>
+
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
 using namespace std;
 using namespace valhalla::mjolnir;
 
@@ -139,7 +144,7 @@ void TestAddBins() {
 
     // load a tile
     GraphId id(test_tile.second, 2, 0);
-    std::string no_bin_dir = "test/data/bin_tiles/no_bin";
+    std::string no_bin_dir = VALHALLA_SOURCE_DIR "test/data/bin_tiles/no_bin";
     GraphTile t(no_bin_dir, id);
     if (!t.header())
       throw std::runtime_error("Couldn't load test tile");
@@ -155,7 +160,8 @@ void TestAddBins() {
     {
       ifstream o;
       o.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      o.open("test/data/bin_tiles/no_bin/2/000/" + test_tile.first, std::ios::binary);
+      o.open(VALHALLA_SOURCE_DIR "test/data/bin_tiles/no_bin/2/000/" + test_tile.first,
+             std::ios::binary);
       std::string obytes((std::istreambuf_iterator<char>(o)), std::istreambuf_iterator<char>());
       ifstream n;
       n.exceptions(std::ifstream::failbit | std::ifstream::badbit);

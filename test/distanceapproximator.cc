@@ -45,7 +45,8 @@ void TryDistanceSquared(const PointLL& a, const PointLL& b, const float d2) {
 void TestDistanceSquared() {
   PointLL a(-80.0f, 42.0f);
   PointLL b(-78.0f, 40.0f);
-  TryDistanceSquaredFromTestPt(a, b, a.Distance(b));
+  auto d = a.Distance(b);
+  TryDistanceSquared(a, b, d * d);
 }
 
 } // namespace

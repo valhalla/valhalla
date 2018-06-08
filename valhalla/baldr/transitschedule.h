@@ -30,20 +30,26 @@ public:
    * creation date.
    * @return  Returns the days
    */
-  uint64_t days() const;
+  uint64_t days() const {
+    return days_;
+  }
 
   /**
    * Gets the days of the week for this departure.
    * @return  Returns the days of the week (bit mask)
    */
-  uint32_t days_of_week() const;
+  uint32_t days_of_week() const {
+    return days_of_week_;
+  }
 
   /**
    * Get the end day for this scheduled departure (number of days
    * from tile creation date that is represented in days_).
    * @return  Returns the end day.
    */
-  uint32_t end_day() const;
+  uint32_t end_day() const {
+    return end_day_;
+  }
 
   /**
    * Checks if the schedule entry is valid for the specified day and
@@ -54,10 +60,23 @@ public:
    * @param  date_before_tile  Is the date prior to the tile creation date.
    * @return Returns true if the departure is valid, false otherwise.
    */
-  bool IsValid(const uint32_t day, const uint32_t dow, bool date_before_tile) const;
+  bool IsValid(const uint32_t day, const uint32_t dow, bool date_before_tile) const {
+    return (!date_before_tile && day <= end_day_) ? ((days_ & (1ULL << day)))
+                                                  : ((days_of_week_ & dow) > 0);
+  }
 
   // For sorting so we can make unique list of schedule records per tile
-  bool operator<(const TransitSchedule& other) const;
+  bool operator<(const TransitSchedule& other) const {
+    if (days_ == other.days_) {
+      if (days_of_week_ == other.days_of_week_) {
+        return end_day_ < other.end_day_;
+      } else {
+        return days_of_week_ < other.days_of_week_;
+      }
+    } else {
+      return days_ < other.days_;
+    }
+  }
 
 protected:
   uint64_t days_; // Days this departure is active relative to the
