@@ -2,7 +2,7 @@ include(FindPkgConfig)
 include(GNUInstallDirs)
 
 ## Set relative to the current source and binary paths
-set(LIBVALHALLA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(VALHALLA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 if(NOT VALHALLA_SOURCE_DIR)
   set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 endif()
@@ -100,6 +100,7 @@ endif()
 # Check the commit message for the fix patch that removes cache internal variables
 # and adds target_link_libraries(${library} ${MODULE_DEPENDS}) again
 set(libvalhalla_compile_definitions "" CACHE INTERNAL "")
+set(libvalhalla_compile_options "" CACHE INTERNAL "")
 set(libvalhalla_include_directories "" CACHE INTERNAL "")
 set(libvalhalla_link_objects "" CACHE INTERNAL  "")
 set(libvalhalla_link_libraries "" CACHE INTERNAL  "")
@@ -120,8 +121,8 @@ function(valhalla_module)
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
-       ${LIBVALHALLA_BINARY_DIR}
-       ${LIBVALHALLA_BINARY_DIR}/valhalla)
+       ${VALHALLA_BINARY_DIR}
+       ${VALHALLA_BINARY_DIR}/valhalla)
 
   if(ENABLE_COVERAGE)
     target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
@@ -148,6 +149,7 @@ function(valhalla_module)
   endforeach()
 
   set(libvalhalla_compile_definitions "${libvalhalla_compile_definitions};$<TARGET_PROPERTY:${library},COMPILE_DEFINITIONS>" CACHE INTERNAL "")
+  set(libvalhalla_compile_options "${libvalhalla_compile_options};$<TARGET_PROPERTY:${library},COMPILE_OPTIONS>" CACHE INTERNAL "")
   set(libvalhalla_include_directories "${libvalhalla_include_directories};$<TARGET_PROPERTY:${library},INCLUDE_DIRECTORIES>" CACHE INTERNAL "")
   set(libvalhalla_link_objects "${libvalhalla_link_objects};$<TARGET_OBJECTS:${library}>" CACHE INTERNAL "")
   set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
@@ -188,12 +190,16 @@ target_compile_definitions(valhalla
   PRIVATE
     ${libvalhalla_compile_definitions})
 
+target_compile_options(valhalla
+  PUBLIC
+    ${libvalhalla_compile_options})
+
 target_include_directories(valhalla
   PUBLIC
     ${VALHALLA_SOURCE_DIR}
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    ${LIBVALHALLA_BINARY_DIR}
-    ${LIBVALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+    ${VALHALLA_BINARY_DIR}
+    ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
   PRIVATE
     ${libvalhalla_include_directories})
@@ -236,12 +242,16 @@ install(FILES ${valhalla_hdrs}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
   COMPONENT development)
 
-## pkg-config file
-set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${PROJECT_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
+## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
+set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
 
-add_executable(libvalhalla.pc ../libvalhalla.pc.in)
+add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
 target_link_libraries(libvalhalla.pc valhalla)
 set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
-install(TARGETS libvalhalla.pc
+install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target libvalhalla.pc OUTPUT_QUIET ERROR_VARIABLE _err RESULT_VARIABLE _res)
+if(NOT \${_res} EQUAL 0)
+  message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")
+endif()")
+install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
   COMPONENT development)

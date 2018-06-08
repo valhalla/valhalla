@@ -18,19 +18,34 @@ public:
   TransitStop(const uint32_t one_stop_offset,
               const uint32_t name_offset,
               const bool generated,
-              const uint32_t traversability);
+              const uint32_t traversability)
+      : spare_(0), generated_(generated), traversability_(traversability) {
+    if (one_stop_offset > kMaxNameOffset) {
+      throw std::runtime_error("TransitStop: Exceeded maximum name offset");
+    }
+    one_stop_offset_ = one_stop_offset;
+
+    if (name_offset > kMaxNameOffset) {
+      throw std::runtime_error("TransitStop: Exceeded maximum name offset");
+    }
+    name_offset_ = name_offset;
+  }
 
   /**
    * Get the TransitLand one stop Id offset for the stop.
    * @return  Returns the TransitLand one stop Id offset.
    */
-  uint32_t one_stop_offset() const;
+  uint32_t one_stop_offset() const {
+    return one_stop_offset_;
+  }
 
   /**
    * Get the text/name offset for the stop name.
    * @return  Returns the name offset in the text/name list.
    */
-  uint32_t name_offset() const;
+  uint32_t name_offset() const {
+    return name_offset_;
+  }
 
   /**
    * Get the generated flag that indicates if
@@ -38,7 +53,9 @@ public:
    * real world
    * @return  Returns the generated flag.
    */
-  bool generated() const;
+  bool generated() const {
+    return generated_;
+  }
 
   /**
    * Get the traversability indicates if
@@ -46,7 +63,9 @@ public:
    * in the real world.
    * @return  Returns the traversability.
    */
-  Traversability traversability() const;
+  Traversability traversability() const {
+    return static_cast<Traversability>(traversability_);
+  }
 
 protected:
   uint64_t one_stop_offset_ : 24; // TransitLand one stop Id offset.
