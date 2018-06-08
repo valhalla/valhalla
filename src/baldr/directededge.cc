@@ -60,6 +60,31 @@ void DirectedEdge::set_endnode(const GraphId& endnode) {
   endnode_ = endnode.value;
 }
 
+// Sets the free flow speed in KPH.
+void DirectedEdge::set_free_flow_speed(const uint32_t speed) {
+  if (speed > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Free flow speed: " + std::to_string(speed));
+    free_flow_speed_ = kMaxSpeedKph;
+  } else {
+    free_flow_speed_ = speed;
+  }
+}
+
+// Sets the constrained flow speed in KPH.
+void DirectedEdge::set_constrained_flow_speed(const uint32_t speed) {
+  if (speed > kMaxSpeedKph) {
+    LOG_WARN("Exceeding maximum.  Constrained flow speed: " + std::to_string(speed));
+    constrained_flow_speed_ = kMaxSpeedKph;
+  } else {
+    constrained_flow_speed_ = speed;
+  }
+}
+
+// Set the flag indicating the edge has predicted speed records.
+void DirectedEdge::set_predicted_speed(const bool p) {
+  predicted_speed_ = p;
+}
+
 // ------------------  Data offsets and flags for extended data -------------//
 
 // Get the offset to the common edge data.
@@ -527,6 +552,8 @@ json::MapPtr DirectedEdge::json() const {
       {"end_node", endnode().json()},
       {"speed", static_cast<uint64_t>(speed_)},
       {"speed_limit", static_cast<uint64_t>(speed_limit_)},
+      {"free_flow_speed", static_cast<uint64_t>(free_flow_speed_)},
+      {"constrained_flow_speed", static_cast<uint64_t>(constrained_flow_speed_)},
       //{"opp_index", static_cast<bool>(opp_index_)},
       //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
       //{"restrictions", restrictions_},
