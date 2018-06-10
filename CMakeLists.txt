@@ -157,60 +157,11 @@ add_subdirectory(test)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
-  find_package(PythonInterp)
-  find_package(PythonLibs)
+  add_subdirectory(src/bindings/python)
 
-  ## This a workaround for CMake Boost::python configuration
-  if(NOT ${PYTHON_VERSION_MAJOR} EQUAL 3)
-    set(Boost_Python_lib "python")
-    find_package(Boost COMPONENTS python QUIET)
-  endif()
-
-  if(NOT Boost_PYTHON_FOUND)
-    set(Boost_Python_lib "python${PYTHON_VERSION_MAJOR}")
-    set(_Boost_PYTHON${PYTHON_VERSION_MAJOR}_HEADERS "boost/python.hpp")
-    find_package(Boost COMPONENTS python${PYTHON_VERSION_MAJOR} QUIET)
-    if(NOT Boost_PYTHON${PYTHON_VERSION_MAJOR}_FOUND)
-      set(Boost_Python_lib "python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
-      set(_Boost_PYTHON${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}_HEADERS "boost/python.hpp")
-      find_package(Boost COMPONENTS python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR} QUIET)
-      if(NOT Boost_PYTHON${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}_FOUND)
-        unset(Boost_Python_lib)
-      endif()
-    endif()
-  endif()
-
-  if(NOT Boost_Python_lib)
-    message(SEND_ERROR "Neither  python, python${PYTHON_VERSION_MAJOR} or "
-      "python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR} Boost library is not found")
-  else()
-    message(STATUS "Found the following Boost libraries:")
-    message(STATUS "  ${Boost_Python_lib}")
-
-    python_add_module(python_valhalla src/bindings/python/python.cc)
-    set_target_properties(python_valhalla PROPERTIES
-      OUTPUT_NAME valhalla
-      LINK_LIBRARIES "${PYTHON_LIBRARIES}"
-      INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIRS}")
-    target_link_libraries(python_valhalla valhalla Boost::${Boost_Python_lib})
-    set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-    if (APPLE)
-      set(get_python_lib "sc.get_python_lib(plat_specific=True)")
-    else()
-      set(get_python_lib "sc.get_python_lib(prefix='', plat_specific=True)")
-    endif()
-    execute_process(
-      COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils import sysconfig as sc; print(${get_python_lib})"
-      OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-    install(TARGETS python_valhalla
-      DESTINATION "${PYTHON_SITE_PACKAGES}"
-      COMPONENT python)
-    install(FILES COPYING ChangeLog
-      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
-      COMPONENT python)
-  endif()
+  install(FILES COPYING ChangeLog
+    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
+    COMPONENT python)
 endif()
 
 
