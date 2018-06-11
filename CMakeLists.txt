@@ -30,6 +30,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
+# colorize output
+include(CheckCXXCompilerFlag)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set(COLOR_FLAG "-fdiagnostics-color=auto")
+  check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
+  if(NOT HAS_COLOR_FLAG)
+    set(COLOR_FLAG "")
+  endif()
+  # using GCC
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COLOR_FLAG}")
+endif()
+
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
