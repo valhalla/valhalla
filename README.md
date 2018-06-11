@@ -84,9 +84,9 @@ To install on a Debian or Ubuntu system you need to install its dependencies wit
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
 #if you plan to compile with data building support, see below for more info
-sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2
+sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2 wget
 if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
@@ -96,10 +96,10 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 
 ```bash
 # install dependencies (czmq is required by prime_server)
-brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl czmq lz4
+brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4
 ```
 
-Then clone and build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install)
+Then clone and build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
 
 After getting the dependencies install it with:
 
