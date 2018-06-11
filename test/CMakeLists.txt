@@ -99,7 +99,24 @@ if(ENABLE_SERVICES)
   add_dependencies(run-skadi_service test_directories)
 endif()
 
+if(ENABLE_PYTHON_BINDINGS)
+  find_package(PythonInterp)
+  add_custom_command(OUTPUT python_valhalla.log
+    COMMAND
+      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
+      PYTHONPATH=src/bindings/python
+      /bin/bash -c "${PYTHON_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py > test/python_valhalla.log"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
+      utrecht_tiles
+      python_valhalla
+    VERBATIM)
+  add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
+endif()
+
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};python_valhalla")
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
