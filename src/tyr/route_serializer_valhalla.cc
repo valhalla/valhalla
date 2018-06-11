@@ -10,9 +10,6 @@
 #include <valhalla/proto/directions_options.pb.h>
 
 using namespace valhalla;
-using namespace valhalla::midgard;
-using namespace valhalla::odin;
-using namespace valhalla::baldr;
 using namespace std;
 
 namespace {
@@ -93,7 +90,7 @@ valhalla output looks like this:
 */
 using namespace std;
 
-json::MapPtr summary(const std::list<valhalla::odin::TripDirections>& legs) {
+baldr::json::MapPtr summary(const std::list<valhalla::odin::TripDirections>& legs) {
 
   uint64_t time = 0;
   long double length = 0;
@@ -107,33 +104,33 @@ json::MapPtr summary(const std::list<valhalla::odin::TripDirections>& legs) {
     bbox.Expand(leg_bbox);
   }
 
-  auto route_summary = json::map({});
+  auto route_summary = baldr::json::map({});
   route_summary->emplace("time", time);
-  route_summary->emplace("length", json::fp_t{length, 3});
-  route_summary->emplace("min_lat", json::fp_t{bbox.miny(), 6});
-  route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
-  route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
-  route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
+  route_summary->emplace("length", baldr::json::fp_t{length, 3});
+  route_summary->emplace("min_lat", baldr::json::fp_t{bbox.miny(), 6});
+  route_summary->emplace("min_lon", baldr::json::fp_t{bbox.minx(), 6});
+  route_summary->emplace("max_lat", baldr::json::fp_t{bbox.maxy(), 6});
+  route_summary->emplace("max_lon", baldr::json::fp_t{bbox.maxx(), 6});
   LOG_DEBUG("trip_time::" + std::to_string(time) + "s");
   return route_summary;
 }
 
-json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs) {
-  auto locations = json::array({});
+baldr::json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs) {
+  auto locations = baldr::json::array({});
 
   int index = 0;
   for (auto leg = legs.begin(); leg != legs.end(); ++leg) {
     for (auto location = leg->location().begin() + index; location != leg->location().end();
          ++location) {
       index = 1;
-      auto loc = json::map({});
+      auto loc = baldr::json::map({});
       if (location->type() == odin::Location_Type_kThrough) {
         loc->emplace("type", std::string("through"));
       } else {
         loc->emplace("type", std::string("break"));
       }
-      loc->emplace("lat", json::fp_t{location->ll().lat(), 6});
-      loc->emplace("lon", json::fp_t{location->ll().lng(), 6});
+      loc->emplace("lat", baldr::json::fp_t{location->ll().lat(), 6});
+      loc->emplace("lon", baldr::json::fp_t{location->ll().lng(), 6});
       if (!location->name().empty()) {
         loc->emplace("name", location->name());
       }
@@ -179,59 +176,59 @@ json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs) 
 }
 
 const std::unordered_map<int, std::string> vehicle_to_string{
-    {static_cast<int>(TripDirections_VehicleType_kCar), "car"},
-    {static_cast<int>(TripDirections_VehicleType_kMotorcycle), "motorcycle"},
-    {static_cast<int>(TripDirections_VehicleType_kAutoBus), "bus"},
-    {static_cast<int>(TripDirections_VehicleType_kTractorTrailer), "tractor_trailer"},
-    {static_cast<int>(TripDirections_VehicleType_kMotorScooter), "motor_scooter"},
+    {static_cast<int>(odin::TripDirections_VehicleType_kCar), "car"},
+    {static_cast<int>(odin::TripDirections_VehicleType_kMotorcycle), "motorcycle"},
+    {static_cast<int>(odin::TripDirections_VehicleType_kAutoBus), "bus"},
+    {static_cast<int>(odin::TripDirections_VehicleType_kTractorTrailer), "tractor_trailer"},
+    {static_cast<int>(odin::TripDirections_VehicleType_kMotorScooter), "motor_scooter"},
 };
 
 std::unordered_map<int, std::string> pedestrian_to_string{
-    {static_cast<int>(TripDirections_PedestrianType_kFoot), "foot"},
-    {static_cast<int>(TripDirections_PedestrianType_kWheelchair), "wheelchair"},
-    {static_cast<int>(TripDirections_PedestrianType_kSegway), "segway"},
+    {static_cast<int>(odin::TripDirections_PedestrianType_kFoot), "foot"},
+    {static_cast<int>(odin::TripDirections_PedestrianType_kWheelchair), "wheelchair"},
+    {static_cast<int>(odin::TripDirections_PedestrianType_kSegway), "segway"},
 };
 
 std::unordered_map<int, std::string> bicycle_to_string{
-    {static_cast<int>(TripDirections_BicycleType_kRoad), "road"},
-    {static_cast<int>(TripDirections_BicycleType_kCross), "cross"},
-    {static_cast<int>(TripDirections_BicycleType_kHybrid), "hybrid"},
-    {static_cast<int>(TripDirections_BicycleType_kMountain), "mountain"},
+    {static_cast<int>(odin::TripDirections_BicycleType_kRoad), "road"},
+    {static_cast<int>(odin::TripDirections_BicycleType_kCross), "cross"},
+    {static_cast<int>(odin::TripDirections_BicycleType_kHybrid), "hybrid"},
+    {static_cast<int>(odin::TripDirections_BicycleType_kMountain), "mountain"},
 };
 
 std::unordered_map<int, std::string> transit_to_string{
-    {static_cast<int>(TripDirections_TransitType_kTram), "tram"},
-    {static_cast<int>(TripDirections_TransitType_kMetro), "metro"},
-    {static_cast<int>(TripDirections_TransitType_kRail), "rail"},
-    {static_cast<int>(TripDirections_TransitType_kBus), "bus"},
-    {static_cast<int>(TripDirections_TransitType_kFerry), "ferry"},
-    {static_cast<int>(TripDirections_TransitType_kCableCar), "cable_car"},
-    {static_cast<int>(TripDirections_TransitType_kGondola), "gondola"},
-    {static_cast<int>(TripDirections_TransitType_kFunicular), "funicular"},
+    {static_cast<int>(odin::TripDirections_TransitType_kTram), "tram"},
+    {static_cast<int>(odin::TripDirections_TransitType_kMetro), "metro"},
+    {static_cast<int>(odin::TripDirections_TransitType_kRail), "rail"},
+    {static_cast<int>(odin::TripDirections_TransitType_kBus), "bus"},
+    {static_cast<int>(odin::TripDirections_TransitType_kFerry), "ferry"},
+    {static_cast<int>(odin::TripDirections_TransitType_kCableCar), "cable_car"},
+    {static_cast<int>(odin::TripDirections_TransitType_kGondola), "gondola"},
+    {static_cast<int>(odin::TripDirections_TransitType_kFunicular), "funicular"},
 };
 
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
   switch (maneuver.travel_mode()) {
-    case TripDirections_TravelMode_kDrive: {
+    case odin::TripDirections_TravelMode_kDrive: {
       auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type())
                                            : vehicle_to_string.cend();
       return i == vehicle_to_string.cend() ? make_pair("drive", "car")
                                            : make_pair("drive", i->second);
     }
-    case TripDirections_TravelMode_kPedestrian: {
+    case odin::TripDirections_TravelMode_kPedestrian: {
       auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
                                               : pedestrian_to_string.cend();
       return i == pedestrian_to_string.cend() ? make_pair("pedestrian", "foot")
                                               : make_pair("pedestrian", i->second);
     }
-    case TripDirections_TravelMode_kBicycle: {
+    case odin::TripDirections_TravelMode_kBicycle: {
       auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type())
                                            : bicycle_to_string.cend();
       return i == bicycle_to_string.cend() ? make_pair("bicycle", "road")
                                            : make_pair("bicycle", i->second);
     }
-    case TripDirections_TravelMode_kTransit: {
+    case odin::TripDirections_TravelMode_kTransit: {
       auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type())
                                            : transit_to_string.cend();
       return i == transit_to_string.cend() ? make_pair("transit", "rail")
@@ -240,18 +237,18 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
   }
 }
 
-json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs) {
+baldr::json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs) {
 
   // TODO: multiple legs.
-  auto legs = json::array({});
+  auto legs = baldr::json::array({});
   for (const auto& directions_leg : directions_legs) {
-    auto leg = json::map({});
-    auto summary = json::map({});
-    auto maneuvers = json::array({});
+    auto leg = baldr::json::map({});
+    auto summary = baldr::json::map({});
+    auto maneuvers = baldr::json::array({});
 
     for (const auto& maneuver : directions_leg.maneuver()) {
 
-      auto man = json::map({});
+      auto man = baldr::json::map({});
 
       // Maneuver type
       man->emplace("type", static_cast<uint64_t>(maneuver.type()));
@@ -273,7 +270,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
       // Set street names
       if (maneuver.street_name_size() > 0) {
-        auto street_names = json::array({});
+        auto street_names = baldr::json::array({});
         for (int i = 0; i < maneuver.street_name_size(); i++) {
           street_names->emplace_back(maneuver.street_name(i));
         }
@@ -282,7 +279,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
       // Set begin street names
       if (maneuver.begin_street_name_size() > 0) {
-        auto begin_street_names = json::array({});
+        auto begin_street_names = baldr::json::array({});
         for (int i = 0; i < maneuver.begin_street_name_size(); i++) {
           begin_street_names->emplace_back(maneuver.begin_street_name(i));
         }
@@ -291,7 +288,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
       // Time, length, and shape indexes
       man->emplace("time", static_cast<uint64_t>(maneuver.time()));
-      man->emplace("length", json::fp_t{maneuver.length(), 3});
+      man->emplace("length", baldr::json::fp_t{maneuver.length(), 3});
       man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
       man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
 
@@ -305,13 +302,13 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
       // Process sign
       if (maneuver.has_sign()) {
-        auto sign = json::map({});
+        auto sign = baldr::json::map({});
 
         // Process exit number
         if (maneuver.sign().exit_number_elements_size() > 0) {
-          auto exit_number_elements = json::array({});
+          auto exit_number_elements = baldr::json::array({});
           for (int i = 0; i < maneuver.sign().exit_number_elements_size(); ++i) {
-            auto exit_number_element = json::map({});
+            auto exit_number_element = baldr::json::map({});
 
             // Add the exit number text
             exit_number_element->emplace("text", maneuver.sign().exit_number_elements(i).text());
@@ -331,9 +328,9 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
         // Process exit branch
         if (maneuver.sign().exit_branch_elements_size() > 0) {
-          auto exit_branch_elements = json::array({});
+          auto exit_branch_elements = baldr::json::array({});
           for (int i = 0; i < maneuver.sign().exit_branch_elements_size(); ++i) {
-            auto exit_branch_element = json::map({});
+            auto exit_branch_element = baldr::json::map({});
 
             // Add the exit branch text
             exit_branch_element->emplace("text", maneuver.sign().exit_branch_elements(i).text());
@@ -353,9 +350,9 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
         // Process exit toward
         if (maneuver.sign().exit_toward_elements_size() > 0) {
-          auto exit_toward_elements = json::array({});
+          auto exit_toward_elements = baldr::json::array({});
           for (int i = 0; i < maneuver.sign().exit_toward_elements_size(); ++i) {
-            auto exit_toward_element = json::map({});
+            auto exit_toward_element = baldr::json::map({});
 
             // Add the exit toward text
             exit_toward_element->emplace("text", maneuver.sign().exit_toward_elements(i).text());
@@ -375,9 +372,9 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
         // Process exit name
         if (maneuver.sign().exit_name_elements_size() > 0) {
-          auto exit_name_elements = json::array({});
+          auto exit_name_elements = baldr::json::array({});
           for (int i = 0; i < maneuver.sign().exit_name_elements_size(); ++i) {
-            auto exit_name_element = json::map({});
+            auto exit_name_element = baldr::json::map({});
 
             // Add the exit name text
             exit_name_element->emplace("text", maneuver.sign().exit_name_elements(i).text());
@@ -421,7 +418,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       // Process transit route
       if (maneuver.has_transit_info()) {
         const auto& transit_info = maneuver.transit_info();
-        auto json_transit_info = json::map({});
+        auto json_transit_info = baldr::json::map({});
 
         if (transit_info.has_onestop_id()) {
           json_transit_info->emplace("onestop_id", transit_info.onestop_id());
@@ -458,13 +455,13 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
         // Add transit stops
         if (transit_info.transit_stops().size() > 0) {
-          auto json_transit_stops = json::array({});
+          auto json_transit_stops = baldr::json::array({});
           for (const auto& transit_stop : transit_info.transit_stops()) {
-            auto json_transit_stop = json::map({});
+            auto json_transit_stop = baldr::json::map({});
 
             // type
             if (transit_stop.has_type()) {
-              if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {
+              if (transit_stop.type() == odin::TransitPlatformInfo_Type_kStation) {
                 json_transit_stop->emplace("type", std::string("station"));
               } else {
                 json_transit_stop->emplace("type", std::string("stop"));
@@ -500,8 +497,8 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
             // latitude and longitude
             if (transit_stop.has_ll()) {
-              json_transit_stop->emplace("lat", json::fp_t{transit_stop.ll().lat(), 6});
-              json_transit_stop->emplace("lon", json::fp_t{transit_stop.ll().lng(), 6});
+              json_transit_stop->emplace("lat", baldr::json::fp_t{transit_stop.ll().lat(), 6});
+              json_transit_stop->emplace("lon", baldr::json::fp_t{transit_stop.ll().lng(), 6});
             }
 
             json_transit_stops->emplace_back(json_transit_stop);
@@ -535,11 +532,11 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       leg->emplace("maneuvers", maneuvers);
     }
     summary->emplace("time", static_cast<uint64_t>(directions_leg.summary().time()));
-    summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
-    summary->emplace("min_lat", json::fp_t{directions_leg.summary().bbox().min_ll().lat(), 6});
-    summary->emplace("min_lon", json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});
-    summary->emplace("max_lat", json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
-    summary->emplace("max_lon", json::fp_t{directions_leg.summary().bbox().max_ll().lng(), 6});
+    summary->emplace("length", baldr::json::fp_t{directions_leg.summary().length(), 3});
+    summary->emplace("min_lat", baldr::json::fp_t{directions_leg.summary().bbox().min_ll().lat(), 6});
+    summary->emplace("min_lon", baldr::json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});
+    summary->emplace("max_lat", baldr::json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
+    summary->emplace("max_lon", baldr::json::fp_t{directions_leg.summary().bbox().max_ll().lng(), 6});
     leg->emplace("summary", summary);
     leg->emplace("shape", directions_leg.shape());
 
@@ -551,8 +548,8 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
                       const std::list<valhalla::odin::TripDirections>& directions_legs) {
   // build up the json object
-  auto json = json::map(
-      {{"trip", json::map({{"locations", locations(directions_legs)},
+  auto json = baldr::json::map(
+      {{"trip", baldr::json::map({{"locations", locations(directions_legs)},
                            {"summary", summary(directions_legs)},
                            {"legs", legs(directions_legs)},
                            {"status_message",
