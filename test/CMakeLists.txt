@@ -47,8 +47,9 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
 
 add_custom_command(OUTPUT .locales.timestamp
-  COMMAND /bin/bash -c "for loc in $(jq --raw-output \".posix_locale\" *.json); do \
-       localedef --inputfile=$\{loc\%.\*\} --charmap=$\{loc\#\#\*.\} ./$\{loc\} ; \
+  COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
+       $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
+       $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
      done \
      && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales

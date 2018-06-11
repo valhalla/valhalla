@@ -4,6 +4,7 @@
 #include <valhalla/midgard/shape_decoder.h>
 
 #include <cmath>
+#include <string>
 #include <type_traits>
 #include <vector>
 
