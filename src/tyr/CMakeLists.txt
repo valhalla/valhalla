@@ -12,7 +12,6 @@ valhalla_module(NAME tyr
     route_serializer_osrm.cc
     transit_available_serializer.cc
     trace_serializer.cc
-    navigator.cc
     actor.cc
   HEADERS
     ${headers}

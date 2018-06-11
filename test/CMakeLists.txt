@@ -3,8 +3,8 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
   enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
-  narrativebuilder narrative_dictionary navigator nodeinfo obb2 openlr optimizer  point2 pointll
-  polyline2 queue routing sample sequence serializers sign signs streetname streetnames streetnames_factory
+  narrativebuilder narrative_dictionary nodeinfo obb2 openlr optimizer  point2 pointll
+  polyline2 queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles traffic_matcher transitdeparture transitroute transitschedule
   transitstop turn util_midgard util_odin util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search)
