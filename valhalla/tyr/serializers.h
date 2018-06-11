@@ -12,7 +12,6 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/route.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/thor/attributes_controller.h>
@@ -101,14 +100,6 @@ std::string serializeTraceAttributes(
     const thor::AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, odin::TripPath>>& results);
 
-/**
- * Transfers the JSON route information returned from a route request into
- * the Route proto object passed in by reference.
- * @param json_route   The route information to be parsed as JSON
- * @param proto_route  The protobuf object that will hold the information
- *                     from the JSON string
- */
-void jsonToProtoRoute(const std::string& json_route, Route& proto_route);
 } // namespace tyr
 } // namespace valhalla
 
