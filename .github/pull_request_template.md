@@ -4,12 +4,12 @@ What issue is this PR targeting? If there is no issue that addresses the problem
 
 ## Tasklist
 
- - [ ] add tests
- - [ ] review - you must request approval to merge any PR to master
+ - [ ] Add tests
+ - [ ] Review - you must request approval to merge any PR to master
  - [ ] Add #fixes with the issue number that this PR addresses
  - [ ] Generally use squash merge to rebase and clean comments before merging
- - [ ] Add to release notes in valhalla-docs
- - [ ] update relevant documentation if this is an API impacting change
+ - [ ] Update the [changelog](CHANGELOG.md)
+ - [ ] Update relevant [documentation](docs/README.md)
 
 ## Requirements / Relations
 

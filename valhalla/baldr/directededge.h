@@ -35,6 +35,48 @@ public:
   void set_endnode(const baldr::GraphId& endnode);
 
   /**
+   * Gets the free flow speed in KPH.
+   * @return  Returns the free flow speed in KPH.
+   */
+  uint32_t free_flow_speed() const {
+    return free_flow_speed_;
+  }
+
+  /**
+   * Sets the free flow speed in KPH.
+   * @param free flow Speed in KPH.
+   */
+  void set_free_flow_speed(const uint32_t speed);
+
+  /**
+   * Gets the constrained flow speed in KPH.
+   * @return  Returns the constrained flow speed in KPH.
+   */
+  uint32_t constrained_flow_speed() const {
+    return constrained_flow_speed_;
+  }
+
+  /**
+   * Sets the constrained flow speed in KPH.
+   * @param constrained flow Speed in KPH.
+   */
+  void set_constrained_flow_speed(const uint32_t speed);
+
+  /**
+   * Flag indicating the edge has predicted speed records.
+   * @return  Returns true if this edge has predicted speed records.
+   */
+  bool predicted_speed() const {
+    return predicted_speed_;
+  }
+
+  /**
+   * Set the flag indicating the edge has predicted speed records.
+   * @param p  True if this edge has predicted speed records
+   */
+  void set_predicted_speed(const bool p);
+
+  /**
    * Offset to the common edge data. The offset is from the start
    * of the common edge information  within a tile.
    * @return  Returns offset from the start of the edge info within a tile.
@@ -1044,8 +1086,11 @@ public:
   json::MapPtr json() const;
 
 protected:
-  uint64_t endnode_ : 46; // End node of the directed edge
-  uint64_t spare1_ : 18;
+  uint64_t endnode_ : 46;               // End node of the directed edge
+  uint64_t free_flow_speed_ : 8;        // Speed when there is no traffic(kph)
+  uint64_t constrained_flow_speed_ : 8; // Speed when there is traffic(kph)
+  uint64_t predicted_speed_ : 1;        // Does this edge have a predicted speed records?
+  uint64_t spare1_ : 1;
 
   // Data offsets and flags for extended data. Where a flag exists the actual
   // data can be indexed by the directed edge Id within the tile.
