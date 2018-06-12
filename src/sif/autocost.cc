@@ -263,7 +263,7 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess)) {
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess)) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -756,7 +756,7 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || !(edge->forwardaccess() & kBusAccess)) {
+      if (!(edge->forwardaccess() & kBusAccess)) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -965,7 +965,7 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->IsTransition() || !(edge->forwardaccess() & kHOVAccess)) {
+      if (!(edge->forwardaccess() & kHOVAccess)) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -1130,9 +1130,8 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      // Do not allow transition edges and edges with no auto access in either direction
-      if (edge->IsTransition() ||
-          !((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess))) {
+      // Do not allow edges with no auto access in either direction
+      if (!((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess))) {
         return 0.0f;
       } else {
         return 1.0f;
