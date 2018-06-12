@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node test/nodejs/*.test.js",
+    "test": "node --expose-gc test/nodejs/*.test.js",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
   },
   "engines": {
