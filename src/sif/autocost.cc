@@ -205,7 +205,7 @@ public:
    * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const float speed) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint64_t speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -474,7 +474,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 // Get the cost to traverse the edge in seconds
-Cost AutoCost::EdgeCost(const DirectedEdge* edge, const float speed) const {
+Cost AutoCost::EdgeCost(const DirectedEdge* edge, const uint64_t speed) const {
   float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
 
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
@@ -635,9 +635,10 @@ public:
    * Returns the cost to traverse the edge and an estimate of the actual time
    * (in seconds) to traverse the edge.
    * @param  edge     Pointer to a directed edge.
+   * @param  speed    A speed for a road segment/edge.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint64_t speed) const {
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : 1.0f;
     return Cost(edge->length() * adjspeedfactor_[edge->speed()] * factor,
                 edge->length() * speedfactor_[edge->speed()]);
@@ -935,9 +936,10 @@ public:
    * Returns the cost to traverse the edge and an estimate of the actual time
    * (in seconds) to traverse the edge.
    * @param  edge     Pointer to a directed edge.
+   * @param  speed    A speed for a road segment/edge.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const float speed) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint64_t speed) const {
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kHOVFactor;

@@ -403,7 +403,11 @@ public:
    * @param  de  Directed edge index. Used to lookup list of signs.
    * @return  Returns the speed for the edge.
    */
-  uint64_t GetSpeed(const DirectedEdge* de) const;
+  uint64_t GetSpeed(const DirectedEdge* de) const {
+    // de->predicted_speed() will need to be only used if there is a time element
+    // will need to add in constrained speed if no predictive and there is a time element
+    return (de->free_flow_speed() > 0) ? de->free_flow_speed() : de->speed();
+  }
 
   /**
    * Get a pointer to a edge elevation data for the specified edge.

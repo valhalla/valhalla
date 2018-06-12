@@ -571,19 +571,6 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
   return signs;
 }
 
-// TODO: THIS SHOULD BE MOVED INTO A UTILITY
-uint64_t GraphTile::GetSpeed(const DirectedEdge* de) const {
-  float speed;
-  // de->predicted_speed_ will need to be only used if there is a time element
-  // will need to add in constrained speed if no predictive and there is a time element
-  if (de->free_flow_speed() > 0) {
-    speed = de->free_flow_speed();
-  } else {
-    speed = de->speed();
-  }
-  return speed;
-}
-
 // Get lane connections ending on this edge.
 std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx) const {
   uint32_t count = lane_connectivity_size_ / sizeof(LaneConnectivity);

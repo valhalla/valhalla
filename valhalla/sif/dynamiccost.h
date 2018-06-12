@@ -193,7 +193,7 @@ public:
    * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and speed.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const float speed) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint64_t speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
