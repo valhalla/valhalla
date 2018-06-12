@@ -244,7 +244,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, directededge->speed()) +
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
                    costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -385,7 +385,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
     // Compute the cost to the end of this edge with separate transition cost
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, opp_edge->speed());
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, tile->GetSpeed(opp_edge));
     newcost.cost += tc.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -730,8 +730,8 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
           continue;
         }
 
-        Cost c =
-            mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, directededge->speed());
+        Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge,
+                                                                      tile->GetSpeed(directededge));
         c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
         newcost += c;
 
@@ -916,8 +916,8 @@ void Isochrone::SetOriginLocations(
 
       // Get cost
       nodeinfo = endtile->node(directededge->endnode());
-      Cost cost =
-          costing->EdgeCost(directededge, directededge->speed()) * (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
+                  (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -987,8 +987,8 @@ void Isochrone::SetOriginLocationsMM(
 
       // Get cost
       nodeinfo = endtile->node(directededge->endnode());
-      Cost cost =
-          costing->EdgeCost(directededge, directededge->speed()) * (1.0f - edge.percent_along());
+      Cost cost = costing->EdgeCost(directededge, endtile->GetSpeed(directededge)) *
+                  (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -1065,7 +1065,8 @@ void Isochrone::SetDestinationLocations(
       // the end node of the opposing edge is in the same tile as the directed
       // edge.  Use the directed edge for costing, as this is the forward
       // direction along the destination edge.
-      Cost cost = costing->EdgeCost(directededge, directededge->speed()) * edge.percent_along();
+      Cost cost =
+          costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route

@@ -183,7 +183,8 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
             mode_costing[static_cast<int>(mode)]->TransitionCost(de, node_info, prev_edge_label).secs;
 
         // Update the elapsed time based on edge cost
-        elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de, de->speed()).secs;
+        elapsed_time +=
+            mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile->GetSpeed(de)).secs;
 
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed_time, edge_id, 0);
@@ -276,8 +277,9 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           de_remaining_length < length_comparison(length, true)) {
 
         // Update the elapsed time edge cost at begin edge
-        elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de, de->speed()).secs *
-                        (1 - edge.percent_along());
+        elapsed_time +=
+            mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile->GetSpeed(de)).secs *
+            (1 - edge.percent_along());
 
         // Add begin edge
         path_infos.emplace_back(mode, elapsed_time, graphid, 0);
@@ -319,9 +321,10 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
                               .secs;
 
           // Update the elapsed time based on edge cost
-          elapsed_time +=
-              mode_costing[static_cast<int>(mode)]->EdgeCost(end_de, end_de->speed()).secs *
-              end_edge.percent_along();
+          elapsed_time += mode_costing[static_cast<int>(mode)]
+                              ->EdgeCost(end_de, end_edge_tile->GetSpeed(end_de))
+                              .secs *
+                          end_edge.percent_along();
 
           // Add end edge
           path_infos.emplace_back(mode, elapsed_time, end_edge_graphid, 0);
@@ -340,8 +343,9 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
     for (auto end : end_nodes) {
       if (end.second.first.graph_id() == edge.graph_id()) {
         // Update the elapsed time based on edge cost
-        elapsed_time += mode_costing[static_cast<int>(mode)]->EdgeCost(de, de->speed()).secs *
-                        (end.second.first.percent_along() - edge.percent_along());
+        elapsed_time +=
+            mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile->GetSpeed(de)).secs *
+            (end.second.first.percent_along() - edge.percent_along());
 
         // Add end edge
         path_infos.emplace_back(mode, elapsed_time, GraphId(edge.graph_id()), 0);

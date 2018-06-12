@@ -334,7 +334,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
         shortcuts |= directededge->shortcut();
       }
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
-      Cost newcost = pred.cost() + tc + costing_->EdgeCost(directededge, directededge->speed());
+      Cost newcost =
+          pred.cost() + tc + costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -608,7 +609,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       }
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge);
-      Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, opp_edge->speed());
+      Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, tile->GetSpeed(opp_edge));
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -695,7 +696,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
       // Get cost. Get distance along the remainder of this edge.
-      Cost edgecost = costing_->EdgeCost(directededge, directededge->speed());
+      Cost edgecost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
       Cost cost = edgecost * (1.0f - edge.percent_along());
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -775,7 +776,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Get cost. Get distance along the remainder of this edge.
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
-      Cost edgecost = costing_->EdgeCost(directededge, directededge->speed());
+      Cost edgecost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
       Cost cost = edgecost * edge.percent_along();
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 

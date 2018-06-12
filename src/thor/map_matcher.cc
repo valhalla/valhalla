@@ -61,12 +61,12 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
       // Get time along the edge, handling partial distance along
       // the first and last edge
-      elapsed_time += costing->EdgeCost(directededge, directededge->speed()).secs *
+      elapsed_time += costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
                       (edge_segment.target - edge_segment.source);
     } else {
       // Get time along the edge, handling partial distance along
       // the first and last edge
-      elapsed_time += costing->EdgeCost(directededge, directededge->speed()).secs *
+      elapsed_time += costing->EdgeCost(directededge, tile->GetSpeed(directededge)).secs *
                       (edge_segment.target - edge_segment.source);
     }
 

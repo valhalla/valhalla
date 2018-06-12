@@ -397,6 +397,15 @@ public:
   std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
   /**
+   * TODO: THIS SHOULD BE MOVED INTO A UTILITY
+   * Convenience method to get the speed for an edge given the directed
+   * edge index.
+   * @param  de  Directed edge index. Used to lookup list of signs.
+   * @return  Returns the speed for the edge.
+   */
+  uint64_t GetSpeed(const DirectedEdge* de) const;
+
+  /**
    * Get a pointer to a edge elevation data for the specified edge.
    * @param  edge  GraphId of the directed edge.
    * @return  Returns a pointer to the edge elevation data for the edge.

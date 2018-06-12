@@ -128,7 +128,7 @@ std::vector<PathInfo> TrafficAlgorithm::GetBestPath(odin::Location& origin,
       Cost edge_cost;
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
       if (speeds.size() == 0 || speeds[edgeid.id()] == 0) {
-        edge_cost = costing_->EdgeCost(directededge, directededge->speed());
+        edge_cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
       } else {
         // Traffic exists for this edge
         float sec =

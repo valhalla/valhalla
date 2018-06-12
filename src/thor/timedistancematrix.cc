@@ -109,7 +109,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     }
 
     // Get cost and update distance
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, directededge->speed()) +
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
                    costing_->TransitionCost(directededge, nodeinfo, pred);
     uint32_t distance = pred.path_distance() + directededge->length();
 
@@ -269,7 +269,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get cost. Use the opposing edge for EdgeCost.
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, opp_edge->speed()) +
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge)) +
                    costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                    opp_pred_edge);
     uint32_t distance = pred.path_distance() + directededge->length();
@@ -436,8 +436,8 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader, const odin
 
     // Get cost. Use this as sortcost since A* is not used for time+distance
     // matrix computations. . Get distance along the remainder of this edge.
-    Cost cost =
-        costing_->EdgeCost(directededge, directededge->speed()) * (1.0f - edge.percent_along());
+    Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
+                (1.0f - edge.percent_along());
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -480,7 +480,8 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader, const odin
 
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations. Get the distance along the edge.
-    Cost cost = costing_->EdgeCost(opp_dir_edge, opp_dir_edge->speed()) * edge.percent_along();
+    Cost cost =
+        costing_->EdgeCost(opp_dir_edge, endtile->GetSpeed(opp_dir_edge)) * edge.percent_along();
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -520,7 +521,7 @@ void TimeDistanceMatrix::SetDestinations(
       GraphId id(static_cast<GraphId>(edge.graph_id()));
       const GraphTile* tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
-      float c = costing_->EdgeCost(directededge, directededge->speed()).cost;
+      float c = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)).cost;
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -564,7 +565,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
       GraphId id(static_cast<GraphId>(edge.graph_id()));
       const GraphTile* tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
-      float c = costing_->EdgeCost(directededge, directededge->speed()).cost;
+      float c = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)).cost;
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
