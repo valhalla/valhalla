@@ -2,7 +2,7 @@ version: 2
 jobs:
   lint:
     docker:
-      - image: valhalla/docker:build-2.5.0
+      - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
       - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git nodejs
@@ -19,7 +19,7 @@ jobs:
 
   build-debug:
     docker:
-      - image: valhalla/docker:build-2.5.0
+      - image: valhalla/docker:build-2.6.1
     steps:
       - checkout
       - run: git submodule sync && git submodule update --init

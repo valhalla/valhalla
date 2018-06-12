@@ -3,8 +3,8 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
   enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
-  narrativebuilder narrative_dictionary navigator nodeinfo obb2 openlr optimizer  point2 pointll
-  polyline2 queue routing sample sequence serializers sign signs streetname streetnames streetnames_factory
+  narrativebuilder narrative_dictionary nodeinfo obb2 openlr optimizer  point2 pointll
+  polyline2 queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles traffic_matcher transitdeparture transitroute transitschedule
   transitstop turn util_midgard util_odin util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search)
@@ -47,8 +47,9 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
 
 add_custom_command(OUTPUT .locales.timestamp
-  COMMAND /bin/bash -c "for loc in $(jq --raw-output \".posix_locale\" *.json); do \
-       localedef --inputfile=$\{loc\%.\*\} --charmap=$\{loc\#\#\*.\} ./$\{loc\} ; \
+  COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
+       $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
+       $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
      done \
      && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
@@ -99,7 +100,24 @@ if(ENABLE_SERVICES)
   add_dependencies(run-skadi_service test_directories)
 endif()
 
+if(ENABLE_PYTHON_BINDINGS)
+  find_package(PythonInterp)
+  add_custom_command(OUTPUT python_valhalla.log
+    COMMAND
+      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
+      PYTHONPATH=src/bindings/python
+      /bin/bash -c "${PYTHON_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py > test/python_valhalla.log"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
+      utrecht_tiles
+      python_valhalla
+    VERBATIM)
+  add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
+endif()
+
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};python_valhalla")
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
