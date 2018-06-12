@@ -41,7 +41,7 @@ namespace baldr {
 
 // Default constructor
 GraphTile::GraphTile()
-    : header_(nullptr), nodes_(nullptr), directededges_(nullptr), departures_(nullptr),
+    : header_(nullptr), nodes_(nullptr), directededges_(nullptr), transitions_(nullptr), departures_(nullptr),
       transit_stops_(nullptr), transit_routes_(nullptr), transit_schedules_(nullptr),
       transit_transfers_(nullptr), access_restrictions_(nullptr), signs_(nullptr), admins_(nullptr),
       edge_bins_(nullptr), complex_restriction_forward_(nullptr),
@@ -140,6 +140,10 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   // Set a pointer to the directed edge list
   directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
   ptr += header_->directededgecount() * sizeof(DirectedEdge);
+
+  // Set a pointer to the node transition list
+  transitions_ = reinterpret_cast<NodeTransition*>(ptr);
+  ptr += header_->transitioncount() * sizeof(NodeTransition);
 
   // Set a pointer access restriction list
   access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);

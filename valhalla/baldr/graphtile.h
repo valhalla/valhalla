@@ -13,6 +13,7 @@
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/trafficassociation.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -188,6 +189,38 @@ public:
   GraphId GetOpposingEdgeId(const DirectedEdge* edge) const {
     GraphId endnode = edge->endnode();
     return {endnode.tileid(), endnode.level(), node(endnode.id())->edge_index() + edge->opp_index()};
+  }
+
+  /**
+   * Get a pointer to a node transition.
+   * @param  idx  Index of the directed edge within the current tile.
+   * @return  Returns a pointer to the edge.
+   */
+  const NodeTransition* transition(const size_t idx) const {
+    if (idx < header_->transitioncount())
+      return &transitions_[idx];
+    throw std::runtime_error("GraphTile NodeTransition index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(idx)  + " transitioncount= " +
+                             std::to_string(header_->transitioncount()));
+  }
+
+  /**
+   * Get an iterable set of transitions from a node in this tile
+   * @param  node  GraphId of the node from which the transitions leave
+   * @return returns an iterable collection of node transitions
+   */
+  iterable_t<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
+    if (node.id() < header_->nodecount()) {
+      const auto& nodeinfo = nodes_[node.id()];
+      const auto* trans = transition(nodeinfo.transition_index());
+      return iterable_t<const NodeTransition>{trans, nodeinfo.transition_count()};
+    }
+    throw std::runtime_error(
+        "GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::to_string(node.level()) + "," + std::to_string(node.id()) +
+        " nodecount= " + std::to_string(header_->nodecount()));
   }
 
   /**
@@ -425,6 +458,12 @@ protected:
   // indexed directly.
   DirectedEdge* directededges_;
 
+  // Access restrictions, 1 or more per edge id
+  AccessRestriction* access_restrictions_;
+
+  // List of transitions between nodes on different levels.
+  NodeTransition* transitions_;
+
   // Transit departures, many per index (indexed by directed edge index and
   // sorted by departure time)
   TransitDeparture* departures_;
@@ -440,9 +479,6 @@ protected:
 
   // Transit transfer records.
   TransitTransfer* transit_transfers_;
-
-  // Access restrictions, 1 or more per edge id
-  AccessRestriction* access_restrictions_;
 
   // Signs (indexed by directed edge index)
   Sign* signs_;

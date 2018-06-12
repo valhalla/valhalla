@@ -61,7 +61,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
       GraphId g_id(endnodetile->id().tileid(), endnodetile->id().level(), n_info->edge_index() + j);
 
       if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
-          !(de->IsTransition() || de->IsTransitLine() || de->is_shortcut() ||
+          !(de->IsTransitLine() || de->is_shortcut() ||
             de->use() == Use::kTransitConnection || de->use() == Use::kEgressConnection ||
             de->use() == Use::kPlatformConnection)) {
         // get the edge info offset
@@ -110,6 +110,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
         }
       }
 
+/** TODO - how do we handle transitions to edges at different hierarchy levels
       // if we made it here we need to check transition edges.
       if (j + 1 == n_info->edge_count()) {
         bool bfound = false;
@@ -202,7 +203,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
           }
         }
         break; // while (j < n_info->edge_count())
-      }
+      } **/
       j++;
     }
   }
@@ -266,8 +267,8 @@ void build(const std::string& complex_restriction_file,
       for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
         DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        if (directededge.IsTransition() || directededge.IsTransitLine() ||
-            directededge.is_shortcut() || directededge.use() == Use::kTransitConnection ||
+        if (directededge.IsTransitLine() || directededge.is_shortcut() ||
+            directededge.use() == Use::kTransitConnection ||
             directededge.use() == Use::kEgressConnection ||
             directededge.use() == Use::kPlatformConnection) {
           continue;

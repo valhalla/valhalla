@@ -126,18 +126,6 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
       continue;
     }
 
-    // Transition edges - set opp_index if an opposing transition
-    // edge is found. Continue if either edge is a transition
-    if ((edge.trans_down() && directededge->trans_up()) ||
-        (edge.trans_up() && directededge->trans_down())) {
-      opp_index = i;
-      continue;
-    }
-    if (edge.trans_down() || directededge->trans_down() || edge.trans_up() ||
-        directededge->trans_up()) {
-      continue;
-    }
-
     // Transit connections. Match opposing edge if same way Id
     if (edge.use() == Use::kTransitConnection && directededge->use() == Use::kTransitConnection &&
         wayid == end_tile->edgeinfo(directededge->edgeinfo_offset()).wayid()) {
@@ -238,9 +226,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
 
   // No matching opposing edge found - log error cases
   if (opp_index == absurd_index) {
-    if (edge.IsTransition()) {
-      LOG_ERROR("No match found to a transition edge");
-    } else if (edge.use() == Use::kTransitConnection || edge.use() == Use::kEgressConnection ||
+    if (edge.use() == Use::kTransitConnection || edge.use() == Use::kEgressConnection ||
                edge.use() == Use::kPlatformConnection) {
       // Log error - no opposing edge for a transit connection
       LOG_ERROR("No opposing transit/egress/platform connection edge: endstop = " +
@@ -410,7 +396,7 @@ void validate(
         // Road Length and some variables for statistics
         float edge_length;
         bool valid_length = false;
-        if (!directededge.shortcut() && !directededge.trans_up() && !directededge.trans_down()) {
+        if (!directededge.shortcut()) {
           edge_length = directededge.length();
           roadlength += edge_length;
           valid_length = true;
@@ -434,8 +420,7 @@ void validate(
         // node. Set the deadend flag and internal flag (if the opposing
         // edge is internal then make sure this edge is as well)
         std::string end_node_iso;
-        uint64_t wayid =
-            directededge.IsTransition() ? 0 : tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
+        uint64_t wayid = tile->edgeinfo(directededge.edgeinfo_offset()).wayid();
         uint32_t opp_index =
             GetOpposingEdgeIndex(node, directededge, wayid, tile, endnode_tile, problem_ways,
                                  dupcount, end_node_iso, transit_level);
