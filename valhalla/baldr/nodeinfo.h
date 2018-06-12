@@ -16,7 +16,7 @@ namespace baldr {
 class GraphTile;
 
 constexpr uint32_t kMaxEdgesPerNode = 127;     // Maximum edges per node
-constexpr uint32_t kMaxAdminsPerTile = 63;     // Maximum Admins per tile
+constexpr uint32_t kMaxAdminsPerTile = 4095;   // Maximum Admins per tile
 constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
 constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on
                                                // local level
@@ -323,6 +323,38 @@ public:
   void set_heading(uint32_t localidx, uint32_t heading);
 
   /**
+   * Return the index of the first transition from this node.
+   * @return  Returns the transition index.
+   */
+  uint32_t transition_index() const {
+    return transition_index_;
+  }
+
+  /**
+   * Return the index of the first transition from this node.
+   * @return  Returns the transition index.
+   */
+  void set_transition_index(const uint32_t index) {
+    transition_index_ = index;
+  }
+
+  /**
+   * Return the number of transitions from this node.
+   * @return  Returns the transition count.
+   */
+  uint32_t transition_count() const {
+    return transition_count_;
+  }
+
+  /**
+   * Return the number of transitions from this node.
+   * @return  Returns the transition count.
+   */
+  void set_transition_count(const uint32_t count) {
+    transition_count_ = count;
+  }
+
+  /**
    * Returns the json representation of the object
    * @param tile the tile required to get admin information
    * @return  json object
@@ -333,26 +365,29 @@ protected:
   // Latitude, longitude position of the node.
   std::pair<float, float> latlng_;
 
-  // Node attributes and admin information
-  uint64_t edge_index_ : 21;      // Index within the node's tile of its
+  // Connectivity to edges
+  uint32_t edge_index_ : 21;      // Index within the node's tile of its
                                   // first outbound directed edge
-  uint64_t access_ : 12;          // Access through the node - bit field
-  uint64_t edge_count_ : 7;       // Number of outbound edges (on this level)
-  uint64_t local_edge_count_ : 3; // # of regular edges across all levels
+  uint32_t edge_count_ : 7;       // Number of outbound edges (on this level)
+  uint32_t local_edge_count_ : 3; // # of regular edges across all levels
                                   // (up to kMaxLocalEdgeIndex+1)
-  uint64_t admin_index_ : 6;      // Index into this tile's admin data list
-  uint64_t timezone_ : 9;         // Time zone
-  uint64_t intersection_ : 5;     // Intersection type
-  uint64_t spare_0 : 1;           // maybe add to admin_index?
+  uint32_t mode_change_ : 1;      // Mode change allowed?
 
-  // Node type and additional node attributes
-  uint32_t local_driveability_ : 16; // Driveability for regular edges (up to
-                                     // kMaxLocalEdgeIndex+1 edges)
-  uint32_t density_ : 4;             // Relative road density
-  uint32_t type_ : 4;                // NodeType, see graphconstants
-  uint32_t mode_change_ : 1;         // Mode change allowed?
-  uint32_t traffic_signal_ : 1;      // Traffic signal
-  uint32_t admin_index_ext_ : 6;     // Extended admin index
+  // Access information
+  uint32_t access_ : 12;          // Access through the node - bit field
+  uint32_t timezone_ : 9;         // Time zone
+  uint32_t intersection_ : 5;     // Intersection type
+  uint32_t type_ : 4;             // NodeType, see graphconstants
+
+  uint32_t traffic_signal_ : 1;   // Traffic signal
+  uint32_t spare0_ : 1;
+
+  // Transitions between nodes on different hierarchy levels
+  uint32_t transition_index_ : 21; // Index into the node transitions to the
+                                   // first transition
+  uint32_t transition_count_ : 3;  // Number of transitions from this node
+  uint32_t density_ : 4;           // Relative road density
+  uint32_t spare1_ : 4;
 
   // Transit stop index (for transit level) / name consistency for all
   // other levels
@@ -362,6 +397,9 @@ protected:
   };
   NodeStop stop_;
 
+  // The following data could be split into a separate structure for node data
+  // that is NOT required during path finding
+
   // Connecting way Id (for transit level) / headings of up to
   // kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
   // for all other levels.
@@ -370,6 +408,12 @@ protected:
     uint64_t headings_;
   };
   WayHeading way_heading_;
+
+  // Admin index and driveability
+  uint64_t local_driveability_ : 16; // Driveability for regular edges (up to
+                                     // kMaxLocalEdgeIndex+1 edges)
+  uint64_t admin_index_ : 12;        // Index into this tile's admin data list
+  uint64_t spare2_ : 36;
 };
 
 } // namespace baldr
