@@ -1001,50 +1001,6 @@ public:
   void set_superseded(const uint32_t superseded);
 
   /**
-   * Does this edge represent a transition up one level in the hierarchy.
-   * Transition edges move between nodes in different levels of the
-   * hierarchy but have no length or other attribution. An upward transition
-   * is a transition from a minor road hierarchy (local) to more major
-   * (arterial).
-   * @return  Returns true if the edge is a transition from a lower level
-   *          to a higher (false if not).
-   */
-  bool trans_up() const {
-    return (use() == Use::kTransitionUp);
-  }
-
-  /**
-   * Set the use indicating this edge represents a transition up one level
-   * in the hierarchy. Transition edges move between nodes in different levels
-   * of the hierarchy but have no length or other attribution. An upward
-   * transition is a transition from a minor road hierarchy (local) to more
-   * major (arterial).
-   */
-  void set_trans_up();
-
-  /**
-   * Does this edge represent a transition down one level in the hierarchy.
-   * Transition edges move between nodes in different levels of the
-   * hierarchy but have no length or other attribution. An downward transition
-   * is a transition from a major road hierarchy (highway) to more minor
-   * (arterial).
-   * @return  Returns true if the edge is a transition from an upper level
-   *          to a lower (false if not).
-   */
-  bool trans_down() const {
-    return (use() == Use::kTransitionDown);
-  }
-
-  /**
-   * Set the use indicating this edge represents a transition down one level
-   * in the hierarchy. Transition edges move between nodes in different levels
-   * of the hierarchy but have no length or other attribution. A downward
-   * transition is a transition from a major road hierarchy (highway) to more
-   * minor (arterial).
-   */
-  void set_trans_down();
-
-  /**
    * Is this edge a shortcut edge. If there are more than kMaxShortcutsFromNode
    * shortcuts no mask is set but this flag is set to true.
    * @return  Returns true if this edge is a shortcut.
@@ -1070,14 +1026,6 @@ public:
    *                      itself).
    */
   void set_leaves_tile(const bool leaves_tile);
-
-  /**
-   * Returns true if the edge is a transition edge either up or down
-   * @return true if the edge is a transition edge either up or down
-   */
-  bool IsTransition() const {
-    return use() == Use::kTransitionUp || use() == Use::kTransitionDown;
-  }
 
   /**
    * Create a json object representing this edge
