@@ -75,7 +75,7 @@ public:
     return (node->access() & kAutoAccess);
   }
 
-  Cost EdgeCost(const DirectedEdge* edge, const uint64_t speed) const {
+  Cost EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }

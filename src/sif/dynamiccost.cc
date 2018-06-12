@@ -46,7 +46,7 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Get the cost to traverse the specified directed edge and gather/pass
 // the speed along for use within costing in the PathAlgorithm. Cost
 // includes the time (seconds) to traverse the edge.
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const uint64_t speed) const {
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
   return {0.0f, 0.0f};
 }
 

@@ -43,7 +43,7 @@ public:
     return true;
   }
 
-  sif::Cost EdgeCost(const baldr::DirectedEdge* edge, const uint64_t speed) const override {
+  sif::Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const override {
     float length = edge->length();
     return {length, length};
   }

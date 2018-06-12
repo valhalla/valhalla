@@ -283,7 +283,7 @@ public:
                       const uint64_t current_time,
                       const uint32_t tz_index) const;
   bool Allowed(const vb::NodeInfo* node) const;
-  vs::Cost EdgeCost(const vb::DirectedEdge* edge, const uint64_t speed) const;
+  vs::Cost EdgeCost(const vb::DirectedEdge* edge, const uint32_t speed) const;
   const vs::EdgeFilter GetEdgeFilter() const;
   const vs::NodeFilter GetNodeFilter() const;
   float AStarCostFactor() const;
@@ -325,7 +325,7 @@ bool DistanceOnlyCost::Allowed(const vb::NodeInfo*) const {
   return true;
 }
 
-vs::Cost DistanceOnlyCost::EdgeCost(const vb::DirectedEdge* edge, const uint64_t speed) const {
+vs::Cost DistanceOnlyCost::EdgeCost(const vb::DirectedEdge* edge, const uint32_t speed) const {
   float edge_len(edge->length());
   return {edge_len, edge_len};
 }
