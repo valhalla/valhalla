@@ -90,15 +90,6 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->IsTransition()) {
-      if (!from_transition) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
-      }
-      continue;
-    }
-
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
@@ -132,6 +123,14 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
                              distance);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
+  }
+
+  // Handle transitions - expand from the end node each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+    }
   }
 }
 
@@ -244,15 +243,6 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->IsTransition()) {
-      if (!from_transition) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, true);
-      }
-      continue;
-    }
-
     // Get opposing edge Id and end node tile
     const GraphTile* t2 =
         directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
@@ -293,6 +283,14 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
                              distance);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
+  }
+
+  // Handle transitions - expand from the end node each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, true);
+    }
   }
 }
 

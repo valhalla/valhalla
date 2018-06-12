@@ -100,6 +100,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
                                      GraphReader& graphreader,
                                      const std::shared_ptr<DynamicCost>* mode_costing,
                                      const TravelMode mode) {
+#ifdef TODO_NO_TRANSITIONS
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -514,6 +515,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
       adjacencylist_->add(idx);
     }
   }
+#endif
   return {}; // Should never get here
 }
 
@@ -665,6 +667,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
                                                   GraphReader& graphreader,
                                                   const TravelMode dest_mode,
                                                   const std::shared_ptr<DynamicCost>& costing) {
+#ifdef TODO_NO_TRANSITIONS
   // Assume pedestrian mode for now
   mode_ = dest_mode;
 
@@ -782,6 +785,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
       label_idx++;
     }
   }
+#endif
   return false;
 }
 

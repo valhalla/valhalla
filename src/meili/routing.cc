@@ -4,6 +4,7 @@
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/nodetransition.h"
 #include "baldr/pathlocation.h"
 #include "midgard/distanceapproximator.h"
 #include "sif/costconstants.h"
@@ -397,15 +398,6 @@ find_shortest_path(baldr::GraphReader& reader,
         continue;
       }
 
-      // Immediately expand from end node of transition edges unless expand is
-      // called from a transition edge (disallow 2 successive transition edges)
-      if (directededge->IsTransition()) {
-        if (!from_transition) {
-          expand(directededge->endnode(), label_idx, true);
-        }
-        continue;
-      }
-
       // Skip it if its not allowed
       if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile)) {
         continue;
@@ -459,6 +451,14 @@ find_shortest_path(baldr::GraphReader& reader,
           labelset->put(directededge->endnode(), edgeid, 0.0f, 1.0f, cost, turn_cost, sortcost,
                         label_idx, directededge, travelmode);
         }
+      }
+    }
+
+    // Handle transitions - expand from the end node each transition
+    if (!from_transition && nodeinfo->transition_count() > 0) {
+      const baldr::NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+      for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+        expand(trans->endnode(), label_idx, true);
       }
     }
   };

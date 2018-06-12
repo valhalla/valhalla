@@ -123,22 +123,6 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_forward_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end node of the transition
-    // (unless this is called from a transition).
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        hierarchy_limits_forward_[node.level()].up_transition_count++;
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition &&
-          !hierarchy_limits_forward_[directededge->endnode().level()].StopExpanding()) {
-        ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true);
-      }
-      continue;
-    }
-
     // Skip this edge if edge is permanently labeled (best path already
     // found to this directed edge), if edge is superseded by a shortcut
     // edge that was taken, if no access is allowed (based on costing method),
@@ -195,6 +179,19 @@ void BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     adjacencylist_forward_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
   }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (trans->up()) {
+        hierarchy_limits_forward_[node.level()].up_transition_count++;
+        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+      } else if (!hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) {
+        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+      }
+    }
+  }
 }
 
 // Expand from a node in reverse direction.
@@ -221,22 +218,6 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
   EdgeStatusInfo* es = edgestatus_reverse_.GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(edgeid);
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++es) {
-    // Handle transition edges - expand from the end not of the transition
-    // unless this is called from a transition.
-    if (directededge->trans_up()) {
-      if (!from_transition) {
-        hierarchy_limits_reverse_[node.level()].up_transition_count++;
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true);
-      }
-      continue;
-    } else if (directededge->trans_down()) {
-      if (!from_transition &&
-          !hierarchy_limits_reverse_[directededge->endnode().level()].StopExpanding()) {
-        ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true);
-      }
-      continue;
-    }
-
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access for this mode, or if edge is superseded
     // by a shortcut edge that was taken.
@@ -302,6 +283,21 @@ void BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     adjacencylist_reverse_->add(idx);
     *es = {EdgeSet::kTemporary, idx};
   }
+
+  // Handle transitions - expand from the end node of each transition
+  if (!from_transition && nodeinfo->transition_count() > 0) {
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
+      if (trans->up()) {
+        hierarchy_limits_reverse_[node.level()].up_transition_count++;
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx,
+                   opp_pred_edge, true);
+      } else if (!hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) {
+        ExpandReverse(graphreader, trans->endnode(), pred, pred_idx,
+                              opp_pred_edge, true);
+      }
+    }
+  }
 }
 
 // Calculate best path using bi-directional A*. No hierarchies or time
@@ -348,8 +344,7 @@ BidirectionalAStar::GetBestPath(odin::Location& origin,
     }
     n++;
 
-    // Get the next predecessor (based on which direction was
-    // expanded in prior step)
+    // Get the next predecessor
     if (expand_forward) {
       forward_pred_idx = adjacencylist_forward_->pop();
       if (forward_pred_idx != kInvalidLabel) {
@@ -407,8 +402,7 @@ BidirectionalAStar::GetBestPath(odin::Location& origin,
 
     // Expand from the search direction with lower sort cost.
     if ((fwd_pred.sortcost() + cost_diff_) < rev_pred.sortcost()) {
-      // Expand forward - set to get next edge from forward adj. list
-      // on the next pass
+      // Expand forward - set to get next edge from forward adj. list on the next pass
       expand_forward = true;
       expand_reverse = false;
 
