@@ -297,9 +297,10 @@ public:
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -637,7 +638,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
-Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * speedfactor_[1]);
@@ -647,7 +648,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
-    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    float sec = (edge->length() * speedfactor_[speed]);
     return {sec * ferry_factor_, sec};
   }
 
@@ -668,7 +669,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   float accommodation_factor = 1.0f;
 
   // Special use cases: cycleway, footway, and path
-  uint32_t road_speed = static_cast<uint32_t>(edge->speed() + 0.5f);
+  uint32_t road_speed = static_cast<uint32_t>(speed + 0.5f);
   if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
 
     // Differentiate how segregated the way is from pedestrians

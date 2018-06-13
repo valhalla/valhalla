@@ -426,7 +426,8 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
           continue;
         }
 
-        Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge);
+        Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge,
+                                                                      tile->GetSpeed(directededge));
         c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
         newcost += c;
 
@@ -552,7 +553,8 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing->EdgeCost(directededge) * (1.0f - edge.percent_along());
+    Cost cost =
+        costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -575,9 +577,10 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
-            Cost dest_cost =
-                costing->EdgeCost(tile->directededge(GraphId(destination_edge.graph_id()))) *
-                (1.0f - destination_edge.percent_along());
+            const DirectedEdge* dest_diredge =
+                tile->directededge(GraphId(destination_edge.graph_id()));
+            Cost dest_cost = costing->EdgeCost(dest_diredge, tile->GetSpeed(dest_diredge)) *
+                             (1.0f - destination_edge.percent_along());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
             cost.cost += destination_edge.distance();
@@ -644,8 +647,9 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
     // up to the end of the destination edge.
     GraphId id(edge.graph_id());
     const GraphTile* tile = graphreader.GetGraphTile(id);
+    const DirectedEdge* dest_diredge = tile->directededge(id);
     destinations_[edge.graph_id()] =
-        costing->EdgeCost(tile->directededge(id)) * (1.0f - edge.percent_along());
+        costing->EdgeCost(dest_diredge, tile->GetSpeed(dest_diredge)) * (1.0f - edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -693,7 +697,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
     const GraphTile* tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
-    Cost cost = costing->EdgeCost(diredge) * ratio;
+    Cost cost = costing->EdgeCost(diredge, tile->GetSpeed(diredge)) * ratio;
     edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, 0.0f, mode_, length);
     adjlist.add(label_idx);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx, tile);
@@ -760,7 +764,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const odin::Location& destinat
       }
 
       // Get cost
-      Cost newcost = pred.cost() + costing->EdgeCost(directededge) +
+      Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile->GetSpeed(directededge)) +
                      costing->TransitionCost(directededge, nodeinfo, pred);
       uint32_t walking_distance = pred.path_distance() + directededge->length();
 

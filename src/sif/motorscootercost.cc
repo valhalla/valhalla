@@ -245,9 +245,10 @@ public:
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -500,18 +501,18 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return opp_edge->surface() <= kMinimumScooterSurface;
 }
 
-Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
 
   if (edge->use() == Use::kFerry) {
-    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    float sec = (edge->length() * speedfactor_[speed]);
     return {sec * ferry_factor_, sec};
   }
 
-  uint32_t scooter_speed = (std::min(top_speed_, edge->speed()) *
-                            kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
-                            kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
+  uint32_t scooter_speed =
+      (std::min(top_speed_, speed) * kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
+       kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
 
-  float speed_penalty = (edge->speed() > top_speed_) ? (edge->speed() - top_speed_) * 0.05f : 0.0f;
+  float speed_penalty = (speed > top_speed_) ? (speed - top_speed_) * 0.05f : 0.0f;
   float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
                  (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
                  grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] + speed_penalty;
