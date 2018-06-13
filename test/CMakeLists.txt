@@ -123,7 +123,22 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   set(python_tests python_valhalla)
 endif()
 
+if(ENABLE_NODE_BINDINGS)
+  find_package(Node)
+  add_custom_command(OUTPUT node_valhalla.out
+    COMMAND
+      /bin/bash -c "node --expose-gc ${VALHALLA_SOURCE_DIR}/test/nodejs/route.test.js > test/node_valhalla.out"
+    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+    DEPENDS
+      copy_node_artifacts
+      ${VALHALLA_SOURCE_DIR}/test/nodejs/route.test.js
+      ${VALHALLA_SOURCE_DIR}/test/nodejs/fixtures/basic_config.json
+      ${VALHALLA_SOURCE_DIR}/test/traffic_matcher_tiles
+    VERBATIM)
+  add_custom_target(run-node_valhalla DEPENDS node_valhalla.out)
+endif()
+
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${python_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${python_tests};node_valhalla")
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
