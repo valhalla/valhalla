@@ -4,13 +4,13 @@
 #include <string>
 #include <vector>
 
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/autocost.h"
 #include "thor/astar.h"
 #include "thor/worker.h"
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla::thor;
 using namespace valhalla::sif;
@@ -20,7 +20,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::tyr;
 
 namespace {
-
 
 boost::property_tree::ptree json_to_pt(const std::string& json) {
   std::stringstream ss;
@@ -115,8 +114,10 @@ const auto config = json_to_pt(R"({
 
 } // namespace
 
-
-void try_path(GraphReader& reader, loki_worker_t& loki_worker, const char* test_request, const uint32_t expected_edgecount) {
+void try_path(GraphReader& reader,
+              loki_worker_t& loki_worker,
+              const char* test_request,
+              const uint32_t expected_edgecount) {
   valhalla::valhalla_request_t request;
   request.parse(test_request, valhalla::odin::DirectionsOptions::route);
   loki_worker.route(request);
@@ -134,7 +135,8 @@ void try_path(GraphReader& reader, loki_worker_t& loki_worker, const char* test_
   valhalla::odin::Location dest = request.options.locations(1);
   auto pathedges = astar.GetBestPath(origin, dest, reader, mode_costing, mode);
   if (pathedges.size() != expected_edgecount) {
-    throw std::runtime_error("Trivial path failed: expected edges: " + std::to_string(expected_edgecount));
+    throw std::runtime_error("Trivial path failed: expected edges: " +
+                             std::to_string(expected_edgecount));
   }
 }
 
@@ -159,8 +161,8 @@ void test_trivial_paths() {
                {"lat":52.078882,"lon":5.1104848}],"costing":"auto"})";
   try_path(reader, loki_worker, test_request3, 1);
 
-  // Simple path along two way edge (opposite direction to request 3) - should edge opposing the driveable direction -must not
-  // return a single edge
+  // Simple path along two way edge (opposite direction to request 3) - should edge opposing the
+  // driveable direction -must not return a single edge
   const auto test_request4 = R"({"locations":[{"lat":52.078882,"lon":5.1104848},
                {"lat":52.0785070,"lon":5.110835}],"costing":"auto"})";
   try_path(reader, loki_worker, test_request4, 1);
@@ -168,7 +170,7 @@ void test_trivial_paths() {
 
 int main(int argc, char* argv[]) {
   test::suite suite("trivial_paths");
- // logging::Configure({{"type", ""}}); // silence logs
+  // logging::Configure({{"type", ""}}); // silence logs
 
   suite.test(TEST_CASE(test_trivial_paths));
 

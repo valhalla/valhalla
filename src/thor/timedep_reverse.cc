@@ -449,7 +449,6 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // edge (edgeid) is set.
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
     uint32_t idx = edgelabels_rev_.size();
-//    edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, c, false);
     adjacencylist_->add(idx);
