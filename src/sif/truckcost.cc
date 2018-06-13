@@ -191,9 +191,10 @@ public:
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -511,7 +512,7 @@ bool TruckCost::Allowed(const baldr::NodeInfo* node) const {
 }
 
 // Get the cost to traverse the edge in seconds
-Cost TruckCost::EdgeCost(const DirectedEdge* edge) const {
+Cost TruckCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
 
   float factor = density_factor_[edge->density()];
 
@@ -523,7 +524,7 @@ Cost TruckCost::EdgeCost(const DirectedEdge* edge) const {
   if (edge->truck_speed() > 0) {
     sec = (edge->length() * speedfactor_[edge->truck_speed()]);
   } else {
-    sec = (edge->length() * speedfactor_[edge->speed()]);
+    sec = (edge->length() * speedfactor_[speed]);
   }
 
   return {sec * factor, sec};
