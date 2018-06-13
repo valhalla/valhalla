@@ -560,7 +560,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
   // Add signs
   for (; found < count && signs_[found].edgeindex() == idx; ++found) {
     if (signs_[found].text_offset() < textlist_size_) {
-      signs.emplace_back(signs_[found].type(), (textlist_ + signs_[found].text_offset()));
+      signs.emplace_back(signs_[found].type(), signs_[found].is_route_num(), (textlist_ + signs_[found].text_offset()));
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
     }
