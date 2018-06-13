@@ -20,23 +20,20 @@
 #include <valhalla/proto/trippath.pb.h>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
-using namespace valhalla::midgard;
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace odin {
 
-odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config) {
+OdinWorker::OdinWorker(const boost::property_tree::ptree& config) {
 }
 
-odin_worker_t::~odin_worker_t() {
+OdinWorker::~OdinWorker() {
 }
 
-void odin_worker_t::cleanup() {
+void OdinWorker::cleanup() {
 }
 
-std::list<TripDirections> odin_worker_t::narrate(const valhalla_request_t& request,
+std::list<TripDirections> OdinWorker::narrate(const valhalla_request_t& request,
                                                  std::list<TripPath>& legs) const {
   // get some annotated directions
   std::list<TripDirections> narrated;
@@ -50,7 +47,7 @@ std::list<TripDirections> odin_worker_t::narrate(const valhalla_request_t& reque
 }
 
 #ifdef HAVE_HTTP
-worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job,
+worker_t::result_t OdinWorker::work(const std::list<zmq::message_t>& job,
                                        void* request_info,
                                        const std::function<void()>& interrupt_function) {
   auto& info = *static_cast<http_request_info_t*>(request_info);
@@ -98,7 +95,7 @@ void run_service(const boost::property_tree::ptree& config) {
   zmq::context_t context;
   prime_server::worker_t worker(context, upstream_endpoint, "ipc:///dev/null", loopback_endpoint,
                                 interrupt_endpoint,
-                                std::bind(&odin_worker_t::work, odin_worker_t(config),
+                                std::bind(&OdinWorker::work, OdinWorker(config),
                                           std::placeholders::_1, std::placeholders::_2,
                                           std::placeholders::_3));
   worker.work();

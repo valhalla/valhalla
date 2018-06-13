@@ -32,7 +32,7 @@ struct actor_t::pimpl_t {
   }
   loki::loki_worker_t loki_worker;
   thor::thor_worker_t thor_worker;
-  odin::odin_worker_t odin_worker;
+  odin::OdinWorker odin_worker;
 };
 
 actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup)

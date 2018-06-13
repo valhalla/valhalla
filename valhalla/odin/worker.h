@@ -13,10 +13,10 @@ namespace odin {
 void run_service(const boost::property_tree::ptree& config);
 #endif
 
-class odin_worker_t : public service_worker_t {
+class OdinWorker : public service_worker_t {
 public:
-  odin_worker_t(const boost::property_tree::ptree& config);
-  virtual ~odin_worker_t();
+  OdinWorker(const boost::property_tree::ptree& config);
+  virtual ~OdinWorker();
 #ifdef HAVE_HTTP
   virtual worker_t::result_t work(const std::list<zmq::message_t>& job,
                                   void* request_info,
