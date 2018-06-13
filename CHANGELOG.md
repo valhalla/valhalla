@@ -1,4 +1,8 @@
 ## Release Date: UNRELEASED Valhalla 3.0
+* **Infrastructure**:
+   * 
+* **Data Producer Update**
+   * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:
