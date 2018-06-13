@@ -612,7 +612,8 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_->add(idx);
-    edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
+
+    // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }
 
   // Set the origin timezone
