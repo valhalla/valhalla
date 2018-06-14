@@ -1150,7 +1150,7 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
   }
 }
 
-json::ArrayPtr grades(const std::list<valhalla::odin::TripPath>& trip_paths) {
+json::ArrayPtr grades(const std::list<valhalla::odin::TripPath> trip_paths) {
   auto grades = json::array({});
 
   for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
@@ -1162,7 +1162,7 @@ json::ArrayPtr grades(const std::list<valhalla::odin::TripPath>& trip_paths) {
       grades_summary->emplace("distance", json::fp_t{edge.length(), 3});
 
       grades->emplace_back(grades_summary);
-     }
+    }
   }
 
   return grades;
