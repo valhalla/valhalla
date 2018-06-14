@@ -67,4 +67,5 @@ message DirectionsOptions {
   optional string date_time = 18;                   // And what day and time
   repeated Location shape = 19;                     // Raw shape for map matching
   optional double resample_distance = 20;           // Resampling shape at regular intervals
+  optional bool grades = 21 [default = false];      // Get elevation information
 }

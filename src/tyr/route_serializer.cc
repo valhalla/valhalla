@@ -1150,7 +1150,8 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
   }
 }
 
-json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs) {
+json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
+                    const std::map<int, bool> direction_map) {
 
   // TODO: multiple legs.
   auto legs = json::array({});
@@ -1312,6 +1313,8 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       if (maneuver.has_roundabout_exit_count()) {
         man->emplace("roundabout_exit_count",
                      static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+
+        man->emplace("counter_clockwise", static_cast<bool>(direction_map.at(maneuver.begin_shape_index())));
       }
 
       // Depart and arrive instructions
@@ -1458,24 +1461,59 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
   return legs;
 }
 
-std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                      const std::list<valhalla::odin::TripDirections>& directions_legs) {
-  // build up the json object
-  auto json = json::map(
-      {{"trip", json::map({{"locations", locations(directions_legs)},
-                           {"summary", summary(directions_legs)},
-                           {"legs", legs(directions_legs)},
-                           {"status_message",
-                            string("Found route between points")}, // found route between points OR
-                                                                   // cannot find route between points
-                           {"status", static_cast<uint64_t>(0)},   // 0 success
-                           {"units", valhalla::odin::DirectionsOptions::Units_Name(
-                                         directions_options.units())},
-                           {"language", directions_options.language()}})}});
-  if (directions_options.has_id()) {
-    json->emplace("id", directions_options.id());
+json::ArrayPtr grades(const std::list<valhalla::odin::TripPath>& trip_paths) {
+  auto grades = json::array({});
+
+  for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
+    for (int i = 0; i < path->node_size(); i++) {
+      auto edge = path->node(i).edge();
+
+      auto grades_summary = json::map({});
+      grades_summary->emplace("grade", json::fp_t{edge.weighted_grade(), 3});
+      grades_summary->emplace("distance", json::fp_t{edge.length(), 3});
+
+      grades->emplace_back(grades_summary);
+     }
   }
 
+  return grades;
+}
+
+std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
+                      const std::list<valhalla::odin::TripDirections>& directions_legs,
+                      const std::list<valhalla::odin::TripPath>& trip_paths) {
+  // build up the json object
+
+  std::map<int, bool> direction_map;
+
+  for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
+    for (auto node: path->node()) {
+      auto edge = node.edge();
+
+      if (edge.roundabout())
+        direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});    }
+  }
+
+  auto json = json::map
+  ({
+    {"trip", json::map
+       ({
+        {"locations", locations(directions_legs)},
+        {"summary", summary(directions_legs)},
+        {"legs", legs(directions_legs, direction_map)},
+        {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
+        {"status", static_cast<uint64_t>(0)}, //0 success
+        {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
+        {"language", directions_options.language()}
+      })
+    }
+  });
+
+  if (directions_options.grades())
+    json->emplace("grades", grades(trip_paths));
+
+  if (directions_options.has_id())
+    json->emplace("id", directions_options.id());
   std::stringstream ss;
   ss << *json;
   return ss.str();
@@ -2281,7 +2319,7 @@ std::string serializeDirections(const valhalla_request_t& request,
     case DirectionsOptions_Format_gpx:
       return pathToGPX(path_legs);
     case DirectionsOptions_Format_json:
-      return valhalla_serializers::serialize(request.options, directions_legs);
+      return (valhalla_serializers::serialize(request.options, directions_legs, path_legs));
     default:
       throw;
   }
