@@ -8,9 +8,10 @@ valhalla_module(NAME tyr
     height_serializer.cc
     locate_serializer.cc
     route_serializer.cc
+    route_serializer_valhalla.cc
+    route_serializer_osrm.cc
     transit_available_serializer.cc
     trace_serializer.cc
-    navigator.cc
     actor.cc
   HEADERS
     ${headers}

@@ -30,6 +30,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
+# colorize output
+include(CheckCXXCompilerFlag)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set(COLOR_FLAG "-fdiagnostics-color=auto")
+  check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
+  if(NOT HAS_COLOR_FLAG)
+    set(COLOR_FLAG "")
+  endif()
+  # using GCC
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COLOR_FLAG}")
+endif()
+
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
@@ -155,33 +169,8 @@ add_subdirectory(test)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
-  find_package(PythonInterp)
-  find_package(PythonLibs)
-  if(${PYTHON_VERSION_MAJOR} EQUAL 3)
-    set(Boost_Python_lib "Boost::python${PYTHON_VERSION_MAJOR}")
-    set(_Boost_PYTHON${PYTHON_VERSION_MAJOR}_HEADERS "boost/python.hpp")
-    find_package(Boost COMPONENTS python${PYTHON_VERSION_MAJOR})
-  else()
-    set(Boost_Python_lib "Boost::python")
-    find_package(Boost COMPONENTS python)
-  endif()
-  python_add_module(python_valhalla src/bindings/python/python.cc)
-  set_target_properties(python_valhalla PROPERTIES
-    OUTPUT_NAME valhalla
-    LINK_LIBRARIES "${PYTHON_LIBRARIES}"
-    INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIRS}")
-  target_link_libraries(python_valhalla valhalla ${Boost_Python_lib})
-  set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  add_subdirectory(src/bindings/python)
 
-  execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}" -c "
-from distutils import sysconfig as sc
-print(sc.get_python_lib(prefix='', plat_specific=True))"
-    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  install(TARGETS python_valhalla
-    DESTINATION "${PYTHON_SITE_PACKAGES}"
-    COMPONENT python)
   install(FILES COPYING ChangeLog
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
