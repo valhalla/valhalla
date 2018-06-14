@@ -1168,24 +1168,6 @@ json::ArrayPtr grades(const std::list<valhalla::odin::TripPath> trip_paths) {
   return grades;
 }
 
-json::ArrayPtr grades(const std::list<valhalla::odin::TripPath>& trip_paths) {
-  auto grades = json::array({});
-
-  for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
-    for (int i = 0; i < path->node_size(); i++) {
-      auto edge = path->node(i).edge();
-
-      auto grades_summary = json::map({});
-      grades_summary->emplace("grade", json::fp_t{edge.weighted_grade(), 3});
-      grades_summary->emplace("distance", json::fp_t{edge.length(), 3});
-
-      grades->emplace_back(grades_summary);
-     }
-  }
-
-  return grades;
-}
-
 json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
                     const std::map<int, bool> direction_map,
                     const std::map<int, std::vector<uint32_t>> angles_map) {
