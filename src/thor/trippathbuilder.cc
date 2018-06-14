@@ -764,6 +764,8 @@ TripPathBuilder::Build(const AttributesController& controller,
   sif::TravelMode prev_mode = sif::TravelMode::kPedestrian;
   uint64_t osmchangeset = 0;
   size_t edge_index = 0;
+  std::vector<uint32_t> roundabout_edges_id;
+  std::vector<uint32_t> roundabout_edges_length;
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr, ++edge_index) {
@@ -1003,6 +1005,95 @@ TripPathBuilder::Build(const AttributesController& controller,
     TripPath_Edge* trip_edge =
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, directededge, trip_node,
                     graphtile, current_time, length_pct);
+
+    // Verifying whether a directededge is a roundabout
+    // and it is not within the vector of roundabout_edges_id
+    if (directededge->roundabout() && !(std::find(roundabout_edges_id.begin(), roundabout_edges_id.end(), directededge->endnode().id()) != roundabout_edges_id.end())) {
+      float total_length = directededge->length();
+      roundabout_edges_length.push_back(directededge->length());
+      roundabout_edges_id.push_back(directededge->endnode().id());
+
+      //   \___ 
+      //  _/   \_
+      // A \___/
+      //       \B
+
+      // Consider this roundabout,
+      // where the path within the roundabout is from A to B
+      // to get the missing roundabout exits which will not be passed around
+      // the algorithm must iterate through each edge for each node within the roundabout
+      // until it has reached the first edge of the roundabout
+
+      // This will be done by going through each edge and finding its
+      // end node, which will then be used to find the adjacent edge,
+      // and repeat until you have found all the edges
+      uint32_t current_index = edge.id();
+      const DirectedEdge* current_directed_edge = graphtile->directededge(current_index);
+      GraphId endnode = current_directed_edge->endnode();
+      auto nodeinfo = graphreader.nodeinfo(endnode);
+      bool found_all_roundabout_exits = false;
+      uint32_t length = 0;
+      bool has_no_intersection = false;
+
+      do {
+
+        // Sometimes there will be edges
+        // that does not have an intersection
+        // since we want the distance between each roundabout exit
+        // we would add this distance to length
+        if (nodeinfo->edge_count() == 2) {
+          length += current_directed_edge->length();
+          has_no_intersection = true;
+        }
+
+        // Going through each edge within a node, 
+        // until the next roundabout edge is found
+        for (int i = 0; i < nodeinfo->edge_count(); i++) {
+
+          current_index = nodeinfo->edge_index() + i;
+
+          current_directed_edge = graphtile->directededge(current_index);
+
+          if (current_directed_edge->roundabout() && !(std::find(roundabout_edges_id.begin(), roundabout_edges_id.end(), current_directed_edge->endnode().id()) != roundabout_edges_id.end())) {
+            roundabout_edges_id.push_back(current_directed_edge->endnode().id());
+
+            if (has_no_intersection) {
+              if (roundabout_edges_length.back() != 0) {
+                total_length -= roundabout_edges_length.back();
+                roundabout_edges_length.back() = current_directed_edge->length() + length;
+                total_length += roundabout_edges_length.back();
+              }
+
+              length = 0;
+              has_no_intersection = false;
+            } else if (length == 0) {
+              roundabout_edges_length.push_back(current_directed_edge->length());
+              total_length += roundabout_edges_length.back();
+            }
+
+            break;
+          }
+
+          if (roundabout_edges_id.size() > 1 && (directededge->endnode().id() == current_directed_edge->endnode().id())) {
+            found_all_roundabout_exits = true;
+            break;
+          }
+        }
+
+        endnode = current_directed_edge->endnode();
+
+        nodeinfo = graphreader.nodeinfo(endnode);
+      } while (!found_all_roundabout_exits);
+
+      uint32_t accumulated_length = 0;
+
+      for (auto exit_length: roundabout_edges_length) {
+        accumulated_length += exit_length;
+        trip_edge->add_roundabout_exit_angles((accumulated_length/total_length) * 360);
+      }
+
+      roundabout_edges_length.clear();
+    }
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).

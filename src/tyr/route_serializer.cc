@@ -1149,9 +1149,28 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
     }
   }
 }
+ 
+json::ArrayPtr grades(const std::list<valhalla::odin::TripPath> trip_paths) {
+  auto grades = json::array({});
+
+  for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
+    for (int i = 0; i < path->node_size(); i++) {
+      auto edge = path->node(i).edge();
+
+      auto grades_summary = json::map({});
+      grades_summary->emplace("grade", json::fp_t{edge.weighted_grade(), 3});
+      grades_summary->emplace("distance", json::fp_t{edge.length(), 3});
+
+      grades->emplace_back(grades_summary);
+    }
+  }
+
+  return grades;
+}
 
 json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
-                    const std::map<int, bool> direction_map) {
+                    const std::map<int, bool> direction_map,
+                    const std::map<int, std::vector<uint32_t>> angles_map) {
 
   // TODO: multiple legs.
   auto legs = json::array({});
@@ -1315,6 +1334,16 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
                      static_cast<uint64_t>(maneuver.roundabout_exit_count()));
 
         man->emplace("counter_clockwise", static_cast<bool>(direction_map.at(maneuver.begin_shape_index())));
+      
+        std::vector<uint32_t> angles = angles_map.at(maneuver.begin_shape_index());
+
+        auto roundabout_exit_angles_json = json::array({});
+
+        for (int i = 0; i < angles.size(); i++) {
+          roundabout_exit_angles_json->emplace_back(static_cast<uint64_t>(angles.at(i)));
+        }
+
+        man->emplace("roundabout_exit_angle", roundabout_exit_angles_json);
       }
 
       // Depart and arrive instructions
@@ -1461,30 +1490,14 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
   return legs;
 }
 
-json::ArrayPtr grades(const std::list<valhalla::odin::TripPath>& trip_paths) {
-  auto grades = json::array({});
-
-  for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
-    for (int i = 0; i < path->node_size(); i++) {
-      auto edge = path->node(i).edge();
-
-      auto grades_summary = json::map({});
-      grades_summary->emplace("grade", json::fp_t{edge.weighted_grade(), 3});
-      grades_summary->emplace("distance", json::fp_t{edge.length(), 3});
-
-      grades->emplace_back(grades_summary);
-     }
-  }
-
-  return grades;
-}
-
 std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
                       const std::list<valhalla::odin::TripDirections>& directions_legs,
                       const std::list<valhalla::odin::TripPath>& trip_paths) {
   // build up the json object
 
   std::map<int, bool> direction_map;
+  std::map<int, std::vector<uint32_t>> angles_map;
+
 
   for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
     for (auto node: path->node()) {
@@ -1492,6 +1505,16 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
 
       if (edge.roundabout())
         direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});
+
+      if (edge.roundabout_exit_angles_size() > 0) {
+        std::vector<uint32_t> angles;
+
+        for (auto angle: edge.roundabout_exit_angles()) {
+          angles.push_back(angle);
+        }
+
+        angles_map.insert({edge.begin_shape_index(), angles});
+      }
     }
   }
 
@@ -1501,7 +1524,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
        ({
         {"locations", locations(directions_legs)},
         {"summary", summary(directions_legs)},
-        {"legs", legs(directions_legs, direction_map)},
+        {"legs", legs(directions_legs, direction_map, angles_map)},
         {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
         {"status", static_cast<uint64_t>(0)}, //0 success
         {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
