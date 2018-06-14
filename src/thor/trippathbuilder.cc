@@ -1013,7 +1013,7 @@ TripPathBuilder::Build(const AttributesController& controller,
       roundabout_edges_length.push_back(directededge->length());
       roundabout_edges_id.push_back(directededge->endnode().id());
 
-      //   \___ 
+      //   \___
       //  _/   \_
       // A \___/
       //       \B
@@ -1046,7 +1046,7 @@ TripPathBuilder::Build(const AttributesController& controller,
           has_no_intersection = true;
         }
 
-        // Going through each edge within a node, 
+        // Going through each edge within a node,
         // until the next roundabout edge is found
         for (int i = 0; i < nodeinfo->edge_count(); i++) {
 

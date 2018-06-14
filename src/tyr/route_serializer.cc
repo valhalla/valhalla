@@ -1149,7 +1149,7 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
     }
   }
 }
- 
+
 json::ArrayPtr grades(const std::list<valhalla::odin::TripPath> trip_paths) {
   auto grades = json::array({});
 
@@ -1334,7 +1334,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
                      static_cast<uint64_t>(maneuver.roundabout_exit_count()));
 
         man->emplace("counter_clockwise", static_cast<bool>(direction_map.at(maneuver.begin_shape_index())));
-      
+
         std::vector<uint32_t> angles = angles_map.at(maneuver.begin_shape_index());
 
         auto roundabout_exit_angles_json = json::array({});
