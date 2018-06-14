@@ -125,22 +125,17 @@ private:
     }
   }
 
-  static napi_value Route(napi_env env, napi_callback_info info) {
+  static std::string ParseRequest(napi_env env, napi_callback_info info, napi_value* jsthis) {
     napi_status status;
-    napi_value jsthis;
     size_t argc = 1;
     napi_value argv[1];
 
-    status = napi_get_cb_info(env, info, &argc, argv, &jsthis, nullptr);
-    assert(status == napi_ok);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    assert(status == napi_ok);
+    status = napi_get_cb_info(env, info, &argc, argv, jsthis, nullptr);
+    checkNapiStatus(status, env, "Failed to parse input args");
 
     size_t buffer_size;
     status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &buffer_size);
-    checkNapiStatus(status, env, "Failed to get config string length");
+    checkNapiStatus(status, env, "Failed to get arg string length");
 
     if (buffer_size > 1024 * 1024) {
       napi_throw_error(env, NULL, "Too large JSON config");
@@ -148,21 +143,41 @@ private:
 
     char buffer[++buffer_size];
     status = napi_get_value_string_utf8(env, argv[0], buffer, buffer_size, &buffer_size);
-    checkNapiStatus(status, env, "Unable to parse req string");
+    checkNapiStatus(status, env, "Unable to parse arg string");
     std::string reqString(buffer, buffer_size);
 
+    return reqString;
+  }
+
+  static napi_value WrapString(napi_env env, std::string cppStr) {
+    napi_value napiStr;
+    napi_status status;
+    const char* outBuff = cppStr.c_str();
+    const auto nchars = cppStr.size();
+    status = napi_create_string_utf8(env, outBuff, nchars, &napiStr);
+    checkNapiStatus(status, env, "Failed to turn c++ string into napi_value");
+    return napiStr;
+  }
+
+  static napi_value Route(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+    // parse input arg into string
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
     assert(status == napi_ok);
+
+    // get the actual route
     std::string route_json;
     try {
       route_json = obj->actor.route(reqString);
     } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
-    napi_value myStr;
-    const char* outBuff = route_json.c_str();
-    const auto nchars = route_json.size();
-
-    status = napi_create_string_utf8(env, outBuff, nchars, &myStr);
-    return myStr;
+    // wrap route_json in napi value for return
+    auto outStr = WrapString(env, route_json);
+    return outStr;
   }
 
   static napi_ref constructor;

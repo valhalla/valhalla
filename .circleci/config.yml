@@ -13,11 +13,10 @@ jobs:
           keys:
             - ccache
       - run: npm install
-      - run: git diff package-lock.json
       - run: mkdir build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
-      - run: run-clang-tidy-5.0.py -p build -header-filter "^$(pwd)/(src|valhalla/(baldr|midgard|sif|odin|thor|skadi|tyr|loki|mjolnir)/.*" && ./scripts/error_on_dirty.sh
+      - run: run-clang-tidy-5.0.py -p build -header-filter "^$(pwd)/(src|valhalla/(baldr|midgard|sif|odin|thor|skadi|tyr|loki|mjolnir|bindings)/.*" && ./scripts/error_on_dirty.sh
 
   build-debug:
     docker:
@@ -62,6 +61,11 @@ jobs:
       - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
+      - run:
+          command: |
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            ./scripts/publish.sh
       - save_cache:
           key: ccache
           paths:

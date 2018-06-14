@@ -11,7 +11,7 @@
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=8.11.2"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/valhalla/valhalla#readme",
   "dependencies": {
+    "@mapbox/cloudfriend": "^1.9.1",
     "node-cmake": "^2.5.1",
     "node-gyp": "^3.6.2",
     "node-pre-gyp": "^0.10.0",
@@ -32,9 +33,16 @@
   },
   "binary": {
     "module_name": "node_valhalla",
-    "module_path": "./lib/binding/",
+    "module_path": "./lib/binding",
     "host": "https://mapbox-node-binary.s3.amazonaws.com",
-    "remote_path": "./{name}/v{version}/{configuration}/",
-    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
-  }
+    "remote_path": "./{module_name}/v{version}/{configuration}/",
+    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.257.1"
+  },
+  "bundledDependencies": [
+    "node-pre-gyp",
+    "node-cmake"
+  ]
 }
