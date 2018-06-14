@@ -1491,7 +1491,8 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
       auto edge = node.edge();
 
       if (edge.roundabout())
-        direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});    }
+        direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});
+    }
   }
 
   auto json = json::map
