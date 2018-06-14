@@ -22,10 +22,12 @@ public:
    * Constructor given arguments.
    * @param  idx  Directed edge index to which this sign applies.
    * @param  type Sign type.
+   * @param  rn   Boolean indicating whether this sign indicates a route number.
    * @param  text_offset  Offset to text in the names/text table.
    */
-  Sign(const uint32_t idx, const Sign::Type& type, const uint32_t text_offset)
-      : edgeindex_(idx), type_(static_cast<uint32_t>(type)), spare_(0), text_offset_(text_offset) {
+  Sign(const uint32_t idx, const Sign::Type& type, const bool rn, const uint32_t text_offset)
+      : edgeindex_(idx), type_(static_cast<uint32_t>(type)), is_route_num_(rn), spare_(0),
+        text_offset_(text_offset) {
   }
 
   /**
@@ -54,6 +56,14 @@ public:
   }
 
   /**
+   * Does this sign record indicate a route number.
+   * @return  Returns true if the sign record is a route number.
+   */
+  bool is_route_num() const {
+    return is_route_num_;
+  }
+
+  /**
    * Get the offset into the GraphTile text list for the text associated
    * with the sign.
    * @return  Returns the text offset.
@@ -65,7 +75,8 @@ public:
 protected:
   uint32_t edgeindex_ : 22; // kMaxTileEdgeCount in nodeinfo.h: 22 bits
   uint32_t type_ : 8;
-  uint32_t spare_ : 2;
+  uint32_t is_route_num_ : 1;
+  uint32_t spare_ : 1;
 
   uint32_t text_offset_;
 };

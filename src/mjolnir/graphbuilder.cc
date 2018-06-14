@@ -1176,12 +1176,12 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> j_refs =
         GetTagTokens(osmdata.ref_offset_map.name(way.junction_ref_index()));
     for (auto& j_ref : j_refs) {
-      exit_list.emplace_back(Sign::Type::kExitNumber, j_ref);
+      exit_list.emplace_back(Sign::Type::kExitNumber, false, j_ref);
     }
   } else if (node.ref() && !fork) {
     std::vector<std::string> n_refs = GetTagTokens(osmdata.node_ref.find(node.osmid)->second);
     for (auto& n_ref : n_refs) {
-      exit_list.emplace_back(Sign::Type::kExitNumber, n_ref);
+      exit_list.emplace_back(Sign::Type::kExitNumber, false, n_ref);
     }
   }
 
@@ -1196,7 +1196,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> branch_refs =
         GetTagTokens(osmdata.ref_offset_map.name(way.destination_ref_index()));
     for (auto& branch_ref : branch_refs) {
-      exit_list.emplace_back(Sign::Type::kExitBranch, branch_ref);
+      exit_list.emplace_back(Sign::Type::kExitBranch, true, branch_ref);
     }
   }
 
@@ -1206,7 +1206,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> branch_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_index()));
     for (auto& branch_street : branch_streets) {
-      exit_list.emplace_back(Sign::Type::kExitBranch, branch_street);
+      exit_list.emplace_back(Sign::Type::kExitBranch, false, branch_street);
     }
   }
 
@@ -1221,7 +1221,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> toward_refs =
         GetTagTokens(osmdata.ref_offset_map.name(way.destination_ref_to_index()));
     for (auto& toward_ref : toward_refs) {
-      exit_list.emplace_back(Sign::Type::kExitToward, toward_ref);
+      exit_list.emplace_back(Sign::Type::kExitToward, true, toward_ref);
     }
   }
 
@@ -1231,7 +1231,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
     std::vector<std::string> toward_streets =
         GetTagTokens(osmdata.name_offset_map.name(way.destination_street_to_index()));
     for (auto& toward_street : toward_streets) {
-      exit_list.emplace_back(Sign::Type::kExitToward, toward_street);
+      exit_list.emplace_back(Sign::Type::kExitToward, false, toward_street);
     }
   }
 
@@ -1244,7 +1244,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
                                                         : way.destination_backward_index());
     std::vector<std::string> toward_names = GetTagTokens(osmdata.name_offset_map.name(index));
     for (auto& toward_name : toward_names) {
-      exit_list.emplace_back(Sign::Type::kExitToward, toward_name);
+      exit_list.emplace_back(Sign::Type::kExitToward, false, toward_name);
     }
   }
 
@@ -1263,12 +1263,12 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
 
         // remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "to ")) {
-          exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(3));
+          exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to.substr(3));
           continue;
         }
         // remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "toward ")) {
-          exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(7));
+          exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to.substr(7));
           continue;
         }
 
@@ -1279,9 +1279,9 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
         if (found != std::string::npos && (tmp.find(" to ", found + 4) == std::string::npos &&
                                            tmp.find(" toward ") == std::string::npos)) {
 
-          exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0, found));
+          exit_list.emplace_back(Sign::Type::kExitBranch, false, exit_to.substr(0, found));
 
-          exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found + 4));
+          exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to.substr(found + 4));
           continue;
         }
 
@@ -1292,14 +1292,14 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
         if (found != std::string::npos && (tmp.find(" toward ", found + 8) == std::string::npos &&
                                            tmp.find(" to ") == std::string::npos)) {
 
-          exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0, found));
+          exit_list.emplace_back(Sign::Type::kExitBranch, false, exit_to.substr(0, found));
 
-          exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found + 8));
+          exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to.substr(found + 8));
           continue;
         }
 
         // default to toward.
-        exit_list.emplace_back(Sign::Type::kExitToward, exit_to);
+        exit_list.emplace_back(Sign::Type::kExitToward, false, exit_to);
       }
     }
   }
@@ -1311,7 +1311,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node,
   if (node.name() && !fork) {
     std::vector<std::string> names = GetTagTokens(osmdata.node_name.find(node.osmid)->second);
     for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kExitName, name);
+      exit_list.emplace_back(Sign::Type::kExitName, false, name);
     }
   }
 
