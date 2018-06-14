@@ -18,6 +18,7 @@
 #include "tyr/serializers.h"
 
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions.pb.h>
 
 using namespace valhalla;
 
@@ -44,6 +45,12 @@ std::list<TripDirections> OdinWorker::narrate(const valhalla_request_t& request,
     }
   } catch (...) { throw valhalla_exception_t{202}; }
   return narrated;
+}
+
+proto::Directions OdinWorker::narrateProto(const valhalla_request_t& request,
+                                                 std::list<TripPath>& legs) const {
+  // get some annotated directions
+  return odin::DirectionsBuilder().BuildProto(request.options, legs);
 }
 
 #ifdef HAVE_HTTP
@@ -75,6 +82,11 @@ worker_t::result_t OdinWorker::work(const std::list<zmq::message_t>& job,
 
     // narrate them and serialize them along
     auto narrated = narrate(request, legs);
+    auto narratedProto = narrateProto(request, legs);
+
+
+    std::cout << "Yai narrating" << std::endl;
+
     auto response = tyr::serializeDirections(request, legs, narrated);
     auto* to_response =
         request.options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
