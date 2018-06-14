@@ -104,6 +104,43 @@ void ExitToTest() {
       throw std::runtime_error("Exitsign text is bad for I 495 Toward I 270 To I 95");
   } else
     throw std::runtime_error("I 495 Toward I 270 To I 95 failed to be parsed.");
+
+  // Add a ref brnahc sign
+  exitsigns.clear();
+  auto index = osmdata.ref_offset_map.index("I 495 N");
+  way.set_destination_ref_index(index);
+  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork, forward);
+  if (exitsigns.size() == 1) {
+    if (exitsigns[0].type() != Sign::Type::kExitBranch)
+      throw std::runtime_error("I 495 N should be a branch.");
+
+    if (!exitsigns[0].is_route_num())
+      throw std::runtime_error("I 495 N should be flagged as a route num");
+
+    if (exitsigns[0].text() != "I 495 N")
+      throw std::runtime_error("Exitsign text is bad for I 495 N destination ref");
+  } else {
+    throw std::runtime_error("destination ref I 495 N failed to create exist sign.");
+  }
+
+  // Add a ref toward sign
+  OSMWay way2{};
+  exitsigns.clear();
+  auto index2 = osmdata.ref_offset_map.index("I 695 N");
+  way2.set_destination_ref_to_index(index2);
+  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way2, osmdata, fork, forward);
+  if (exitsigns.size() == 1) {
+    if (exitsigns[0].type() != Sign::Type::kExitToward)
+      throw std::runtime_error("I 695 N should be a toward.");
+
+    if (!exitsigns[0].is_route_num())
+      throw std::runtime_error("I 695 N should be flagged as a route num");
+
+    if (exitsigns[0].text() != "I 695 N")
+      throw std::runtime_error("Exitsign text is bad for I 695 N destination to ref");
+  } else {
+    throw std::runtime_error("destination ref I 695 N failed to create exist sign.");
+  }
 }
 
 } // namespace
