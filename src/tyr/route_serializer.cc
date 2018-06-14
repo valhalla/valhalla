@@ -1151,7 +1151,11 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
 }
 
 json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
-                    const std::map<int, bool> direction_map) {
+                    const std::map<int, bool> direction_map,
+                    const std::map<int, valhalla::odin::TripPath_Surface> surface_map,
+                    const std::map<int, valhalla::odin::TripPath_Use> use_map,
+                    const std::map<int, valhalla::odin::TripPath_Node_Type> node_type_map,
+                    const std::map<int, valhalla::odin::TripPath_CycleLane> cycle_lane_map) {
 
   // TODO: multiple legs.
   auto legs = json::array({});
@@ -1315,6 +1319,22 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
                      static_cast<uint64_t>(maneuver.roundabout_exit_count()));
 
         man->emplace("counter_clockwise", static_cast<bool>(direction_map.at(maneuver.begin_shape_index())));
+      }
+
+      if (surface_map.size() != 0 && surface_map.find(maneuver.begin_shape_index()) != surface_map.end()) {
+        man->emplace("surface", static_cast<string>(surface(surface_map.at(maneuver.begin_shape_index()))));
+      }
+
+      if (use_map.size() != 0 && use_map.find(maneuver.begin_shape_index()) != use_map.end()) {
+        man->emplace("use", static_cast<string>(use(use_map.at(maneuver.begin_shape_index()))));
+      }
+
+      if (node_type_map.size() != 0 && node_type_map.find(maneuver.begin_shape_index()) != node_type_map.end()) {
+        man->emplace("node_type", static_cast<string>(node_type(node_type_map.at(maneuver.begin_shape_index()))));
+      }
+
+      if (cycle_lane_map.size() != 0 && cycle_lane_map.find(maneuver.begin_shape_index()) != cycle_lane_map.end()) {
+        man->emplace("cycle_lane", static_cast<string>(cycle_lane(cycle_lane_map.at(maneuver.begin_shape_index()))));
       }
 
       // Depart and arrive instructions
@@ -1485,13 +1505,26 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   // build up the json object
 
   std::map<int, bool> direction_map;
+  std::map<int, valhalla::odin::TripPath_Surface> surface_map;
+  std::map<int, valhalla::odin::TripPath_Use> use_map;
+  std::map<int, valhalla::odin::TripPath_Node_Type> node_type_map;
+  std::map<int, valhalla::odin::TripPath_CycleLane> cycle_lane_map;
 
   for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
     for (auto node: path->node()) {
       auto edge = node.edge();
 
       if (edge.roundabout())
-        direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});    }
+        direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});
+
+      surface_map.insert({edge.begin_shape_index(), edge.surface()});
+
+      use_map.insert({edge.begin_shape_index(), edge.use()});
+
+      node_type_map.insert({edge.begin_shape_index(), node.type()});
+
+      cycle_lane_map.insert({edge.begin_shape_index(), edge.cycle_lane()});
+    }
   }
 
   auto json = json::map
@@ -1500,7 +1533,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
        ({
         {"locations", locations(directions_legs)},
         {"summary", summary(directions_legs)},
-        {"legs", legs(directions_legs, direction_map)},
+        {"legs", legs(directions_legs, direction_map, surface_map, use_map, node_type_map, cycle_lane_map)},
         {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
         {"status", static_cast<uint64_t>(0)}, //0 success
         {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
