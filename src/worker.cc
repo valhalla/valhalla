@@ -580,6 +580,12 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   // get the contours in there
   parse_contours(doc, options.mutable_contours());
 
+  // if specified, get the polygons boolean in there
+  auto polygons = rapidjson::get_optional<bool>(doc, "/polygons");
+  if (polygons) {
+    options.set_polygons(*polygons);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},

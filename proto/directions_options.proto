@@ -73,4 +73,5 @@ message DirectionsOptions {
   repeated Location shape = 19;                     // Raw shape for map matching
   optional double resample_distance = 20;           // Resampling shape at regular intervals
   repeated Contour contours = 21;                   // List of isochrone contours
+  optional bool polygons = 22;                      // Boolean value to determine whether to return geojson polygons or linestrings as the contours
 }

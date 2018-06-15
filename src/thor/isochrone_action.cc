@@ -18,7 +18,6 @@ std::string thor_worker_t::isochrones(valhalla_request_t& request) {
     contours.push_back(contour.time());
     colors[contours.back()] = contour.color();
   }
-  auto polygons = rapidjson::get<bool>(request.document, "/polygons", false);
   auto denoise =
       std::max(std::min(rapidjson::get<float>(request.document, "/denoise", 1.f), 1.f), 0.f);
 
@@ -38,10 +37,11 @@ std::string thor_worker_t::isochrones(valhalla_request_t& request) {
                                           reader, mode_costing, mode);
 
   // turn it into geojson
-  auto isolines = grid->GenerateContours(contours, polygons, denoise, generalize);
+  auto isolines = grid->GenerateContours(contours, request.options.polygons(), denoise, generalize);
 
   auto showLocations = rapidjson::get<bool>(request.document, "/show_locations", false);
-  return tyr::serializeIsochrones<PointLL>(request, isolines, polygons, colors, showLocations);
+  return tyr::serializeIsochrones<PointLL>(request, isolines, request.options.polygons(), colors,
+                                           showLocations);
 }
 
 } // namespace thor
