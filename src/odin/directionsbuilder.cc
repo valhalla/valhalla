@@ -20,6 +20,8 @@ constexpr auto kMinEdgeLength = 0.003f;
 namespace valhalla {
 namespace odin {
 
+// Note: reason for casting the Enum to int here:
+// https://stackoverflow.com/questions/18837857/cant-use-enum-class-as-unordered-map-key
 const std::unordered_map<int, TripDirections_VehicleType> translate_vehicle_type{
     {static_cast<int>(TripPath_VehicleType_kCar), TripDirections_VehicleType_kCar},
     {static_cast<int>(TripPath_VehicleType_kMotorcycle), TripDirections_VehicleType_kMotorcycle},
@@ -61,6 +63,84 @@ const std::unordered_map<int, TripDirections_TravelMode> translate_travel_mode{
     {static_cast<int>(TripPath_TravelMode_kTransit), TripDirections_TravelMode_kTransit},
 };
 
+const std::unordered_map<int, std::string> stringify_vehicle_type{
+    {static_cast<int>(TripPath_VehicleType_kCar), "car"},
+    {static_cast<int>(TripPath_VehicleType_kMotorcycle), "motorcycle"},
+    {static_cast<int>(TripPath_VehicleType_kAutoBus), "autobus"},
+    {static_cast<int>(TripPath_VehicleType_kTractorTrailer), "trailer"},
+    {static_cast<int>(TripPath_VehicleType_kMotorScooter), "motorscooter"},
+};
+
+const std::unordered_map<int, std::string> stringify_pedestrian_type{
+    {static_cast<int>(TripPath_PedestrianType_kFoot), "foot"},
+    {static_cast<int>(TripPath_PedestrianType_kWheelchair), "wheelchair"},
+    {static_cast<int>(TripPath_PedestrianType_kSegway), "segway"},
+};
+
+const std::unordered_map<int, std::string> stringify_bicycle_type{
+    {static_cast<int>(TripPath_BicycleType_kRoad), "roadbike"},
+    {static_cast<int>(TripPath_BicycleType_kCross), "crossbike"},
+    {static_cast<int>(TripPath_BicycleType_kHybrid), "hybridbike"},
+    {static_cast<int>(TripPath_BicycleType_kMountain), "mountainbike"},
+};
+
+const std::unordered_map<int, std::string> stringify_transit_type{
+    {static_cast<int>(TripPath_TransitType_kTram), "tram"},
+    {static_cast<int>(TripPath_TransitType_kMetro), "metro"},
+    {static_cast<int>(TripPath_TransitType_kRail), "rail"},
+    {static_cast<int>(TripPath_TransitType_kBus), "bus"},
+    {static_cast<int>(TripPath_TransitType_kFerry), "ferry"},
+    {static_cast<int>(TripPath_TransitType_kCableCar), "cablecar"},
+    {static_cast<int>(TripPath_TransitType_kGondola), "gondola"},
+    {static_cast<int>(TripPath_TransitType_kFunicular), "funicular"},
+};
+
+const std::unordered_map<int, std::string> stringify_travel_mode{
+    {static_cast<int>(TripDirections_TravelMode_kDrive), "driving"},
+    {static_cast<int>(TripDirections_TravelMode_kPedestrian), "walking"},
+    {static_cast<int>(TripDirections_TravelMode_kBicycle), "cycling"},
+    {static_cast<int>(TripDirections_TravelMode_kTransit), "transit"},
+};
+
+const std::unordered_map<int, std::string> stringify_maneuver_type {
+    {static_cast<int>(TripDirections_Maneuver_Type_kNone), "none"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kStart), "start"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kStartRight), "start_right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kStartLeft), "start_left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kDestination), "destination"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kDestinationRight), "destination_right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kDestinationLeft), "destination_left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kBecomes), "becomes"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kContinue), "continue"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kSlightRight), "slight_right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kRight), "right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kSharpRight), "sharp_right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kUturnRight), "u-turn-right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kUturnLeft), "turn_left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kSharpLeft), "sharp_left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kLeft), "left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kSlightLeft), "slight_left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kRampStraight), "ramp_straight"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kRampRight), "ramp_right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kRampLeft), "ramp_left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kExitRight), "exit_right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kExitLeft), "exit_left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kStayStraight), "stay_straight"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kStayRight), "stay_right"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kStayLeft), "stay_left"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kMerge), "merge"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kRoundaboutEnter), "roundabout_enter"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kRoundaboutExit), "roundabout_exit"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kFerryEnter), "ferry_enter"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kFerryExit), "ferry_exit"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kTransit), "transit"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kTransitTransfer), "transit_transfer"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kTransitRemainOn), "transit_remain_on"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kTransitConnectionStart), "transit_connection_start"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kTransitConnectionTransfer), "transit_connection_transfer"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kTransitConnectionDestination), "transit_connection_destination"},
+    {static_cast<int>(TripDirections_Maneuver_Type_kPostTransitConnectionDestination), "post_transit_connection_destination"}
+};
 
 
 DirectionsBuilder::DirectionsBuilder() {
@@ -412,7 +492,7 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
   // DONE optional uint32 duration = 3;
   // DONE optional BoundingBox bounding_box = 4;
   // DONE optional string geometry = 5;
-  // TODO repeated Step steps = 6;
+  // DONE repeated Step steps = 6;
   // TODO repeated Maneuver maneuvers = 7;
   proto_leg.set_distance(etp->GetLength(directions_options.units()));  // TODO check distance
   proto_leg.set_duration(etp->node(etp->GetLastNodeIndex()).elapsed_time());
@@ -422,75 +502,63 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
   proto_leg.mutable_bounding_box()->set_max_lon(etp->bbox().max_ll().lng());
   proto_leg.set_geometry(etp->shape());
 
+
+  // TODO: fix maneuvers and steps with destination and start
   std::size_t maneuver_n = 0;
   for (const auto& odin_maneuver : odin_maneuvers) {
     proto::Step* proto_step = proto_leg.add_steps();
     proto::Maneuver* proto_maneuver = proto_leg.add_maneuvers();
 
-    // step
-    // optional float distance = 1;
-    // optional uint32 duration = 2;
-    // optional uint32 geometry_index_begin = 3;
-    // optional uint32 geometry_index_end = 4;
-    // optional uint32 incoming_maneuver_index = 5;
-    // optional uint32 outgoing_maneuver_index = 6;
-    // repeated StreetName street_names = 7;
-    // optional string travel_mode = 8;
-    // optional string travel_mode_type = 9;
-    // optional string driving_side = 10;
-    proto_step->set_distance(odin_maneuver.length(directions_options.units()));
-    proto_step->set_duration(odin_maneuver.time());
-    proto_step->set_geometry_index_begin(odin_maneuver.begin_shape_index());
-    proto_step->set_geometry_index_end(odin_maneuver.end_shape_index());
-    proto_step->set_incoming_maneuver_index(maneuver_n);
-    proto_step->set_outgoing_maneuver_index(maneuver_n + 1);
-    proto_step->mutable_street()->set_name(odin_maneuver.street_names().front()->value()); // TODO fix this!
-    proto_step->mutable_street()->set_ref(odin_maneuver.street_names().back()->value());
-
-    // TODO: make this possible and not use the switch
-    // proto_step->set_travel_mode(stringify_travel_mode.find(odin_maneuver.travel_mode())->second);
-    switch (odin_maneuver.travel_mode()) {
-      case TripPath_TravelMode_kDrive:
-        proto_step->set_travel_mode("driving");
-        break;
-      case TripPath_TravelMode_kPedestrian:
-        proto_step->set_travel_mode("walking");
-        break;
-      case TripPath_TravelMode_kBicycle:
-        proto_step->set_travel_mode("cycling");
-        break;
-      default:
-        break;
+    // if (odin_maneuver.is_not_destination())
+    if (odin_maneuver.type() != 4 && odin_maneuver.type() != 5 && odin_maneuver.type() != 6) {
+      // step
+      // DONE optional float distance = 1;
+      // DONE optional uint32 duration = 2;
+      // DONE optional uint32 geometry_index_begin = 3;
+      // DONE optional uint32 geometry_index_end = 4;
+      // DONE optional uint32 incoming_maneuver_index = 5;
+      // DONE optional uint32 outgoing_maneuver_index = 6;
+      // DONE repeated StreetName street_names = 7;
+      // DONE optional string travel_mode = 8;
+      // DONE optional string travel_mode_type = 9;
+      // DONE optional string driving_side = 10;
+      proto_step->set_distance(odin_maneuver.length(directions_options.units()));
+      proto_step->set_duration(odin_maneuver.time());
+      proto_step->set_geometry_index_begin(odin_maneuver.begin_shape_index());
+      proto_step->set_geometry_index_end(odin_maneuver.end_shape_index());
+      proto_step->set_incoming_maneuver_index(maneuver_n);
+      proto_step->set_outgoing_maneuver_index(maneuver_n + 1);
+      if (!odin_maneuver.street_names().empty()) {
+        proto_step->mutable_street()->set_name(odin_maneuver.street_names().front()->value()); // TODO fix this!
+        proto_step->mutable_street()->set_ref(odin_maneuver.street_names().back()->value());
+      }
+      // TODO: fix if find() doesn't find anything
+      proto_step->set_travel_mode(stringify_travel_mode.find(odin_maneuver.travel_mode())->second);
+      switch (odin_maneuver.travel_mode()) {
+        case TripPath_TravelMode_kDrive: {
+          proto_step->set_travel_mode_type(stringify_vehicle_type.find(odin_maneuver.vehicle_type())->second);
+          break;
+        }
+        case TripPath_TravelMode_kPedestrian: {
+          proto_step->set_travel_mode_type(
+              stringify_pedestrian_type.find(odin_maneuver.pedestrian_type())->second);
+          break;
+        }
+        case TripPath_TravelMode_kBicycle: {
+          proto_step->set_travel_mode_type(stringify_bicycle_type.find(odin_maneuver.bicycle_type())->second);
+          break;
+        }
+        case TripPath_TravelMode_kTransit: {
+          proto_step->set_travel_mode_type(stringify_transit_type.find(odin_maneuver.transit_type())->second);
+          break;
+        }
+      }
+      proto_step->set_driving_side("right"); // TODO fix this
     }
-
-    // TODO: implement travel_mode_type
-    // switch (odin_maneuver.travel_mode()) {
-    //   case TripPath_TravelMode_kDrive: {
-    //     proto_step->set_travel_mode_type(translate_vehicle_type.find(odin_maneuver.vehicle_type())->second);
-    //     break;
-    //   }
-    //   case TripPath_TravelMode_kPedestrian: {
-    //     proto_step->set_travel_mode_type(
-    //         translate_pedestrian_type.find(odin_maneuver.pedestrian_type())->second);
-    //     break;
-    //   }
-    //   case TripPath_TravelMode_kBicycle: {
-    //     proto_step->set_travel_mode_type(translate_bicycle_type.find(odin_maneuver.bicycle_type())->second);
-    //     break;
-    //   }
-    //   case TripPath_TravelMode_kTransit: {
-    //     proto_step->set_travel_mode_type(translate_transit_type.find(odin_maneuver.transit_type())->second);
-    //     break;
-    //   }
-    // }
-    // TODO: implement driving side
-
-
-
 
     // TODO: maneuver
     // optional string type = 1;
-    // optional uint32 geometry_index = 2;
+    // opitional uint32 geometry_index = 2;
     // optional uint32 incoming_bearing = 3;
     // optional uint32 outgoing_bearing = 4;
     // repeated StreetName street_names = 5;
@@ -502,6 +570,11 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
     // optional string verbal_transition_alert_instruction = 11;
     // optional string verbal_pre_transition_instruction = 12;
     // optional string verbal_post_transition_instruction = 13;
+    // TODO: fix/assert if find() doesn't find anything
+    proto_maneuver->set_type(stringify_maneuver_type.find(odin_maneuver.type())->second);
+    proto_maneuver->set_geometry_index(odin_maneuver.begin_shape_index());
+    // proto_maneuver->set_incoming_bearing(odin_maneuver.begin_heading());
+    // proto_maneuver->set_outgoing_bearing(odin_maneuver.begin_heading());
 
     maneuver_n++;
   }
@@ -634,43 +707,6 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
   //   }
   //   if (!maneuver.verbal_arrive_instruction().empty()) {
   //     trip_maneuver->set_verbal_arrive_instruction(maneuver.verbal_arrive_instruction());
-  //   }
-
-  //   // Process transit route
-  //   if (maneuver.IsTransit()) {
-  //     const auto& transit_route = maneuver.transit_info();
-  //     auto* trip_transit_info = trip_maneuver->mutable_transit_info();
-  //     if (!transit_route.onestop_id.empty()) {
-  //       trip_transit_info->set_onestop_id(transit_route.onestop_id);
-  //     }
-  //     if (!transit_route.short_name.empty()) {
-  //       trip_transit_info->set_short_name(transit_route.short_name);
-  //     }
-  //     if (!transit_route.long_name.empty()) {
-  //       trip_transit_info->set_long_name(transit_route.long_name);
-  //     }
-  //     if (!transit_route.headsign.empty()) {
-  //       trip_transit_info->set_headsign(transit_route.headsign);
-  //     }
-  //     trip_transit_info->set_color(transit_route.color);
-  //     trip_transit_info->set_text_color(transit_route.text_color);
-  //     if (!transit_route.description.empty()) {
-  //       trip_transit_info->set_description(transit_route.description);
-  //     }
-  //     if (!transit_route.operator_onestop_id.empty()) {
-  //       trip_transit_info->set_operator_onestop_id(transit_route.operator_onestop_id);
-  //     }
-  //     if (!transit_route.operator_name.empty()) {
-  //       trip_transit_info->set_operator_name(transit_route.operator_name);
-  //     }
-  //     if (!transit_route.operator_url.empty()) {
-  //       trip_transit_info->set_operator_url(transit_route.operator_url);
-  //     }
-
-  //     // Process transit stops
-  //     for (const auto& transit_platform : transit_route.transit_stops) {
-  //       trip_transit_info->add_transit_stops()->CopyFrom(transit_platform);
-  //     }
   //   }
 
   //   // Verbal multi-cue
