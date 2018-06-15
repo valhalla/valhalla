@@ -1,6 +1,11 @@
 package valhalla.odin;
 import public "tripcommon.proto";
 
+message Contour {
+  optional float time = 1;     // minutes
+  optional string color = 2;   // hex color with out # - for example: "ff0000" for red 
+}
+
 message DirectionsOptions {
   
   enum Units {
@@ -67,4 +72,5 @@ message DirectionsOptions {
   optional string date_time = 18;                   // And what day and time
   repeated Location shape = 19;                     // Raw shape for map matching
   optional double resample_distance = 20;           // Resampling shape at regular intervals
+  repeated Contour contours = 21;                   // List of isochrone contours
 }

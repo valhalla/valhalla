@@ -392,6 +392,36 @@ void parse_locations(const rapidjson::Document& doc,
   }
 }
 
+void parse_contours(const rapidjson::Document& doc,
+                    google::protobuf::RepeatedPtrField<odin::Contour>* contours) {
+
+  // make sure the isoline definitions are valid
+  auto json_contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/contours");
+  if (json_contours) {
+    float prev = 0.f;
+    const float NO_TIME = -1.f;
+    for (const auto& json_contour : *json_contours) {
+      // Grab contour time and validate that it is increasing
+      const float c = rapidjson::get_optional<float>(json_contour, "/time").get_value_or(NO_TIME);
+      if (c < prev || c == NO_TIME) {
+        throw valhalla_exception_t{111};
+      }
+
+      // Add new contour object to list
+      auto* contour = contours->Add();
+      // Set contour time
+      contour->set_time(c);
+
+      // If specified, grab and set contour color
+      auto color = rapidjson::get_optional<std::string>(json_contour, "/color");
+      if (color) {
+        contour->set_color(*color);
+      }
+      prev = c;
+    }
+  }
+}
+
 void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   bool track = !options.has_do_not_track() || !options.do_not_track();
 
@@ -547,11 +577,15 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_resample_distance(*resample_distance);
   }
 
+  // get the contours in there
+  parse_contours(doc, options.mutable_contours());
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
                 {odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
 }
+
 } // namespace
 
 namespace valhalla {
