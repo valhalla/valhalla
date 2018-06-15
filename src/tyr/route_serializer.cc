@@ -1150,20 +1150,88 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
   }
 }
 
-json::ArrayPtr grades(const std::list<valhalla::odin::TripPath> trip_paths) {
-  auto grades = json::array({});
+json::MapPtr grades(const std::list<valhalla::odin::TripPath> trip_paths) {
+  auto grades = json::map({});
 
-  for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
-    for (int i = 0; i < path->node_size(); i++) {
-      auto edge = path->node(i).edge();
+  float grade;
+  float distance = 0;
 
-      auto grades_summary = json::map({});
-      grades_summary->emplace("grade", json::fp_t{edge.weighted_grade(), 3});
-      grades_summary->emplace("distance", json::fp_t{edge.length(), 3});
+  // The shape index of where the beginning
+  // of a shape index starts
+  int start_of_grade;
 
-      grades->emplace_back(grades_summary);
+  // The features will contain the grade and distance
+  std::vector<std::pair<float, float>> features;
+
+  // The indices will contain the beginning and end
+  // index for a certain grade
+  std::vector<std::pair<int, int>> indices;
+
+  std::map<float, float> overall_summary_map;
+
+  float total_length = 0;
+
+  for (auto path: trip_paths) {
+    for (int i = 0; i < path.node_size(); i++) {
+      auto current_edge = path.node(i).edge();
+
+      total_length += current_edge.length();
+
+      // Save information if it is the first index
+      if (i == 0) {
+        start_of_grade = 0;
+        grade = current_edge.weighted_grade();
+        distance = current_edge.length();
+      } else {
+        auto previous_edge = path.node(i - 1).edge();
+
+        // Either if it is the last edge, or the grades are different
+        // save their information to the maps
+        if (i == path.node_size() - 1 || previous_edge.weighted_grade() != current_edge.weighted_grade()) {
+          indices.push_back(std::make_pair(start_of_grade, previous_edge.end_shape_index()));
+          features.push_back(std::make_pair(grade, distance));
+
+          start_of_grade = current_edge.begin_shape_index(); 
+
+          grade = current_edge.weighted_grade();
+          distance = current_edge.length();
+        } else {
+          distance += current_edge.length();
+        }
+      }
     }
   }
+
+  auto features_array = json::array({});
+  auto indices_array = json::array({});
+  auto overall_summary_array = json::array({});
+
+  for (int i = 0; i < features.size(); i++) {
+    auto feature_json = json::array({});
+    feature_json->emplace_back(json::fp_t{features[i].first, 3});
+    feature_json->emplace_back(json::fp_t{features[i].second, 3});
+    feature_json->emplace_back(json::fp_t{features[i].second/total_length * 100, 2});
+    features_array->emplace_back(feature_json);
+
+    overall_summary_map[features[i].first] += features[i].second;
+
+    auto indices_json = json::array({});
+    indices_json->emplace_back(static_cast<uint64_t>(indices[i].first));
+    indices_json->emplace_back(static_cast<uint64_t>(indices[i].second));
+    indices_array->emplace_back(indices_json);
+  }
+
+  for (auto grade: overall_summary_map) {
+    auto overall_grade = json::array({});
+    overall_grade->emplace_back(json::fp_t{grade.first, 3});
+    overall_grade->emplace_back(json::fp_t{grade.second, 3});
+    overall_grade->emplace_back(json::fp_t{grade.second/total_length * 100, 2});
+    overall_summary_array->emplace_back(overall_grade);
+  }
+
+  grades->emplace("overall_summary", std::move(overall_summary_array));
+  grades->emplace("summary", std::move(features_array));
+  grades->emplace("indices", std::move(indices_array));
 
   return grades;
 }
@@ -1510,8 +1578,12 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     }
   });
 
-  if (directions_options.grades())
-    json->emplace("grades", grades(trip_paths));
+  auto properties = json::map({});
+
+  if (directions_options.grades()) {
+    properties->emplace("grades", grades(trip_paths));
+    json->emplace("properties", properties);
+  }
 
   if (directions_options.has_id())
     json->emplace("id", directions_options.id());
