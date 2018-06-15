@@ -19,9 +19,11 @@ std::string thor_worker_t::isochrones(valhalla_request_t& request) {
     colors[contours.back()] = contour.color();
   }
 
-  // Get the generalization factor (in meters). If none is provided then
-  // an optimal factor is computed (based on the isotile grid size).
-  auto generalize = rapidjson::get<float>(request.document, "/generalize", kOptimalGeneralization);
+  // If generalize is not provided then an optimal factor is computed
+  // (based on the isotile grid size).
+  if (!request.options.has_generalize()) {
+    request.options.set_generalize(kOptimalGeneralization);
+  }
 
   // get the raster
   // Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
@@ -36,7 +38,7 @@ std::string thor_worker_t::isochrones(valhalla_request_t& request) {
 
   // turn it into geojson
   auto isolines = grid->GenerateContours(contours, request.options.polygons(),
-                                         request.options.denoise(), generalize);
+                                         request.options.denoise(), request.options.generalize());
 
   auto showLocations = rapidjson::get<bool>(request.document, "/show_locations", false);
   return tyr::serializeIsochrones<PointLL>(request, isolines, request.options.polygons(), colors,

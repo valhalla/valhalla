@@ -592,6 +592,12 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_denoise(std::max(std::min(*denoise, 1.f), 0.f));
   }
 
+  // if specified, get the generalize value in there
+  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
+  if (generalize) {
+    options.set_generalize(*generalize);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
