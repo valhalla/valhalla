@@ -18,8 +18,6 @@ std::string thor_worker_t::isochrones(valhalla_request_t& request) {
     contours.push_back(contour.time());
     colors[contours.back()] = contour.color();
   }
-  auto denoise =
-      std::max(std::min(rapidjson::get<float>(request.document, "/denoise", 1.f), 1.f), 0.f);
 
   // Get the generalization factor (in meters). If none is provided then
   // an optimal factor is computed (based on the isotile grid size).
@@ -37,7 +35,8 @@ std::string thor_worker_t::isochrones(valhalla_request_t& request) {
                                           reader, mode_costing, mode);
 
   // turn it into geojson
-  auto isolines = grid->GenerateContours(contours, request.options.polygons(), denoise, generalize);
+  auto isolines = grid->GenerateContours(contours, request.options.polygons(),
+                                         request.options.denoise(), generalize);
 
   auto showLocations = rapidjson::get<bool>(request.document, "/show_locations", false);
   return tyr::serializeIsochrones<PointLL>(request, isolines, request.options.polygons(), colors,

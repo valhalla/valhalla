@@ -586,6 +586,12 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_polygons(*polygons);
   }
 
+  // if specified, get the denoise in there
+  auto denoise = rapidjson::get_optional<float>(doc, "/denoise");
+  if (denoise) {
+    options.set_denoise(std::max(std::min(*denoise, 1.f), 0.f));
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},

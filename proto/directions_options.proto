@@ -74,4 +74,5 @@ message DirectionsOptions {
   optional double resample_distance = 20;           // Resampling shape at regular intervals
   repeated Contour contours = 21;                   // List of isochrone contours
   optional bool polygons = 22;                      // Boolean value to determine whether to return geojson polygons or linestrings as the contours
+  optional float denoise = 23 [default = 1.0];       // A floating point value from 0 to 1 which can be used to remove smaller contours
 }
