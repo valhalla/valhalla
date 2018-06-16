@@ -40,9 +40,8 @@ std::string thor_worker_t::isochrones(valhalla_request_t& request) {
   auto isolines = grid->GenerateContours(contours, request.options.polygons(),
                                          request.options.denoise(), request.options.generalize());
 
-  auto showLocations = rapidjson::get<bool>(request.document, "/show_locations", false);
   return tyr::serializeIsochrones<PointLL>(request, isolines, request.options.polygons(), colors,
-                                           showLocations);
+                                           request.options.show_locations());
 }
 
 } // namespace thor

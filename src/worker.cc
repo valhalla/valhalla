@@ -598,6 +598,12 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_generalize(*generalize);
   }
 
+  // if specified, get the show_locations boolean in there
+  auto show_locations = rapidjson::get_optional<bool>(doc, "/show_locations");
+  if (show_locations) {
+    options.set_show_locations(*show_locations);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
