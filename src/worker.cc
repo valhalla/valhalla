@@ -604,6 +604,12 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_show_locations(*show_locations);
   }
 
+  // if specified, get the shape_match in there
+  auto shape_match = rapidjson::get_optional<std::string>(doc, "/shape_match");
+  if (shape_match) {
+    options.set_shape_match(*shape_match);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
