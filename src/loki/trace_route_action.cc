@@ -123,10 +123,11 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
   // Determine max factor, defaults to 1. This factor is used to increase
   // the max value when an edge_walk shape match is requested
   float max_factor = 1.0f;
-  std::string shape_match =
-      rapidjson::GetValueByPointerWithDefault(request.document, "/shape_match", "walk_or_snap")
-          .GetString();
-  if (shape_match == "edge_walk") {
+  // If shape_match was not specified then set to default of "walk_or_snap"
+  if (!request.options.has_shape_match()) {
+    request.options.set_shape_match("walk_or_snap");
+  }
+  if (request.options.shape_match() == "edge_walk") {
     max_factor = 5.0f;
   }
 
@@ -135,7 +136,7 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
   check_distance(request.options.shape(), max_distance.find("trace")->second, max_factor);
 
   // Validate best paths and best paths shape for `map_snap` requests
-  if (shape_match == "map_snap") {
+  if (request.options.shape_match() == "map_snap") {
     unsigned int best_paths =
         rapidjson::GetValueByPointerWithDefault(request.document, "/best_paths", 1).GetUint();
     check_best_paths(best_paths, max_best_paths);
