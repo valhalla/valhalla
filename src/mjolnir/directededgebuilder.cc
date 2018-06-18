@@ -51,7 +51,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_truck_route(way.truck_route());
 
-  // Set destination only to thru if either destination only or no thru traffic is set
+  // Set destination only to true if either destination only or no thru traffic is set
   set_dest_only(way.destination_only() || way.no_thru_traffic());
 
   set_dismount(way.dismount());
