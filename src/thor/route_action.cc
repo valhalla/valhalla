@@ -24,7 +24,7 @@ namespace thor {
 // single direction A* there may be performance issues allowing very long
 // routes. Also, for long routes the accuracy of predicted time along the
 // route starts to become suspect (due to user breaks and other factors).
-constexpr float kMaxTimeDependentDistance = 500000.0f;  // 500 km
+constexpr float kMaxTimeDependentDistance = 500000.0f; // 500 km
 
 std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& request) {
   parse_locations(request);
