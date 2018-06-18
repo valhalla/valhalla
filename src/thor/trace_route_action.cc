@@ -76,7 +76,7 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
         try {
           trip_path = route_match(request, controller);
           if (trip_path.node().size() == 0) {
-            throw;
+            throw std::runtime_error("Invalid " + shape_match->first);
           }
         } catch (...) {
           throw valhalla_exception_t{
