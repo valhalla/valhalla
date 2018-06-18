@@ -3,6 +3,8 @@
    * 
 * **Data Producer Update**
    * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
+* **Map Matching**
+   * FIXED: Fixed trace_route edge_walk server abort [#1365](https://github.com/valhalla/valhalla/pull/1365)
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:
