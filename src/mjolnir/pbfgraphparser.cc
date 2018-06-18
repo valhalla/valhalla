@@ -492,6 +492,7 @@ public:
             w.set_use(Use::kEmergencyAccess);
             break;
           case Use::kDriveThru:
+            w.set_destination_only(true);
             w.set_use(Use::kDriveThru);
             break;
           case Use::kTrack:
