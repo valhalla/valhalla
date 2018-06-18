@@ -605,7 +605,6 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
     penalty += alley_penalty_;
   }
 
-
   // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;

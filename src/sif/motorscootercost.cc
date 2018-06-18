@@ -22,16 +22,15 @@ namespace sif {
 // Default options/values
 namespace {
 
-constexpr float kDefaultManeuverPenalty = 5.0f;        // Seconds
-constexpr float kDefaultAlleyPenalty = 5.0f;           // Seconds
-constexpr float kDefaultGateCost = 30.0f;              // Seconds
-constexpr float kDefaultGatePenalty = 300.0f;          // Seconds
-constexpr float kDefaultFerryCost = 300.0f;            // Seconds
-constexpr float kDefaultCountryCrossingCost = 600.0f;  // Seconds
-constexpr float kDefaultCountryCrossingPenalty = 0.0f; // Seconds
-constexpr float kDefaultUseFerry = 0.5f;               // Factor between 0 and 1
+constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultGateCost = 30.0f;                // Seconds
+constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultFerryCost = 300.0f;              // Seconds
+constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultUseFerry = 0.5f;                 // Factor between 0 and 1
 constexpr float kDefaultDestinationOnlyPenalty = 120.0f; // Seconds
-
 
 constexpr float kDefaultUseHills = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUsePrimary = 0.5f; // Factor between 0 and 1
@@ -549,7 +548,7 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Additional penalties without any time cost
   uint32_t idx = pred.opp_local_idx();
-  if ( edge->destonly() && !pred.destonly()) {
+  if (edge->destonly() && !pred.destonly()) {
     penalty += destination_only_penalty_;
   }
   if (edge->use() == Use::kAlley && pred.use() != Use::kAlley) {
