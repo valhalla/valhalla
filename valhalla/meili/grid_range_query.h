@@ -2,6 +2,7 @@
 #ifndef MMP_GRID_RANGE_QUERY_H_
 #define MMP_GRID_RANGE_QUERY_H_
 
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>

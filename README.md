@@ -64,7 +64,6 @@ The Valhalla organization is comprised of several library modules each responsib
 - [Tyr](https://github.com/valhalla/valhalla/tree/master/valhalla/tyr) - Service used to handle http requests for a route communicating with all of the other valhalla APIs. The service will format output from `odin` and support json (and eventually protocol buffer) output.
 - [Tools](https://github.com/valhalla/valhalla/tree/master/src) - A set command line tools that exercise bits of functionality from the library components above and provide the basis for quality testing and performance benchmarking.
 - [Demos](https://github.com/valhalla/demos) - A set of demos which allows interacting with the service and APIs.
-- [Chef](https://github.com/valhalla/chef-valhalla) - A chef cookbook demonstrating how to deploy the valhalla stack to a virtual machine (sample vagrant file included).
 
 Documentation
 --------
@@ -188,6 +187,8 @@ Tests
 We highly encourage running and updating the tests to make sure no regressions have been made. We use the Automake test suite to run our tests by simply making the `check` target:
 
     make check
+
+To run an individual test, `make run-<test name>` from the build directory or `./test/<testname>`
 
 Coverage reports are automatically generated using codecov for each pull request, but you can also build them locally by passing `-DENABLE_COVERAGE=On` and running `make coverage`.
 
