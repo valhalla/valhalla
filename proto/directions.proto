@@ -37,17 +37,18 @@ message Step {
   optional string driving_side = 10;             // legal driving side for this step
 }
 
-message SignElement {
-  optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
-  optional bool is_route_number = 2;      // true if sign element is a reference route number such as: I 81 South or US 322 West
-  optional uint32 consecutive_count = 3;  // The frequency of this sign element within a set a consecutive signs
-}
+// message SignElement {
+//   optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
+//   optional bool is_route_number = 2;      // true if sign element is a reference route number such as: I 81 South or US 322 West
+//   optional uint32 consecutive_count = 3;  // The frequency of this sign element within a set a consecutive signs
+// }
 
 message Sign {
-  repeated SignElement exit_numbers = 1;          // The list of exit numbers, example: 67B
-  repeated SignElement exit_onto_streets = 2;     // The list of exit branch street names, example: I 95 North
-  repeated SignElement exit_toward_locations = 3; // The list of exit toward locations, examples: New York or I 395 South
-  repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
+  repeated string exit_numbers = 1;          // The list of exit numbers, example: 67B
+  repeated string exit_onto_streets = 2;     // The list of exit branch street names, example: I 95 North
+  repeated string exit_toward_locations = 3; // The list of exit toward locations, examples: New York or I 395 South
+  repeated string exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
+  optional uint32 exit_roundabout_count = 5;
 }
 
 message Lane {

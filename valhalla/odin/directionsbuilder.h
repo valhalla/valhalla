@@ -57,8 +57,9 @@ protected:
                                         EnhancedTripPath* etp,
                                         std::list<Maneuver>& maneuvers);
   proto::Leg PopulateRouteLegProto(const DirectionsOptions& directions_options,
-                                                EnhancedTripPath* etp,
-                                                std::list<Maneuver>& maneuvers);
+                                   EnhancedTripPath* etp,
+                                   std::list<Maneuver>& maneuvers,
+                                   proto::Route* proto_route);
 };
 
 } // namespace odin
