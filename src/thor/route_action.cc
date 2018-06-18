@@ -20,6 +20,12 @@ using namespace valhalla::thor;
 namespace valhalla {
 namespace thor {
 
+// Maximum distance allowed for time dependent routes. Since these use
+// single direction A* there may be performance issues allowing very long
+// routes. Also, for long routes the accuracy of predicted time along the
+// route starts to become suspect (due to user breaks and other factors).
+constexpr float kMaxTimeDependentDistance = 500.0f;
+
 std::list<valhalla::odin::TripPath> thor_worker_t::route(valhalla_request_t& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
@@ -43,6 +49,28 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   if (routetype == "multimodal" || routetype == "transit") {
     multi_modal_astar.set_interrupt(interrupt);
     return &multi_modal_astar;
+  }
+
+  // If the origin has date_time set use timedep_forward method if the distance
+  // between location is below some maximum distance (TBD).
+  if (origin.has_date_time()) {
+    PointLL ll1(origin.ll().lng(), origin.ll().lat());
+    PointLL ll2(destination.ll().lng(), destination.ll().lat());
+    if (ll1.Distance(ll2) < kMaxTimeDependentDistance) {
+      timedep_forward.set_interrupt(interrupt);
+      return &timedep_forward;
+    }
+  }
+
+  // If the destination has date_time set use timedep_reverse method if the distance
+  // between location is below some maximum distance (TBD).
+  if (destination.has_date_time()) {
+    PointLL ll1(origin.ll().lng(), origin.ll().lat());
+    PointLL ll2(destination.ll().lng(), destination.ll().lat());
+    if (ll1.Distance(ll2) < kMaxTimeDependentDistance) {
+      timedep_reverse.set_interrupt(interrupt);
+      return &timedep_reverse;
+    }
   }
 
   // Use A* if any origin and destination edges are the same - otherwise
