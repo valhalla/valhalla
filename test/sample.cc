@@ -5,14 +5,14 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 
-using namespace valhalla;
-
 #include <cmath>
 #include <fstream>
 #include <list>
 #include <lz4.h>
 #include <lz4hc.h>
 #include <zlib.h>
+
+using namespace valhalla;
 
 namespace {
 
@@ -79,8 +79,9 @@ void create_tile() {
   // | sed -e "s/^/#include<cstdint>\n#include<unordered_map>\nstd::unordered_map<size_t,int16_t>
   // pixels {/g" -e "s/$/};/g" > test/pixels.h
   std::vector<int16_t> tile(3601 * 3601, 0);
-  for (const auto& p : pixels)
+  for (const auto& p : pixels) {
     tile[p.first] = p.second;
+  }
   std::ofstream file("test/data/sample/N40/N40W077.hgt", std::ios::binary | std::ios::trunc);
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());

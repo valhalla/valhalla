@@ -23,7 +23,6 @@ jobs:
     steps:
       - checkout
       - run: git submodule sync && git submodule update --init
-      - run: cd locales && for loc in $(jq ".posix_locale" *.json | sed -e 's/"//g'); do localedef -i "${loc%.*}" -f "${loc##*.}" "./${loc}" ; done
       - restore_cache:
           keys:
             - ccache
@@ -47,7 +46,6 @@ jobs:
     steps:
       - checkout
       - run: git submodule sync && git submodule update --init
-      - run: cd locales && for loc in $(jq ".posix_locale" *.json | sed -e 's/"//g'); do localedef -i "${loc%.*}" -f "${loc##*.}" "./${loc}" ; done
       - restore_cache:
           keys:
             - ccache
@@ -72,7 +70,6 @@ jobs:
       - run: brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl czmq lz4
       - checkout
       - run: git submodule sync && git submodule update --init
-      - run: cd locales && for loc in $(jq ".posix_locale" *.json | sed -e 's/"//g'); do localedef -i "${loc%.*}" -f "${loc##*.}" "./${loc}" ; done
       - restore_cache:
           keys:
             - ccache

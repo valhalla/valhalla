@@ -18,6 +18,10 @@
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
 using namespace std;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
@@ -34,8 +38,8 @@ void write_config(const std::string& filename) {
       \"mjolnir\": { \
       \"concurrency\": 1, \
        \"tile_dir\": \"test/data/amsterdam_tiles\", \
-        \"admin\": \"test/data/netherlands_admin.sqlite\", \
-         \"timezone\": \"test/data/not_needed.sqlite\" \
+        \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
+         \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
       } \
     }";
   } catch (...) {}
@@ -79,8 +83,9 @@ void CountryAccess(const std::string& config_file) {
   std::string way_nodes_file = "test_way_nodes_amsterdam.bin";
   std::string access_file = "test_access_amsterdam.bin";
   std::string restriction_file = "test_complex_restrictions_amsterdam.bin";
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/amsterdam.osm.pbf"},
-                                       ways_file, way_nodes_file, access_file, restriction_file);
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"),
+                                       {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
+                                       way_nodes_file, access_file, restriction_file);
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, restriction_file);
 
