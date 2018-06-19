@@ -708,7 +708,7 @@ public:
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time,
+                       const uint64_t current_time,
                        const uint32_t tz_index) const;
 
   /**
@@ -734,7 +734,7 @@ public:
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time,
+                              const uint64_t current_time,
                               const uint32_t tz_index) const;
 
   /**
@@ -782,7 +782,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
-                      const uint32_t current_time,
+                      const uint64_t current_time,
                       const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
@@ -795,6 +795,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
+
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), kBusAccess);
@@ -822,7 +823,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& opp_edgeid,
-                             const uint32_t current_time,
+                             const uint64_t current_time,
                              const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
@@ -903,7 +904,7 @@ public:
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time,
+                       const uint64_t current_time,
                        const uint32_t tz_index) const;
 
   /**
@@ -928,7 +929,7 @@ public:
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time,
+                              const uint64_t current_time,
                               const uint32_t tz_index) const;
 
   /**
@@ -992,7 +993,7 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
-                      const uint32_t current_time,
+                      const uint64_t current_time,
                       const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
@@ -1034,7 +1035,7 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& opp_edgeid,
-                             const uint32_t current_time,
+                             const uint64_t current_time,
                              const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
@@ -1109,7 +1110,7 @@ public:
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time,
+                       const uint64_t current_time,
                        const uint32_t tz_index) const {
     // Check access and return false (not allowed if no auto access is allowed in either
     // direction. Also disallow simple U-turns except at dead-end nodes.
