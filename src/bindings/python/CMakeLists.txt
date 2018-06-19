@@ -30,7 +30,7 @@ else()
     OUTPUT_NAME valhalla
     LINK_LIBRARIES "${PYTHON_LIBRARIES}"
     INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIRS}")
-  target_link_libraries(python_valhalla valhalla Boost::${Boost_Python_lib})
+  target_link_libraries(python_valhalla valhalla Boost::thread Boost::${Boost_Python_lib})
   set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
   # Part of OpenCVDetectPython.cmake
