@@ -76,6 +76,11 @@ constexpr uint32_t kMaxSpeedKph = 140; // ~85 MPH
 // Maximum ferry speed
 constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots
 
+// Special speeds for use with parking aisles, driveways, and drive thrus
+constexpr uint32_t kParkingAisleSpeed = 15; // 15 KPH (10MPH)
+constexpr uint32_t kDriveThruSpeed = 10;    // 10 KPH
+constexpr uint32_t kDrivewaySpeed = 10;     // 10 KPH
+
 // Road class or importance of an edge
 enum class RoadClass : uint8_t {
   kMotorway = 0,
