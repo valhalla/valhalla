@@ -29,7 +29,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-add_definitions(-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 # colorize output
 include(CheckCXXCompilerFlag)
@@ -88,7 +87,7 @@ add_subdirectory(src)
 
 
 ## Executable targets
-find_package(Boost 1.51 REQUIRED COMPONENTS program_options thread)
+find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
 find_package(Threads REQUIRED)
 
 function(get_source_path PATH NAME)
@@ -120,7 +119,7 @@ set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker
 foreach(program ${valhalla_programs})
   get_source_path(path ${program})
   add_executable(${program} ${path})
-  target_link_libraries(${program} ${Boost_LIBRARIES} valhalla Threads::Threads)
+  target_link_libraries(${program} Boost::program_options valhalla Threads::Threads)
   install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
 endforeach()
 
@@ -128,7 +127,7 @@ if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} valhalla ${Boost_LIBRARIES} Threads::Threads)
+    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
@@ -144,7 +143,7 @@ endif()
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} src/${program}.cc)
-    target_link_libraries(${program} valhalla ${Boost_LIBRARIES} Threads::Threads)
+    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
