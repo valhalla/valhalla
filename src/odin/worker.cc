@@ -81,16 +81,29 @@ worker_t::result_t OdinWorker::work(const std::list<zmq::message_t>& job,
     }
 
     // narrate them and serialize them along
-    auto narrated = narrate(request, legs);
-    auto narratedProto = narrateProto(request, legs);
+    if (request.options.format() == DirectionsOptions::proto) {
+      std::cout << "PROTO YEAI" << std::endl;
 
+      auto narrated_proto = narrateProto(request, legs);
 
-    std::cout << "Yai narrating" << std::endl;
+      std::cout << "DEBUG" << std::endl;
+      std::cout << narrated_proto.DebugString() << std::endl;
 
-    auto response = tyr::serializeDirections(request, legs, narrated);
-    auto* to_response =
-        request.options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
-    return to_response(response, info, request);
+      std::string narrated_proto_string;
+      narrated_proto.SerializeToString(&narrated_proto_string);
+      std::cout << "DEBUG STRING" << std::endl;
+      std::cout << narrated_proto_string << std::endl;
+
+      return to_response_proto(narrated_proto_string, info, request);
+    }
+    else {
+      std::cout << "NO PROTO NAY" << std::endl;
+      auto narrated = narrate(request, legs);
+      auto response = tyr::serializeDirections(request, legs, narrated);
+      auto* to_response =
+          request.options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
+      return to_response(response, info, request);
+    }
   } catch (const std::exception& e) {
     return jsonify_error({299, std::string(e.what())}, info, request);
   }

@@ -750,6 +750,16 @@ worker_t::result_t to_response_xml(const std::string& xml,
   return result;
 }
 
+worker_t::result_t to_response_proto(const std::string& proto,
+                                   http_request_info_t& request_info,
+                                   const valhalla_request_t& request) {
+  worker_t::result_t result{false};
+  http_response_t response(200, "OK", proto, headers_t{CORS}); // TODO: Check this again!
+  response.from_info(request_info);
+  result.messages.emplace_back(response.to_string());
+  return result;
+}
+
 #endif
 
 service_worker_t::service_worker_t() : interrupt(nullptr) {

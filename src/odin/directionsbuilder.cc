@@ -187,7 +187,7 @@ proto::Directions DirectionsBuilder::BuildProto(const DirectionsOptions& directi
   proto::Directions proto_directions;
 
 
-  auto proto_route = proto_directions.add_routes(); // TODO do this for every alternative route
+  auto proto_route = proto_directions.add_routes(); // TODO: do this for every alternative route
 
   for (auto& leg : legs) {
     // Validate trip path node list
@@ -215,31 +215,6 @@ proto::Directions DirectionsBuilder::BuildProto(const DirectionsOptions& directi
     auto proto_leg = PopulateRouteLegProto(directions_options, etp, maneuvers, proto_route);
   }
 
-  std::cout << proto_directions.DebugString() << std::endl;
-  // // Validate trip path node list
-  // if (trip_path.node_size() < 1) {
-  //   throw valhalla_exception_t{210};
-  // }
-
-  // EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
-
-  // // Produce maneuvers and narrative if enabled
-  // std::list<Maneuver> maneuvers;
-  // if (directions_options.narrative()) {
-  //   // Update the heading of ~0 length edges
-  //   UpdateHeading(etp);
-
-  //   // Create maneuvers
-  //   ManeuversBuilder maneuversBuilder(directions_options, etp);
-  //   maneuvers = maneuversBuilder.Build();
-
-  //   // Create the narrative
-  //   std::unique_ptr<NarrativeBuilder> narrative_builder =
-  //       NarrativeBuilderFactory::Create(directions_options, etp);
-  //   narrative_builder->Build(directions_options, etp, maneuvers);
-  // }
-
-  // // Return trip directions
   return proto_directions;
 }
 
@@ -487,16 +462,9 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
                                                     std::list<Maneuver>& odin_maneuvers,
                                                     proto::Route* proto_route) {
 
-
   auto proto_leg = proto_route->add_legs();
-  // TODO optional string summary = 1;
-  // DONE optional float distance = 2;
-  // DONE optional uint32 duration = 3;
-  // DONE optional BoundingBox bounding_box = 4;
-  // DONE optional string geometry = 5;
-  // DONE repeated Step steps = 6;
-  // TODO repeated Maneuver maneuvers = 7;
-  proto_leg->set_distance(etp->GetLength(directions_options.units()));  // TODO check distance
+  // proto_leg->set_summary("Route to " + odin_maneuvers.back().street_names().front()->value());  // TODO: write better summaries
+  proto_leg->set_distance(etp->GetLength(directions_options.units()));  // TODO: check distance with units
   proto_leg->set_duration(etp->node(etp->GetLastNodeIndex()).elapsed_time());
   proto_leg->mutable_bounding_box()->set_min_lat(etp->bbox().min_ll().lat());
   proto_leg->mutable_bounding_box()->set_min_lon(etp->bbox().min_ll().lng());
@@ -505,7 +473,6 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
   proto_leg->set_geometry(etp->shape());
 
 
-  // TODO: fix maneuvers and steps with destination and start
   std::size_t maneuver_n = 0;
   for (const auto& odin_maneuver : odin_maneuvers) {
     proto::Step* proto_step = proto_leg->add_steps();
@@ -513,17 +480,6 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
 
     // if (odin_maneuver.is_not_destination())
     if (odin_maneuver.type() != 4 && odin_maneuver.type() != 5 && odin_maneuver.type() != 6) {
-      // step
-      // DONE optional float distance = 1;
-      // DONE optional uint32 duration = 2;
-      // DONE optional uint32 geometry_index_begin = 3;
-      // DONE optional uint32 geometry_index_end = 4;
-      // DONE optional uint32 incoming_maneuver_index = 5;
-      // DONE optional uint32 outgoing_maneuver_index = 6;
-      // DONE repeated StreetName street_names = 7;
-      // DONE optional string travel_mode = 8;
-      // DONE optional string travel_mode_type = 9;
-      // DONE optional string driving_side = 10;
       proto_step->set_distance(odin_maneuver.length(directions_options.units()));
       proto_step->set_duration(odin_maneuver.time());
       proto_step->set_geometry_index_begin(odin_maneuver.begin_shape_index());
@@ -531,7 +487,7 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
       proto_step->set_incoming_maneuver_index(maneuver_n);
       proto_step->set_outgoing_maneuver_index(maneuver_n + 1);
       if (!odin_maneuver.street_names().empty()) {
-        proto_step->mutable_street()->set_name(odin_maneuver.street_names().front()->value()); // TODO fix this!
+        proto_step->mutable_street()->set_name(odin_maneuver.street_names().front()->value()); // TODO fix this! see valhalla/issues/1367
         proto_step->mutable_street()->set_ref(odin_maneuver.street_names().back()->value());
       }
       // TODO: fix if find() doesn't find anything
@@ -555,49 +511,51 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
           break;
         }
       }
-      proto_step->set_driving_side("right"); // TODO fix this
+      proto_step->set_driving_side("right"); // TODO: fix this
     }
 
-    // maneuver
-    // DONE optional string type = 1;
-    // DONE optional uint32 geometry_index = 2;
-    // DONE optional uint32 incoming_bearing = 3;
-    // DONE optional uint32 outgoing_bearing = 4;
-    // TODO repeated StreetName street_names = 5;
-    // DONE optional Sign sign = 6;
+    // TODO repeated StreetName street_names = 5; // see valhalla/issues/1368
     // TODO optional Lane lane = 7;
     // TODO optional bool is_obvious = 8;
 
-    // DONE optional bool is_verbal_multi_cue = 9;
-    // DONE optional string text_instruction = 10;
-    // DONE optional string verbal_transition_alert_instruction = 11;
-    // DONE optional string verbal_pre_transition_instruction = 12;
-    // DONE optional string verbal_post_transition_instruction = 13;
     // TODO: fix/assert if find() doesn't find anything
     proto_maneuver->set_type(stringify_maneuver_type.find(odin_maneuver.type())->second);
     proto_maneuver->set_geometry_index(odin_maneuver.begin_shape_index());
-    proto_maneuver->set_incoming_bearing(odin_maneuver.begin_heading()); // TODO FIX THIS
-    proto_maneuver->set_outgoing_bearing(odin_maneuver.begin_heading());
-    if (odin_maneuver.HasExitSign()) {
-      auto* proto_maneuver_sign = proto_maneuver->mutable_sign();
+    proto_maneuver->set_incoming_bearing(odin_maneuver.begin_heading()); // TODO: FIX THIS
+    proto_maneuver->set_outgoing_bearing(odin_maneuver.begin_heading()); // TODO: FIX THIS is odin_maneuver.begin_heading() = outgoing_bearing?
+    if (odin_maneuver.HasExitSign()) {  // TODO: What is consecutive_count used for?
+      auto proto_maneuver_sign = proto_maneuver->mutable_sign();
+      // TODO: Is this lambdaable?
       if (odin_maneuver.HasExitNumberSign()) {
+        auto proto_maneuver_exit_sign_numbers = proto_maneuver_sign->mutable_exit_numbers();
         for (const auto& exit_number : odin_maneuver.signs().exit_number_list()) {
-          proto_maneuver_sign->add_exit_numbers(exit_number.text());
+          auto proto_maneuver_exit_sign_number = proto_maneuver_exit_sign_numbers->Add();
+          proto_maneuver_exit_sign_number->set_value(exit_number.text());
+          proto_maneuver_exit_sign_number->set_consecutive_count(exit_number.consecutive_count());
         }
       }
       if (odin_maneuver.HasExitBranchSign()) {
+        auto proto_maneuver_exit_sign_onto_streets = proto_maneuver_sign->mutable_exit_onto_streets();
         for (const auto& exit_branch : odin_maneuver.signs().exit_branch_list()) {
-          proto_maneuver_sign->add_exit_onto_streets(exit_branch.text());
+          auto proto_maneuver_exit_sign_onto_street = proto_maneuver_exit_sign_onto_streets->Add();
+          proto_maneuver_exit_sign_onto_street->set_value(exit_branch.text());
+          proto_maneuver_exit_sign_onto_street->set_consecutive_count(exit_branch.consecutive_count());
         }
       }
       if (odin_maneuver.HasExitTowardSign()) {
+        auto proto_maneuver_exit_sign_toward_locations = proto_maneuver_sign->mutable_exit_toward_locations();
         for (const auto& exit_toward : odin_maneuver.signs().exit_toward_list()) {
-          proto_maneuver_sign->add_exit_toward_locations(exit_toward.text());
+          auto proto_maneuver_exit_sign_toward_location = proto_maneuver_exit_sign_toward_locations->Add();
+          proto_maneuver_exit_sign_toward_location->set_value(exit_toward.text());
+          proto_maneuver_exit_sign_toward_location->set_consecutive_count(exit_toward.consecutive_count());
         }
       }
       if (odin_maneuver.HasExitNameSign()) {
+        auto proto_maneuver_exit_sign_exit_names = proto_maneuver_sign->mutable_exit_names();
         for (const auto& exit_name : odin_maneuver.signs().exit_name_list()) {
-          proto_maneuver_sign->add_exit_names(exit_name.text());
+          auto proto_maneuver_exit_sign_exit_name = proto_maneuver_exit_sign_exit_names->Add();
+          proto_maneuver_exit_sign_exit_name->set_value(exit_name.text());
+          proto_maneuver_exit_sign_exit_name->set_consecutive_count(exit_name.consecutive_count());
         }
       }
       if (odin_maneuver.roundabout_exit_count() > 0) {
@@ -627,9 +585,7 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
 
     maneuver_n++;
   }
-
-
-
+  // assert(proto_leg->steps_size() + 1 == proto_leg->maneuvers_size());
 
   return proto::Leg();
 }

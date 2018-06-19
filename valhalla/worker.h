@@ -50,6 +50,9 @@ worker_t::result_t to_response_json(const std::string& json,
 worker_t::result_t to_response_xml(const std::string& xml,
                                    http_request_info_t& request_info,
                                    const valhalla_request_t& options);
+worker_t::result_t to_response_proto(const std::string& proto,
+                                     http_request_info_t& request_info,
+                                     const valhalla_request_t& options);
 #endif
 
 class service_worker_t {
