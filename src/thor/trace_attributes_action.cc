@@ -87,8 +87,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
       map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
-  auto shape_match = STRING_TO_MATCH.find(
-      rapidjson::get<std::string>(request.document, "/shape_match", "walk_or_snap"));
+  auto shape_match = STRING_TO_MATCH.find(request.options.shape_match());
   if (shape_match == STRING_TO_MATCH.cend()) {
     throw valhalla_exception_t{445};
   } else {
