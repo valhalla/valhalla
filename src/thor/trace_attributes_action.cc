@@ -112,8 +112,7 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
       // through the map-matching algorithm to snap the points to the correct shape
       case MAP_SNAP:
         try {
-          uint32_t best_paths = rapidjson::get<uint32_t>(request.document, "/best_paths", 1);
-          map_match_results = map_match(request, controller, best_paths);
+          map_match_results = map_match(request, controller, request.options.best_paths());
         } catch (const std::exception& e) {
           throw valhalla_exception_t{
               444, shape_match->first +

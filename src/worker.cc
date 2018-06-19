@@ -610,6 +610,12 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_shape_match(*shape_match);
   }
 
+  // if specified, get the best_paths in there
+  auto best_paths = rapidjson::get_optional<uint32_t>(doc, "/best_paths");
+  if (best_paths) {
+    options.set_best_paths(*best_paths);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},

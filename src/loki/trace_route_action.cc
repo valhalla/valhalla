@@ -137,10 +137,9 @@ void loki_worker_t::init_trace(valhalla_request_t& request) {
 
   // Validate best paths and best paths shape for `map_snap` requests
   if (request.options.shape_match() == "map_snap") {
-    unsigned int best_paths =
-        rapidjson::GetValueByPointerWithDefault(request.document, "/best_paths", 1).GetUint();
-    check_best_paths(best_paths, max_best_paths);
-    check_best_paths_shape(best_paths, request.options.shape(), max_best_paths_shape);
+    check_best_paths(request.options.best_paths(), max_best_paths);
+    check_best_paths_shape(request.options.best_paths(), request.options.shape(),
+                           max_best_paths_shape);
   }
 
   // Validate optional trace options

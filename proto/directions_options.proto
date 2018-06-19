@@ -78,4 +78,5 @@ message DirectionsOptions {
   optional float generalize = 24;                   // Meters used as the tolerance for Douglas-Peucker generalization
   optional bool show_locations = 25;                // Add original locations to the isochrone geojson response
   optional string shape_match = 26;                 // The matching algorithm based on the type of input
+  optional uint32 best_paths = 27 [default = 1];    // The number of top k paths
 }
