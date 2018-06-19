@@ -761,7 +761,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing,
+  // Special cases with both time and penalty: country crossing, ferry,
   // gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
@@ -770,23 +770,22 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     seconds += gate_cost_;
     penalty += gate_penalty_;
   }
-
-  // Additional penalties without any time cost
-  uint32_t idx = pred.opp_local_idx();
-  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-  if (pred.use() != Use::kDriveway && edge->use() == Use::kDriveway) {
-    penalty += driveway_penalty_;
-  }
-  if ((pred.use() != Use::kFerry && edge->use() == Use::kFerry)) {
+  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
 
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  // Additional penalties without any time cost
+  uint32_t idx = pred.opp_local_idx();
+  if (edge->use() == Use::kAlley && pred.use() != Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (edge->use() == Use::kDriveway && pred.use() != Use::kDriveway) {
+    penalty += driveway_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
@@ -866,7 +865,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing,
+  // Special cases with both time and penalty: country crossing, ferry,
   // gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
@@ -875,22 +874,21 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
     seconds += gate_cost_;
     penalty += gate_penalty_;
   }
-
-  // Additional penalties without any time cost
-  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-  if (pred->use() != Use::kDriveway && edge->use() == Use::kDriveway) {
-    penalty += driveway_penalty_;
-  }
-  if ((pred->use() != Use::kFerry && edge->use() == Use::kFerry)) {
+  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
 
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  // Additional penalties without any time cost
+  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (edge->use() == Use::kDriveway && pred->use() != Use::kDriveway) {
+    penalty += driveway_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 

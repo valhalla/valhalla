@@ -166,6 +166,12 @@ void test_trivial_paths() {
   const auto test_request4 = R"({"locations":[{"lat":52.078882,"lon":5.1104848},
                {"lat":52.0785070,"lon":5.110835}],"costing":"auto"})";
   try_path(reader, loki_worker, test_request4, 1);
+
+  // Test avoidance of parking aisles. Path should avoid the shortcut via a parking aisle.
+  // driveable direction -must not return a single edge
+  const auto test_request5 = R"({"locations":[{"lat":52.072534,"lon":5.125980},
+               {"lat":52.072862,"lon":5.124025}],"costing":"auto"})";
+  try_path(reader, loki_worker, test_request5, 5);
 }
 
 int main(int argc, char* argv[]) {

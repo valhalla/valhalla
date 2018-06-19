@@ -22,17 +22,18 @@ namespace sif {
 // Default options/values
 namespace {
 
-constexpr float kDefaultManeuverPenalty = 5.0f;        // Seconds
-constexpr float kDefaultAlleyPenalty = 5.0f;           // Seconds
-constexpr float kDefaultGateCost = 30.0f;              // Seconds
-constexpr float kDefaultGatePenalty = 300.0f;          // Seconds
-constexpr float kDefaultFerryCost = 300.0f;            // Seconds
-constexpr float kDefaultCountryCrossingCost = 600.0f;  // Seconds
-constexpr float kDefaultCountryCrossingPenalty = 0.0f; // Seconds
-constexpr float kDefaultUseFerry = 0.5f;               // Factor between 0 and 1
-constexpr float kDefaultUseHighways = 1.0f;            // Factor between 0 and 1
-constexpr float kDefaultUsePrimary = 0.5f;             // Factor between 0 and 1
-constexpr float kDefaultUseTrails = 0.0f;              // Factor between 0 and 1
+constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultGateCost = 30.0f;                // Seconds
+constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultFerryCost = 300.0f;              // Seconds
+constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultUseFerry = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultUseHighways = 1.0f;              // Factor between 0 and 1
+constexpr float kDefaultUsePrimary = 0.5f;               // Factor between 0 and 1
+constexpr float kDefaultUseTrails = 0.0f;                // Factor between 0 and 1
+constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
 
@@ -76,6 +77,8 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
+constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
+                                                               kMaxSeconds};
 
 // Additional penalty to avoid destination only
 constexpr float kDestinationOnlyFactor = 0.2f;
@@ -292,6 +295,7 @@ public:
   float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16];       // Density factor
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
+  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float gate_cost_;                // Cost (seconds) to go through gate
   float gate_penalty_;             // Penalty (seconds) to go through gate
   float ferry_cost_;               // Cost (seconds) to enter a ferry
@@ -342,6 +346,8 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
 
   maneuver_penalty_ =
       kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
+  destination_only_penalty_ = kDestinationOnlyPenaltyRange(
+      pt.get<float>("destination_only_penalty", kDefaultDestinationOnlyPenalty));
   gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
   gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
   alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
@@ -522,8 +528,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing
-  // and gate
+  // Special cases with both time and penalty: country crossing, ferry, and gate
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
@@ -531,18 +536,22 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     seconds += gate_cost_;
     penalty += gate_penalty_;
   }
-  // Additional penalties without any time cost
-  uint32_t idx = pred.opp_local_idx();
-  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-  if (pred.use() != Use::kFerry && edge->use() == Use::kFerry) {
+  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+
+  // Additional penalties without any time cost
+  uint32_t idx = pred.opp_local_idx();
+  if (!pred.destonly() && edge->destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
@@ -575,8 +584,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing
-  // andgate
+  // Special cases with both time and penalty: country crossing, ferry, and gate
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
@@ -584,18 +592,21 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
     seconds += gate_cost_;
     penalty += gate_penalty_;
   }
-
-  // Additional penalties without any time cost
-  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-  if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
+  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+
+  // Additional penalties without any time cost
+  if (edge->destonly() && !pred->destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
