@@ -29,6 +29,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+add_definitions(-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS)
+
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.

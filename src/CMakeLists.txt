@@ -33,7 +33,8 @@ set(boost_components
   filesystem
   iostreams
   regex
-  system)
+  system
+  thread)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   list(APPEND boost_components zlib)
 endif()
