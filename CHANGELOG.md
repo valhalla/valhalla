@@ -3,6 +3,9 @@
    * 
 * **Data Producer Update**
    * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
+   * CHANGED: Lower speeds on driveways, drive-thru, and parking aisle. Set destination only flag for drive thru use.
+  **Bug Fix**
+   * CHANGED: Fix destination only penalty for A* and time dependent cases.
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:

@@ -617,7 +617,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     return {step_penalty_, 0.0f};
   }
 
-  // Penalty through gates and border control.
+  // Penalty through gates, ferries, and border control.
   float seconds = 0.0f;
   float penalty = 0.0f;
   if (node->type() == NodeType::kBorderControl) {
@@ -626,17 +626,15 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   } else if (node->type() == NodeType::kGate) {
     penalty += gate_penalty_;
   }
-
-  if ((pred.use() != Use::kFerry && edge->use() == Use::kFerry)) {
+  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
 
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   uint32_t idx = pred.opp_local_idx();
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
   if (!edge->link() && edge->use() != Use::kEgressConnection &&
       edge->use() != Use::kPlatformConnection && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
@@ -660,7 +658,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     return {step_penalty_, 0.0f};
   }
 
-  // Penalty through gates and border control.
+  // Penalty through gates, ferries, and border control.
   float seconds = 0.0f;
   float penalty = 0.0f;
   if (node->type() == NodeType::kBorderControl) {
@@ -669,16 +667,14 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   } else if (node->type() == NodeType::kGate) {
     penalty += gate_penalty_;
   }
-
-  if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
+  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
 
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && edge->use() != Use::kEgressConnection &&
       edge->use() != Use::kPlatformConnection && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 

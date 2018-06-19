@@ -42,7 +42,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
     set_use(Use::kRailFerry);
   }
   set_toll(way.toll());
-  set_dest_only(way.destination_only());
 
   if (bike_network) {
     set_bike_network(way.bike_network() | bike_network);
@@ -52,9 +51,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_truck_route(way.truck_route());
 
-  if (!way.destination_only()) {
-    set_dest_only(way.no_thru_traffic());
-  }
+  // Set destination only to true if either destination only or no thru traffic is set
+  set_dest_only(way.destination_only() || way.no_thru_traffic());
 
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());

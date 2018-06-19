@@ -175,6 +175,16 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
       directededge.set_speed(urban_rc_speed[rc]);
     }
 
+    // Reduce speeds on parking aisles, driveways, and drive-thrus. These uses are
+    // marked as destination only in pbfgraphparser.
+    if (directededge.use() == Use::kParkingAisle) {
+      directededge.set_speed(kParkingAisleSpeed);
+    } else if (directededge.use() == Use::kDriveway) {
+      directededge.set_speed(kDrivewaySpeed);
+    } else if (directededge.use() == Use::kDriveThru) {
+      directededge.set_speed(kDriveThruSpeed);
+    }
+
     // Modify speed based on surface.
     if (directededge.surface() >= Surface::kPavedRough) {
       uint32_t speed = directededge.speed();
