@@ -6,6 +6,8 @@
    * CHANGED: Lower speeds on driveways, drive-thru, and parking aisle. Set destination only flag for drive thru use.
   **Bug Fix**
    * CHANGED: Fix destination only penalty for A* and time dependent cases.
+* **Map Matching**
+   * FIXED: Fixed trace_route edge_walk server abort [#1365](https://github.com/valhalla/valhalla/pull/1365)
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:
