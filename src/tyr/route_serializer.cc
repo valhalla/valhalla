@@ -1171,7 +1171,7 @@ json::MapPtr grades(const std::list<valhalla::odin::TripPath> trip_paths, float 
   int start_of_grade;
 
   std::vector<valhalla::baldr::EdgeData> grades_data;
-  auto features_array = json::array({});
+  auto summary_array = json::array({});
   auto indices_array = json::array({});
 
   for (auto path: trip_paths) {
@@ -1194,7 +1194,7 @@ json::MapPtr grades(const std::list<valhalla::odin::TripPath> trip_paths, float 
           grade.set_percentage(grade.distance()/total_length * 100);
 
           auto feature_json = edge_data(grade);
-          features_array->emplace_back(feature_json);
+          summary_array->emplace_back(feature_json);
 
           auto indices_json = json::array({});
           indices_json->emplace_back(static_cast<uint64_t>(grade.start_index()));
@@ -1237,7 +1237,7 @@ json::MapPtr grades(const std::list<valhalla::odin::TripPath> trip_paths, float 
   }
 
   grades->emplace("overall_summary", std::move(overall_summary_array));
-  grades->emplace("summary", std::move(features_array));
+  grades->emplace("summary", std::move(summary_array));
   grades->emplace("indices", std::move(indices_array));
 
   return grades;
