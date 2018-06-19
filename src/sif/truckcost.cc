@@ -191,9 +191,10 @@ public:
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -272,7 +273,7 @@ public:
   float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16];       // Density factor
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
-  float destination_only_penalty_; // Penalty (seconds) using a driveway or parking aisle
+  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float gate_cost_;                // Cost (seconds) to go through gate
   float gate_penalty_;             // Penalty (seconds) to go through gate
   float tollbooth_cost_;           // Cost (seconds) to go through toll booth
@@ -511,21 +512,15 @@ bool TruckCost::Allowed(const baldr::NodeInfo* node) const {
 }
 
 // Get the cost to traverse the edge in seconds
-Cost TruckCost::EdgeCost(const DirectedEdge* edge) const {
-
+Cost TruckCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
   float factor = density_factor_[edge->density()];
-
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   }
 
-  float sec = 0.0f;
-  if (edge->truck_speed() > 0) {
-    sec = (edge->length() * speedfactor_[edge->truck_speed()]);
-  } else {
-    sec = (edge->length() * speedfactor_[edge->speed()]);
-  }
-
+  // Use the lower or truck speed (ir present) and speed
+  uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
+  float sec = edge->length() * speedfactor_[s];
   return {sec * factor, sec};
 }
 
@@ -537,8 +532,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing,
-  // gate, toll booth
+  // Special cases with both time and penalty: country crossing, gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
@@ -553,21 +547,20 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Additional penalties without any time cost
   uint32_t idx = pred.opp_local_idx();
-  if (allow_destination_only_ && !pred.destonly() && edge->destonly()) {
+  if (edge->destonly() && !pred.destonly()) {
     penalty += destination_only_penalty_;
   }
-  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
+  if (edge->use() == Use::kAlley && pred.use() != Use::kAlley) {
     penalty += alley_penalty_;
   }
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
-    penalty += maneuver_penalty_;
-  }
-
   if (edge->classification() == RoadClass::kResidential ||
       edge->classification() == RoadClass::kServiceOther) {
     penalty += low_class_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    penalty += maneuver_penalty_;
   }
 
   // Transition time = densityfactor * stopimpact * turncost
@@ -599,8 +592,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing,
-  // gate, toll booth
+  // Special cases with both time and penalty: country crossing, gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
@@ -614,20 +606,20 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   }
 
   // Additional penalties without any time cost
-  if (allow_destination_only_ && !pred->destonly() && edge->destonly()) {
+  if (edge->destonly() && !pred->destonly()) {
     penalty += destination_only_penalty_;
   }
-  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
+  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
     penalty += alley_penalty_;
   }
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
-  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    penalty += maneuver_penalty_;
-  }
-
   if (edge->classification() == RoadClass::kResidential ||
       edge->classification() == RoadClass::kServiceOther) {
     penalty += low_class_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
+  if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
+    penalty += maneuver_penalty_;
   }
 
   // Transition time = densityfactor * stopimpact * turncost

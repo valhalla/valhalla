@@ -11,7 +11,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder
-    idtable mapmatch matrix names node_search refs search signinfo uniquenames utrecht)
+    idtable mapmatch matrix names node_search refs search signinfo trivial_paths uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)
@@ -47,8 +47,9 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
 
 add_custom_command(OUTPUT .locales.timestamp
-  COMMAND /bin/bash -c "for loc in $(jq --raw-output \".posix_locale\" *.json); do \
-       localedef --inputfile=$\{loc\%.\*\} --charmap=$\{loc\#\#\*.\} ./$\{loc\} ; \
+  COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
+       $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
+       $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
      done \
      && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
@@ -93,13 +94,31 @@ add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
+  add_dependencies(run-trivial_paths utrecht_tiles)
 endif()
 
 if(ENABLE_SERVICES)
   add_dependencies(run-skadi_service test_directories)
 endif()
 
+if(ENABLE_PYTHON_BINDINGS)
+  find_package(PythonInterp)
+  add_custom_command(OUTPUT python_valhalla.log
+    COMMAND
+      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
+      PYTHONPATH=src/bindings/python
+      /bin/bash -c "${PYTHON_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py > test/python_valhalla.log"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
+      utrecht_tiles
+      python_valhalla
+    VERBATIM)
+  add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
+endif()
+
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};python_valhalla")
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})

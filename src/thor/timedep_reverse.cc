@@ -155,7 +155,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge));
     newcost.cost += tc.cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
@@ -399,7 +399,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
     // Get cost
-    Cost cost = costing_->EdgeCost(directededge) * edge.percent_along();
+    Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
     float dist = astarheuristic_.GetDistance(tile->node(opp_dir_edge->endnode())->latlng());
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -422,9 +422,10 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
-            Cost dest_cost =
-                costing_->EdgeCost(tile->directededge(GraphId(destination_edge.graph_id()))) *
-                (1.0f - destination_edge.percent_along());
+            GraphId id(destination_edge.graph_id());
+            const DirectedEdge* dest_diredge = tile->directededge(id);
+            Cost dest_cost = costing_->EdgeCost(dest_diredge, tile->GetSpeed(dest_diredge)) *
+                             (1.0f - destination_edge.percent_along());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
             cost.cost += destination_edge.distance();
@@ -446,8 +447,8 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // Add BDEdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path. Make sure the opposing
     // edge (edgeid) is set.
+    // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
     uint32_t idx = edgelabels_rev_.size();
-    edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, c, false);
     adjacencylist_->add(idx);
@@ -495,7 +496,8 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const odin::Lo
       continue;
     }
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
-    destinations_[oppedge] = costing_->EdgeCost(directededge) * (1.0f - edge.percent_along());
+    destinations_[oppedge] = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
+                             (1.0f - edge.percent_along());
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
