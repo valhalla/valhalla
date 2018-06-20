@@ -79,4 +79,7 @@ message DirectionsOptions {
   optional bool show_locations = 25;                // Add original locations to the isochrone geojson response
   optional string shape_match = 26;                 // The matching algorithm based on the type of input
   optional uint32 best_paths = 27 [default = 1];    // The number of top k paths
+  optional float gps_accuracy = 28;                 // The gps accuracy associated with the suppplied trace points
+  optional float search_radius = 29;                // The search radius associated with the suppplied trace points
+  optional float turn_penalty_factor = 30;          // The turn penalty factor associated with the suppplied trace points
 }

@@ -616,6 +616,25 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_best_paths(*best_paths);
   }
 
+  // if specified, get the trace gps_accuracy value in there
+  auto gps_accuracy = rapidjson::get_optional<float>(doc, "/trace_options/gps_accuracy");
+  if (gps_accuracy) {
+    options.set_gps_accuracy(*gps_accuracy);
+  }
+
+  // if specified, get the trace search_radius value in there
+  auto search_radius = rapidjson::get_optional<float>(doc, "/trace_options/search_radius");
+  if (search_radius) {
+    options.set_search_radius(*search_radius);
+  }
+
+  // if specified, get the trace turn_penalty_factor value in there
+  auto turn_penalty_factor =
+      rapidjson::get_optional<float>(doc, "/trace_options/turn_penalty_factor");
+  if (turn_penalty_factor) {
+    options.set_turn_penalty_factor(*turn_penalty_factor);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
