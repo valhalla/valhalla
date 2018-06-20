@@ -1161,9 +1161,29 @@ json::ArrayPtr edge_data(valhalla::baldr::EdgeData data) {
   return edge_data;
 }
 
-json::MapPtr grades(const std::list<valhalla::odin::TripPath> trip_paths, float total_length) {
-  auto grades = json::map({});
+json::ArrayPtr grades_overall_summary(const std::vector<valhalla::baldr::EdgeData> grades_data) {
+  auto overall_summary_array = json::array({});
+  auto overall_grade = grades_data.front();
 
+  for (int i = 1; i < grades_data.size(); i++) {
+    if (overall_grade.type() == grades_data[i].type()) {
+      overall_grade += grades_data[i];
+    } else {
+      overall_summary_array->emplace_back(edge_data(overall_grade));
+      overall_grade = grades_data[i];
+    }
+
+    if (i == grades_data.size() - 1) {
+      overall_summary_array->emplace_back(edge_data(overall_grade));
+    }
+  }
+
+  return overall_summary_array;
+}
+
+std::tuple<std::vector<valhalla::baldr::EdgeData>, json::ArrayPtr, json::ArrayPtr>
+          get_grades_data(const std::vector<valhalla::odin::TripPath_Edge> edges,
+                          float total_length) {
   valhalla::baldr::EdgeData grade;
 
   // The shape index of where the beginning
@@ -1171,70 +1191,62 @@ json::MapPtr grades(const std::list<valhalla::odin::TripPath> trip_paths, float 
   int start_of_grade;
 
   std::vector<valhalla::baldr::EdgeData> grades_data;
-  auto summary_array = json::array({});
   auto indices_array = json::array({});
+  auto summary_array = json::array({});
 
-  for (auto path: trip_paths) {
-    for (int i = 0; i < path.node_size(); i++) {
-      auto current_edge = path.node(i).edge();
+  for (int i = 0; i < edges.size(); i++) {
+    auto current_edge = edges[i];
 
-      // Save information if it is the first index
-      if (i == 0) {
-        start_of_grade = 0;
+    // Save information if it is the first index
+    if (i == 0) {
+      start_of_grade = 0;
+      grade.set_type(current_edge.weighted_grade());
+      grade.set_distance(current_edge.length());
+    } else {
+      auto previous_edge = edges[i - 1];
+
+      // Either if it is the last edge, or the grades are different
+      // save their information to the maps
+      if (i == edges.size() - 1 || previous_edge.weighted_grade() != current_edge.weighted_grade()) {
+        grade.set_start_index(start_of_grade);
+        grade.set_end_index(previous_edge.end_shape_index());
+        grade.set_percentage(grade.distance()/total_length * 100);
+
+        auto feature_json = edge_data(grade);
+        summary_array->emplace_back(feature_json);
+
+        auto indices_json = json::array({});
+        indices_json->emplace_back(static_cast<uint64_t>(grade.start_index()));
+        indices_json->emplace_back(static_cast<uint64_t>(grade.end_index()));
+        indices_array->emplace_back(indices_json);
+
+        grades_data.push_back(grade);
+
+        start_of_grade = current_edge.begin_shape_index();
         grade.set_type(current_edge.weighted_grade());
         grade.set_distance(current_edge.length());
       } else {
-        auto previous_edge = path.node(i - 1).edge();
-
-        // Either if it is the last edge, or the grades are different
-        // save their information to the maps
-        if (i == path.node_size() - 1 || previous_edge.weighted_grade() != current_edge.weighted_grade()) {
-          grade.set_start_index(start_of_grade);
-          grade.set_end_index(previous_edge.end_shape_index());
-          grade.set_percentage(grade.distance()/total_length * 100);
-
-          auto feature_json = edge_data(grade);
-          summary_array->emplace_back(feature_json);
-
-          auto indices_json = json::array({});
-          indices_json->emplace_back(static_cast<uint64_t>(grade.start_index()));
-          indices_json->emplace_back(static_cast<uint64_t>(grade.end_index()));
-          indices_array->emplace_back(indices_json);
-
-          grades_data.push_back(grade);
-
-          start_of_grade = current_edge.begin_shape_index();
-          grade.set_type(current_edge.weighted_grade());
-          grade.set_distance(current_edge.length());
-        } else {
-          auto new_distance = grade.distance() + current_edge.length();
-          grade.set_distance(new_distance);
-        }
+        auto new_distance = grade.distance() + current_edge.length();
+        grade.set_distance(new_distance);
       }
     }
   }
 
-  auto overall_summary_array = json::array({});
+  return std::make_tuple(grades_data, indices_array, summary_array);
+}
 
-  if (grades_data.size() == 1) {
-    overall_summary_array->emplace_back(edge_data(grades_data.front()));
-  } else {
-    std::sort(grades_data.begin(), grades_data.end());
-    auto overall_grade = grades_data.front();
+json::MapPtr grades(const std::vector<valhalla::odin::TripPath_Edge> edges, float total_length) {
+  auto grades = json::map({});
 
-    for (int i = 1; i < grades_data.size(); i++) {
-      if (overall_grade.type() == grades_data[i].type()) {
-        overall_grade += grades_data[i];
-      } else {
-        overall_summary_array->emplace_back(edge_data(overall_grade));
-        overall_grade = grades_data[i];
-      }
+  auto grades_info = get_grades_data(edges, total_length);
+  auto grades_data = std::get<0>(grades_info);
+  json::ArrayPtr indices_array = std::get<1>(grades_info);
+  json::ArrayPtr summary_array = std::get<2>(grades_info);
 
-      if (i == grades_data.size() - 1) {
-        overall_summary_array->emplace_back(edge_data(overall_grade));
-      } 
-    }
-  }
+  std::sort(grades_data.begin(), grades_data.end());
+
+  json::ArrayPtr overall_summary_array = (grades_data.size() == 1) ? 
+    edge_data(grades_data.front()) : grades_overall_summary(grades_data);
 
   grades->emplace("overall_summary", std::move(overall_summary_array));
   grades->emplace("summary", std::move(summary_array));
@@ -1560,6 +1572,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   // build up the json object
 
   std::map<int, bool> direction_map;
+  std::vector<valhalla::odin::TripPath_Edge> edges;
   float total_length = 0;
 
   for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
@@ -1567,6 +1580,8 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
       auto edge = node.edge();
 
       total_length += edge.length();
+
+      edges.push_back(edge);
 
       if (edge.roundabout())
         direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});
@@ -1591,7 +1606,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   auto properties = json::map({});
 
   if (directions_options.grades()) {
-    properties->emplace("grades", grades(trip_paths, total_length));
+    properties->emplace("grades", grades(edges, total_length));
     json->emplace("properties", properties);
   }
 
