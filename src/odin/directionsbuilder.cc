@@ -475,11 +475,12 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
 
   std::size_t maneuver_n = 0;
   for (const auto& odin_maneuver : odin_maneuvers) {
-    proto::Step* proto_step = proto_leg->add_steps();
-    proto::Maneuver* proto_maneuver = proto_leg->add_maneuvers();
 
-    // if (odin_maneuver.is_not_destination())
-    if (odin_maneuver.type() != 4 && odin_maneuver.type() != 5 && odin_maneuver.type() != 6) {
+    if (odin_maneuver.type() != TripDirections_Maneuver_Type_kDestination &&
+        odin_maneuver.type() != TripDirections_Maneuver_Type_kDestinationRight &&
+        odin_maneuver.type() != TripDirections_Maneuver_Type_kDestinationLeft) {
+      // std::cout << "Creating Step #" << maneuver_n << " of type " << TripDirections_Maneuver_Type_Name(odin_maneuver.type()) << std::endl;
+      proto::Step* proto_step = proto_leg->add_steps();
       proto_step->set_distance(odin_maneuver.length(directions_options.units()));
       proto_step->set_duration(odin_maneuver.time());
       proto_step->set_geometry_index_begin(odin_maneuver.begin_shape_index());
@@ -518,6 +519,7 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
     // TODO optional Lane lane = 7;
     // TODO optional bool is_obvious = 8;
 
+    proto::Maneuver* proto_maneuver = proto_leg->add_maneuvers();
     // TODO: fix/assert if find() doesn't find anything
     proto_maneuver->set_type(stringify_maneuver_type.find(odin_maneuver.type())->second);
     proto_maneuver->set_geometry_index(odin_maneuver.begin_shape_index());
@@ -585,7 +587,7 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
 
     maneuver_n++;
   }
-  // assert(proto_leg->steps_size() + 1 == proto_leg->maneuvers_size());
+  assert(proto_leg->steps_size() + 1 == proto_leg->maneuvers_size());
 
   return proto::Leg();
 }

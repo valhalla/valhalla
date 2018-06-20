@@ -86,13 +86,9 @@ worker_t::result_t OdinWorker::work(const std::list<zmq::message_t>& job,
 
       auto narrated_proto = narrateProto(request, legs);
 
-      std::cout << "DEBUG" << std::endl;
-      std::cout << narrated_proto.DebugString() << std::endl;
 
       std::string narrated_proto_string;
       narrated_proto.SerializeToString(&narrated_proto_string);
-      std::cout << "DEBUG STRING" << std::endl;
-      std::cout << narrated_proto_string << std::endl;
 
       return to_response_proto(narrated_proto_string, info, request);
     }
