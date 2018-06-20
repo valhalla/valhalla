@@ -14,16 +14,6 @@ constexpr uint32_t kMaxNodesPerWay = 65535;
 namespace valhalla {
 namespace mjolnir {
 
-// Set way id.
-void OSMWay::set_way_id(const uint64_t id) {
-  osmwayid_ = id;
-}
-
-// Get the way id
-uint64_t OSMWay::way_id() const {
-  return osmwayid_;
-}
-
 // Set the number of nodes for this way.
 void OSMWay::set_node_count(const uint32_t count) {
   if (count > kMaxNodesPerWay) {
@@ -34,189 +24,34 @@ void OSMWay::set_node_count(const uint32_t count) {
   }
 }
 
-// Get the number of nodes for this way.
-uint32_t OSMWay::node_count() const {
-  return nodecount_;
-}
-
 // Sets the speed in KPH.
 void OSMWay::set_speed(const float speed) {
+  // TODO - range check
   speed_ = static_cast<unsigned char>(speed + 0.5f);
-}
-
-// Gets the speed in KPH.
-float OSMWay::speed() const {
-  return static_cast<float>(speed_);
 }
 
 // Sets the speed limit in KPH.
 void OSMWay::set_speed_limit(const float speed_limit) {
+  // TODO - range check
   speed_limit_ = static_cast<unsigned char>(speed_limit + 0.5f);
-}
-
-// Gets the speed limit in KPH.
-float OSMWay::speed_limit() const {
-  return static_cast<float>(speed_limit_);
 }
 
 // Sets the backward speed in KPH.
 void OSMWay::set_backward_speed(const float backward_speed) {
+  // TODO - range check
   backward_speed_ = static_cast<unsigned char>(backward_speed + 0.5f);
-}
-
-// Gets the backward speed in KPH.
-float OSMWay::backward_speed() const {
-  return static_cast<float>(backward_speed_);
 }
 
 // Sets the backward speed in KPH.
 void OSMWay::set_forward_speed(const float forward_speed) {
+  // TODO - range check
   forward_speed_ = static_cast<unsigned char>(forward_speed + 0.5f);
-}
-
-// Gets the backward speed in KPH.
-float OSMWay::forward_speed() const {
-  return static_cast<float>(forward_speed_);
 }
 
 // Sets the truck speed in KPH.
 void OSMWay::set_truck_speed(const float speed) {
+  // TODO - range check
   truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
-}
-
-// Gets the truck speed in KPH.
-float OSMWay::truck_speed() const {
-  return static_cast<float>(truck_speed_);
-}
-
-// Set the index for the ref.
-void OSMWay::set_ref_index(const uint32_t idx) {
-  ref_index_ = idx;
-}
-
-// Get the ref.
-uint32_t OSMWay::ref_index() const {
-  return ref_index_;
-}
-
-// Set the index for the int ref.
-void OSMWay::set_int_ref_index(const uint32_t idx) {
-  int_ref_index_ = idx;
-}
-
-// Get the int ref.
-uint32_t OSMWay::int_ref_index() const {
-  return int_ref_index_;
-}
-
-// Set the index for the name.
-void OSMWay::set_name_index(const uint32_t idx) {
-  name_index_ = idx;
-}
-
-// Get the name.
-uint32_t OSMWay::name_index() const {
-  return name_index_;
-}
-
-// Set the index for the name:en.
-void OSMWay::set_name_en_index(const uint32_t idx) {
-  name_en_index_ = idx;
-}
-
-// Get the name:en.
-uint32_t OSMWay::name_en_index() const {
-  return name_en_index_;
-}
-
-// Set the index for the alt name.
-void OSMWay::set_alt_name_index(const uint32_t idx) {
-  alt_name_index_ = idx;
-}
-
-// Get the alt name.
-uint32_t OSMWay::alt_name_index() const {
-  return alt_name_index_;
-}
-
-// Set the index for the official name.
-void OSMWay::set_official_name_index(const uint32_t idx) {
-  official_name_index_ = idx;
-}
-
-// Get the official name.
-uint32_t OSMWay::official_name_index() const {
-  return official_name_index_;
-}
-
-// Set the index for the destination.
-void OSMWay::set_destination_index(const uint32_t idx) {
-  destination_index_ = idx;
-}
-
-// Get the get_destination.
-uint32_t OSMWay::destination_index() const {
-  return destination_index_;
-}
-
-// Set the index for the destination.
-void OSMWay::set_destination_forward_index(const uint32_t idx) {
-  destination_forward_index_ = idx;
-}
-
-// Get the get_destination.
-uint32_t OSMWay::destination_forward_index() const {
-  return destination_forward_index_;
-}
-
-// Set the index for the destination.
-void OSMWay::set_destination_backward_index(const uint32_t idx) {
-  destination_backward_index_ = idx;
-}
-
-// Get the get_destination.
-uint32_t OSMWay::destination_backward_index() const {
-  return destination_backward_index_;
-}
-
-// Set the index for thedestination_ref.
-void OSMWay::set_destination_ref_index(const uint32_t idx) {
-  destination_ref_index_ = idx;
-}
-
-// Get the destination_ref.
-uint32_t OSMWay::destination_ref_index() const {
-  return destination_ref_index_;
-}
-
-// Set the index for the destination_ref_to.
-void OSMWay::set_destination_ref_to_index(const uint32_t idx) {
-  destination_ref_to_index_ = idx;
-}
-
-// Get the destination ref to.
-uint32_t OSMWay::destination_ref_to_index() const {
-  return destination_ref_to_index_;
-}
-
-// Set the index for thedestination_street.
-void OSMWay::set_destination_street_index(const uint32_t idx) {
-  destination_street_index_ = idx;
-}
-
-// Get the destination_street.
-uint32_t OSMWay::destination_street_index() const {
-  return destination_street_index_;
-}
-
-// Set the index for the destination_street_to.
-void OSMWay::set_destination_street_to_index(const uint32_t idx) {
-  destination_street_to_index_ = idx;
-}
-
-// Get the destination street to.
-uint32_t OSMWay::destination_street_to_index() const {
-  return destination_street_to_index_;
 }
 
 // Set the index for the junction_ref.

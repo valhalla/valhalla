@@ -520,28 +520,24 @@ void BuildTileSet(const std::string& ways_file,
             std::swap(source, target);
           }
 
-          // Validate speed
-          uint32_t speed = static_cast<uint32_t>(w.speed());
-
+          // Validate speed. Set speed limit and truck speed.
+          uint32_t speed = w.speed();
           if (forward && w.forward_tagged_speed()) {
-            speed = static_cast<uint32_t>(w.forward_speed());
+            speed = w.forward_speed();
           } else if (!forward && w.backward_tagged_speed()) {
-            speed = static_cast<uint32_t>(w.backward_speed());
+            speed = w.backward_speed();
           }
-
           if (speed > kMaxSpeedKph) {
             LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
             speed = kMaxSpeedKph;
           }
-
-          uint32_t speed_limit = static_cast<uint32_t>(w.speed_limit());
+          uint32_t speed_limit = w.speed_limit();
           if (speed_limit > kMaxSpeedKph) {
             LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
                      " wayId= " + std::to_string(w.way_id()));
             speed_limit = kMaxSpeedKph;
           }
-
-          uint32_t truck_speed = static_cast<uint32_t>(w.truck_speed());
+          uint32_t truck_speed = w.truck_speed();
           if (truck_speed > kMaxSpeedKph) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
                      " wayId= " + std::to_string(w.way_id()));

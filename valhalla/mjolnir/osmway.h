@@ -18,13 +18,17 @@ struct OSMWay {
    * Set way id.
    * @param   id  way id
    */
-  void set_way_id(const uint64_t id);
+  void set_way_id(const uint64_t id) {
+    osmwayid_ = id;
+  }
 
   /**
    * Get the way id
    * @return  Returns way id.
    */
-  uint64_t way_id() const;
+  uint64_t way_id() const {
+    return osmwayid_;
+  }
 
   /**
    * Set the number of nodes for this way.
@@ -35,7 +39,9 @@ struct OSMWay {
   /**
    * Get the number of nodes for this way.
    */
-  uint32_t node_count() const;
+  uint32_t node_count() const {
+    return nodecount_;
+  }
 
   /**
    * Sets the speed
@@ -47,7 +53,9 @@ struct OSMWay {
    * Gets the speed in KPH.
    * @return  Returns speed.
    */
-  float speed() const;
+  uint8_t speed() const {
+    return static_cast<float>(speed_);
+  }
 
   /**
    * Sets the speed limit
@@ -59,8 +67,9 @@ struct OSMWay {
    * Gets the speed limit in KPH.
    * @return  Returns speed_limit.
    */
-  float speed_limit() const;
-
+  uint8_t speed_limit() const {
+    return static_cast<float>(speed_limit_);
+  }
   /**
    * Sets the backward speed
    * @param  backward_speed   Speed in KPH.
@@ -71,7 +80,9 @@ struct OSMWay {
    * Gets the backward speed in KPH.
    * @return  Returns backward speed.
    */
-  float backward_speed() const;
+  uint8_t backward_speed() const {
+    return backward_speed_;
+  }
 
   /**
    * Sets the forward speed
@@ -83,7 +94,9 @@ struct OSMWay {
    * Gets the forward speed in KPH.
    * @return  Returns forward speed.
    */
-  float forward_speed() const;
+  uint8_t forward_speed() const {
+    return forward_speed_;
+  }
 
   /**
    * Sets the truck speed
@@ -95,163 +108,249 @@ struct OSMWay {
    * Gets the truck speed in KPH.
    * @return  Returns truck speed.
    */
-  float truck_speed() const;
+  uint8_t truck_speed() const {
+    return truck_speed_;
+  }
 
   /**
    * Sets the index for the ref
    * @param  idx  Index for the reference.
    */
-  void set_ref_index(const uint32_t idx);
+  void set_ref_index(const uint32_t idx) {
+    ref_index_ = idx;
+  }
 
   /**
    * Get the ref index.
    * @return  Returns the index for the ref.
    */
-  uint32_t ref_index() const;
+  uint32_t ref_index() const {
+    return ref_index_;
+  }
 
   /**
    * Sets the index for int ret
    * @param  idx  Index for the international reference.
    */
-  void set_int_ref_index(const uint32_t idx);
+  void set_int_ref_index(const uint32_t idx) {
+    int_ref_index_ = idx;
+  }
 
   /**
    * Get the int ref index.
    * @return  Returns the index for the int ref.
    */
-  uint32_t int_ref_index() const;
+  uint32_t int_ref_index() const {
+    return int_ref_index_;
+  }
 
   /**
    * Sets the index for name
    * @param  idx  Index for the name.
    */
-  void set_name_index(const uint32_t idx);
+  void set_name_index(const uint32_t idx) {
+    name_index_ = idx;
+  }
 
   /**
    * Get the name index.
    * @return  Returns the index for the name.
    */
-  uint32_t name_index() const;
+  uint32_t name_index() const {
+    return name_index_;
+  }
 
   /**
    * Sets the index for name:en
    * @param  idx  Index for the English name.
    */
-  void set_name_en_index(const uint32_t idx);
+  void set_name_en_index(const uint32_t idx) {
+    name_en_index_ = idx;
+  }
 
   /**
    * Get the name:en index.
    * @return  Returns the index for the English name.
    */
-  uint32_t name_en_index() const;
+  uint32_t name_en_index() const {
+    return name_en_index_;
+  }
 
   /**
    * Sets the index for alt name
    * @param  idx  Index for the alt name.
    */
-  void set_alt_name_index(const uint32_t idx);
+  void set_alt_name_index(const uint32_t idx) {
+    alt_name_index_ = idx;
+  }
 
   /**
    * Get the alt name index.
    * @return  Returns the index for the alt name.
    */
-  uint32_t alt_name_index() const;
+  uint32_t alt_name_index() const {
+    return alt_name_index_;
+  }
 
   /**
    * Sets the index for official name
    * @param  idx  Index for the official name.
    */
-  void set_official_name_index(const uint32_t idx);
+  void set_official_name_index(const uint32_t idx) {
+    official_name_index_ = idx;
+  }
 
   /**
    * Get the official name index.
    * @return  Returns the index for the official name.
    */
-  uint32_t official_name_index() const;
+  uint32_t official_name_index() const {
+    return official_name_index_;
+  }
+
+  /**
+   * Sets the index for forward turn lanes string.
+   * @param  idx  Index for the forward turn lanes string.
+   */
+  void set_fwd_turn_lanes_index(const uint32_t idx) {
+    fwd_turn_lanes_index_ = idx;
+  }
+
+  /**
+   * Get the forward turn lanes string index.
+   * @return  Returns the index for the forward turn lanes string.
+   */
+  uint32_t fwd_turn_lanes_index() const {
+    return fwd_turn_lanes_index_;
+  }
+
+  /**
+   * Sets the index for backward turn lanes string.
+   * @param  idx  Index for the backward turn lanes string.
+   */
+  void set_bwd_turn_lanes_index(const uint32_t idx) {
+    bwd_turn_lanes_index_ = idx;
+  }
+
+  /**
+   * Get the backward turn lanes string index.
+   * @return  Returns the index for the backward turn lanes string.
+   */
+  uint32_t bwd_turn_lanes_index() const {
+    return bwd_turn_lanes_index_;
+  }
 
   /**
    * Sets the index for destination.
    * @param  idx  Index for the destination.
    */
-  void set_destination_index(const uint32_t idx);
+  void set_destination_index(const uint32_t idx) {
+    destination_index_ = idx;
+  }
 
   /**
    * Get the get_destination index.
    * @return  Returns the index for the destination.
    */
-  uint32_t destination_index() const;
+  uint32_t destination_index() const {
+    return destination_index_;
+  }
 
   /**
    * Sets the index for destination in forward direction.
    * @param  idx  Index for the destination.
    */
-  void set_destination_forward_index(const uint32_t idx);
+  void set_destination_forward_index(const uint32_t idx) {
+    destination_forward_index_ = idx;
+  }
 
   /**
    * Get the get_destination index.
    * @return  Returns the index for the destination.
    */
-  uint32_t destination_forward_index() const;
+  uint32_t destination_forward_index() const {
+    return destination_forward_index_;
+  }
 
   /**
    * Sets the index for destination in backward direction.
    * @param  idx  Index for the destination.
    */
-  void set_destination_backward_index(const uint32_t idx);
+  void set_destination_backward_index(const uint32_t idx) {
+    destination_backward_index_ = idx;
+  }
 
   /**
    * Get the get_destination index.
    * @return  Returns the index for the destination.
    */
-  uint32_t destination_backward_index() const;
+  uint32_t destination_backward_index() const {
+    return destination_backward_index_;
+  }
 
   /**
    * Sets the index for destination ref.
    * @param  idx  Index for the destination ref.
    */
-  void set_destination_ref_index(const uint32_t idx);
+  void set_destination_ref_index(const uint32_t idx) {
+    destination_ref_index_ = idx;
+  }
 
   /**
    * Get the destination_ref index.
    * @return  Returns the index for the destination ref.
    */
-  uint32_t destination_ref_index() const;
+  uint32_t destination_ref_index() const {
+    return destination_ref_index_;
+  }
 
   /**
    * Sets the index for destination ref to.
    * @param  idx  Index for the destination ref to.
    */
-  void set_destination_ref_to_index(const uint32_t idx);
+  void set_destination_ref_to_index(const uint32_t idx) {
+    destination_ref_to_index_ = idx;
+  }
 
   /**
    * Get the destination ref to index.
    * @return  Returns the index for the destination ref to.
    */
-  uint32_t destination_ref_to_index() const;
+  uint32_t destination_ref_to_index() const {
+    return destination_ref_to_index_;
+  }
 
   /**
    * Sets the index for destination street.
    * @param  idx  Index for the destination street.
    */
-  void set_destination_street_index(const uint32_t idx);
+  void set_destination_street_index(const uint32_t idx) {
+    destination_street_index_ = idx;
+  }
 
   /**
    * Get the destination_street index.
    * @return  Returns the index for the destination street.
    */
-  uint32_t destination_street_index() const;
+  uint32_t destination_street_index() const {
+    return destination_street_index_;
+  }
 
   /**
    * Sets the index for destination street to.
    * @param  idx  Index for the destination street to.
    */
-  void set_destination_street_to_index(const uint32_t idx);
+  void set_destination_street_to_index(const uint32_t idx) {
+    destination_street_to_index_ = idx;
+  }
 
   /**
    * Get the destination street to index.
    * @return  Returns the index for the destination street to.
    */
-  uint32_t destination_street_to_index() const;
+  uint32_t destination_street_to_index() const{
+    return destination_street_to_index_;
+  }
 
   /**
    * Sets the index for junction ref.
@@ -1089,6 +1188,10 @@ struct OSMWay {
   uint32_t name_en_index_;
   uint32_t alt_name_index_;
   uint32_t official_name_index_;
+
+  // Turn lanes
+  uint32_t fwd_turn_lanes_index_;
+  uint32_t bwd_turn_lanes_index_;
 
   // Sign Destination information
   uint32_t destination_index_;
