@@ -56,10 +56,10 @@ protected:
   TripDirections PopulateTripDirections(const DirectionsOptions& directions_options,
                                         EnhancedTripPath* etp,
                                         std::list<Maneuver>& maneuvers);
-  proto::Leg PopulateRouteLegProto(const DirectionsOptions& directions_options,
+  void PopulateRouteLegProto(const DirectionsOptions& directions_options,
                                    EnhancedTripPath* etp,
                                    std::list<Maneuver>& maneuvers,
-                                   proto::Route* proto_route);
+                                   proto::Leg* proto_leg);
 };
 
 } // namespace odin

@@ -187,7 +187,7 @@ proto::Directions DirectionsBuilder::BuildProto(const DirectionsOptions& directi
   proto::Directions proto_directions;
 
 
-  auto proto_route = proto_directions.add_routes(); // TODO: do this for every alternative route
+  proto::Route* proto_route = proto_directions.add_routes(); // TODO: do this for every alternative route
 
   for (auto& leg : legs) {
     // Validate trip path node list
@@ -212,7 +212,8 @@ proto::Directions DirectionsBuilder::BuildProto(const DirectionsOptions& directi
           NarrativeBuilderFactory::Create(directions_options, etp);
       narrative_builder->Build(directions_options, etp, maneuvers);
     }
-    auto proto_leg = PopulateRouteLegProto(directions_options, etp, maneuvers, proto_route);
+    proto::Leg* proto_leg = proto_route->add_legs();
+    PopulateRouteLegProto(directions_options, etp, maneuvers, proto_leg);
   }
 
   return proto_directions;
@@ -457,12 +458,11 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
 
 // Returns the trip directions based on the specified directions options,
 // trip path, and maneuver list.
-proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& directions_options,
+void DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& directions_options,
                                                     EnhancedTripPath* etp,
                                                     std::list<Maneuver>& odin_maneuvers,
-                                                    proto::Route* proto_route) {
+                                                    proto::Leg* proto_leg) {
 
-  auto proto_leg = proto_route->add_legs();
   // proto_leg->set_summary("Route to " + odin_maneuvers.back().street_names().front()->value());  // TODO: write better summaries
   proto_leg->set_distance(etp->GetLength(directions_options.units()));  // TODO: check distance with units
   proto_leg->set_duration(etp->node(etp->GetLastNodeIndex()).elapsed_time());
@@ -481,6 +481,7 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
         odin_maneuver.type() != TripDirections_Maneuver_Type_kDestinationLeft) {
       // std::cout << "Creating Step #" << maneuver_n << " of type " << TripDirections_Maneuver_Type_Name(odin_maneuver.type()) << std::endl;
       proto::Step* proto_step = proto_leg->add_steps();
+
       proto_step->set_distance(odin_maneuver.length(directions_options.units()));
       proto_step->set_duration(odin_maneuver.time());
       proto_step->set_geometry_index_begin(odin_maneuver.begin_shape_index());
@@ -588,8 +589,6 @@ proto::Leg DirectionsBuilder::PopulateRouteLegProto(const DirectionsOptions& dir
     maneuver_n++;
   }
   assert(proto_leg->steps_size() + 1 == proto_leg->maneuvers_size());
-
-  return proto::Leg();
 }
 
 

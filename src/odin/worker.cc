@@ -1,3 +1,4 @@
+#include <fstream>
 #include <cstdint>
 #include <functional>
 #include <sstream>
@@ -82,18 +83,29 @@ worker_t::result_t OdinWorker::work(const std::list<zmq::message_t>& job,
 
     // narrate them and serialize them along
     if (request.options.format() == DirectionsOptions::proto) {
-      std::cout << "PROTO YEAI" << std::endl;
 
-      auto narrated_proto = narrateProto(request, legs);
+      proto::Directions narrated_proto = narrateProto(request, legs);
 
-
+      // encode to binary
       std::string narrated_proto_string;
       narrated_proto.SerializeToString(&narrated_proto_string);
+
+      // // decode again
+      // proto::Directions decoded;
+      // decoded.ParseFromString(narrated_proto_string);
+
+      // // print for debugging purposes
+      // std::cout << narrated_proto.DebugString() << std::endl;
+
+      // // save to file
+      // std::ofstream debugfile;
+      // debugfile.open ("data/debug.pbf");
+      // debugfile << narrated_proto_string;
+      // debugfile.close();
 
       return to_response_proto(narrated_proto_string, info, request);
     }
     else {
-      std::cout << "NO PROTO NAY" << std::endl;
       auto narrated = narrate(request, legs);
       auto response = tyr::serializeDirections(request, legs, narrated);
       auto* to_response =
