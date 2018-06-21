@@ -4,7 +4,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
   narrativebuilder narrative_dictionary nodeinfo obb2 openlr optimizer parse_request point2 pointll
-  polyline2 queue routing sample sequence sign signs streetname streetnames streetnames_factory
+  polyline2 predictive_traffic queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles traffic_matcher transitdeparture transitroute transitschedule
   transitstop turn util_midgard util_odin util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search)
@@ -41,9 +41,12 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
+      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","hierarchy":true,"shortcuts":true,"concurrency":4,"logging":{"type":""}}}'
+      -t ${VALHALLA_SOURCE_DIR}/test/data/
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
+  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
 
 add_custom_command(OUTPUT .locales.timestamp
@@ -95,6 +98,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
+  add_dependencies(predictive_traffic utrecht_tiles)
 endif()
 
 if(ENABLE_SERVICES)
