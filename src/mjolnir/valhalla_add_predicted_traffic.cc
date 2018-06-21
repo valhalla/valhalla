@@ -139,7 +139,6 @@ void ParseTrafficFile(const std::string& directory,
  * <quadtreeID>.freeflow.csv. (e.g., 1202021.constrained.csv and 1202021.freeflow.csv)
  */
 void parse_traffic_tiles(const std::string& traffic_dir,
-                         std::mutex& lock,
                          std::unordered_set<std::string>::const_iterator tile_start,
                          std::unordered_set<std::string>::const_iterator tile_end,
                          unique_data_t& unique_data,
@@ -166,27 +165,59 @@ void update_valhalla_tiles(
   stats stat{};
   // Get the tile dir
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+  GraphReader reader(pt.get_child("mjolnir"));
+
   // Iterate through the tiles in the queue and perform enhancements
   for (; tile_start != tile_end; ++tile_start) {
+    // Get the tile
+    vj::GraphTileBuilder tile_builder(tile_dir, tile_start->first, false);
+    // Update nodes and directed edges as needed
+    std::vector<NodeInfo> nodes;
+    std::vector<DirectedEdge> directededges;
+    // Get this tile
     lock.lock();
-    vj::GraphTileBuilder tile_builder(tile_dir, tile_start->first, true);
-    std::vector<DirectedEdge> directededges = tile_builder.directededges();
+    const GraphTile* tile = reader.GetGraphTile(tile_start->first);
+    lock.unlock();
+
     std::unordered_set<GraphId> edges;
-    for (const auto& speeds : tile_start->second) {
-      // Go through directed edges and update the speeds for this tile
-      DirectedEdge& directededge = tile_builder.directededge_builder(speeds.id);
+    uint32_t nodecount = tile_builder.header()->nodecount();
+    GraphId node = tile_start->first;
+    for (uint32_t i = 0; i < nodecount; i++, ++node) {
+      // The node we will modify
+      NodeInfo nodeinfo = tile_builder.node(i);
+      auto ni = tile->node(i);
 
-      if (speeds.constrained_flow_speed)
-        directededge.set_constrained_flow_speed(speeds.constrained_flow_speed);
-      if (speeds.free_flow_speed)
-        directededge.set_free_flow_speed(speeds.free_flow_speed);
-
-      directededges[speeds.id] = directededge;
-      edges.emplace(tile_start->first.tileid(), tile_start->first.level(), speeds.id);
+      // Go through directed edges and validate/update data
+      uint32_t idx = ni->edge_index();
+      GraphId edgeid(node.tileid(), node.level(), idx);
+      for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++, ++edgeid) {
+        DirectedEdge& directededge = tile_builder.directededge(nodeinfo.edge_index() + j);
+        //could be more than one in the vector
+        for (const auto& speeds : tile_start->second) {
+          if (speeds.id == nodeinfo.edge_index() + j) {
+            if (speeds.constrained_flow_speed)
+              directededge.set_constrained_flow_speed(speeds.constrained_flow_speed);
+            if (speeds.free_flow_speed)
+              directededge.set_free_flow_speed(speeds.free_flow_speed);
+            edges.emplace(tile_start->first.tileid(), tile_start->first.level(), speeds.id);
+          }
+        }
+        // Add the directed edge to the local list
+        directededges.emplace_back(std::move(directededge));
+      }
+      // Add the node to the list
+      nodes.emplace_back(std::move(nodeinfo));
     }
-
     stat.updated_count += edges.size();
-    tile_builder.Update(directededges);
+
+    // Write the new tile
+    lock.lock();
+    tile_builder.Update(nodes, directededges);
+
+    // Check if we need to clear the tile cache
+    if (reader.OverCommitted()) {
+      reader.Clear();
+    }
     lock.unlock();
   }
   result.set_value(stat);
@@ -302,7 +333,6 @@ int main(int argc, char** argv) {
   std::unordered_set<std::string>::const_iterator tile_start, tile_end = traffic_tiles.begin();
   uint32_t constrained_count = 0;
   uint32_t free_flow_count = 0;
-  std::mutex lock;
   unique_data_t unique_data;
   // A place to hold the results of those threads (exceptions, stats)
   std::list<std::promise<stats>> results;
@@ -316,7 +346,7 @@ int main(int argc, char** argv) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, std::ref(lock), tile_start,
+    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, tile_start,
                                      tile_end, std::ref(unique_data), std::ref(results.back())));
   }
 
@@ -344,6 +374,7 @@ int main(int argc, char** argv) {
   std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator t_start,
       t_end = unique_data.tile_speeds.begin();
   uint32_t updated_count = 0;
+  std::mutex lock;
   // A place to hold the results of those threads (exceptions, stats)
   results.clear();
   // Atomically pass around stats info
