@@ -189,6 +189,14 @@ proto::Directions DirectionsBuilder::BuildProto(const DirectionsOptions& directi
 
   proto::Route* proto_route = proto_directions.add_routes(); // TODO: do this for every alternative route
 
+  proto_route->set_distance(0);
+  proto_route->set_duration(0);
+  proto_route->mutable_bounding_box()->set_min_lat(90);
+  proto_route->mutable_bounding_box()->set_min_lon(180);
+  proto_route->mutable_bounding_box()->set_max_lat(-90);
+  proto_route->mutable_bounding_box()->set_max_lon(-180);
+
+
   for (auto& leg : legs) {
     // Validate trip path node list
     if (leg.node_size() < 1) {
@@ -214,6 +222,13 @@ proto::Directions DirectionsBuilder::BuildProto(const DirectionsOptions& directi
     }
     proto::Leg* proto_leg = proto_route->add_legs();
     PopulateRouteLegProto(directions_options, etp, maneuvers, proto_leg);
+
+    proto_route->set_distance(proto_route->distance() + proto_leg->distance());
+    proto_route->set_duration(proto_route->duration() + proto_leg->duration());
+    proto_route->mutable_bounding_box()->set_min_lat(std::min(proto_route->mutable_bounding_box()->min_lat(), proto_leg->mutable_bounding_box()->min_lat()));
+    proto_route->mutable_bounding_box()->set_min_lon(std::min(proto_route->mutable_bounding_box()->min_lon(), proto_leg->mutable_bounding_box()->min_lon()));
+    proto_route->mutable_bounding_box()->set_max_lat(std::max(proto_route->mutable_bounding_box()->max_lat(), proto_leg->mutable_bounding_box()->max_lat()));
+    proto_route->mutable_bounding_box()->set_max_lon(std::max(proto_route->mutable_bounding_box()->max_lon(), proto_leg->mutable_bounding_box()->max_lon()));
   }
 
   return proto_directions;
