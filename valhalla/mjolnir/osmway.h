@@ -348,7 +348,7 @@ struct OSMWay {
    * Get the destination street to index.
    * @return  Returns the index for the destination street to.
    */
-  uint32_t destination_street_to_index() const{
+  uint32_t destination_street_to_index() const {
     return destination_street_to_index_;
   }
 
@@ -388,7 +388,7 @@ struct OSMWay {
    * Sets the index for bike regional ref.
    * @param  idx  Index for the name of the regional bike network.
    */
-  void set_bike_regional_ref_index(const uint32_t idx){
+  void set_bike_regional_ref_index(const uint32_t idx) {
     bike_regional_ref_index_ = idx;
   }
 
@@ -420,7 +420,7 @@ struct OSMWay {
    * Sets the duration for ferries.
    * @param  duration  The time it takes to take this ferry (in seconds).
    */
-  void set_duration(const uint32_t duration){
+  void set_duration(const uint32_t duration) {
     duration_ = duration;
   }
 
@@ -436,7 +436,7 @@ struct OSMWay {
    * Sets the auto_forward flag.
    * @param  auto_forward   Can you drive in the forward direction?
    */
-  void set_auto_forward(const bool auto_forward)  {
+  void set_auto_forward(const bool auto_forward) {
     access_.fields.auto_forward = auto_forward;
   }
 
@@ -669,7 +669,7 @@ struct OSMWay {
    * Get the bike backward flag.
    * @return  Returns bike backward flag.
    */
-  bool bike_backward() const{
+  bool bike_backward() const {
     return bike_info_.fields.bike_backward;
   }
 
@@ -784,7 +784,7 @@ struct OSMWay {
    * Get the no thru traffic flag.
    * @return  Returns no thru traffic flag.
    */
-  bool no_thru_traffic() const  {
+  bool no_thru_traffic() const {
     return attributes_.fields.no_thru_traffic;
   }
 
@@ -928,7 +928,7 @@ struct OSMWay {
    * Gets the left cycle lane.
    * @return  Returns CycleLane on left.
    */
-  baldr::CycleLane cyclelane_left() const{
+  baldr::CycleLane cyclelane_left() const {
     return static_cast<baldr::CycleLane>(bike_info_.fields.cycle_lane_left);
   }
 
@@ -936,7 +936,7 @@ struct OSMWay {
    * Sets if the right cycle lane is facing the opposite direction
    * @param  cyclelane_opposite
    */
-  void set_cyclelane_right_opposite(const bool cyclelane_opposite)  {
+  void set_cyclelane_right_opposite(const bool cyclelane_opposite) {
     bike_info_.fields.cycle_lane_right_opposite = cyclelane_opposite;
   }
 
@@ -1228,7 +1228,7 @@ struct OSMWay {
    * Get the bike network mask.
    * @return  Returns the bike network mask.
    */
-  uint32_t bike_network() const{
+  uint32_t bike_network() const {
     return attributes_.fields.bike_network;
   }
 
@@ -1340,7 +1340,7 @@ struct OSMWay {
    * Get the backward_tagged_lanes flag.
    * @return  Returns backward_tagged_lanes flag.
    */
-  bool backward_tagged_lanes() const{
+  bool backward_tagged_lanes() const {
     return attributes_.fields.backward_tagged_lanes;
   }
 
@@ -1390,7 +1390,7 @@ struct OSMWay {
    * Get the use.
    * @return  Returns use.
    */
-  baldr::Use use() const{
+  baldr::Use use() const {
     return static_cast<baldr::Use>(classification_.fields.use);
   }
 
@@ -1398,7 +1398,7 @@ struct OSMWay {
    * Sets the link tag.
    * @param  link       Link.  Ramp or turn channel.
    */
-  void set_link(const bool link){
+  void set_link(const bool link) {
     classification_.fields.link = link;
   }
 
