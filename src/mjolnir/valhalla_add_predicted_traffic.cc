@@ -79,15 +79,13 @@ void ParseTrafficFile(const std::string& directory,
       GraphId tile_id;
       for (const auto& t : tok) {
         switch (field_num) {
-          case 0:
-          {
+          case 0: {
             GraphId tmp(std::stoull(t));
             tile_id = tmp.Tile_Base();
-            //only need to save the unique id in the tile as
-            //our key in tile_speeds is the tileID.
+            // only need to save the unique id in the tile as
+            // our key in tile_speeds is the tileID.
             traffic.id = tmp.id();
-          }
-          break;
+          } break;
           case 1:
             if (ext == "constrained") {
               traffic.constrained_flow_speed = std::stoi(t);
@@ -101,21 +99,23 @@ void ParseTrafficFile(const std::string& directory,
         field_num++;
       }
 
-      //assume that we are in the same tile.
-      //trying to save on looking up/finding a vector for a tile.
+      // assume that we are in the same tile.
+      // trying to save on looking up/finding a vector for a tile.
       if (last_tile_id == tile_id) {
         ts.emplace_back(traffic);
-      } else{
+      } else {
         unique_data.lock.lock();
         if (last_tile_id != kInvalidGraphId) {
-          if(it != unique_data.tile_speeds.end())
+          if (it != unique_data.tile_speeds.end())
             it->second = ts;
-          else unique_data.tile_speeds.insert({last_tile_id, ts});
+          else
+            unique_data.tile_speeds.insert({last_tile_id, ts});
         }
         it = unique_data.tile_speeds.find(tile_id);
-        if(it != unique_data.tile_speeds.end()) {
+        if (it != unique_data.tile_speeds.end()) {
           ts = it->second;
-        } else ts.clear();
+        } else
+          ts.clear();
         unique_data.lock.unlock();
         last_tile_id = tile_id;
         ts.emplace_back(traffic);
@@ -123,9 +123,10 @@ void ParseTrafficFile(const std::string& directory,
     }
     if (last_tile_id != kInvalidGraphId) {
       unique_data.lock.lock();
-      if(it != unique_data.tile_speeds.end())
+      if (it != unique_data.tile_speeds.end())
         it->second = ts;
-      else unique_data.tile_speeds.insert({last_tile_id, ts});
+      else
+        unique_data.tile_speeds.insert({last_tile_id, ts});
       unique_data.lock.unlock();
     }
   }
@@ -147,18 +148,19 @@ void parse_traffic_tiles(const std::string& traffic_dir,
   // Iterate through the tiles and parse them
   stats stat{};
   for (; tile_start != tile_end; ++tile_start) {
-    ParseTrafficFile(traffic_dir,*tile_start,"constrained", unique_data, stat);
-    ParseTrafficFile(traffic_dir,*tile_start,"freeflow", unique_data, stat);
+    ParseTrafficFile(traffic_dir, *tile_start, "constrained", unique_data, stat);
+    ParseTrafficFile(traffic_dir, *tile_start, "freeflow", unique_data, stat);
   }
   result.set_value(stat);
 }
 
-void update_valhalla_tiles(const bpt::ptree& pt,
-                           std::mutex& lock,
-                           std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator tile_start,
-                           std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator tile_end,
-                           unique_data_t& unique_data,
-                           std::promise<stats>& result) {
+void update_valhalla_tiles(
+    const bpt::ptree& pt,
+    std::mutex& lock,
+    std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator tile_start,
+    std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator tile_end,
+    unique_data_t& unique_data,
+    std::promise<stats>& result) {
 
   // Iterate through the tiles and parse them
   stats stat{};
@@ -207,16 +209,19 @@ int main(int argc, char** argv) {
                                    "\n"
                                    "\n");
 
-
-
-  options.add_options()("help,h", "Print this help message.")
-      ("version,v","Print the version of this software.")
-      ("concurrency,j", bpo::value<unsigned int>(&num_threads),"Number of threads to use.")
-      ("config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path),
-      "Path to the json configuration file.")
-      ("inline-config,i",boost::program_options::value<std::string>(&inline_config),"Inline json config.")
+  options.add_options()("help,h", "Print this help message.")("version,v",
+                                                              "Print the version of this software.")(
+      "concurrency,j", bpo::value<unsigned int>(&num_threads),
+      "Number of threads to use.")("config,c",
+                                   boost::program_options::value<boost::filesystem::path>(
+                                       &config_file_path),
+                                   "Path to the json configuration file.")("inline-config,i",
+                                                                           boost::program_options::
+                                                                               value<std::string>(
+                                                                                   &inline_config),
+                                                                           "Inline json config.")
       // positional arguments
-      ("traffic-tile-dir,t", bpo::value<std::string>(&tile_dir),"Location of traffic csv tiles.");
+      ("traffic-tile-dir,t", bpo::value<std::string>(&tile_dir), "Location of traffic csv tiles.");
 
   bpo::positional_options_description pos_options;
   pos_options.add("traffic-tile-dir", 1);
@@ -227,7 +232,7 @@ int main(int argc, char** argv) {
     bpo::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-        << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
@@ -284,7 +289,7 @@ int main(int argc, char** argv) {
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-        std::unordered_map<std::string, std::string>>(logging_subtree.get());
+                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -311,9 +316,8 @@ int main(int argc, char** argv) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir,
-                                     std::ref(lock), tile_start, tile_end,
-                                     std::ref(unique_data), std::ref(results.back())));
+    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, std::ref(lock), tile_start,
+                                     tile_end, std::ref(unique_data), std::ref(results.back())));
   }
 
   // wait for it to finish
@@ -337,7 +341,8 @@ int main(int argc, char** argv) {
   LOG_INFO("Updating speeds for " + std::to_string(unique_data.tile_speeds.size()) + " tiles.");
   floor = unique_data.tile_speeds.size() / threads.size();
   at_ceiling = unique_data.tile_speeds.size() - (threads.size() * floor);
-  std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator t_start, t_end = unique_data.tile_speeds.begin();
+  std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator t_start,
+      t_end = unique_data.tile_speeds.begin();
   uint32_t updated_count = 0;
   // A place to hold the results of those threads (exceptions, stats)
   results.clear();
@@ -351,9 +356,8 @@ int main(int argc, char** argv) {
     std::advance(t_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(update_valhalla_tiles, std::cref(pt),
-                                     std::ref(lock), t_start, t_end,
-                                     std::ref(unique_data), std::ref(results.back())));
+    threads[i].reset(new std::thread(update_valhalla_tiles, std::cref(pt), std::ref(lock), t_start,
+                                     t_end, std::ref(unique_data), std::ref(results.back())));
   }
 
   // wait for it to finish
@@ -375,4 +379,3 @@ int main(int argc, char** argv) {
 
   return EXIT_SUCCESS;
 }
-

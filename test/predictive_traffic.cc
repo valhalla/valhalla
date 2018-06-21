@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 
-#include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
+#include "mjolnir/graphtilebuilder.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -55,14 +55,21 @@ void test_predictive_traffic() {
 
           if (edgeid.value == 67134432) {
             if (de->free_flow_speed() != 5)
-              throw std::runtime_error("Free flow speed should be 5 for edge 67134432, but it is: " + std::to_string(de->free_flow_speed()));
+              throw std::runtime_error("Free flow speed should be 5 for edge 67134432, but it is: " +
+                                       std::to_string(de->free_flow_speed()));
             if (de->constrained_flow_speed() != 6)
-              throw std::runtime_error("Constrained flow speed should be 6 for edge 67134432, but it is: " + std::to_string(de->constrained_flow_speed()));
+              throw std::runtime_error(
+                  "Constrained flow speed should be 6 for edge 67134432, but it is: " +
+                  std::to_string(de->constrained_flow_speed()));
           } else if (edgeid.value == 264348364578) {
             if (de->free_flow_speed() != 13)
-              throw std::runtime_error("Free fow speed should be 13 for edge 264348364578, but it is: " + std::to_string(de->free_flow_speed()));
+              throw std::runtime_error(
+                  "Free fow speed should be 13 for edge 264348364578, but it is: " +
+                  std::to_string(de->free_flow_speed()));
             if (de->constrained_flow_speed() != 9)
-              throw std::runtime_error("Constrained flow speed should be 9 for edge 264348364578, but it is: " + std::to_string(de->constrained_flow_speed()));
+              throw std::runtime_error(
+                  "Constrained flow speed should be 9 for edge 264348364578, but it is: " +
+                  std::to_string(de->constrained_flow_speed()));
           }
           if (de->constrained_flow_speed() || de->free_flow_speed())
             count++;
