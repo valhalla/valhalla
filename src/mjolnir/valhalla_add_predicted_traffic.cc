@@ -192,7 +192,7 @@ void update_valhalla_tiles(
       GraphId edgeid(node.tileid(), node.level(), idx);
       for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++, ++edgeid) {
         DirectedEdge& directededge = tile_builder.directededge(nodeinfo.edge_index() + j);
-        //could be more than one in the vector
+        // could be more than one in the vector
         for (const auto& speeds : tile_start->second) {
           if (speeds.id == nodeinfo.edge_index() + j) {
             if (speeds.constrained_flow_speed)
@@ -346,8 +346,8 @@ int main(int argc, char** argv) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, tile_start,
-                                     tile_end, std::ref(unique_data), std::ref(results.back())));
+    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, tile_start, tile_end,
+                                     std::ref(unique_data), std::ref(results.back())));
   }
 
   // wait for it to finish
