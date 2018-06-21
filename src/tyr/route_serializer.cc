@@ -1165,20 +1165,20 @@ json::ArrayPtr edge_data(valhalla::baldr::EdgeData data) {
   return edge_data;
 }
 
-json::ArrayPtr grades_overall_summary(const std::vector<valhalla::baldr::EdgeData> grades_data) {
+json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto overall_summary_array = json::array({});
-  auto overall_grade = grades_data.front();
+  auto overall_property = property_data.front();
 
-  for (int i = 1; i < grades_data.size(); i++) {
-    if (overall_grade.type() == grades_data[i].type()) {
-      overall_grade += grades_data[i];
+  for (int i = 1; i < property_data.size(); i++) {
+    if (overall_property.type() == property_data[i].type()) {
+      overall_property += property_data[i];
     } else {
-      overall_summary_array->emplace_back(edge_data(overall_grade));
-      overall_grade = grades_data[i];
+      overall_summary_array->emplace_back(edge_data(overall_property));
+      overall_property = property_data[i];
     }
 
-    if (i == grades_data.size() - 1) {
-      overall_summary_array->emplace_back(edge_data(overall_grade));
+    if (i == property_data.size() - 1) {
+      overall_summary_array->emplace_back(edge_data(overall_property));
     }
   }
 
@@ -1186,7 +1186,7 @@ json::ArrayPtr grades_overall_summary(const std::vector<valhalla::baldr::EdgeDat
 }
 
 std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json::ArrayPtr>,std::vector<json::ArrayPtr>>
-          get_grades_data(const std::vector<valhalla::odin::TripPath_Edge> edges,
+          get_properties_data(const std::vector<valhalla::odin::TripPath_Edge> edges,
                           float total_length,
                           std::vector<Properties> properties_enabled) {
 
@@ -1259,28 +1259,36 @@ std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json:
   return std::make_tuple(grades_data, indices_array, summary_array);
 }
 
-json::MapPtr grades(const std::vector<valhalla::odin::TripPath_Edge> edges,
+json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
                     float total_length,
                     std::vector<Properties> properties_enabled) {
-  auto grades = json::map({});
+  auto properties = json::map({});
 
-  auto grades_info = get_grades_data(edges, total_length, properties_enabled);
-  auto grades_data = std::get<0>(grades_info);
-  std::vector<json::ArrayPtr> indices_array = std::get<1>(grades_info);
-  std::vector<json::ArrayPtr> summary_array = std::get<2>(grades_info);
+  auto properties_info = get_properties_data(edges, total_length, properties_enabled);
+  auto properties_data = std::get<0>(properties_info);
+  std::vector<json::ArrayPtr> indices_array = std::get<1>(properties_info);
+  std::vector<json::ArrayPtr> summary_array = std::get<2>(properties_info);
 
   for (int i = 0; i < properties_enabled.size(); i++) {
-    std::sort(grades_data[i].begin(), grades_data[i].end());
+    auto property = json::map({});
 
-    json::ArrayPtr overall_summary_array = (grades_data[i].size() == 1) ? 
-      edge_data(grades_data[i].front()) : grades_overall_summary(grades_data[i]);
+    std::sort(properties_data[i].begin(), properties_data[i].end());
 
-    grades->emplace("overall_summary", std::move(overall_summary_array));
-    grades->emplace("summary", std::move(summary_array[i]));
-    grades->emplace("indices", std::move(indices_array[i]));
+    json::ArrayPtr overall_summary_array = (properties_data[i].size() == 1) ? 
+      edge_data(properties_data[i].front()) : overall_summary(properties_data[i]);
+
+    property->emplace("overall_summary", std::move(overall_summary_array));
+    property->emplace("summary", std::move(summary_array[i]));
+    property->emplace("indices", std::move(indices_array[i]));
+
+    switch (properties_enabled[i]) {
+      case Properties::Grade:
+       properties->emplace("grade", property);
+       break;
+    }
   }
 
-  return grades;
+  return properties;
 }
 
 json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
@@ -1631,16 +1639,12 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     }
   });
 
-  auto properties = json::map({});
   std::vector<Properties> properties_enabled;
 
   if (directions_options.grades())
     properties_enabled.push_back(Properties::Grade);
 
-  // if (directions_options.grades()) {
-    properties->emplace("grades", grades(edges, total_length, properties_enabled));
-    json->emplace("properties", properties);
-  // }
+  json->emplace("properties", properties(edges, total_length, properties_enabled));
 
   if (directions_options.has_id())
     json->emplace("id", directions_options.id());
