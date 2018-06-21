@@ -38,6 +38,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   list(APPEND boost_components zlib)
 endif()
 find_package(Boost 1.51 REQUIRED COMPONENTS ${boost_components})
+if(${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION} VERSION_LESS 1.59)
+  set(REQUIRES_SPIRIT_THREADSAFE 1)
+  find_package(Boost 1.51 REQUIRED COMPONENTS thread)
+endif()
 
 find_package(CURL REQUIRED)
 add_library(CURL::CURL INTERFACE IMPORTED)
@@ -116,6 +120,7 @@ function(valhalla_module)
   target_compile_definitions(${library}
     PUBLIC
       RAPIDJSON_HAS_STDSTRING
+      $<$<BOOL:${REQUIRES_SPIRIT_THREADSAFE}>:BOOST_SPIRIT_THREADSAFE>
     PRIVATE
       $<$<BOOL:${USE_STD_REGEX}>:USE_STD_REGEX=1>
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
@@ -187,6 +192,7 @@ add_library(valhalla worker.cc ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h ${v
 target_compile_definitions(valhalla
   PUBLIC
     $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">
+    $<$<BOOL:${REQUIRES_SPIRIT_THREADSAFE}>:BOOST_SPIRIT_THREADSAFE>
   PRIVATE
     ${libvalhalla_compile_definitions})
 
@@ -207,6 +213,7 @@ target_include_directories(valhalla
 target_link_libraries(valhalla
   PUBLIC
     ${libvalhalla_link_libraries}
+    $<$<BOOL:${REQUIRES_SPIRIT_THREADSAFE}>:Boost::thread>
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
     Threads::Threads)

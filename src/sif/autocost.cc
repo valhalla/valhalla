@@ -290,7 +290,7 @@ public:
   float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16];       // Density factor
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
-  float destination_only_penalty_; // Penalty (seconds) using a driveway or parking aisle
+  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float gate_cost_;                // Cost (seconds) to go through gate
   float gate_penalty_;             // Penalty (seconds) to go through gate
   float tollbooth_cost_;           // Cost (seconds) to go through toll booth
@@ -317,7 +317,6 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
                                                                  1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                                  2.5f, 2.8f, 3.1f, 3.5f} {
-
   surface_factor_ = 0.5f;
   // Get the vehicle type - enter as string and convert to enum
   std::string type = pt.get<std::string>("type", "car");
@@ -495,7 +494,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing,
+  // Special cases with both time and penalty: country crossing, ferry,
   // gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
@@ -508,22 +507,22 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     seconds += tollbooth_cost_;
     penalty += tollbooth_penalty_;
   }
-
-  // Additional penalties without any time cost
-  uint32_t idx = pred.opp_local_idx();
-  if (allow_destination_only_ && !pred.destonly() && edge->destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-  if (pred.use() != Use::kFerry && edge->use() == Use::kFerry) {
+  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+
+  // Additional penalties without any time cost
+  uint32_t idx = pred.opp_local_idx();
+  if (edge->destonly() && !pred.destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (edge->use() == Use::kAlley && pred.use() != Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
@@ -556,7 +555,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing,
+  // Special cases with both time and penalty: country crossing, ferry,
   // gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
@@ -569,21 +568,21 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     seconds += tollbooth_cost_;
     penalty += tollbooth_penalty_;
   }
-
-  // Additional penalties without any time cost
-  if (allow_destination_only_ && !pred->destonly() && edge->destonly()) {
-    penalty += destination_only_penalty_;
-  }
-  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
-  }
-  if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
+  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+
+  // Additional penalties without any time cost
+  if (edge->destonly() && !pred->destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
@@ -709,7 +708,7 @@ public:
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time,
+                       const uint64_t current_time,
                        const uint32_t tz_index) const;
 
   /**
@@ -735,7 +734,7 @@ public:
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time,
+                              const uint64_t current_time,
                               const uint32_t tz_index) const;
 
   /**
@@ -783,7 +782,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
-                      const uint32_t current_time,
+                      const uint64_t current_time,
                       const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
@@ -796,6 +795,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
+
   if (edge->access_restriction()) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), kBusAccess);
@@ -823,7 +823,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& opp_edgeid,
-                             const uint32_t current_time,
+                             const uint64_t current_time,
                              const uint32_t tz_index) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
@@ -904,7 +904,7 @@ public:
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time,
+                       const uint64_t current_time,
                        const uint32_t tz_index) const;
 
   /**
@@ -929,7 +929,7 @@ public:
                               const baldr::DirectedEdge* opp_edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
-                              const uint32_t current_time,
+                              const uint64_t current_time,
                               const uint32_t tz_index) const;
 
   /**
@@ -993,7 +993,7 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
-                      const uint32_t current_time,
+                      const uint64_t current_time,
                       const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
@@ -1035,7 +1035,7 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::DirectedEdge* opp_edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& opp_edgeid,
-                             const uint32_t current_time,
+                             const uint64_t current_time,
                              const uint32_t tz_index) const {
   // TODO - obtain and check the access restrictions.
 
@@ -1110,7 +1110,7 @@ public:
                        const EdgeLabel& pred,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
-                       const uint32_t current_time,
+                       const uint64_t current_time,
                        const uint32_t tz_index) const {
     // Check access and return false (not allowed if no auto access is allowed in either
     // direction. Also disallow simple U-turns except at dead-end nodes.

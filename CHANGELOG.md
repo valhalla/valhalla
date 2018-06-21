@@ -1,4 +1,13 @@
 ## Release Date: UNRELEASED Valhalla 3.0
+* **Infrastructure**:
+   * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
+* **Data Producer Update**
+   * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
+   * CHANGED: Lower speeds on driveways, drive-thru, and parking aisle. Set destination only flag for drive thru use.
+  **Bug Fix**
+   * CHANGED: Fix destination only penalty for A* and time dependent cases.
+* **Map Matching**
+   * FIXED: Fixed trace_route edge_walk server abort [#1365](https://github.com/valhalla/valhalla/pull/1365)
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:

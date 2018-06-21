@@ -3,6 +3,7 @@
 #include "test.h"
 
 #include <list>
+#include <unordered_map>
 #include <vector>
 
 #include "midgard/vector2.h"
@@ -156,6 +157,21 @@ void TestWithinConvexPolygon() {
   TryWithinConvexPolygonList(ptslist, Point2(0.0f, 0.0f), true);
 }
 
+void TestHash() {
+  Point2 a(10.5f, -100.0f);
+  std::unordered_map<Point2, int> m{{a, 1}};
+  if (m.find(a) == m.cend()) {
+    throw std::logic_error("Should have found a");
+  }
+  Point2 b(1.5f, 1.0f);
+  if (!m.insert({b, 2}).second) {
+    throw std::logic_error("Should not have found b");
+  }
+  if (m.find(b) == m.cend()) {
+    throw std::logic_error("Should have found b");
+  }
+}
+
 } // namespace
 
 int main() {
@@ -187,6 +203,9 @@ int main() {
 
   // Test if within polygon
   suite.test(TEST_CASE(TestWithinConvexPolygon));
+
+  // Test hashing
+  suite.test(TEST_CASE(TestHash));
 
   return suite.tear_down();
 }

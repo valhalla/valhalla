@@ -15,9 +15,12 @@ public:
   /**
    * Constructor.
    * @param  type   Sign type.
+   *
+   * @param  rn     Bool indicating if this sign is a route number.
    * @param  text   Text string.
    */
-  SignInfo(const Sign::Type& type, const std::string& text) : type_(type), text_(text) {
+  SignInfo(const Sign::Type& type, const bool rn, const std::string& text)
+      : is_route_num_(rn), type_(type), text_(text) {
   }
 
   /**
@@ -26,6 +29,14 @@ public:
    */
   const Sign::Type& type() const {
     return type_;
+  }
+
+  /**
+   * Does this sign record indicate a route number.
+   * @return  Returns true if the sign record is a route number.
+   */
+  bool is_route_num() const {
+    return is_route_num_;
   }
 
   /**
@@ -38,6 +49,7 @@ public:
 
 protected:
   Sign::Type type_;
+  bool is_route_num_;
   std::string text_;
 };
 

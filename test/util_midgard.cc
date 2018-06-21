@@ -154,6 +154,19 @@ void TestClamp() {
     throw std::runtime_error("wrong clamp value");
   if (!equal<float>(circular_range_clamp<float>(739, -45, -8), -38))
     throw std::runtime_error("wrong clamp value");
+
+  // Test invalid range - should throw an exception
+  try {
+    circular_range_clamp<float>(739, -8, -45);
+    throw std::runtime_error("should throw exception (lower > upper)");
+  } catch (...) {}
+
+  // Make sure get_turn_degree180 throws an exception if inbound and outbound
+  // degrees are not clamped to 0,360
+  try {
+    get_turn_degree180(420, 580);
+    throw std::runtime_error("get_turn_degree should throw exception (inputs not in 0,360 range)");
+  } catch (...) {}
 }
 
 void TestResample() {
@@ -307,6 +320,11 @@ void TestTrimPolyline() {
 
   test::assert_bool(trim_polyline(line.begin(), line.end(), 0.5f, 0.1f).empty(),
                     "nothing should be clipped since empty set [0.5, 0.1]");
+
+  // Make sure length returns 0 when iterator is equal
+  if (length(clip.begin(), clip.begin()) != 0.0f) {
+    throw std::logic_error("incorrect length when iterators are equal");
+  }
 }
 
 void TestTrimFront() {
@@ -370,6 +388,31 @@ void TestExpandLocation() {
     throw std::logic_error("ExpandLocation: area of the bounding box is incorrect " +
                            std::to_string(area));
   }
+
+  // Should throw an exception if negative value is sent
+  try {
+    AABB2<PointLL> box = ExpandMeters(loc, -10.0f);
+    throw std::logic_error("ExpandLocation: should throw exception with negative meters supplied");
+  } catch (...) {}
+}
+
+void TestSimilarAndEqual() {
+  // Make sure no negative epsilons are allowed in equal
+  try {
+    equal<float>(10.0f, 10.0f, -0.0001f);
+    throw std::logic_error("Equal test fails to throw exception for negative epsilon");
+  } catch (...) {}
+
+  // Test the equality case
+  if (!similar<float>(45.0f, 45.0f, 0.0001f)) {
+    throw std::logic_error("Similar test fails for equal values");
+  }
+
+  // Test case where signs are different - if opposing signs the values should not
+  // be similar regardless of difference
+  if (similar<float>(0.00001f, -0.00001f, 0.0001f)) {
+    throw std::logic_error("Similar test fails for values with opposing signs");
+  }
 }
 
 } // namespace
@@ -401,6 +444,9 @@ int main() {
 
   // trim_front of a polyline
   suite.test(TEST_CASE(TestTrimFront));
+
+  // Test similar and equal edge cases
+  suite.test(TEST_CASE(TestSimilarAndEqual));
 
   return suite.tear_down();
 }
