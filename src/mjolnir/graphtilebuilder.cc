@@ -385,6 +385,46 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
   }
 }
 
+/**
+ * Updates a tile with updated directed edges.
+ */
+void GraphTileBuilder::Update(const std::vector<DirectedEdge>& directededges) {
+
+  // Get the name of the file
+  boost::filesystem::path filename =
+      tile_dir_ + filesystem::path_separator + GraphTile::FileSuffix(header_builder_.graphid());
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open file and truncate
+  std::stringstream in_mem;
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+    // Write the header
+    file.write(reinterpret_cast<const char*>(header_), sizeof(GraphTileHeader));
+
+    // Write the nodes.
+    file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
+
+    // Write the updated directed edges. Make sure edge count matches.
+    if (directededges.size() != header_->directededgecount()) {
+      throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
+    }
+    file.write(reinterpret_cast<const char*>(directededges.data()),
+               directededges.size() * sizeof(DirectedEdge));
+
+    // Write the rest of the tiles
+    auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
+    auto end = reinterpret_cast<const char*>(header()) + header()->end_offset();
+    file.write(begin, end - begin);
+    file.close();
+  } else {
+    throw std::runtime_error("GraphTileBuilder::Update - Failed to open file " + filename.string());
+  }
+}
+
 // Gets a reference to the header builder.
 GraphTileHeader& GraphTileBuilder::header_builder() {
   return header_builder_;
