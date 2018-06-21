@@ -6,6 +6,11 @@ message Contour {
   optional string color = 2;   // hex color with out # - for example: "ff0000" for red 
 }
 
+enum FilterAction {
+  exclude = 0;
+  include = 1;
+}
+
 message DirectionsOptions {
   
   enum Units {
@@ -82,4 +87,6 @@ message DirectionsOptions {
   optional float gps_accuracy = 28;                 // The gps accuracy associated with the suppplied trace points
   optional float search_radius = 29;                // The search radius associated with the suppplied trace points
   optional float turn_penalty_factor = 30;          // The turn penalty factor associated with the suppplied trace points
+  optional FilterAction filter_action = 31;         // The trace filter action - either exclude or include
+  repeated string filter_attributes = 32;           // The filter list for trace attributes
 }

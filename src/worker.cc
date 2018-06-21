@@ -635,6 +635,22 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_turn_penalty_factor(*turn_penalty_factor);
   }
 
+  // if specified, get the filter_action value in there
+  auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
+  odin::FilterAction filter_action;
+  if (filter_action_str && odin::FilterAction_Parse(*filter_action_str, &filter_action)) {
+    options.set_filter_action(filter_action);
+  }
+
+  // if specified, get the filter_attributes value in there
+  auto filter_attributes_json =
+      rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
+  if (filter_attributes_json) {
+    for (const auto& filter_attribute : *filter_attributes_json) {
+      options.add_filter_attributes(filter_attribute.GetString());
+    }
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},

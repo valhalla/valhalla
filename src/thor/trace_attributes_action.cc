@@ -40,23 +40,26 @@ namespace thor {
 
 void thor_worker_t::filter_attributes(const valhalla_request_t& request,
                                       AttributesController& controller) {
-  auto filter_action = rapidjson::get<std::string>(request.document, "/filters/action", "");
-
-  if (filter_action == "include") {
-    controller.disable_all();
-    for (const auto& v :
-         rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes")) {
-      try {
-        controller.attributes.at(v.GetString()) = true;
-      } catch (...) { LOG_ERROR("Invalid filter attribute " + std::string(v.GetString())); }
-    }
-  } else if (filter_action == "exclude") {
-    controller.enable_all();
-    for (const auto& v :
-         rapidjson::get<rapidjson::Value::ConstArray>(request.document, "/filters/attributes")) {
-      try {
-        controller.attributes.at(v.GetString()) = false;
-      } catch (...) { LOG_ERROR("Invalid filter attribute " + std::string(v.GetString())); }
+  if (request.options.has_filter_action()) {
+    switch (request.options.filter_action()) {
+      case (odin::FilterAction::include): {
+        controller.disable_all();
+        for (const auto& filter_attribute : request.options.filter_attributes()) {
+          try {
+            controller.attributes.at(filter_attribute) = true;
+          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+        }
+        break;
+      }
+      case (odin::FilterAction::exclude): {
+        controller.enable_all();
+        for (const auto& filter_attribute : request.options.filter_attributes()) {
+          try {
+            controller.attributes.at(filter_attribute) = false;
+          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+        }
+        break;
+      }
     }
   } else {
     controller.enable_all();
@@ -120,8 +123,9 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
         }
         break;
       // If we think that we have the exact shape but there ends up being no Valhalla route match,
-      // then we want to fallback to try and use meili map matching to match to local route network.
-      // No shortcuts are used and detailed information at every intersection becomes available.
+      // then we want to fallback to try and use meili map matching to match to local route
+      // network. No shortcuts are used and detailed information at every intersection becomes
+      // available.
       case WALK_OR_SNAP:
         trip_path = route_match(request, controller);
         if (trip_path.node().size() == 0) {
@@ -144,8 +148,9 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
   if (map_match_results.empty() ||
       std::get<kTripPathIndex>(map_match_results.at(0)).node().size() == 0) {
     throw valhalla_exception_t{442};
-  };
+  }
   return tyr::serializeTraceAttributes(request, controller, map_match_results);
 }
+
 } // namespace thor
 } // namespace valhalla
