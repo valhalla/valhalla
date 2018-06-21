@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
@@ -42,16 +41,15 @@ public:
         DECLARE_NAPI_METHOD("route", Route),
     };
 
-    napi_value cons;
-    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 1, properties, &cons);
-    assert(status == napi_ok);
+    napi_value actor_constructor;
+    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 1, properties,
+                               &actor_constructor);
+    checkNapiStatus(status, env, "Failed to define class");
 
-    status = napi_create_reference(env, cons, 1, &constructor);
-    assert(status == napi_ok);
+    status = napi_create_reference(env, actor_constructor, 1, &constructor);
+    checkNapiStatus(status, env, "Failed to create constructor reference");
 
-    status = napi_set_named_property(env, exports, "Actor", cons);
-    assert(status == napi_ok);
-    return exports;
+    return actor_constructor;
   }
   static void Destructor(napi_env env, void* nativeObject, void* finalize_hint) {
     delete reinterpret_cast<Actor*>(nativeObject);
@@ -69,7 +67,7 @@ private:
 
     napi_value target;
     status = napi_get_new_target(env, info, &target);
-    assert(status == napi_ok);
+    checkNapiStatus(status, env, "Failed to get 'new' target");
     bool is_constructor = target != nullptr;
 
     if (is_constructor) {
@@ -82,25 +80,26 @@ private:
       checkNapiStatus(status, env, "Failed to parse arguments");
 
       // parse config string passed in
-      size_t buffer_size;
-      status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &buffer_size);
+      size_t config_string_size;
+      status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &config_string_size);
       checkNapiStatus(status, env, "Failed to get config string length");
 
-      if (buffer_size > 1024 * 1024) {
+      if (config_string_size > 1024 * 1024) {
         napi_throw_error(env, NULL, "Too large JSON config");
       }
 
-      char buffer[++buffer_size];
-      status = napi_get_value_string_utf8(env, argv[0], buffer, buffer_size, &buffer_size);
+      char config_string[++config_string_size];
+      status = napi_get_value_string_utf8(env, argv[0], config_string, config_string_size,
+                                          &config_string_size);
       checkNapiStatus(status, env, "Failed to get config string");
 
-      Actor* obj = new Actor(buffer);
+      Actor* obj = new Actor(config_string);
 
       obj->env_ = env;
       status = napi_wrap(env, jsthis, reinterpret_cast<void*>(obj), Actor::Destructor,
                          nullptr, // finalize_hint
                          &obj->wrapper_);
-      assert(status == napi_ok);
+      checkNapiStatus(status, env, "Failed to wrap actor object");
 
       return jsthis;
     } else {
@@ -108,18 +107,18 @@ private:
       size_t argc_ = 1;
       napi_value args[1];
       status = napi_get_cb_info(env, info, &argc_, args, nullptr, nullptr);
-      assert(status == napi_ok);
+      checkNapiStatus(status, env, "Failed to parse input args");
 
       const size_t argc = 1;
       napi_value argv[argc] = {args[0]};
 
-      napi_value cons;
-      status = napi_get_reference_value(env, constructor, &cons);
-      assert(status == napi_ok);
+      napi_value actor_constructor;
+      status = napi_get_reference_value(env, constructor, &actor_constructor);
+      checkNapiStatus(status, env, "Failed to reference the constructor");
 
       napi_value instance;
-      status = napi_new_instance(env, cons, 0, NULL, &instance);
-      assert(status == napi_ok);
+      status = napi_new_instance(env, actor_constructor, 0, NULL, &instance);
+      checkNapiStatus(status, env, "Failed to create new instance");
 
       return instance;
     }
@@ -133,18 +132,19 @@ private:
     status = napi_get_cb_info(env, info, &argc, argv, jsthis, nullptr);
     checkNapiStatus(status, env, "Failed to parse input args");
 
-    size_t buffer_size;
-    status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &buffer_size);
+    size_t request_str_size;
+    status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &request_str_size);
     checkNapiStatus(status, env, "Failed to get arg string length");
 
-    if (buffer_size > 1024 * 1024) {
+    if (request_str_size > 1024 * 1024) {
       napi_throw_error(env, NULL, "Too large JSON config");
     }
 
-    char buffer[++buffer_size];
-    status = napi_get_value_string_utf8(env, argv[0], buffer, buffer_size, &buffer_size);
+    char request_string[++request_str_size];
+    status =
+        napi_get_value_string_utf8(env, argv[0], request_string, request_str_size, &request_str_size);
     checkNapiStatus(status, env, "Unable to parse arg string");
-    std::string reqString(buffer, buffer_size);
+    std::string reqString(request_string, request_str_size);
 
     return reqString;
   }
@@ -167,7 +167,7 @@ private:
 
     Actor* obj;
     status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    assert(status == napi_ok);
+    checkNapiStatus(status, env, "Failed to unwrap js object");
 
     // get the actual route
     std::string route_json;

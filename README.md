@@ -187,22 +187,16 @@ Also note that we run some `clang-tidy` linting over the code as well (see `.cla
 Using the Node.js Bindings
 --------------------------
 
-The Node.js bindings are still under construction. We are working on building binaries for as many environments as possible, but they may not all be available yet. The first functionality that we are exposing is `route`, but we plan on exposing more of the tyr actor functions. Right now, the input and the output are both strings - THAT WILL CHANGE. We plan on ingesting and producing protobufs.
+The Node.js bindings are still under construction. We are working on building binaries for as many environments as possible, but they may not all be available yet. The first functionality that we are exposing is `route`, but we plan on exposing more functionality over time. Right now, the input and the output are both strings - THAT WILL CHANGE. We plan on ingesting and producing protobufs.
 
-The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings via npm install valhalla or from this repository either via
-
-`$npm install`
-which will check and use pre-built binaries if they're available for this release and your Node version, or via
-
-`$npm install --build-from-source`
-to always force building the Node.js bindings from source.
+The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings via npm install valhalla or from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version.
 
 Example of using in a node project:
 ```js
-var valhalla = require('valhalla');
-var router = new valhalla.Actor(configString);
+var Valhalla = require('valhalla');
+var valhalla = new Valhalla(configString);
 var hersheyRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"}, {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"}';
-var route = router.route(hersheyRequest); // returns a string
+var route = valhalla.route(hersheyRequest); // returns a string
 ```
 
 Please see the releasing docs for information on releasing a new version.

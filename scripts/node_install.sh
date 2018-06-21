@@ -2,7 +2,7 @@
 
 set -e
 
-CMAKE_OPTIONS=${CMAKE_OPTIONS:-"-DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=On"}
+CMAKE_OPTIONS=${CMAKE_OPTIONS:-"-DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=On -DENABLE_SERVICES=OFF"}
 
 if [[ ! -f $(which cmake) ]]; then
     echo "Needs cmake to build from source"

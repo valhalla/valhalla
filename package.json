@@ -35,8 +35,8 @@
     "module_name": "node_valhalla",
     "module_path": "./lib/binding",
     "host": "https://mapbox-node-binary.s3.amazonaws.com",
-    "remote_path": "./{module_name}/v{version}/{configuration}/",
-    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz"
+    "remote_path": "./valhalla/v{version}/{configuration}/",
+    "package_name": "valhalla-v{version}-{node_abi}-{platform}-{arch}.tar.gz"
   },
   "devDependencies": {
     "aws-sdk": "^2.257.1"

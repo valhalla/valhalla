@@ -18,6 +18,35 @@ jobs:
       - run: make -C build -j4
       - run: run-clang-tidy-5.0.py -p build -header-filter "^$(pwd)/(src|valhalla/(baldr|midgard|sif|odin|thor|skadi|tyr|loki|mjolnir|bindings)/.*" && ./scripts/error_on_dirty.sh
 
+
+  build-publish:
+    docker:
+      - image: valhalla/docker:build-2.6.1
+    steps:
+      - checkout
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache
+      - run: npm install
+      - run: mkdir build
+      - run: |
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
+          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
+      - run: make -C build -j4
+      - run: make -C build install
+      - run: make -C build package
+      - run:
+          command: |
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+            ./scripts/publish.sh
+      - save_cache:
+          key: ccache
+          paths:
+            - ~/.ccache
+
   build-debug:
     docker:
       - image: valhalla/docker:build-2.6.1
@@ -61,11 +90,6 @@ jobs:
       - run: make -C build -j2 check
       - run: make -C build install
       - run: make -C build package
-      - run:
-          command: |
-            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
-            ./scripts/publish.sh
       - save_cache:
           key: ccache
           paths:
@@ -75,14 +99,16 @@ jobs:
     macos:
       xcode: "9.2.0"
     steps:
-      - run: brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl czmq lz4
+      - run: brew install protobuf --without-python@2
+      - run: brew upgrade python
+      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4
       - checkout
       - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache
+      # - restore_cache:
+      #     keys:
+      #       - ccache
       - run: npm install
-      - run: mkdir build
+      - run: mkdir -p build
       - run: cd build && cmake ..
       - run: make -C build -j4
       - run: make -C build -j2 tests
@@ -100,3 +126,5 @@ workflows:
       - lint
       - build-debug
       - build-release
+      - build-osx
+      - build-publish
