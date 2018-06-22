@@ -1348,6 +1348,7 @@ json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
 
 json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
                     const std::map<int, bool> direction_map) {
+
   // TODO: multiple legs.
   auto legs = json::array({});
   for (const auto& directions_leg : directions_legs) {
