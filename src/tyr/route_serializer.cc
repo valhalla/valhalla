@@ -1232,7 +1232,7 @@ json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> prop
   return overall_summary_array;
 }
 
-float set_property_type(valhalla::odin::TripPath_Edge current_edge, Properties current_property) {
+float get_property_type(valhalla::odin::TripPath_Edge current_edge, Properties current_property) {
   switch (current_property) {
     case Properties::Grade:
       return current_edge.weighted_grade();
@@ -1270,54 +1270,14 @@ std::vector<std::vector<valhalla::baldr::EdgeData>>
       if (i == 0) {
         start_of_property[j] = 0;
 
-        properties[j].set_type(set_property_type(current_edge, current_property));
+        properties[j].set_type(get_property_type(current_edge, current_property));
         properties[j].set_distance(current_edge.length());
       } else {
         auto previous_edge = edges[i - 1];
 
-        switch(current_property) {
-          case Properties::Grade:
-            if (i != edges.size() - 1 && previous_edge.weighted_grade() == current_edge.weighted_grade()) {
-              properties[j] += current_edge.length();
-              continue;
-            }
-            break;
-          case Properties::Surface:
-            if (i != edges.size() - 1 && previous_edge.surface() == current_edge.surface()) {
-              properties[j] += current_edge.length();
-              continue;
-            }
-            break;
-          case Properties::Cycle_Lane:
-            if (i != edges.size() - 1 && previous_edge.cycle_lane() == current_edge.cycle_lane()) {
-              properties[j] += current_edge.length();
-              continue;
-            }
-            break;
-          case Properties::Use:
-            if (i != edges.size() - 1 && previous_edge.use() == current_edge.use()) {
-              properties[j] += current_edge.length();
-              continue;
-            }
-            break;
-          case Properties::Toll:
-            if (i != edges.size() - 1 && previous_edge.toll() == current_edge.toll()) {
-              properties[j] += current_edge.length();
-              continue;
-            }
-            break;
-          case Properties::Bridge:
-            if (i != edges.size() - 1 && previous_edge.bridge() == current_edge.bridge()) {
-              properties[j] += current_edge.length();
-              continue;
-            }
-            break;
-          case Properties::Tunnel:
-            if (i != edges.size() - 1 && previous_edge.tunnel() == current_edge.tunnel()) {
-              properties[j] += current_edge.length();
-              continue;
-            }
-            break;
+        if (i != edges.size() - 1 && properties[j].type() == get_property_type(current_edge, current_property)) {
+          properties[j] += current_edge.length();
+          continue;
         }
 
         properties[j].set_start_index(start_of_property[j]);
@@ -1328,7 +1288,7 @@ std::vector<std::vector<valhalla::baldr::EdgeData>>
 
         start_of_property[j] = current_edge.begin_shape_index();
         properties[j].set_distance(current_edge.length());
-        properties[j].set_type(set_property_type(current_edge, current_property));
+        properties[j].set_type(get_property_type(current_edge, current_property));
       }
     }
   }
