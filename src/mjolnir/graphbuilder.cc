@@ -368,42 +368,6 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
   return modes;
 }
 
-// Get the pipe separated turn lane string from the OSM tags.
-std::string GetTurnLaneString(const std::string str, const uint64_t wayid, bool bkd) {
-  std::string tl;
-  std::stringstream ss(str);
-  std::string item;
-  while (std::getline(ss, item, kLaneDelimiter)) {
-    if (!tl.empty()) {
-      tl += kLaneDelimiter;
-    }
-    std::stringstream ss2(item);
-    std::string item2;
-    uint16_t lanemask = 0;
-    while (std::getline(ss2, item2, kTurnLaneDelimiter)) {
-      const auto turnlane_mask = kTurnLaneMasks.find(item2);
-      if (turnlane_mask != kTurnLaneMasks.end()) {
-        lanemask |= turnlane_mask->second;
-      }
-    }
-
-    // Append to the string
-    tl += std::to_string(lanemask);
-  }
-
-  // Add an empty lane if the string ends with a delimiter
-  if (str.back() == kLaneDelimiter) {
-    tl += kLaneDelimiter;
-    tl += '0';
-  }
-  if (bkd) {
-    LOG_INFO("wayid " + std::to_string(wayid) + " Backward OSM turn lane " + str + " Lanemasks " + tl);
-  } else {
-    LOG_INFO("wayid " + std::to_string(wayid) + " Forward OSM turn lane " + str + " Lanemasks " + tl);
-  }
-  return tl;
-}
-
 void BuildTileSet(const std::string& ways_file,
                   const std::string& way_nodes_file,
                   const std::string& nodes_file,
@@ -807,16 +771,14 @@ void BuildTileSet(const std::string& ways_file,
 
           // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way
           // and the backward turn lanes on the first edge in a way.
-          bool bkd = false;
           std::string turnlane_tags;
           if (forward && w.fwd_turn_lanes_index() > 0 && edge.attributes.way_end) {
             turnlane_tags = osmdata.fwd_turn_lanes_map.name(w.fwd_turn_lanes_index());
           } else if (!forward && w.bwd_turn_lanes_index() > 0 && edge.attributes.way_begin) {
             turnlane_tags = osmdata.bwd_turn_lanes_map.name(w.bwd_turn_lanes_index());
-            bkd = true;
           }
           if (!turnlane_tags.empty()) {
-            std::string str = GetTurnLaneString(turnlane_tags, w.way_id(), bkd);
+            std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
             if (!str.empty()) {
               graphtile.AddTurnLanes(idx, str);
               directededge.set_turnlanes(true);

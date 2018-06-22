@@ -180,6 +180,16 @@ void TestWriteRead() {
   if (hdr.edge_elevation_offset() != 55511) {
     throw runtime_error("Header edge elevation offset test failed");
   }
+
+  hdr.set_turnlane_count(1234);
+  if (hdr.turnlane_count() != 1234) {
+    throw runtime_error("Header turnlane count test failed");
+  }
+
+  hdr.set_turnlane_offset(4321);
+  if (hdr.turnlane_offset() != 4321) {
+    throw runtime_error("Header turnlane offset test failed");
+  }
 }
 } // namespace
 

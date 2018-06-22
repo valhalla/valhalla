@@ -1323,8 +1323,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
   // If turn lanes exist
   if (directededge->turnlanes()) {
     auto turnlanes = graphtile->turnlanes(idx);
-    LOG_INFO(std::to_string(edgeinfo.wayid()) + " Turnlanes: " + TurnLanes::turnlane_string(turnlanes));
-
     // TODO - add to TripPath
   }
 

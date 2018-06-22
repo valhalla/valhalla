@@ -534,7 +534,7 @@ protected:
   uint64_t traffic_id_count_ : 24;
   uint64_t has_edge_elevation_ : 1;
   uint64_t turnlane_count_ : 22;
-  uint64_t spare2_ : 21;
+  uint64_t spare2_ : 1;
 
   // Date the tile was created. Days since pivot date.
   uint32_t date_created_;

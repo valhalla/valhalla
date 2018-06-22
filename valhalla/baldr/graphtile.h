@@ -435,11 +435,11 @@ public:
   }
 
   /**
-  * Convenience method to get the offset into the text table for the turn lanes
-  * for the specified directed edge.
-  * @param  idx  Directed edge index. Used to lookup turn lanes.
-  * @return  Returns offset into the text table.
-  */
+   * Convenience method to get the offset into the text table for the turn lanes
+   * for the specified directed edge.
+   * @param  idx  Directed edge index. Used to lookup turn lanes.
+   * @return  Returns offset into the text table.
+   */
   uint32_t turnlanes_offset(const uint32_t idx) const;
 
 protected:
