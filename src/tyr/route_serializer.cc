@@ -1156,17 +1156,48 @@ enum class Properties {
   Surface,
   Cycle_Lane,
   Use,
-  Node_Type
+  Toll,
+  Bridge,
+  Tunnel
 };
 
-json::ArrayPtr edge_data(valhalla::baldr::EdgeData data) {
-  auto edge_data = json::array({});
+json::ArrayPtr summary_data(valhalla::baldr::EdgeData data) {
+  auto summary_data = json::array({});
 
-  edge_data->emplace_back(json::fp_t{data.type(), 3});
-  edge_data->emplace_back(json::fp_t{data.distance(), 3});
-  edge_data->emplace_back(json::fp_t{data.percentage(), 2});
+  summary_data->emplace_back(json::fp_t{data.type(), 3});
+  summary_data->emplace_back(json::fp_t{data.distance(), 3});
+  summary_data->emplace_back(json::fp_t{data.percentage(), 2});
 
-  return edge_data;
+  return summary_data;
+}
+
+json::ArrayPtr indices_data(valhalla::baldr::EdgeData data) {
+  auto indices_data = json::array({});
+
+  indices_data->emplace_back(static_cast<uint64_t>(data.start_index()));
+  indices_data->emplace_back(static_cast<uint64_t>(data.end_index()));
+
+  return indices_data;
+}
+
+json::ArrayPtr indices(const std::vector<valhalla::baldr::EdgeData> property_data) {
+  auto indices_array = json::array({});
+
+  for (auto data: property_data) {
+    indices_array->emplace_back(indices_data(data));
+  }
+
+  return indices_array;
+}
+
+json::ArrayPtr summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
+  auto summary_array = json::array({});
+
+  for (auto data: property_data) {
+    summary_array->emplace_back(summary_data(data));
+  }
+
+  return summary_array;
 }
 
 json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
@@ -1177,22 +1208,21 @@ json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> prop
     if (overall_property.type() == property_data[i].type()) {
       overall_property += property_data[i];
     } else {
-      overall_summary_array->emplace_back(edge_data(overall_property));
+      overall_summary_array->emplace_back(summary_data(overall_property));
       overall_property = property_data[i];
     }
 
     if (i == property_data.size() - 1) {
-      overall_summary_array->emplace_back(edge_data(overall_property));
+      overall_summary_array->emplace_back(summary_data(overall_property));
     }
   }
 
   return overall_summary_array;
 }
 
-std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json::ArrayPtr>,std::vector<json::ArrayPtr>>
-          get_properties_data(const std::vector<valhalla::odin::TripPath_Edge> edges,
-                          float total_length,
-                          std::vector<Properties> properties_enabled) {
+std::vector<std::vector<valhalla::baldr::EdgeData>>
+  get_properties_data(const std::vector<valhalla::odin::TripPath_Edge> edges,
+                      float total_length, std::vector<Properties> properties_enabled) {
 
   valhalla::baldr::EdgeData properties [properties_enabled.size()];
 
@@ -1200,9 +1230,7 @@ std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json:
   // of a shape index starts
   int start_of_grade [properties_enabled.size()];
 
-  std::vector<std::vector<valhalla::baldr::EdgeData>> grades_data(properties_enabled.size());
-  std::vector<json::ArrayPtr> indices_array(properties_enabled.size(), json::array({}));
-  std::vector<json::ArrayPtr> summary_array(properties_enabled.size(), json::array({}));
+  std::vector<std::vector<valhalla::baldr::EdgeData>> properties_data(properties_enabled.size());
 
   for (int i = 0; i < edges.size(); i++) {
     auto current_edge = edges[i];
@@ -1227,6 +1255,15 @@ std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json:
           case Properties::Use:
             properties[j].set_type(current_edge.use());
             break;
+          case Properties::Toll:
+            properties[j].set_type(0);
+            break;
+          case Properties::Bridge:
+            properties[j].set_type(0);
+            break;
+          case Properties::Tunnel:
+            properties[j].set_type(0);
+            break;
           default:
             break;
         }
@@ -1234,9 +1271,6 @@ std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json:
         properties[j].set_distance(current_edge.length());
       } else {
         auto previous_edge = edges[i - 1];
-
-        // Either if it is the last edge, or the grades are different
-        // save their information to the maps
 
         switch(current_property) {
           case Properties::Grade:
@@ -1263,13 +1297,31 @@ std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json:
               continue;
             }
             break;
+          case Properties::Toll:
+            if (i != edges.size() - 1 && previous_edge.toll() == current_edge.toll()) {
+              properties[j] += current_edge.length();
+              continue;
+            }
+            break;
+          case Properties::Bridge:
+            if (i != edges.size() - 1 && previous_edge.bridge() == current_edge.bridge()) {
+              properties[j] += current_edge.length();
+              continue;
+            }
+            break;
+          case Properties::Tunnel:
+            if (i != edges.size() - 1 && previous_edge.tunnel() == current_edge.tunnel()) {
+              properties[j] += current_edge.length();
+              continue;
+            }
+            break;
         }
 
         properties[j].set_start_index(start_of_grade[j]);
         properties[j].set_end_index(previous_edge.end_shape_index());
         properties[j].set_percentage(properties[j].distance()/total_length * 100);
 
-        grades_data[j].push_back(properties[j]);
+        properties_data[j].push_back(properties[j]);
 
         start_of_grade[j] = current_edge.begin_shape_index();
         properties[j].set_distance(current_edge.length());
@@ -1287,20 +1339,21 @@ std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json:
           case Properties::Use:
             properties[j].set_type(current_edge.use());
             break;
+          case Properties::Toll:
+            properties[j].set_type(0);
+            break;
+          case Properties::Bridge:
+            properties[j].set_type(0);
+            break;
+          case Properties::Tunnel:
+            properties[j].set_type(0);
+            break;
         }
-
-        auto feature_json = edge_data(grades_data[j].back());
-        summary_array[j]->emplace_back(feature_json);
-
-        auto indices_json = json::array({});
-        indices_json->emplace_back(static_cast<uint64_t>(grades_data[j].back().start_index()));
-        indices_json->emplace_back(static_cast<uint64_t>(grades_data[j].back().end_index()));
-        indices_array[j]->emplace_back(indices_json);
       }
     }
   }
 
-  return std::make_tuple(grades_data, indices_array, summary_array);
+  return properties_data;
 }
 
 json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
@@ -1308,22 +1361,22 @@ json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
                     std::vector<Properties> properties_enabled) {
   auto properties = json::map({});
 
-  auto properties_info = get_properties_data(edges, total_length, properties_enabled);
-  auto properties_data = std::get<0>(properties_info);
-  std::vector<json::ArrayPtr> indices_array = std::get<1>(properties_info);
-  std::vector<json::ArrayPtr> summary_array = std::get<2>(properties_info);
+  auto properties_data = get_properties_data(edges, total_length, properties_enabled);
 
   for (int i = 0; i < properties_enabled.size(); i++) {
     auto property = json::map({});
 
+    json::ArrayPtr summary_array = summary(properties_data[i]);
+    json::ArrayPtr indices_array = indices(properties_data[i]);
+
     std::sort(properties_data[i].begin(), properties_data[i].end());
 
     json::ArrayPtr overall_summary_array = (properties_data[i].size() == 1) ? 
-      edge_data(properties_data[i].front()) : overall_summary(properties_data[i]);
+      summary_data(properties_data[i].front()) : overall_summary(properties_data[i]);
 
     property->emplace("overall_summary", std::move(overall_summary_array));
-    property->emplace("summary", std::move(summary_array[i]));
-    property->emplace("indices", std::move(indices_array[i]));
+    property->emplace("summary", std::move(summary_array));
+    property->emplace("indices", std::move(indices_array));
 
     switch (properties_enabled[i]) {
       case Properties::Grade:
@@ -1334,8 +1387,19 @@ json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
         break;
       case Properties::Cycle_Lane:
         properties->emplace("cycle_lane", property);
+        break;
       case Properties::Use:
         properties->emplace("use", property);
+        break;
+      case Properties::Toll:
+        properties->emplace("toll", property);
+        break;
+      case Properties::Bridge:
+        properties->emplace("bridge", property);
+        break;
+      case Properties::Tunnel:
+        properties->emplace("tunnel", property);
+        break;
     }
   }
 
@@ -1703,8 +1767,14 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   if (directions_options.use())
     properties_enabled.push_back(Properties::Use);
 
-  if (directions_options.node_type())
-    properties_enabled.push_back(Properties::Node_Type);
+  if (directions_options.toll())
+    properties_enabled.push_back(Properties::Toll);
+
+  if (directions_options.bridge())
+    properties_enabled.push_back(Properties::Bridge);
+
+  if (directions_options.tunnel())
+    properties_enabled.push_back(Properties::Tunnel);
 
   json->emplace("properties", properties(edges, total_length, properties_enabled));
 
