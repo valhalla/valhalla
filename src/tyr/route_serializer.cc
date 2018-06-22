@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "baldr/edge_data.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/turn.h"
@@ -1150,13 +1151,199 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
   }
 }
 
-json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
-                    const std::map<int, bool> direction_map,
-                    const std::map<int, valhalla::odin::TripPath_Surface> surface_map,
-                    const std::map<int, valhalla::odin::TripPath_Use> use_map,
-                    const std::map<int, valhalla::odin::TripPath_Node_Type> node_type_map,
-                    const std::map<int, valhalla::odin::TripPath_CycleLane> cycle_lane_map) {
+enum class Properties {
+  Grade,
+  Surface,
+  Cycle_Lane,
+  Use,
+  Node_Type
+};
 
+json::ArrayPtr edge_data(valhalla::baldr::EdgeData data) {
+  auto edge_data = json::array({});
+
+  edge_data->emplace_back(json::fp_t{data.type(), 3});
+  edge_data->emplace_back(json::fp_t{data.distance(), 3});
+  edge_data->emplace_back(json::fp_t{data.percentage(), 2});
+
+  return edge_data;
+}
+
+json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
+  auto overall_summary_array = json::array({});
+  auto overall_property = property_data.front();
+
+  for (int i = 1; i < property_data.size(); i++) {
+    if (overall_property.type() == property_data[i].type()) {
+      overall_property += property_data[i];
+    } else {
+      overall_summary_array->emplace_back(edge_data(overall_property));
+      overall_property = property_data[i];
+    }
+
+    if (i == property_data.size() - 1) {
+      overall_summary_array->emplace_back(edge_data(overall_property));
+    }
+  }
+
+  return overall_summary_array;
+}
+
+std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json::ArrayPtr>,std::vector<json::ArrayPtr>>
+          get_properties_data(const std::vector<valhalla::odin::TripPath_Edge> edges,
+                          float total_length,
+                          std::vector<Properties> properties_enabled) {
+
+  valhalla::baldr::EdgeData properties [properties_enabled.size()];
+
+  // The shape index of where the beginning
+  // of a shape index starts
+  int start_of_grade [properties_enabled.size()];
+
+  std::vector<std::vector<valhalla::baldr::EdgeData>> grades_data(properties_enabled.size());
+  std::vector<json::ArrayPtr> indices_array(properties_enabled.size(), json::array({}));
+  std::vector<json::ArrayPtr> summary_array(properties_enabled.size(), json::array({}));
+
+  for (int i = 0; i < edges.size(); i++) {
+    auto current_edge = edges[i];
+
+    for (int j = 0; j < properties_enabled.size(); j++) {
+      auto current_property = properties_enabled[j];
+
+      // Save information if it is the first index
+      if (i == 0) {
+        start_of_grade[j] = 0;
+
+        switch (current_property) {
+          case Properties::Grade:
+            properties[j].set_type(current_edge.weighted_grade());
+            break;
+          case Properties::Surface:
+            properties[j].set_type(current_edge.surface());
+            break;
+          case Properties::Cycle_Lane:
+            properties[j].set_type(current_edge.cycle_lane());
+            break;
+          case Properties::Use:
+            properties[j].set_type(current_edge.use());
+            break;
+          default:
+            break;
+        }
+        
+        properties[j].set_distance(current_edge.length());
+      } else {
+        auto previous_edge = edges[i - 1];
+
+        // Either if it is the last edge, or the grades are different
+        // save their information to the maps
+
+        switch(current_property) {
+          case Properties::Grade:
+            if (i != edges.size() - 1 && previous_edge.weighted_grade() == current_edge.weighted_grade()) {
+              properties[j] += current_edge.length();
+              continue;
+            }
+            break;
+          case Properties::Surface:
+            if (i != edges.size() - 1 && previous_edge.surface() == current_edge.surface()) {
+              properties[j] += current_edge.length();
+              continue;
+            }
+            break;
+          case Properties::Cycle_Lane:
+            if (i != edges.size() - 1 && previous_edge.cycle_lane() == current_edge.cycle_lane()) {
+              properties[j] += current_edge.length();
+              continue;
+            }
+            break;
+          case Properties::Use:
+            if (i != edges.size() - 1 && previous_edge.use() == current_edge.use()) {
+              properties[j] += current_edge.length();
+              continue;
+            }
+            break;
+        }
+
+        properties[j].set_start_index(start_of_grade[j]);
+        properties[j].set_end_index(previous_edge.end_shape_index());
+        properties[j].set_percentage(properties[j].distance()/total_length * 100);
+
+        grades_data[j].push_back(properties[j]);
+
+        start_of_grade[j] = current_edge.begin_shape_index();
+        properties[j].set_distance(current_edge.length());
+
+        switch (current_property) {
+          case Properties::Grade:
+            properties[j].set_type(current_edge.weighted_grade());
+            break;
+          case Properties::Surface:
+            properties[j].set_type(current_edge.surface());
+            break;
+          case Properties::Cycle_Lane:
+            properties[j].set_type(current_edge.cycle_lane());
+            break;
+          case Properties::Use:
+            properties[j].set_type(current_edge.use());
+            break;
+        }
+
+        auto feature_json = edge_data(grades_data[j].back());
+        summary_array[j]->emplace_back(feature_json);
+
+        auto indices_json = json::array({});
+        indices_json->emplace_back(static_cast<uint64_t>(grades_data[j].back().start_index()));
+        indices_json->emplace_back(static_cast<uint64_t>(grades_data[j].back().end_index()));
+        indices_array[j]->emplace_back(indices_json);
+      }
+    }
+  }
+
+  return std::make_tuple(grades_data, indices_array, summary_array);
+}
+
+json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
+                    float total_length,
+                    std::vector<Properties> properties_enabled) {
+  auto properties = json::map({});
+
+  auto properties_info = get_properties_data(edges, total_length, properties_enabled);
+  auto properties_data = std::get<0>(properties_info);
+  std::vector<json::ArrayPtr> indices_array = std::get<1>(properties_info);
+  std::vector<json::ArrayPtr> summary_array = std::get<2>(properties_info);
+
+  for (int i = 0; i < properties_enabled.size(); i++) {
+    auto property = json::map({});
+
+    std::sort(properties_data[i].begin(), properties_data[i].end());
+
+    json::ArrayPtr overall_summary_array = (properties_data[i].size() == 1) ? 
+      edge_data(properties_data[i].front()) : overall_summary(properties_data[i]);
+
+    property->emplace("overall_summary", std::move(overall_summary_array));
+    property->emplace("summary", std::move(summary_array[i]));
+    property->emplace("indices", std::move(indices_array[i]));
+
+    switch (properties_enabled[i]) {
+      case Properties::Grade:
+       properties->emplace("grade", property);
+       break;
+      case Properties::Surface:
+        properties->emplace("surface", property);
+        break;
+      case Properties::Cycle_Lane:
+        properties->emplace("cycle_lane", property);
+      case Properties::Use:
+        properties->emplace("use", property);
+    }
+  }
+
+  return properties;
+}
+
+json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
+                    const std::map<int, bool> direction_map) {
   // TODO: multiple legs.
   auto legs = json::array({});
   for (const auto& directions_leg : directions_legs) {
@@ -1321,22 +1508,6 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
         man->emplace("counter_clockwise", static_cast<bool>(direction_map.at(maneuver.begin_shape_index())));
       }
 
-      if (surface_map.size() != 0 && surface_map.find(maneuver.begin_shape_index()) != surface_map.end()) {
-        man->emplace("surface", static_cast<string>(surface(surface_map.at(maneuver.begin_shape_index()))));
-      }
-
-      if (use_map.size() != 0 && use_map.find(maneuver.begin_shape_index()) != use_map.end()) {
-        man->emplace("use", static_cast<string>(use(use_map.at(maneuver.begin_shape_index()))));
-      }
-
-      if (node_type_map.size() != 0 && node_type_map.find(maneuver.begin_shape_index()) != node_type_map.end()) {
-        man->emplace("node_type", static_cast<string>(node_type(node_type_map.at(maneuver.begin_shape_index()))));
-      }
-
-      if (cycle_lane_map.size() != 0 && cycle_lane_map.find(maneuver.begin_shape_index()) != cycle_lane_map.end()) {
-        man->emplace("cycle_lane", static_cast<string>(cycle_lane(cycle_lane_map.at(maneuver.begin_shape_index()))));
-      }
-
       // Depart and arrive instructions
       if (maneuver.has_depart_instruction()) {
         man->emplace("depart_instruction", maneuver.depart_instruction());
@@ -1481,49 +1652,40 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
   return legs;
 }
 
-json::ArrayPtr grades(const std::list<valhalla::odin::TripPath>& trip_paths) {
-  auto grades = json::array({});
-
-  for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
-    for (int i = 0; i < path->node_size(); i++) {
-      auto edge = path->node(i).edge();
-
-      auto grades_summary = json::map({});
-      grades_summary->emplace("grade", json::fp_t{edge.weighted_grade(), 3});
-      grades_summary->emplace("distance", json::fp_t{edge.length(), 3});
-
-      grades->emplace_back(grades_summary);
-     }
-  }
-
-  return grades;
-}
-
 std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
                       const std::list<valhalla::odin::TripDirections>& directions_legs,
                       const std::list<valhalla::odin::TripPath>& trip_paths) {
   // build up the json object
 
   std::map<int, bool> direction_map;
-  std::map<int, valhalla::odin::TripPath_Surface> surface_map;
-  std::map<int, valhalla::odin::TripPath_Use> use_map;
-  std::map<int, valhalla::odin::TripPath_Node_Type> node_type_map;
-  std::map<int, valhalla::odin::TripPath_CycleLane> cycle_lane_map;
+// <<<<<<< HEAD
+//   std::map<int, valhalla::odin::TripPath_Surface> surface_map;
+//   std::map<int, valhalla::odin::TripPath_Use> use_map;
+//   std::map<int, valhalla::odin::TripPath_Node_Type> node_type_map;
+//   std::map<int, valhalla::odin::TripPath_CycleLane> cycle_lane_map;
+// =======
+  std::vector<valhalla::odin::TripPath_Edge> edges;
+  float total_length = 0;
+// >>>>>>> grades-refactor
 
   for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
     for (auto node: path->node()) {
       auto edge = node.edge();
 
+      total_length += edge.length();
+
+      edges.push_back(edge);
+
       if (edge.roundabout())
         direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});
 
-      surface_map.insert({edge.begin_shape_index(), edge.surface()});
+      // surface_map.insert({edge.begin_shape_index(), edge.surface()});
 
-      use_map.insert({edge.begin_shape_index(), edge.use()});
+      // use_map.insert({edge.begin_shape_index(), edge.use()});
 
-      node_type_map.insert({edge.begin_shape_index(), node.type()});
+      // node_type_map.insert({edge.begin_shape_index(), node.type()});
 
-      cycle_lane_map.insert({edge.begin_shape_index(), edge.cycle_lane()});
+      // cycle_lane_map.insert({edge.begin_shape_index(), edge.cycle_lane()});
     }
   }
 
@@ -1533,7 +1695,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
        ({
         {"locations", locations(directions_legs)},
         {"summary", summary(directions_legs)},
-        {"legs", legs(directions_legs, direction_map, surface_map, use_map, node_type_map, cycle_lane_map)},
+        {"legs", legs(directions_legs, direction_map)},//, surface_map, use_map, node_type_map, cycle_lane_map)},
         {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
         {"status", static_cast<uint64_t>(0)}, //0 success
         {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
@@ -1542,8 +1704,24 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
     }
   });
 
+  std::vector<Properties> properties_enabled;
+
   if (directions_options.grades())
-    json->emplace("grades", grades(trip_paths));
+    properties_enabled.push_back(Properties::Grade);
+
+  if (directions_options.surface())
+    properties_enabled.push_back(Properties::Surface);
+
+  if (directions_options.cycle_lane())
+    properties_enabled.push_back(Properties::Cycle_Lane);
+
+  if (directions_options.use())
+    properties_enabled.push_back(Properties::Use);
+
+  if (directions_options.node_type())
+    properties_enabled.push_back(Properties::Node_Type);
+
+  json->emplace("properties", properties(edges, total_length, properties_enabled));
 
   if (directions_options.has_id())
     json->emplace("id", directions_options.id());

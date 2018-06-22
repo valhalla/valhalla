@@ -400,7 +400,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto deprecated = get_child_optional(doc, "/directions_options");
   auto& allocator = doc.GetAllocator();
   if (deprecated) {
-    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/grades"}) {
+    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/grades", "/surface", "/cycle_lane"}) {
       auto child = rapidjson::get_child_optional(*deprecated, key);
       if (child) {
         doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
@@ -445,9 +445,25 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_narrative(*narrative);
   }
 
-    auto grades = rapidjson::get_optional<bool>(doc, "/grades");
-    if(grades)
-      options.set_grades(*grades);
+  auto grades = rapidjson::get_optional<bool>(doc, "/grades");
+  if (grades)
+    options.set_grades(*grades);
+
+  auto surface = rapidjson::get_optional<bool>(doc, "/surface");
+  if (surface)
+    options.set_surface(*surface);
+
+  auto cycle_lane = rapidjson::get_optional<bool>(doc, "/cycle_lane");
+  if (cycle_lane)
+    options.set_cycle_lane(*cycle_lane);
+
+  auto node_type = rapidjson::get_optional<bool>(doc, "/node_type");
+  if (node_type)
+    options.set_node_type(*node_type);
+
+  auto use = rapidjson::get_optional<bool>(doc, "/use");
+  if (use)
+    options.set_use(*use);   
 
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {

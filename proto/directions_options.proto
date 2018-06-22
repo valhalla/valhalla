@@ -68,4 +68,8 @@ message DirectionsOptions {
   repeated Location shape = 19;                     // Raw shape for map matching
   optional double resample_distance = 20;           // Resampling shape at regular intervals
   optional bool grades = 21 [default = false];      // Get elevation information
+  optional bool surface = 22 [default = false];     // Get the surface information
+  optional bool cycle_lane = 23 [default = false];  // Get the cycle lane information
+  optional bool node_type = 24 [default = false];   // Get the node type information
+  optional bool use = 25 [default = false];           // Get the type of use for a certain edge
 }
