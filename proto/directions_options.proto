@@ -1,6 +1,16 @@
 package valhalla.odin;
 import public "tripcommon.proto";
 
+message Contour {
+  optional float time = 1;     // minutes
+  optional string color = 2;   // hex color with out # - for example: "ff0000" for red 
+}
+
+enum FilterAction {
+  exclude = 0;
+  include = 1;
+}
+
 message DirectionsOptions {
   
   enum Units {
@@ -67,4 +77,16 @@ message DirectionsOptions {
   optional string date_time = 18;                   // And what day and time
   repeated Location shape = 19;                     // Raw shape for map matching
   optional double resample_distance = 20;           // Resampling shape at regular intervals
+  repeated Contour contours = 21;                   // List of isochrone contours
+  optional bool polygons = 22;                      // Boolean value to determine whether to return geojson polygons or linestrings as the contours
+  optional float denoise = 23 [default = 1.0];      // A floating point value from 0 to 1 which can be used to remove smaller contours
+  optional float generalize = 24;                   // Meters used as the tolerance for Douglas-Peucker generalization
+  optional bool show_locations = 25;                // Add original locations to the isochrone geojson response
+  optional string shape_match = 26;                 // The matching algorithm based on the type of input
+  optional uint32 best_paths = 27 [default = 1];    // The number of top k paths
+  optional float gps_accuracy = 28;                 // The gps accuracy associated with the suppplied trace points
+  optional float search_radius = 29;                // The search radius associated with the suppplied trace points
+  optional float turn_penalty_factor = 30;          // The turn penalty factor associated with the suppplied trace points
+  optional FilterAction filter_action = 31;         // The trace filter action - either exclude or include
+  repeated string filter_attributes = 32;           // The filter list for trace attributes
 }

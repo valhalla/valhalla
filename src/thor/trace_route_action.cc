@@ -64,8 +64,7 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
    * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
-  auto shape_match = STRING_TO_MATCH.find(
-      rapidjson::get<std::string>(request.document, "/shape_match", "walk_or_snap"));
+  auto shape_match = STRING_TO_MATCH.find(request.options.shape_match());
   if (shape_match == STRING_TO_MATCH.cend()) {
     throw valhalla_exception_t{445};
   } else {
