@@ -445,9 +445,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_narrative(*narrative);
   }
 
-    auto grades = rapidjson::get_optional<bool>(doc, "/grades");
-    if(grades)
-      options.set_grades(*grades);
+  auto grades = rapidjson::get_optional<bool>(doc, "/grades");
+  if (grades)
+    options.set_grades(*grades);
 
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {

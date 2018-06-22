@@ -52,5 +52,9 @@ namespace baldr {
     set_distance(distance() + edge_data.distance());
     set_percentage(percentage() + edge_data.percentage());
   }
+
+  void EdgeData::operator +=(const float new_distance) {
+    set_distance(distance() + new_distance);
+  }
 } // namespace baldr
 } // namespace valhalla

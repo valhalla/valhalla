@@ -1226,32 +1226,36 @@ std::tuple<std::vector<std::vector<valhalla::baldr::EdgeData>>,std::vector<json:
         // save their information to the maps
 
         switch(current_property) {
-          case Properties::Grade: {
-            if (i == edges.size() - 1 || previous_edge.weighted_grade() != current_edge.weighted_grade()) {
-              properties[j].set_start_index(start_of_grade[j]);
-              properties[j].set_end_index(previous_edge.end_shape_index());
-              properties[j].set_percentage(properties[j].distance()/total_length * 100);
-
-              auto feature_json = edge_data(properties[j]);
-              summary_array[j]->emplace_back(feature_json);
-
-              auto indices_json = json::array({});
-              indices_json->emplace_back(static_cast<uint64_t>(properties[j].start_index()));
-              indices_json->emplace_back(static_cast<uint64_t>(properties[j].end_index()));
-              indices_array[j]->emplace_back(indices_json);
-
-              grades_data[j].push_back(properties[j]);
-
-              start_of_grade[j] = current_edge.begin_shape_index();
-              properties[j].set_type(current_edge.weighted_grade());
-              properties[j].set_distance(current_edge.length());
-            } else {
-              auto new_distance = properties[j].distance() + current_edge.length();
-              properties[j].set_distance(new_distance);
+          case Properties::Grade:
+            if (i != edges.size() - 1 && previous_edge.weighted_grade() == current_edge.weighted_grade()) {
+              properties[j] += current_edge.length();
+              continue;
             }
-          }
-          break;
+            break;
         }
+
+        properties[j].set_start_index(start_of_grade[j]);
+        properties[j].set_end_index(previous_edge.end_shape_index());
+        properties[j].set_percentage(properties[j].distance()/total_length * 100);
+
+        grades_data[j].push_back(properties[j]);
+
+        start_of_grade[j] = current_edge.begin_shape_index();
+        properties[j].set_distance(current_edge.length());
+
+        switch (current_property) {
+          case Properties::Grade:
+            properties[j].set_type(current_edge.weighted_grade());
+            break;
+        }
+
+        auto feature_json = edge_data(grades_data[j].back());
+        summary_array[j]->emplace_back(feature_json);
+
+        auto indices_json = json::array({});
+        indices_json->emplace_back(static_cast<uint64_t>(grades_data[j].back().start_index()));
+        indices_json->emplace_back(static_cast<uint64_t>(grades_data[j].back().end_index()));
+        indices_array[j]->emplace_back(indices_json);
       }
     }
   }
