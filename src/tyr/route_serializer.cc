@@ -1296,7 +1296,7 @@ json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
 
     std::sort(properties_data[i].begin(), properties_data[i].end());
 
-    json::ArrayPtr overall_summary_array = (properties_data[i].size() == 1) ? 
+    json::ArrayPtr overall_summary_array = (properties_data[i].size() == 1) ?
       summary_data(properties_data[i].front()) : overall_summary(properties_data[i]);
 
     property->emplace("overall_summary", std::move(overall_summary_array));
