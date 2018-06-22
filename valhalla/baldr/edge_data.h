@@ -4,7 +4,7 @@
 namespace valhalla {
 namespace baldr {
 
-/** 
+/**
  * Contains the data for a certain edge
  */
 class EdgeData {
@@ -36,7 +36,7 @@ public:
   void operator +=(const float new_distance);
 
   bool operator ==(const EdgeData& edge_data) const;
-  
+
 protected:
   float type_;
   float distance_;
