@@ -56,5 +56,10 @@ namespace baldr {
   void EdgeData::operator +=(const float new_distance) {
     set_distance(distance() + new_distance);
   }
+
+  bool EdgeData::operator ==(const EdgeData &edge_data) const{
+    return this->start_index() == edge_data.start_index() &&
+           this->end_index() == edge_data.end_index();
+  }
 } // namespace baldr
 } // namespace valhalla
