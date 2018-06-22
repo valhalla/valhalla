@@ -934,8 +934,8 @@ uint32_t GraphTile::turnlanes_offset(const uint32_t idx) const {
     return 0;
   }
 
-  // Lane connections are sorted by edge index.
-  // Binary search to find a sign with matching edge index.
+  // Turn lanes are sorted by edge index.
+  // Binary search to find a turn lane with matching edge index.
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
