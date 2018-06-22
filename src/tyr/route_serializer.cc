@@ -1658,15 +1658,8 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
   // build up the json object
 
   std::map<int, bool> direction_map;
-// <<<<<<< HEAD
-//   std::map<int, valhalla::odin::TripPath_Surface> surface_map;
-//   std::map<int, valhalla::odin::TripPath_Use> use_map;
-//   std::map<int, valhalla::odin::TripPath_Node_Type> node_type_map;
-//   std::map<int, valhalla::odin::TripPath_CycleLane> cycle_lane_map;
-// =======
   std::vector<valhalla::odin::TripPath_Edge> edges;
   float total_length = 0;
-// >>>>>>> grades-refactor
 
   for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
     for (auto node: path->node()) {
@@ -1678,14 +1671,6 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
 
       if (edge.roundabout())
         direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});
-
-      // surface_map.insert({edge.begin_shape_index(), edge.surface()});
-
-      // use_map.insert({edge.begin_shape_index(), edge.use()});
-
-      // node_type_map.insert({edge.begin_shape_index(), node.type()});
-
-      // cycle_lane_map.insert({edge.begin_shape_index(), edge.cycle_lane()});
     }
   }
 
@@ -1695,7 +1680,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
        ({
         {"locations", locations(directions_legs)},
         {"summary", summary(directions_legs)},
-        {"legs", legs(directions_legs, direction_map)},//, surface_map, use_map, node_type_map, cycle_lane_map)},
+        {"legs", legs(directions_legs, direction_map)},
         {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
         {"status", static_cast<uint64_t>(0)}, //0 success
         {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},

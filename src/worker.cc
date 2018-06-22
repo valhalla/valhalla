@@ -463,7 +463,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
 
   auto use = rapidjson::get_optional<bool>(doc, "/use");
   if (use)
-    options.set_use(*use);   
+    options.set_use(*use);
 
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
