@@ -1211,9 +1211,12 @@ json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> prop
   auto overall_property = property_data.front();
 
   for (auto data: property_data) {
-    if (overall_property.type() == data.type()) {
+    if (data == property_data.front())
+      continue;
+
+    if (overall_property.type() == data.type())
       overall_property += data;
-    } else {
+    else {
       overall_summary_array->emplace_back(summary_data(overall_property));
       overall_property = data;
     }
