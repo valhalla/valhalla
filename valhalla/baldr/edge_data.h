@@ -34,6 +34,8 @@ public:
   void operator +=(const EdgeData& edge_data);
 
   void operator +=(const float new_distance);
+
+  bool operator ==(const EdgeData& edge_data) const;
   
 protected:
   float type_;

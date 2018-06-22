@@ -1151,6 +1151,8 @@ travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
   }
 }
 
+// The types of properties that will be returned
+// for a given route
 enum class Properties {
   Grade,
   Surface,
@@ -1161,6 +1163,8 @@ enum class Properties {
   Tunnel
 };
 
+// Will return a json of an edge's type, distance and percentage
+// compared to the entire route
 json::ArrayPtr summary_data(valhalla::baldr::EdgeData data) {
   auto summary_data = json::array({});
 
@@ -1171,6 +1175,8 @@ json::ArrayPtr summary_data(valhalla::baldr::EdgeData data) {
   return summary_data;
 }
 
+// Will return a json of an edge's start and stop index
+// for a certain type
 json::ArrayPtr indices_data(valhalla::baldr::EdgeData data) {
   auto indices_data = json::array({});
 
@@ -1180,6 +1186,8 @@ json::ArrayPtr indices_data(valhalla::baldr::EdgeData data) {
   return indices_data;
 }
 
+// Returns the start and stop indices for the entire route
+// for a certain property
 json::ArrayPtr indices(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto indices_array = json::array({});
 
@@ -1190,6 +1198,8 @@ json::ArrayPtr indices(const std::vector<valhalla::baldr::EdgeData> property_dat
   return indices_array;
 }
 
+// Returns the summary for the entire route
+// for a certain property
 json::ArrayPtr summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto summary_array = json::array({});
 
@@ -1200,19 +1210,21 @@ json::ArrayPtr summary(const std::vector<valhalla::baldr::EdgeData> property_dat
   return summary_array;
 }
 
+// Returns the overall summary for the entire route
+// This will condense the summary
 json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto overall_summary_array = json::array({});
   auto overall_property = property_data.front();
 
-  for (int i = 1; i < property_data.size(); i++) {
-    if (overall_property.type() == property_data[i].type()) {
-      overall_property += property_data[i];
+  for (auto data: property_data) {
+    if (overall_property.type() == data.type()) {
+      overall_property += data;
     } else {
       overall_summary_array->emplace_back(summary_data(overall_property));
-      overall_property = property_data[i];
+      overall_property = data;
     }
 
-    if (i == property_data.size() - 1) {
+    if (data == property_data.back()) {
       overall_summary_array->emplace_back(summary_data(overall_property));
     }
   }
@@ -1220,15 +1232,32 @@ json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> prop
   return overall_summary_array;
 }
 
+float set_property_type(valhalla::odin::TripPath_Edge current_edge, Properties current_property) {
+  switch (current_property) {
+    case Properties::Grade:
+      return current_edge.weighted_grade();
+    case Properties::Surface:
+      return current_edge.surface();
+    case Properties::Cycle_Lane:
+      return current_edge.cycle_lane();
+    case Properties::Use:
+      return current_edge.use();
+    case Properties::Toll:
+      return 0;
+    case Properties::Bridge:
+      return 0;
+    case Properties::Tunnel:
+      return 0;
+  }
+}
+
+// Returns the properties data
 std::vector<std::vector<valhalla::baldr::EdgeData>>
   get_properties_data(const std::vector<valhalla::odin::TripPath_Edge> edges,
                       float total_length, std::vector<Properties> properties_enabled) {
-
   valhalla::baldr::EdgeData properties [properties_enabled.size()];
 
-  // The shape index of where the beginning
-  // of a shape index starts
-  int start_of_grade [properties_enabled.size()];
+  int start_of_property [properties_enabled.size()];
 
   std::vector<std::vector<valhalla::baldr::EdgeData>> properties_data(properties_enabled.size());
 
@@ -1238,36 +1267,10 @@ std::vector<std::vector<valhalla::baldr::EdgeData>>
     for (int j = 0; j < properties_enabled.size(); j++) {
       auto current_property = properties_enabled[j];
 
-      // Save information if it is the first index
       if (i == 0) {
-        start_of_grade[j] = 0;
+        start_of_property[j] = 0;
 
-        switch (current_property) {
-          case Properties::Grade:
-            properties[j].set_type(current_edge.weighted_grade());
-            break;
-          case Properties::Surface:
-            properties[j].set_type(current_edge.surface());
-            break;
-          case Properties::Cycle_Lane:
-            properties[j].set_type(current_edge.cycle_lane());
-            break;
-          case Properties::Use:
-            properties[j].set_type(current_edge.use());
-            break;
-          case Properties::Toll:
-            properties[j].set_type(0);
-            break;
-          case Properties::Bridge:
-            properties[j].set_type(0);
-            break;
-          case Properties::Tunnel:
-            properties[j].set_type(0);
-            break;
-          default:
-            break;
-        }
-        
+        properties[j].set_type(set_property_type(current_edge, current_property));
         properties[j].set_distance(current_edge.length());
       } else {
         auto previous_edge = edges[i - 1];
@@ -1317,38 +1320,15 @@ std::vector<std::vector<valhalla::baldr::EdgeData>>
             break;
         }
 
-        properties[j].set_start_index(start_of_grade[j]);
+        properties[j].set_start_index(start_of_property[j]);
         properties[j].set_end_index(previous_edge.end_shape_index());
         properties[j].set_percentage(properties[j].distance()/total_length * 100);
 
         properties_data[j].push_back(properties[j]);
 
-        start_of_grade[j] = current_edge.begin_shape_index();
+        start_of_property[j] = current_edge.begin_shape_index();
         properties[j].set_distance(current_edge.length());
-
-        switch (current_property) {
-          case Properties::Grade:
-            properties[j].set_type(current_edge.weighted_grade());
-            break;
-          case Properties::Surface:
-            properties[j].set_type(current_edge.surface());
-            break;
-          case Properties::Cycle_Lane:
-            properties[j].set_type(current_edge.cycle_lane());
-            break;
-          case Properties::Use:
-            properties[j].set_type(current_edge.use());
-            break;
-          case Properties::Toll:
-            properties[j].set_type(0);
-            break;
-          case Properties::Bridge:
-            properties[j].set_type(0);
-            break;
-          case Properties::Tunnel:
-            properties[j].set_type(0);
-            break;
-        }
+        properties[j].set_type(set_property_type(current_edge, current_property));
       }
     }
   }
