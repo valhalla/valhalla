@@ -1163,6 +1163,13 @@ enum class Properties {
   Tunnel
 };
 
+bool isPropertyAbsent(Properties current_property) {
+  return current_property == Properties::Cycle_Lane ||
+         current_property == Properties::Toll ||
+         current_property == Properties::Bridge ||
+         current_property == Properties::Tunnel;
+}
+
 // Will return a json of an edge's type, distance and percentage
 // compared to the entire route
 json::ArrayPtr summary_data(valhalla::baldr::EdgeData data) {
@@ -1191,8 +1198,10 @@ json::ArrayPtr indices_data(valhalla::baldr::EdgeData data) {
 json::ArrayPtr indices(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto indices_array = json::array({});
 
-  for (auto data: property_data) {
-    indices_array->emplace_back(indices_data(data));
+  if (property_data.size() > 0) {
+    for (auto data: property_data) {
+      indices_array->emplace_back(indices_data(data));
+    }
   }
 
   return indices_array;
@@ -1203,8 +1212,10 @@ json::ArrayPtr indices(const std::vector<valhalla::baldr::EdgeData> property_dat
 json::ArrayPtr summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto summary_array = json::array({});
 
-  for (auto data: property_data) {
-    summary_array->emplace_back(summary_data(data));
+  if (property_data.size() > 0) {
+    for (auto data: property_data) {
+      summary_array->emplace_back(summary_data(data));
+    }
   }
 
   return summary_array;
@@ -1214,21 +1225,24 @@ json::ArrayPtr summary(const std::vector<valhalla::baldr::EdgeData> property_dat
 // This will condense the summary
 json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto overall_summary_array = json::array({});
-  auto overall_property = property_data.front();
 
-  for (auto data: property_data) {
-    if (data == property_data.front())
-      continue;
+  if (property_data.size() > 0) {
+    auto overall_property = property_data.front();
 
-    if (overall_property.type() == data.type())
-      overall_property += data;
-    else {
-      overall_summary_array->emplace_back(summary_data(overall_property));
-      overall_property = data;
-    }
+    for (auto data: property_data) {
+      if (data == property_data.front())
+        continue;
 
-    if (data == property_data.back()) {
-      overall_summary_array->emplace_back(summary_data(overall_property));
+      if (overall_property.type() == data.type())
+        overall_property += data;
+      else {
+        overall_summary_array->emplace_back(summary_data(overall_property));
+        overall_property = data;
+      }
+
+      if (data == property_data.back()) {
+        overall_summary_array->emplace_back(summary_data(overall_property));
+      }
     }
   }
 
@@ -1288,6 +1302,9 @@ std::vector<std::vector<valhalla::baldr::EdgeData>>
         properties[j].set_percentage(properties[j].distance()/total_length * 100);
 
         properties_data[j].push_back(properties[j]);
+
+        if (isPropertyAbsent(current_property) && properties_data[j].back().type() == 0)
+          properties_data[j].pop_back();
 
         start_of_property[j] = current_edge.begin_shape_index();
         properties[j].set_distance(current_edge.length());
