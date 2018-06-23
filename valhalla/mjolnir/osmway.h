@@ -54,7 +54,7 @@ struct OSMWay {
    * @return  Returns speed.
    */
   uint8_t speed() const {
-    return static_cast<float>(speed_);
+    return speed_;
   }
 
   /**
@@ -68,7 +68,7 @@ struct OSMWay {
    * @return  Returns speed_limit.
    */
   uint8_t speed_limit() const {
-    return static_cast<float>(speed_limit_);
+    return speed_limit_;
   }
   /**
    * Sets the backward speed
