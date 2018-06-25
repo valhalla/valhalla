@@ -50,12 +50,6 @@ set_target_properties(CURL::CURL PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
   INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
 
-find_package(Lua REQUIRED)
-add_library(Lua::Lua INTERFACE IMPORTED)
-set_target_properties(Lua::Lua PROPERTIES
-  INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
-  INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
-
 find_package(Protobuf REQUIRED)
 # TODO: remove after switching to CMake >= 3.7
 if(NOT TARGET protobuf::libprotobuf)
@@ -174,6 +168,11 @@ add_subdirectory(tyr)
 if(ENABLE_DATA_TOOLS)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
+  find_package(Lua REQUIRED)
+  add_library(Lua::Lua INTERFACE IMPORTED)
+  set_target_properties(Lua::Lua PROPERTIES
+    INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
   add_subdirectory(mjolnir)
 endif()
 

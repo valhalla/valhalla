@@ -4,13 +4,13 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
   narrativebuilder narrative_dictionary nodeinfo obb2 openlr optimizer parse_request point2 pointll
-  polyline2 predictive_traffic queue routing sample sequence sign signs streetname streetnames streetnames_factory
+  polyline2 queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles traffic_matcher transitdeparture transitroute transitschedule
   transitstop turn util_midgard util_odin util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder
+  list(APPEND tests astar countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder predictive_traffic
     idtable mapmatch matrix names node_search refs search signinfo trivial_paths uniquenames utrecht)
 endif()
 
@@ -105,7 +105,7 @@ if(ENABLE_SERVICES)
   add_dependencies(run-skadi_service test_directories)
 endif()
 
-if(ENABLE_PYTHON_BINDINGS)
+if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   find_package(PythonInterp)
   add_custom_command(OUTPUT python_valhalla.log
     COMMAND
@@ -120,9 +120,10 @@ if(ENABLE_PYTHON_BINDINGS)
       python_valhalla
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
+  set(python_tests python_valhalla)
 endif()
 
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};python_valhalla")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${python_tests}")
 add_custom_target(check DEPENDS ${test_targets})
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
