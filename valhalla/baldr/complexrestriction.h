@@ -30,6 +30,11 @@ constexpr size_t kMaxViasPerRestriction = 31;
  */
 class ComplexRestriction {
 public:
+  ComplexRestriction()
+      : from_graphid_(kInvalidGraphId), has_dt_(0), to_graphid_(kInvalidGraphId), type_(0), modes_(0),
+        via_count_(0) {
+  }
+
   /**
    * Get the restriction's from graph id
    * @return  Returns the from graph id
