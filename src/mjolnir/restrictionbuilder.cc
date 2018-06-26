@@ -395,7 +395,7 @@ void build(const std::string& complex_restriction_file,
                   // determine if we need to add this complex restriction or not.
                   // basically we do not want any dups.
                   bool bfound = false;
-                  auto res = reverse_tmp_cr.equal_range(tmp_ids.at(0));
+                  const auto res = reverse_tmp_cr.equal_range(tmp_ids.at(0));
                   if (res.first != reverse_tmp_cr.end()) {
                     for (auto r = res.first; r != res.second; ++r) {
                       if (complex_restriction == r->second) {
@@ -419,7 +419,7 @@ void build(const std::string& complex_restriction_file,
         if (directededge.end_restriction()) {
 
           // is this edge the end of a restriction?
-          auto to = end_map.equal_range(e_offset.wayid());
+          const auto to = end_map.equal_range(e_offset.wayid());
           if (to.first != end_map.end()) {
             for (auto it = to.first; it != to.second; ++it) {
 
@@ -529,7 +529,7 @@ void build(const std::string& complex_restriction_file,
                       // determine if we need to add this complex restriction or not.
                       // basically we do not want any dups.
                       bool bfound = false;
-                      auto res = forward_tmp_cr.equal_range(tmp_ids.at(0));
+                      const auto res = forward_tmp_cr.equal_range(tmp_ids.at(0));
                       if (res.first != forward_tmp_cr.end()) {
                         for (auto r = res.first; r != res.second; ++r) {
                           if (complex_restriction == r->second) {
@@ -607,9 +607,8 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     LOG_INFO("Adding Restrictions at level " + std::to_string(tile_level.level));
     for (size_t i = 0; i < threads.size(); ++i) {
       threads[i].reset(new std::thread(build, std::cref(complex_restrictions_file),
-                                       std::cref(end_map), std::ref(hierarchy_properties),
-                                       std::ref(tilequeue), std::ref(lock),
-                                       std::ref(std::ref(results[i]))));
+                                       std::cref(end_map), std::cref(hierarchy_properties),
+                                       std::ref(tilequeue), std::ref(lock), std::ref(results[i])));
     }
 
     // Wait for them to finish up their work
