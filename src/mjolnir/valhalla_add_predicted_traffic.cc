@@ -50,7 +50,6 @@ struct TrafficSpeeds {
 };
 
 struct unique_data_t {
-  std::mutex lock;
   std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>> tile_speeds;
 };
 
@@ -61,6 +60,7 @@ void ParseTrafficFile(const std::string& directory,
                       const std::string& filename,
                       const std::string& ext,
                       unique_data_t& unique_data,
+                      std::mutex& lock,
                       stats& stat) {
   typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
   boost::char_separator<char> sep{","};
@@ -71,7 +71,6 @@ void ParseTrafficFile(const std::string& directory,
   if (file.is_open()) {
     GraphId last_tile_id;
     std::vector<TrafficSpeeds> ts;
-    auto it = unique_data.tile_speeds.end();
     while (getline(file, line)) {
       TrafficSpeeds traffic{};
       tokenizer tok{line, sep};
@@ -104,30 +103,28 @@ void ParseTrafficFile(const std::string& directory,
       if (last_tile_id == tile_id) {
         ts.emplace_back(traffic);
       } else {
-        unique_data.lock.lock();
         if (last_tile_id != kInvalidGraphId) {
+          lock.lock();
+          auto it = unique_data.tile_speeds.find(last_tile_id);
           if (it != unique_data.tile_speeds.end())
-            it->second = ts;
+            it->second.insert(std::end(it->second), std::begin(ts), std::end(ts));
           else
             unique_data.tile_speeds.insert({last_tile_id, ts});
-        }
-        it = unique_data.tile_speeds.find(tile_id);
-        if (it != unique_data.tile_speeds.end()) {
-          ts = it->second;
-        } else
+          lock.unlock();
           ts.clear();
-        unique_data.lock.unlock();
+        }
         last_tile_id = tile_id;
         ts.emplace_back(traffic);
       }
     }
     if (last_tile_id != kInvalidGraphId) {
-      unique_data.lock.lock();
+      lock.lock();
+      auto it = unique_data.tile_speeds.find(last_tile_id);
       if (it != unique_data.tile_speeds.end())
-        it->second = ts;
+        it->second.insert(std::end(it->second), std::begin(ts), std::end(ts));
       else
         unique_data.tile_speeds.insert({last_tile_id, ts});
-      unique_data.lock.unlock();
+      lock.unlock();
     }
   }
   file.close();
@@ -139,6 +136,7 @@ void ParseTrafficFile(const std::string& directory,
  * <quadtreeID>.freeflow.csv. (e.g., 1202021.constrained.csv and 1202021.freeflow.csv)
  */
 void parse_traffic_tiles(const std::string& traffic_dir,
+                         std::mutex& lock,
                          std::unordered_set<std::string>::const_iterator tile_start,
                          std::unordered_set<std::string>::const_iterator tile_end,
                          unique_data_t& unique_data,
@@ -147,26 +145,23 @@ void parse_traffic_tiles(const std::string& traffic_dir,
   // Iterate through the tiles and parse them
   stats stat{};
   for (; tile_start != tile_end; ++tile_start) {
-    ParseTrafficFile(traffic_dir, *tile_start, "constrained", unique_data, stat);
-    ParseTrafficFile(traffic_dir, *tile_start, "freeflow", unique_data, stat);
+    ParseTrafficFile(traffic_dir, *tile_start, "constrained", unique_data, lock, stat);
+    ParseTrafficFile(traffic_dir, *tile_start, "freeflow", unique_data, lock, stat);
   }
   result.set_value(stat);
 }
 
 void update_valhalla_tiles(
     const bpt::ptree& pt,
-    std::mutex& lock,
     std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator tile_start,
     std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator tile_end,
-    unique_data_t& unique_data,
+    const unique_data_t& unique_data,
     std::promise<stats>& result) {
 
   // Iterate through the tiles and parse them
   stats stat{};
   // Get the tile dir
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  GraphReader reader(pt.get_child("mjolnir"));
-
   // Iterate through the tiles in the queue and perform enhancements
   for (; tile_start != tile_end; ++tile_start) {
     // Get the tile
@@ -174,27 +169,20 @@ void update_valhalla_tiles(
     // Update nodes and directed edges as needed
     std::vector<NodeInfo> nodes;
     std::vector<DirectedEdge> directededges;
-    // Get this tile
-    lock.lock();
-    const GraphTile* tile = reader.GetGraphTile(tile_start->first);
-    lock.unlock();
-
     std::unordered_set<GraphId> edges;
     uint32_t nodecount = tile_builder.header()->nodecount();
     GraphId node = tile_start->first;
     for (uint32_t i = 0; i < nodecount; i++, ++node) {
       // The node we will modify
       NodeInfo nodeinfo = tile_builder.node(i);
-      auto ni = tile->node(i);
-
       // Go through directed edges and validate/update data
-      uint32_t idx = ni->edge_index();
+      uint32_t idx = nodeinfo.edge_index();
       GraphId edgeid(node.tileid(), node.level(), idx);
       for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++, ++edgeid) {
-        DirectedEdge& directededge = tile_builder.directededge(nodeinfo.edge_index() + j);
+        DirectedEdge& directededge = tile_builder.directededge(idx);
         // could be more than one in the vector
         for (const auto& speeds : tile_start->second) {
-          if (speeds.id == nodeinfo.edge_index() + j) {
+          if (speeds.id == idx) {
             if (speeds.constrained_flow_speed)
               directededge.set_constrained_flow_speed(speeds.constrained_flow_speed);
             if (speeds.free_flow_speed)
@@ -211,14 +199,7 @@ void update_valhalla_tiles(
     stat.updated_count += edges.size();
 
     // Write the new tile
-    lock.lock();
     tile_builder.Update(nodes, directededges);
-
-    // Check if we need to clear the tile cache
-    if (reader.OverCommitted()) {
-      reader.Clear();
-    }
-    lock.unlock();
   }
   result.set_value(stat);
 }
@@ -334,6 +315,7 @@ int main(int argc, char** argv) {
   uint32_t constrained_count = 0;
   uint32_t free_flow_count = 0;
   unique_data_t unique_data;
+  std::mutex lock;
   // A place to hold the results of those threads (exceptions, stats)
   std::list<std::promise<stats>> results;
   // Atomically pass around stats info
@@ -346,7 +328,8 @@ int main(int argc, char** argv) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, tile_start, tile_end,
+    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, std::ref(lock),
+                                     tile_start, tile_end,
                                      std::ref(unique_data), std::ref(results.back())));
   }
 
@@ -372,9 +355,8 @@ int main(int argc, char** argv) {
   floor = unique_data.tile_speeds.size() / threads.size();
   at_ceiling = unique_data.tile_speeds.size() - (threads.size() * floor);
   std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator t_start,
-      t_end = unique_data.tile_speeds.begin();
+      t_end = unique_data.tile_speeds.cbegin();
   uint32_t updated_count = 0;
-  std::mutex lock;
   // A place to hold the results of those threads (exceptions, stats)
   results.clear();
   // Atomically pass around stats info
@@ -387,7 +369,7 @@ int main(int argc, char** argv) {
     std::advance(t_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(update_valhalla_tiles, std::cref(pt), std::ref(lock), t_start,
+    threads[i].reset(new std::thread(update_valhalla_tiles, std::cref(pt), t_start,
                                      t_end, std::ref(unique_data), std::ref(results.back())));
   }
 
