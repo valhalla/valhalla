@@ -328,9 +328,8 @@ int main(int argc, char** argv) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, std::ref(lock),
-                                     tile_start, tile_end,
-                                     std::ref(unique_data), std::ref(results.back())));
+    threads[i].reset(new std::thread(parse_traffic_tiles, tile_dir, std::ref(lock), tile_start,
+                                     tile_end, std::ref(unique_data), std::ref(results.back())));
   }
 
   // wait for it to finish
@@ -369,8 +368,8 @@ int main(int argc, char** argv) {
     std::advance(t_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(update_valhalla_tiles, std::cref(pt), t_start,
-                                     t_end, std::ref(unique_data), std::ref(results.back())));
+    threads[i].reset(new std::thread(update_valhalla_tiles, std::cref(pt), t_start, t_end,
+                                     std::ref(unique_data), std::ref(results.back())));
   }
 
   // wait for it to finish
