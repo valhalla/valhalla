@@ -69,15 +69,6 @@ public:
   void Update(const std::vector<NodeInfo>& nodes, const std::vector<DirectedEdge>& directededges);
 
   /**
-   * Update a graph tile with new directed edges. Assumes no new
-   * nodes or edges are added. Attributes within existing edges
-   * are updated. This is used in valhalla_add_predicted_traffic to update directed edge
-   * information.
-   * @param directededges Updated list of edges.
-   */
-  void Update(const std::vector<DirectedEdge>& directededges);
-
-  /**
    * Get the current list of node builders.
    * @return  Returns the node info builders.
    */
