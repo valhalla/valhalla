@@ -272,6 +272,24 @@ rapidjson::Document from_string(const std::string& json, const std::exception& e
   return d;
 }
 
+std::vector<std::string> split(const std::string delimiter, std::string string_to_split) {
+    std::vector<std::string> strings;
+
+    if (string_to_split.find(delimiter) == std::string::npos) {
+      strings.push_back(string_to_split);
+    } else {
+      size_t position = 0;
+      std::string substring;
+      while ((position = string_to_split.find(delimiter)) != std::string::npos) {
+        substring = string_to_split.substr(0, position);
+        strings.push_back(substring);
+        string_to_split.erase(0, position + delimiter.length());
+      }
+    }
+
+    return strings;
+}
+
 void parse_locations(const rapidjson::Document& doc,
                      google::protobuf::RepeatedPtrField<odin::Location>* locations,
                      const std::string& node,
@@ -400,7 +418,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto deprecated = get_child_optional(doc, "/directions_options");
   auto& allocator = doc.GetAllocator();
   if (deprecated) {
-    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/grades"}) {
+    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/properties"}) {
       auto child = rapidjson::get_child_optional(*deprecated, key);
       if (child) {
         doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
@@ -445,9 +463,15 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_narrative(*narrative);
   }
 
-  auto grades = rapidjson::get_optional<bool>(doc, "/grades");
-  if (grades)
-    options.set_grades(*grades);
+  auto properties = rapidjson::get_optional<std::string>(doc, "/properties");
+  if (properties) {
+    auto property_vector = split("|", *properties);
+
+    for (auto property: property_vector) {
+      if (property == "grades")
+        options.set_grades(true);
+    }
+  }
 
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
