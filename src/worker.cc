@@ -272,6 +272,24 @@ rapidjson::Document from_string(const std::string& json, const std::exception& e
   return d;
 }
 
+std::vector<std::string> split(const std::string delimiter, std::string string_to_split) {
+    std::vector<std::string> strings;
+
+    if (string_to_split.find(delimiter) == std::string::npos) {
+      strings.push_back(string_to_split);
+    } else {
+      size_t position = 0;
+      std::string substring;
+      while ((position = string_to_split.find(delimiter)) != std::string::npos) {
+        substring = string_to_split.substr(0, position);
+        strings.push_back(substring);
+        string_to_split.erase(0, position + delimiter.length());
+      }
+    }
+
+    return strings;
+}
+
 void parse_locations(const rapidjson::Document& doc,
                      google::protobuf::RepeatedPtrField<odin::Location>* locations,
                      const std::string& node,
@@ -400,8 +418,8 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto deprecated = get_child_optional(doc, "/directions_options");
   auto& allocator = doc.GetAllocator();
   if (deprecated) {
-    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/grades", "/surface",
-                            "/cycle_lane", "/use", "/node_type", "/toll", "/bridge", "/tunnel"}) {
+
+    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/properties"}) {
       auto child = rapidjson::get_child_optional(*deprecated, key);
       if (child) {
         doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
@@ -446,33 +464,27 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_narrative(*narrative);
   }
 
-  auto grades = rapidjson::get_optional<bool>(doc, "/grades");
-  if (grades)
-    options.set_grades(*grades);
+  auto properties = rapidjson::get_optional<std::string>(doc, "/properties");
+  if (properties) {
+    auto property_vector = split("|", *properties);
 
-  auto surface = rapidjson::get_optional<bool>(doc, "/surface");
-  if (surface)
-    options.set_surface(*surface);
-
-  auto cycle_lane = rapidjson::get_optional<bool>(doc, "/cycle_lane");
-  if (cycle_lane)
-    options.set_cycle_lane(*cycle_lane);
-
-  auto use = rapidjson::get_optional<bool>(doc, "/use");
-  if (use)
-    options.set_use(*use);
-
-  auto toll = rapidjson::get_optional<bool>(doc, "/toll");
-  if (toll)
-    options.set_toll(*toll);
-
-  auto bridge = rapidjson::get_optional<bool>(doc, "/bridge");
-  if (bridge)
-    options.set_bridge(*bridge);
-
-  auto tunnel = rapidjson::get_optional<bool>(doc, "/tunnel");
-  if (bridge)
-    options.set_tunnel(*tunnel);
+    for (auto property: property_vector) {
+      if (property == "grades")
+        options.set_grades(true);
+      else if (property == "surface")
+        options.set_surface(true);
+      else if (property == "cycle_lane")
+        options.set_cycle_lane(true);
+      else if (property == "use")
+        options.set_use(true);
+      else if (property == "toll")
+        options.set_toll(true);
+      else if (property == "bridge")
+        options.set_bridge(true);
+      else if (property == "tunnel")
+        options.set_tunnel(true);
+    }
+  }
 
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
