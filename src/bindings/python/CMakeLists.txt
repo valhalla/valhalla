@@ -1,6 +1,13 @@
 find_package(PythonInterp)
 find_package(PythonLibs)
 
+set(_executable ${PYTHON_EXECUTABLE})
+set(_version_major_minor "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+execute_process(COMMAND ${_executable} -c "from distutils.sysconfig import *; print(get_config_var('HOST_GNU_TYPE'))"
+  RESULT_VARIABLE _cvpy_process
+  OUTPUT_VARIABLE _host_gnu_type
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 ## This a workaround for CMake Boost::python configuration
 set(Boost_Python_libs
   python${PYTHON_VERSION_MAJOR}
@@ -34,14 +41,8 @@ else()
   set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
   # Part of OpenCVDetectPython.cmake
-  set(_executable ${PYTHON_EXECUTABLE})
-  set(_version_major_minor "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
   if(CMAKE_HOST_UNIX)
-    execute_process(COMMAND ${_executable} -c "from distutils.sysconfig import *; print(get_python_lib())"
-      RESULT_VARIABLE _cvpy_process
-      OUTPUT_VARIABLE _std_packages_path
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if("${_std_packages_path}" MATCHES "site-packages")
+    if("${_host_gnu_type}" MATCHES "redhat")
       set(_packages_path "python${_version_major_minor}/site-packages")
     else() #debian based assumed, install to the dist-packages.
       set(_packages_path "python${_version_major_minor}/dist-packages")
