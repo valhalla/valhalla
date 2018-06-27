@@ -319,7 +319,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > 150000) {
+    } else if (nc++ > 50000) {
       if (best_path.first >= 0) {
         return FormPath(graphreader, best_path.first);
       } else {
