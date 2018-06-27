@@ -155,7 +155,8 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge));
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge, localtime,
+                                                                           nodeinfo->timezone()));
     newcost.cost += tc.cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
@@ -318,7 +319,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > 50000) {
+    } else if (nc++ > 150000) {
       if (best_path.first >= 0) {
         return FormPath(graphreader, best_path.first);
       } else {
