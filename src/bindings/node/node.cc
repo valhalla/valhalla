@@ -10,6 +10,8 @@
 #include <string>
 
 #include "valhalla/tyr/actor.h"
+#include "valhalla/midgard/logging.h"
+#include "valhalla/midgard/util.h"
 
 boost::property_tree::ptree json_to_pt(const char* json) {
   std::stringstream ss;
@@ -35,11 +37,44 @@ void checkNapiStatus(napi_status status, napi_env env, const char* error_message
 
 class Actor {
 public:
-  static napi_value Init(napi_env env, napi_value exports) {
+  static napi_value Init(napi_env env, napi_callback_info info) {
     napi_status status;
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_METHOD("route", Route),
     };
+    // parse config file to get logging config
+    size_t argc = 1;
+    napi_value argv[1];
+
+    status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    checkNapiStatus(status, env, "Failed to parse arguments");
+
+    // parse config string passed in
+    size_t config_string_size;
+    status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &config_string_size);
+    checkNapiStatus(status, env, "Failed to get config string length");
+    if (config_string_size > 1024 * 1024) {
+      napi_throw_error(env, NULL, "Too large JSON config");
+    }
+
+    char config_string[++config_string_size];
+    status = napi_get_value_string_utf8(env, argv[0], config_string, config_string_size,
+                                        &config_string_size);
+    checkNapiStatus(status, env, "Failed to get config string");
+    static boost::optional<boost::property_tree::ptree> pt = make_conf(config_string);
+    try {
+      // configure logging
+      boost::optional<boost::property_tree::ptree&> logging_subtree =
+          pt->get_child_optional("tyr.logging");
+      if (logging_subtree) {
+        auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                       std::unordered_map<std::string, std::string>>(
+            logging_subtree.get());
+        valhalla::midgard::logging::Configure(logging_config);
+      }
+    } catch (...) {
+      napi_throw_error(env, NULL, "Failed to load logging config");
+    }
 
     napi_value actor_constructor;
     status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 1, properties,
@@ -190,7 +225,11 @@ private:
 napi_ref Actor::constructor;
 
 napi_value Init(napi_env env, napi_value exports) {
-  return Actor::Init(env, exports);
+  napi_value new_exports;
+  napi_status status =
+      napi_create_function(env, "", NAPI_AUTO_LENGTH, Actor::Init, nullptr, &new_exports);
+  checkNapiStatus(status, env, "Failed to wrap init function");
+  return new_exports;
 }
 
 NAPI_MODULE(NODE_GYP_MODULE_NAME, Init)

@@ -1,6 +1,6 @@
 const test = require('tape');
 var config = require('./fixtures/basic_config');
-var Valhalla = require('../../');
+var Valhalla = require('../../')(JSON.stringify(config));
 var valhalla = new Valhalla(JSON.stringify(config));
 
 test('route: can get a route in Hershey', function(assert) {
