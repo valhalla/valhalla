@@ -713,7 +713,9 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
     mid = (low + high) / 2;
     const auto& dep = departures_[mid];
     // find the first matching lineid in the list
-    if (lineid == dep.lineid()) {
+    if (lineid == dep.lineid() &&
+        ((current_time <= dep.departure_time() && dep.type() == kFixedSchedule) ||
+         (current_time <= dep.end_time() && dep.type() == kFrequencySchedule))) {
       found = mid;
       high = mid - 1;
     } // need a smaller lineid
