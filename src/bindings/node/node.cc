@@ -72,9 +72,7 @@ public:
             logging_subtree.get());
         valhalla::midgard::logging::Configure(logging_config);
       }
-    } catch (...) {
-      napi_throw_error(env, NULL, "Failed to load logging config");
-    }
+    } catch (...) { napi_throw_error(env, NULL, "Failed to load logging config"); }
 
     napi_value actor_constructor;
     status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 1, properties,
