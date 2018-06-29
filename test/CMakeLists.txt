@@ -24,8 +24,8 @@ if(NOT APPLE)
 endif()
 
 ## TODO: fix apple tests!
-if (ENABLE_DATA_TOOLS AND NOT APPLE)
-  list(APPEND countryaccess mapmatch)
+if(ENABLE_DATA_TOOLS AND NOT APPLE)
+  list(APPEND tests countryaccess mapmatch)
 endif()
 
 ## Add executable targets
@@ -102,7 +102,7 @@ endforeach()
 
 ## Run test dependencies
 ## TODO: fix apple tests!
-if (NOT APPLE)
+if(NOT APPLE)
   add_dependencies(run-util_odin localedef)
   add_dependencies(run-narrativebuilder localedef)
 endif()
@@ -110,7 +110,7 @@ endif()
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
   ## TODO: fix apple tests!
-  if (NOT APPLE)
+  if(NOT APPLE)
     add_dependencies(run-mapmatch utrecht_tiles)
   endif()
   add_dependencies(run-matrix utrecht_tiles)
