@@ -114,6 +114,12 @@ jobs:
       - run: make -C build -j2 tests
       - run: make -C build -j2 check
       - run: make -C build install
+      - run:
+          command: |
+            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
+            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
+            ./scripts/publish.sh
       - save_cache:
           key: ccache
           paths:

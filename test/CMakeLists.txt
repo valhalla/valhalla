@@ -18,11 +18,13 @@ if(ENABLE_SERVICES)
   list(APPEND tests loki_service skadi_service thor_service)
 endif()
 
+## TODO: fix apple tests!
 if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
-if (NOT APPLE AND ENABLE_DATA_TOOLS)
+## TODO: fix apple tests!
+if (ENABLE_DATA_TOOLS AND NOT APPLE)
   list(APPEND countryaccess mapmatch)
 endif()
 
@@ -99,6 +101,7 @@ foreach(test ${tests} ${cost_tests})
 endforeach()
 
 ## Run test dependencies
+## TODO: fix apple tests!
 if (NOT APPLE)
   add_dependencies(run-util_odin localedef)
   add_dependencies(run-narrativebuilder localedef)
@@ -106,6 +109,7 @@ endif()
 
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
+  ## TODO: fix apple tests!
   if (NOT APPLE)
     add_dependencies(run-mapmatch utrecht_tiles)
   endif()
