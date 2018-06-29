@@ -12,6 +12,13 @@
    * ADDED: Added post process for updating free and constrained speeds in the directed edges.
    * UPDATED: Parse the json request once and store in a protocol buffer to pass along the pipeline. This completed the first portion of [1357](https://github.com/valhalla/valhalla/issues/1357)
 
+## Release Date: 2018-06-28 Valhalla 2.6.2
+* **Data Producer Update**
+   * FIXED: Complex restriction sorting bug.  Check of has_dt in ComplexRestrictionBuilder::operator==.
+* **API**:
+   * FIXED: Fixed CostFactory convenience method that registers costing models
+   * ADDED: Added use_tolls into motorcycle costing options
+
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:
    * CHANGED: Update cmake buildsystem to replace autoconf [#1272](https://github.com/valhalla/valhalla/pull/1272)
