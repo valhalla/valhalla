@@ -104,12 +104,12 @@ jobs:
       - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4
       - checkout
       - run: git submodule sync && git submodule update --init
-      # - restore_cache:
-      #     keys:
-      #       - ccache
+      - restore_cache:
+          keys:
+            - ccache
       - run: npm install
       - run: mkdir -p build
-      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
+      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off -ENABLE_SERVICES=Off
       - run: make -C build -j4
       - run: make -C build -j2 tests
       - run: make -C build -j2 check
