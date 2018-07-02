@@ -46,7 +46,7 @@ struct GraphReader::tile_extract_t {
       }
     }
 
-    // found no files in the tar that looked like ttiles
+    // found no files in the tar that looked like tiles
     if (tiles.empty()) {
       LOG_WARN("Tile extract " + file_name + " contained no valid tiles");
     } // we got some tiles
