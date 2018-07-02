@@ -69,6 +69,20 @@ void validate(const std::string& key,
 }
 
 void validate(const std::string& key,
+              const valhalla::odin::ShapeMatch expected_value,
+              const bool has_pbf_value,
+              const valhalla::odin::ShapeMatch pbf_value) {
+  if (!has_pbf_value) {
+    throw std::runtime_error("ShapeMatch value not found in pbf for key=" + key);
+  }
+  if (pbf_value != expected_value) {
+    throw std::runtime_error("Incorrect " + key +
+                             " ShapeMatch | expected_value=" + ShapeMatch_Name(expected_value) +
+                             " | found=" + ShapeMatch_Name(pbf_value));
+  }
+}
+
+void validate(const std::string& key,
               const valhalla::odin::FilterAction expected_value,
               const bool has_pbf_value,
               const valhalla::odin::FilterAction pbf_value) {
@@ -121,6 +135,10 @@ std::string get_request_str(const std::string& key, const uint32_t expected_valu
 
 std::string get_request_str(const std::string& key, const std::string& expected_value) {
   return R"({")" + key + R"(":")" + expected_value + R"("})";
+}
+
+std::string get_request_str(const std::string& key, const valhalla::odin::ShapeMatch expected_value) {
+  return R"({")" + key + R"(":")" + ShapeMatch_Name(expected_value) + R"("})";
 }
 
 std::string get_request_str(const std::string& parent_key,
@@ -191,7 +209,7 @@ void test_show_locations_parsing(const bool expected_value,
            request.options.show_locations());
 }
 
-void test_shape_match_parsing(const std::string& expected_value,
+void test_shape_match_parsing(const valhalla::odin::ShapeMatch expected_value,
                               const valhalla::odin::DirectionsOptions::Action action) {
   const std::string key = "shape_match";
   valhalla::valhalla_request_t request = get_request(get_request_str(key, expected_value), action);
@@ -282,10 +300,14 @@ void test_show_locations() {
 }
 
 void test_shape_match() {
-  test_shape_match_parsing("map_snap", valhalla::odin::DirectionsOptions::trace_route);
-  test_shape_match_parsing("map_snap", valhalla::odin::DirectionsOptions::trace_attributes);
-  test_shape_match_parsing("edge_walk", valhalla::odin::DirectionsOptions::trace_route);
-  test_shape_match_parsing("edge_walk", valhalla::odin::DirectionsOptions::trace_attributes);
+  test_shape_match_parsing(valhalla::odin::ShapeMatch::map_snap,
+                           valhalla::odin::DirectionsOptions::trace_route);
+  test_shape_match_parsing(valhalla::odin::ShapeMatch::map_snap,
+                           valhalla::odin::DirectionsOptions::trace_attributes);
+  test_shape_match_parsing(valhalla::odin::ShapeMatch::edge_walk,
+                           valhalla::odin::DirectionsOptions::trace_route);
+  test_shape_match_parsing(valhalla::odin::ShapeMatch::edge_walk,
+                           valhalla::odin::DirectionsOptions::trace_attributes);
 }
 
 void test_best_paths() {
