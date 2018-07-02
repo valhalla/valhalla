@@ -102,6 +102,8 @@ jobs:
       - run: brew install protobuf --without-python@2
       - run: brew upgrade python
       - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4
+      - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
+      - run: brew install --build-from-source ./prime_server.rb
       - checkout
       - run: git submodule sync && git submodule update --init
       # - restore_cache:
