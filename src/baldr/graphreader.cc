@@ -30,7 +30,7 @@ struct GraphReader::tile_extract_t {
     // no tar was loaded
     if (tar.tar_file.empty()) {
       // warn if you were actually trying to load something
-      if (file_name.empty())
+      if (!file_name.empty())
         LOG_WARN("Tile extract " + file_name + " could not be loaded");
       return;
     }
