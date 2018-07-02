@@ -23,30 +23,46 @@ constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 namespace valhalla {
 namespace baldr {
 
-struct GraphReader::tile_extract_t : public midgard::tar {
+struct GraphReader::tile_extract_t {
   tile_extract_t(const boost::property_tree::ptree& pt)
-      : tar(pt.get<std::string>("tile_extract", "")) {
-    // if you really meant to load it
-    if (pt.get_optional<std::string>("tile_extract")) {
-      // map files to graph ids
-      for (auto& c : contents) {
-        try {
-          auto id = GraphTile::GetTileId(c.first);
-          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-        } catch (...) {}
+      : file_name(pt.get<std::string>("tile_extract", "")), tar(file_name) {
+
+    // no tar was loaded
+    if (tar.tar_file.empty()) {
+      // warn if you were actually trying to load something
+      if (file_name.empty())
+        LOG_WARN("Tile extract " + file_name + " could not be loaded");
+      return;
+    }
+
+    // map file names to tile ids
+    for (auto& c : tar.contents) {
+      try {
+        auto id = GraphTile::GetTileId(c.first);
+        tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+      } // bad tile name
+      catch (...) {
+        LOG_WARN("Skipping file " + c.first + " in extract " + file_name);
       }
-      // couldn't load it
-      if (tiles.empty()) {
-        LOG_WARN("Tile extract could not be loaded");
-      } // loaded ok but with possibly bad blocks
-      else {
-        LOG_INFO("Tile extract successfully loaded");
-        if (corrupt_blocks) {
-          LOG_WARN("Tile extract had " + std::to_string(corrupt_blocks) + " corrupt blocks");
-        }
+    }
+
+    // found no files in the tar that looked like ttiles
+    if (tiles.empty()) {
+      LOG_WARN("Tile extract " + file_name + " contained no valid tiles");
+    } // we got some tiles
+    else {
+      LOG_INFO("Tile extract " + file_name + " successfully loaded with " +
+               std::to_string(tiles.size()) + " tiles");
+      // but maybe we missed some because of some strange blocks in the tar
+      if (tar.corrupt_blocks) {
+        LOG_WARN("Tile extract " + file_name + " had " + std::to_string(tar.corrupt_blocks) +
+                 " corrupt blocks");
       }
     }
   }
+
+  std::string file_name;
+  midgard::tar tar;
   // TODO: dont remove constness, and actually make graphtile read only?
   std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
 };
