@@ -99,7 +99,7 @@ if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y l
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
 #if you plan to compile with node bindings, run
-nvm use 10 # must use node 8 or 10
+nvm use 10 # must use node 8.11.1 and up because of N-API
 npm install --ignore-scripts
 ```
 
@@ -108,6 +108,7 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 ```bash
 # install dependencies (czmq is required by prime_server)
 brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4 npm
+nvm use 10 # must use node 8.11.1 and up because of N-API
 npm install --ignore-scripts
 ```
 
@@ -192,6 +193,8 @@ Using the Node.js Bindings
 The Node.js bindings are still under construction. We are working on building binaries for as many environments as possible, but they may not all be available yet. The first functionality that we are exposing is `route`, but we plan on exposing more functionality over time. Right now, the input and the output are both strings - THAT WILL CHANGE. We plan on ingesting and producing protobufs.
 
 The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version. Soon you will be able to run `npm install valhalla` to include the package as a dependency in another project, but we haven't published to the npm org just yet. You can also build bindings from source with the ENABLE_NODE_BINDINGS option.
+
+We are using N-API to create node bindings. N-API aims to provide ABI compatibility guarantees across different Node versions and also across different Node VMs - allowing N-API enabled native modules to just work across different versions and flavors of Node.js without recompilations. N-API is a new feature and was experimental until node 8.11.2, after which is it considered stable. Please make sure you are using node 8.11.2+ if you want to use the node bindings.
 
 Example of using in a node project:
 ```js
