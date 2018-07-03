@@ -107,6 +107,8 @@ jobs:
       # - restore_cache:
       #     keys:
       #       - ccache
+      - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
+      - run: brew install --build-from-source ./prime_server.rb
       - run: npm install
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
