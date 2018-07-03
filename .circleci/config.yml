@@ -18,7 +18,7 @@ jobs:
       - run: make -C build -j4
       - run: run-clang-tidy-5.0.py -p build -header-filter "^$(pwd)/(src|valhalla/(baldr|midgard|sif|odin|thor|skadi|tyr|loki|mjolnir|bindings)/.*" && ./scripts/error_on_dirty.sh
 
-
+# TODO: create a debug build with DCMAKE_BUILD_TYPE=Debug and make sure to export the variable needed by publish
   build-publish:
     docker:
       - image: valhalla/docker:build-2.6.1
