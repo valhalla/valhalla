@@ -107,7 +107,7 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 
 ```bash
 # install dependencies (czmq is required by prime_server)
-brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4 npm
+brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4 node@10 npm
 nvm use 10 # must use node 8.11.1 and up because of N-API
 npm install --ignore-scripts
 ```
