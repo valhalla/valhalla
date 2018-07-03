@@ -961,13 +961,15 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     trip_path_->GetEnhancedNode(node_index)
         ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), mode, xedge_counts);
 
-      if (prev_edge->roundabout_exit_angles_size() == 0 && trip_path_->GetEnhancedNode(node_index)->HasIntersectingEdges()) {
-        if (prev_edge->drive_on_right()) {
-          maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + 1);
-        } else {
-          maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + 1);
-        }
+    LOG_INFO("xedge_counts.right_traversable_outbound::" + std::to_string(xedge_counts.right_traversable_outbound));
+
+    if (prev_edge->roundabout_exit_angles_size() == 0 && trip_path_->GetEnhancedNode(node_index)->HasIntersectingEdges()) {
+      if (prev_edge->drive_on_right()) {
+        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + 1);
+      } else {
+        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + 1);
       }
+    }
   }
 
   // Signs
