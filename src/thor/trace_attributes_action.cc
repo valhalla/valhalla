@@ -90,59 +90,55 @@ std::string thor_worker_t::trace_attributes(valhalla_request_t& request) {
       map_match_results;
   AttributesController controller;
   filter_attributes(request, controller);
-  auto shape_match = STRING_TO_MATCH.find(request.options.shape_match());
-  if (shape_match == STRING_TO_MATCH.cend()) {
-    throw valhalla_exception_t{445};
-  } else {
+
+  switch (request.options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
-    switch (shape_match->second) {
-      case EDGE_WALK:
-        try {
-          trip_path = route_match(request, controller);
-          if (trip_path.node().size() == 0) {
-            throw std::exception{};
-          };
-          map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
-        } catch (const std::exception& e) {
-          throw valhalla_exception_t{
-              443, shape_match->first +
-                       " algorithm failed to find exact route match.  Try using "
-                       "shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
-        }
-        break;
-      // If non-exact shape points are used, then we need to correct this shape by sending them
-      // through the map-matching algorithm to snap the points to the correct shape
-      case MAP_SNAP:
-        try {
-          map_match_results = map_match(request, controller, request.options.best_paths());
-        } catch (const std::exception& e) {
-          throw valhalla_exception_t{
-              444, shape_match->first +
-                       " algorithm failed to snap the shape points to the correct shape."};
-        }
-        break;
-      // If we think that we have the exact shape but there ends up being no Valhalla route match,
-      // then we want to fallback to try and use meili map matching to match to local route
-      // network. No shortcuts are used and detailed information at every intersection becomes
-      // available.
-      case WALK_OR_SNAP:
+    case odin::ShapeMatch::edge_walk:
+      try {
         trip_path = route_match(request, controller);
         if (trip_path.node().size() == 0) {
-          LOG_WARN(shape_match->first +
-                   " algorithm failed to find exact route match; Falling back to map_match...");
-          try {
-            map_match_results = map_match(request, controller);
-          } catch (const std::exception& e) {
-            throw valhalla_exception_t{
-                444, shape_match->first +
-                         " algorithm failed to snap the shape points to the correct shape."};
-          }
-        } else {
-          map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
+          throw std::exception{};
+        };
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
+      } catch (const std::exception& e) {
+        throw valhalla_exception_t{
+            443, odin::ShapeMatch_Name(request.options.shape_match()) +
+                     " algorithm failed to find exact route match.  Try using "
+                     "shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
+      }
+      break;
+    // If non-exact shape points are used, then we need to correct this shape by sending them
+    // through the map-matching algorithm to snap the points to the correct shape
+    case odin::ShapeMatch::map_snap:
+      try {
+        map_match_results = map_match(request, controller, request.options.best_paths());
+      } catch (const std::exception& e) {
+        throw valhalla_exception_t{
+            444, odin::ShapeMatch_Name(request.options.shape_match()) +
+                     " algorithm failed to snap the shape points to the correct shape."};
+      }
+      break;
+    // If we think that we have the exact shape but there ends up being no Valhalla route match,
+    // then we want to fallback to try and use meili map matching to match to local route
+    // network. No shortcuts are used and detailed information at every intersection becomes
+    // available.
+    case odin::ShapeMatch::walk_or_snap:
+      trip_path = route_match(request, controller);
+      if (trip_path.node().size() == 0) {
+        LOG_WARN(odin::ShapeMatch_Name(request.options.shape_match()) +
+                 " algorithm failed to find exact route match; Falling back to map_match...");
+        try {
+          map_match_results = map_match(request, controller);
+        } catch (const std::exception& e) {
+          throw valhalla_exception_t{
+              444, odin::ShapeMatch_Name(request.options.shape_match()) +
+                       " algorithm failed to snap the shape points to the correct shape."};
         }
-        break;
-    }
+      } else {
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{}, trip_path);
+      }
+      break;
   }
 
   if (map_match_results.empty() ||
