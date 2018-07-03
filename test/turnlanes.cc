@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <cstdint>
-#include <string>
-#include <vector>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "baldr/turnlanes.h"
 
@@ -20,8 +20,9 @@ namespace {
 
 void test_sizeof() {
   if (sizeof(valhalla::baldr::TurnLanes) != kTurnLanesExpectedSize)
-    throw std::runtime_error("TurnLanes size should be " + std::to_string(kTurnLanesExpectedSize) + " bytes" +
-                             " but is " + std::to_string(sizeof(valhalla::baldr::TurnLanes)));
+    throw std::runtime_error("TurnLanes size should be " + std::to_string(kTurnLanesExpectedSize) +
+                             " bytes" + " but is " +
+                             std::to_string(sizeof(valhalla::baldr::TurnLanes)));
 }
 
 void test_access() {
@@ -40,7 +41,8 @@ void test_static_methods() {
   std::vector<uint16_t> masks = TurnLanes::lanemasks(val_internal);
   std::string val_turn_lanes = TurnLanes::turnlane_string(masks);
   if (osm_turn_lanes != val_turn_lanes) {
-    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes + " expected: " + osm_turn_lanes);
+    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes +
+                             " expected: " + osm_turn_lanes);
   }
 
   osm_turn_lanes = "|through;right||none|slight_left|left";
@@ -48,7 +50,8 @@ void test_static_methods() {
   masks = TurnLanes::lanemasks(val_internal);
   val_turn_lanes = TurnLanes::turnlane_string(masks);
   if (osm_turn_lanes != val_turn_lanes) {
-    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes + " expected: " + osm_turn_lanes);
+    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes +
+                             " expected: " + osm_turn_lanes);
   }
 
   osm_turn_lanes = "merge_to_left||reverse|merge_to_right";
@@ -56,7 +59,8 @@ void test_static_methods() {
   masks = TurnLanes::lanemasks(val_internal);
   val_turn_lanes = TurnLanes::turnlane_string(masks);
   if (osm_turn_lanes != val_turn_lanes) {
-    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes + " expected: " + osm_turn_lanes);
+    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes +
+                             " expected: " + osm_turn_lanes);
   }
 
   osm_turn_lanes = "none||none||none|";
@@ -64,7 +68,8 @@ void test_static_methods() {
   masks = TurnLanes::lanemasks(val_internal);
   val_turn_lanes = TurnLanes::turnlane_string(masks);
   if (osm_turn_lanes != val_turn_lanes) {
-    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes + " expected: " + osm_turn_lanes);
+    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes +
+                             " expected: " + osm_turn_lanes);
   }
 }
 

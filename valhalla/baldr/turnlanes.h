@@ -192,6 +192,15 @@ public:
     return tl;
   }
 
+  /**
+   * < operator for use in std::lower_bound.
+   * @param  other  Other object to compare against.
+   * @return  Returns true if this object is < the other object.
+   */
+  bool operator<(const TurnLanes& other) const {
+    return edgeindex_ < other.edgeindex();
+  }
+
 protected:
   uint32_t edgeindex_ : 22; // kMaxTileEdgeCount in nodeinfo.h: 22 bits
   uint32_t spare_ : 10;

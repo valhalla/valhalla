@@ -926,36 +926,15 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
                            " traffic Id count= " + std::to_string(header_->traffic_id_count()));
 }
 
-// Get lane connections ending on this edge.
+// Get turn lanes for this edge.
 uint32_t GraphTile::turnlanes_offset(const uint32_t idx) const {
   uint32_t count = header_->turnlane_count();
   if (count == 0) {
     LOG_ERROR("No turn lanes found for idx = " + std::to_string(idx));
     return 0;
   }
-
-  // Turn lanes are sorted by edge index.
-  // Binary search to find a turn lane with matching edge index.
-  int32_t low = 0;
-  int32_t high = count - 1;
-  int32_t mid;
-  int32_t found = count;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    const auto& l = turnlanes_[mid];
-    // matching edge index
-    if (idx == l.edgeindex()) {
-      found = mid;
-      high = mid - 1;
-    } // need a smaller index
-    else if (idx < l.edgeindex()) {
-      high = mid - 1;
-    } // need a bigger index
-    else {
-      low = mid + 1;
-    }
-  }
-  return turnlanes_[found].text_offset();
+  auto tl = std::lower_bound(&turnlanes_[0], &turnlanes_[count], TurnLanes(idx, 0));
+  return tl != &turnlanes_[count] ? tl->text_offset() : 0;
 }
 
 } // namespace baldr
