@@ -1,13 +1,13 @@
-     ██▒   █▓ ▄▄▄       ██▓     ██░ ██  ▄▄▄       ██▓     ██▓    ▄▄▄      
-    ▓██░   █▒▒████▄    ▓██▒    ▓██░ ██▒▒████▄    ▓██▒    ▓██▒   ▒████▄    
-     ▓██  █▒░▒██  ▀█▄  ▒██░    ▒██▀▀██░▒██  ▀█▄  ▒██░    ▒██░   ▒██  ▀█▄  
+     ██▒   █▓ ▄▄▄       ██▓     ██░ ██  ▄▄▄       ██▓     ██▓    ▄▄▄
+    ▓██░   █▒▒████▄    ▓██▒    ▓██░ ██▒▒████▄    ▓██▒    ▓██▒   ▒████▄
+     ▓██  █▒░▒██  ▀█▄  ▒██░    ▒██▀▀██░▒██  ▀█▄  ▒██░    ▒██░   ▒██  ▀█▄
       ▒██ █░░░██▄▄▄▄██ ▒██░    ░▓█ ░██ ░██▄▄▄▄██ ▒██░    ▒██░   ░██▄▄▄▄██
        ▒▀█░   ▓█   ▓██▒░██████▒░▓█▒░██▓ ▓█   ▓██▒░██████▒░██████▒▓█   ▓██▒
        ░ ▐░   ▒▒   ▓▒█░░ ▒░▓  ░ ▒ ░░▒░▒ ▒▒   ▓▒█░░ ▒░▓  ░░ ▒░▓  ░▒▒   ▓▒█░
        ░ ░░    ▒   ▒▒ ░░ ░ ▒  ░ ▒ ░▒░ ░  ▒   ▒▒ ░░ ░ ▒  ░░ ░ ▒  ░ ▒   ▒▒ ░
-         ░░    ░   ▒     ░ ░    ░  ░░ ░  ░   ▒     ░ ░     ░ ░    ░   ▒   
+         ░░    ░   ▒     ░ ░    ░  ░░ ░  ░   ▒     ░ ░     ░ ░    ░   ▒
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
-         ░                                                                    
+         ░
 
 
 Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
@@ -84,19 +84,24 @@ To install on a Debian or Ubuntu system you need to install its dependencies wit
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y autoconf automake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc jq lcov protobuf-compiler vim-common libboost-all-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server0.6.3-dev libprotobuf-dev prime-server0.6.3-bin nodejs npm
 #if you plan to compile with data building support, see below for more info
 sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2
 if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
+#if you plan to compile with node bindings, run
+nvm use 10 # must use node 8.11.1 and up because of N-API
+npm install --ignore-scripts
 ```
 
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
 ```bash
 # install dependencies (czmq is required by prime_server)
-brew install autoconf automake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl czmq lz4
+brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4 node@10 npm
+nvm use 10 # must use node 8.11.1 and up because of N-API
+npm install --ignore-scripts
 ```
 
 Then clone and build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install)
@@ -110,8 +115,6 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 sudo make install
-// to install with node bindings
-make copy_node_artifacts
 ```
 
 Important build options include:
@@ -181,7 +184,9 @@ Using the Node.js Bindings
 
 The Node.js bindings are still under construction. We are working on building binaries for as many environments as possible, but they may not all be available yet. The first functionality that we are exposing is `route`, but we plan on exposing more functionality over time. Right now, the input and the output are both strings - THAT WILL CHANGE. We plan on ingesting and producing protobufs.
 
-The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings via npm install valhalla or from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version.
+The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version. Soon you will be able to run `npm install valhalla` to include the package as a dependency in another project, but we haven't published to the npm org just yet. You can also build bindings from source with the ENABLE_NODE_BINDINGS option.
+
+We are using N-API to create node bindings. N-API aims to provide ABI compatibility guarantees across different Node versions and also across different Node VMs - allowing N-API enabled native modules to just work across different versions and flavors of Node.js without recompilations. N-API is a new feature and was experimental until node 8.11.2, after which is it considered stable. Please make sure you are using node 8.11.2+ if you want to use the node bindings.
 
 Example of using in a node project:
 ```js

@@ -12,7 +12,7 @@ jobs:
       - restore_cache:
           keys:
             - ccache
-      - run: npm install
+      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
@@ -28,7 +28,7 @@ jobs:
       - restore_cache:
           keys:
             - ccache
-      - run: npm install
+      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
@@ -56,7 +56,7 @@ jobs:
       - restore_cache:
           keys:
             - ccache
-      - run: npm install
+      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
       - run: make -C build -j4
@@ -80,7 +80,7 @@ jobs:
       - restore_cache:
           keys:
             - ccache
-      - run: npm install
+      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
@@ -109,7 +109,9 @@ jobs:
       # - restore_cache:
       #     keys:
       #       - ccache
-      - run: npm install
+      - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
+      - run: brew install --build-from-source ./prime_server.rb
+      - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
