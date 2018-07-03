@@ -6,7 +6,7 @@
 2. [OSM Processing Overview](#osm-processing-overview)
 3. [Lua Tag Processing](#lua-tag-processing)
 4. [C++ Tag Processing](#c++-tag-processing)
-5. [Common Pitfalls](#common-pitfalls-and-debugging)
+5. [Common Pitfalls and Debugging](#common-pitfalls-and-debugging)
 
 ## OSM Data Model Overview
 
