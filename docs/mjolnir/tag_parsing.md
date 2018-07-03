@@ -2,11 +2,11 @@
 
 ## Table of Contents
 
-1. [OSM Data Model Overview](osm-data-model-overview)
-2. [OSM Processing Overview](osm-processing-overview)
-3. [Lua Tag Processing](lua-tag-processing)
-4. [C++ Tag Processing](c++-tag-processing)
-5. [Common Pitfalls](common-pitfalls-and-debugging)
+1. [OSM Data Model Overview](#osm-data-model-overview)
+2. [OSM Processing Overview](#osm-processing-overview)
+3. [Lua Tag Processing](#lua-tag-processing)
+4. [C++ Tag Processing](#c++-tag-processing)
+5. [Common Pitfalls](#common-pitfalls-and-debugging)
 
 ## OSM Data Model Overview
 
