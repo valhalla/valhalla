@@ -82,7 +82,7 @@ public:
     Register("bus", CreateBusCost);
     Register("hov", CreateHOVCost);
     Register("motor_scooter", CreateMotorScooterCost);
-    Register("motorcycle", CreateMotorScooterCost);
+    Register("motorcycle", CreateMotorcycleCost);
     Register("pedestrian", CreatePedestrianCost);
     Register("truck", CreateTruckCost);
     Register("transit", CreateTransitCost);
