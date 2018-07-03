@@ -961,8 +961,15 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     trip_path_->GetEnhancedNode(node_index)
         ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), mode, xedge_counts);
     if (prev_edge->drive_on_right()) {
-      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
-                                         xedge_counts.right_traversable_outbound);
+
+      if (maneuver.roundabout_way_id() == 0) {
+        maneuver.set_roundabout_way_id(prev_edge->way_id());
+      } else if (maneuver.roundabout_way_id() == prev_edge->way_id() && trip_path_->GetEnhancedNode(node_index)->HasIntersectingEdges()) {
+        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + 1);
+      }
+
+      // maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
+      //                                    xedge_counts.right_traversable_outbound);
     } else {
       maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
                                          xedge_counts.left_traversable_outbound);
