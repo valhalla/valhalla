@@ -44,11 +44,12 @@ int TimeDepReverse::GetDestinationTimezone(GraphReader& graphreader) {
 
 // Initialize prior to finding best path
 void TimeDepReverse::Init(const PointLL& origll, const PointLL& destll) {
-  // Set the destination and cost factor in the A* heuristic
-  astarheuristic_.Init(destll, costing_->AStarCostFactor());
+  // Set the origin lat,lon (since this is reverse path) and cost factor
+  // in the A* heuristic
+  astarheuristic_.Init(origll, costing_->AStarCostFactor());
 
-  // Get the initial cost based on A* heuristic from origin
-  float mincost = astarheuristic_.Get(origll);
+  // Get the initial cost based on A* heuristic from destination
+  float mincost = astarheuristic_.Get(destll);
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
