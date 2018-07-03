@@ -98,6 +98,8 @@ sudo apt-get install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-de
 if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
+#if you plan to compile with node bindings, run
+npm install --ignore-scripts
 ```
 
 To install on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
@@ -105,6 +107,7 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 ```bash
 # install dependencies (czmq is required by prime_server)
 brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4
+npm install --ignore-scripts
 ```
 
 Then clone and build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
@@ -118,8 +121,6 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 sudo make install
-// to install with node bindings
-make copy_node_artifacts
 ```
 
 Important build options include:
@@ -189,7 +190,7 @@ Using the Node.js Bindings
 
 The Node.js bindings are still under construction. We are working on building binaries for as many environments as possible, but they may not all be available yet. The first functionality that we are exposing is `route`, but we plan on exposing more functionality over time. Right now, the input and the output are both strings - THAT WILL CHANGE. We plan on ingesting and producing protobufs.
 
-The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings via npm install valhalla or from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version.
+The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version. Soon you will be able to run `npm install valhalla` to include the package as a dependency in another project, but we haven't published to the npm org just yet. You can also build bindings from source with the ENABLE_NODE_BINDINGS option.
 
 Example of using in a node project:
 ```js
