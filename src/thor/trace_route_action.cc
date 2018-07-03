@@ -58,64 +58,53 @@ odin::TripPath thor_worker_t::trace_route(valhalla_request_t& request) {
   odin::TripPath trip_path;
   AttributesController controller;
 
-  /*
-   * A flag indicating whether the input shape is a GPS trace or exact points from a
-   * prior route run against the Valhalla road network.  Knowing that the input is from
-   * Valhalla will allow an efficient “edge-walking” algorithm rather than a more extensive
-   * map-matching method. If true, this enforces to only use exact route match algorithm.
-   */
-  auto shape_match = STRING_TO_MATCH.find(request.options.shape_match());
-  if (shape_match == STRING_TO_MATCH.cend()) {
-    throw valhalla_exception_t{445};
-  } else {
+  switch (request.options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
     // then we can traverse the exact shape to form a path by using edge-walking algorithm
-    switch (shape_match->second) {
-      case EDGE_WALK:
-        try {
-          trip_path = route_match(request, controller);
-          if (trip_path.node().size() == 0) {
-            throw std::exception{};
-          }
-        } catch (...) {
-          throw valhalla_exception_t{
-              443, shape_match->first +
-                       " algorithm failed to find exact route match.  Try using "
-                       "shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
+    case odin::ShapeMatch::edge_walk:
+      try {
+        trip_path = route_match(request, controller);
+        if (trip_path.node().size() == 0) {
+          throw std::exception{};
         }
-        break;
-      // If non-exact shape points are used, then we need to correct this shape by sending them
-      // through the map-matching algorithm to snap the points to the correct shape
-      case MAP_SNAP:
+      } catch (...) {
+        throw valhalla_exception_t{
+            443, odin::ShapeMatch_Name(request.options.shape_match()) +
+                     " algorithm failed to find exact route match.  Try using "
+                     "shape_match:'walk_or_snap' to fallback to map-matching algorithm"};
+      }
+      break;
+    // If non-exact shape points are used, then we need to correct this shape by sending them
+    // through the map-matching algorithm to snap the points to the correct shape
+    case odin::ShapeMatch::map_snap:
+      try {
+        auto map_match_results = map_match(request, controller);
+        if (!map_match_results.empty()) {
+          trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
+        }
+      } catch (...) { throw valhalla_exception_t{442}; }
+      break;
+    // If we think that we have the exact shape but there ends up being no Valhalla route match,
+    // then we want to fallback to try and use meili map matching to match to local route
+    // network. No shortcuts are used and detailed information at every intersection becomes
+    // available.
+    case odin::ShapeMatch::walk_or_snap:
+      trip_path = route_match(request, controller);
+      if (trip_path.node().size() == 0) {
+        LOG_WARN(odin::ShapeMatch_Name(request.options.shape_match()) +
+                 " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           auto map_match_results = map_match(request, controller);
           if (!map_match_results.empty()) {
             trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
           }
         } catch (...) { throw valhalla_exception_t{442}; }
-        break;
-      // If we think that we have the exact shape but there ends up being no Valhalla route match,
-      // then
-      // then we want to fallback to try and use meili map matching to match to local route network.
-      // No shortcuts are used and detailed information at every intersection becomes available.
-      case WALK_OR_SNAP:
-        trip_path = route_match(request, controller);
-        if (trip_path.node().size() == 0) {
-          LOG_WARN(shape_match->first +
-                   " algorithm failed to find exact route match; Falling back to map_match...");
-          try {
-            auto map_match_results = map_match(request, controller);
-            if (!map_match_results.empty()) {
-              trip_path = std::get<kTripPathIndex>(map_match_results.at(0));
-            }
-          } catch (...) { throw valhalla_exception_t{442}; }
-        }
-        break;
-    }
+      }
+      break;
+  }
 
-    if (!request.options.do_not_track()) {
-      log_admin(trip_path);
-    }
+  if (!request.options.do_not_track()) {
+    log_admin(trip_path);
   }
 
   return trip_path;
