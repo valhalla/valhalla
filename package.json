@@ -32,11 +32,10 @@
     "module_path": "./lib/binding",
     "host": "https://mapbox-node-binary.s3.amazonaws.com",
     "remote_path": "./valhalla/v{version}/{configuration}/",
-    "package_name": "{platform}-{arch}-napi-v{node_abi_napi}.tar.gz"
+    "package_name": "{platform}-{arch}-napi-v{napi_version}.tar.gz"
   },
   "devDependencies": {
     "node-cmake": "^2.5.1",
-    "@mapbox/cloudfriend": "^1.9.1",
     "aws-sdk": "^2.257.1",
     "tape": "^4.9.0"
   }

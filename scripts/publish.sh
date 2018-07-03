@@ -7,7 +7,6 @@ echo "node version is:"
 which node
 node -v
 
-
 function is_pr_merge() {
   # Get the commit message via git log
   # This should always be the exactly the text the developer provided
@@ -24,16 +23,15 @@ function is_pr_merge() {
   fi
 }
 
+NPM_FLAGS=''
+if [[ ${BUILD_TYPE} == "Debug" ]]; then
+    NPM_FLAGS='--debug'
+fi
 
 if [[ $(is_pr_merge) ]]; then
     echo "Skipping publishing because this is a PR merge commit"
 elif [[ ${PUBLISH} == 'On' ]]; then
     echo "PUBLISH is set to '${PUBLISH}', publishing!"
-    NPM_FLAGS=''
-    if [[ ${BUILD_TYPE} == "Debug" ]]; then
-        NPM_FLAGS='--debug'
-    fi
-
     echo "dumping binary meta..."
     ./node_modules/.bin/node-pre-gyp reveal $NPM_FLAGS
     ./node_modules/.bin/node-pre-gyp package publish info $NPM_FLAGS
@@ -41,10 +39,10 @@ elif [[ ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
     # allow user to force a publish if they use a specific commit message
     echo "Publishing"
     echo "dumping binary meta..."
-    ./node_modules/.bin/node-pre-gyp package publish $@
+    ./node_modules/.bin/node-pre-gyp package publish $NPM_FLAGS
 elif [[ ${COMMIT_MESSAGE} =~ "[republish binary]" ]]; then
     echo "Re-Publishing"
-    ./node_modules/.bin/node-pre-gyp package unpublish publish $@
+    ./node_modules/.bin/node-pre-gyp package unpublish publish $NPM_FLAGS
 else
     echo "PUBLISH is set to '${PUBLISH}', skipping."
 fi
