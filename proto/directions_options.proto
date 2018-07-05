@@ -6,6 +6,12 @@ message Contour {
   optional string color = 2;   // hex color with out # - for example: "ff0000" for red 
 }
 
+enum ShapeMatch {
+  edge_walk = 0;
+  map_snap = 1;
+  walk_or_snap = 2;
+}
+
 enum FilterAction {
   exclude = 0;
   include = 1;
@@ -57,36 +63,36 @@ message DirectionsOptions {
     arrive_by = 2;
   }
 
-  optional Units units = 1;                         // kilometers or miles
-  optional string language = 2 [default = "en-US"]; // Based on IETF BCP 47 language tag string
-  optional bool narrative = 3 [default = true];     // Enable/disable narrative production
-  optional Format format = 4 [default = json];      // What the response format should be
-  optional string id = 5;                           // Optional id for the request
-  optional string jsonp = 6;                        // Optional javascript callback for the request
-  optional string encoded_polyline = 7;             // Optional polyline 6 encoded shape used in /height /trace_*
-  optional Action action = 8;                       // Action signifying the request type
-  optional bool do_not_track = 9 [default = false]; // Disable analytics for this request
-  optional bool range = 10 [default = false];       // Used in /height if the range between points should be serialized
-  optional bool verbose = 11 [default = false];     // Used in /locate request to give back extensive information
-  optional Costing costing = 12;                    // Used to tell what type of costing to use
-  repeated Location locations = 13;                 // Locations for /route /optimized /locate /isochrone
-  repeated Location avoid_locations = 14;           // Avoids for any costing
-  repeated Location sources = 15;                   // Sources for /sources_to_targets
-  repeated Location targets = 16;					// Targets for /sources_to_targets
-  optional DateTimeType date_time_type = 17;        // Are you leaving now or then or arriving then
-  optional string date_time = 18;                   // And what day and time
-  repeated Location shape = 19;                     // Raw shape for map matching
-  optional double resample_distance = 20;           // Resampling shape at regular intervals
-  repeated Contour contours = 21;                   // List of isochrone contours
-  optional bool polygons = 22;                      // Boolean value to determine whether to return geojson polygons or linestrings as the contours
-  optional float denoise = 23 [default = 1.0];      // A floating point value from 0 to 1 which can be used to remove smaller contours
-  optional float generalize = 24;                   // Meters used as the tolerance for Douglas-Peucker generalization
-  optional bool show_locations = 25;                // Add original locations to the isochrone geojson response
-  optional string shape_match = 26;                 // The matching algorithm based on the type of input
-  optional uint32 best_paths = 27 [default = 1];    // The number of top k paths
-  optional float gps_accuracy = 28;                 // The gps accuracy associated with the suppplied trace points
-  optional float search_radius = 29;                // The search radius associated with the suppplied trace points
-  optional float turn_penalty_factor = 30;          // The turn penalty factor associated with the suppplied trace points
-  optional FilterAction filter_action = 31;         // The trace filter action - either exclude or include
-  repeated string filter_attributes = 32;           // The filter list for trace attributes
+  optional Units units = 1;                                      // kilometers or miles
+  optional string language = 2 [default = "en-US"];              // Based on IETF BCP 47 language tag string
+  optional bool narrative = 3 [default = true];                  // Enable/disable narrative production
+  optional Format format = 4 [default = json];                   // What the response format should be
+  optional string id = 5;                                        // Optional id for the request
+  optional string jsonp = 6;                                     // Optional javascript callback for the request
+  optional string encoded_polyline = 7;                          // Optional polyline 6 encoded shape used in /height /trace_*
+  optional Action action = 8;                                    // Action signifying the request type
+  optional bool do_not_track = 9 [default = false];              // Disable analytics for this request
+  optional bool range = 10 [default = false];                    // Used in /height if the range between points should be serialized
+  optional bool verbose = 11 [default = false];                  // Used in /locate request to give back extensive information
+  optional Costing costing = 12;                                 // Used to tell what type of costing to use
+  repeated Location locations = 13;                              // Locations for /route /optimized /locate /isochrone
+  repeated Location avoid_locations = 14;                        // Avoids for any costing
+  repeated Location sources = 15;                                // Sources for /sources_to_targets
+  repeated Location targets = 16;					             // Targets for /sources_to_targets
+  optional DateTimeType date_time_type = 17;                     // Are you leaving now or then or arriving then
+  optional string date_time = 18;                                // And what day and time
+  repeated Location shape = 19;                                  // Raw shape for map matching
+  optional double resample_distance = 20;                        // Resampling shape at regular intervals
+  repeated Contour contours = 21;                                // List of isochrone contours
+  optional bool polygons = 22;                                   // Boolean value to determine whether to return geojson polygons or linestrings as the contours
+  optional float denoise = 23 [default = 1.0];                   // A floating point value from 0 to 1 which can be used to remove smaller contours
+  optional float generalize = 24;                                // Meters used as the tolerance for Douglas-Peucker generalization
+  optional bool show_locations = 25;                             // Add original locations to the isochrone geojson response
+  optional ShapeMatch shape_match = 26 [default = walk_or_snap]; // The matching algorithm based on the type of input
+  optional uint32 best_paths = 27 [default = 1];                 // The number of top k paths
+  optional float gps_accuracy = 28;                              // The gps accuracy associated with the suppplied trace points
+  optional float search_radius = 29;                             // The search radius associated with the suppplied trace points
+  optional float turn_penalty_factor = 30;                       // The turn penalty factor associated with the suppplied trace points
+  optional FilterAction filter_action = 31;                      // The trace filter action - either exclude or include
+  repeated string filter_attributes = 32;                        // The filter list for trace attributes
 }

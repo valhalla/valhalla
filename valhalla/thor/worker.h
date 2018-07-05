@@ -37,9 +37,7 @@ void run_service(const boost::property_tree::ptree& config);
 
 class thor_worker_t : public service_worker_t {
 public:
-  enum SHAPE_MATCH { EDGE_WALK = 0, MAP_SNAP = 1, WALK_OR_SNAP = 2 };
   enum SOURCE_TO_TARGET_ALGORITHM { SELECT_OPTIMAL = 0, COST_MATRIX = 1, TIME_DISTANCE_MATRIX = 2 };
-  static const std::unordered_map<std::string, SHAPE_MATCH> STRING_TO_MATCH;
   thor_worker_t(const boost::property_tree::ptree& config);
   virtual ~thor_worker_t();
 #ifdef HAVE_HTTP
