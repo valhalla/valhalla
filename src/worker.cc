@@ -506,10 +506,10 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       options.set_costing(costing);
     } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
-    };
+    }
+    // TODO: costing options
+    // Switch and parse each one?
   }
-
-  // TODO: costing options
 
   // get the locations in there
   parse_locations(doc, options.mutable_locations(), "locations", 130, track);
