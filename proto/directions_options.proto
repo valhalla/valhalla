@@ -17,6 +17,21 @@ enum FilterAction {
   include = 1;
 }
 
+enum Costing {
+  auto_ = 0;
+  auto_shorter = 1;
+  bicycle = 2;
+  bus = 3;
+  hov = 4;
+  motor_scooter = 5;
+  multimodal = 6;
+  pedestrian = 7;
+  transit = 8;
+  truck = 9;
+  motorcycle = 10;
+  auto_data_fix = 11;
+}
+
 message CostingOptions {
   optional float maneuver_penalty = 1;
   optional float destination_only_penalty = 2;
@@ -57,21 +72,6 @@ message DirectionsOptions {
     height = 11;
     transit_available = 12;
   }
-  
-  enum Costing {
-    auto_ = 0;
-    auto_shorter = 1;
-    bicycle = 2;
-    bus = 3;
-    hov = 4;
-    motor_scooter = 5;
-    multimodal = 6;
-    pedestrian = 7;
-    transit = 8;
-    truck = 9;
-    motorcycle = 10;
-    auto_data_fix = 11;
-  }  
   
   enum DateTimeType {
     current = 0;

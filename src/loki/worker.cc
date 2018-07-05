@@ -52,7 +52,7 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
     throw valhalla_exception_t{124};
   };
 
-  auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
+  auto costing = odin::Costing_Name(request.options.costing());
   if (costing.back() == '_') {
     costing.pop_back();
   }

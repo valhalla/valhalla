@@ -499,10 +499,10 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto costing_str = rapidjson::get_optional<std::string>(doc, "/costing");
   if (costing_str) {
     // try the string directly, some strings are keywords so add an underscore
-    odin::DirectionsOptions::Costing costing;
-    if (odin::DirectionsOptions::Costing_Parse(*costing_str, &costing)) {
+    odin::Costing costing;
+    if (odin::Costing_Parse(*costing_str, &costing)) {
       options.set_costing(costing);
-    } else if (odin::DirectionsOptions::Costing_Parse(*costing_str + '_', &costing)) {
+    } else if (odin::Costing_Parse(*costing_str + '_', &costing)) {
       options.set_costing(costing);
     } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
@@ -528,8 +528,8 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   if (date_time_type && odin::DirectionsOptions::DateTimeType_IsValid(*date_time_type)) {
     options.set_date_time_type(static_cast<odin::DirectionsOptions::DateTimeType>(*date_time_type));
   } // not specified but you want transit, then we default to current
-  else if (options.has_costing() && (options.costing() == odin::DirectionsOptions::multimodal ||
-                                     options.costing() == odin::DirectionsOptions::transit)) {
+  else if (options.has_costing() &&
+           (options.costing() == odin::multimodal || options.costing() == odin::transit)) {
     options.set_date_time_type(odin::DirectionsOptions::current);
   }
 
@@ -553,8 +553,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
         break;
       case odin::DirectionsOptions::arrive_by:
         // not yet for transit
-        if (options.costing() == odin::DirectionsOptions::multimodal ||
-            options.costing() == odin::DirectionsOptions::transit) {
+        if (options.costing() == odin::multimodal || options.costing() == odin::transit) {
           throw valhalla_exception_t{141};
         };
         if (!date_time_value) {
