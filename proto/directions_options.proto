@@ -17,6 +17,22 @@ enum FilterAction {
   include = 1;
 }
 
+message CostingOptions {
+  optional float maneuver_penalty = 1;
+  optional float destination_only_penalty = 2;
+  optional float gate_cost = 3;
+  optional float gate_penalty = 4;
+  optional float toll_booth_cost = 5;
+  optional float toll_booth_penalty = 6;
+  optional float alley_penalty = 7;
+  optional float country_crossing_cost = 8;
+  optional float country_crossing_penalty = 9;
+  optional float ferry_cost = 10;
+  optional float use_ferry = 11;
+  optional float use_highways = 12;
+  optional float use_tolls = 13;
+}
+
 message DirectionsOptions {
   
   enum Units {
@@ -75,24 +91,25 @@ message DirectionsOptions {
   optional bool range = 10 [default = false];                    // Used in /height if the range between points should be serialized
   optional bool verbose = 11 [default = false];                  // Used in /locate request to give back extensive information
   optional Costing costing = 12;                                 // Used to tell what type of costing to use
-  repeated Location locations = 13;                              // Locations for /route /optimized /locate /isochrone
-  repeated Location avoid_locations = 14;                        // Avoids for any costing
-  repeated Location sources = 15;                                // Sources for /sources_to_targets
-  repeated Location targets = 16;					             // Targets for /sources_to_targets
-  optional DateTimeType date_time_type = 17;                     // Are you leaving now or then or arriving then
-  optional string date_time = 18;                                // And what day and time
-  repeated Location shape = 19;                                  // Raw shape for map matching
-  optional double resample_distance = 20;                        // Resampling shape at regular intervals
-  repeated Contour contours = 21;                                // List of isochrone contours
-  optional bool polygons = 22;                                   // Boolean value to determine whether to return geojson polygons or linestrings as the contours
-  optional float denoise = 23 [default = 1.0];                   // A floating point value from 0 to 1 which can be used to remove smaller contours
-  optional float generalize = 24;                                // Meters used as the tolerance for Douglas-Peucker generalization
-  optional bool show_locations = 25;                             // Add original locations to the isochrone geojson response
-  optional ShapeMatch shape_match = 26 [default = walk_or_snap]; // The matching algorithm based on the type of input
-  optional uint32 best_paths = 27 [default = 1];                 // The number of top k paths
-  optional float gps_accuracy = 28;                              // The gps accuracy associated with the suppplied trace points
-  optional float search_radius = 29;                             // The search radius associated with the suppplied trace points
-  optional float turn_penalty_factor = 30;                       // The turn penalty factor associated with the suppplied trace points
-  optional FilterAction filter_action = 31;                      // The trace filter action - either exclude or include
-  repeated string filter_attributes = 32;                        // The filter list for trace attributes
+  repeated CostingOptions costing_options = 13;                  // A list of costing options for each costing model
+  repeated Location locations = 14;                              // Locations for /route /optimized /locate /isochrone
+  repeated Location avoid_locations = 15;                        // Avoids for any costing
+  repeated Location sources = 16;                                // Sources for /sources_to_targets
+  repeated Location targets = 17;                                // Targets for /sources_to_targets
+  optional DateTimeType date_time_type = 18;                     // Are you leaving now or then or arriving then
+  optional string date_time = 19;                                // And what day and time
+  repeated Location shape = 20;                                  // Raw shape for map matching
+  optional double resample_distance = 21;                        // Resampling shape at regular intervals
+  repeated Contour contours = 22;                                // List of isochrone contours
+  optional bool polygons = 23;                                   // Boolean value to determine whether to return geojson polygons or linestrings as the contours
+  optional float denoise = 24 [default = 1.0];                   // A floating point value from 0 to 1 which can be used to remove smaller contours
+  optional float generalize = 25;                                // Meters used as the tolerance for Douglas-Peucker generalization
+  optional bool show_locations = 26;                             // Add original locations to the isochrone geojson response
+  optional ShapeMatch shape_match = 27 [default = walk_or_snap]; // The matching algorithm based on the type of input
+  optional uint32 best_paths = 28 [default = 1];                 // The number of top k paths
+  optional float gps_accuracy = 29;                              // The gps accuracy associated with the suppplied trace points
+  optional float search_radius = 30;                             // The search radius associated with the suppplied trace points
+  optional float turn_penalty_factor = 31;                       // The turn penalty factor associated with the suppplied trace points
+  optional FilterAction filter_action = 32;                      // The trace filter action - either exclude or include
+  repeated string filter_attributes = 33;                        // The filter list for trace attributes
 }
