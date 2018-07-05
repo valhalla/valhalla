@@ -392,6 +392,36 @@ void parse_locations(const rapidjson::Document& doc,
   }
 }
 
+void parse_contours(const rapidjson::Document& doc,
+                    google::protobuf::RepeatedPtrField<odin::Contour>* contours) {
+
+  // make sure the isoline definitions are valid
+  auto json_contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/contours");
+  if (json_contours) {
+    float prev = 0.f;
+    const float NO_TIME = -1.f;
+    for (const auto& json_contour : *json_contours) {
+      // Grab contour time and validate that it is increasing
+      const float c = rapidjson::get_optional<float>(json_contour, "/time").get_value_or(NO_TIME);
+      if (c < prev || c == NO_TIME) {
+        throw valhalla_exception_t{111};
+      }
+
+      // Add new contour object to list
+      auto* contour = contours->Add();
+      // Set contour time
+      contour->set_time(c);
+
+      // If specified, grab and set contour color
+      auto color = rapidjson::get_optional<std::string>(json_contour, "/color");
+      if (color) {
+        contour->set_color(*color);
+      }
+      prev = c;
+    }
+  }
+}
+
 void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   bool track = !options.has_do_not_track() || !options.do_not_track();
 
@@ -547,11 +577,86 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_resample_distance(*resample_distance);
   }
 
+  // get the contours in there
+  parse_contours(doc, options.mutable_contours());
+
+  // if specified, get the polygons boolean in there
+  auto polygons = rapidjson::get_optional<bool>(doc, "/polygons");
+  if (polygons) {
+    options.set_polygons(*polygons);
+  }
+
+  // if specified, get the denoise in there
+  auto denoise = rapidjson::get_optional<float>(doc, "/denoise");
+  if (denoise) {
+    options.set_denoise(std::max(std::min(*denoise, 1.f), 0.f));
+  }
+
+  // if specified, get the generalize value in there
+  auto generalize = rapidjson::get_optional<float>(doc, "/generalize");
+  if (generalize) {
+    options.set_generalize(*generalize);
+  }
+
+  // if specified, get the show_locations boolean in there
+  auto show_locations = rapidjson::get_optional<bool>(doc, "/show_locations");
+  if (show_locations) {
+    options.set_show_locations(*show_locations);
+  }
+
+  // if specified, get the shape_match in there
+  auto shape_match = rapidjson::get_optional<std::string>(doc, "/shape_match");
+  if (shape_match) {
+    options.set_shape_match(*shape_match);
+  }
+
+  // if specified, get the best_paths in there
+  auto best_paths = rapidjson::get_optional<uint32_t>(doc, "/best_paths");
+  if (best_paths) {
+    options.set_best_paths(*best_paths);
+  }
+
+  // if specified, get the trace gps_accuracy value in there
+  auto gps_accuracy = rapidjson::get_optional<float>(doc, "/trace_options/gps_accuracy");
+  if (gps_accuracy) {
+    options.set_gps_accuracy(*gps_accuracy);
+  }
+
+  // if specified, get the trace search_radius value in there
+  auto search_radius = rapidjson::get_optional<float>(doc, "/trace_options/search_radius");
+  if (search_radius) {
+    options.set_search_radius(*search_radius);
+  }
+
+  // if specified, get the trace turn_penalty_factor value in there
+  auto turn_penalty_factor =
+      rapidjson::get_optional<float>(doc, "/trace_options/turn_penalty_factor");
+  if (turn_penalty_factor) {
+    options.set_turn_penalty_factor(*turn_penalty_factor);
+  }
+
+  // if specified, get the filter_action value in there
+  auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
+  odin::FilterAction filter_action;
+  if (filter_action_str && odin::FilterAction_Parse(*filter_action_str, &filter_action)) {
+    options.set_filter_action(filter_action);
+  }
+
+  // if specified, get the filter_attributes value in there
+  auto filter_attributes_json =
+      rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/attributes");
+  if (filter_attributes_json) {
+    for (const auto& filter_attribute : *filter_attributes_json) {
+      options.add_filter_attributes(filter_attribute.GetString());
+    }
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
                 {odin::DirectionsOptions::Format_Name(options.format()), allocator}, allocator);
 }
+
 } // namespace
 
 namespace valhalla {

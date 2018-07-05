@@ -26,11 +26,14 @@ constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
 constexpr float kDefaultGateCost = 30.0f;                // Seconds
 constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
+constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry = 0.5f;                 // Factor between 0 and 1
 constexpr float kDefaultUseHighways = 1.0f;              // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;                 // Factor between 0 and 1
 constexpr float kDefaultUsePrimary = 0.5f;               // Factor between 0 and 1
 constexpr float kDefaultUseTrails = 0.0f;                // Factor between 0 and 1
 constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
@@ -68,6 +71,8 @@ constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenal
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
 constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kTollBoothCostRange{0, kDefaultTollBoothCost, kMaxSeconds};
+constexpr ranged_default_t<float> kTollBoothPenaltyRange{0, kDefaultTollBoothPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost,
                                                             kMaxSeconds};
@@ -75,6 +80,7 @@ constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountr
                                                                kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
+constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
@@ -298,6 +304,8 @@ public:
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float gate_cost_;                // Cost (seconds) to go through gate
   float gate_penalty_;             // Penalty (seconds) to go through gate
+  float tollbooth_cost_;           // Cost (seconds) to go through toll booth
+  float tollbooth_penalty_;        // Penalty (seconds) to go through a toll booth
   float ferry_cost_;               // Cost (seconds) to enter a ferry
   float ferry_penalty_;            // Penalty (seconds) to enter a ferry
   float ferry_factor_;             // Weighting to apply to ferry edges
@@ -306,6 +314,8 @@ public:
   float country_crossing_penalty_; // Penalty (seconds) to go across a country border
   float use_ferry_;
   float use_highways_;   // Preference to use highways. Is a value from 0 to 1
+  float use_tolls_;      // Preference to use tolls. Is a value from 0 to 1
+  float toll_factor_;    // Factor applied when road has a toll
   float highway_factor_; // Factor applied when road is a motorway or trunk
   float surface_factor_; // How much the surface factors are applied
   float use_trails_;     // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
@@ -350,6 +360,9 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
       pt.get<float>("destination_only_penalty", kDefaultDestinationOnlyPenalty));
   gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
   gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
+  tollbooth_cost_ = kTollBoothCostRange(pt.get<float>("toll_booth_cost", kDefaultTollBoothCost));
+  tollbooth_penalty_ =
+      kTollBoothPenaltyRange(pt.get<float>("toll_booth_penalty", kDefaultTollBoothPenalty));
   alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
   country_crossing_cost_ =
       kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
@@ -380,6 +393,14 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   use_highways_ = kUseHighwaysRange(pt.get<float>("use_highways", kDefaultUseHighways));
 
   highway_factor_ = 1.0f - use_highways_;
+
+  use_tolls_ = kUseTollsRange(pt.get<float>("use_tolls", kDefaultUseTolls));
+
+  // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
+  // use_tolls = 1 would reduce weighting slightly (a negative delta) while
+  // use_tolls = 0 would penalize (positive delta to weighting factor).
+  toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
+                     (0.5f - use_tolls_) * 0.03f;              // ranges from 0 to -0.15
 
   use_trails_ = kUseTrailsRange(pt.get<float>("use_trails", kDefaultUseTrails));
 
@@ -512,6 +533,10 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t sp
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
 
+  if (edge->toll()) {
+    factor += toll_factor_;
+  }
+
   if (edge->destonly()) {
     factor += kDestinationOnlyFactor;
   }
@@ -528,13 +553,18 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing, ferry, and gate
+  // Special cases with both time and penalty: country crossing, ferry,
+  // gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
   } else if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
     penalty += gate_penalty_;
+  }
+  if (node->type() == NodeType::kTollBooth || (!pred.toll() && edge->toll())) {
+    seconds += tollbooth_cost_;
+    penalty += tollbooth_penalty_;
   }
   if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
     seconds += ferry_cost_;
@@ -584,13 +614,18 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing, ferry, and gate
+  // Special cases with both time and penalty: country crossing, ferry,
+  // gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
   } else if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
     penalty += gate_penalty_;
+  }
+  if (node->type() == NodeType::kTollBooth || (!pred->toll() && edge->toll())) {
+    seconds += tollbooth_cost_;
+    penalty += tollbooth_penalty_;
   }
   if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
     seconds += ferry_cost_;
@@ -712,6 +747,26 @@ void testMotorcycleCostParams() {
     if (ctorTester->gate_penalty_ < kGatePenaltyRange.min ||
         ctorTester->gate_penalty_ > kGatePenaltyRange.max) {
       throw std::runtime_error("gate_penalty_ is not within it's range");
+    }
+  }
+
+  // tollbooth_cost_
+  distributor.reset(make_distributor_from_range(kTollBoothCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_autocost_from_json("toll_booth_cost", (*distributor)(generator)));
+    if (ctorTester->tollbooth_cost_ < kTollBoothCostRange.min ||
+        ctorTester->tollbooth_cost_ > kTollBoothCostRange.max) {
+      throw std::runtime_error("tollbooth_cost_ is not within it's range");
+    }
+  }
+
+  // tollbooth_penalty_
+  distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_autocost_from_json("toll_booth_penalty", (*distributor)(generator)));
+    if (ctorTester->tollbooth_penalty_ < kTollBoothPenaltyRange.min ||
+        ctorTester->tollbooth_penalty_ > kTollBoothPenaltyRange.max) {
+      throw std::runtime_error("tollbooth_penalty_ is not within it's range");
     }
   }
 

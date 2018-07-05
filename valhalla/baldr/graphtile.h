@@ -6,6 +6,7 @@
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/curler.h>
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edge_elevation.h>
 #include <valhalla/baldr/edgeinfo.h>
@@ -398,15 +399,22 @@ public:
   std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
   /**
-   * TODO: THIS SHOULD BE MOVED INTO A UTILITY
    * Convenience method to get the speed for an edge given the directed
    * edge index.
-   * @param  de  Directed edge index. Used to lookup list of signs.
+   * @param  de           Directed edge index. Used to lookup list of signs.
+   * @param  current_time Current time (seconds since epoch). A value of 0
+   *                      indicates the route is not time dependent.
+   * @param  tz_index     timezone index for the node
    * @return  Returns the speed for the edge.
    */
-  uint32_t GetSpeed(const DirectedEdge* de) const {
-    // de->predicted_speed() will need to be only used if there is a time element
-    // will need to add in constrained speed if no predictive and there is a time element
+  uint32_t GetSpeed(const DirectedEdge* de,
+                    const uint64_t current_time = 0,
+                    const uint32_t tz_index = 0) const {
+    // if time dependent route and we are routing between 7 AM and 7 PM local time.
+    if (current_time && DateTime::is_restricted(false, 7, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, current_time,
+                                                baldr::DateTime::get_tz_db().from_index(tz_index))) {
+      return (de->constrained_flow_speed() > 0) ? de->constrained_flow_speed() : de->speed();
+    }
     return (de->free_flow_speed() > 0) ? de->free_flow_speed() : de->speed();
   }
 

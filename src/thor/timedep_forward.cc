@@ -109,7 +109,9 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) +
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(directededge,
+                                      tile->GetSpeed(directededge, localtime, nodeinfo->timezone())) +
                    costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // If this edge is a destination, subtract the partial/remainder cost

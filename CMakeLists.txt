@@ -21,6 +21,7 @@ option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(USE_STD_REGEX "Use std::regex instead of boost::regex" OFF)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -28,7 +29,6 @@ set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBU
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 
 # colorize output
 include(CheckCXXCompilerFlag)
@@ -111,7 +111,7 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins	valhalla_build_connectivity	valhalla_build_tiles
   valhalla_build_admins valhalla_build_transit valhalla_fetch_transit valhalla_query_transit
-  valhalla_build_speeds  valhalla_associate_segments)
+  valhalla_build_speeds  valhalla_associate_segments	valhalla_add_predicted_traffic)
 
 ## Valhalla services
 set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker valhalla_thor_worker)
@@ -170,10 +170,14 @@ add_subdirectory(test)
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
   add_subdirectory(src/bindings/python)
-
   install(FILES COPYING ChangeLog
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
+endif()
+
+# NodeJS Bindings
+if (ENABLE_NODE_BINDINGS)
+  add_subdirectory(src/bindings/node)
 endif()
 
 

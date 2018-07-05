@@ -1,0 +1,48 @@
+{
+  "name": "valhalla",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --expose-gc test/nodejs/*.test.js",
+    "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
+  },
+  "engines": {
+    "node": ">=8.11.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valhalla/valhalla.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/valhalla/valhalla/issues"
+  },
+  "homepage": "https://github.com/valhalla/valhalla#readme",
+  "dependencies": {
+    "@mapbox/cloudfriend": "^1.9.1",
+    "node-cmake": "^2.5.1",
+    "node-gyp": "^3.6.2",
+    "node-pre-gyp": "^0.10.0",
+    "tape": "^4.9.0"
+  },
+  "binary": {
+    "module_name": "node_valhalla",
+    "module_path": "./lib/binding",
+    "host": "https://mapbox-node-binary.s3.amazonaws.com",
+    "remote_path": "./valhalla/v{version}/{configuration}/",
+    "package_name": "valhalla-v{version}-{node_abi}-{platform}-{arch}.tar.gz"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.257.1"
+  },
+  "bundledDependencies": [
+    "node-pre-gyp",
+    "node-cmake"
+  ]
+}

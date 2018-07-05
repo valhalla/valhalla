@@ -155,7 +155,8 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge));
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge, localtime,
+                                                                           nodeinfo->timezone()));
     newcost.cost += tc.cost;
 
     // If this edge is a destination, subtract the partial/remainder cost

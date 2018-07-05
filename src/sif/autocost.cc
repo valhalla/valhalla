@@ -376,7 +376,7 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
 
   use_tolls_ = kUseTollsRange(pt.get<float>("use_tolls", kDefaultUseTolls));
 
-  // Tool factor of 0 would indicate no adjustment to weighting for toll roads.
+  // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
   toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
