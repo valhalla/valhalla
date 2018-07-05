@@ -48,7 +48,7 @@ const static std::unordered_map<uint16_t, std::string> kTurnLaneNames =
      {kTurnLaneMergeToRight, "merge_to_right"}};
 
 const static std::unordered_map<std::string, uint16_t> kTurnLaneMasks =
-    {{"", kTurnLaneEmpty},
+    {{"|", kTurnLaneEmpty},
      {"none", kTurnLaneNone},
      {"through", kTurnLaneThrough},
      {"sharp_left", kTurnLaneSharpLeft},
@@ -162,7 +162,7 @@ public:
    * @param  osmstr  OSM turn lane string.
    * @return Returns pipe separated turn lane string (stored in Valhalla tiles).
    */
-  static std::string GetTurnLaneString(const std::string osmstr) {
+  static std::string GetTurnLaneString(const std::string& osmstr) {
     std::string tl;
     std::stringstream ss(osmstr);
     std::string item;

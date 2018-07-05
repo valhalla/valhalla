@@ -1,9 +1,11 @@
 ## Release Date: UNRELEASED Valhalla 3.0
 * **Infrastructure**:
    * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
+   * ADDED: TurnLanes to indicate turning lanes at the end of a directed edge.
 * **Data Producer Update**
    * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
    * CHANGED: Lower speeds on driveways, drive-thru, and parking aisle. Set destination only flag for drive thru use.
+   * ADDED: Initial implementation of turn lanes.
   **Bug Fix**
    * CHANGED: Fix destination only penalty for A* and time dependent cases.
 * **Map Matching**

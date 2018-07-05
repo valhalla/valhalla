@@ -71,6 +71,24 @@ void test_static_methods() {
     throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes +
                              " expected: " + osm_turn_lanes);
   }
+
+  // Test invalid values
+  osm_turn_lanes = "|blah||none||none|";
+  val_internal = TurnLanes::GetTurnLaneString(osm_turn_lanes);
+  masks = TurnLanes::lanemasks(val_internal);
+  val_turn_lanes = TurnLanes::turnlane_string(masks);
+  if ("|||none||none|" != val_turn_lanes) {
+    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes +
+                             " expected: " + "|||none||none|");
+  }
+
+  osm_turn_lanes = "blah|blah|";
+  val_internal = TurnLanes::GetTurnLaneString(osm_turn_lanes);
+  masks = TurnLanes::lanemasks(val_internal);
+  val_turn_lanes = TurnLanes::turnlane_string(masks);
+  if ("||" != val_turn_lanes) {
+    throw std::runtime_error("TurnLanes mismatch: " + val_turn_lanes + " expected: " + "||");
+  }
 }
 
 } // namespace
