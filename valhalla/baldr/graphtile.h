@@ -21,6 +21,7 @@
 #include <valhalla/baldr/transitschedule.h>
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
+#include <valhalla/baldr/turnlanes.h>
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/util.h>
@@ -431,6 +432,24 @@ public:
     }
   }
 
+  /**
+   * Convenience method to get the turn lanes for an edge given the directed edge index.
+   * @param  idx  Directed edge index. Used to lookup turn lanes.
+   * @return  Returns a list (vector) of signs.
+   */
+  std::vector<uint16_t> turnlanes(const uint32_t idx) const {
+    uint32_t offset = turnlanes_offset(idx);
+    return (offset > 0) ? TurnLanes::lanemasks(textlist_ + offset) : std::vector<uint16_t>();
+  }
+
+  /**
+   * Convenience method to get the offset into the text table for the turn lanes
+   * for the specified directed edge.
+   * @param  idx  Directed edge index. Used to lookup turn lanes.
+   * @return  Returns offset into the text table.
+   */
+  uint32_t turnlanes_offset(const uint32_t idx) const;
+
 protected:
   // Graph tile memory, this must be shared so that we can put it into cache
   std::shared_ptr<std::vector<char>> graphtile_;
@@ -520,6 +539,9 @@ protected:
 
   // Edge elevation data
   EdgeElevation* edge_elevation_;
+
+  // Turn lanes (indexed by directed edge index)
+  TurnLanes* turnlanes_;
 
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, GraphId> stop_one_stops;

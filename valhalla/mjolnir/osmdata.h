@@ -105,6 +105,12 @@ struct OSMData {
   // Names
   UniqueNames name_offset_map;
 
+  // Forward turn lane strings
+  UniqueNames fwd_turn_lanes_map;
+
+  // Backward turn lane strings
+  UniqueNames bwd_turn_lanes_map;
+
   // Map used in admins to store the shape of the nodes.
   OSMShapeMap shape_map;
 

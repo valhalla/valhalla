@@ -1320,6 +1320,12 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
     }
   }
 
+  // If turn lanes exist
+  if (directededge->turnlanes()) {
+    auto turnlanes = graphtile->turnlanes(idx);
+    // TODO - add to TripPath
+  }
+
   // Set road class if requested
   if (controller.attributes.at(kEdgeRoadClass)) {
     trip_edge->set_road_class(GetTripPathRoadClass(directededge->classification()));

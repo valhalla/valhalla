@@ -14,7 +14,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 13;
+constexpr size_t kEmptySlots = 12;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -462,6 +462,38 @@ public:
   void set_edge_elevation_offset(const uint32_t offset);
 
   /**
+   * Gets the offset to the turn lane data.
+   * @return  Returns the number of bytes to offset to the the turn lane data.
+   */
+  uint32_t turnlane_offset() const {
+    return turnlane_offset_;
+  }
+
+  /**
+   * Sets the offset to the turn lane data.
+   * @param offset Offset in bytes to the start of the turn lane data.
+   */
+  void set_turnlane_offset(const uint32_t offset) {
+    turnlane_offset_ = offset;
+  }
+
+  /**
+   * Gets the number of  turn lanes in this tile.
+   * @return  Returns the number of  turn lanes.
+   */
+  uint32_t turnlane_count() const {
+    return turnlane_count_;
+  }
+
+  /**
+   * Sets the number of turn lanes within this tile.
+   * @param count Number of  turn lanes within the tile.
+   */
+  void set_turnlane_count(const uint32_t count) {
+    turnlane_count_ = count;
+  }
+
+  /**
    * Get the offset to the end of the tile
    * @return the number of bytes in the tile, unless the last slot is used
    */
@@ -501,7 +533,8 @@ protected:
   uint64_t transfercount_ : 16;
   uint64_t traffic_id_count_ : 24;
   uint64_t has_edge_elevation_ : 1;
-  uint64_t spare2_ : 23;
+  uint64_t turnlane_count_ : 22;
+  uint64_t spare2_ : 1;
 
   // Date the tile was created. Days since pivot date.
   uint32_t date_created_;
@@ -534,6 +567,9 @@ protected:
 
   // Offset to the beginning of the edge elevation data.
   uint32_t edge_elevation_offset_;
+
+  // Offset to the beginning of the turn lane data.
+  uint32_t turnlane_offset_;
 
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,
