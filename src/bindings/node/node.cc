@@ -41,6 +41,7 @@ public:
     napi_status status;
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_METHOD("route", Route),
+        DECLARE_NAPI_METHOD("locate", Locate),
     };
     // parse config file to get logging config
     size_t argc = 1;
@@ -210,6 +211,25 @@ private:
 
     // wrap route_json in napi value for return
     auto outStr = WrapString(env, route_json);
+    return outStr;
+  }
+
+  static napi_value Locate(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
+    checkNapiStatus(status, env, "Failed to unwrap js object");
+
+    std::string locate_json;
+    try {
+      locate_json = obj->actor.locate(reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+
+    auto outStr = WrapString(env, locate_json);
     return outStr;
   }
 
