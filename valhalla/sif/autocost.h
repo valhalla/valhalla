@@ -4,10 +4,19 @@
 #include <cstdint>
 
 #include <boost/property_tree/ptree.hpp>
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
 namespace sif {
+
+/**
+ * Parses the auto cost options from json and stores values in pbf.
+ */
+void ParseAutoCostOptions(const rapidjson::Document& doc,
+                          const std::string& costing_options_key,
+                          odin::CostingOptions* pbf_costing_options);
 
 /**
  * Create an auto route cost method. This is generally shortest time but uses

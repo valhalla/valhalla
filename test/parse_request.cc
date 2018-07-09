@@ -27,6 +27,14 @@ void validate(const std::string& key,
   }
 }
 
+void validate(const std::string& key, const float expected_value, const float pbf_value) {
+  if (pbf_value != expected_value) {
+    throw std::runtime_error("Incorrect " + key +
+                             " float | expected_value=" + std::to_string(expected_value) +
+                             " | found=" + std::to_string(pbf_value));
+  }
+}
+
 void validate(const std::string& key,
               const float expected_value,
               const bool has_pbf_value,
@@ -129,6 +137,14 @@ get_request_str(const std::string& parent_key, const std::string& key, const flo
   return R"({")" + parent_key + R"(":{")" + key + R"(":)" + std::to_string(expected_value) + R"(}})";
 }
 
+std::string get_request_str(const std::string& grandparent_key,
+                            const std::string& parent_key,
+                            const std::string& key,
+                            const float specified_value) {
+  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + key + R"(":)" +
+         std::to_string(specified_value) + R"(}}})";
+}
+
 std::string get_request_str(const std::string& key, const uint32_t expected_value) {
   return R"({")" + key + R"(":)" + std::to_string(expected_value) + R"(})";
 }
@@ -168,7 +184,7 @@ std::string get_request_str(const std::string& parent_key,
 
 valhalla::valhalla_request_t get_request(const std::string& request_str,
                                          const valhalla::odin::DirectionsOptions::Action action) {
-  // std::cout << ">>>>> request_str=" << request_str << "<<<<<" << std::endl;
+  std::cout << ">>>>> request_str=" << request_str << "<<<<<" << std::endl;
   valhalla::valhalla_request_t request;
   request.parse(request_str, action);
   return request;
@@ -276,6 +292,279 @@ void test_filter_attributes_parsing(const std::vector<std::string>& expected_val
            request.options.filter_attributes());
 }
 
+void test_maneuver_penalty_parsing(const valhalla::odin::Costing costing,
+                                   const float specified_value,
+                                   const float expected_value,
+                                   const valhalla::odin::DirectionsOptions::Action action =
+                                       valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "maneuver_penalty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).maneuver_penalty());
+}
+
+void test_destination_only_penalty_parsing(const valhalla::odin::Costing costing,
+                                           const float specified_value,
+                                           const float expected_value,
+                                           const valhalla::odin::DirectionsOptions::Action action =
+                                               valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "destination_only_penalty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).destination_only_penalty());
+}
+
+void test_gate_cost_parsing(const valhalla::odin::Costing costing,
+                            const float specified_value,
+                            const float expected_value,
+                            const valhalla::odin::DirectionsOptions::Action action =
+                                valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "gate_cost";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).gate_cost());
+}
+
+void test_gate_penalty_parsing(const valhalla::odin::Costing costing,
+                               const float specified_value,
+                               const float expected_value,
+                               const valhalla::odin::DirectionsOptions::Action action =
+                                   valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "gate_penalty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).gate_penalty());
+}
+
+void test_toll_booth_cost_parsing(const valhalla::odin::Costing costing,
+                                  const float specified_value,
+                                  const float expected_value,
+                                  const valhalla::odin::DirectionsOptions::Action action =
+                                      valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "toll_booth_cost";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).toll_booth_cost());
+}
+
+void test_toll_booth_penalty_parsing(const valhalla::odin::Costing costing,
+                                     const float specified_value,
+                                     const float expected_value,
+                                     const valhalla::odin::DirectionsOptions::Action action =
+                                         valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "toll_booth_penalty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).toll_booth_penalty());
+}
+
+void test_alley_penalty_parsing(const valhalla::odin::Costing costing,
+                                const float specified_value,
+                                const float expected_value,
+                                const valhalla::odin::DirectionsOptions::Action action =
+                                    valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "alley_penalty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).alley_penalty());
+}
+
+void test_country_crossing_cost_parsing(const valhalla::odin::Costing costing,
+                                        const float specified_value,
+                                        const float expected_value,
+                                        const valhalla::odin::DirectionsOptions::Action action =
+                                            valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "country_crossing_cost";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).country_crossing_cost());
+}
+
+void test_country_crossing_penalty_parsing(const valhalla::odin::Costing costing,
+                                           const float specified_value,
+                                           const float expected_value,
+                                           const valhalla::odin::DirectionsOptions::Action action =
+                                               valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "country_crossing_penalty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).country_crossing_penalty());
+}
+
+void test_ferry_cost_parsing(const valhalla::odin::Costing costing,
+                             const float specified_value,
+                             const float expected_value,
+                             const valhalla::odin::DirectionsOptions::Action action =
+                                 valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "ferry_cost";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).ferry_cost());
+}
+
+void test_use_ferry_parsing(const valhalla::odin::Costing costing,
+                            const float specified_value,
+                            const float expected_value,
+                            const valhalla::odin::DirectionsOptions::Action action =
+                                valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "use_ferry";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).use_ferry());
+}
+
+void test_use_highways_parsing(const valhalla::odin::Costing costing,
+                               const float specified_value,
+                               const float expected_value,
+                               const valhalla::odin::DirectionsOptions::Action action =
+                                   valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "use_highways";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).use_highways());
+}
+
+void test_use_tolls_parsing(const valhalla::odin::Costing costing,
+                            const float specified_value,
+                            const float expected_value,
+                            const valhalla::odin::DirectionsOptions::Action action =
+                                valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "use_tolls";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).use_tolls());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // test by key methods
 void test_polygons() {
@@ -340,6 +629,123 @@ void test_filter_attributes() {
   test_filter_attributes_parsing({"edge.names", "edge.id", "edge.weighted_grade", "edge.speed"});
 }
 
+void test_maneuver_penalty() {
+  const float default_value = 5.f;
+  test_maneuver_penalty_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_maneuver_penalty_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_maneuver_penalty_parsing(valhalla::odin::Costing::auto_, 30.f, 30.f);
+  test_maneuver_penalty_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_maneuver_penalty_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_destination_only_penalty() {
+  const float default_value = 600.f;
+  test_destination_only_penalty_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_destination_only_penalty_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_destination_only_penalty_parsing(valhalla::odin::Costing::auto_, 700.f, 700.f);
+  test_destination_only_penalty_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_destination_only_penalty_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_gate_cost() {
+  const float default_value = 30.f;
+  test_gate_cost_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_gate_cost_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_gate_cost_parsing(valhalla::odin::Costing::auto_, 60.f, 60.f);
+  test_gate_cost_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_gate_cost_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_gate_penalty() {
+  const float default_value = 300.f;
+  test_gate_penalty_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_gate_penalty_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_gate_penalty_parsing(valhalla::odin::Costing::auto_, 60.f, 60.f);
+  test_gate_penalty_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_gate_penalty_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_toll_booth_cost() {
+  const float default_value = 15.f;
+  test_toll_booth_cost_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_toll_booth_cost_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_toll_booth_cost_parsing(valhalla::odin::Costing::auto_, 60.f, 60.f);
+  test_toll_booth_cost_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_toll_booth_cost_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_toll_booth_penalty() {
+  const float default_value = 0.f;
+  test_toll_booth_penalty_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_toll_booth_penalty_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_toll_booth_penalty_parsing(valhalla::odin::Costing::auto_, 60.f, 60.f);
+  test_toll_booth_penalty_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_toll_booth_penalty_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_alley_penalty() {
+  const float default_value = 5.f;
+  test_alley_penalty_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_alley_penalty_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_alley_penalty_parsing(valhalla::odin::Costing::auto_, 60.f, 60.f);
+  test_alley_penalty_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_alley_penalty_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_country_crossing_cost() {
+  const float default_value = 600.f;
+  test_country_crossing_cost_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_country_crossing_cost_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_country_crossing_cost_parsing(valhalla::odin::Costing::auto_, 60.f, 60.f);
+  test_country_crossing_cost_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_country_crossing_cost_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_country_crossing_penalty() {
+  const float default_value = 0.f;
+  test_country_crossing_penalty_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_country_crossing_penalty_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_country_crossing_penalty_parsing(valhalla::odin::Costing::auto_, 60.f, 60.f);
+  test_country_crossing_penalty_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_country_crossing_penalty_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_ferry_cost() {
+  const float default_value = 300.f;
+  test_ferry_cost_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_ferry_cost_parsing(valhalla::odin::Costing::auto_, 2.f, 2.f);
+  test_ferry_cost_parsing(valhalla::odin::Costing::auto_, 600.f, 600.f);
+  test_ferry_cost_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_ferry_cost_parsing(valhalla::odin::Costing::auto_, 500000.f, default_value);
+}
+
+void test_use_ferry() {
+  const float default_value = 0.5f;
+  test_use_ferry_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_use_ferry_parsing(valhalla::odin::Costing::auto_, 0.2f, 0.2f);
+  test_use_ferry_parsing(valhalla::odin::Costing::auto_, 0.6f, 0.6f);
+  test_use_ferry_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_use_ferry_parsing(valhalla::odin::Costing::auto_, 2.f, default_value);
+}
+
+void test_use_highways() {
+  const float default_value = 1.f;
+  test_use_highways_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_use_highways_parsing(valhalla::odin::Costing::auto_, 0.2f, 0.2f);
+  test_use_highways_parsing(valhalla::odin::Costing::auto_, 0.6f, 0.6f);
+  test_use_highways_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_use_highways_parsing(valhalla::odin::Costing::auto_, 2.f, default_value);
+}
+
+void test_use_tolls() {
+  const float default_value = 0.5f;
+  test_use_tolls_parsing(valhalla::odin::Costing::auto_, default_value, default_value);
+  test_use_tolls_parsing(valhalla::odin::Costing::auto_, 0.2f, 0.2f);
+  test_use_tolls_parsing(valhalla::odin::Costing::auto_, 0.6f, 0.6f);
+  test_use_tolls_parsing(valhalla::odin::Costing::auto_, -2.f, default_value);
+  test_use_tolls_parsing(valhalla::odin::Costing::auto_, 2.f, default_value);
+}
+
 } // namespace
 
 int main() {
@@ -379,6 +785,48 @@ int main() {
 
   // filter_attributes
   suite.test(TEST_CASE(test_filter_attributes));
+
+  /////////////////////////////////////////////////////////////////////////////
+  // CostingOptions
+
+  // maneuver_penalty
+  suite.test(TEST_CASE(test_maneuver_penalty));
+
+  // destination_only_penalty
+  suite.test(TEST_CASE(test_destination_only_penalty));
+
+  // gate_cost
+  suite.test(TEST_CASE(test_gate_cost));
+
+  // gate_penalty
+  suite.test(TEST_CASE(test_gate_penalty));
+
+  // toll_booth_cost
+  suite.test(TEST_CASE(test_toll_booth_cost));
+
+  // toll_booth_penalty
+  suite.test(TEST_CASE(test_toll_booth_penalty));
+
+  // alley_penalty
+  suite.test(TEST_CASE(test_alley_penalty));
+
+  // country_crossing_cost
+  suite.test(TEST_CASE(test_country_crossing_cost));
+
+  // country_crossing_penalty
+  suite.test(TEST_CASE(test_country_crossing_penalty));
+
+  // ferry_cost
+  suite.test(TEST_CASE(test_ferry_cost));
+
+  // use_ferry
+  suite.test(TEST_CASE(test_use_ferry));
+
+  // use_highways
+  suite.test(TEST_CASE(test_use_highways));
+
+  // use_tolls
+  suite.test(TEST_CASE(test_use_tolls));
 
   return suite.tear_down();
 }

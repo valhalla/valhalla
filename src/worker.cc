@@ -8,6 +8,7 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/util.h"
+#include "sif/autocost.h"
 #include "worker.h"
 
 using namespace valhalla;
@@ -507,8 +508,72 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
     }
-    // TODO: costing options
-    // Switch and parse each one?
+  }
+
+  // if specified, get the costing options in there
+  for (const auto costing : {odin::auto_, odin::auto_shorter, odin::bicycle, odin::bus, odin::hov,
+                             odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
+                             odin::truck, odin::motorcycle, odin::auto_data_fix}) {
+    // Create the costing string
+    auto costing_str = odin::Costing_Name(costing);
+    // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+    if (costing_str.back() == '_') {
+      costing_str.pop_back();
+    }
+    // Create the costing options key
+    const auto costing_options_key = "/costing_options/" + costing_str;
+
+    switch (costing) {
+      case odin::auto_: {
+        std::cout << "((((( auto_ )))))" << std::endl;
+        sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::auto_shorter: {
+        std::cout << "((((( auto_shorter )))))" << std::endl;
+        break;
+      }
+      case odin::bicycle: {
+        std::cout << "((((( bicycle )))))" << std::endl;
+        break;
+      }
+      case odin::bus: {
+        std::cout << "((((( bus )))))" << std::endl;
+        break;
+      }
+      case odin::hov: {
+        std::cout << "((((( hov )))))" << std::endl;
+        break;
+      }
+      case odin::motor_scooter: {
+        std::cout << "((((( motor_scooter )))))" << std::endl;
+        break;
+      }
+      case odin::multimodal: {
+        std::cout << "((((( multimodal )))))" << std::endl;
+        break;
+      }
+      case odin::pedestrian: {
+        std::cout << "((((( pedestrian )))))" << std::endl;
+        break;
+      }
+      case odin::transit: {
+        std::cout << "((((( transit )))))" << std::endl;
+        break;
+      }
+      case odin::truck: {
+        std::cout << "((((( truck )))))" << std::endl;
+        break;
+      }
+      case odin::motorcycle: {
+        std::cout << "((((( motorcycle )))))" << std::endl;
+        break;
+      }
+      case odin::auto_data_fix: {
+        std::cout << "((((( auto_data_fix )))))" << std::endl;
+        break;
+      }
+    }
   }
 
   // get the locations in there
