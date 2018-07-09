@@ -517,10 +517,13 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         LOG_ERROR("Shortcut edge with exit signs");
       }
 
-      // Get turn lanes from the base directed edge. Add them if this is the last edge
-      if (directededge->turnlanes() && last_edge(tile, directededge->endnode(), edgepairs)) {
+      // Get turn lanes from the base directed edge. Add them if this is the last edge otherwise
+      // set the turnlanes flag to false;
+      if (directededge->turnlanes() && last_edge(reader.GetGraphTile(directededge->endnode()),
+                                                 directededge->endnode(), edgepairs)) {
         uint32_t offset = tile->turnlanes_offset(edge_id.id());
         tilebuilder.AddTurnLanes(tilebuilder.directededges().size(), tile->GetName(offset));
+        newedge.set_turnlanes(true);
       } else {
         newedge.set_turnlanes(false);
       }
