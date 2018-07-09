@@ -192,6 +192,9 @@ target_compile_definitions(valhalla
   PUBLIC
     $<$<BOOL:${MSVC}>:"VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI">
     $<$<BOOL:${REQUIRES_SPIRIT_THREADSAFE}>:BOOST_SPIRIT_THREADSAFE>
+    RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
+                             # because ${libvalhalla_compile_definitions} must be private.
+                             # To be removed with ${libvalhalla_compile_definitions} below
   PRIVATE
     ${libvalhalla_compile_definitions})
 

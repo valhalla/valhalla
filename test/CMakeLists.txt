@@ -36,8 +36,7 @@ foreach(test ${tests})
   target_link_libraries(${test} valhalla)
 endforeach()
 
-#set(cost_tests autocost bicyclecost motorscootercost pedestriancost transitcost truckcost)
-set(cost_tests bicyclecost motorscootercost pedestriancost transitcost truckcost)
+set(cost_tests autocost bicyclecost motorscootercost pedestriancost transitcost truckcost)
 foreach(test ${cost_tests})
   add_executable(${test} EXCLUDE_FROM_ALL	${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc test.cc)
   set_target_properties(${test} PROPERTIES
