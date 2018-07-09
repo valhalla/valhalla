@@ -6,21 +6,30 @@ If you would like to create your own routing tiles, this guilde will help you ge
 
 ### Data
 
-You can download city-sized extracts from [Mapzen](https://mapzen.com/data/metro-extracts/).  However, if you are looking for larger extracts, they can be downloaded from [Geofabrik GmbH](http://download.geofabrik.de/).  If you wish to convert the entire planet, we have successfully run conversions on quad-cores(CPU @ 2.70GHz) machines with 16 gigs of RAM utilizing a SSD.  Conversions with administrative areas and timezones, but without elevation data will take around 15 hours.  This route graph will include motor vehicle, pedestrian, and bicycle route information.
+You can download extracts from [Geofabrik GmbH](http://download.geofabrik.de/).  If you wish to convert the entire planet, we have successfully run conversions on quad-cores(CPU @ 2.70GHz) machines with 16 gigs of RAM utilizing a SSD.  Conversions with administrative areas and timezones, but without elevation data will take around 15 hours.  This route graph will include motor vehicle, pedestrian, and bicycle route information.
 
-```
-./autogen.sh
-./configure CPPFLAGS="-DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS" --enable-python-bindings
-make test -j$(nproc)
-```
+For more information on what tags and values we use from OSM please consult our [tag parsing guide](tag_parsing.md).
 
 ### Creating Data
 
-Run `valhalla_build_tiles` under the valhalla directory.  If needed, update the values under valhalla in your `valhalla.json` config.
+Build valhalla and its various tools:
 
 ```
-./valhalla_build_tiles --config  /path_to_your_config/valhalla.json /data/osm_data/your_osm_extract.pbf
+mkdir build
+cd build
+cmake ..
+make all check -j$(nproc)
 ```
+
+You'll see `valhalla_build_tiles` under the build directory. One level up you'll find `scripts/valhalla_build_config` which you can use to generate the config file needed to build routing tiles. Check the `--help` text for all the various configuration options in the config file.
+
+Generate your config:
+
+    ../scripts/valhalla_build_config > valhalla.config
+
+Then build some tiles from an extract:
+
+    ./valhalla_build_tiles --config  /path_to_your_config/valhalla.json /data/osm_data/your_osm_extract.pbf
 
 ## Optional Prerequisites
 
@@ -47,3 +56,19 @@ If you would like timezone information within the route graph, please follow the
 2. Go to `your_valhalla_directory/scripts`.
 3. Run `valhalla_build_timezones /path_to_your_config/valhalla.json`
 4. The next time you run `valhalla_build_tiles`, timezone information will be added to the route graph.
+
+### Elevation
+
+If you want to add elevation information to your route tiles you can do so using SRTMv3 tiles as the input. 
+
+1. If needed run `valhalla_build_elevation`. I will create an elevation dataset which is about 1.6TB for the whole world
+2. Point your `valhalla.json` configuration to this directory so it can be referenced when building the graph tiles. The proper configuration value for this can be sent when running `valhalla_build_config` using the `--additional-data-elevation` argument.
+3. The next time you run `valhalla_build_tiles`, elevation information will be added to the route graph.
+
+### Transit Data
+
+If you want to add transit data to your route tiles you can follow these steps:
+
+1. Use `valhalla_build_transit` to create an initial set of transit tiles for your region.
+2. Configure `valhalla.json` using `valhalla_build_config` and the `--mjolnir-transit-dir` argument.
+3. The next time you run `valhalla_build_tiles`, transit graph will be connected to the route graph.
