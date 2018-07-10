@@ -303,6 +303,7 @@ public:
   float use_highways_;   // Preference to use highways. Is a value from 0 to 1
   float use_tolls_;      // Preference to use tolls. Is a value from 0 to 1
   float toll_factor_;    // Factor applied when road has a toll
+  float surface_factor_; // How much the surface factors are applied
   float highway_factor_; // Factor applied when road is a motorway or trunk
   float use_trails_;     // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
 
@@ -372,7 +373,9 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
                      (0.5f - use_tolls_) * 0.03f;              // ranges from 0 to -0.15
 
+  // Set the surface factor based on the use trails value
   use_trails_ = kUseTrailsRange(pt.get<float>("use_trails", kDefaultUseTrails));
+  surface_factor_ = 0.5f;  // TODO - need to modulate surface factor based on use_trails.
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
@@ -477,7 +480,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
 
   float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll()) {
     factor += toll_factor_;
   }
@@ -768,7 +771,7 @@ void testMotorcycleCostParams() {
   }
 
   // use_tolls_
-  fDistributor.reset(make_real_distributor_from_range(kUseTrailsRange));
+  fDistributor.reset(make_real_distributor_from_range(kUseTollsRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("use_tolls", (*fDistributor)(generator)));
     if (ctorTester->use_tolls_ < kUseTollsRange.min || ctorTester->use_tolls_ > kUseTollsRange.max) {
