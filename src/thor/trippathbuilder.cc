@@ -1104,6 +1104,7 @@ TripPathBuilder::Build(const AttributesController& controller,
       for (auto exit_length: roundabout_edges_length) {
         accumulated_length += exit_length;
         trip_edge->add_roundabout_exit_angles((accumulated_length/total_length) * 360);
+        LOG_INFO(std::to_string((accumulated_length/total_length) * 360));
       }
 
       roundabout_edges_length.clear();
