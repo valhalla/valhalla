@@ -17,11 +17,26 @@ constexpr float kPiConstant = kPi / 2016.0f;
 class PredictedSpeeds {
 public:
   /**
-   * Constructor given arguments.
+   * Constructor.
+   */
+  PredictedSpeeds() : index_(nullptr), profiles_(nullptr) {
+  }
+
+  /**
+   * Set a pointer to the index data within the GraphTile.
    * @param  index_ Pointer to the index array in the GraphTile.
    * @param  profiles Pointer to the profiles array in the GraphTile.
    */
-  PredictedSpeeds(uint32_t* index, uint16_t* profiles) : index_(index), profiles_(profiles) {
+  void set_index(const uint32_t* index) {
+    index_ = index;
+  }
+
+  /**
+   * Set a pointer to the speed profile data within the GraphTile.
+   * @param  profiles Pointer to the profiles array in the GraphTile.
+   */
+  void set_profiles(const uint16_t* profiles) {
+    profiles_ = profiles;
   }
 
   /**
@@ -29,13 +44,15 @@ public:
    * @param  idx  Directed edge index.
    * @param  seconds_of_week  Seconds from start of the week (local time).
    */
-  uint32_t speed(const uint32_t idx, const uint32_t seconds_of_week) {
-    // Assume the index is valid. If there is no predicted speed profile this
-    // method will not be called due to DirectedEdge::predicted_speed being false.
-    uint16_t* speeds = profiles_ + (kBucketCount * index_[idx]);
+  uint32_t speed(const uint32_t idx, const uint32_t seconds_of_week) const {
+    // Get a pointer to the compressed speed profile for this edge. Assume the edge Id is valid
+    // (otherwise an exception would be thrown when getting the directed edge) and the profile
+    // index is valid. If there is no predicted speed profile this method will not be called due
+    // to DirectedEdge::predicted_speed being false.
+    const uint16_t* speeds = profiles_ + (kBucketCount * index_[idx]);
     float b = ((seconds_of_week / kSpeedBucketSize) + 0.5f) * kPiConstant;
     float speed = 0.5f * speeds[0];
-    uint16_t* s = &speeds[1];
+    const uint16_t* s = &speeds[1];
     for (uint32_t k = 1; k < kBucketCount; ++k, ++s) {
       speed += *s * cosf(k * b);
       ++k;
@@ -44,8 +61,8 @@ public:
   }
 
 protected:
-  uint32_t* index_;    // Index into the array of compressed speed profiles for each directed edge.
-  uint16_t* profiles_; // Compressed speed profiles
+  const uint32_t* index_; // Index into the array of compressed speed profiles for each directed edge
+  const uint16_t* profiles_; // Compressed speed profiles
 };
 
 } // namespace baldr

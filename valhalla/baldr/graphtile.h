@@ -425,10 +425,17 @@ public:
     }
   }
 
+  /**
+   * Convenience method to get the speed for an edge given the directed
+   * edge index and a time (seconds since start of the week).
+   * @param  de               Directed edge information.
+   * @param  seconds_of_week  Seconds since midnight.
+   * @return Returns the speed for the edge.
+   */
   uint32_t
   GetSpeed(const DirectedEdge* de, const GraphId& edgeid, const uint32_t seconds_of_week) const {
     if (de->predicted_speed()) {
-      return predictedspeeds_->speed(edgeid.id(), seconds_of_week);
+      return predictedspeeds_.speed(edgeid.id(), seconds_of_week);
     } else {
       // Fallback if no predicted speed
       return GetSpeed(de, seconds_of_week % kSecondsPerDay);
@@ -561,7 +568,7 @@ protected:
   TurnLanes* turnlanes_;
 
   // Predicted speeds
-  PredictedSpeeds* predictedspeeds_;
+  PredictedSpeeds predictedspeeds_;
 
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, GraphId> stop_one_stops;
