@@ -1225,6 +1225,7 @@ json::ArrayPtr summary(const std::vector<valhalla::baldr::EdgeData> property_dat
 // This will condense the summary
 json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto overall_summary_array = json::array({});
+  auto overall_property = property_data.front();
 
   if (property_data.size() == 1) {
     overall_summary_array->emplace_back(summary_data(overall_property));
