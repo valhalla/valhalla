@@ -751,6 +751,12 @@ protected:
   float adjspeedfactor_[kMaxSpeedKph + 1];
 };
 
+void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
+                                 const std::string& costing_options_key,
+                                 odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
+
 cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoShorterCost>(config);
 }
@@ -946,6 +952,12 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   return true;
+}
+
+void ParseBusCostOptions(const rapidjson::Document& doc,
+                         const std::string& costing_options_key,
+                         odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
 cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config) {
@@ -1161,6 +1173,12 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return true;
 }
 
+void ParseHOVCostOptions(const rapidjson::Document& doc,
+                         const std::string& costing_options_key,
+                         odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
+
 cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
   return std::make_shared<HOVCost>(config);
 }
@@ -1235,6 +1253,12 @@ public:
     };
   }
 };
+
+void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
+                                 const std::string& costing_options_key,
+                                 odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
 
 cost_ptr_t CreateAutoDataFixCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoDataFix>(config);
