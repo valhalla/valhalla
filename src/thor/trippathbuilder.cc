@@ -523,7 +523,7 @@ namespace thor {
 TripPathBuilder::TripPathBuilder() {
 }
 
-// Destructor
+// Destruct1or
 TripPathBuilder::~TripPathBuilder() {
 }
 
@@ -1033,7 +1033,9 @@ TripPathBuilder::Build(const AttributesController& controller,
       auto nodeinfo = graphreader.nodeinfo(endnode);
       bool found_all_roundabout_exits = false;
       uint32_t length = 0;
-      bool has_no_intersection = false;
+      auto valid_roundabout_exit = true;
+      auto roundabout_edge_index = current_index;
+      auto roundabout_edge = directededge;
 
       do {
 
@@ -1042,45 +1044,57 @@ TripPathBuilder::Build(const AttributesController& controller,
         // since we want the distance between each roundabout exit
         // we would add this distance to length
         if (nodeinfo->edge_count() == 2) {
-          length += current_directed_edge->length();
-          has_no_intersection = true;
+          length += roundabout_edge->length();
+          valid_roundabout_exit = false;
         }
 
-        // Going through each edge within a node,
-        // until the next roundabout edge is found
         for (int i = 0; i < nodeinfo->edge_count(); i++) {
-
           current_index = nodeinfo->edge_index() + i;
 
           current_directed_edge = graphtile->directededge(current_index);
 
-          if (current_directed_edge->roundabout() && !(std::find(roundabout_edges_id.begin(), roundabout_edges_id.end(), current_directed_edge->endnode().id()) != roundabout_edges_id.end())) {
-            roundabout_edges_id.push_back(current_directed_edge->endnode().id());
+          if (int(current_directed_edge->use()) == 25 && nodeinfo->edge_count() == 3) {
+            length += roundabout_edge->length();
+            valid_roundabout_exit = false;
+            break;
+          }
+        }
 
-            if (has_no_intersection) {
-              if (roundabout_edges_length.back() != 0) {
-                total_length -= roundabout_edges_length.back();
-                roundabout_edges_length.back() = current_directed_edge->length() + length;
-                total_length += roundabout_edges_length.back();
-              }
+        for (int i = 0; i < nodeinfo->edge_count(); i++) {
+          auto edge_index = nodeinfo->edge_index() + i;
+          auto edge = graphtile->directededge(edge_index);
 
-              length = 0;
-              has_no_intersection = false;
-            } else if (length == 0) {
-              roundabout_edges_length.push_back(current_directed_edge->length());
-              total_length += roundabout_edges_length.back();
-            }
-
+          if (edge->roundabout() && std::find(roundabout_edges_id.begin(), roundabout_edges_id.end(), edge->endnode().id()) == roundabout_edges_id.end()) {
+            roundabout_edges_id.push_back(edge->endnode().id());
+            roundabout_edge_index = edge_index;
+            roundabout_edge = edge;
             break;
           }
 
-          if (roundabout_edges_id.size() > 1 && (directededge->endnode().id() == current_directed_edge->endnode().id())) {
+          if (roundabout_edges_id.size() > 1 && (directededge->endnode().id() == edge->endnode().id())) {
             found_all_roundabout_exits = true;
             break;
           }
         }
 
-        endnode = current_directed_edge->endnode();
+        if (!found_all_roundabout_exits) {
+          if (!valid_roundabout_exit || length != 0) {
+            if (roundabout_edges_length.back() != 0) {
+              total_length -= roundabout_edges_length.back();
+              roundabout_edges_length.back() = roundabout_edge->length() + length;
+              total_length += roundabout_edges_length.back();
+            }
+
+            length = 0;
+          } else if (length == 0) {
+            roundabout_edges_length.push_back(roundabout_edge->length());
+            total_length += roundabout_edges_length.back();
+          }
+
+          valid_roundabout_exit = true;
+        }
+
+        endnode = roundabout_edge->endnode();
 
         nodeinfo = graphreader.nodeinfo(endnode);
       } while (!found_all_roundabout_exits);
