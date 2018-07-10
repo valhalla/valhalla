@@ -8,7 +8,7 @@ namespace valhalla {
 namespace baldr {
 
 constexpr uint32_t kSpeedBucketSize = 5 * 60; // 5 minute buckets (in seconds)
-constexpr uint32_t kBucketCount = 200;
+constexpr uint32_t kSpeedBucketCount = 200;
 constexpr float kPiConstant = kPi / 2016.0f;
 
 /**
@@ -35,7 +35,7 @@ public:
    * Set a pointer to the speed profile data within the GraphTile.
    * @param  profiles Pointer to the profiles array in the GraphTile.
    */
-  void set_profiles(const uint16_t* profiles) {
+  void set_profiles(const int16_t* profiles) {
     profiles_ = profiles;
   }
 
@@ -49,11 +49,11 @@ public:
     // (otherwise an exception would be thrown when getting the directed edge) and the profile
     // index is valid. If there is no predicted speed profile this method will not be called due
     // to DirectedEdge::predicted_speed being false.
-    const uint16_t* speeds = profiles_ + (kBucketCount * index_[idx]);
+    const int16_t* speeds = profiles_ + (kSpeedBucketCount * index_[idx]);
     float b = ((seconds_of_week / kSpeedBucketSize) + 0.5f) * kPiConstant;
     float speed = 0.5f * speeds[0];
-    const uint16_t* s = &speeds[1];
-    for (uint32_t k = 1; k < kBucketCount; ++k, ++s) {
+    const int16_t* s = &speeds[1];
+    for (uint32_t k = 1; k < kSpeedBucketCount; ++k, ++s) {
       speed += *s * cosf(k * b);
       ++k;
     }
@@ -62,7 +62,7 @@ public:
 
 protected:
   const uint32_t* index_; // Index into the array of compressed speed profiles for each directed edge
-  const uint16_t* profiles_; // Compressed speed profiles
+  const int16_t* profiles_; // Compressed speed profiles
 };
 
 } // namespace baldr
