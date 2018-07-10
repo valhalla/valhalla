@@ -1226,23 +1226,24 @@ json::ArrayPtr summary(const std::vector<valhalla::baldr::EdgeData> property_dat
 json::ArrayPtr overall_summary(const std::vector<valhalla::baldr::EdgeData> property_data) {
   auto overall_summary_array = json::array({});
 
-  if (property_data.size() > 0) {
-    auto overall_property = property_data.front();
+  if (property_data.size() == 1) {
+    overall_summary_array->emplace_back(summary_data(overall_property));
+    return overall_summary_array;
+  }
 
-    for (auto data: property_data) {
-      if (data == property_data.front())
-        continue;
+  for (auto data: property_data) {
+    if (data == property_data.front())
+      continue;
 
-      if (overall_property.type() == data.type())
-        overall_property += data;
-      else {
-        overall_summary_array->emplace_back(summary_data(overall_property));
-        overall_property = data;
-      }
+    if (overall_property.type() == data.type())
+      overall_property += data;
+    else {
+      overall_summary_array->emplace_back(summary_data(overall_property));
+      overall_property = data;
+    }
 
-      if (data == property_data.back()) {
-        overall_summary_array->emplace_back(summary_data(overall_property));
-      }
+    if (data == property_data.back()) {
+      overall_summary_array->emplace_back(summary_data(overall_property));
     }
   }
 
@@ -1331,8 +1332,7 @@ json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
 
     std::sort(properties_data[i].begin(), properties_data[i].end());
 
-    json::ArrayPtr overall_summary_array = (properties_data[i].size() == 1) ?
-      summary_data(properties_data[i].front()) : overall_summary(properties_data[i]);
+    json::ArrayPtr overall_summary_array = overall_summary(properties_data[i]);
 
     property->emplace("overall_summary", std::move(overall_summary_array));
     property->emplace("summary", std::move(summary_array));
