@@ -3,7 +3,7 @@ import public "tripcommon.proto";
 
 message Contour {
   optional float time = 1;     // minutes
-  optional string color = 2;   // hex color with out # - for example: "ff0000" for red 
+  optional string color = 2;   // hex color with out # - for example: "ff0000" for red
 }
 
 enum ShapeMatch {
@@ -35,32 +35,35 @@ enum Costing {
 message CostingOptions {
   optional float maneuver_penalty = 1;
   optional float destination_only_penalty = 2;
-  optional float gate_cost = 3;
-  optional float gate_penalty = 4;
-  optional float toll_booth_cost = 5;
-  optional float toll_booth_penalty = 6;
-  optional float alley_penalty = 7;
-  optional float country_crossing_cost = 8;
-  optional float country_crossing_penalty = 9;
-  optional float ferry_cost = 10;
-  optional float use_ferry = 11;
-  optional float use_highways = 12;
-  optional float use_tolls = 13;
+  optional float driveway_penalty = 3;
+  optional float gate_cost = 4;
+  optional float gate_penalty = 5;
+  optional float toll_booth_cost = 6;
+  optional float toll_booth_penalty = 7;
+  optional float alley_penalty = 8;
+  optional float country_crossing_cost = 9;
+  optional float country_crossing_penalty = 10;
+  optional float ferry_cost = 11;
+  optional float avoid_bad_surfaces = 12;
+  optional float use_ferry = 13;
+  optional float use_highways = 14;
+  optional float use_tolls = 15;
+  optional float use_road = 16;
 }
 
 message DirectionsOptions {
-  
+
   enum Units {
     kilometers = 0;
     miles = 1;
   }
-  
+
   enum Format {
     json = 0;
     gpx = 1;
     osrm = 2;
   }
-  
+
   enum Action {
     route = 1;
     locate = 2;
@@ -72,7 +75,7 @@ message DirectionsOptions {
     height = 11;
     transit_available = 12;
   }
-  
+
   enum DateTimeType {
     current = 0;
     depart_at = 1;
