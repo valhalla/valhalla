@@ -14,6 +14,7 @@
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/predictedspeeds.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/trafficassociation.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -401,21 +402,37 @@ public:
   /**
    * Convenience method to get the speed for an edge given the directed
    * edge index.
-   * @param  de           Directed edge index. Used to lookup list of signs.
-   * @param  current_time Current time (seconds since epoch). A value of 0
-   *                      indicates the route is not time dependent.
-   * @param  tz_index     timezone index for the node
+   * @param  de  Directed edge information.
    * @return  Returns the speed for the edge.
    */
-  uint32_t GetSpeed(const DirectedEdge* de,
-                    const uint64_t current_time = 0,
-                    const uint32_t tz_index = 0) const {
-    // if time dependent route and we are routing between 7 AM and 7 PM local time.
-    if (current_time && DateTime::is_restricted(false, 7, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, current_time,
-                                                baldr::DateTime::get_tz_db().from_index(tz_index))) {
-      return (de->constrained_flow_speed() > 0) ? de->constrained_flow_speed() : de->speed();
-    }
+  uint32_t GetSpeed(const DirectedEdge* de) const {
     return (de->free_flow_speed() > 0) ? de->free_flow_speed() : de->speed();
+  }
+
+  /**
+   * Convenience method to get the speed for an edge given the directed
+   * edge index.
+   * @param  de              Directed edge information.
+   * @param  seconds_of_day  Seconds since midnight.
+   * @return Returns the speed for the edge.
+   */
+  uint32_t GetSpeed(const DirectedEdge* de, const uint32_t seconds_of_day) const {
+    // if time dependent route and we are routing between 7 AM and 7 PM local time.
+    if (25200 < seconds_of_day && seconds_of_day < 68400) {
+      return (de->constrained_flow_speed() > 0) ? de->constrained_flow_speed() : de->speed();
+    } else {
+      return (de->free_flow_speed() > 0) ? de->free_flow_speed() : de->speed();
+    }
+  }
+
+  uint32_t
+  GetSpeed(const DirectedEdge* de, const GraphId& edgeid, const uint32_t seconds_of_week) const {
+    if (de->predicted_speed()) {
+      return predictedspeeds_->speed(edgeid.id(), seconds_of_week);
+    } else {
+      // Fallback if no predicted speed
+      return GetSpeed(de, seconds_of_week % kSecondsPerDay);
+    }
   }
 
   /**
@@ -542,6 +559,9 @@ protected:
 
   // Turn lanes (indexed by directed edge index)
   TurnLanes* turnlanes_;
+
+  // Predicted speeds
+  PredictedSpeeds* predictedspeeds_;
 
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, GraphId> stop_one_stops;

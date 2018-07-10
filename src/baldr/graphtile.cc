@@ -49,7 +49,7 @@ GraphTile::GraphTile()
       complex_restriction_forward_size_(0), complex_restriction_reverse_size_(0), edgeinfo_size_(0),
       textlist_size_(0), traffic_segments_(nullptr), traffic_chunks_(nullptr), traffic_chunk_size_(0),
       lane_connectivity_(nullptr), lane_connectivity_size_(0), edge_elevation_(nullptr),
-      turnlanes_(nullptr) {
+      turnlanes_(nullptr), predictedspeeds_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -124,6 +124,9 @@ GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler
 }
 
 GraphTile::~GraphTile() {
+  if (predictedspeeds_ != nullptr) {
+    delete predictedspeeds_;
+  }
 }
 
 // Set pointers to internal tile data structures
@@ -215,6 +218,13 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
 
   // Start of turn lane data.
   turnlanes_ = reinterpret_cast<TurnLanes*>(tile_ptr + header_->turnlane_offset());
+
+  // Start of predicted speed data.
+  if (header_->predictedspeeds_count() > 0) {
+    char* ptr1 = tile_ptr + header_->predictedspeeds_offset();
+    char* ptr2 = ptr1 + (header_->directededgecount() * sizeof(int16_t));
+    predictedspeeds_ = new PredictedSpeeds(reinterpret_cast<uint32_t*>(ptr1), reinterpret_cast<uint16_t*>(ptr2));
+  }
 
   // For reference - how to use the end offset to set size of an object (that
   // is not fixed size and count).

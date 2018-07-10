@@ -101,6 +101,9 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                             DateTime::get_tz_db().from_index(dest_tz_index_));
   }
 
+  // TODO: convert to seconds of the week
+  uint32_t seconds_of_week = 0;
+
   // Expand from end node.
   uint32_t max_shortcut_length = static_cast<uint32_t>(pred.distance() * 0.5f);
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -156,8 +159,8 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
 
     Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                               opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2->GetSpeed(opp_edge, localtime,
-                                                                           nodeinfo->timezone()));
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(opp_edge, t2->GetSpeed(directededge, edgeid, seconds_of_week));
     newcost.cost += tc.cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
