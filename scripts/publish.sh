@@ -23,9 +23,9 @@ function is_pr_merge() {
   fi
 }
 
-NPM_FLAGS=''
+NODE_PRE_GYP_FLAGS=''
 if [[ ${BUILD_TYPE} == "Debug" ]]; then
-    NPM_FLAGS='--debug'
+    NODE_PRE_GYP_FLAGS='--debug'
 fi
 
 if [[ $(is_pr_merge) ]]; then
@@ -33,16 +33,16 @@ if [[ $(is_pr_merge) ]]; then
 elif [[ ${PUBLISH} == 'On' ]]; then
     echo "PUBLISH is set to '${PUBLISH}', publishing!"
     echo "dumping binary meta..."
-    ./node_modules/.bin/node-pre-gyp reveal $NPM_FLAGS
-    ./node_modules/.bin/node-pre-gyp package publish info $NPM_FLAGS
+    ./node_modules/.bin/node-pre-gyp reveal $NODE_PRE_GYP_FLAGS
+    ./node_modules/.bin/node-pre-gyp package publish info $NODE_PRE_GYP_FLAGS
 elif [[ ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
     # allow user to force a publish if they use a specific commit message
     echo "Publishing"
     echo "dumping binary meta..."
-    ./node_modules/.bin/node-pre-gyp package publish $NPM_FLAGS
+    ./node_modules/.bin/node-pre-gyp package publish $NODE_PRE_GYP_FLAGS
 elif [[ ${COMMIT_MESSAGE} =~ "[republish binary]" ]]; then
     echo "Re-Publishing"
-    ./node_modules/.bin/node-pre-gyp package unpublish publish $NPM_FLAGS
+    ./node_modules/.bin/node-pre-gyp package unpublish publish $NODE_PRE_GYP_FLAGS
 else
     echo "PUBLISH is set to '${PUBLISH}', skipping."
 fi
