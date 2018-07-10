@@ -1120,8 +1120,8 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     // Write a new header - add the offset to predicted speed data and the profile count.
     // Update the end offset (shift by the amount of predicted speed data added).
     header_builder_.set_end_offset(header_->end_offset() +
-            (speed_profile_index_builder_.size() * sizeof(uint32_t)) +
-            (speed_profile_builder_.size() * sizeof(int16_t)));
+                                   (speed_profile_index_builder_.size() * sizeof(uint32_t)) +
+                                   (speed_profile_builder_.size() * sizeof(int16_t)));
     size_t offset = header_->turnlane_offset() + header_->turnlane_count() * sizeof(TurnLanes);
     header_builder_.set_predictedspeeds_offset(offset);
     header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kSpeedBucketCount);
@@ -1144,9 +1144,9 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
 
     // Append the speed profile indexes and profiles.
     file.write(reinterpret_cast<const char*>(speed_profile_index_builder_.data()),
-        speed_profile_index_builder_.size() * sizeof(uint32_t));
+               speed_profile_index_builder_.size() * sizeof(uint32_t));
     file.write(reinterpret_cast<const char*>(speed_profile_builder_.data()),
-        speed_profile_builder_.size() * sizeof(int16_t));
+               speed_profile_builder_.size() * sizeof(int16_t));
 
     // Write the rest of the tiles. TBD (if anything is added after the speed profiles
     // then this will need to be updated)
@@ -1155,7 +1155,6 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     file.close();
   }
 }
-
 
 } // namespace mjolnir
 } // namespace valhalla
