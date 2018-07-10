@@ -409,6 +409,21 @@ public:
    */
   void AddTurnLanes(const uint32_t idx, const std::string& str);
 
+  /**
+   * Add a predicted speed profile for a directed edge.
+   * @param  idx  Edge Id within the tile.
+   * @param  profile  Compressed profile (200 short int)
+   */
+  void AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile);
+
+  /**
+   * Updates a tile with predictive speed data. Also updates directed edges with
+   * free flow and constrained flow speeds and the predicted traffic flag. The
+   * predicted traffic is written after turn lane data.
+   * @param  directededges  Updated directed edge information.
+   */
+  void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
+
 protected:
   struct EdgeTupleHasher {
     std::size_t operator()(const edge_tuple& k) const {
@@ -512,6 +527,12 @@ protected:
 
   // List of turn lanes.
   std::vector<TurnLanes> turnlanes_builder_;
+
+  // Indexes into predicted speed profiles for each directed edge.
+  std::vector<uint32_t> speed_profile_index_builder_;
+
+  // Predicted speed profiles. 200 short int for each directed edge which has predicted speed.
+  std::vector<int16_t> speed_profile_builder_;
 
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;
