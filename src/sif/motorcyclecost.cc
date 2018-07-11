@@ -5,6 +5,7 @@
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
+#include "midgard/logging.h"
 #include "midgard/util.h"
 #include <iostream>
 
@@ -97,6 +98,8 @@ constexpr float kHighwayFactor[] = {
     0.0f, // Residential
     0.0f  // Service, other
 };
+
+constexpr float kMaxTrailBiasFactor = 8.0f;
 
 constexpr float kSurfaceFactor[] = {
     0.0f, // kPavedSmooth
@@ -307,7 +310,7 @@ public:
   float use_highways_;   // Preference to use highways. Is a value from 0 to 1
   float use_tolls_;      // Preference to use tolls. Is a value from 0 to 1
   float toll_factor_;    // Factor applied when road has a toll
-  float surface_factor_; // How much the surface factors are applied
+  float surface_factor_; // How much the surface factors are applied when using trails
   float highway_factor_; // Factor applied when road is a motorway or trunk
   float use_trails_;     // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
 
@@ -379,9 +382,27 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
                      (0.5f - use_tolls_) * 0.03f;              // ranges from 0 to -0.15
 
+
   // Set the surface factor based on the use trails value
   use_trails_ = kUseTrailsRange(pt.get<float>("use_trails", kDefaultUseTrails));
-  surface_factor_ = 0.5f;  // TODO - need to modulate surface factor based on use_trails.
+  LOG_WARN("use_trails_ value :: " + std::to_string(use_trails_));
+  LOG_WARN("use_highways_ value :: " + std::to_string(use_highways_));
+  LOG_WARN("use_tolls_ value :: " + std::to_string(use_tolls_));
+
+  // Factor for trail use - use a non-linear factor with values at 0.5 being neutral (factor
+  // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
+  // trails) while values between 0.5 to 0 slowly increase to a maximum of the surfact_factor_
+  // to avoid/penalize trails.
+  // modulates surface factor based on use_trails
+  if (use_trails_ >= 0.5f) {
+    float f = (0.5f - use_trails_);
+    surface_factor_ = f * f * f;
+    LOG_WARN("surface_factor_ when favoring trails (>= 0.5f) :: " + std::to_string(surface_factor_));
+  } else {
+    float f = 1.0f - use_trails_ * 2.0f;
+    surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f * f));
+    LOG_WARN("surface_factor_ when penalizing trails (< 0.5f):: " + std::to_string(surface_factor_));
+  }
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
