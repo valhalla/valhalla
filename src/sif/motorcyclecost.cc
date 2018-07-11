@@ -84,6 +84,9 @@ constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxSeconds};
 
+// Maximum highway avoidance bias (modulates the highway factors based on road class)
+constexpr float kMaxHighwayBiasFactor = 8.0f;
+
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
     0.5f, // Trunk
@@ -200,9 +203,10 @@ public:
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -355,21 +359,23 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
     ferry_factor_ = 1.5f - use_ferry_;
   }
 
-  // Factor for highway use (TODO - create a non-linear factor)
+  // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
+  // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
+  // highways) while values between 0.5 to 0 slowly increase to a maximum of kMaxHighwayBiasFactor
+  // to avoid/penalize highways.
   use_highways_ = kUseHighwaysRange(pt.get<float>("use_highways", kDefaultUseHighways));
   if (use_highways_ >= 0.5f) {
     float f = (0.5f - use_highways_);
     highway_factor_ = f * f * f;
   } else {
-    float f = 1.0f - use_highways_;
-    highway_factor_ = 1.0f / (f * f * f * f);
+    float f = 1.0f - (use_highways_ * 2.0f);
+    highway_factor_ = (f < 0.01) ? 1.0f : kMaxHighwayBiasFactor * (f * f * f);
   }
-
-  use_tolls_ = kUseTollsRange(pt.get<float>("use_tolls", kDefaultUseTolls));
 
   // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
+  use_tolls_ = kUseTollsRange(pt.get<float>("use_tolls", kDefaultUseTolls));
   toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
                      (0.5f - use_tolls_) * 0.03f;              // ranges from 0 to -0.15
 
@@ -471,21 +477,22 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return opp_edge->surface() <= kMinimumMotorcycleSurface;
 }
 
-Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
-
+Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
+  // Special case for travel on a ferry
   if (edge->use() == Use::kFerry) {
+    // Use the edge speed (should be the speed of the ferry)
     float sec = (edge->length() * speedfactor_[edge->speed()]);
     return {sec * ferry_factor_, sec};
   }
 
-  float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
-  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+  float factor = density_factor_[edge->density()] +
+            highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll()) {
     factor += toll_factor_;
   }
 
-  float sec = (edge->length() * speedfactor_[edge->speed()]);
+  float sec = (edge->length() * speedfactor_[speed]);
   return {sec * factor, sec};
 }
 
