@@ -23,6 +23,7 @@
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitschedule.h>
 #include <valhalla/baldr/transitstop.h>
+#include <valhalla/baldr/turnlanes.h>
 
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
@@ -394,6 +395,20 @@ public:
    */
   std::vector<EdgeElevation>& edge_elevations();
 
+  /**
+   * Get the turn lane builder at the specified index.
+   * @param  idx  Index of the turn lane builder.
+   * @return  Returns a reference to the turn lane builder.
+   */
+  TurnLanes& turnlane_builder(const size_t idx);
+
+  /**
+   * Add turn lane information for a directed edge.
+   * @param  idx  Directed edge index.
+   * @param  str  Turn lane information.
+   */
+  void AddTurnLanes(const uint32_t idx, const std::string& str);
+
 protected:
   struct EdgeTupleHasher {
     std::size_t operator()(const edge_tuple& k) const {
@@ -494,6 +509,9 @@ protected:
 
   // List of edge elevation records. Index with directed edge Id.
   std::vector<EdgeElevation> edge_elevation_builder_;
+
+  // List of turn lanes.
+  std::vector<TurnLanes> turnlanes_builder_;
 
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;

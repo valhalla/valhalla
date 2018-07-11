@@ -48,7 +48,8 @@ GraphTile::GraphTile()
       complex_restriction_reverse_(nullptr), edgeinfo_(nullptr), textlist_(nullptr),
       complex_restriction_forward_size_(0), complex_restriction_reverse_size_(0), edgeinfo_size_(0),
       textlist_size_(0), traffic_segments_(nullptr), traffic_chunks_(nullptr), traffic_chunk_size_(0),
-      lane_connectivity_(nullptr), lane_connectivity_size_(0), edge_elevation_(nullptr) {
+      lane_connectivity_(nullptr), lane_connectivity_size_(0), edge_elevation_(nullptr),
+      turnlanes_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -211,6 +212,9 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   // Start of edge elevation data. If the tile has edge elevation data (query
   // the header) then the count is the same as the directed edge count.
   edge_elevation_ = reinterpret_cast<EdgeElevation*>(tile_ptr + header_->edge_elevation_offset());
+
+  // Start of turn lane data.
+  turnlanes_ = reinterpret_cast<TurnLanes*>(tile_ptr + header_->turnlane_offset());
 
   // For reference - how to use the end offset to set size of an object (that
   // is not fixed size and count).
@@ -713,7 +717,9 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
     mid = (low + high) / 2;
     const auto& dep = departures_[mid];
     // find the first matching lineid in the list
-    if (lineid == dep.lineid()) {
+    if (lineid == dep.lineid() &&
+        ((current_time <= dep.departure_time() && dep.type() == kFixedSchedule) ||
+         (current_time <= dep.end_time() && dep.type() == kFrequencySchedule))) {
       found = mid;
       high = mid - 1;
     } // need a smaller lineid
@@ -920,6 +926,17 @@ std::vector<TrafficSegment> GraphTile::GetTrafficSegments(const uint32_t idx) co
                            std::to_string(header_->graphid().tileid()) + "," +
                            std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
                            " traffic Id count= " + std::to_string(header_->traffic_id_count()));
+}
+
+// Get turn lanes for this edge.
+uint32_t GraphTile::turnlanes_offset(const uint32_t idx) const {
+  uint32_t count = header_->turnlane_count();
+  if (count == 0) {
+    LOG_ERROR("No turn lanes found for idx = " + std::to_string(idx));
+    return 0;
+  }
+  auto tl = std::lower_bound(&turnlanes_[0], &turnlanes_[count], TurnLanes(idx, 0));
+  return tl != &turnlanes_[count] ? tl->text_offset() : 0;
 }
 
 } // namespace baldr

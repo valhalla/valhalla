@@ -386,6 +386,11 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     return 0;
   }
 
+  // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
+  auto last_edge = [&reader](const GraphTile* tile, const GraphId& endnode, EdgePairs& edgepairs) {
+    return !CanContract(reader, tile, endnode, edgepairs);
+  };
+
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
   uint32_t shortcut_count = 0;
@@ -442,7 +447,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       while (true) {
         EdgePairs edgepairs;
         const GraphTile* tile = reader.GetGraphTile(end_node);
-        if (!CanContract(reader, tile, end_node, edgepairs)) {
+        if (last_edge(tile, end_node, edgepairs)) {
           break;
         }
 
@@ -510,6 +515,17 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Sanity check - should never see a shortcut with signs
       if (newedge.exitsign()) {
         LOG_ERROR("Shortcut edge with exit signs");
+      }
+
+      // Get turn lanes from the base directed edge. Add them if this is the last edge otherwise
+      // set the turnlanes flag to false;
+      if (directededge->turnlanes() && last_edge(reader.GetGraphTile(directededge->endnode()),
+                                                 directededge->endnode(), edgepairs)) {
+        uint32_t offset = tile->turnlanes_offset(edge_id.id());
+        tilebuilder.AddTurnLanes(tilebuilder.directededges().size(), tile->GetName(offset));
+        newedge.set_turnlanes(true);
+      } else {
+        newedge.set_turnlanes(false);
       }
 
       // TODO: for now just drop lane connectivity for shortcuts
@@ -604,6 +620,12 @@ uint32_t FormShortcuts(GraphReader& reader,
               LOG_ERROR("Base edge should have signs, but none found");
             }
             tilebuilder.AddSigns(tilebuilder.directededges().size(), signs);
+          }
+
+          // Get turn lanes from the base directed edge
+          if (directededge->turnlanes()) {
+            uint32_t offset = tile->turnlanes_offset(edgeid.id());
+            tilebuilder.AddTurnLanes(tilebuilder.directededges().size(), tile->GetName(offset));
           }
 
           // Get access restrictions from the base directed edge. Add these to

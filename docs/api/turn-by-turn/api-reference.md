@@ -138,7 +138,7 @@ The following options are available for motorcycle costing:
 
 | Motorcycle options | Description |
 | :-------------------------- | :----------- |
-| `use_highway` | A riders's propensity to prefer the use of highways. This is a range of values from 0 to 1, where 0 attempts to avoid highways, and values toward 1 indicates the rider prefers highways. The default value is 1.0. |
+| `use_highways` | A riders's propensity to prefer the use of highways. This is a range of values from 0 to 1, where 0 attempts to avoid highways, and values toward 1 indicates the rider prefers highways. The default value is 1.0. |
 | `use_trails` | A riders's desire for adventure in their routes.  This is a range of values from 0 to 1, where 0 will avoid trails, tracks, unclassified or bad surfaces and values towards 1 will tend to avoid major roads and route on secondary roads.  The default value is 0.0. |
 
 ##### Pedestrian costing options

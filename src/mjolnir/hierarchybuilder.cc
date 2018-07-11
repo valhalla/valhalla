@@ -268,6 +268,12 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
         tilebuilder->AddSigns(tilebuilder->directededges().size(), signs);
       }
 
+      // Get turn lanes from the base directed edge
+      if (directededge->turnlanes()) {
+        uint32_t offset = tile->turnlanes_offset(base_edge_id.id());
+        tilebuilder->AddTurnLanes(tilebuilder->directededges().size(), tile->GetName(offset));
+      }
+
       // Get access restrictions from the base directed edge. Add these to
       // the list of access restrictions in the new tile. Update the
       // edge index in the restriction to be the current directed edge Id

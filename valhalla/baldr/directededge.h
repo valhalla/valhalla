@@ -71,6 +71,22 @@ public:
   }
 
   /**
+   * Set the flag indicating the edge has turn lanes at the end of the edge.
+   * @param lanes  True if this edge has turn lane records.
+   */
+  void set_turnlanes(const bool lanes) {
+    turnlanes_ = lanes;
+  }
+
+  /**
+   * Flag indicating the edge has turn lanes at the end of the edge.
+   * @return  Returns true if this edge has turn lane records.
+   */
+  bool turnlanes() const {
+    return turnlanes_;
+  }
+
+  /**
    * Set the flag indicating the edge has predicted speed records.
    * @param p  True if this edge has predicted speed records
    */
@@ -1090,7 +1106,7 @@ protected:
   uint64_t free_flow_speed_ : 8;        // Speed when there is no traffic(kph)
   uint64_t constrained_flow_speed_ : 8; // Speed when there is traffic(kph)
   uint64_t predicted_speed_ : 1;        // Does this edge have a predicted speed records?
-  uint64_t spare1_ : 1;
+  uint64_t turnlanes_ : 1;              // Does this edge have turn lanes (end of edge)
 
   // Data offsets and flags for extended data. Where a flag exists the actual
   // data can be indexed by the directed edge Id within the tile.

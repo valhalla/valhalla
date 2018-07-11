@@ -193,6 +193,11 @@ void ConstructEdges(const OSMData& osmdata,
             !way.link() && (way.auto_forward() || way.auto_backward());
         nodes.push_back({way_node.node, static_cast<uint32_t>(-1),
                          static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
+
+        // Mark the edge as ending a way if this is the last node in the way
+        edge.attributes.way_end = current_way_node_index == last_way_node_index;
+
+        // Add to the list of edges
         edges.push_back(edge);
 
         // Start a new edge if this is not the last node in the way
@@ -214,7 +219,6 @@ void ConstructEdges(const OSMData& osmdata,
         edge.attributes.backward_signal = way_node.node.backward_signal();
       }
     }
-    edge.attributes.way_end = true;
   }
   LOG_INFO("Finished with " + std::to_string(edges.size()) + " graph edges");
 }
@@ -520,28 +524,24 @@ void BuildTileSet(const std::string& ways_file,
             std::swap(source, target);
           }
 
-          // Validate speed
-          uint32_t speed = static_cast<uint32_t>(w.speed());
-
+          // Validate speed. Set speed limit and truck speed.
+          uint32_t speed = w.speed();
           if (forward && w.forward_tagged_speed()) {
-            speed = static_cast<uint32_t>(w.forward_speed());
+            speed = w.forward_speed();
           } else if (!forward && w.backward_tagged_speed()) {
-            speed = static_cast<uint32_t>(w.backward_speed());
+            speed = w.backward_speed();
           }
-
           if (speed > kMaxSpeedKph) {
             LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
             speed = kMaxSpeedKph;
           }
-
-          uint32_t speed_limit = static_cast<uint32_t>(w.speed_limit());
+          uint32_t speed_limit = w.speed_limit();
           if (speed_limit > kMaxSpeedKph) {
             LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
                      " wayId= " + std::to_string(w.way_id()));
             speed_limit = kMaxSpeedKph;
           }
-
-          uint32_t truck_speed = static_cast<uint32_t>(w.truck_speed());
+          uint32_t truck_speed = w.truck_speed();
           if (truck_speed > kMaxSpeedKph) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
                      " wayId= " + std::to_string(w.way_id()));
@@ -767,6 +767,22 @@ void BuildTileSet(const std::string& ways_file,
             float max_down_slope = forward ? std::get<5>(found->second) : std::get<7>(found->second);
             graphtile.edge_elevations().emplace_back(std::get<8>(found->second), max_up_slope,
                                                      max_down_slope);
+          }
+
+          // Add turn lanes if they exist. Store forward turn lanes on the last edge for a way
+          // and the backward turn lanes on the first edge in a way.
+          std::string turnlane_tags;
+          if (forward && w.fwd_turn_lanes_index() > 0 && edge.attributes.way_end) {
+            turnlane_tags = osmdata.fwd_turn_lanes_map.name(w.fwd_turn_lanes_index());
+          } else if (!forward && w.bwd_turn_lanes_index() > 0 && edge.attributes.way_begin) {
+            turnlane_tags = osmdata.bwd_turn_lanes_map.name(w.bwd_turn_lanes_index());
+          }
+          if (!turnlane_tags.empty()) {
+            std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
+            if (!str.empty()) {
+              graphtile.AddTurnLanes(idx, str);
+              directededge.set_turnlanes(true);
+            }
           }
 
           // Add lane connectivity

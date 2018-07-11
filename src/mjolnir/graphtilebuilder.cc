@@ -93,6 +93,12 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                                 signs_[i].text_offset());
   }
 
+  // Create turn lane builders
+  for (uint32_t i = 0; i < header_->turnlane_count(); i++) {
+    name_info.insert({turnlanes_[i].text_offset()});
+    turnlanes_builder_.emplace_back(turnlanes_[i].edgeindex(), turnlanes_[i].text_offset());
+  }
+
   // Create admin builders
   for (uint32_t i = 0; i < header_->admincount(); i++) {
     admins_builder_.emplace_back(admins_[i].country_offset(), admins_[i].state_offset(),
@@ -309,9 +315,16 @@ void GraphTileBuilder::StoreTileData() {
                    edge_elevation_builder_.size() * sizeof(EdgeElevation));
     }
 
+    // Write turn lanes
+    header_builder_.set_turnlane_offset(header_builder_.edge_elevation_offset() +
+                                        edge_elevation_builder_.size() * sizeof(EdgeElevation));
+    header_builder_.set_turnlane_count(turnlanes_builder_.size());
+    in_mem.write(reinterpret_cast<const char*>(turnlanes_builder_.data()),
+                 turnlanes_builder_.size() * sizeof(TurnLanes));
+
     // Set the end offset
-    header_builder_.set_end_offset(header_builder_.edge_elevation_offset() +
-                                   (edge_elevation_builder_.size() * sizeof(EdgeElevation)));
+    header_builder_.set_end_offset(header_builder_.turnlane_offset() +
+                                   turnlanes_builder_.size() * sizeof(TurnLanes));
 
     // Sanity check for the end offset
     uint32_t curr =
@@ -853,6 +866,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_traffic_chunk_offset(header.traffic_chunk_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_edge_elevation_offset(header.edge_elevation_offset() + shift);
+  header.set_turnlane_offset(header.turnlane_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
   boost::filesystem::path filename =
@@ -1011,7 +1025,7 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
                traffic_chunk_builder_.size() * sizeof(TrafficChunk));
 
     // Write rest of the stuff after traffic chunks (includes lane connectivity
-    // and edge elevation...so far).
+    // and edge elevation, turn lanes, ...so far).
     const auto* begin = reinterpret_cast<const char*>(header_) + header_->lane_connectivity_offset();
     const auto* end = reinterpret_cast<const char*>(header_) + header_->end_offset();
     file.write(begin, end - begin);
@@ -1047,6 +1061,22 @@ void GraphTileBuilder::UpdateTrafficSegments(const bool update_dir_edges) {
 // Gets the current list of directed edge (builders).
 std::vector<EdgeElevation>& GraphTileBuilder::edge_elevations() {
   return edge_elevation_builder_;
+}
+
+// Gets a sign builder at the specified index.
+TurnLanes& GraphTileBuilder::turnlane_builder(const size_t idx) {
+  if (idx < header_->turnlane_count()) {
+    return turnlanes_[idx];
+  }
+  throw std::runtime_error("GraphTileBuilder turn lane index is out of bounds");
+}
+
+// Add turn lanes for a directed edge
+void GraphTileBuilder::AddTurnLanes(const uint32_t idx, const std::string& str) {
+  if (!str.empty()) {
+    uint32_t offset = AddName(str);
+    turnlanes_builder_.emplace_back(idx, offset);
+  }
 }
 
 } // namespace mjolnir
