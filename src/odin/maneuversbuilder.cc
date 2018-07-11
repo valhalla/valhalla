@@ -823,7 +823,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Roundabout
   if (prev_edge->roundabout()) {
     maneuver.set_roundabout(true);
-    maneuver.set_roundabout_exit_count(1);
+    maneuver.set_roundabout_exit_count(0);
   }
 
   // Internal Intersection
@@ -948,26 +948,8 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   }
 
   // Roundabouts
-  if (prev_edge->roundabout()) {
-    TripPath_TravelMode mode = prev_edge->travel_mode();
-
-    // Adjust bicycle travel mode if roundabout is a road
-    if ((mode == TripPath_TravelMode_kBicycle) && (prev_edge->IsRoadUse())) {
-      mode = TripPath_TravelMode_kDrive;
-    }
-    // TODO might have to adjust for pedestrian too
-
-    IntersectingEdgeCounts xedge_counts;
-    trip_path_->GetEnhancedNode(node_index)
-        ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), mode, xedge_counts);
-
-    if (trip_path_->GetEnhancedNode(node_index)->HasIntersectingEdges()) {
-      if (prev_edge->drive_on_right()) {
-        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + xedge_counts.right_traversable_outbound);
-      } else {
-        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + xedge_counts.left_traversable_outbound);
-      }
-    }
+  if (prev_edge->has_two_roundabout_exits()) {
+    maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + 1);
   }
 
   // Signs

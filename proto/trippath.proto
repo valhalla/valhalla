@@ -209,6 +209,7 @@ message TripPath {
     repeated bool name_is_ref = 42;          // Corresponds to street name to
                                              // indicate name is a reference name
     repeated uint32 roundabout_exit_angles = 43;
+    optional bool has_two_roundabout_exits = 44;
   }
 
   message IntersectingEdge {
