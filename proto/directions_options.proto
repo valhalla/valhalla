@@ -47,7 +47,7 @@ message CostingOptions {
   optional float use_ferry = 12;
   optional float use_highways = 13;
   optional float use_tolls = 14;
-  optional float use_road = 15;
+  optional float use_roads = 15;
   optional uint32 max_distance = 16;
   optional float walking_speed = 17;
   optional float step_penalty = 18;
@@ -73,6 +73,7 @@ message CostingOptions {
   optional float height = 38;
   optional float width = 39;
   optional float length = 40;
+  optional float cycling_speed = 41;
 }
 
 message DirectionsOptions {
