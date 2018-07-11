@@ -94,6 +94,8 @@ public:
                                       const baldr::NodeInfo* nodeinfo,
                                       odin::TripPath_Node* trip_node,
                                       const baldr::DirectedEdge* intersecting_de);
+
+  static bool IsValidRoundaboutEdge(const baldr::NodeInfo* nodeinfo, const baldr::GraphTile* graphtile);
 };
 
 } // namespace thor

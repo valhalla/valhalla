@@ -1006,6 +1006,8 @@ TripPathBuilder::Build(const AttributesController& controller,
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, directededge, trip_node,
                     graphtile, current_time, length_pct);
 
+    trip_edge->set_has_two_roundabout_exits(directededge->roundabout() && IsValidRoundaboutEdge(node, graphtile));
+
     // Verifying whether a directededge is a roundabout
     // and it is not within the vector of roundabout_edges_id
     if (directededge->roundabout() && !(std::find(roundabout_edges_id.begin(), roundabout_edges_id.end(), directededge->endnode().id()) != roundabout_edges_id.end())) {
@@ -1043,6 +1045,12 @@ TripPathBuilder::Build(const AttributesController& controller,
         // that does not have an intersection
         // since we want the distance between each roundabout exit
         // we would add this distance to length
+        valid_roundabout_exit = IsValidRoundaboutEdge(nodeinfo, graphtile);
+
+        if (!valid_roundabout_exit) {
+          length += roundabout_edge->length();
+        }
+
         if (nodeinfo->edge_count() == 2) {
           length += roundabout_edge->length();
           valid_roundabout_exit = false;
@@ -1828,6 +1836,27 @@ void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& contro
     itersecting_edge->set_curr_name_consistency(
         nodeinfo->name_consistency(curr_edge_index, local_edge_index));
   }
+}
+
+bool TripPathBuilder::IsValidRoundaboutEdge(const NodeInfo* nodeinfo, const GraphTile* graphtile) {
+  if (nodeinfo->edge_count() == 2) {
+    // length += roundabout_edge->length();
+    return false;
+  }
+
+  for (int i = 0; i < nodeinfo->edge_count(); i++) {
+    auto current_index = nodeinfo->edge_index() + i;
+
+    auto current_directed_edge = graphtile->directededge(current_index);
+
+    if (int(current_directed_edge->use()) == 25 && nodeinfo->edge_count() == 3) {
+      // length += roundabout_edge->length();
+      return false;
+      // break;
+    }
+  }
+
+  return true;
 }
 
 } // namespace thor
