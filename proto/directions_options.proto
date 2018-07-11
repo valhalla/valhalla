@@ -35,20 +35,33 @@ enum Costing {
 message CostingOptions {
   optional float maneuver_penalty = 1;
   optional float destination_only_penalty = 2;
-  optional float driveway_penalty = 3;
-  optional float gate_cost = 4;
-  optional float gate_penalty = 5;
-  optional float toll_booth_cost = 6;
-  optional float toll_booth_penalty = 7;
-  optional float alley_penalty = 8;
-  optional float country_crossing_cost = 9;
-  optional float country_crossing_penalty = 10;
-  optional float ferry_cost = 11;
-  optional float avoid_bad_surfaces = 12;
-  optional float use_ferry = 13;
-  optional float use_highways = 14;
-  optional float use_tolls = 15;
-  optional float use_road = 16;
+  optional float gate_cost = 3;
+  optional float gate_penalty = 4;
+  optional float toll_booth_cost = 5;
+  optional float toll_booth_penalty = 6;
+  optional float alley_penalty = 7;
+  optional float country_crossing_cost = 8;
+  optional float country_crossing_penalty = 9;
+  optional float ferry_cost = 10;
+  optional float avoid_bad_surfaces = 11;
+  optional float use_ferry = 12;
+  optional float use_highways = 13;
+  optional float use_tolls = 14;
+  optional float use_road = 15;
+  optional uint32 max_distance = 16;
+  optional float walking_speed = 17;
+  optional float step_penalty = 18;
+  optional uint32 max_grade = 19;
+  optional uint32 max_hiking_difficulty = 20;
+  optional float mode_factor = 21;
+  optional float walkway_factor = 22;
+  optional float sidewalk_factor = 23;
+  optional float alley_factor = 24;
+  optional float driveway_factor = 25;
+  optional float driveway_penalty = 26;
+  optional uint32 transit_start_end_max_distance = 27;
+  optional uint32 transit_transfer_max_distance = 28;
+  optional string type = 29; // TODO determine how we want to handle the vehicle, pedestrian, bicycyle types
 }
 
 message DirectionsOptions {

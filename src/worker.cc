@@ -10,6 +10,7 @@
 #include "odin/util.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
+#include "sif/pedestriancost.h"
 #include "worker.h"
 
 using namespace valhalla;
@@ -563,7 +564,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       }
       case odin::pedestrian: {
         std::cout << "((((( pedestrian )))))" << std::endl;
-        sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
+        sif::ParsePedestrianCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::transit: {

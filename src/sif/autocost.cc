@@ -693,7 +693,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
   }
-} // namespace sif
+}
 
 cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoCost>(config);
