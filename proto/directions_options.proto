@@ -65,6 +65,7 @@ message CostingOptions {
   optional float top_speed = 30;
   optional float use_hills = 31;
   optional float use_primary = 32;
+  optional float use_trails = 33;
 }
 
 message DirectionsOptions {

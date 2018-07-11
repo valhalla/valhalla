@@ -4,10 +4,19 @@
 #include <cstdint>
 
 #include <boost/property_tree/ptree.hpp>
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
 namespace sif {
+
+/**
+ * Parses the motorcycle cost options from json and stores values in pbf.
+ */
+void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
+                                const std::string& costing_options_key,
+                                odin::CostingOptions* pbf_costing_options);
 
 /**
  * Create motorcycle cost method. This is derived from auto costing and
