@@ -32,6 +32,7 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f; // Seconds
 constexpr float kDefaultUseRoad = 0.25f;               // Factor between 0 and 1
 constexpr float kDefaultUseFerry = 0.5f;               // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f;      // Factor between 0 and 1
+const std::string kDefaultBicycleType = "Road";        // Bicycle type
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -970,9 +971,9 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
             .get_value_or(kDefaultManeuverPenalty)));
 
     // driveway_penalty
-    pbf_costing_options->set_driveway_penalty(kDrivewayPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/driveway_penalty")
-            .get_value_or(kDefaultDrivewayPenalty)));
+    pbf_costing_options->set_driveway_penalty(
+        kDrivewayPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/driveway")
+                                  .get_value_or(kDefaultDrivewayPenalty)));
 
     // alley_penalty
     pbf_costing_options->set_alley_penalty(
@@ -1004,10 +1005,15 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
             .get_value_or(kDefaultCountryCrossingPenalty)));
 
-    // use_road
-    pbf_costing_options->set_use_road(
-        kUseRoadRange(rapidjson::get_optional<float>(*json_costing_options, "/use_road")
+    // use_roads
+    pbf_costing_options->set_use_roads(
+        kUseRoadRange(rapidjson::get_optional<float>(*json_costing_options, "/use_roads")
                           .get_value_or(kDefaultUseRoad)));
+
+    // use_hills
+    pbf_costing_options->set_use_hills(
+        kUseHillsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
+                           .get_value_or(kDefaultUseHills)));
 
     // use_ferry
     pbf_costing_options->set_use_ferry(
@@ -1019,8 +1025,34 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<float>(*json_costing_options, "/avoid_bad_surfaces")
             .get_value_or(kDefaultAvoidBadSurfaces)));
 
-  } else {
+    // bicycle_type
+    std::string bicycle_type =
+        rapidjson::get_optional<std::string>(*json_costing_options, "/bicycle_type")
+            .get_value_or(kDefaultBicycleType);
+    pbf_costing_options->set_type(bicycle_type);
 
+    // convert string to enum, set ranges and defaults based on enum
+    BicycleType type_;
+    if (bicycle_type == "Cross") {
+      type_ = BicycleType::kCross;
+    } else if (bicycle_type == "Hybrid") {
+      type_ = BicycleType::kHybrid;
+    } else if (bicycle_type == "Mountain") {
+      type_ = BicycleType::kMountain;
+    } else {
+      type_ = BicycleType::kRoad;
+    }
+    uint32_t t = static_cast<uint32_t>(type_);
+    ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
+                                             kMaxCyclingSpeed};
+
+    // Set type specific defaults, override with URL inputs
+    // cycling_speed
+    pbf_costing_options->set_cycling_speed(
+        kCycleSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/cycling_speed")
+                             .get_value_or(kDefaultCyclingSpeed[t])));
+
+  } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
     pbf_costing_options->set_driveway_penalty(kDefaultDrivewayPenalty);
@@ -1030,9 +1062,12 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
     pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
     pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
-    pbf_costing_options->set_use_road(kDefaultUseRoad);
+    pbf_costing_options->set_use_roads(kDefaultUseRoad);
+    pbf_costing_options->set_use_hills(kDefaultUseHills);
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
     pbf_costing_options->set_avoid_bad_surfaces(kDefaultAvoidBadSurfaces);
+    pbf_costing_options->set_type(kDefaultBicycleType);
+    pbf_costing_options->set_cycling_speed(kDefaultCyclingSpeed[0]);
   }
 }
 
