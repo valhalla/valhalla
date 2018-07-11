@@ -10,6 +10,7 @@
 #include "odin/util.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
+#include "sif/motorscootercost.h"
 #include "sif/pedestriancost.h"
 #include "worker.h"
 
@@ -554,7 +555,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       }
       case odin::motor_scooter: {
         std::cout << "((((( motor_scooter )))))" << std::endl;
-        sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
+        sif::ParseMotorScooterCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::multimodal: {

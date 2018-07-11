@@ -62,6 +62,9 @@ message CostingOptions {
   optional uint32 transit_start_end_max_distance = 27;
   optional uint32 transit_transfer_max_distance = 28;
   optional string type = 29; // TODO determine how we want to handle the vehicle, pedestrian, bicycyle types
+  optional float top_speed = 30;
+  optional float use_hills = 31;
+  optional float use_primary = 32;
 }
 
 message DirectionsOptions {
