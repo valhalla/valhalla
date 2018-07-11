@@ -1032,17 +1032,17 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_type(bicycle_type);
 
     // convert string to enum, set ranges and defaults based on enum
-    BicycleType type_;
+    BicycleType type;
     if (bicycle_type == "Cross") {
-      type_ = BicycleType::kCross;
+      type = BicycleType::kCross;
     } else if (bicycle_type == "Hybrid") {
-      type_ = BicycleType::kHybrid;
+      type = BicycleType::kHybrid;
     } else if (bicycle_type == "Mountain") {
-      type_ = BicycleType::kMountain;
+      type = BicycleType::kMountain;
     } else {
-      type_ = BicycleType::kRoad;
+      type = BicycleType::kRoad;
     }
-    uint32_t t = static_cast<uint32_t>(type_);
+    uint32_t t = static_cast<uint32_t>(type);
     ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
                                              kMaxCyclingSpeed};
 
