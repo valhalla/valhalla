@@ -66,6 +66,13 @@ message CostingOptions {
   optional float use_hills = 31;
   optional float use_primary = 32;
   optional float use_trails = 33;
+  optional float low_class_penalty = 34;
+  optional bool hazmat = 35;
+  optional float weight = 36;
+  optional float axle_load = 37;
+  optional float height = 38;
+  optional float width = 39;
+  optional float length = 40;
 }
 
 message DirectionsOptions {

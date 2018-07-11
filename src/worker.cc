@@ -13,6 +13,7 @@
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/pedestriancost.h"
+#include "sif/truckcost.h"
 #include "worker.h"
 
 using namespace valhalla;
@@ -576,7 +577,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
       }
       case odin::truck: {
         std::cout << "((((( truck )))))" << std::endl;
-        sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
+        sif::ParseTruckCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::motorcycle: {
