@@ -15,6 +15,7 @@ constexpr uint32_t kSpeedBucketCount = 200;
 constexpr float kPiConstant = 3.14159265f / static_cast<float>(kBucketsPerWeek);
 
 // DTC-III constants for speed decoding and normalization
+constexpr uint32_t kCoefficientCount = 200;
 constexpr float k1OverSqrt2 = 1.0f / sqrtf(2.0f);
 constexpr float kPiBucketConstant = 3.14159265f / 2016.0f;
 constexpr float kSpeedNormalization = sqrtf(2.0f / 2016.0f);
@@ -65,7 +66,7 @@ public:
     // DTC-III with some speed normalization
     float b = kPiBucketConstant * (bucket + 0.5f);
     float speed = coefficients[0] * k1OverSqrt2;
-    for (int k = 1; k < 200; k++) {
+    for (int k = 1; k < kCoefficientCount; k++) {
       speed += coefficients[k] * cosf(b * k);
     }
     return speed * kSpeedNormalization;

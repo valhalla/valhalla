@@ -1128,7 +1128,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
     // Copy the nodes (they are unchanged when adding predicted speeds).
-    file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() - sizeof(NodeInfo));
+    file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
 
     // Write the updated directed edges. Make sure edge count matches.
     if (directededges.size() != header_->directededgecount()) {

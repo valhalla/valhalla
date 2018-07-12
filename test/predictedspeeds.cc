@@ -6,9 +6,8 @@
 
 #include <iostream>
 
-#include "midgard/util.h"
 #include "baldr/predictedspeeds.h"
-
+#include "midgard/util.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -25,8 +24,7 @@ std::string decode64(const std::string& val) {
 
 // Convert big endian bytes to little endian
 int16_t to_little_endian(const int16_t val) {
-  return (val << 8) |          // left-shift always fills with zeros
-        ((val >> 8) & 0x00ff);
+  return (val << 8) | ((val >> 8) & 0x00ff);
 }
 
 // Check if the speed is within threshold for the test
@@ -58,7 +56,8 @@ void test_decoding() {
   // Decode the base64 string and cast the data to a raw string of signed bytes
   auto decoded_str = decode64(encoded_speed_string);
   if (decoded_str.size() != 402) {
-    throw std::runtime_error("Decoded speed string size should be 402 but is " + std::to_string(decoded_str.size()));
+    throw std::runtime_error("Decoded speed string size should be 402 but is " +
+                             std::to_string(decoded_str.size()));
   }
   auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
 
@@ -168,7 +167,7 @@ void test_decoding() {
 
   // Set data pointers within the PredictedSpeeds class (mimic how this might look for a single
   // directed edge)
-  uint32_t indexes[] = { 0 };
+  uint32_t indexes[] = {0};
   PredictedSpeeds pred_speeds;
   pred_speeds.set_index(indexes);
   pred_speeds.set_profiles(coefficients);
@@ -182,7 +181,6 @@ void test_decoding() {
       throw std::runtime_error("Speed outside of range");
     }
   }
-
 }
 
 } // namespace
