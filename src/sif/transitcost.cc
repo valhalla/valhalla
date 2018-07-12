@@ -637,6 +637,115 @@ uint32_t TransitCost::UnitSize() const {
   return kUnitSize;
 }
 
+void ParseTransitCostOptions(const rapidjson::Document& doc,
+                             const std::string& costing_options_key,
+                             odin::CostingOptions* pbf_costing_options) {
+  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+
+  if (json_costing_options) {
+    // If specified, parse json and set pbf values
+
+    // mode_factor
+    pbf_costing_options->set_mode_factor(
+        kModeFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/mode_factor")
+                             .get_value_or(kModeFactor)));
+
+    // wheelchair
+    pbf_costing_options->set_wheelchair(
+        rapidjson::get_optional<bool>(*json_costing_options, "/wheelchair").get_value_or(false));
+
+    // bicycle
+    pbf_costing_options->set_bicycle(
+        rapidjson::get_optional<bool>(*json_costing_options, "/bicycle").get_value_or(false));
+
+    // use_bus
+    pbf_costing_options->set_use_bus(
+        kUseBusRange(rapidjson::get_optional<float>(*json_costing_options, "/use_bus")
+                         .get_value_or(kDefaultUseBus)));
+
+    // use_rail
+    pbf_costing_options->set_use_rail(
+        kUseRailRange(rapidjson::get_optional<float>(*json_costing_options, "/use_rail")
+                          .get_value_or(kDefaultUseRail)));
+
+    // use_transfers
+    pbf_costing_options->set_use_transfers(
+        kUseTransfersRange(rapidjson::get_optional<float>(*json_costing_options, "/use_transfers")
+                               .get_value_or(kDefaultUseTransfers)));
+
+    // transfer_cost
+    pbf_costing_options->set_transfer_cost(
+        kTransferCostRange(rapidjson::get_optional<float>(*json_costing_options, "/transfer_cost")
+                               .get_value_or(kDefaultTransferCost)));
+
+    // transfer_penalty
+    pbf_costing_options->set_transfer_penalty(kTransferPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/transfer_penalty")
+            .get_value_or(kDefaultTransferPenalty)));
+
+    // filter_stop_action
+    auto filter_stop_action_str = rapidjson::get_optional<std::string>(doc, "/filters/stops/action");
+    odin::FilterAction filter_stop_action;
+    if (filter_stop_action_str &&
+        odin::FilterAction_Parse(*filter_stop_action_str, &filter_stop_action)) {
+      pbf_costing_options->set_filter_stop_action(filter_stop_action);
+      // filter_stop_ids
+      auto filter_stop_ids_json =
+          rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/stops/ids");
+      if (filter_stop_ids_json) {
+        for (const auto& filter_stop_id_json : *filter_stop_ids_json) {
+          pbf_costing_options->add_filter_stop_ids(filter_stop_id_json.GetString());
+        }
+      }
+    }
+
+    // filter_operator_action
+    auto filter_operator_action_str =
+        rapidjson::get_optional<std::string>(doc, "/filters/operators/action");
+    odin::FilterAction filter_operator_action;
+    if (filter_operator_action_str &&
+        odin::FilterAction_Parse(*filter_operator_action_str, &filter_operator_action)) {
+      pbf_costing_options->set_filter_operator_action(filter_operator_action);
+      // filter_operator_ids
+      auto filter_operator_ids_json =
+          rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/operators/ids");
+      if (filter_operator_ids_json) {
+        for (const auto& filter_operator_id_json : *filter_operator_ids_json) {
+          pbf_costing_options->add_filter_operator_ids(filter_operator_id_json.GetString());
+        }
+      }
+    }
+
+    // filter_route_action
+    auto filter_route_action_str =
+        rapidjson::get_optional<std::string>(doc, "/filters/routes/action");
+    odin::FilterAction filter_route_action;
+    if (filter_route_action_str &&
+        odin::FilterAction_Parse(*filter_route_action_str, &filter_route_action)) {
+      pbf_costing_options->set_filter_route_action(filter_route_action);
+      // filter_route_ids
+      auto filter_route_ids_json =
+          rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/routes/ids");
+      if (filter_route_ids_json) {
+        for (const auto& filter_route_id_json : *filter_route_ids_json) {
+          pbf_costing_options->add_filter_route_ids(filter_route_id_json.GetString());
+        }
+      }
+    }
+
+  } else {
+    // Set pbf values to defaults
+    pbf_costing_options->set_mode_factor(kModeFactor);
+    pbf_costing_options->set_wheelchair(false);
+    pbf_costing_options->set_bicycle(false);
+    pbf_costing_options->set_use_bus(kDefaultUseBus);
+    pbf_costing_options->set_use_rail(kDefaultUseRail);
+    pbf_costing_options->set_use_transfers(kDefaultUseTransfers);
+    pbf_costing_options->set_transfer_cost(kDefaultTransferCost);
+    pbf_costing_options->set_transfer_penalty(kDefaultTransferPenalty);
+  }
+}
+
 cost_ptr_t CreateTransitCost(const boost::property_tree::ptree& config) {
   return std::make_shared<TransitCost>(config);
 }
