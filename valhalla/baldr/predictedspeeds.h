@@ -7,9 +7,12 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kSpeedBucketSize = 5 * 60; // 5 minute buckets (in seconds)
+constexpr uint32_t kSpeedBucketSizeMinutes = 5;
+constexpr uint32_t kSpeedBucketSizeSeconds = kSpeedBucketSizeMinutes * 60;
+constexpr uint32_t kBucketsPerWeek = (7 * 24 * 60) / kSpeedBucketSizeMinutes;
+constexpr float kSecondsPerWeek = 7.0f * 24.0f * 60.0f * 60.0f;
 constexpr uint32_t kSpeedBucketCount = 200;
-constexpr float kPiConstant = kPi / 2016.0f;
+constexpr float kPiConstant = 3.14159265f / static_cast<float>(kBucketsPerWeek);
 
 /**
  * Class to access predicted speed information within a tile.
@@ -50,14 +53,17 @@ public:
     // index is valid. If there is no predicted speed profile this method will not be called due
     // to DirectedEdge::predicted_speed being false.
     const int16_t* speeds = profiles_ + (kSpeedBucketCount * index_[idx]);
-    float b = ((seconds_of_week / kSpeedBucketSize) + 0.5f) * kPiConstant;
+
+    // TODO - how to figure out the bucket?
+ //   int bucket = (seconds_of_week / kSpeedBucketSizeSeconds);
+    float i = (static_cast<float>(seconds_of_week) / kSecondsPerWeek) * static_cast<float>(kSpeedBucketCount);
+
+    // DTC-III
     float speed = 0.5f * speeds[0];
-    const int16_t* s = &speeds[1];
-    for (uint32_t k = 1; k < kSpeedBucketCount; ++k, ++s) {
-      speed += *s * cosf(k * b);
-      ++k;
+    for (uint32_t n = 1; n < kSpeedBucketCount; ++n) {
+      speed += speeds[n] * cosf(kPiConstant * n * (i + 0.5f));
     }
-    return static_cast<uint32_t>(speed + 0.5f);
+    return speed > 0.0f ? static_cast<uint32_t>(speed + 0.5f) : 0;
   }
 
 protected:
