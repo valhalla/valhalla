@@ -14,6 +14,11 @@ constexpr float kSecondsPerWeek = 7.0f * 24.0f * 60.0f * 60.0f;
 constexpr uint32_t kSpeedBucketCount = 200;
 constexpr float kPiConstant = 3.14159265f / static_cast<float>(kBucketsPerWeek);
 
+// DTC-III constants for speed decoding and normalization
+constexpr float k1OverSqrt2 = 1.0f / sqrtf(2.0f);
+constexpr float kPiBucketConstant = 3.14159265f / 2016.0f;
+constexpr float kSpeedNormalization = sqrtf(2.0f / 2016.0f);
+
 /**
  * Class to access predicted speed information within a tile.
  */
@@ -52,18 +57,18 @@ public:
     // (otherwise an exception would be thrown when getting the directed edge) and the profile
     // index is valid. If there is no predicted speed profile this method will not be called due
     // to DirectedEdge::predicted_speed being false.
-    const int16_t* speeds = profiles_ + (kSpeedBucketCount * index_[idx]);
+    const int16_t* coefficients = profiles_ + (kSpeedBucketCount * index_[idx]);
 
-    // TODO - how to figure out the bucket?
- //   int bucket = (seconds_of_week / kSpeedBucketSizeSeconds);
-    float i = (static_cast<float>(seconds_of_week) / kSecondsPerWeek) * static_cast<float>(kSpeedBucketCount);
+    // Compute the time bucket
+    int bucket = (seconds_of_week / kSpeedBucketSizeSeconds);
 
-    // DTC-III
-    float speed = 0.5f * speeds[0];
-    for (uint32_t n = 1; n < kSpeedBucketCount; ++n) {
-      speed += speeds[n] * cosf(kPiConstant * n * (i + 0.5f));
+    // DTC-III with some speed normalization
+    float b = kPiBucketConstant * (bucket + 0.5f);
+    float speed = coefficients[0] * k1OverSqrt2;
+    for (int k = 1; k < 200; k++) {
+      speed += coefficients[k] * cosf(b * k);
     }
-    return speed > 0.0f ? static_cast<uint32_t>(speed + 0.5f) : 0;
+    return speed * kSpeedNormalization;
   }
 
 protected:
