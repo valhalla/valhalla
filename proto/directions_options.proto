@@ -153,4 +153,5 @@ message DirectionsOptions {
   optional float turn_penalty_factor = 31;                       // The turn penalty factor associated with the suppplied trace points
   optional FilterAction filter_action = 32;                      // The trace filter action - either exclude or include
   repeated string filter_attributes = 33;                        // The filter list for trace attributes
+  repeated uint64 avoid_edges = 34;                              // Avoid edges for any costing - derived from avoid_locations
 }
