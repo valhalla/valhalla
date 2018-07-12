@@ -1026,18 +1026,17 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
             .get_value_or(kDefaultAvoidBadSurfaces)));
 
     // bicycle_type
-    std::string bicycle_type =
+    pbf_costing_options->set_transport_type(
         rapidjson::get_optional<std::string>(*json_costing_options, "/bicycle_type")
-            .get_value_or(kDefaultBicycleType);
-    pbf_costing_options->set_transport_type(bicycle_type);
+            .get_value_or(kDefaultBicycleType));
 
     // convert string to enum, set ranges and defaults based on enum
     BicycleType type;
-    if (bicycle_type == "Cross") {
+    if (pbf_costing_options->transport_type() == "Cross") {
       type = BicycleType::kCross;
-    } else if (bicycle_type == "Hybrid") {
+    } else if (pbf_costing_options->transport_type() == "Hybrid") {
       type = BicycleType::kHybrid;
-    } else if (bicycle_type == "Mountain") {
+    } else if (pbf_costing_options->transport_type() == "Mountain") {
       type = BicycleType::kMountain;
     } else {
       type = BicycleType::kRoad;

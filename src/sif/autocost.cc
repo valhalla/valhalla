@@ -612,6 +612,10 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   if (json_costing_options) {
     // If specified, parse json and set pbf values
 
+    // type (transport_type)
+    pbf_costing_options->set_transport_type(
+        rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("car"));
+
     // maneuver_penalty
     pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
@@ -679,6 +683,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
 
   } else {
     // Set pbf values to defaults
+    pbf_costing_options->set_transport_type("car");
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
     pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
     pbf_costing_options->set_gate_cost(kDefaultGateCost);
