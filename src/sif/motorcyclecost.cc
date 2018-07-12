@@ -372,7 +372,7 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
     highway_factor_ = f * f * f;
   } else {
     float f = 1.0f - (use_highways_ * 2.0f);
-    highway_factor_ = (f < 0.01) ? 1.0f : kMaxHighwayBiasFactor * (f * f * f);
+    highway_factor_ = kMaxHighwayBiasFactor * (f * f);
   }
 
   // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -400,7 +400,7 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
     LOG_WARN("surface_factor_ when favoring trails (>= 0.5f) :: " + std::to_string(surface_factor_));
   } else {
     float f = 1.0f - use_trails_ * 2.0f;
-    surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f * f));
+    surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
     LOG_WARN("surface_factor_ when penalizing trails (< 0.5f):: " + std::to_string(surface_factor_));
   }
 
