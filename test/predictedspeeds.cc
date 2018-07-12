@@ -52,18 +52,15 @@ std::vector<int8_t> base64_decode(std::string const& encoded_string) {
   }
   return ret;
 }
-// Assume 200 values (int16)
-constexpr float kConst = 3.14159265f / 2016.0f;
-constexpr float kOverSqrt2 = 1.0f / sqrtf(2.0f);
-constexpr float kSpeedFactor = sqrtf(2.0f / 2016.0f);
 
 // DTC-III with some speed normalization
 float dtciii(int16_t* coefficients, const float i) {
   float sum = 0.0f;
-  for (uint32_t n = 1; n < 200; ++n) {
-    sum += coefficients[n] * cosf(kConst * n * (i + 0.5f));
+  float speed = coefficients[0] / sqrtf(2.0f);
+  for (int k = 1; k < 200; k++) {
+    speed += coefficients[k] * cosf(3.14159f * k / 2016.0f * (i + 0.5f));
   }
-  return kOverSqrt2 * coefficients[0] + kSpeedFactor * sum;
+  return speed * sqrtf(2.0f / 2016.0f);
 }
 
 void test_decoding() {
@@ -73,10 +70,10 @@ void test_decoding() {
 
   std::cout << "Encoded string size = " << std::to_string(encoded_speed_string.size()) << std::endl;
 
-  // Decode the base64 string
+  // Decode the base64 string and cast the data to a raw string of signed bytes
   auto decoded_str = base64_decode(encoded_speed_string);
   if (decoded_str.size() != 401) {
-    throw std::runtime_error("Decoded speed string size should be 402 but is " + std::to_string(decoded_str.size()));
+    throw std::runtime_error("Decoded speed string size should be 401 but is " + std::to_string(decoded_str.size()));
   }
   auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
 
@@ -84,6 +81,8 @@ void test_decoding() {
   if (static_cast<std::int8_t>(raw[0]) != 1) {
     throw std::runtime_error("First value should be 1");
   }
+
+  // Create the coefficients. Each group of 2 bytes represents a signed, int16 number (big endian)
   int idx = 1;
   int16_t coefficients[200];
   for (uint32_t i = 0; i < 200; ++i, idx += 2) {
