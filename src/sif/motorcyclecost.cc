@@ -382,12 +382,8 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
                      (0.5f - use_tolls_) * 0.03f;              // ranges from 0 to -0.15
 
-
   // Set the surface factor based on the use trails value
   use_trails_ = kUseTrailsRange(pt.get<float>("use_trails", kDefaultUseTrails));
-  LOG_WARN("use_trails_ value :: " + std::to_string(use_trails_));
-  LOG_WARN("use_highways_ value :: " + std::to_string(use_highways_));
-  LOG_WARN("use_tolls_ value :: " + std::to_string(use_tolls_));
 
   // Factor for trail use - use a non-linear factor with values at 0.5 being neutral (factor
   // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
@@ -397,11 +393,9 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   if (use_trails_ >= 0.5f) {
     float f = (0.5f - use_trails_);
     surface_factor_ = f * f * f;
-    LOG_WARN("surface_factor_ when favoring trails (>= 0.5f) :: " + std::to_string(surface_factor_));
   } else {
     float f = 1.0f - use_trails_ * 2.0f;
     surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
-    LOG_WARN("surface_factor_ when penalizing trails (< 0.5f):: " + std::to_string(surface_factor_));
   }
 
   // Create speed cost table
@@ -507,8 +501,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t sp
   }
 
   float factor = density_factor_[edge->density()] +
-            highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+                 highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+                 surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll()) {
     factor += toll_factor_;
   }
