@@ -1087,14 +1087,14 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx, const std::vector<i
   }
 
   if (idx < header_->directededgecount()) {
-    speed_profile_index_builder_[idx] = speed_profile_builder_.size() / kSpeedBucketCount;
+    speed_profile_index_builder_[idx] = speed_profile_builder_.size() / kCoefficientCount;
 
     // Append the profile
-    if (profile.size() == kSpeedBucketCount) {
-      speed_profile_builder_.reserve(speed_profile_builder_.size() + kSpeedBucketCount);
+    if (profile.size() == kCoefficientCount) {
+      speed_profile_builder_.reserve(speed_profile_builder_.size() + kCoefficientCount);
       speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
     } else {
-      throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size");
+      throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " + std::to_string(profile.size()));
     }
   } else {
     throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
@@ -1124,7 +1124,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
                                    (speed_profile_builder_.size() * sizeof(int16_t)));
     size_t offset = header_->turnlane_offset() + header_->turnlane_count() * sizeof(TurnLanes);
     header_builder_.set_predictedspeeds_offset(offset);
-    header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kSpeedBucketCount);
+    header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kCoefficientCount);
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
     // Copy the nodes (they are unchanged when adding predicted speeds).

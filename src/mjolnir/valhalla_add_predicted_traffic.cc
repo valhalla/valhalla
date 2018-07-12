@@ -55,6 +55,10 @@ struct TrafficSpeeds {
   uint8_t constrained_flow_speed;
   uint8_t free_flow_speed;
   std::vector<int16_t> coefficients;
+
+  bool operator < (const TrafficSpeeds& other) const {
+    return id < other.id;
+  }
 };
 
 struct unique_data_t {
@@ -212,43 +216,38 @@ void update_valhalla_tiles(
   for (; tile_start != tile_end; ++tile_start) {
     // Get the tile
     vj::GraphTileBuilder tile_builder(tile_dir, tile_start->first, false);
-    // Update nodes and directed edges as needed
-    std::vector<NodeInfo> nodes;
+
+    // Update directed edges as needed
+    uint32_t idx = 0;
+    uint32_t count = 0;
+    uint32_t duplicates = 0;
     std::vector<DirectedEdge> directededges;
-    std::unordered_set<GraphId> edges;
-    uint32_t nodecount = tile_builder.header()->nodecount();
-    GraphId node = tile_start->first;
-    for (uint32_t i = 0; i < nodecount; i++, ++node) {
-      // The node we will modify
-      NodeInfo nodeinfo = tile_builder.node(i);
-      // Go through directed edges and validate/update data
-      uint32_t idx = nodeinfo.edge_index();
-      GraphId edgeid(node.tileid(), node.level(), idx);
-      for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++, ++edgeid) {
-        DirectedEdge& directededge = tile_builder.directededge(idx);
-        // could be more than one in the vector
-        for (const auto& speeds : tile_start->second) {
-          if (speeds.id == idx) {
-            if (speeds.constrained_flow_speed) {
-              directededge.set_constrained_flow_speed(speeds.constrained_flow_speed);
-            }
-            if (speeds.free_flow_speed) {
-              directededge.set_free_flow_speed(speeds.free_flow_speed);
-            }
-            if (speeds.coefficients.size() > 0) {
-              tile_builder.AddPredictedSpeed(idx, speeds.coefficients);
-              directededge.set_predicted_speed(true);
-            }
-            edges.emplace(tile_start->first.tileid(), tile_start->first.level(), speeds.id);
+    for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j, ++idx) {
+      DirectedEdge& directededge = tile_builder.directededge(idx);
+      for (const auto& speeds : tile_start->second) {
+        if (speeds.id == idx) {
+          if (speeds.constrained_flow_speed) {
+            directededge.set_constrained_flow_speed(speeds.constrained_flow_speed);
           }
+          if (speeds.free_flow_speed) {
+            directededge.set_free_flow_speed(speeds.free_flow_speed);
+          }
+          if (speeds.coefficients.size() > 0) {
+            tile_builder.AddPredictedSpeed(idx, speeds.coefficients);
+            directededge.set_predicted_speed(true);
+          }
+          count++;
         }
-        // Add the directed edge to the local list
-        directededges.emplace_back(std::move(directededge));
       }
-      // Add the node to the list
-      nodes.emplace_back(std::move(nodeinfo));
+
+      // Add the directed edge to the local list
+      directededges.emplace_back(std::move(directededge));
     }
-    stat.updated_count += edges.size();
+    stat.updated_count += count;
+
+    if (duplicates) {
+      LOG_INFO("Duplicate count = " + std::to_string(duplicates));
+    }
 
     // Write the new tile with updated directed edges and the predicted speeds
     tile_builder.UpdatePredictedSpeeds(directededges);
@@ -356,7 +355,7 @@ int main(int argc, char** argv) {
   LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
 
-  LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
+  LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " quadkey tiles.");
   size_t floor = traffic_tiles.size() / threads.size();
   size_t at_ceiling = traffic_tiles.size() - (threads.size() * floor);
   std::unordered_set<std::string>::const_iterator tile_start, tile_end = traffic_tiles.begin();
@@ -399,7 +398,12 @@ int main(int argc, char** argv) {
   LOG_INFO("Parsed " + std::to_string(free_flow_count) + " free flow traffic speeds.");
   LOG_INFO("Parsed " + std::to_string(compressed_count) + " compressed records.");
 
-  LOG_INFO("Updating speeds for " + std::to_string(unique_data.tile_speeds.size()) + " tiles.");
+  // Sort the Traffic speeds within each tile
+//  for (auto& tile : unique_data.tile_speeds) {
+//    std::sort(tile.second.begin(), tile.second.end());
+//  }
+
+  LOG_INFO("Updating speeds for " + std::to_string(unique_data.tile_speeds.size()) + " Valhalla tiles.");
   floor = unique_data.tile_speeds.size() / threads.size();
   at_ceiling = unique_data.tile_speeds.size() - (threads.size() * floor);
   std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator t_start,

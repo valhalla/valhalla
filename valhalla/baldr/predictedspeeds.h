@@ -11,7 +11,6 @@ constexpr uint32_t kSpeedBucketSizeMinutes = 5;
 constexpr uint32_t kSpeedBucketSizeSeconds = kSpeedBucketSizeMinutes * 60;
 constexpr uint32_t kBucketsPerWeek = (7 * 24 * 60) / kSpeedBucketSizeMinutes;
 constexpr float kSecondsPerWeek = 7.0f * 24.0f * 60.0f * 60.0f;
-constexpr uint32_t kSpeedBucketCount = 200;
 constexpr float kPiConstant = 3.14159265f / static_cast<float>(kBucketsPerWeek);
 
 // DTC-III constants for speed decoding and normalization
@@ -58,7 +57,7 @@ public:
     // (otherwise an exception would be thrown when getting the directed edge) and the profile
     // index is valid. If there is no predicted speed profile this method will not be called due
     // to DirectedEdge::predicted_speed being false.
-    const int16_t* coefficients = profiles_ + (kSpeedBucketCount * index_[idx]);
+    const int16_t* coefficients = profiles_ + (kCoefficientCount * index_[idx]);
 
     // Compute the time bucket
     int bucket = (seconds_of_week / kSpeedBucketSizeSeconds);
