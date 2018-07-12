@@ -41,7 +41,7 @@ public:
     napi_status status;
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_METHOD("route", Route),
-        DECLARE_NAPI_METHOD("locate", Locate),
+        DECLARE_NAPI_METHOD("locate", Locate)
     };
     // parse config file to get logging config
     size_t argc = 1;
