@@ -1029,7 +1029,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     std::string bicycle_type =
         rapidjson::get_optional<std::string>(*json_costing_options, "/bicycle_type")
             .get_value_or(kDefaultBicycleType);
-    pbf_costing_options->set_type(bicycle_type);
+    pbf_costing_options->set_transport_type(bicycle_type);
 
     // convert string to enum, set ranges and defaults based on enum
     BicycleType type;
@@ -1066,7 +1066,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_hills(kDefaultUseHills);
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
     pbf_costing_options->set_avoid_bad_surfaces(kDefaultAvoidBadSurfaces);
-    pbf_costing_options->set_type(kDefaultBicycleType);
+    pbf_costing_options->set_transport_type(kDefaultBicycleType);
     pbf_costing_options->set_cycling_speed(kDefaultCyclingSpeed[0]);
   }
 }

@@ -723,13 +723,12 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
         kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
                            .get_value_or(kDefaultUseFerry)));
 
-    // type
-    // TODO determine how to handle type for real
-    pbf_costing_options->set_type(
+    // type (transport_type)
+    pbf_costing_options->set_transport_type(
         (rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("foot")));
 
     // Set type specific defaults, override with URL inputs
-    if (pbf_costing_options->type() == "wheelchair") {
+    if (pbf_costing_options->transport_type() == "wheelchair") {
       // max_distance
       pbf_costing_options->set_max_distance(kMaxDistanceWheelchairRange(
           rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_distance")
@@ -821,7 +820,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
     pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
-    pbf_costing_options->set_type("foot");
+    pbf_costing_options->set_transport_type("foot");
     pbf_costing_options->set_max_distance(kMaxDistanceFoot);
     pbf_costing_options->set_walking_speed(kDefaultSpeedFoot);
     pbf_costing_options->set_step_penalty(kDefaultStepPenaltyFoot);
