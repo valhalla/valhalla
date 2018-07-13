@@ -1,4 +1,7 @@
 ## Release Date: UNRELEASED Valhalla 3.0
+
+## Release Date: 2018-07-12 Valhalla 3.0.0-alpha.1
+**NOTE**: There was already a small package named `valhalla` on the npm registry, only published up to version 0.0.3. The team at npm has transferred the package to us, but would like us to publish something to it ASAP to prove our stake in it. Though the bindings do not have all of the actor functionality exposed yet (just route), we are going to publish an alpha release of 3.0.0 to get something up on npm.
 * **Infrastructure**:
    * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
    * ADDED: TurnLanes to indicate turning lanes at the end of a directed edge.
