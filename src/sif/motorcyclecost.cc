@@ -5,7 +5,6 @@
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
-#include "midgard/logging.h"
 #include "midgard/util.h"
 #include <iostream>
 
