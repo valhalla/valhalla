@@ -40,6 +40,23 @@ constexpr float kDefaultMotorScooterUseHills = 0.5f;                 // Factor b
 constexpr float kDefaultMotorScooterUsePrimary = 0.5f;               // Factor between 0 and 1
 constexpr uint32_t kDefaultMotorScooterTopSpeed = 45;                // Kilometers per hour
 
+// Motorcycle defaults
+constexpr float kDefaultMotorcycleManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultMotorcycleAlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultMotorcycleGateCost = 30.0f;                // Seconds
+constexpr float kDefaultMotorcycleGatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultMotorcycleTollBoothCost = 15.0f;           // Seconds
+constexpr float kDefaultMotorcycleTollBoothPenalty = 0.0f;         // Seconds
+constexpr float kDefaultMotorcycleFerryCost = 300.0f;              // Seconds
+constexpr float kDefaultMotorcycleCountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultMotorcycleCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultMotorcycleUseFerry = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultMotorcycleUseHighways = 1.0f;              // Factor between 0 and 1
+constexpr float kDefaultMotorcycleUseTolls = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultMotorcycleUsePrimary = 0.5f;               // Factor between 0 and 1
+constexpr float kDefaultMotorcycleUseTrails = 0.0f;                // Factor between 0 and 1
+constexpr float kDefaultMotorcycleDestinationOnlyPenalty = 600.0f; // Seconds
+
 ///////////////////////////////////////////////////////////////////////////////
 // validate by type methods
 void validate(const std::string& key,
@@ -401,6 +418,43 @@ void test_default_motor_scooter_cost_options(const valhalla::odin::Costing costi
            request.options.costing_options(static_cast<int>(costing)).use_primary());
 }
 
+void test_default_motorcycle_cost_options(const valhalla::odin::Costing costing,
+                                          const valhalla::odin::DirectionsOptions::Action action) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string key = "costing";
+
+  // Get cost request with no cost options
+  valhalla::valhalla_request_t request = get_request(get_request_str(key, costing_str), action);
+
+  validate("maneuver_penalty", kDefaultMotorcycleManeuverPenalty,
+           request.options.costing_options(static_cast<int>(costing)).maneuver_penalty());
+  validate("destination_only_penalty", kDefaultMotorcycleDestinationOnlyPenalty,
+           request.options.costing_options(static_cast<int>(costing)).destination_only_penalty());
+  validate("gate_cost", kDefaultMotorcycleGateCost,
+           request.options.costing_options(static_cast<int>(costing)).gate_cost());
+  validate("gate_penalty", kDefaultMotorcycleGatePenalty,
+           request.options.costing_options(static_cast<int>(costing)).gate_penalty());
+  validate("alley_penalty", kDefaultMotorcycleAlleyPenalty,
+           request.options.costing_options(static_cast<int>(costing)).alley_penalty());
+  validate("country_crossing_cost", kDefaultMotorcycleCountryCrossingCost,
+           request.options.costing_options(static_cast<int>(costing)).country_crossing_cost());
+  validate("country_crossing_penalty", kDefaultMotorcycleCountryCrossingPenalty,
+           request.options.costing_options(static_cast<int>(costing)).country_crossing_penalty());
+  validate("ferry_cost", kDefaultMotorcycleFerryCost,
+           request.options.costing_options(static_cast<int>(costing)).ferry_cost());
+  validate("use_ferry", kDefaultMotorcycleUseFerry,
+           request.options.costing_options(static_cast<int>(costing)).use_ferry());
+  validate("use_primary", kDefaultMotorcycleUsePrimary,
+           request.options.costing_options(static_cast<int>(costing)).use_primary());
+  validate("use_trails", kDefaultMotorcycleUseTrails,
+           request.options.costing_options(static_cast<int>(costing)).use_trails());
+}
+
 void test_maneuver_penalty_parsing(const valhalla::odin::Costing costing,
                                    const float specified_value,
                                    const float expected_value,
@@ -737,6 +791,27 @@ void test_top_speed_parsing(const valhalla::odin::Costing costing,
            request.options.costing_options(static_cast<int>(costing)).top_speed());
 }
 
+void test_use_trails_parsing(const valhalla::odin::Costing costing,
+                             const float specified_value,
+                             const float expected_value,
+                             const valhalla::odin::DirectionsOptions::Action action =
+                                 valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "use_trails";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).use_trails());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // test by key methods
 void test_polygons() {
@@ -817,6 +892,11 @@ void test_default_motor_scooter_cost_options() {
                                           valhalla::odin::DirectionsOptions::route);
 }
 
+void test_default_motorcycle_cost_options() {
+  test_default_motorcycle_cost_options(valhalla::odin::motorcycle,
+                                       valhalla::odin::DirectionsOptions::route);
+}
+
 void test_maneuver_penalty() {
   float default_value = kDefaultAutoManeuverPenalty;
   for (auto costing : get_base_auto_costing_list()) {
@@ -829,6 +909,14 @@ void test_maneuver_penalty() {
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
   default_value = kDefaultMotorScooterManeuverPenalty;
+  test_maneuver_penalty_parsing(costing, default_value, default_value);
+  test_maneuver_penalty_parsing(costing, 2.f, 2.f);
+  test_maneuver_penalty_parsing(costing, 30.f, 30.f);
+  test_maneuver_penalty_parsing(costing, -2.f, default_value);
+  test_maneuver_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleManeuverPenalty;
   test_maneuver_penalty_parsing(costing, default_value, default_value);
   test_maneuver_penalty_parsing(costing, 2.f, 2.f);
   test_maneuver_penalty_parsing(costing, 30.f, 30.f);
@@ -853,6 +941,14 @@ void test_destination_only_penalty() {
   test_destination_only_penalty_parsing(costing, 700.f, 700.f);
   test_destination_only_penalty_parsing(costing, -2.f, default_value);
   test_destination_only_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleDestinationOnlyPenalty;
+  test_destination_only_penalty_parsing(costing, default_value, default_value);
+  test_destination_only_penalty_parsing(costing, 2.f, 2.f);
+  test_destination_only_penalty_parsing(costing, 700.f, 700.f);
+  test_destination_only_penalty_parsing(costing, -2.f, default_value);
+  test_destination_only_penalty_parsing(costing, 500000.f, default_value);
 }
 
 void test_gate_cost() {
@@ -867,6 +963,14 @@ void test_gate_cost() {
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
   default_value = kDefaultMotorScooterGateCost;
+  test_gate_cost_parsing(costing, default_value, default_value);
+  test_gate_cost_parsing(costing, 2.f, 2.f);
+  test_gate_cost_parsing(costing, 60.f, 60.f);
+  test_gate_cost_parsing(costing, -2.f, default_value);
+  test_gate_cost_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleGateCost;
   test_gate_cost_parsing(costing, default_value, default_value);
   test_gate_cost_parsing(costing, 2.f, 2.f);
   test_gate_cost_parsing(costing, 60.f, 60.f);
@@ -891,10 +995,18 @@ void test_gate_penalty() {
   test_gate_penalty_parsing(costing, 60.f, 60.f);
   test_gate_penalty_parsing(costing, -2.f, default_value);
   test_gate_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleGatePenalty;
+  test_gate_penalty_parsing(costing, default_value, default_value);
+  test_gate_penalty_parsing(costing, 2.f, 2.f);
+  test_gate_penalty_parsing(costing, 600.f, 600.f);
+  test_gate_penalty_parsing(costing, -2.f, default_value);
+  test_gate_penalty_parsing(costing, 500000.f, default_value);
 }
 
 void test_toll_booth_cost() {
-  const float default_value = kDefaultAutoTollBoothCost;
+  float default_value = kDefaultAutoTollBoothCost;
   for (auto costing : get_base_auto_costing_list()) {
     test_toll_booth_cost_parsing(costing, default_value, default_value);
     test_toll_booth_cost_parsing(costing, 2.f, 2.f);
@@ -902,10 +1014,18 @@ void test_toll_booth_cost() {
     test_toll_booth_cost_parsing(costing, -2.f, default_value);
     test_toll_booth_cost_parsing(costing, 500000.f, default_value);
   }
+
+  valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleTollBoothCost;
+  test_toll_booth_cost_parsing(costing, default_value, default_value);
+  test_toll_booth_cost_parsing(costing, 2.f, 2.f);
+  test_toll_booth_cost_parsing(costing, 20.f, 20.f);
+  test_toll_booth_cost_parsing(costing, -2.f, default_value);
+  test_toll_booth_cost_parsing(costing, 500000.f, default_value);
 }
 
 void test_toll_booth_penalty() {
-  const float default_value = kDefaultAutoTollBoothPenalty;
+  float default_value = kDefaultAutoTollBoothPenalty;
   for (auto costing : get_base_auto_costing_list()) {
     test_toll_booth_penalty_parsing(costing, default_value, default_value);
     test_toll_booth_penalty_parsing(costing, 2.f, 2.f);
@@ -913,6 +1033,14 @@ void test_toll_booth_penalty() {
     test_toll_booth_penalty_parsing(costing, -2.f, default_value);
     test_toll_booth_penalty_parsing(costing, 500000.f, default_value);
   }
+
+  valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleTollBoothPenalty;
+  test_toll_booth_penalty_parsing(costing, default_value, default_value);
+  test_toll_booth_penalty_parsing(costing, 2.f, 2.f);
+  test_toll_booth_penalty_parsing(costing, 60.f, 60.f);
+  test_toll_booth_penalty_parsing(costing, -2.f, default_value);
+  test_toll_booth_penalty_parsing(costing, 500000.f, default_value);
 }
 
 void test_alley_penalty() {
@@ -930,6 +1058,14 @@ void test_alley_penalty() {
   test_alley_penalty_parsing(costing, default_value, default_value);
   test_alley_penalty_parsing(costing, 2.f, 2.f);
   test_alley_penalty_parsing(costing, 60.f, 60.f);
+  test_alley_penalty_parsing(costing, -2.f, default_value);
+  test_alley_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleAlleyPenalty;
+  test_alley_penalty_parsing(costing, default_value, default_value);
+  test_alley_penalty_parsing(costing, 2.f, 2.f);
+  test_alley_penalty_parsing(costing, 10.f, 10.f);
   test_alley_penalty_parsing(costing, -2.f, default_value);
   test_alley_penalty_parsing(costing, 500000.f, default_value);
 }
@@ -951,6 +1087,14 @@ void test_country_crossing_cost() {
   test_country_crossing_cost_parsing(costing, 700.f, 700.f);
   test_country_crossing_cost_parsing(costing, -2.f, default_value);
   test_country_crossing_cost_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleCountryCrossingCost;
+  test_country_crossing_cost_parsing(costing, default_value, default_value);
+  test_country_crossing_cost_parsing(costing, 2.f, 2.f);
+  test_country_crossing_cost_parsing(costing, 700.f, 700.f);
+  test_country_crossing_cost_parsing(costing, -2.f, default_value);
+  test_country_crossing_cost_parsing(costing, 500000.f, default_value);
 }
 
 void test_country_crossing_penalty() {
@@ -961,15 +1105,18 @@ void test_country_crossing_penalty() {
     test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
     test_country_crossing_penalty_parsing(costing, -2.f, default_value);
     test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
-    test_country_crossing_penalty_parsing(costing, default_value, default_value);
-    test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
-    test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
-    test_country_crossing_penalty_parsing(costing, -2.f, default_value);
-    test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
   default_value = kDefaultMotorScooterCountryCrossingPenalty;
+  test_country_crossing_penalty_parsing(costing, default_value, default_value);
+  test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
+  test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
+  test_country_crossing_penalty_parsing(costing, -2.f, default_value);
+  test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleCountryCrossingPenalty;
   test_country_crossing_penalty_parsing(costing, default_value, default_value);
   test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
   test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
@@ -994,6 +1141,14 @@ void test_ferry_cost() {
   test_ferry_cost_parsing(costing, 600.f, 600.f);
   test_ferry_cost_parsing(costing, -2.f, default_value);
   test_ferry_cost_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleFerryCost;
+  test_ferry_cost_parsing(costing, default_value, default_value);
+  test_ferry_cost_parsing(costing, 2.f, 2.f);
+  test_ferry_cost_parsing(costing, 600.f, 600.f);
+  test_ferry_cost_parsing(costing, -2.f, default_value);
+  test_ferry_cost_parsing(costing, 500000.f, default_value);
 }
 
 void test_use_ferry() {
@@ -1013,10 +1168,18 @@ void test_use_ferry() {
   test_use_ferry_parsing(costing, 0.6f, 0.6f);
   test_use_ferry_parsing(costing, -2.f, default_value);
   test_use_ferry_parsing(costing, 2.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleUseFerry;
+  test_use_ferry_parsing(costing, default_value, default_value);
+  test_use_ferry_parsing(costing, 0.2f, 0.2f);
+  test_use_ferry_parsing(costing, 0.6f, 0.6f);
+  test_use_ferry_parsing(costing, -2.f, default_value);
+  test_use_ferry_parsing(costing, 2.f, default_value);
 }
 
 void test_use_highways() {
-  const float default_value = kDefaultAutoUseHighways;
+  float default_value = kDefaultAutoUseHighways;
   for (auto costing : get_base_auto_costing_list()) {
     test_use_highways_parsing(costing, default_value, default_value);
     test_use_highways_parsing(costing, 0.2f, 0.2f);
@@ -1024,10 +1187,18 @@ void test_use_highways() {
     test_use_highways_parsing(costing, -2.f, default_value);
     test_use_highways_parsing(costing, 2.f, default_value);
   }
+
+  valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleUseHighways;
+  test_use_highways_parsing(costing, default_value, default_value);
+  test_use_highways_parsing(costing, 0.2f, 0.2f);
+  test_use_highways_parsing(costing, 0.6f, 0.6f);
+  test_use_highways_parsing(costing, -2.f, default_value);
+  test_use_highways_parsing(costing, 2.f, default_value);
 }
 
 void test_use_tolls() {
-  const float default_value = kDefaultAutoUseTolls;
+  float default_value = kDefaultAutoUseTolls;
   for (auto costing : get_base_auto_costing_list()) {
     test_use_tolls_parsing(costing, default_value, default_value);
     test_use_tolls_parsing(costing, 0.2f, 0.2f);
@@ -1035,6 +1206,14 @@ void test_use_tolls() {
     test_use_tolls_parsing(costing, -2.f, default_value);
     test_use_tolls_parsing(costing, 2.f, default_value);
   }
+
+  valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleUseTolls;
+  test_use_tolls_parsing(costing, default_value, default_value);
+  test_use_tolls_parsing(costing, 0.2f, 0.2f);
+  test_use_tolls_parsing(costing, 0.6f, 0.6f);
+  test_use_tolls_parsing(costing, -2.f, default_value);
+  test_use_tolls_parsing(costing, 2.f, default_value);
 }
 
 void test_use_hills() {
@@ -1055,6 +1234,14 @@ void test_use_primary() {
   test_use_primary_parsing(costing, 0.6f, 0.6f);
   test_use_primary_parsing(costing, -2.f, default_value);
   test_use_primary_parsing(costing, 2.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultMotorcycleUsePrimary;
+  test_use_primary_parsing(costing, default_value, default_value);
+  test_use_primary_parsing(costing, 0.2f, 0.2f);
+  test_use_primary_parsing(costing, 0.6f, 0.6f);
+  test_use_primary_parsing(costing, -2.f, default_value);
+  test_use_primary_parsing(costing, 2.f, default_value);
 }
 
 void test_top_speed() {
@@ -1065,6 +1252,16 @@ void test_top_speed() {
   test_top_speed_parsing(costing, 50, 50);
   test_top_speed_parsing(costing, -2, default_value);
   test_top_speed_parsing(costing, 200, default_value);
+}
+
+void test_use_trails() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
+  float default_value = kDefaultMotorcycleUseTrails;
+  test_use_trails_parsing(costing, default_value, default_value);
+  test_use_trails_parsing(costing, 0.2f, 0.2f);
+  test_use_trails_parsing(costing, 0.6f, 0.6f);
+  test_use_trails_parsing(costing, -2.f, default_value);
+  test_use_trails_parsing(costing, 2.f, default_value);
 }
 
 } // namespace
@@ -1116,6 +1313,9 @@ int main() {
   // default motor_scooter cost options
   suite.test(TEST_CASE(test_default_motor_scooter_cost_options));
 
+  // default motorcycle cost options
+  suite.test(TEST_CASE(test_default_motorcycle_cost_options));
+
   // maneuver_penalty
   suite.test(TEST_CASE(test_maneuver_penalty));
 
@@ -1163,6 +1363,9 @@ int main() {
 
   // top_speed
   suite.test(TEST_CASE(test_top_speed));
+
+  // use_trails
+  suite.test(TEST_CASE(test_use_trails));
 
   return suite.tear_down();
 }
