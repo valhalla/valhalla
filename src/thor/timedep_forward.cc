@@ -69,6 +69,9 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
                             DateTime::get_tz_db().from_index(nodeinfo->timezone()));
   }
 
+  // TODO - convert to seconds of the week.
+  uint32_t seconds_of_week = 0;
+
   // Expand from end node.
   uint32_t max_shortcut_length = static_cast<uint32_t>(pred.distance() * 0.5f);
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -109,10 +112,10 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
     }
 
     // Compute the cost to the end of this edge
-    Cost newcost = pred.cost() +
-                   costing_->EdgeCost(directededge,
-                                      tile->GetSpeed(directededge, localtime, nodeinfo->timezone())) +
-                   costing_->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost =
+        pred.cost() +
+        costing_->EdgeCost(directededge, tile->GetSpeed(directededge, edgeid, seconds_of_week)) +
+        costing_->TransitionCost(directededge, nodeinfo, pred);
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
