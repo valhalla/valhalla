@@ -148,12 +148,9 @@ jobs:
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
-      - run: brew install wget
-      - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
-      - run: brew install --build-from-source ./prime_server.rb
       - run: brew install protobuf --without-python@2
       - run: brew upgrade python
-      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl czmq lz4 nvm
+      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
       - run:
           command: |
             set +e
@@ -168,6 +165,8 @@ jobs:
       # - restore_cache:
       #     keys:
       #       - ccache
+      - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
+      - run: brew install --build-from-source ./prime_server.rb
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
