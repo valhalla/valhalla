@@ -687,7 +687,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
 
     // top_speed
     pbf_costing_options->set_top_speed(
-        kTopSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
+        kTopSpeedRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/top_speed")
                            .get_value_or(kDefaultTopSpeed)));
 
     // use_hills
