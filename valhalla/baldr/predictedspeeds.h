@@ -15,9 +15,9 @@ constexpr float kPiConstant = 3.14159265f / static_cast<float>(kBucketsPerWeek);
 
 // DTC-III constants for speed decoding and normalization
 constexpr uint32_t kCoefficientCount = 200;
-constexpr float k1OverSqrt2 = 1.0f / sqrtf(2.0f);
+constexpr float k1OverSqrt2 = 0.707106781f; // 1 / sqrt(2)
 constexpr float kPiBucketConstant = 3.14159265f / 2016.0f;
-constexpr float kSpeedNormalization = sqrtf(2.0f / 2016.0f);
+constexpr float kSpeedNormalization = 0.031497039f; // sqrt(2.0f / 2016.0f);
 
 /**
  * Class to access predicted speed information within a tile.

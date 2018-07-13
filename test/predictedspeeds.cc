@@ -33,19 +33,6 @@ inline bool within_threshold(const uint32_t v1, const uint32_t v2) {
   return (v2 > v1) ? (v2 - v1) < kSpeedErrorThreshold : (v1 - v2) < kSpeedErrorThreshold;
 }
 
-// DTC-III with some speed normalization
-constexpr float k1OverSqrt2 = 1.0f / sqrtf(2.0f);
-constexpr float kPiBucketConstant = 3.14159265f / 2016.0f;
-constexpr float kSpeedNormalization = sqrtf(2.0f / 2016.0f);
-float dtciii(int16_t* coefficients, const float i) {
-  float speed = coefficients[0] * k1OverSqrt2;
-  float b = kPiBucketConstant * (i + 0.5f);
-  for (int k = 1; k < 200; k++) {
-    speed += coefficients[k] * cosf(b * k);
-  }
-  return speed * kSpeedNormalization;
-}
-
 void test_decoding() {
   // base64 encoded string
   std::string encoded_speed_string =
