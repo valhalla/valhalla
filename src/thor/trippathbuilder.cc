@@ -1051,23 +1051,6 @@ TripPathBuilder::Build(const AttributesController& controller,
           length += roundabout_edge->length();
         }
 
-        if (nodeinfo->edge_count() == 2) {
-          length += roundabout_edge->length();
-          valid_roundabout_exit = false;
-        }
-
-        for (int i = 0; i < nodeinfo->edge_count(); i++) {
-          current_index = nodeinfo->edge_index() + i;
-
-          current_directed_edge = graphtile->directededge(current_index);
-
-          if (int(current_directed_edge->use()) == 25 && nodeinfo->edge_count() == 3) {
-            length += roundabout_edge->length();
-            valid_roundabout_exit = false;
-            break;
-          }
-        }
-
         for (int i = 0; i < nodeinfo->edge_count(); i++) {
           auto edge_index = nodeinfo->edge_index() + i;
           auto edge = graphtile->directededge(edge_index);
@@ -1111,7 +1094,10 @@ TripPathBuilder::Build(const AttributesController& controller,
 
       for (auto exit_length: roundabout_edges_length) {
         accumulated_length += exit_length;
-        trip_edge->add_roundabout_exit_angles((accumulated_length/total_length) * 360);
+
+        if (accumulated_length/total_length != 1) {
+          trip_edge->add_roundabout_exit_angles((accumulated_length/total_length) * 360);
+        }
       }
 
       roundabout_edges_length.clear();
@@ -1840,7 +1826,6 @@ void TripPathBuilder::AddTripIntersectingEdge(const AttributesController& contro
 
 bool TripPathBuilder::IsValidRoundaboutEdge(const NodeInfo* nodeinfo, const GraphTile* graphtile) {
   if (nodeinfo->edge_count() == 2) {
-    // length += roundabout_edge->length();
     return false;
   }
 
@@ -1850,9 +1835,7 @@ bool TripPathBuilder::IsValidRoundaboutEdge(const NodeInfo* nodeinfo, const Grap
     auto current_directed_edge = graphtile->directededge(current_index);
 
     if (int(current_directed_edge->use()) == 25 && nodeinfo->edge_count() == 3) {
-      // length += roundabout_edge->length();
       return false;
-      // break;
     }
   }
 
