@@ -1,6 +1,6 @@
 {
   "name": "valhalla",
-  "version": "1.0.0",
+  "version": "3.0.0-alpha.1",
   "main": "lib/index.js",
   "directories": {
     "doc": "docs",
