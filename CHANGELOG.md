@@ -2,6 +2,7 @@
 * **Infrastructure**:
    * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
    * ADDED: TurnLanes to indicate turning lanes at the end of a directed edge.
+   * ADDED: Added PredictedSpeeds to Valhalla tiles and logic to compute speed based on predictive speed profiles.
 * **Data Producer Update**
    * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
    * CHANGED: Lower speeds on driveways, drive-thru, and parking aisle. Set destination only flag for drive thru use.
