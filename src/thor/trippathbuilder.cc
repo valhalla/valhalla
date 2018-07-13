@@ -1111,7 +1111,10 @@ TripPathBuilder::Build(const AttributesController& controller,
 
       for (auto exit_length: roundabout_edges_length) {
         accumulated_length += exit_length;
-        trip_edge->add_roundabout_exit_angles((accumulated_length/total_length) * 360);
+
+        if (accumulated_length/total_length != 1) {
+          trip_edge->add_roundabout_exit_angles((accumulated_length/total_length) * 360);
+        }
       }
 
       roundabout_edges_length.clear();
