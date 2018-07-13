@@ -108,9 +108,13 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
           }
         }
       }
+      // TODO remove the json assignment after we use values in the pbf
+      rapidjson::Value avoid_edges{rapidjson::kArrayType};
       for (auto avoid : avoids) {
+        avoid_edges.PushBack(rapidjson::Value(avoid), allocator);
         request.options.add_avoid_edges(avoid);
       }
+      method_options_ptr->AddMember("avoid_edges", avoid_edges, allocator);
     } // swallow all failures on optional avoids
     catch (...) {
       LOG_WARN("Failed to find avoid_locations");
