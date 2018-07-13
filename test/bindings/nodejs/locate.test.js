@@ -3,10 +3,34 @@ var config = require('./fixtures/basic_config');
 var Valhalla = require('../../../')(JSON.stringify(config));
 var valhalla = new Valhalla(JSON.stringify(config));
 
-test('locate: can locate something?', function(assert) {
-  var locateRequest = '{"verbose":true,"locations":[{"lat":42.358528,"lon":-83.271400},{"lat":42.996613,"lon":-78.749855}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"road"}},"directions_options":{"units":"miles"},"id":"12abc3afe23984fe"}';
+test('locate: can return info for locations', function(assert) {
+  var locateRequest = '{"verbose":true,"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"}, {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"road"}},"directions_options":{"units":"miles"},"id":"12abc3afe23984fe"}';
   var locate = JSON.parse(valhalla.locate(locateRequest));
   assert.ok(locate);
-  assert.equal();
+  assert.equal(locate.length, 2, 'two locations returned');
+  assert.ok(locate[0].edges, 'returns edge info');
   assert.end();
+});
+
+test('locate: returns null for edges and nodes if none found', function(assert) {
+  var hersheyRequest = '{"locations":[{"lat":5,"lon":-76.385076,"type":"break"}, {"lat":4,"lon":-76.385752,"type":"break"}],"costing":"auto"}';
+  var locate = JSON.parse(valhalla.locate(hersheyRequest));
+  assert.equal(locate[0].edges, null, 'no edges found for first location');
+  assert.equal(locate[1].edges, null, 'no edges found for second location');
+  assert.equal(locate[0].nodes, null, 'no nodes found for first location');
+  assert.equal(locate[1].nodes, null, 'no nodes found for second location');
+  assert.end();
+});
+
+test('locate: returns an error if request format is wrong', function(assert) {
+  var badRequest = '{"locations":[40.546115,-76.385076], [40.544232,"lon":-76.385752],"costing":"auto"}';
+  // TODO: we are not throwing a very useful error in this case - we should track this
+  // down and throw something a little more descriptive
+  assert.throws(() => { valhalla.locate(badRequest) }, /std::exception/, 'Throws an error');
+  assert.end();
+});
+
+test.onFinish(() => {
+    valhalla = null;
+    if (global.gc) global.gc();
 });

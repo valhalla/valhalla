@@ -41,7 +41,8 @@ public:
     napi_status status;
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_METHOD("route", Route),
-        DECLARE_NAPI_METHOD("locate", Locate)
+        DECLARE_NAPI_METHOD("locate", Locate),
+        DECLARE_NAPI_METHOD("matrix", Matrix)
     };
     // parse config file to get logging config
     size_t argc = 1;
@@ -76,7 +77,7 @@ public:
     } catch (...) { napi_throw_error(env, NULL, "Failed to load logging config"); }
 
     napi_value actor_constructor;
-    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 1, properties,
+    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 3, properties,
                                &actor_constructor);
     checkNapiStatus(status, env, "Failed to define class");
 
@@ -230,6 +231,25 @@ private:
     } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, locate_json);
+    return outStr;
+  }
+
+  static napi_value Matrix(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
+    checkNapiStatus(status, env, "Failed to unwrap js object");
+
+    std::string matrix_json;
+    try {
+      matrix_json = obj->actor.matrix(reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+
+    auto outStr = WrapString(env, matrix_json);
     return outStr;
   }
 
