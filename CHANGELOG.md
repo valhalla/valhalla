@@ -1,4 +1,33 @@
+<<<<<<< HEAD
 ## Release Date: UNRELEASED Valhalla 2.7.0
+=======
+## Release Date: UNRELEASED Valhalla 3.0
+* **Infrastructure**:
+   * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
+   * ADDED: TurnLanes to indicate turning lanes at the end of a directed edge.
+   * ADDED: Added PredictedSpeeds to Valhalla tiles and logic to compute speed based on predictive speed profiles.
+* **Data Producer Update**
+   * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
+   * CHANGED: Lower speeds on driveways, drive-thru, and parking aisle. Set destination only flag for drive thru use.
+   * ADDED: Initial implementation of turn lanes.
+  **Bug Fix**
+   * CHANGED: Fix destination only penalty for A* and time dependent cases.
+* **Map Matching**
+   * FIXED: Fixed trace_route edge_walk server abort [#1365](https://github.com/valhalla/valhalla/pull/1365)
+* **Enhancement**
+   * ADDED: Added post process for updating free and constrained speeds in the directed edges.
+   * UPDATED: Parse the json request once and store in a protocol buffer to pass along the pipeline. This completed the first portion of [1357](https://github.com/valhalla/valhalla/issues/1357)
+   * UPDATED: Changed the shape_match attribute from a string to an enum. Fixes [1376](https://github.com/valhalla/valhalla/issues/1376)
+   * ADDED: Node bindings for route [#1341](https://github.com/valhalla/valhalla/pull/1341)
+   * UPDATED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
+
+## Release Date: 2018-06-28 Valhalla 2.6.2
+* **Data Producer Update**
+   * FIXED: Complex restriction sorting bug.  Check of has_dt in ComplexRestrictionBuilder::operator==.
+* **API**:
+   * FIXED: Fixed CostFactory convenience method that registers costing models
+   * ADDED: Added use_tolls into motorcycle costing options
+>>>>>>> 9a04b69... Motorcycle Costing Updates (#1409)
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:
