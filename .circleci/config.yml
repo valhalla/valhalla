@@ -145,6 +145,8 @@ jobs:
   build-osx:
     macos:
       xcode: "9.2.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       - run: brew install wget
       - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
