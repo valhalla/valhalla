@@ -532,62 +532,50 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
 
     switch (costing) {
       case odin::auto_: {
-        std::cout << "((((( auto_ )))))" << std::endl;
         sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::auto_shorter: {
-        std::cout << "((((( auto_shorter )))))" << std::endl;
         sif::ParseAutoShorterCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::bicycle: {
-        std::cout << "((((( bicycle )))))" << std::endl;
         sif::ParseBicycleCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::bus: {
-        std::cout << "((((( bus )))))" << std::endl;
         sif::ParseBusCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::hov: {
-        std::cout << "((((( hov )))))" << std::endl;
         sif::ParseHOVCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::motor_scooter: {
-        std::cout << "((((( motor_scooter )))))" << std::endl;
         sif::ParseMotorScooterCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::multimodal: {
-        std::cout << "((((( multimodal )))))" << std::endl;
         options.add_costing_options(); // Nothing to parse for this one
         break;
       }
       case odin::pedestrian: {
-        std::cout << "((((( pedestrian )))))" << std::endl;
         sif::ParsePedestrianCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::transit: {
-        std::cout << "((((( transit )))))" << std::endl;
         sif::ParseTransitCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::truck: {
-        std::cout << "((((( truck )))))" << std::endl;
         sif::ParseTruckCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::motorcycle: {
-        std::cout << "((((( motorcycle )))))" << std::endl;
         sif::ParseMotorcycleCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
       case odin::auto_data_fix: {
-        std::cout << "((((( auto_data_fix )))))" << std::endl;
         sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
