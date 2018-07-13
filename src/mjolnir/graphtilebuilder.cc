@@ -1094,7 +1094,8 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx, const std::vector<i
       speed_profile_builder_.reserve(speed_profile_builder_.size() + kCoefficientCount);
       speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
     } else {
-      throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " + std::to_string(profile.size()));
+      throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
+                               std::to_string(profile.size()));
     }
   } else {
     throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");

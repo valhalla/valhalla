@@ -56,7 +56,7 @@ struct TrafficSpeeds {
   uint8_t free_flow_speed;
   std::vector<int16_t> coefficients;
 
-  bool operator < (const TrafficSpeeds& other) const {
+  bool operator<(const TrafficSpeeds& other) const {
     return id < other.id;
   }
 };
@@ -398,12 +398,14 @@ int main(int argc, char** argv) {
   LOG_INFO("Parsed " + std::to_string(free_flow_count) + " free flow traffic speeds.");
   LOG_INFO("Parsed " + std::to_string(compressed_count) + " compressed records.");
 
-  // Sort the Traffic speeds within each tile
-//  for (auto& tile : unique_data.tile_speeds) {
-//    std::sort(tile.second.begin(), tile.second.end());
-//  }
+  // Sort the Traffic speeds within each tile. Wanted to do this so that the linear search
+  // for speeds attached to an edge would be faster...but the data seemed to be corrupted?
+  //  for (auto& tile : unique_data.tile_speeds) {
+  //    std::sort(tile.second.begin(), tile.second.end());
+  //  }
 
-  LOG_INFO("Updating speeds for " + std::to_string(unique_data.tile_speeds.size()) + " Valhalla tiles.");
+  LOG_INFO("Updating speeds for " + std::to_string(unique_data.tile_speeds.size()) +
+           " Valhalla tiles.");
   floor = unique_data.tile_speeds.size() / threads.size();
   at_ceiling = unique_data.tile_speeds.size() - (threads.size() * floor);
   std::unordered_map<vb::GraphId, std::vector<TrafficSpeeds>>::const_iterator t_start,
