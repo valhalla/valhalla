@@ -1,7 +1,11 @@
 -j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0,"use_tolls":0,"use_trails":1}}}'
+-j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0.25,"use_tolls":0,"use_trails":0.1}}}'
+-j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0.75,"use_tolls":0,"use_trails":0.3}}}'
+-j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":1,"use_tolls":0,"use_trails":1}}}'
 -j '{"locations":[{"lon":-106.093895,"lat":39.583698},{"lon":-106.078835,"lat":39.646495}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":1,"use_tolls":1,"use_trails":0}}}'
 -j '{"locations":[{"lon":-110.239525,"lat":38.985511},{"lon":-110.040642,"lat":38.957431}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":1,"use_tolls":1,"use_trails":0}}}'
 -j '{"locations":[{"lon":-110.239525,"lat":38.985511},{"lon":-110.040642,"lat":38.957431}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0,"use_tolls":0,"use_trails":1}}}'
+-j '{"locations":[{"lon":-110.239525,"lat":38.985511},{"lon":-110.040642,"lat":38.957431}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0,"use_tolls":0,"use_trails":0.5}}}'
 -j '{"locations":[{"lon":-122.990975,"lat":42.305183},{"lon":-123.048806,"lat":42.277015}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":1,"use_tolls":1,"use_trails":0}}}'
 -j '{"locations":[{"lon":-122.990975,"lat":42.305183},{"lon":-123.048806,"lat":42.277015}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":0,"use_tolls":0,"use_trails":1}}}'
 -j '{"locations":[{"lon":-120.300438,"lat":37.814617},{"lon":-118.985161,"lat":37.755424}],"costing":"motorcycle","costing_options":{"motorcycle":{"use_highways":1,"use_tolls":1,"use_trails":0}}}'
@@ -17,4 +21,3 @@
 -j '{"locations":[{"lat":52.307704570278425,"lon":4.689113795866433,"type":"break"},{"lat":52.30768489077867,"lon":4.688791930784646,"type":"break"}],"costing":"motorcycle"}'
 -j '{"locations":[{"lat":52.011745032826454,"lon":4.380545318017539,"type":"break"},{"lat":52.01148749177001,"lon":4.380207359681663,"type":"break"}],"costing":"motorcycle"}'
 -j '{"locations":[{"lat":50.897457332575954,"lon":4.025255441665649,"type":"break"},{"lat":50.89682801714832,"lon":4.017595052719116,"type":"break","name":""}],"costing":"motorcycle"}'
-

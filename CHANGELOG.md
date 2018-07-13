@@ -16,6 +16,7 @@
    * UPDATED: Parse the json request once and store in a protocol buffer to pass along the pipeline. This completed the first portion of [1357](https://github.com/valhalla/valhalla/issues/1357)
    * UPDATED: Changed the shape_match attribute from a string to an enum. Fixes [1376](https://github.com/valhalla/valhalla/issues/1376)
    * ADDED: Node bindings for route [#1341](https://github.com/valhalla/valhalla/pull/1341)
+   * UPDATED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
 
 ## Release Date: 2018-06-28 Valhalla 2.6.2
 * **Data Producer Update**
