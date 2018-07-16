@@ -121,9 +121,8 @@ void TestWriteRead() {
 
   res.set_end_mins(55);
   if (res.end_mins() != 55) {
-  throw runtime_error("ComplexRestriction end_mins failed");
+    throw runtime_error("ComplexRestriction end_mins failed");
   }
-
 }
 } // namespace
 
