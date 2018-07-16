@@ -158,13 +158,13 @@ void test_depart_at_paths() {
   // Simple path along oneway edge in the driveable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},
                {"lat":52.078937,"lon":5.115321}],"costing":"auto","date_time":{"type":1,"value":"2018-06-28T07:00"}})";
-  try_path(reader, loki_worker, test_request1, 1);
+  try_path(reader, loki_worker, true, test_request1, 1);
 
   // Simple path along oneway edge opposing the driveable direction -must not
   // return a single edge (edge count is 10)
   const auto test_request2 = R"({"locations":[{"lat":52.078937,"lon":5.115321},
                {"lat":52.079079,"lon":5.115197}],"costing":"auto","date_time":{"type":1,"value":"2018-06-28T07:00"}})";
-  try_path(reader, loki_worker, test_request2, 10);
+  try_path(reader, loki_worker, true, test_request2, 10);
 }
 
 void test_arrive_by_paths() {
@@ -175,7 +175,7 @@ void test_arrive_by_paths() {
   // Simple path along oneway edge in the driveable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},
                {"lat":52.078937,"lon":5.115321}],"costing":"auto","date_time":{"type":2,"value":"2018-06-28T07:00"}})";
-  try_path(reader, loki_worker, test_request1, 1);
+  try_path(reader, loki_worker, false, test_request1, 1);
 }
 
 int main(int argc, char* argv[]) {

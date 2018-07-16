@@ -11,7 +11,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder predictive_traffic
-    idtable matrix names node_search refs search signinfo trivial_paths uniquenames utrecht)
+    idtable matrix names node_search refs search signinfo timedep_paths trivial_paths uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)
@@ -114,6 +114,7 @@ if(ENABLE_DATA_TOOLS)
     add_dependencies(run-mapmatch utrecht_tiles)
   endif()
   add_dependencies(run-matrix utrecht_tiles)
+  add_dependencies(run-timedep_paths utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
 endif()
