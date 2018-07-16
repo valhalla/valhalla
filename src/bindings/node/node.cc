@@ -4,11 +4,11 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
+#include <functional>
 #include <iostream>
 #include <node_api.h>
 #include <sstream>
 #include <string>
-#include <functional>
 
 #include "valhalla/tyr/actor.h"
 #include "valhalla/midgard/logging.h"
@@ -200,8 +200,11 @@ private:
     return napiStr;
   }
 
-  static napi_value generic_action(napi_env env, napi_callback_info info,
-      const std::function<std::string(valhalla::tyr::actor_t& actor, const std::string& request)>& func) {
+  static napi_value generic_action(
+      napi_env env,
+      napi_callback_info info,
+      const std::function<std::string(valhalla::tyr::actor_t& actor, const std::string& request)>&
+          func) {
     napi_value jsthis;
     napi_status status;
 
@@ -214,64 +217,64 @@ private:
     std::string locate_json;
     try {
       locate_json = func(obj->actor, reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, locate_json);
     return outStr;
   }
 
   static napi_value Route(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.route(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.route(request); });
   }
 
   static napi_value Locate(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.locate(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.locate(request); });
   }
 
   static napi_value Matrix(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.matrix(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.matrix(request); });
   }
 
   static napi_value OptimizedRoute(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.optimized_route(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.optimized_route(request); });
   }
 
   static napi_value Isochrone(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.isochrone(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.isochrone(request); });
   }
 
   static napi_value TraceRoute(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.trace_route(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.trace_route(request); });
   }
 
   static napi_value TraceAttributes(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.trace_attributes(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.trace_attributes(request); });
   }
 
   static napi_value Height(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.height(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.height(request); });
   }
 
   static napi_value TransitAvailable(napi_env env, napi_callback_info info) {
-    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
-        return actor.transit_available(request);
-      });
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.transit_available(request); });
   }
 
   static napi_ref constructor;
