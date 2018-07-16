@@ -8,6 +8,7 @@
 #include <node_api.h>
 #include <sstream>
 #include <string>
+#include <functional>
 
 #include "valhalla/tyr/actor.h"
 #include "valhalla/midgard/logging.h"
@@ -199,28 +200,8 @@ private:
     return napiStr;
   }
 
-  static napi_value Route(napi_env env, napi_callback_info info) {
-    napi_value jsthis;
-    napi_status status;
-    // parse input arg into string
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    // get the actual route
-    std::string route_json;
-    try {
-      route_json = obj->actor.route(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
-
-    // wrap route_json in napi value for return
-    auto outStr = WrapString(env, route_json);
-    return outStr;
-  }
-
-  static napi_value Locate(napi_env env, napi_callback_info info) {
+  static napi_value generic_action(napi_env env, napi_callback_info info,
+      const std::function<std::string(valhalla::tyr::actor_t& actor, const std::string& request)>& func) {
     napi_value jsthis;
     napi_status status;
 
@@ -232,144 +213,65 @@ private:
 
     std::string locate_json;
     try {
-      locate_json = obj->actor.locate(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
+      locate_json = func(obj->actor, reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, locate_json);
     return outStr;
   }
 
+  static napi_value Route(napi_env env, napi_callback_info info) {
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.route(request);
+      });
+  }
+
+  static napi_value Locate(napi_env env, napi_callback_info info) {
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.locate(request);
+      });
+  }
+
   static napi_value Matrix(napi_env env, napi_callback_info info) {
-    napi_value jsthis;
-    napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    std::string matrix_json;
-    try {
-      matrix_json = obj->actor.matrix(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
-
-    auto outStr = WrapString(env, matrix_json);
-    return outStr;
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.matrix(request);
+      });
   }
 
   static napi_value OptimizedRoute(napi_env env, napi_callback_info info) {
-    napi_value jsthis;
-    napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    std::string optimized_route_json;
-    try {
-      optimized_route_json = obj->actor.optimized_route(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
-
-    auto outStr = WrapString(env, optimized_route_json);
-    return outStr;
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.optimized_route(request);
+      });
   }
 
   static napi_value Isochrone(napi_env env, napi_callback_info info) {
-    napi_value jsthis;
-    napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    std::string isochrone_json;
-    try {
-      isochrone_json = obj->actor.isochrone(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
-
-    auto outStr = WrapString(env, isochrone_json);
-    return outStr;
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.isochrone(request);
+      });
   }
 
   static napi_value TraceRoute(napi_env env, napi_callback_info info) {
-    napi_value jsthis;
-    napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    std::string trace_route_json;
-    try {
-      trace_route_json = obj->actor.trace_route(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
-
-    auto outStr = WrapString(env, trace_route_json);
-    return outStr;
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.trace_route(request);
+      });
   }
 
   static napi_value TraceAttributes(napi_env env, napi_callback_info info) {
-    napi_value jsthis;
-    napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    std::string trace_attributes_json;
-    try {
-      trace_attributes_json = obj->actor.trace_attributes(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
-
-    auto outStr = WrapString(env, trace_attributes_json);
-    return outStr;
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.trace_attributes(request);
+      });
   }
 
   static napi_value Height(napi_env env, napi_callback_info info) {
-    napi_value jsthis;
-    napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    std::string height_json;
-    try {
-      height_json = obj->actor.height(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
-
-    auto outStr = WrapString(env, height_json);
-    return outStr;
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.height(request);
+      });
   }
 
   static napi_value TransitAvailable(napi_env env, napi_callback_info info) {
-    napi_value jsthis;
-    napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    std::string transit_available_json;
-    try {
-      transit_available_json = obj->actor.transit_available(reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
-
-    auto outStr = WrapString(env, transit_available_json);
-    return outStr;
+    return generic_action(env, info, [](valhalla::tyr::actor_t& actor, const std::string& request) -> std::string {
+        return actor.transit_available(request);
+      });
   }
 
   static napi_ref constructor;
