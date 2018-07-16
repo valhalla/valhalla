@@ -300,10 +300,11 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     // edge and potentially complete the path.
     BDEdgeLabel pred = edgelabels_rev_[predindex];
     if (destinations_.find(pred.edgeid()) != destinations_.end()) {
-      // Check if a trivial path. Skip if no predecessor and not
+      // Check if a trivial path using opposing edge. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
-        if (IsTrivial(pred.edgeid(), origin, destination)) {
+        // Use opposing edge.
+        if (IsTrivial(pred.opp_edgeid(), origin, destination)) {
           return FormPath(graphreader, predindex);
         }
       } else {
@@ -418,9 +419,10 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // destination is in a forward direction along the edge. Add back in
     // the edge score/penalty to account for destination edges farther from
     // the input location lat,lon.
-    auto p = destinations_.find(edgeid);
+    auto p = destinations_.find(opp_edge_id);
     if (p != destinations_.end()) {
-      if (IsTrivial(edgeid, origin, destination)) {
+      // Reverse the origin and destination in the IsTrivial call.
+      if (IsTrivial(edgeid, destination, origin)) {
         // Find the destination edge and update cost.
         for (const auto& destination_edge : destination.path_edges()) {
           if (destination_edge.graph_id() == edgeid) {
