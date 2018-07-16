@@ -21,7 +21,7 @@
    * ADDED: Node bindings for route [#1341](https://github.com/valhalla/valhalla/pull/1341)
    * UPDATED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
 
-## Release Date: 2018-06-28 Valhalla 2.6.3
+## Release Date: 2018-07-15 Valhalla 2.6.3
 * **API**:
    * FIXED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
    * FIXED: Fixed the highway_factor when use_highways < 0.5.
