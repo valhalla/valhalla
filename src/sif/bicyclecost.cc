@@ -32,7 +32,7 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f; // Seconds
 constexpr float kDefaultUseRoad = 0.25f;               // Factor between 0 and 1
 constexpr float kDefaultUseFerry = 0.5f;               // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f;      // Factor between 0 and 1
-const std::string kDefaultBicycleType = "Road";        // Bicycle type
+const std::string kDefaultBicycleType = "Hybrid";      // Bicycle type
 
 // Maximum ferry penalty (when use_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
@@ -452,7 +452,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
       pt.get<float>("country_crossing_penalty", kDefaultCountryCrossingPenalty));
 
   // Get the bicycle type - enter as string and convert to enum
-  std::string bicycle_type = pt.get("bicycle_type", "Hybrid");
+  std::string bicycle_type = pt.get("bicycle_type", kDefaultBicycleType);
   if (bicycle_type == "Cross") {
     type_ = BicycleType::kCross;
   } else if (bicycle_type == "Road") {
@@ -1034,13 +1034,14 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     BicycleType type;
     if (pbf_costing_options->transport_type() == "Cross") {
       type = BicycleType::kCross;
-    } else if (pbf_costing_options->transport_type() == "Hybrid") {
-      type = BicycleType::kHybrid;
+    } else if (pbf_costing_options->transport_type() == "Road") {
+      type = BicycleType::kRoad;
     } else if (pbf_costing_options->transport_type() == "Mountain") {
       type = BicycleType::kMountain;
     } else {
-      type = BicycleType::kRoad;
+      type = BicycleType::kHybrid;
     }
+
     uint32_t t = static_cast<uint32_t>(type);
     ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
                                              kMaxCyclingSpeed};
@@ -1066,7 +1067,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
     pbf_costing_options->set_avoid_bad_surfaces(kDefaultAvoidBadSurfaces);
     pbf_costing_options->set_transport_type(kDefaultBicycleType);
-    pbf_costing_options->set_cycling_speed(kDefaultCyclingSpeed[0]);
+    pbf_costing_options->set_cycling_speed(
+        kDefaultCyclingSpeed[static_cast<uint32_t>(BicycleType::kHybrid)]);
   }
 }
 
