@@ -1,6 +1,4 @@
-<<<<<<< HEAD
-## Release Date: UNRELEASED Valhalla 2.7.0
-=======
+
 ## Release Date: UNRELEASED Valhalla 3.0
 * **Infrastructure**:
    * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
