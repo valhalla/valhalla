@@ -57,6 +57,30 @@ constexpr float kDefaultMotorcycleUsePrimary = 0.5f;               // Factor bet
 constexpr float kDefaultMotorcycleUseTrails = 0.0f;                // Factor between 0 and 1
 constexpr float kDefaultMotorcycleDestinationOnlyPenalty = 600.0f; // Seconds
 
+// Pedestrian defaults
+constexpr uint32_t kDefaultPedestrianMaxDistanceFoot = 100000;      // 100 km
+constexpr uint32_t kDefaultPedestrianMaxDistanceWheelchair = 10000; // 10 km
+constexpr float kDefaultPedestrianSpeedFoot = 5.1f;                 // 3.16 MPH
+constexpr float kDefaultPedestrianSpeedWheelchair = 4.0f;           // 2.5  MPH  TODO
+constexpr float kDefaultPedestrianStepPenaltyFoot = 30.0f;          // 30 seconds
+constexpr float kDefaultPedestrianStepPenaltyWheelchair = 600.0f;   // 10 minutes
+constexpr uint32_t kDefaultPedestrianMaxGradeFoot = 90;
+constexpr uint32_t kDefaultPedestrianMaxGradeWheelchair = 12;    // Conservative for now...
+constexpr uint8_t kDefaultPedestrianMaxHikingDifficulty = 1;     // T1 (kHiking)
+constexpr float kDefaultPedestrianModeFactor = 1.5f;             // Favor this mode?
+constexpr float kDefaultPedestrianManeuverPenalty = 5.0f;        // Seconds
+constexpr float kDefaultPedestrianGatePenalty = 10.0f;           // Seconds
+constexpr float kDefaultPedestrianWalkwayFactor = 0.9f;          // Slightly favor walkways
+constexpr float kDefaultPedestrianSideWalkFactor = 0.95f;        // Slightly favor sidewalks
+constexpr float kDefaultPedestrianAlleyFactor = 2.0f;            // Avoid alleys
+constexpr float kDefaultPedestrianDrivewayFactor = 5.0f;         // Avoid driveways
+constexpr float kDefaultPedestrianFerryCost = 300.0f;            // Seconds
+constexpr float kDefaultPedestrianCountryCrossingCost = 600.0f;  // Seconds
+constexpr float kDefaultPedestrianCountryCrossingPenalty = 0.0f; // Seconds
+constexpr float kDefaultPedestrianUseFerry = 1.0f;
+constexpr uint32_t kDefaultPedestrianTransitStartEndMaxDistance = 2415; // 1.5 miles
+constexpr uint32_t kDefaultPedestrianTransitTransferMaxDistance = 805;  // 0.5 miles
+
 ///////////////////////////////////////////////////////////////////////////////
 // validate by type methods
 void validate(const std::string& key,
@@ -95,6 +119,14 @@ void validate(const std::string& key,
   }
 }
 
+void validate(const std::string& key, const uint32_t expected_value, const uint32_t pbf_value) {
+  if (pbf_value != expected_value) {
+    throw std::runtime_error("Incorrect " + key +
+                             " uint32_t | expected_value=" + std::to_string(expected_value) +
+                             " | found=" + std::to_string(pbf_value));
+  }
+}
+
 void validate(const std::string& key,
               const uint32_t expected_value,
               const bool has_pbf_value,
@@ -106,6 +138,15 @@ void validate(const std::string& key,
     throw std::runtime_error("Incorrect " + key +
                              " uint32_t | expected_value=" + std::to_string(expected_value) +
                              " | found=" + std::to_string(pbf_value));
+  }
+}
+
+void validate(const std::string& key,
+              const std::string& expected_value,
+              const std::string& pbf_value) {
+  if (pbf_value != expected_value) {
+    throw std::runtime_error("Incorrect " + key + " string | expected_value=" + expected_value +
+                             " | found=" + pbf_value);
   }
 }
 
@@ -189,6 +230,44 @@ std::string get_request_str(const std::string& grandparent_key,
                             const float specified_value) {
   return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + key + R"(":)" +
          std::to_string(specified_value) + R"(}}})";
+}
+
+std::string get_request_str(const std::string& grandparent_key,
+                            const std::string& parent_key,
+                            const std::string& sibling_key,
+                            const std::string& sibling_value,
+                            const std::string& key,
+                            const float specified_value) {
+  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + sibling_key +
+         R"(":")" + sibling_value + R"(",")" + key + R"(":)" + std::to_string(specified_value) +
+         R"(}}})";
+}
+
+std::string get_request_str(const std::string& grandparent_key,
+                            const std::string& parent_key,
+                            const std::string& key,
+                            const uint32_t specified_value) {
+  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + key + R"(":)" +
+         std::to_string(specified_value) + R"(}}})";
+}
+
+std::string get_request_str(const std::string& grandparent_key,
+                            const std::string& parent_key,
+                            const std::string& sibling_key,
+                            const std::string& sibling_value,
+                            const std::string& key,
+                            const uint32_t specified_value) {
+  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + sibling_key +
+         R"(":")" + sibling_value + R"(",")" + key + R"(":)" + std::to_string(specified_value) +
+         R"(}}})";
+}
+
+std::string get_request_str(const std::string& grandparent_key,
+                            const std::string& parent_key,
+                            const std::string& key,
+                            const std::string& specified_value) {
+  return R"({")" + grandparent_key + R"(":{")" + parent_key + R"(":{")" + key + R"(":")" +
+         specified_value + R"("}}})";
 }
 
 std::string get_request_str(const std::string& key, const uint32_t expected_value) {
@@ -410,7 +489,7 @@ void test_default_motor_scooter_cost_options(const valhalla::odin::Costing costi
            request.options.costing_options(static_cast<int>(costing)).ferry_cost());
   validate("use_ferry", kDefaultMotorScooterUseFerry,
            request.options.costing_options(static_cast<int>(costing)).use_ferry());
-  validate("top_speed", kDefaultMotorScooterTopSpeed,
+  validate("top_speed", static_cast<float>(kDefaultMotorScooterTopSpeed),
            request.options.costing_options(static_cast<int>(costing)).top_speed());
   validate("use_hills", kDefaultMotorScooterUseHills,
            request.options.costing_options(static_cast<int>(costing)).use_hills());
@@ -453,6 +532,84 @@ void test_default_motorcycle_cost_options(const valhalla::odin::Costing costing,
            request.options.costing_options(static_cast<int>(costing)).use_primary());
   validate("use_trails", kDefaultMotorcycleUseTrails,
            request.options.costing_options(static_cast<int>(costing)).use_trails());
+}
+
+void test_default_pedestrian_cost_options(const valhalla::odin::Costing costing,
+                                          const valhalla::odin::DirectionsOptions::Action action) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string key = "costing";
+
+  // Get cost request with no cost options
+  valhalla::valhalla_request_t request = get_request(get_request_str(key, costing_str), action);
+
+  validate("type", "foot",
+           request.options.costing_options(static_cast<int>(costing)).transport_type());
+  validate("maneuver_penalty", kDefaultPedestrianManeuverPenalty,
+           request.options.costing_options(static_cast<int>(costing)).maneuver_penalty());
+  validate("gate_penalty", kDefaultPedestrianGatePenalty,
+           request.options.costing_options(static_cast<int>(costing)).gate_penalty());
+  validate("country_crossing_cost", kDefaultPedestrianCountryCrossingCost,
+           request.options.costing_options(static_cast<int>(costing)).country_crossing_cost());
+  validate("country_crossing_penalty", kDefaultPedestrianCountryCrossingPenalty,
+           request.options.costing_options(static_cast<int>(costing)).country_crossing_penalty());
+  validate("ferry_cost", kDefaultPedestrianFerryCost,
+           request.options.costing_options(static_cast<int>(costing)).ferry_cost());
+  validate("use_ferry", kDefaultPedestrianUseFerry,
+           request.options.costing_options(static_cast<int>(costing)).use_ferry());
+  validate("max_distance", kDefaultPedestrianMaxDistanceFoot,
+           request.options.costing_options(static_cast<int>(costing)).max_distance());
+  validate("walking_speed", kDefaultPedestrianSpeedFoot,
+           request.options.costing_options(static_cast<int>(costing)).walking_speed());
+  validate("walking_speed", kDefaultPedestrianSpeedFoot,
+           request.options.costing_options(static_cast<int>(costing)).walking_speed());
+  validate("step_penalty", kDefaultPedestrianStepPenaltyFoot,
+           request.options.costing_options(static_cast<int>(costing)).step_penalty());
+  validate("max_grade", kDefaultPedestrianMaxGradeFoot,
+           request.options.costing_options(static_cast<int>(costing)).max_grade());
+  validate("max_hiking_difficulty", kDefaultPedestrianMaxHikingDifficulty,
+           request.options.costing_options(static_cast<int>(costing)).max_hiking_difficulty());
+  validate("mode_factor", kDefaultPedestrianModeFactor,
+           request.options.costing_options(static_cast<int>(costing)).mode_factor());
+  validate("walkway_factor", kDefaultPedestrianWalkwayFactor,
+           request.options.costing_options(static_cast<int>(costing)).walkway_factor());
+  validate("sidewalk_factor", kDefaultPedestrianSideWalkFactor,
+           request.options.costing_options(static_cast<int>(costing)).sidewalk_factor());
+  validate("alley_factor", kDefaultPedestrianAlleyFactor,
+           request.options.costing_options(static_cast<int>(costing)).alley_factor());
+  validate("driveway_factor", kDefaultPedestrianDrivewayFactor,
+           request.options.costing_options(static_cast<int>(costing)).driveway_factor());
+  validate("transit_start_end_max_distance", kDefaultPedestrianTransitStartEndMaxDistance,
+           request.options.costing_options(static_cast<int>(costing))
+               .transit_start_end_max_distance());
+  validate("transit_transfer_max_distance", kDefaultPedestrianTransitTransferMaxDistance,
+           request.options.costing_options(static_cast<int>(costing))
+               .transit_transfer_max_distance());
+}
+
+void test_transport_type_parsing(const valhalla::odin::Costing costing,
+                                 const std::string& key,
+                                 const std::string& specified_value,
+                                 const std::string& expected_value,
+                                 const valhalla::odin::DirectionsOptions::Action action =
+                                     valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).transport_type());
 }
 
 void test_maneuver_penalty_parsing(const valhalla::odin::Costing costing,
@@ -812,6 +969,278 @@ void test_use_trails_parsing(const valhalla::odin::Costing costing,
            request.options.costing_options(static_cast<int>(costing)).use_trails());
 }
 
+void test_max_distance_parsing(const valhalla::odin::Costing costing,
+                               const std::string& transport_type,
+                               const uint32_t specified_value,
+                               const uint32_t expected_value,
+                               const valhalla::odin::DirectionsOptions::Action action =
+                                   valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string sibling_key = "type";
+  const std::string key = "max_distance";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type, key,
+                                  specified_value),
+                  action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).max_distance());
+}
+
+void test_walking_speed_parsing(const valhalla::odin::Costing costing,
+                                const std::string& transport_type,
+                                const float specified_value,
+                                const float expected_value,
+                                const valhalla::odin::DirectionsOptions::Action action =
+                                    valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string sibling_key = "type";
+  const std::string key = "walking_speed";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type, key,
+                                  specified_value),
+                  action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).walking_speed());
+}
+
+void test_step_penalty_parsing(const valhalla::odin::Costing costing,
+                               const std::string& transport_type,
+                               const float specified_value,
+                               const float expected_value,
+                               const valhalla::odin::DirectionsOptions::Action action =
+                                   valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string sibling_key = "type";
+  const std::string key = "step_penalty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type, key,
+                                  specified_value),
+                  action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).step_penalty());
+}
+
+void test_max_grade_parsing(const valhalla::odin::Costing costing,
+                            const std::string& transport_type,
+                            const uint32_t specified_value,
+                            const uint32_t expected_value,
+                            const valhalla::odin::DirectionsOptions::Action action =
+                                valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string sibling_key = "type";
+  const std::string key = "max_grade";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type, key,
+                                  specified_value),
+                  action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).max_grade());
+}
+
+void test_max_hiking_difficulty_parsing(const valhalla::odin::Costing costing,
+                                        const uint32_t specified_value,
+                                        const uint32_t expected_value,
+                                        const valhalla::odin::DirectionsOptions::Action action =
+                                            valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "max_hiking_difficulty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).max_hiking_difficulty());
+}
+
+void test_mode_factor_parsing(const valhalla::odin::Costing costing,
+                              const float specified_value,
+                              const float expected_value,
+                              const valhalla::odin::DirectionsOptions::Action action =
+                                  valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "mode_factor";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).mode_factor());
+}
+
+void test_walkway_factor_parsing(const valhalla::odin::Costing costing,
+                                 const float specified_value,
+                                 const float expected_value,
+                                 const valhalla::odin::DirectionsOptions::Action action =
+                                     valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "walkway_factor";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).walkway_factor());
+}
+
+void test_sidewalk_factor_parsing(const valhalla::odin::Costing costing,
+                                  const float specified_value,
+                                  const float expected_value,
+                                  const valhalla::odin::DirectionsOptions::Action action =
+                                      valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "sidewalk_factor";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).sidewalk_factor());
+}
+
+void test_alley_factor_parsing(const valhalla::odin::Costing costing,
+                               const float specified_value,
+                               const float expected_value,
+                               const valhalla::odin::DirectionsOptions::Action action =
+                                   valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "alley_factor";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).alley_factor());
+}
+
+void test_driveway_factor_parsing(const valhalla::odin::Costing costing,
+                                  const float specified_value,
+                                  const float expected_value,
+                                  const valhalla::odin::DirectionsOptions::Action action =
+                                      valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "driveway_factor";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).driveway_factor());
+}
+
+void test_transit_start_end_max_distance_parsing(
+    const valhalla::odin::Costing costing,
+    const uint32_t specified_value,
+    const uint32_t expected_value,
+    const valhalla::odin::DirectionsOptions::Action action =
+        valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "transit_start_end_max_distance";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing))
+               .transit_start_end_max_distance());
+}
+
+void test_transit_transfer_max_distance_parsing(
+    const valhalla::odin::Costing costing,
+    const uint32_t specified_value,
+    const uint32_t expected_value,
+    const valhalla::odin::DirectionsOptions::Action action =
+        valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "transit_transfer_max_distance";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing))
+               .transit_transfer_max_distance());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // test by key methods
 void test_polygons() {
@@ -897,6 +1326,28 @@ void test_default_motorcycle_cost_options() {
                                        valhalla::odin::DirectionsOptions::route);
 }
 
+void test_default_pedestrian_cost_options() {
+  test_default_pedestrian_cost_options(valhalla::odin::pedestrian,
+                                       valhalla::odin::DirectionsOptions::route);
+}
+
+void test_transport_type() {
+  std::string transport_type_key = "type";
+  std::string transport_type_value = "car";
+  for (auto costing : get_base_auto_costing_list()) {
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
+                                transport_type_value);
+  }
+
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  transport_type_value = "foot";
+  test_transport_type_parsing(costing, transport_type_key, transport_type_value,
+                              transport_type_value);
+  transport_type_value = "wheelchair";
+  test_transport_type_parsing(costing, transport_type_key, transport_type_value,
+                              transport_type_value);
+}
+
 void test_maneuver_penalty() {
   float default_value = kDefaultAutoManeuverPenalty;
   for (auto costing : get_base_auto_costing_list()) {
@@ -917,6 +1368,14 @@ void test_maneuver_penalty() {
 
   costing = valhalla::odin::Costing::motorcycle;
   default_value = kDefaultMotorcycleManeuverPenalty;
+  test_maneuver_penalty_parsing(costing, default_value, default_value);
+  test_maneuver_penalty_parsing(costing, 2.f, 2.f);
+  test_maneuver_penalty_parsing(costing, 30.f, 30.f);
+  test_maneuver_penalty_parsing(costing, -2.f, default_value);
+  test_maneuver_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::pedestrian;
+  default_value = kDefaultPedestrianManeuverPenalty;
   test_maneuver_penalty_parsing(costing, default_value, default_value);
   test_maneuver_penalty_parsing(costing, 2.f, 2.f);
   test_maneuver_penalty_parsing(costing, 30.f, 30.f);
@@ -1001,6 +1460,14 @@ void test_gate_penalty() {
   test_gate_penalty_parsing(costing, default_value, default_value);
   test_gate_penalty_parsing(costing, 2.f, 2.f);
   test_gate_penalty_parsing(costing, 600.f, 600.f);
+  test_gate_penalty_parsing(costing, -2.f, default_value);
+  test_gate_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::pedestrian;
+  default_value = kDefaultPedestrianGatePenalty;
+  test_gate_penalty_parsing(costing, default_value, default_value);
+  test_gate_penalty_parsing(costing, 5.f, 5.f);
+  test_gate_penalty_parsing(costing, 20.f, 20.f);
   test_gate_penalty_parsing(costing, -2.f, default_value);
   test_gate_penalty_parsing(costing, 500000.f, default_value);
 }
@@ -1095,6 +1562,14 @@ void test_country_crossing_cost() {
   test_country_crossing_cost_parsing(costing, 700.f, 700.f);
   test_country_crossing_cost_parsing(costing, -2.f, default_value);
   test_country_crossing_cost_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::pedestrian;
+  default_value = kDefaultPedestrianCountryCrossingCost;
+  test_country_crossing_cost_parsing(costing, default_value, default_value);
+  test_country_crossing_cost_parsing(costing, 2.f, 2.f);
+  test_country_crossing_cost_parsing(costing, 700.f, 700.f);
+  test_country_crossing_cost_parsing(costing, -2.f, default_value);
+  test_country_crossing_cost_parsing(costing, 500000.f, default_value);
 }
 
 void test_country_crossing_penalty() {
@@ -1117,6 +1592,14 @@ void test_country_crossing_penalty() {
 
   costing = valhalla::odin::Costing::motorcycle;
   default_value = kDefaultMotorcycleCountryCrossingPenalty;
+  test_country_crossing_penalty_parsing(costing, default_value, default_value);
+  test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
+  test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
+  test_country_crossing_penalty_parsing(costing, -2.f, default_value);
+  test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::motorcycle;
+  default_value = kDefaultPedestrianCountryCrossingPenalty;
   test_country_crossing_penalty_parsing(costing, default_value, default_value);
   test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
   test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
@@ -1149,6 +1632,14 @@ void test_ferry_cost() {
   test_ferry_cost_parsing(costing, 600.f, 600.f);
   test_ferry_cost_parsing(costing, -2.f, default_value);
   test_ferry_cost_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::pedestrian;
+  default_value = kDefaultPedestrianFerryCost;
+  test_ferry_cost_parsing(costing, default_value, default_value);
+  test_ferry_cost_parsing(costing, 2.f, 2.f);
+  test_ferry_cost_parsing(costing, 600.f, 600.f);
+  test_ferry_cost_parsing(costing, -2.f, default_value);
+  test_ferry_cost_parsing(costing, 500000.f, default_value);
 }
 
 void test_use_ferry() {
@@ -1171,6 +1662,14 @@ void test_use_ferry() {
 
   costing = valhalla::odin::Costing::motorcycle;
   default_value = kDefaultMotorcycleUseFerry;
+  test_use_ferry_parsing(costing, default_value, default_value);
+  test_use_ferry_parsing(costing, 0.2f, 0.2f);
+  test_use_ferry_parsing(costing, 0.6f, 0.6f);
+  test_use_ferry_parsing(costing, -2.f, default_value);
+  test_use_ferry_parsing(costing, 2.f, default_value);
+
+  costing = valhalla::odin::Costing::pedestrian;
+  default_value = kDefaultPedestrianUseFerry;
   test_use_ferry_parsing(costing, default_value, default_value);
   test_use_ferry_parsing(costing, 0.2f, 0.2f);
   test_use_ferry_parsing(costing, 0.6f, 0.6f);
@@ -1264,6 +1763,153 @@ void test_use_trails() {
   test_use_trails_parsing(costing, 2.f, default_value);
 }
 
+void test_max_distance() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+
+  std::string transport_type = "foot";
+  uint32_t default_value = kDefaultPedestrianMaxDistanceFoot;
+  test_max_distance_parsing(costing, transport_type, default_value, default_value);
+  test_max_distance_parsing(costing, transport_type, 50, 50);
+  test_max_distance_parsing(costing, transport_type, 200000, default_value);
+
+  transport_type = "wheelchair";
+  default_value = kDefaultPedestrianMaxDistanceWheelchair;
+  test_max_distance_parsing(costing, transport_type, default_value, default_value);
+  test_max_distance_parsing(costing, transport_type, 50, 50);
+  test_max_distance_parsing(costing, transport_type, 200000, default_value);
+}
+
+void test_walking_speed() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+
+  std::string transport_type = "foot";
+  float default_value = kDefaultPedestrianSpeedFoot;
+  test_walking_speed_parsing(costing, transport_type, default_value, default_value);
+  test_walking_speed_parsing(costing, transport_type, 2.5f, 2.5f);
+  test_walking_speed_parsing(costing, transport_type, 6.f, 6.f);
+  test_walking_speed_parsing(costing, transport_type, -2.f, default_value);
+  test_walking_speed_parsing(costing, transport_type, 50.f, default_value);
+
+  transport_type = "wheelchair";
+  default_value = kDefaultPedestrianSpeedWheelchair;
+  test_walking_speed_parsing(costing, transport_type, default_value, default_value);
+  test_walking_speed_parsing(costing, transport_type, 2.f, 2.f);
+  test_walking_speed_parsing(costing, transport_type, 5.f, 5.f);
+  test_walking_speed_parsing(costing, transport_type, -2.f, default_value);
+  test_walking_speed_parsing(costing, transport_type, 50.f, default_value);
+}
+
+void test_step_penalty() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+
+  std::string transport_type = "foot";
+  float default_value = kDefaultPedestrianStepPenaltyFoot;
+  test_step_penalty_parsing(costing, transport_type, default_value, default_value);
+  test_step_penalty_parsing(costing, transport_type, 10.f, 10.f);
+  test_step_penalty_parsing(costing, transport_type, 40.f, 40.f);
+  test_step_penalty_parsing(costing, transport_type, -2.f, default_value);
+  test_step_penalty_parsing(costing, transport_type, 500000.f, default_value);
+
+  transport_type = "wheelchair";
+  default_value = kDefaultPedestrianStepPenaltyWheelchair;
+  test_step_penalty_parsing(costing, transport_type, default_value, default_value);
+  test_step_penalty_parsing(costing, transport_type, 400.f, 400.f);
+  test_step_penalty_parsing(costing, transport_type, 800.f, 800.f);
+  test_step_penalty_parsing(costing, transport_type, -2.f, default_value);
+  test_step_penalty_parsing(costing, transport_type, 500000.f, default_value);
+}
+
+void test_max_grade() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+
+  std::string transport_type = "foot";
+  uint32_t default_value = kDefaultPedestrianMaxGradeFoot;
+  test_max_grade_parsing(costing, transport_type, default_value, default_value);
+  test_max_grade_parsing(costing, transport_type, 30, 30);
+  test_max_grade_parsing(costing, transport_type, 100, default_value);
+
+  transport_type = "wheelchair";
+  default_value = kDefaultPedestrianMaxGradeWheelchair;
+  test_max_grade_parsing(costing, transport_type, default_value, default_value);
+  test_max_grade_parsing(costing, transport_type, 10, 10);
+  test_max_grade_parsing(costing, transport_type, 14, 14);
+  test_max_grade_parsing(costing, transport_type, 100, default_value);
+}
+
+void test_max_hiking_difficulty() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  float default_value = kDefaultPedestrianMaxHikingDifficulty;
+  test_max_hiking_difficulty_parsing(costing, default_value, default_value);
+  test_max_hiking_difficulty_parsing(costing, 3, 3);
+  test_max_hiking_difficulty_parsing(costing, 10, default_value);
+}
+
+void test_mode_factor() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  float default_value = kDefaultPedestrianModeFactor;
+  test_mode_factor_parsing(costing, default_value, default_value);
+  test_mode_factor_parsing(costing, 1.f, 1.f);
+  test_mode_factor_parsing(costing, 10.f, 10.f);
+  test_mode_factor_parsing(costing, -2.f, default_value);
+  test_mode_factor_parsing(costing, 200000.f, default_value);
+}
+
+void test_walkway_factor() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  float default_value = kDefaultPedestrianWalkwayFactor;
+  test_walkway_factor_parsing(costing, default_value, default_value);
+  test_walkway_factor_parsing(costing, 0.5f, 0.5f);
+  test_walkway_factor_parsing(costing, 10.f, 10.f);
+  test_walkway_factor_parsing(costing, -2.f, default_value);
+  test_walkway_factor_parsing(costing, 200000.f, default_value);
+}
+
+void test_sidewalk_factor() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  float default_value = kDefaultPedestrianSideWalkFactor;
+  test_sidewalk_factor_parsing(costing, default_value, default_value);
+  test_sidewalk_factor_parsing(costing, 0.5f, 0.5f);
+  test_sidewalk_factor_parsing(costing, 10.f, 10.f);
+  test_sidewalk_factor_parsing(costing, -2.f, default_value);
+  test_sidewalk_factor_parsing(costing, 200000.f, default_value);
+}
+
+void test_alley_factor() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  float default_value = kDefaultPedestrianAlleyFactor;
+  test_alley_factor_parsing(costing, default_value, default_value);
+  test_alley_factor_parsing(costing, 1.f, 1.f);
+  test_alley_factor_parsing(costing, 10.f, 10.f);
+  test_alley_factor_parsing(costing, -2.f, default_value);
+  test_alley_factor_parsing(costing, 200000.f, default_value);
+}
+
+void test_driveway_factor() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  float default_value = kDefaultPedestrianDrivewayFactor;
+  test_driveway_factor_parsing(costing, default_value, default_value);
+  test_driveway_factor_parsing(costing, 1.f, 1.f);
+  test_driveway_factor_parsing(costing, 10.f, 10.f);
+  test_driveway_factor_parsing(costing, -2.f, default_value);
+  test_driveway_factor_parsing(costing, 200000.f, default_value);
+}
+
+void test_transit_start_end_max_distance() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  float default_value = kDefaultPedestrianTransitStartEndMaxDistance;
+  test_transit_start_end_max_distance_parsing(costing, default_value, default_value);
+  test_transit_start_end_max_distance_parsing(costing, 3000, 3000);
+  test_transit_start_end_max_distance_parsing(costing, 200000, default_value);
+}
+
+void test_transit_transfer_max_distance() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
+  float default_value = kDefaultPedestrianTransitTransferMaxDistance;
+  test_transit_transfer_max_distance_parsing(costing, default_value, default_value);
+  test_transit_transfer_max_distance_parsing(costing, 1500, 1500);
+  test_transit_transfer_max_distance_parsing(costing, 100000, default_value);
+}
+
 } // namespace
 
 int main() {
@@ -1316,6 +1962,12 @@ int main() {
   // default motorcycle cost options
   suite.test(TEST_CASE(test_default_motorcycle_cost_options));
 
+  // default pedestrian cost options
+  suite.test(TEST_CASE(test_default_pedestrian_cost_options));
+
+  // transport_type
+  suite.test(TEST_CASE(test_transport_type));
+
   // maneuver_penalty
   suite.test(TEST_CASE(test_maneuver_penalty));
 
@@ -1366,6 +2018,42 @@ int main() {
 
   // use_trails
   suite.test(TEST_CASE(test_use_trails));
+
+  // max_distance
+  suite.test(TEST_CASE(test_max_distance));
+
+  // step_penalty
+  suite.test(TEST_CASE(test_step_penalty));
+
+  // walking_speed
+  suite.test(TEST_CASE(test_walking_speed));
+
+  // max_grade
+  suite.test(TEST_CASE(test_max_grade));
+
+  // max_hiking_difficulty
+  suite.test(TEST_CASE(test_max_hiking_difficulty));
+
+  // mode_factor
+  suite.test(TEST_CASE(test_mode_factor));
+
+  // walkway_factor
+  suite.test(TEST_CASE(test_walkway_factor));
+
+  // sidewalk_factor
+  suite.test(TEST_CASE(test_sidewalk_factor));
+
+  // alley_factor
+  suite.test(TEST_CASE(test_alley_factor));
+
+  // driveway_factor
+  suite.test(TEST_CASE(test_driveway_factor));
+
+  // transit_start_end_max_distance
+  suite.test(TEST_CASE(test_transit_start_end_max_distance));
+
+  // transit_transfer_max_distance
+  suite.test(TEST_CASE(test_transit_transfer_max_distance));
 
   return suite.tear_down();
 }
