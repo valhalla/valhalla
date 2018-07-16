@@ -42,7 +42,13 @@ public:
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_METHOD("route", Route),
         DECLARE_NAPI_METHOD("locate", Locate),
-        DECLARE_NAPI_METHOD("matrix", Matrix)
+        DECLARE_NAPI_METHOD("matrix", Matrix),
+        DECLARE_NAPI_METHOD("optimizedRoute", OptimizedRoute),
+        DECLARE_NAPI_METHOD("isochrone", Isochrone),
+        DECLARE_NAPI_METHOD("traceRoute", TraceRoute),
+        DECLARE_NAPI_METHOD("traceAttributes", TraceAttributes),
+        DECLARE_NAPI_METHOD("height", Height),
+        DECLARE_NAPI_METHOD("transitAvailable", TransitAvailable)
     };
     // parse config file to get logging config
     size_t argc = 1;
@@ -77,7 +83,7 @@ public:
     } catch (...) { napi_throw_error(env, NULL, "Failed to load logging config"); }
 
     napi_value actor_constructor;
-    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 3, properties,
+    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 9, properties,
                                &actor_constructor);
     checkNapiStatus(status, env, "Failed to define class");
 
@@ -250,6 +256,120 @@ private:
     } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, matrix_json);
+    return outStr;
+  }
+
+  static napi_value OptimizedRoute(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
+    checkNapiStatus(status, env, "Failed to unwrap js object");
+
+    std::string optimized_route_json;
+    try {
+      optimized_route_json = obj->actor.optimized_route(reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+
+    auto outStr = WrapString(env, optimized_route_json);
+    return outStr;
+  }
+
+  static napi_value Isochrone(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
+    checkNapiStatus(status, env, "Failed to unwrap js object");
+
+    std::string isochrone_json;
+    try {
+      isochrone_json = obj->actor.isochrone(reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+
+    auto outStr = WrapString(env, isochrone_json);
+    return outStr;
+  }
+
+  static napi_value TraceRoute(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
+    checkNapiStatus(status, env, "Failed to unwrap js object");
+
+    std::string trace_route_json;
+    try {
+      trace_route_json = obj->actor.trace_route(reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+
+    auto outStr = WrapString(env, trace_route_json);
+    return outStr;
+  }
+
+  static napi_value TraceAttributes(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
+    checkNapiStatus(status, env, "Failed to unwrap js object");
+
+    std::string trace_attributes_json;
+    try {
+      trace_attributes_json = obj->actor.trace_attributes(reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+
+    auto outStr = WrapString(env, trace_attributes_json);
+    return outStr;
+  }
+
+  static napi_value Height(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
+    checkNapiStatus(status, env, "Failed to unwrap js object");
+
+    std::string height_json;
+    try {
+      height_json = obj->actor.height(reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+
+    auto outStr = WrapString(env, height_json);
+    return outStr;
+  }
+
+  static napi_value TransitAvailable(napi_env env, napi_callback_info info) {
+    napi_value jsthis;
+    napi_status status;
+
+    std::string reqString = ParseRequest(env, info, &jsthis);
+
+    Actor* obj;
+    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
+    checkNapiStatus(status, env, "Failed to unwrap js object");
+
+    std::string transit_available_json;
+    try {
+      transit_available_json = obj->actor.transit_available(reqString);
+    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+
+    auto outStr = WrapString(env, transit_available_json);
     return outStr;
   }
 
