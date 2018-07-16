@@ -151,6 +151,13 @@ if(ENABLE_NODE_BINDINGS)
       copy_node_artifacts
       ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/route.test.js
       ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/locate.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/height.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/isochrone.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/matrix.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/optimized_route.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/trace_attributes.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/trace_route.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/transit_available.test.js
       ${VALHALLA_SOURCE_DIR}/test/nodejs/fixtures/basic_config.json
       ${VALHALLA_SOURCE_DIR}/test/traffic_matcher_tiles
     VERBATIM)
