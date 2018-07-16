@@ -1,4 +1,3 @@
-
 ## Release Date: UNRELEASED Valhalla 3.0
 * **Infrastructure**:
    * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
@@ -22,7 +21,6 @@
 ## Release Date: 2018-07-15 Valhalla 2.6.3
 * **API**:
    * FIXED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
-   * FIXED: Fixed the highway_factor when use_highways < 0.5.
    * ENHANCEMENT: Added logic to modulate the surface factor based on use_trails.
    * ADDED: New customer test requests for motorcycle costing.
 
@@ -32,7 +30,6 @@
 * **API**:
    * FIXED: Fixed CostFactory convenience method that registers costing models
    * ADDED: Added use_tolls into motorcycle costing options
->>>>>>> 9a04b69... Motorcycle Costing Updates (#1409)
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:
