@@ -12,75 +12,95 @@
 
 namespace {
 // Auto defaults
-constexpr float kDefaultAutoManeuverPenalty = 5.0f;          // Seconds
-constexpr float kDefaultAutoDestinationOnlyPenalty = 600.0f; // Seconds
-constexpr float kDefaultAutoAlleyPenalty = 5.0f;             // Seconds
-constexpr float kDefaultAutoGateCost = 30.0f;                // Seconds
-constexpr float kDefaultAutoGatePenalty = 300.0f;            // Seconds
-constexpr float kDefaultAutoTollBoothCost = 15.0f;           // Seconds
-constexpr float kDefaultAutoTollBoothPenalty = 0.0f;         // Seconds
-constexpr float kDefaultAutoFerryCost = 300.0f;              // Seconds
-constexpr float kDefaultAutoCountryCrossingCost = 600.0f;    // Seconds
-constexpr float kDefaultAutoCountryCrossingPenalty = 0.0f;   // Seconds
-constexpr float kDefaultAutoUseFerry = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultAutoUseHighways = 1.0f;              // Factor between 0 and 1
-constexpr float kDefaultAutoUseTolls = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultAuto_ManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultAuto_DestinationOnlyPenalty = 600.0f; // Seconds
+constexpr float kDefaultAuto_AlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultAuto_GateCost = 30.0f;                // Seconds
+constexpr float kDefaultAuto_GatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultAuto_TollBoothCost = 15.0f;           // Seconds
+constexpr float kDefaultAuto_TollBoothPenalty = 0.0f;         // Seconds
+constexpr float kDefaultAuto_FerryCost = 300.0f;              // Seconds
+constexpr float kDefaultAuto_CountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultAuto_CountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultAuto_UseFerry = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultAuto_UseHighways = 1.0f;              // Factor between 0 and 1
+constexpr float kDefaultAuto_UseTolls = 0.5f;                 // Factor between 0 and 1
 
 // Motor Scooter defaults
-constexpr float kDefaultMotorScooterManeuverPenalty = 5.0f;          // Seconds
-constexpr float kDefaultMotorScooterAlleyPenalty = 5.0f;             // Seconds
-constexpr float kDefaultMotorScooterGateCost = 30.0f;                // Seconds
-constexpr float kDefaultMotorScooterGatePenalty = 300.0f;            // Seconds
-constexpr float kDefaultMotorScooterFerryCost = 300.0f;              // Seconds
-constexpr float kDefaultMotorScooterCountryCrossingCost = 600.0f;    // Seconds
-constexpr float kDefaultMotorScooterCountryCrossingPenalty = 0.0f;   // Seconds
-constexpr float kDefaultMotorScooterUseFerry = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultMotorScooterDestinationOnlyPenalty = 120.0f; // Seconds
-constexpr float kDefaultMotorScooterUseHills = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultMotorScooterUsePrimary = 0.5f;               // Factor between 0 and 1
-constexpr uint32_t kDefaultMotorScooterTopSpeed = 45;                // Kilometers per hour
+constexpr float kDefaultMotorScooter_ManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultMotorScooter_AlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultMotorScooter_GateCost = 30.0f;                // Seconds
+constexpr float kDefaultMotorScooter_GatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultMotorScooter_FerryCost = 300.0f;              // Seconds
+constexpr float kDefaultMotorScooter_CountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultMotorScooter_CountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultMotorScooter_UseFerry = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultMotorScooter_DestinationOnlyPenalty = 120.0f; // Seconds
+constexpr float kDefaultMotorScooter_UseHills = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultMotorScooter_UsePrimary = 0.5f;               // Factor between 0 and 1
+constexpr uint32_t kDefaultMotorScooter_TopSpeed = 45;                // Kilometers per hour
 
 // Motorcycle defaults
-constexpr float kDefaultMotorcycleManeuverPenalty = 5.0f;          // Seconds
-constexpr float kDefaultMotorcycleAlleyPenalty = 5.0f;             // Seconds
-constexpr float kDefaultMotorcycleGateCost = 30.0f;                // Seconds
-constexpr float kDefaultMotorcycleGatePenalty = 300.0f;            // Seconds
-constexpr float kDefaultMotorcycleTollBoothCost = 15.0f;           // Seconds
-constexpr float kDefaultMotorcycleTollBoothPenalty = 0.0f;         // Seconds
-constexpr float kDefaultMotorcycleFerryCost = 300.0f;              // Seconds
-constexpr float kDefaultMotorcycleCountryCrossingCost = 600.0f;    // Seconds
-constexpr float kDefaultMotorcycleCountryCrossingPenalty = 0.0f;   // Seconds
-constexpr float kDefaultMotorcycleUseFerry = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultMotorcycleUseHighways = 1.0f;              // Factor between 0 and 1
-constexpr float kDefaultMotorcycleUseTolls = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultMotorcycleUsePrimary = 0.5f;               // Factor between 0 and 1
-constexpr float kDefaultMotorcycleUseTrails = 0.0f;                // Factor between 0 and 1
-constexpr float kDefaultMotorcycleDestinationOnlyPenalty = 600.0f; // Seconds
+constexpr float kDefaultMotorcycle_ManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultMotorcycle_AlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultMotorcycle_GateCost = 30.0f;                // Seconds
+constexpr float kDefaultMotorcycle_GatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultMotorcycle_TollBoothCost = 15.0f;           // Seconds
+constexpr float kDefaultMotorcycle_TollBoothPenalty = 0.0f;         // Seconds
+constexpr float kDefaultMotorcycle_FerryCost = 300.0f;              // Seconds
+constexpr float kDefaultMotorcycle_CountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultMotorcycle_CountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultMotorcycle_UseFerry = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultMotorcycle_UseHighways = 1.0f;              // Factor between 0 and 1
+constexpr float kDefaultMotorcycle_UseTolls = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultMotorcycle_UsePrimary = 0.5f;               // Factor between 0 and 1
+constexpr float kDefaultMotorcycle_UseTrails = 0.0f;                // Factor between 0 and 1
+constexpr float kDefaultMotorcycle_DestinationOnlyPenalty = 600.0f; // Seconds
 
 // Pedestrian defaults
-constexpr uint32_t kDefaultPedestrianMaxDistanceFoot = 100000;      // 100 km
-constexpr uint32_t kDefaultPedestrianMaxDistanceWheelchair = 10000; // 10 km
-constexpr float kDefaultPedestrianSpeedFoot = 5.1f;                 // 3.16 MPH
-constexpr float kDefaultPedestrianSpeedWheelchair = 4.0f;           // 2.5  MPH  TODO
-constexpr float kDefaultPedestrianStepPenaltyFoot = 30.0f;          // 30 seconds
-constexpr float kDefaultPedestrianStepPenaltyWheelchair = 600.0f;   // 10 minutes
-constexpr uint32_t kDefaultPedestrianMaxGradeFoot = 90;
-constexpr uint32_t kDefaultPedestrianMaxGradeWheelchair = 12;    // Conservative for now...
-constexpr uint8_t kDefaultPedestrianMaxHikingDifficulty = 1;     // T1 (kHiking)
-constexpr float kDefaultPedestrianModeFactor = 1.5f;             // Favor this mode?
-constexpr float kDefaultPedestrianManeuverPenalty = 5.0f;        // Seconds
-constexpr float kDefaultPedestrianGatePenalty = 10.0f;           // Seconds
-constexpr float kDefaultPedestrianWalkwayFactor = 0.9f;          // Slightly favor walkways
-constexpr float kDefaultPedestrianSideWalkFactor = 0.95f;        // Slightly favor sidewalks
-constexpr float kDefaultPedestrianAlleyFactor = 2.0f;            // Avoid alleys
-constexpr float kDefaultPedestrianDrivewayFactor = 5.0f;         // Avoid driveways
-constexpr float kDefaultPedestrianFerryCost = 300.0f;            // Seconds
-constexpr float kDefaultPedestrianCountryCrossingCost = 600.0f;  // Seconds
-constexpr float kDefaultPedestrianCountryCrossingPenalty = 0.0f; // Seconds
-constexpr float kDefaultPedestrianUseFerry = 1.0f;
-constexpr uint32_t kDefaultPedestrianTransitStartEndMaxDistance = 2415; // 1.5 miles
-constexpr uint32_t kDefaultPedestrianTransitTransferMaxDistance = 805;  // 0.5 miles
+constexpr uint32_t kDefaultPedestrian_MaxDistanceFoot = 100000;      // 100 km
+constexpr uint32_t kDefaultPedestrian_MaxDistanceWheelchair = 10000; // 10 km
+constexpr float kDefaultPedestrian_SpeedFoot = 5.1f;                 // 3.16 MPH
+constexpr float kDefaultPedestrian_SpeedWheelchair = 4.0f;           // 2.5  MPH  TODO
+constexpr float kDefaultPedestrian_StepPenaltyFoot = 30.0f;          // 30 seconds
+constexpr float kDefaultPedestrian_StepPenaltyWheelchair = 600.0f;   // 10 minutes
+constexpr uint32_t kDefaultPedestrian_MaxGradeFoot = 90;
+constexpr uint32_t kDefaultPedestrian_MaxGradeWheelchair = 12;    // Conservative for now...
+constexpr uint8_t kDefaultPedestrian_MaxHikingDifficulty = 1;     // T1 (kHiking)
+constexpr float kDefaultPedestrian_ModeFactor = 1.5f;             // Favor this mode?
+constexpr float kDefaultPedestrian_ManeuverPenalty = 5.0f;        // Seconds
+constexpr float kDefaultPedestrian_GatePenalty = 10.0f;           // Seconds
+constexpr float kDefaultPedestrian_WalkwayFactor = 0.9f;          // Slightly favor walkways
+constexpr float kDefaultPedestrian_SideWalkFactor = 0.95f;        // Slightly favor sidewalks
+constexpr float kDefaultPedestrian_AlleyFactor = 2.0f;            // Avoid alleys
+constexpr float kDefaultPedestrian_DrivewayFactor = 5.0f;         // Avoid driveways
+constexpr float kDefaultPedestrian_FerryCost = 300.0f;            // Seconds
+constexpr float kDefaultPedestrian_CountryCrossingCost = 600.0f;  // Seconds
+constexpr float kDefaultPedestrian_CountryCrossingPenalty = 0.0f; // Seconds
+constexpr float kDefaultPedestrian_UseFerry = 1.0f;
+constexpr uint32_t kDefaultPedestrian_TransitStartEndMaxDistance = 2415; // 1.5 miles
+constexpr uint32_t kDefaultPedestrian_TransitTransferMaxDistance = 805;  // 0.5 miles
 
+// Bicycle defaults
+constexpr float kDefaultBicycle_ManeuverPenalty = 5.0f;        // Seconds
+constexpr float kDefaultBicycle_DrivewayPenalty = 300.0f;      // Seconds
+constexpr float kDefaultBicycle_AlleyPenalty = 60.0f;          // Seconds
+constexpr float kDefaultBicycle_GateCost = 30.0f;              // Seconds
+constexpr float kDefaultBicycle_GatePenalty = 300.0f;          // Seconds
+constexpr float kDefaultBicycle_FerryCost = 300.0f;            // Seconds
+constexpr float kDefaultBicycle_CountryCrossingCost = 600.0f;  // Seconds
+constexpr float kDefaultBicycle_CountryCrossingPenalty = 0.0f; // Seconds
+constexpr float kDefaultBicycle_UseRoad = 0.25f;               // Factor between 0 and 1
+constexpr float kDefaultBicycle_UseFerry = 0.5f;               // Factor between 0 and 1
+constexpr float kDefaultBicycle_UseHills = 0.25f;
+constexpr float kDefaultBicycle_AvoidBadSurfaces = 0.25f; // Factor between 0 and 1
+const std::string kDefaultBicycle_BicycleType = "Hybrid"; // Bicycle type
+constexpr float kDefaultBicycle_CyclingSpeed[] = {
+    25.0f, // Road bicycle: ~15.5 MPH
+    20.0f, // Cross bicycle: ~13 MPH
+    18.0f, // Hybrid or "city" bicycle: ~11.5 MPH
+    16.0f  // Mountain bicycle: ~10 MPH
+};
 ///////////////////////////////////////////////////////////////////////////////
 // validate by type methods
 void validate(const std::string& key,
@@ -430,31 +450,31 @@ void test_default_base_auto_cost_options(const valhalla::odin::Costing costing,
   // Get cost request with no cost options
   valhalla::valhalla_request_t request = get_request(get_request_str(key, costing_str), action);
 
-  validate("maneuver_penalty", kDefaultAutoManeuverPenalty,
+  validate("maneuver_penalty", kDefaultAuto_ManeuverPenalty,
            request.options.costing_options(static_cast<int>(costing)).maneuver_penalty());
-  validate("destination_only_penalty", kDefaultAutoDestinationOnlyPenalty,
+  validate("destination_only_penalty", kDefaultAuto_DestinationOnlyPenalty,
            request.options.costing_options(static_cast<int>(costing)).destination_only_penalty());
-  validate("gate_cost", kDefaultAutoGateCost,
+  validate("gate_cost", kDefaultAuto_GateCost,
            request.options.costing_options(static_cast<int>(costing)).gate_cost());
-  validate("gate_penalty", kDefaultAutoGatePenalty,
+  validate("gate_penalty", kDefaultAuto_GatePenalty,
            request.options.costing_options(static_cast<int>(costing)).gate_penalty());
-  validate("toll_booth_cost", kDefaultAutoTollBoothCost,
+  validate("toll_booth_cost", kDefaultAuto_TollBoothCost,
            request.options.costing_options(static_cast<int>(costing)).toll_booth_cost());
-  validate("toll_booth_penalty", kDefaultAutoTollBoothPenalty,
+  validate("toll_booth_penalty", kDefaultAuto_TollBoothPenalty,
            request.options.costing_options(static_cast<int>(costing)).toll_booth_penalty());
-  validate("alley_penalty", kDefaultAutoAlleyPenalty,
+  validate("alley_penalty", kDefaultAuto_AlleyPenalty,
            request.options.costing_options(static_cast<int>(costing)).alley_penalty());
-  validate("country_crossing_cost", kDefaultAutoCountryCrossingCost,
+  validate("country_crossing_cost", kDefaultAuto_CountryCrossingCost,
            request.options.costing_options(static_cast<int>(costing)).country_crossing_cost());
-  validate("country_crossing_penalty", kDefaultAutoCountryCrossingPenalty,
+  validate("country_crossing_penalty", kDefaultAuto_CountryCrossingPenalty,
            request.options.costing_options(static_cast<int>(costing)).country_crossing_penalty());
-  validate("ferry_cost", kDefaultAutoFerryCost,
+  validate("ferry_cost", kDefaultAuto_FerryCost,
            request.options.costing_options(static_cast<int>(costing)).ferry_cost());
-  validate("use_ferry", kDefaultAutoUseFerry,
+  validate("use_ferry", kDefaultAuto_UseFerry,
            request.options.costing_options(static_cast<int>(costing)).use_ferry());
-  validate("use_highways", kDefaultAutoUseHighways,
+  validate("use_highways", kDefaultAuto_UseHighways,
            request.options.costing_options(static_cast<int>(costing)).use_highways());
-  validate("use_tolls", kDefaultAutoUseTolls,
+  validate("use_tolls", kDefaultAuto_UseTolls,
            request.options.costing_options(static_cast<int>(costing)).use_tolls());
 }
 
@@ -471,29 +491,29 @@ void test_default_motor_scooter_cost_options(const valhalla::odin::Costing costi
   // Get cost request with no cost options
   valhalla::valhalla_request_t request = get_request(get_request_str(key, costing_str), action);
 
-  validate("maneuver_penalty", kDefaultMotorScooterManeuverPenalty,
+  validate("maneuver_penalty", kDefaultMotorScooter_ManeuverPenalty,
            request.options.costing_options(static_cast<int>(costing)).maneuver_penalty());
-  validate("destination_only_penalty", kDefaultMotorScooterDestinationOnlyPenalty,
+  validate("destination_only_penalty", kDefaultMotorScooter_DestinationOnlyPenalty,
            request.options.costing_options(static_cast<int>(costing)).destination_only_penalty());
-  validate("gate_cost", kDefaultMotorScooterGateCost,
+  validate("gate_cost", kDefaultMotorScooter_GateCost,
            request.options.costing_options(static_cast<int>(costing)).gate_cost());
-  validate("gate_penalty", kDefaultMotorScooterGatePenalty,
+  validate("gate_penalty", kDefaultMotorScooter_GatePenalty,
            request.options.costing_options(static_cast<int>(costing)).gate_penalty());
-  validate("alley_penalty", kDefaultMotorScooterAlleyPenalty,
+  validate("alley_penalty", kDefaultMotorScooter_AlleyPenalty,
            request.options.costing_options(static_cast<int>(costing)).alley_penalty());
-  validate("country_crossing_cost", kDefaultMotorScooterCountryCrossingCost,
+  validate("country_crossing_cost", kDefaultMotorScooter_CountryCrossingCost,
            request.options.costing_options(static_cast<int>(costing)).country_crossing_cost());
-  validate("country_crossing_penalty", kDefaultMotorScooterCountryCrossingPenalty,
+  validate("country_crossing_penalty", kDefaultMotorScooter_CountryCrossingPenalty,
            request.options.costing_options(static_cast<int>(costing)).country_crossing_penalty());
-  validate("ferry_cost", kDefaultMotorScooterFerryCost,
+  validate("ferry_cost", kDefaultMotorScooter_FerryCost,
            request.options.costing_options(static_cast<int>(costing)).ferry_cost());
-  validate("use_ferry", kDefaultMotorScooterUseFerry,
+  validate("use_ferry", kDefaultMotorScooter_UseFerry,
            request.options.costing_options(static_cast<int>(costing)).use_ferry());
-  validate("top_speed", static_cast<float>(kDefaultMotorScooterTopSpeed),
+  validate("top_speed", static_cast<float>(kDefaultMotorScooter_TopSpeed),
            request.options.costing_options(static_cast<int>(costing)).top_speed());
-  validate("use_hills", kDefaultMotorScooterUseHills,
+  validate("use_hills", kDefaultMotorScooter_UseHills,
            request.options.costing_options(static_cast<int>(costing)).use_hills());
-  validate("use_primary", kDefaultMotorScooterUsePrimary,
+  validate("use_primary", kDefaultMotorScooter_UsePrimary,
            request.options.costing_options(static_cast<int>(costing)).use_primary());
 }
 
@@ -510,27 +530,27 @@ void test_default_motorcycle_cost_options(const valhalla::odin::Costing costing,
   // Get cost request with no cost options
   valhalla::valhalla_request_t request = get_request(get_request_str(key, costing_str), action);
 
-  validate("maneuver_penalty", kDefaultMotorcycleManeuverPenalty,
+  validate("maneuver_penalty", kDefaultMotorcycle_ManeuverPenalty,
            request.options.costing_options(static_cast<int>(costing)).maneuver_penalty());
-  validate("destination_only_penalty", kDefaultMotorcycleDestinationOnlyPenalty,
+  validate("destination_only_penalty", kDefaultMotorcycle_DestinationOnlyPenalty,
            request.options.costing_options(static_cast<int>(costing)).destination_only_penalty());
-  validate("gate_cost", kDefaultMotorcycleGateCost,
+  validate("gate_cost", kDefaultMotorcycle_GateCost,
            request.options.costing_options(static_cast<int>(costing)).gate_cost());
-  validate("gate_penalty", kDefaultMotorcycleGatePenalty,
+  validate("gate_penalty", kDefaultMotorcycle_GatePenalty,
            request.options.costing_options(static_cast<int>(costing)).gate_penalty());
-  validate("alley_penalty", kDefaultMotorcycleAlleyPenalty,
+  validate("alley_penalty", kDefaultMotorcycle_AlleyPenalty,
            request.options.costing_options(static_cast<int>(costing)).alley_penalty());
-  validate("country_crossing_cost", kDefaultMotorcycleCountryCrossingCost,
+  validate("country_crossing_cost", kDefaultMotorcycle_CountryCrossingCost,
            request.options.costing_options(static_cast<int>(costing)).country_crossing_cost());
-  validate("country_crossing_penalty", kDefaultMotorcycleCountryCrossingPenalty,
+  validate("country_crossing_penalty", kDefaultMotorcycle_CountryCrossingPenalty,
            request.options.costing_options(static_cast<int>(costing)).country_crossing_penalty());
-  validate("ferry_cost", kDefaultMotorcycleFerryCost,
+  validate("ferry_cost", kDefaultMotorcycle_FerryCost,
            request.options.costing_options(static_cast<int>(costing)).ferry_cost());
-  validate("use_ferry", kDefaultMotorcycleUseFerry,
+  validate("use_ferry", kDefaultMotorcycle_UseFerry,
            request.options.costing_options(static_cast<int>(costing)).use_ferry());
-  validate("use_primary", kDefaultMotorcycleUsePrimary,
+  validate("use_primary", kDefaultMotorcycle_UsePrimary,
            request.options.costing_options(static_cast<int>(costing)).use_primary());
-  validate("use_trails", kDefaultMotorcycleUseTrails,
+  validate("use_trails", kDefaultMotorcycle_UseTrails,
            request.options.costing_options(static_cast<int>(costing)).use_trails());
 }
 
@@ -549,44 +569,44 @@ void test_default_pedestrian_cost_options(const valhalla::odin::Costing costing,
 
   validate("type", "foot",
            request.options.costing_options(static_cast<int>(costing)).transport_type());
-  validate("maneuver_penalty", kDefaultPedestrianManeuverPenalty,
+  validate("maneuver_penalty", kDefaultPedestrian_ManeuverPenalty,
            request.options.costing_options(static_cast<int>(costing)).maneuver_penalty());
-  validate("gate_penalty", kDefaultPedestrianGatePenalty,
+  validate("gate_penalty", kDefaultPedestrian_GatePenalty,
            request.options.costing_options(static_cast<int>(costing)).gate_penalty());
-  validate("country_crossing_cost", kDefaultPedestrianCountryCrossingCost,
+  validate("country_crossing_cost", kDefaultPedestrian_CountryCrossingCost,
            request.options.costing_options(static_cast<int>(costing)).country_crossing_cost());
-  validate("country_crossing_penalty", kDefaultPedestrianCountryCrossingPenalty,
+  validate("country_crossing_penalty", kDefaultPedestrian_CountryCrossingPenalty,
            request.options.costing_options(static_cast<int>(costing)).country_crossing_penalty());
-  validate("ferry_cost", kDefaultPedestrianFerryCost,
+  validate("ferry_cost", kDefaultPedestrian_FerryCost,
            request.options.costing_options(static_cast<int>(costing)).ferry_cost());
-  validate("use_ferry", kDefaultPedestrianUseFerry,
+  validate("use_ferry", kDefaultPedestrian_UseFerry,
            request.options.costing_options(static_cast<int>(costing)).use_ferry());
-  validate("max_distance", kDefaultPedestrianMaxDistanceFoot,
+  validate("max_distance", kDefaultPedestrian_MaxDistanceFoot,
            request.options.costing_options(static_cast<int>(costing)).max_distance());
-  validate("walking_speed", kDefaultPedestrianSpeedFoot,
+  validate("walking_speed", kDefaultPedestrian_SpeedFoot,
            request.options.costing_options(static_cast<int>(costing)).walking_speed());
-  validate("walking_speed", kDefaultPedestrianSpeedFoot,
+  validate("walking_speed", kDefaultPedestrian_SpeedFoot,
            request.options.costing_options(static_cast<int>(costing)).walking_speed());
-  validate("step_penalty", kDefaultPedestrianStepPenaltyFoot,
+  validate("step_penalty", kDefaultPedestrian_StepPenaltyFoot,
            request.options.costing_options(static_cast<int>(costing)).step_penalty());
-  validate("max_grade", kDefaultPedestrianMaxGradeFoot,
+  validate("max_grade", kDefaultPedestrian_MaxGradeFoot,
            request.options.costing_options(static_cast<int>(costing)).max_grade());
-  validate("max_hiking_difficulty", kDefaultPedestrianMaxHikingDifficulty,
+  validate("max_hiking_difficulty", kDefaultPedestrian_MaxHikingDifficulty,
            request.options.costing_options(static_cast<int>(costing)).max_hiking_difficulty());
-  validate("mode_factor", kDefaultPedestrianModeFactor,
+  validate("mode_factor", kDefaultPedestrian_ModeFactor,
            request.options.costing_options(static_cast<int>(costing)).mode_factor());
-  validate("walkway_factor", kDefaultPedestrianWalkwayFactor,
+  validate("walkway_factor", kDefaultPedestrian_WalkwayFactor,
            request.options.costing_options(static_cast<int>(costing)).walkway_factor());
-  validate("sidewalk_factor", kDefaultPedestrianSideWalkFactor,
+  validate("sidewalk_factor", kDefaultPedestrian_SideWalkFactor,
            request.options.costing_options(static_cast<int>(costing)).sidewalk_factor());
-  validate("alley_factor", kDefaultPedestrianAlleyFactor,
+  validate("alley_factor", kDefaultPedestrian_AlleyFactor,
            request.options.costing_options(static_cast<int>(costing)).alley_factor());
-  validate("driveway_factor", kDefaultPedestrianDrivewayFactor,
+  validate("driveway_factor", kDefaultPedestrian_DrivewayFactor,
            request.options.costing_options(static_cast<int>(costing)).driveway_factor());
-  validate("transit_start_end_max_distance", kDefaultPedestrianTransitStartEndMaxDistance,
+  validate("transit_start_end_max_distance", kDefaultPedestrian_TransitStartEndMaxDistance,
            request.options.costing_options(static_cast<int>(costing))
                .transit_start_end_max_distance());
-  validate("transit_transfer_max_distance", kDefaultPedestrianTransitTransferMaxDistance,
+  validate("transit_transfer_max_distance", kDefaultPedestrian_TransitTransferMaxDistance,
            request.options.costing_options(static_cast<int>(costing))
                .transit_transfer_max_distance());
 }
@@ -1349,7 +1369,7 @@ void test_transport_type() {
 }
 
 void test_maneuver_penalty() {
-  float default_value = kDefaultAutoManeuverPenalty;
+  float default_value = kDefaultAuto_ManeuverPenalty;
   for (auto costing : get_base_auto_costing_list()) {
     test_maneuver_penalty_parsing(costing, default_value, default_value);
     test_maneuver_penalty_parsing(costing, 2.f, 2.f);
@@ -1359,7 +1379,7 @@ void test_maneuver_penalty() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterManeuverPenalty;
+  default_value = kDefaultMotorScooter_ManeuverPenalty;
   test_maneuver_penalty_parsing(costing, default_value, default_value);
   test_maneuver_penalty_parsing(costing, 2.f, 2.f);
   test_maneuver_penalty_parsing(costing, 30.f, 30.f);
@@ -1367,7 +1387,7 @@ void test_maneuver_penalty() {
   test_maneuver_penalty_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleManeuverPenalty;
+  default_value = kDefaultMotorcycle_ManeuverPenalty;
   test_maneuver_penalty_parsing(costing, default_value, default_value);
   test_maneuver_penalty_parsing(costing, 2.f, 2.f);
   test_maneuver_penalty_parsing(costing, 30.f, 30.f);
@@ -1375,7 +1395,7 @@ void test_maneuver_penalty() {
   test_maneuver_penalty_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::pedestrian;
-  default_value = kDefaultPedestrianManeuverPenalty;
+  default_value = kDefaultPedestrian_ManeuverPenalty;
   test_maneuver_penalty_parsing(costing, default_value, default_value);
   test_maneuver_penalty_parsing(costing, 2.f, 2.f);
   test_maneuver_penalty_parsing(costing, 30.f, 30.f);
@@ -1384,7 +1404,7 @@ void test_maneuver_penalty() {
 }
 
 void test_destination_only_penalty() {
-  float default_value = kDefaultAutoDestinationOnlyPenalty;
+  float default_value = kDefaultAuto_DestinationOnlyPenalty;
   for (auto costing : get_base_auto_costing_list()) {
     test_destination_only_penalty_parsing(costing, default_value, default_value);
     test_destination_only_penalty_parsing(costing, 2.f, 2.f);
@@ -1394,7 +1414,7 @@ void test_destination_only_penalty() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterDestinationOnlyPenalty;
+  default_value = kDefaultMotorScooter_DestinationOnlyPenalty;
   test_destination_only_penalty_parsing(costing, default_value, default_value);
   test_destination_only_penalty_parsing(costing, 2.f, 2.f);
   test_destination_only_penalty_parsing(costing, 700.f, 700.f);
@@ -1402,7 +1422,7 @@ void test_destination_only_penalty() {
   test_destination_only_penalty_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleDestinationOnlyPenalty;
+  default_value = kDefaultMotorcycle_DestinationOnlyPenalty;
   test_destination_only_penalty_parsing(costing, default_value, default_value);
   test_destination_only_penalty_parsing(costing, 2.f, 2.f);
   test_destination_only_penalty_parsing(costing, 700.f, 700.f);
@@ -1411,7 +1431,7 @@ void test_destination_only_penalty() {
 }
 
 void test_gate_cost() {
-  float default_value = kDefaultAutoGateCost;
+  float default_value = kDefaultAuto_GateCost;
   for (auto costing : get_base_auto_costing_list()) {
     test_gate_cost_parsing(costing, default_value, default_value);
     test_gate_cost_parsing(costing, 2.f, 2.f);
@@ -1421,7 +1441,7 @@ void test_gate_cost() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterGateCost;
+  default_value = kDefaultMotorScooter_GateCost;
   test_gate_cost_parsing(costing, default_value, default_value);
   test_gate_cost_parsing(costing, 2.f, 2.f);
   test_gate_cost_parsing(costing, 60.f, 60.f);
@@ -1429,7 +1449,7 @@ void test_gate_cost() {
   test_gate_cost_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleGateCost;
+  default_value = kDefaultMotorcycle_GateCost;
   test_gate_cost_parsing(costing, default_value, default_value);
   test_gate_cost_parsing(costing, 2.f, 2.f);
   test_gate_cost_parsing(costing, 60.f, 60.f);
@@ -1438,7 +1458,7 @@ void test_gate_cost() {
 }
 
 void test_gate_penalty() {
-  float default_value = kDefaultAutoGatePenalty;
+  float default_value = kDefaultAuto_GatePenalty;
   for (auto costing : get_base_auto_costing_list()) {
     test_gate_penalty_parsing(costing, default_value, default_value);
     test_gate_penalty_parsing(costing, 2.f, 2.f);
@@ -1448,7 +1468,7 @@ void test_gate_penalty() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterGatePenalty;
+  default_value = kDefaultMotorScooter_GatePenalty;
   test_gate_penalty_parsing(costing, default_value, default_value);
   test_gate_penalty_parsing(costing, 2.f, 2.f);
   test_gate_penalty_parsing(costing, 60.f, 60.f);
@@ -1456,7 +1476,7 @@ void test_gate_penalty() {
   test_gate_penalty_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleGatePenalty;
+  default_value = kDefaultMotorcycle_GatePenalty;
   test_gate_penalty_parsing(costing, default_value, default_value);
   test_gate_penalty_parsing(costing, 2.f, 2.f);
   test_gate_penalty_parsing(costing, 600.f, 600.f);
@@ -1464,7 +1484,7 @@ void test_gate_penalty() {
   test_gate_penalty_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::pedestrian;
-  default_value = kDefaultPedestrianGatePenalty;
+  default_value = kDefaultPedestrian_GatePenalty;
   test_gate_penalty_parsing(costing, default_value, default_value);
   test_gate_penalty_parsing(costing, 5.f, 5.f);
   test_gate_penalty_parsing(costing, 20.f, 20.f);
@@ -1473,7 +1493,7 @@ void test_gate_penalty() {
 }
 
 void test_toll_booth_cost() {
-  float default_value = kDefaultAutoTollBoothCost;
+  float default_value = kDefaultAuto_TollBoothCost;
   for (auto costing : get_base_auto_costing_list()) {
     test_toll_booth_cost_parsing(costing, default_value, default_value);
     test_toll_booth_cost_parsing(costing, 2.f, 2.f);
@@ -1483,7 +1503,7 @@ void test_toll_booth_cost() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleTollBoothCost;
+  default_value = kDefaultMotorcycle_TollBoothCost;
   test_toll_booth_cost_parsing(costing, default_value, default_value);
   test_toll_booth_cost_parsing(costing, 2.f, 2.f);
   test_toll_booth_cost_parsing(costing, 20.f, 20.f);
@@ -1492,7 +1512,7 @@ void test_toll_booth_cost() {
 }
 
 void test_toll_booth_penalty() {
-  float default_value = kDefaultAutoTollBoothPenalty;
+  float default_value = kDefaultAuto_TollBoothPenalty;
   for (auto costing : get_base_auto_costing_list()) {
     test_toll_booth_penalty_parsing(costing, default_value, default_value);
     test_toll_booth_penalty_parsing(costing, 2.f, 2.f);
@@ -1502,7 +1522,7 @@ void test_toll_booth_penalty() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleTollBoothPenalty;
+  default_value = kDefaultMotorcycle_TollBoothPenalty;
   test_toll_booth_penalty_parsing(costing, default_value, default_value);
   test_toll_booth_penalty_parsing(costing, 2.f, 2.f);
   test_toll_booth_penalty_parsing(costing, 60.f, 60.f);
@@ -1511,7 +1531,7 @@ void test_toll_booth_penalty() {
 }
 
 void test_alley_penalty() {
-  float default_value = kDefaultAutoAlleyPenalty;
+  float default_value = kDefaultAuto_AlleyPenalty;
   for (auto costing : get_base_auto_costing_list()) {
     test_alley_penalty_parsing(costing, default_value, default_value);
     test_alley_penalty_parsing(costing, 2.f, 2.f);
@@ -1521,7 +1541,7 @@ void test_alley_penalty() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterAlleyPenalty;
+  default_value = kDefaultMotorScooter_AlleyPenalty;
   test_alley_penalty_parsing(costing, default_value, default_value);
   test_alley_penalty_parsing(costing, 2.f, 2.f);
   test_alley_penalty_parsing(costing, 60.f, 60.f);
@@ -1529,7 +1549,7 @@ void test_alley_penalty() {
   test_alley_penalty_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleAlleyPenalty;
+  default_value = kDefaultMotorcycle_AlleyPenalty;
   test_alley_penalty_parsing(costing, default_value, default_value);
   test_alley_penalty_parsing(costing, 2.f, 2.f);
   test_alley_penalty_parsing(costing, 10.f, 10.f);
@@ -1538,7 +1558,7 @@ void test_alley_penalty() {
 }
 
 void test_country_crossing_cost() {
-  float default_value = kDefaultAutoCountryCrossingCost;
+  float default_value = kDefaultAuto_CountryCrossingCost;
   for (auto costing : get_base_auto_costing_list()) {
     test_country_crossing_cost_parsing(costing, default_value, default_value);
     test_country_crossing_cost_parsing(costing, 2.f, 2.f);
@@ -1548,7 +1568,7 @@ void test_country_crossing_cost() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterCountryCrossingCost;
+  default_value = kDefaultMotorScooter_CountryCrossingCost;
   test_country_crossing_cost_parsing(costing, default_value, default_value);
   test_country_crossing_cost_parsing(costing, 2.f, 2.f);
   test_country_crossing_cost_parsing(costing, 700.f, 700.f);
@@ -1556,7 +1576,7 @@ void test_country_crossing_cost() {
   test_country_crossing_cost_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleCountryCrossingCost;
+  default_value = kDefaultMotorcycle_CountryCrossingCost;
   test_country_crossing_cost_parsing(costing, default_value, default_value);
   test_country_crossing_cost_parsing(costing, 2.f, 2.f);
   test_country_crossing_cost_parsing(costing, 700.f, 700.f);
@@ -1564,7 +1584,7 @@ void test_country_crossing_cost() {
   test_country_crossing_cost_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::pedestrian;
-  default_value = kDefaultPedestrianCountryCrossingCost;
+  default_value = kDefaultPedestrian_CountryCrossingCost;
   test_country_crossing_cost_parsing(costing, default_value, default_value);
   test_country_crossing_cost_parsing(costing, 2.f, 2.f);
   test_country_crossing_cost_parsing(costing, 700.f, 700.f);
@@ -1573,7 +1593,7 @@ void test_country_crossing_cost() {
 }
 
 void test_country_crossing_penalty() {
-  float default_value = kDefaultAutoCountryCrossingPenalty;
+  float default_value = kDefaultAuto_CountryCrossingPenalty;
   for (auto costing : get_base_auto_costing_list()) {
     test_country_crossing_penalty_parsing(costing, default_value, default_value);
     test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
@@ -1583,7 +1603,7 @@ void test_country_crossing_penalty() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterCountryCrossingPenalty;
+  default_value = kDefaultMotorScooter_CountryCrossingPenalty;
   test_country_crossing_penalty_parsing(costing, default_value, default_value);
   test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
   test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
@@ -1591,7 +1611,7 @@ void test_country_crossing_penalty() {
   test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleCountryCrossingPenalty;
+  default_value = kDefaultMotorcycle_CountryCrossingPenalty;
   test_country_crossing_penalty_parsing(costing, default_value, default_value);
   test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
   test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
@@ -1599,7 +1619,7 @@ void test_country_crossing_penalty() {
   test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultPedestrianCountryCrossingPenalty;
+  default_value = kDefaultPedestrian_CountryCrossingPenalty;
   test_country_crossing_penalty_parsing(costing, default_value, default_value);
   test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
   test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
@@ -1608,7 +1628,7 @@ void test_country_crossing_penalty() {
 }
 
 void test_ferry_cost() {
-  float default_value = kDefaultAutoFerryCost;
+  float default_value = kDefaultAuto_FerryCost;
   for (auto costing : get_base_auto_costing_list()) {
     test_ferry_cost_parsing(costing, default_value, default_value);
     test_ferry_cost_parsing(costing, 2.f, 2.f);
@@ -1618,7 +1638,7 @@ void test_ferry_cost() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterFerryCost;
+  default_value = kDefaultMotorScooter_FerryCost;
   test_ferry_cost_parsing(costing, default_value, default_value);
   test_ferry_cost_parsing(costing, 2.f, 2.f);
   test_ferry_cost_parsing(costing, 600.f, 600.f);
@@ -1626,7 +1646,7 @@ void test_ferry_cost() {
   test_ferry_cost_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleFerryCost;
+  default_value = kDefaultMotorcycle_FerryCost;
   test_ferry_cost_parsing(costing, default_value, default_value);
   test_ferry_cost_parsing(costing, 2.f, 2.f);
   test_ferry_cost_parsing(costing, 600.f, 600.f);
@@ -1634,7 +1654,7 @@ void test_ferry_cost() {
   test_ferry_cost_parsing(costing, 500000.f, default_value);
 
   costing = valhalla::odin::Costing::pedestrian;
-  default_value = kDefaultPedestrianFerryCost;
+  default_value = kDefaultPedestrian_FerryCost;
   test_ferry_cost_parsing(costing, default_value, default_value);
   test_ferry_cost_parsing(costing, 2.f, 2.f);
   test_ferry_cost_parsing(costing, 600.f, 600.f);
@@ -1643,7 +1663,7 @@ void test_ferry_cost() {
 }
 
 void test_use_ferry() {
-  float default_value = kDefaultAutoUseFerry;
+  float default_value = kDefaultAuto_UseFerry;
   for (auto costing : get_base_auto_costing_list()) {
     test_use_ferry_parsing(costing, default_value, default_value);
     test_use_ferry_parsing(costing, 0.2f, 0.2f);
@@ -1653,7 +1673,7 @@ void test_use_ferry() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  default_value = kDefaultMotorScooterUseFerry;
+  default_value = kDefaultMotorScooter_UseFerry;
   test_use_ferry_parsing(costing, default_value, default_value);
   test_use_ferry_parsing(costing, 0.2f, 0.2f);
   test_use_ferry_parsing(costing, 0.6f, 0.6f);
@@ -1661,7 +1681,7 @@ void test_use_ferry() {
   test_use_ferry_parsing(costing, 2.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleUseFerry;
+  default_value = kDefaultMotorcycle_UseFerry;
   test_use_ferry_parsing(costing, default_value, default_value);
   test_use_ferry_parsing(costing, 0.2f, 0.2f);
   test_use_ferry_parsing(costing, 0.6f, 0.6f);
@@ -1669,7 +1689,7 @@ void test_use_ferry() {
   test_use_ferry_parsing(costing, 2.f, default_value);
 
   costing = valhalla::odin::Costing::pedestrian;
-  default_value = kDefaultPedestrianUseFerry;
+  default_value = kDefaultPedestrian_UseFerry;
   test_use_ferry_parsing(costing, default_value, default_value);
   test_use_ferry_parsing(costing, 0.2f, 0.2f);
   test_use_ferry_parsing(costing, 0.6f, 0.6f);
@@ -1678,7 +1698,7 @@ void test_use_ferry() {
 }
 
 void test_use_highways() {
-  float default_value = kDefaultAutoUseHighways;
+  float default_value = kDefaultAuto_UseHighways;
   for (auto costing : get_base_auto_costing_list()) {
     test_use_highways_parsing(costing, default_value, default_value);
     test_use_highways_parsing(costing, 0.2f, 0.2f);
@@ -1688,7 +1708,7 @@ void test_use_highways() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleUseHighways;
+  default_value = kDefaultMotorcycle_UseHighways;
   test_use_highways_parsing(costing, default_value, default_value);
   test_use_highways_parsing(costing, 0.2f, 0.2f);
   test_use_highways_parsing(costing, 0.6f, 0.6f);
@@ -1697,7 +1717,7 @@ void test_use_highways() {
 }
 
 void test_use_tolls() {
-  float default_value = kDefaultAutoUseTolls;
+  float default_value = kDefaultAuto_UseTolls;
   for (auto costing : get_base_auto_costing_list()) {
     test_use_tolls_parsing(costing, default_value, default_value);
     test_use_tolls_parsing(costing, 0.2f, 0.2f);
@@ -1707,7 +1727,7 @@ void test_use_tolls() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleUseTolls;
+  default_value = kDefaultMotorcycle_UseTolls;
   test_use_tolls_parsing(costing, default_value, default_value);
   test_use_tolls_parsing(costing, 0.2f, 0.2f);
   test_use_tolls_parsing(costing, 0.6f, 0.6f);
@@ -1717,7 +1737,7 @@ void test_use_tolls() {
 
 void test_use_hills() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  float default_value = kDefaultMotorScooterUseHills;
+  float default_value = kDefaultMotorScooter_UseHills;
   test_use_hills_parsing(costing, default_value, default_value);
   test_use_hills_parsing(costing, 0.2f, 0.2f);
   test_use_hills_parsing(costing, 0.6f, 0.6f);
@@ -1727,7 +1747,7 @@ void test_use_hills() {
 
 void test_use_primary() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  float default_value = kDefaultMotorScooterUsePrimary;
+  float default_value = kDefaultMotorScooter_UsePrimary;
   test_use_primary_parsing(costing, default_value, default_value);
   test_use_primary_parsing(costing, 0.2f, 0.2f);
   test_use_primary_parsing(costing, 0.6f, 0.6f);
@@ -1735,7 +1755,7 @@ void test_use_primary() {
   test_use_primary_parsing(costing, 2.f, default_value);
 
   costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycleUsePrimary;
+  default_value = kDefaultMotorcycle_UsePrimary;
   test_use_primary_parsing(costing, default_value, default_value);
   test_use_primary_parsing(costing, 0.2f, 0.2f);
   test_use_primary_parsing(costing, 0.6f, 0.6f);
@@ -1745,7 +1765,7 @@ void test_use_primary() {
 
 void test_top_speed() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
-  float default_value = kDefaultMotorScooterTopSpeed;
+  float default_value = kDefaultMotorScooter_TopSpeed;
   test_top_speed_parsing(costing, default_value, default_value);
   test_top_speed_parsing(costing, 25, 25);
   test_top_speed_parsing(costing, 50, 50);
@@ -1755,7 +1775,7 @@ void test_top_speed() {
 
 void test_use_trails() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::motorcycle;
-  float default_value = kDefaultMotorcycleUseTrails;
+  float default_value = kDefaultMotorcycle_UseTrails;
   test_use_trails_parsing(costing, default_value, default_value);
   test_use_trails_parsing(costing, 0.2f, 0.2f);
   test_use_trails_parsing(costing, 0.6f, 0.6f);
@@ -1767,13 +1787,13 @@ void test_max_distance() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
 
   std::string transport_type = "foot";
-  uint32_t default_value = kDefaultPedestrianMaxDistanceFoot;
+  uint32_t default_value = kDefaultPedestrian_MaxDistanceFoot;
   test_max_distance_parsing(costing, transport_type, default_value, default_value);
   test_max_distance_parsing(costing, transport_type, 50, 50);
   test_max_distance_parsing(costing, transport_type, 200000, default_value);
 
   transport_type = "wheelchair";
-  default_value = kDefaultPedestrianMaxDistanceWheelchair;
+  default_value = kDefaultPedestrian_MaxDistanceWheelchair;
   test_max_distance_parsing(costing, transport_type, default_value, default_value);
   test_max_distance_parsing(costing, transport_type, 50, 50);
   test_max_distance_parsing(costing, transport_type, 200000, default_value);
@@ -1783,7 +1803,7 @@ void test_walking_speed() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
 
   std::string transport_type = "foot";
-  float default_value = kDefaultPedestrianSpeedFoot;
+  float default_value = kDefaultPedestrian_SpeedFoot;
   test_walking_speed_parsing(costing, transport_type, default_value, default_value);
   test_walking_speed_parsing(costing, transport_type, 2.5f, 2.5f);
   test_walking_speed_parsing(costing, transport_type, 6.f, 6.f);
@@ -1791,7 +1811,7 @@ void test_walking_speed() {
   test_walking_speed_parsing(costing, transport_type, 50.f, default_value);
 
   transport_type = "wheelchair";
-  default_value = kDefaultPedestrianSpeedWheelchair;
+  default_value = kDefaultPedestrian_SpeedWheelchair;
   test_walking_speed_parsing(costing, transport_type, default_value, default_value);
   test_walking_speed_parsing(costing, transport_type, 2.f, 2.f);
   test_walking_speed_parsing(costing, transport_type, 5.f, 5.f);
@@ -1803,7 +1823,7 @@ void test_step_penalty() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
 
   std::string transport_type = "foot";
-  float default_value = kDefaultPedestrianStepPenaltyFoot;
+  float default_value = kDefaultPedestrian_StepPenaltyFoot;
   test_step_penalty_parsing(costing, transport_type, default_value, default_value);
   test_step_penalty_parsing(costing, transport_type, 10.f, 10.f);
   test_step_penalty_parsing(costing, transport_type, 40.f, 40.f);
@@ -1811,7 +1831,7 @@ void test_step_penalty() {
   test_step_penalty_parsing(costing, transport_type, 500000.f, default_value);
 
   transport_type = "wheelchair";
-  default_value = kDefaultPedestrianStepPenaltyWheelchair;
+  default_value = kDefaultPedestrian_StepPenaltyWheelchair;
   test_step_penalty_parsing(costing, transport_type, default_value, default_value);
   test_step_penalty_parsing(costing, transport_type, 400.f, 400.f);
   test_step_penalty_parsing(costing, transport_type, 800.f, 800.f);
@@ -1823,13 +1843,13 @@ void test_max_grade() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
 
   std::string transport_type = "foot";
-  uint32_t default_value = kDefaultPedestrianMaxGradeFoot;
+  uint32_t default_value = kDefaultPedestrian_MaxGradeFoot;
   test_max_grade_parsing(costing, transport_type, default_value, default_value);
   test_max_grade_parsing(costing, transport_type, 30, 30);
   test_max_grade_parsing(costing, transport_type, 100, default_value);
 
   transport_type = "wheelchair";
-  default_value = kDefaultPedestrianMaxGradeWheelchair;
+  default_value = kDefaultPedestrian_MaxGradeWheelchair;
   test_max_grade_parsing(costing, transport_type, default_value, default_value);
   test_max_grade_parsing(costing, transport_type, 10, 10);
   test_max_grade_parsing(costing, transport_type, 14, 14);
@@ -1838,7 +1858,7 @@ void test_max_grade() {
 
 void test_max_hiking_difficulty() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  float default_value = kDefaultPedestrianMaxHikingDifficulty;
+  float default_value = kDefaultPedestrian_MaxHikingDifficulty;
   test_max_hiking_difficulty_parsing(costing, default_value, default_value);
   test_max_hiking_difficulty_parsing(costing, 3, 3);
   test_max_hiking_difficulty_parsing(costing, 10, default_value);
@@ -1846,7 +1866,7 @@ void test_max_hiking_difficulty() {
 
 void test_mode_factor() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  float default_value = kDefaultPedestrianModeFactor;
+  float default_value = kDefaultPedestrian_ModeFactor;
   test_mode_factor_parsing(costing, default_value, default_value);
   test_mode_factor_parsing(costing, 1.f, 1.f);
   test_mode_factor_parsing(costing, 10.f, 10.f);
@@ -1856,7 +1876,7 @@ void test_mode_factor() {
 
 void test_walkway_factor() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  float default_value = kDefaultPedestrianWalkwayFactor;
+  float default_value = kDefaultPedestrian_WalkwayFactor;
   test_walkway_factor_parsing(costing, default_value, default_value);
   test_walkway_factor_parsing(costing, 0.5f, 0.5f);
   test_walkway_factor_parsing(costing, 10.f, 10.f);
@@ -1866,7 +1886,7 @@ void test_walkway_factor() {
 
 void test_sidewalk_factor() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  float default_value = kDefaultPedestrianSideWalkFactor;
+  float default_value = kDefaultPedestrian_SideWalkFactor;
   test_sidewalk_factor_parsing(costing, default_value, default_value);
   test_sidewalk_factor_parsing(costing, 0.5f, 0.5f);
   test_sidewalk_factor_parsing(costing, 10.f, 10.f);
@@ -1876,7 +1896,7 @@ void test_sidewalk_factor() {
 
 void test_alley_factor() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  float default_value = kDefaultPedestrianAlleyFactor;
+  float default_value = kDefaultPedestrian_AlleyFactor;
   test_alley_factor_parsing(costing, default_value, default_value);
   test_alley_factor_parsing(costing, 1.f, 1.f);
   test_alley_factor_parsing(costing, 10.f, 10.f);
@@ -1886,7 +1906,7 @@ void test_alley_factor() {
 
 void test_driveway_factor() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  float default_value = kDefaultPedestrianDrivewayFactor;
+  float default_value = kDefaultPedestrian_DrivewayFactor;
   test_driveway_factor_parsing(costing, default_value, default_value);
   test_driveway_factor_parsing(costing, 1.f, 1.f);
   test_driveway_factor_parsing(costing, 10.f, 10.f);
@@ -1896,7 +1916,7 @@ void test_driveway_factor() {
 
 void test_transit_start_end_max_distance() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  float default_value = kDefaultPedestrianTransitStartEndMaxDistance;
+  float default_value = kDefaultPedestrian_TransitStartEndMaxDistance;
   test_transit_start_end_max_distance_parsing(costing, default_value, default_value);
   test_transit_start_end_max_distance_parsing(costing, 3000, 3000);
   test_transit_start_end_max_distance_parsing(costing, 200000, default_value);
@@ -1904,7 +1924,7 @@ void test_transit_start_end_max_distance() {
 
 void test_transit_transfer_max_distance() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  float default_value = kDefaultPedestrianTransitTransferMaxDistance;
+  float default_value = kDefaultPedestrian_TransitTransferMaxDistance;
   test_transit_transfer_max_distance_parsing(costing, default_value, default_value);
   test_transit_transfer_max_distance_parsing(costing, 1500, 1500);
   test_transit_transfer_max_distance_parsing(costing, 100000, default_value);
