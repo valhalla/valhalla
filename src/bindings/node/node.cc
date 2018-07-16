@@ -39,17 +39,16 @@ class Actor {
 public:
   static napi_value Init(napi_env env, napi_callback_info info) {
     napi_status status;
-    napi_property_descriptor properties[] = {
-        DECLARE_NAPI_METHOD("route", Route),
-        DECLARE_NAPI_METHOD("locate", Locate),
-        DECLARE_NAPI_METHOD("matrix", Matrix),
-        DECLARE_NAPI_METHOD("optimizedRoute", OptimizedRoute),
-        DECLARE_NAPI_METHOD("isochrone", Isochrone),
-        DECLARE_NAPI_METHOD("traceRoute", TraceRoute),
-        DECLARE_NAPI_METHOD("traceAttributes", TraceAttributes),
-        DECLARE_NAPI_METHOD("height", Height),
-        DECLARE_NAPI_METHOD("transitAvailable", TransitAvailable)
-    };
+    napi_property_descriptor properties[] = {DECLARE_NAPI_METHOD("route", Route),
+                                             DECLARE_NAPI_METHOD("locate", Locate),
+                                             DECLARE_NAPI_METHOD("matrix", Matrix),
+                                             DECLARE_NAPI_METHOD("optimizedRoute", OptimizedRoute),
+                                             DECLARE_NAPI_METHOD("isochrone", Isochrone),
+                                             DECLARE_NAPI_METHOD("traceRoute", TraceRoute),
+                                             DECLARE_NAPI_METHOD("traceAttributes", TraceAttributes),
+                                             DECLARE_NAPI_METHOD("height", Height),
+                                             DECLARE_NAPI_METHOD("transitAvailable",
+                                                                 TransitAvailable)};
     // parse config file to get logging config
     size_t argc = 1;
     napi_value argv[1];
@@ -234,7 +233,7 @@ private:
     std::string locate_json;
     try {
       locate_json = obj->actor.locate(reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, locate_json);
     return outStr;
@@ -253,7 +252,7 @@ private:
     std::string matrix_json;
     try {
       matrix_json = obj->actor.matrix(reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, matrix_json);
     return outStr;
@@ -272,7 +271,7 @@ private:
     std::string optimized_route_json;
     try {
       optimized_route_json = obj->actor.optimized_route(reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, optimized_route_json);
     return outStr;
@@ -291,7 +290,7 @@ private:
     std::string isochrone_json;
     try {
       isochrone_json = obj->actor.isochrone(reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, isochrone_json);
     return outStr;
@@ -310,7 +309,7 @@ private:
     std::string trace_route_json;
     try {
       trace_route_json = obj->actor.trace_route(reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, trace_route_json);
     return outStr;
@@ -329,7 +328,7 @@ private:
     std::string trace_attributes_json;
     try {
       trace_attributes_json = obj->actor.trace_attributes(reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, trace_attributes_json);
     return outStr;
@@ -348,7 +347,7 @@ private:
     std::string height_json;
     try {
       height_json = obj->actor.height(reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, height_json);
     return outStr;
@@ -367,7 +366,7 @@ private:
     std::string transit_available_json;
     try {
       transit_available_json = obj->actor.transit_available(reqString);
-    } catch (const std::exception& e) {napi_throw_error(env, NULL, e.what()); }
+    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
     auto outStr = WrapString(env, transit_available_json);
     return outStr;
