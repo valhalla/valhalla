@@ -383,20 +383,20 @@ void TestTangentAngle() {
   std::vector<PointLL> shape{{-122.839104f, 38.3988266f},
                              {-122.839539f, 38.3988342f},
                              {-122.839546f, 38.3990479f}};
-  constexpr float kTestDistance = 24.0f;  // Use the maximum distance from GetOffsetForHeading
+  constexpr float kTestDistance = 24.0f; // Use the maximum distance from GetOffsetForHeading
   float expected = shape[1].Heading(shape[2]);
   float tang = tangent_angle(1, point, shape, kTestDistance, true);
   if (std::abs(tang - expected) > 5.0f) {
     throw std::logic_error("tangent_angle outside expected tolerance: expected " +
                            std::to_string(expected) + " but tangent = " + std::to_string(tang));
-}
+  }
 
   PointLL point2{-122.839125f, 38.3988266f};
   expected = shape[1].Heading(shape[0]);
   tang = tangent_angle(0, point2, shape, kTestDistance, false);
   if (std::abs(tang - expected) > 5.0f) {
     throw std::logic_error("tangent_angle outside expected tolerance: expected " +
-                               std::to_string(expected) + " but tangent = " + std::to_string(tang));
+                           std::to_string(expected) + " but tangent = " + std::to_string(tang));
   }
 }
 
