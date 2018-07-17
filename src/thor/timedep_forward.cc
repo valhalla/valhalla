@@ -1,5 +1,6 @@
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
+#include "midgard/constants.h"
 #include "thor/timedep.h"
 #include <algorithm>
 #include <iostream> // TODO remove if not needed
@@ -20,6 +21,7 @@ TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
   adjacencylist_ = nullptr;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
   origin_tz_index_ = 0;
+  seconds_of_week_ = 0;
 }
 
 // Destructor
@@ -50,6 +52,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
                                    const uint32_t pred_idx,
                                    const bool from_transition,
                                    uint64_t localtime,
+                                   uint32_t seconds_of_week,
                                    const odin::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -65,12 +68,12 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
 
   // Adjust for time zone (if different from timezone at the start).
   if (nodeinfo->timezone() != origin_tz_index_) {
+    // TODO - why doesn't this return the seconds difference in timezones?
     DateTime::timezone_diff(true, localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
                             DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-  }
 
-  // TODO - convert to seconds of the week.
-  uint32_t seconds_of_week = 0;
+    // TODO - alter seconds of week based on timezone diff
+  }
 
   // Expand from end node.
   uint32_t max_shortcut_length = static_cast<uint32_t>(pred.distance() * 0.5f);
@@ -84,14 +87,14 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
-                      destination, best_path);
+            seconds_of_week, destination, best_path);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
-                      destination, best_path);
+            seconds_of_week, destination, best_path);
       }
       continue;
     }
@@ -217,6 +220,14 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   uint64_t start_time =
       DateTime::seconds_since_epoch(origin.date_time(),
                                     DateTime::get_tz_db().from_index(origin_tz_index_));
+
+  // Set seconds from beginning of the week
+  uint32_t dow = DateTime::day_of_week(origin.date_time());
+  uint32_t secs = DateTime::seconds_from_midnight(origin.date_time());
+  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
+                     DateTime::seconds_from_midnight(origin.date_time());
+printf("%s\n", origin.date_time().c_str());
+printf("seconds of the week = %d dow %d seconds_from_midnight %d\n", seconds_of_week_, dow, secs);
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
@@ -290,11 +301,15 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
       continue;
     }
 
-    // Set local time.
-    uint64_t localtime = start_time + (double)pred.cost().secs;
+    // Set local time and seconds of the week.
+    uint64_t localtime = start_time + static_cast<uint32_t>(pred.cost().secs);
+    uint32_t seconds_of_week = seconds_of_week_ + static_cast<uint32_t>(pred.cost().secs);
+    if (seconds_of_week > midgard::kSecondsPerWeek) {
+      seconds_of_week -= midgard::kSecondsPerWeek;
+    }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, destination,
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week, destination,
                   best_path);
   }
   return {}; // Should never get here
