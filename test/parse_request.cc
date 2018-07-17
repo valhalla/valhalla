@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "sif/costconstants.h"
 #include "worker.h"
 
 #include <valhalla/proto/directions_options.pb.h>
@@ -611,6 +612,50 @@ void test_default_pedestrian_cost_options(const valhalla::odin::Costing costing,
                .transit_transfer_max_distance());
 }
 
+void test_default_bicycle_cost_options(const valhalla::odin::Costing costing,
+                                       const valhalla::odin::DirectionsOptions::Action action) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string key = "costing";
+
+  // Get cost request with no cost options
+  valhalla::valhalla_request_t request = get_request(get_request_str(key, costing_str), action);
+
+  validate("bicycle_type", kDefaultBicycle_BicycleType,
+           request.options.costing_options(static_cast<int>(costing)).transport_type());
+  validate("maneuver_penalty", kDefaultBicycle_ManeuverPenalty,
+           request.options.costing_options(static_cast<int>(costing)).maneuver_penalty());
+  validate("driveway", kDefaultBicycle_DrivewayPenalty,
+           request.options.costing_options(static_cast<int>(costing)).driveway_penalty());
+  validate("alley_penalty", kDefaultBicycle_AlleyPenalty,
+           request.options.costing_options(static_cast<int>(costing)).alley_penalty());
+  validate("gate_cost", kDefaultBicycle_GateCost,
+           request.options.costing_options(static_cast<int>(costing)).gate_cost());
+  validate("gate_penalty", kDefaultBicycle_GatePenalty,
+           request.options.costing_options(static_cast<int>(costing)).gate_penalty());
+  validate("country_crossing_cost", kDefaultBicycle_CountryCrossingCost,
+           request.options.costing_options(static_cast<int>(costing)).country_crossing_cost());
+  validate("country_crossing_penalty", kDefaultBicycle_CountryCrossingPenalty,
+           request.options.costing_options(static_cast<int>(costing)).country_crossing_penalty());
+  validate("ferry_cost", kDefaultBicycle_FerryCost,
+           request.options.costing_options(static_cast<int>(costing)).ferry_cost());
+  validate("use_ferry", kDefaultBicycle_UseFerry,
+           request.options.costing_options(static_cast<int>(costing)).use_ferry());
+  validate("use_roads", kDefaultBicycle_UseRoad,
+           request.options.costing_options(static_cast<int>(costing)).use_roads());
+  validate("use_hills", kDefaultBicycle_UseHills,
+           request.options.costing_options(static_cast<int>(costing)).use_hills());
+  validate("avoid_bad_surfaces", kDefaultBicycle_AvoidBadSurfaces,
+           request.options.costing_options(static_cast<int>(costing)).avoid_bad_surfaces());
+  validate("cycling_speed",
+           kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kHybrid)],
+           request.options.costing_options(static_cast<int>(costing)).cycling_speed());
+}
+
 void test_transport_type_parsing(const valhalla::odin::Costing costing,
                                  const std::string& key,
                                  const std::string& specified_value,
@@ -1039,6 +1084,31 @@ void test_walking_speed_parsing(const valhalla::odin::Costing costing,
            request.options.costing_options(static_cast<int>(costing)).walking_speed());
 }
 
+void test_cycling_speed_parsing(const valhalla::odin::Costing costing,
+                                const std::string& transport_type,
+                                const float specified_value,
+                                const float expected_value,
+                                const valhalla::odin::DirectionsOptions::Action action =
+                                    valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string sibling_key = "bicycle_type";
+  const std::string key = "cycling_speed";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, sibling_key, transport_type, key,
+                                  specified_value),
+                  action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).cycling_speed());
+}
+
 void test_step_penalty_parsing(const valhalla::odin::Costing costing,
                                const std::string& transport_type,
                                const float specified_value,
@@ -1215,6 +1285,69 @@ void test_driveway_factor_parsing(const valhalla::odin::Costing costing,
            request.options.costing_options(static_cast<int>(costing)).driveway_factor());
 }
 
+void test_driveway_penalty_parsing(const valhalla::odin::Costing costing,
+                                   const float specified_value,
+                                   const float expected_value,
+                                   const valhalla::odin::DirectionsOptions::Action action =
+                                       valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "driveway"; // NOTE: key is truncated to 'driveway'
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).driveway_penalty());
+}
+
+void test_use_roads_parsing(const valhalla::odin::Costing costing,
+                            const float specified_value,
+                            const float expected_value,
+                            const valhalla::odin::DirectionsOptions::Action action =
+                                valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "use_roads";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).use_roads());
+}
+
+void test_avoid_bad_surfaces_parsing(const valhalla::odin::Costing costing,
+                                     const float specified_value,
+                                     const float expected_value,
+                                     const valhalla::odin::DirectionsOptions::Action action =
+                                         valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "avoid_bad_surfaces";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).avoid_bad_surfaces());
+}
+
 void test_transit_start_end_max_distance_parsing(
     const valhalla::odin::Costing costing,
     const uint32_t specified_value,
@@ -1351,6 +1484,11 @@ void test_default_pedestrian_cost_options() {
                                        valhalla::odin::DirectionsOptions::route);
 }
 
+void test_default_bicycle_cost_options() {
+  test_default_bicycle_cost_options(valhalla::odin::bicycle,
+                                    valhalla::odin::DirectionsOptions::route);
+}
+
 void test_transport_type() {
   std::string transport_type_key = "type";
   std::string transport_type_value = "car";
@@ -1360,12 +1498,17 @@ void test_transport_type() {
   }
 
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
-  transport_type_value = "foot";
-  test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                              transport_type_value);
-  transport_type_value = "wheelchair";
-  test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                              transport_type_value);
+  for (const auto& transport_type_value : {"foot", "wheelchair"}) {
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
+                                transport_type_value);
+  }
+
+  costing = valhalla::odin::Costing::bicycle;
+  transport_type_key = "bicycle_type";
+  for (const auto& transport_type_value : {"Road", "Cross", "Hybrid", "Mountain"}) {
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
+                                transport_type_value);
+  }
 }
 
 void test_maneuver_penalty() {
@@ -1396,6 +1539,14 @@ void test_maneuver_penalty() {
 
   costing = valhalla::odin::Costing::pedestrian;
   default_value = kDefaultPedestrian_ManeuverPenalty;
+  test_maneuver_penalty_parsing(costing, default_value, default_value);
+  test_maneuver_penalty_parsing(costing, 2.f, 2.f);
+  test_maneuver_penalty_parsing(costing, 30.f, 30.f);
+  test_maneuver_penalty_parsing(costing, -2.f, default_value);
+  test_maneuver_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_ManeuverPenalty;
   test_maneuver_penalty_parsing(costing, default_value, default_value);
   test_maneuver_penalty_parsing(costing, 2.f, 2.f);
   test_maneuver_penalty_parsing(costing, 30.f, 30.f);
@@ -1455,6 +1606,14 @@ void test_gate_cost() {
   test_gate_cost_parsing(costing, 60.f, 60.f);
   test_gate_cost_parsing(costing, -2.f, default_value);
   test_gate_cost_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_GateCost;
+  test_gate_cost_parsing(costing, default_value, default_value);
+  test_gate_cost_parsing(costing, 15.f, 15.f);
+  test_gate_cost_parsing(costing, 60.f, 60.f);
+  test_gate_cost_parsing(costing, -2.f, default_value);
+  test_gate_cost_parsing(costing, 50000.f, default_value);
 }
 
 void test_gate_penalty() {
@@ -1490,6 +1649,14 @@ void test_gate_penalty() {
   test_gate_penalty_parsing(costing, 20.f, 20.f);
   test_gate_penalty_parsing(costing, -2.f, default_value);
   test_gate_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_GatePenalty;
+  test_gate_penalty_parsing(costing, default_value, default_value);
+  test_gate_penalty_parsing(costing, 150.f, 150.f);
+  test_gate_penalty_parsing(costing, 600.f, 600.f);
+  test_gate_penalty_parsing(costing, -2.f, default_value);
+  test_gate_penalty_parsing(costing, 50000.f, default_value);
 }
 
 void test_toll_booth_cost() {
@@ -1555,6 +1722,14 @@ void test_alley_penalty() {
   test_alley_penalty_parsing(costing, 10.f, 10.f);
   test_alley_penalty_parsing(costing, -2.f, default_value);
   test_alley_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_AlleyPenalty;
+  test_alley_penalty_parsing(costing, default_value, default_value);
+  test_alley_penalty_parsing(costing, 30.f, 30.f);
+  test_alley_penalty_parsing(costing, 90.f, 90.f);
+  test_alley_penalty_parsing(costing, -2.f, default_value);
+  test_alley_penalty_parsing(costing, 50000.f, default_value);
 }
 
 void test_country_crossing_cost() {
@@ -1590,6 +1765,14 @@ void test_country_crossing_cost() {
   test_country_crossing_cost_parsing(costing, 700.f, 700.f);
   test_country_crossing_cost_parsing(costing, -2.f, default_value);
   test_country_crossing_cost_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_CountryCrossingCost;
+  test_country_crossing_cost_parsing(costing, default_value, default_value);
+  test_country_crossing_cost_parsing(costing, 300.f, 300.f);
+  test_country_crossing_cost_parsing(costing, 1200.f, 1200.f);
+  test_country_crossing_cost_parsing(costing, -2.f, default_value);
+  test_country_crossing_cost_parsing(costing, 50000.f, default_value);
 }
 
 void test_country_crossing_penalty() {
@@ -1618,13 +1801,20 @@ void test_country_crossing_penalty() {
   test_country_crossing_penalty_parsing(costing, -2.f, default_value);
   test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
 
-  costing = valhalla::odin::Costing::motorcycle;
+  costing = valhalla::odin::Costing::pedestrian;
   default_value = kDefaultPedestrian_CountryCrossingPenalty;
   test_country_crossing_penalty_parsing(costing, default_value, default_value);
   test_country_crossing_penalty_parsing(costing, 2.f, 2.f);
   test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
   test_country_crossing_penalty_parsing(costing, -2.f, default_value);
   test_country_crossing_penalty_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_CountryCrossingPenalty;
+  test_country_crossing_penalty_parsing(costing, default_value, default_value);
+  test_country_crossing_penalty_parsing(costing, 60.f, 60.f);
+  test_country_crossing_penalty_parsing(costing, -2.f, default_value);
+  test_country_crossing_penalty_parsing(costing, 50000.f, default_value);
 }
 
 void test_ferry_cost() {
@@ -1660,6 +1850,14 @@ void test_ferry_cost() {
   test_ferry_cost_parsing(costing, 600.f, 600.f);
   test_ferry_cost_parsing(costing, -2.f, default_value);
   test_ferry_cost_parsing(costing, 500000.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_FerryCost;
+  test_ferry_cost_parsing(costing, default_value, default_value);
+  test_ferry_cost_parsing(costing, 150.f, 150.f);
+  test_ferry_cost_parsing(costing, 600.f, 600.f);
+  test_ferry_cost_parsing(costing, -2.f, default_value);
+  test_ferry_cost_parsing(costing, 50000.f, default_value);
 }
 
 void test_use_ferry() {
@@ -1690,6 +1888,14 @@ void test_use_ferry() {
 
   costing = valhalla::odin::Costing::pedestrian;
   default_value = kDefaultPedestrian_UseFerry;
+  test_use_ferry_parsing(costing, default_value, default_value);
+  test_use_ferry_parsing(costing, 0.2f, 0.2f);
+  test_use_ferry_parsing(costing, 0.6f, 0.6f);
+  test_use_ferry_parsing(costing, -2.f, default_value);
+  test_use_ferry_parsing(costing, 2.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_UseFerry;
   test_use_ferry_parsing(costing, default_value, default_value);
   test_use_ferry_parsing(costing, 0.2f, 0.2f);
   test_use_ferry_parsing(costing, 0.6f, 0.6f);
@@ -1741,6 +1947,14 @@ void test_use_hills() {
   test_use_hills_parsing(costing, default_value, default_value);
   test_use_hills_parsing(costing, 0.2f, 0.2f);
   test_use_hills_parsing(costing, 0.6f, 0.6f);
+  test_use_hills_parsing(costing, -2.f, default_value);
+  test_use_hills_parsing(costing, 2.f, default_value);
+
+  costing = valhalla::odin::Costing::bicycle;
+  default_value = kDefaultBicycle_UseHills;
+  test_use_hills_parsing(costing, default_value, default_value);
+  test_use_hills_parsing(costing, 0.15f, 0.15f);
+  test_use_hills_parsing(costing, 0.5f, 0.5f);
   test_use_hills_parsing(costing, -2.f, default_value);
   test_use_hills_parsing(costing, 2.f, default_value);
 }
@@ -1914,6 +2128,16 @@ void test_driveway_factor() {
   test_driveway_factor_parsing(costing, 200000.f, default_value);
 }
 
+void test_driveway_penalty() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::bicycle;
+  float default_value = kDefaultBicycle_DrivewayPenalty;
+  test_driveway_penalty_parsing(costing, default_value, default_value);
+  test_driveway_penalty_parsing(costing, 100.f, 100.f);
+  test_driveway_penalty_parsing(costing, 500.f, 500.f);
+  test_driveway_penalty_parsing(costing, -2.f, default_value);
+  test_driveway_penalty_parsing(costing, 50000.f, default_value);
+}
+
 void test_transit_start_end_max_distance() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::pedestrian;
   float default_value = kDefaultPedestrian_TransitStartEndMaxDistance;
@@ -1928,6 +2152,66 @@ void test_transit_transfer_max_distance() {
   test_transit_transfer_max_distance_parsing(costing, default_value, default_value);
   test_transit_transfer_max_distance_parsing(costing, 1500, 1500);
   test_transit_transfer_max_distance_parsing(costing, 100000, default_value);
+}
+
+void test_use_roads() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::bicycle;
+  float default_value = kDefaultBicycle_UseRoad;
+  test_use_roads_parsing(costing, default_value, default_value);
+  test_use_roads_parsing(costing, 0.1f, 0.1f);
+  test_use_roads_parsing(costing, 0.5f, 0.5f);
+  test_use_roads_parsing(costing, -2.f, default_value);
+  test_use_roads_parsing(costing, 2.f, default_value);
+}
+
+void test_avoid_bad_surfaces() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::bicycle;
+  float default_value = kDefaultBicycle_AvoidBadSurfaces;
+  test_avoid_bad_surfaces_parsing(costing, default_value, default_value);
+  test_avoid_bad_surfaces_parsing(costing, 0.1f, 0.1f);
+  test_avoid_bad_surfaces_parsing(costing, 0.5f, 0.5f);
+  test_avoid_bad_surfaces_parsing(costing, -2.f, default_value);
+  test_avoid_bad_surfaces_parsing(costing, 2.f, default_value);
+}
+
+void test_cycling_speed() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::bicycle;
+
+  std::string transport_type = "Road";
+  float default_value =
+      kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kRoad)];
+  test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
+  test_cycling_speed_parsing(costing, transport_type, 23.5f, 23.5f);
+  test_cycling_speed_parsing(costing, transport_type, 26.5f, 26.5f);
+  test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
+  test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
+
+  transport_type = "Cross";
+  default_value =
+      kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kCross)];
+  test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
+  test_cycling_speed_parsing(costing, transport_type, 18.5f, 18.5f);
+  test_cycling_speed_parsing(costing, transport_type, 21.5f, 21.5f);
+  test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
+  test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
+
+  transport_type = "Hybrid";
+  default_value =
+      kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kHybrid)];
+  test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
+  test_cycling_speed_parsing(costing, transport_type, 16.5f, 16.5f);
+  test_cycling_speed_parsing(costing, transport_type, 19.5f, 19.5f);
+  test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
+  test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
+
+  transport_type = "Mountain";
+  default_value =
+      kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kMountain)];
+  test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
+  test_cycling_speed_parsing(costing, transport_type, 14.5f, 14.5f);
+  test_cycling_speed_parsing(costing, transport_type, 17.5f, 17.5f);
+  test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
+  test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 }
 
 } // namespace
@@ -1984,6 +2268,9 @@ int main() {
 
   // default pedestrian cost options
   suite.test(TEST_CASE(test_default_pedestrian_cost_options));
+
+  // default bicycle cost options
+  suite.test(TEST_CASE(test_default_bicycle_cost_options));
 
   // transport_type
   suite.test(TEST_CASE(test_transport_type));
@@ -2069,11 +2356,23 @@ int main() {
   // driveway_factor
   suite.test(TEST_CASE(test_driveway_factor));
 
+  // driveway_penalty
+  suite.test(TEST_CASE(test_driveway_penalty));
+
   // transit_start_end_max_distance
   suite.test(TEST_CASE(test_transit_start_end_max_distance));
 
   // transit_transfer_max_distance
   suite.test(TEST_CASE(test_transit_transfer_max_distance));
+
+  // use_roads
+  suite.test(TEST_CASE(test_use_roads));
+
+  // avoid_bad_surfaces
+  suite.test(TEST_CASE(test_avoid_bad_surfaces));
+
+  // cycling_speed
+  suite.test(TEST_CASE(test_cycling_speed));
 
   return suite.tear_down();
 }
