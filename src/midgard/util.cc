@@ -88,6 +88,58 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
   return result;
 }
 
+float tangent_angle(size_t index,
+                    const PointLL& point,
+                    const std::vector<PointLL>& shape,
+                    const float sample_distance,
+                    bool forward) {
+  // depending on if we are going forward or backward we choose a different increment
+  auto increment = forward ? -1 : 1;
+  auto first_end = forward ? shape.cbegin() : shape.cend() - 1;
+  auto second_end = forward ? shape.cend() - 1 : shape.cbegin();
+
+  // u and v will be points we move along the shape until we have enough distance between them or
+  // run out of points
+
+  // move backwards until we have enough or run out
+  float remaining = sample_distance;
+  auto u = point;
+  auto i = shape.cbegin() + index + forward;
+  while (remaining > 0 && i != first_end) {
+    // move along and see how much distance that added
+    i += increment;
+    auto d = u.Distance(*i);
+    // are we done yet?
+    if (remaining <= d) {
+      auto coef = remaining / d;
+      u = u.AffineCombination(1 - coef, coef, *i);
+      return u.Heading(point);
+    }
+    // next one
+    u = *i;
+    remaining -= d;
+  }
+
+  // move forwards until we have enough or run out
+  auto v = point;
+  i = shape.cbegin() + index + !forward;
+  while (remaining > 0 && i != second_end) {
+    // move along and see how much distance that added
+    i -= increment;
+    auto d = v.Distance(*i);
+    // are we done yet?
+    if (remaining <= d) {
+      auto coef = remaining / d;
+      v = v.AffineCombination(1 - coef, coef, *i);
+      return u.Heading(v);
+    }
+    // next one
+    v = *i;
+    remaining -= d;
+  }
+  return u.Heading(v);
+}
+
 // Explicit instantiations
 template std::vector<PointLL> trim_front<std::vector<PointLL>>(std::vector<PointLL>&, const float);
 template std::vector<Point2> trim_front<std::vector<Point2>>(std::vector<Point2>&, const float);

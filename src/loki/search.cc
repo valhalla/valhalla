@@ -2,6 +2,7 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/linesegment2.h"
+#include "midgard/util.h"
 
 #include <algorithm>
 #include <cmath>
@@ -27,67 +28,9 @@ constexpr float NODE_SNAP = 5.f;
 // data for the roads it might want half that) but its better to assume on street than not
 constexpr float SIDE_OF_STREET_SNAP =
     25.f; // this is 5 meters squared, the computation uses square distance
-// how much of the shape should be sampled to get heading
-constexpr float HEADING_SAMPLE = 30.f;
+
 // cone width to use for cosine similarity comparisons for favoring heading
 constexpr float DEFAULT_ANGLE_WIDTH = 60.f;
-
-// TODO: move this to midgard and test the crap out of it
-// we are essentially estimating the angle of the tangent
-// at a point along a discretised curve. we attempt to mostly
-// use the shape coming into the point on the curve but if there
-// isnt enough there we will use the shape coming out of the it
-float tangent_angle(size_t index,
-                    const PointLL& point,
-                    const std::vector<PointLL>& shape,
-                    bool forward) {
-  // depending on if we are going forward or backward we choose a different increment
-  auto increment = forward ? -1 : 1;
-  auto first_end = forward ? shape.cbegin() : shape.cend() - 1;
-  auto second_end = forward ? shape.cend() - 1 : shape.cbegin();
-
-  // u and v will be points we move along the shape until we have enough distance between them or
-  // run out of points
-
-  // move backwards until we have enough or run out
-  float remaining = HEADING_SAMPLE;
-  auto u = point;
-  auto i = shape.cbegin() + index + forward;
-  while (remaining > 0 && i != first_end) {
-    // move along and see how much distance that added
-    i += increment;
-    auto d = u.Distance(*i);
-    // are we done yet?
-    if (remaining <= d) {
-      auto coef = remaining / d;
-      u = u.AffineCombination(1 - coef, coef, *i);
-      return u.Heading(point);
-    }
-    // next one
-    u = *i;
-    remaining -= d;
-  }
-
-  // move forwards until we have enough or run out
-  auto v = point;
-  i = shape.cbegin() + index + !forward;
-  while (remaining > 0 && i != second_end) {
-    // move along and see how much distance that added
-    i -= increment;
-    auto d = v.Distance(*i);
-    // are we done yet?
-    if (remaining <= d) {
-      auto coef = remaining / d;
-      v = v.AffineCombination(1 - coef, coef, *i);
-      return u.Heading(v);
-    }
-    // next one
-    v = *i;
-    remaining -= d;
-  }
-
-  return u.Heading(v);
-}
 
 bool heading_filter(const DirectedEdge* edge,
                     const EdgeInfo& info,
@@ -100,7 +43,9 @@ bool heading_filter(const DirectedEdge* edge,
   }
 
   // get the angle of the shape from this point
-  auto angle = tangent_angle(index, point, info.shape(), edge->forward());
+  auto angle =
+      tangent_angle(index, point, info.shape(),
+                    GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
   // we want the closest distance between two angles which can be had
   // across 0 or between the two so we just need to know which is bigger
   if (*location.heading_ > angle) {

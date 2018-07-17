@@ -378,6 +378,31 @@ void TestTrimFront() {
   }
 }
 
+void TestTangentAngle() {
+  auto angle_diff = [](float angle1, float angle2) {
+    return std::fmod(angle1 - angle2 + 180.f + 360.f, 360.f) - 180.f;
+  };
+
+  PointLL point{-122.839554, 38.3990479};
+  std::vector<PointLL> shape{{-122.839104, 38.3988266},
+                             {-122.839539, 38.3988342},
+                             {-122.839546, 38.3990479}};
+  float expected = shape[1].Heading(shape[2]);
+  float tan = tangent_angle(1, point, shape, 24.0f, true);
+  if (angle_diff(0, tan) > 5) {
+    throw std::logic_error("tangent_angle outside expected tolerance: expected " +
+                           std::to_string(expected) + " but tangent = " + std::to_string(tan));
+  }
+
+  PointLL point2{-122.839104, 38.3988266};
+  float expected = shape[1].Heading(shape[2]);
+  tan = tangent_angle(1, point2, shape, 24.0f, false);
+  if (angle_diff(90, tan) > 5) {
+    throw std::logic_error("tangent_angle outside expected tolerance: expected 90 but tangent = " +
+                           std::to_string(tan));
+  }
+}
+
 void TestExpandLocation() {
   // Expand to create a box approx 200x200 meters
   PointLL loc(-77.0f, 39.0f);
@@ -444,6 +469,9 @@ int main() {
 
   // trim_front of a polyline
   suite.test(TEST_CASE(TestTrimFront));
+
+  // tangent angle
+  suite.test(TEST_CASE(TestTangentAngle));
 
   // Test similar and equal edge cases
   suite.test(TEST_CASE(TestSimilarAndEqual));
