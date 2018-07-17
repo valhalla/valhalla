@@ -1,6 +1,6 @@
 const test = require('tape');
 var config = require('./fixtures/basic_config');
-var Valhalla = require('../../')(JSON.stringify(config));
+var Valhalla = require('../../../')(JSON.stringify(config));
 var valhalla = new Valhalla(JSON.stringify(config));
 
 test('route: can get a route in Hershey', function(assert) {
@@ -21,13 +21,6 @@ test('route: returns an error if no edges found', function(assert) {
 
 test('route: returns an error if request format is wrong', function(assert) {
   var hersheyRequest = '{"locations":[40.546115,-76.385076], [40.544232,"lon":-76.385752],"costing":"auto"}';
-  // TODO: we are not throwing a very useful error in this case - we should track this
-  // down and throw something a little more descriptive
   assert.throws(() => { valhalla.route(hersheyRequest) }, /std::exception/, 'Throws an error');
   assert.end();
-});
-
-test.onFinish(() => {
-    valhalla = null;
-    if (global.gc) global.gc();
 });
