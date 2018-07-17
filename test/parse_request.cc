@@ -52,9 +52,8 @@ constexpr float kDefaultMotorcycle_FerryCost = 300.0f;              // Seconds
 constexpr float kDefaultMotorcycle_CountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultMotorcycle_CountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultMotorcycle_UseFerry = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultMotorcycle_UseHighways = 1.0f;              // Factor between 0 and 1
+constexpr float kDefaultMotorcycle_UseHighways = 0.5f;              // Factor between 0 and 1
 constexpr float kDefaultMotorcycle_UseTolls = 0.5f;                 // Factor between 0 and 1
-constexpr float kDefaultMotorcycle_UsePrimary = 0.5f;               // Factor between 0 and 1
 constexpr float kDefaultMotorcycle_UseTrails = 0.0f;                // Factor between 0 and 1
 constexpr float kDefaultMotorcycle_DestinationOnlyPenalty = 600.0f; // Seconds
 
@@ -591,8 +590,6 @@ void test_default_motorcycle_cost_options(const valhalla::odin::Costing costing,
            request.options.costing_options(static_cast<int>(costing)).ferry_cost());
   validate("use_ferry", kDefaultMotorcycle_UseFerry,
            request.options.costing_options(static_cast<int>(costing)).use_ferry());
-  validate("use_primary", kDefaultMotorcycle_UsePrimary,
-           request.options.costing_options(static_cast<int>(costing)).use_primary());
   validate("use_trails", kDefaultMotorcycle_UseTrails,
            request.options.costing_options(static_cast<int>(costing)).use_trails());
 }
@@ -2447,14 +2444,6 @@ void test_use_hills() {
 void test_use_primary() {
   valhalla::odin::Costing costing = valhalla::odin::Costing::motor_scooter;
   float default_value = kDefaultMotorScooter_UsePrimary;
-  test_use_primary_parsing(costing, default_value, default_value);
-  test_use_primary_parsing(costing, 0.2f, 0.2f);
-  test_use_primary_parsing(costing, 0.6f, 0.6f);
-  test_use_primary_parsing(costing, -2.f, default_value);
-  test_use_primary_parsing(costing, 2.f, default_value);
-
-  costing = valhalla::odin::Costing::motorcycle;
-  default_value = kDefaultMotorcycle_UsePrimary;
   test_use_primary_parsing(costing, default_value, default_value);
   test_use_primary_parsing(costing, 0.2f, 0.2f);
   test_use_primary_parsing(costing, 0.6f, 0.6f);

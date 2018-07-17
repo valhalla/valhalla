@@ -1,17 +1,17 @@
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edge_elevation edgestatus ellipse encode
   enhancedtrippath factory graphid graphreader graphtile graphtileheader gridded_data grid_range_query grid_traversal
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory
   narrative_dictionary nodeinfo obb2 openlr optimizer parse_request point2 pointll
-  polyline2 queue routing sample sequence sign signs streetname streetnames streetnames_factory
+  polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles traffic_matcher transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder predictive_traffic
-    idtable matrix names node_search refs search signinfo trivial_paths uniquenames utrecht)
+    idtable matrix names node_search refs search signinfo timedep_paths trivial_paths uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)
@@ -114,6 +114,7 @@ if(ENABLE_DATA_TOOLS)
     add_dependencies(run-mapmatch utrecht_tiles)
   endif()
   add_dependencies(run-matrix utrecht_tiles)
+  add_dependencies(run-timedep_paths utrecht_tiles)
   add_dependencies(run-trivial_paths utrecht_tiles)
   add_dependencies(predictive_traffic utrecht_tiles)
 endif()

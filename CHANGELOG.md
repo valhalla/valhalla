@@ -1,7 +1,11 @@
 ## Release Date: UNRELEASED Valhalla 3.0
+
+## Release Date: 2018-07-12 Valhalla 3.0.0-alpha.1
+**NOTE**: There was already a small package named `valhalla` on the npm registry, only published up to version 0.0.3. The team at npm has transferred the package to us, but would like us to publish something to it ASAP to prove our stake in it. Though the bindings do not have all of the actor functionality exposed yet (just route), we are going to publish an alpha release of 3.0.0 to get something up on npm.
 * **Infrastructure**:
    * ADDED: add in time dependent algorithms if the distance between locations is less than 500km.
    * ADDED: TurnLanes to indicate turning lanes at the end of a directed edge.
+   * ADDED: Added PredictedSpeeds to Valhalla tiles and logic to compute speed based on predictive speed profiles.
 * **Data Producer Update**
    * ADDED: is_route_num flag was added to Sign records. Set this to true if the exit sign comes from a route number/ref.
    * CHANGED: Lower speeds on driveways, drive-thru, and parking aisle. Set destination only flag for drive thru use.
@@ -15,6 +19,14 @@
    * UPDATED: Parse the json request once and store in a protocol buffer to pass along the pipeline. This completed the first portion of [1357](https://github.com/valhalla/valhalla/issues/1357)
    * UPDATED: Changed the shape_match attribute from a string to an enum. Fixes [1376](https://github.com/valhalla/valhalla/issues/1376)
    * ADDED: Node bindings for route [#1341](https://github.com/valhalla/valhalla/pull/1341)
+   * UPDATED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
+
+## Release Date: 2018-07-15 Valhalla 2.6.3
+* **API**:
+   * FIXED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
+   * FIXED: Fixed the highway_factor when use_highways < 0.5.
+   * ENHANCEMENT: Added logic to modulate the surface factor based on use_trails.
+   * ADDED: New customer test requests for motorcycle costing.
 
 ## Release Date: 2018-06-28 Valhalla 2.6.2
 * **Data Producer Update**

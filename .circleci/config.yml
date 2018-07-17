@@ -145,6 +145,8 @@ jobs:
   build-osx:
     macos:
       xcode: "9.2.0"
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       - run: brew install protobuf --without-python@2
       - run: brew upgrade python

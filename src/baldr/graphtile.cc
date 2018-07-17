@@ -216,6 +216,14 @@ void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t 
   // Start of turn lane data.
   turnlanes_ = reinterpret_cast<TurnLanes*>(tile_ptr + header_->turnlane_offset());
 
+  // Start of predicted speed data.
+  if (header_->predictedspeeds_count() > 0) {
+    char* ptr1 = tile_ptr + header_->predictedspeeds_offset();
+    char* ptr2 = ptr1 + (header_->directededgecount() * sizeof(int16_t));
+    predictedspeeds_.set_index(reinterpret_cast<uint32_t*>(ptr1));
+    predictedspeeds_.set_profiles(reinterpret_cast<int16_t*>(ptr2));
+  }
+
   // For reference - how to use the end offset to set size of an object (that
   // is not fixed size and count).
   // example_size_ = header_->end_offset() - header_->example_offset();
