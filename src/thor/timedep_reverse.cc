@@ -1,6 +1,6 @@
 #include "baldr/datetime.h"
-#include "midgard/logging.h"
 #include "midgard/constants.h"
+#include "midgard/logging.h"
 #include "thor/timedep.h"
 #include <algorithm>
 #include <iostream> // TODO remove if not needed
@@ -119,14 +119,14 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
         ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
-            seconds_of_week, localtime, destination, best_path);
+                      seconds_of_week, localtime, destination, best_path);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
         ExpandReverse(graphreader, directededge->endnode(), pred, pred_idx, opp_pred_edge, true,
-            seconds_of_week, localtime, destination, best_path);
+                      seconds_of_week, localtime, destination, best_path);
       }
       continue;
     }
@@ -350,8 +350,9 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     // Set local time and seconds of the week.
     uint32_t secs = static_cast<uint32_t>(pred.cost().secs);
     uint64_t localtime = start_time - secs;
-    uint32_t seconds_of_week = (secs < seconds_of_week_) ?
-        seconds_of_week_ - secs : midgard::kSecondsPerWeek - (secs - seconds_of_week_);
+    uint32_t seconds_of_week = (secs < seconds_of_week_)
+                                   ? seconds_of_week_ - secs
+                                   : midgard::kSecondsPerWeek - (secs - seconds_of_week_);
 
     // Get the opposing predecessor directed edge. Need to make sure we get
     // the correct one if a transition occurred
@@ -359,8 +360,8 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, seconds_of_week, localtime,
-                  destination, best_path);
+    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, seconds_of_week,
+                  localtime, destination, best_path);
   }
   return {}; // Should never get here
 }

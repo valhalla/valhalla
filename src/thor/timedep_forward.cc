@@ -1,6 +1,6 @@
 #include "baldr/datetime.h"
-#include "midgard/logging.h"
 #include "midgard/constants.h"
+#include "midgard/logging.h"
 #include "thor/timedep.h"
 #include <algorithm>
 #include <iostream> // TODO remove if not needed
@@ -87,14 +87,14 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
       if (!from_transition) {
         hierarchy_limits_[node.level()].up_transition_count++;
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
-            seconds_of_week, destination, best_path);
+                      seconds_of_week, destination, best_path);
       }
       continue;
     } else if (directededge->trans_down()) {
       if (!from_transition &&
           !hierarchy_limits_[directededge->endnode().level()].StopExpanding(pred.distance())) {
         ExpandForward(graphreader, directededge->endnode(), pred, pred_idx, true, localtime,
-            seconds_of_week, destination, best_path);
+                      seconds_of_week, destination, best_path);
       }
       continue;
     }
@@ -226,8 +226,8 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
   uint32_t secs = DateTime::seconds_from_midnight(origin.date_time());
   seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
                      DateTime::seconds_from_midnight(origin.date_time());
-printf("%s\n", origin.date_time().c_str());
-printf("seconds of the week = %d dow %d seconds_from_midnight %d\n", seconds_of_week_, dow, secs);
+  printf("%s\n", origin.date_time().c_str());
+  printf("seconds of the week = %d dow %d seconds_from_midnight %d\n", seconds_of_week_, dow, secs);
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
@@ -309,8 +309,8 @@ printf("seconds of the week = %d dow %d seconds_from_midnight %d\n", seconds_of_
     }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week, destination,
-                  best_path);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week,
+                  destination, best_path);
   }
   return {}; // Should never get here
 }

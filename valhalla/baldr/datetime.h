@@ -2,14 +2,14 @@
 #define VALHALLA_BALDR_DATETIME_H_
 
 #include <cstdint>
-#include <memory>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <sstream>
-#include <locale>
 #include <ctime>
 #include <iomanip>
+#include <iostream>
+#include <locale>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
