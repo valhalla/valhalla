@@ -15,6 +15,12 @@ include(GNUInstallDirs)
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
+set(Boost_USE_STATIC_LIBS   ON)
+set(Protobuf_USE_STATIC_LIBS ON)
+set(LZ4_USE_STATIC_LIBS ON)
+# set(Spatialite_USE_STATIC_LIBS ON)
+set(Sqlite_USE_STATIC_LIBS ON)
+
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
