@@ -18,18 +18,19 @@ enum FilterAction {
 }
 
 message DirectionsOptions {
-  
+
   enum Units {
     kilometers = 0;
     miles = 1;
   }
-  
+
   enum Format {
     json = 0;
     gpx = 1;
     osrm = 2;
+    proto = 3;
   }
-  
+
   enum Action {
     route = 1;
     locate = 2;
@@ -41,7 +42,7 @@ message DirectionsOptions {
     height = 11;
     transit_available = 12;
   }
-  
+
   enum Costing {
     auto_ = 0;
     auto_shorter = 1;
@@ -55,8 +56,8 @@ message DirectionsOptions {
     truck = 9;
     motorcycle = 10;
     auto_data_fix = 11;
-  }  
-  
+  }
+
   enum DateTimeType {
     current = 0;
     depart_at = 1;

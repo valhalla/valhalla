@@ -32,7 +32,7 @@ struct actor_t::pimpl_t {
   }
   loki::loki_worker_t loki_worker;
   thor::thor_worker_t thor_worker;
-  odin::odin_worker_t odin_worker;
+  odin::OdinWorker odin_worker;
 };
 
 actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup)
@@ -53,6 +53,7 @@ std::string actor_t::route(const std::string& request_str, const std::function<v
   pimpl->loki_worker.route(request);
   auto legs = pimpl->thor_worker.route(request);
   // get some directions back from them
+  std::cout << "tyring here" << std::endl;
   auto directions = pimpl->odin_worker.narrate(request, legs);
   // serialize them out to json string
   auto bytes = tyr::serializeDirections(request, legs, directions);

@@ -1,3 +1,4 @@
+#include <fstream>
 #include <cstdint>
 #include <functional>
 #include <sstream>
@@ -18,25 +19,23 @@
 #include "tyr/serializers.h"
 
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions.pb.h>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
-using namespace valhalla::midgard;
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace odin {
 
-odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config) {
+OdinWorker::OdinWorker(const boost::property_tree::ptree& config) {
 }
 
-odin_worker_t::~odin_worker_t() {
+OdinWorker::~OdinWorker() {
 }
 
-void odin_worker_t::cleanup() {
+void OdinWorker::cleanup() {
 }
 
-std::list<TripDirections> odin_worker_t::narrate(const valhalla_request_t& request,
+std::list<TripDirections> OdinWorker::narrate(const valhalla_request_t& request,
                                                  std::list<TripPath>& legs) const {
   // get some annotated directions
   std::list<TripDirections> narrated;
@@ -49,8 +48,14 @@ std::list<TripDirections> odin_worker_t::narrate(const valhalla_request_t& reque
   return narrated;
 }
 
+proto::Directions OdinWorker::narrateProto(const valhalla_request_t& request,
+                                                 std::list<TripPath>& legs) const {
+  // get some annotated directions
+  return odin::DirectionsBuilder().BuildProto(request.options, legs);
+}
+
 #ifdef HAVE_HTTP
-worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job,
+worker_t::result_t OdinWorker::work(const std::list<zmq::message_t>& job,
                                        void* request_info,
                                        const std::function<void()>& interrupt_function) {
   auto& info = *static_cast<http_request_info_t*>(request_info);
@@ -77,11 +82,36 @@ worker_t::result_t odin_worker_t::work(const std::list<zmq::message_t>& job,
     }
 
     // narrate them and serialize them along
-    auto narrated = narrate(request, legs);
-    auto response = tyr::serializeDirections(request, legs, narrated);
-    auto* to_response =
-        request.options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
-    return to_response(response, info, request);
+    if (request.options.format() == DirectionsOptions::proto) {
+
+      proto::Directions narrated_proto = narrateProto(request, legs);
+
+      // encode to binary
+      std::string narrated_proto_string;
+      narrated_proto.SerializeToString(&narrated_proto_string);
+
+      // // decode again
+      // proto::Directions decoded;
+      // decoded.ParseFromString(narrated_proto_string);
+
+      // // print for debugging purposes
+      // std::cout << narrated_proto.DebugString() << std::endl;
+
+      // // save to file
+      // std::ofstream debugfile;
+      // debugfile.open ("data/debug.pbf");
+      // debugfile << narrated_proto_string;
+      // debugfile.close();
+
+      return to_response_proto(narrated_proto_string, info, request);
+    }
+    else {
+      auto narrated = narrate(request, legs);
+      auto response = tyr::serializeDirections(request, legs, narrated);
+      auto* to_response =
+          request.options.format() == DirectionsOptions::gpx ? to_response_xml : to_response_json;
+      return to_response(response, info, request);
+    }
   } catch (const std::exception& e) {
     return jsonify_error({299, std::string(e.what())}, info, request);
   }
@@ -98,7 +128,7 @@ void run_service(const boost::property_tree::ptree& config) {
   zmq::context_t context;
   prime_server::worker_t worker(context, upstream_endpoint, "ipc:///dev/null", loopback_endpoint,
                                 interrupt_endpoint,
-                                std::bind(&odin_worker_t::work, odin_worker_t(config),
+                                std::bind(&OdinWorker::work, OdinWorker(config),
                                           std::placeholders::_1, std::placeholders::_2,
                                           std::placeholders::_3));
   worker.work();

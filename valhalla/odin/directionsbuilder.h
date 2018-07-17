@@ -8,6 +8,7 @@
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -32,6 +33,7 @@ public:
    * @param trip_path The trip path - list of nodes, edges, attributes and shape.
    */
   TripDirections Build(const DirectionsOptions& directions_options, TripPath& trip_path);
+  proto::Directions BuildProto(const DirectionsOptions& directions_options, std::list<TripPath>& trip_path);
 
 protected:
   /**
@@ -54,6 +56,10 @@ protected:
   TripDirections PopulateTripDirections(const DirectionsOptions& directions_options,
                                         EnhancedTripPath* etp,
                                         std::list<Maneuver>& maneuvers);
+  void PopulateRouteLegProto(const DirectionsOptions& directions_options,
+                                   EnhancedTripPath* etp,
+                                   std::list<Maneuver>& maneuvers,
+                                   proto::Leg* proto_leg);
 };
 
 } // namespace odin
