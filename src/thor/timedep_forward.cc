@@ -222,12 +222,9 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
                                     DateTime::get_tz_db().from_index(origin_tz_index_));
 
   // Set seconds from beginning of the week
-  uint32_t dow = DateTime::day_of_week(origin.date_time());
-  uint32_t secs = DateTime::seconds_from_midnight(origin.date_time());
   seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
                      DateTime::seconds_from_midnight(origin.date_time());
-  printf("%s\n", origin.date_time().c_str());
-  printf("seconds of the week = %d dow %d seconds_from_midnight %d\n", seconds_of_week_, dow, secs);
+
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
