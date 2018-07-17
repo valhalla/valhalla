@@ -26,4 +26,3 @@ test('route: returns an error if request format is wrong', function(assert) {
   assert.throws(() => { valhalla.route(hersheyRequest) }, /std::exception/, 'Throws an error');
   assert.end();
 });
-

@@ -27,4 +27,3 @@ test('optimizedRoute: returns an error if request format is wrong', function(ass
   assert.throws(() => { valhalla.optimizedRoute(badRequest) }, /std::exception/, 'Throws an error when request format is wrong');
   assert.end();
 });
-

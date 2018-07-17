@@ -26,4 +26,3 @@ test('traceAttributes: returns an error if request format is wrong', function(as
   assert.throws(() => { valhalla.traceAttributes(badRequest) }, /std::exception/, 'Throws an error when request format is wrong');
   assert.end();
 });
-

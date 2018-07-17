@@ -27,4 +27,3 @@ test('traceRoute: returns an error if request format is wrong', function(assert)
   assert.throws(() => { valhalla.traceRoute(badRequest) }, /std::exception/, 'Throws an error when request format is wrong');
   assert.end();
 });
-
