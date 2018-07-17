@@ -22,8 +22,6 @@ test('optimizedRoute: throws error if can\'t match input to map', function(asser
 
 test('optimizedRoute: returns an error if request format is wrong', function(assert) {
   var badRequest = '{"locations":[40.546115,-76.385076], [40.544232,"lon":-76.385752],"costing":"auto"}';
-  // TODO: we are not throwing a very useful error in this case - we should track this
-  // down and throw something a little more descriptive
   assert.throws(() => { valhalla.optimizedRoute(badRequest) }, /std::exception/, 'Throws an error when request format is wrong');
   assert.end();
 });

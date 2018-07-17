@@ -24,8 +24,6 @@ test('locate: returns null for edges and nodes if none found', function(assert) 
 
 test('locate: returns an error if request format is wrong', function(assert) {
   var badRequest = '{"locations":[40.546115,-76.385076], [40.544232,"lon":-76.385752],"costing":"auto"}';
-  // TODO: we are not throwing a very useful error in this case - we should track this
-  // down and throw something a little more descriptive
   assert.throws(() => { valhalla.locate(badRequest) }, /std::exception/, 'Throws an error');
   assert.end();
 });

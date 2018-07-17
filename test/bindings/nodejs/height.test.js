@@ -14,15 +14,12 @@ test('height: can return info for locations', function(assert) {
 
 test('height: throws error if can\'t match input to map', function(assert) {
   var badRequest = '{shape":[{"lat":5,"lon":-76.504916},{"lat":5,"lon":-76.605259}]}';
-  // TODO: we need to throw a better error here
   assert.throws(() => { valhalla.height(badRequest), /std::exception/, 'Throws an error when cant match input to map'});
   assert.end();
 });
 
 test('height: returns an error if request format is wrong', function(assert) {
   var badRequest = '{"locations":[40.546115,-76.385076], [40.544232,"lon":-76.385752],"costing":"auto"}';
-  // TODO: we are not throwing a very useful error in this case - we should track this
-  // down and throw something a little more descriptive
   assert.throws(() => { valhalla.height(badRequest) }, /std::exception/, 'Throws an error when request format is wrong');
   assert.end();
 });

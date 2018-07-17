@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "tape test/bindings/nodejs/*.test.js --expose-gc",
+    "test": "tape test/bindings/nodejs/*.test.js",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
   },
   "engines": {
