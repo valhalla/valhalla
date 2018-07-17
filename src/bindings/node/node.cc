@@ -4,6 +4,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
+#include <functional>
 #include <iostream>
 #include <node_api.h>
 #include <sstream>
@@ -39,9 +40,16 @@ class Actor {
 public:
   static napi_value Init(napi_env env, napi_callback_info info) {
     napi_status status;
-    napi_property_descriptor properties[] = {
-        DECLARE_NAPI_METHOD("route", Route),
-    };
+    napi_property_descriptor properties[] = {DECLARE_NAPI_METHOD("route", Route),
+                                             DECLARE_NAPI_METHOD("locate", Locate),
+                                             DECLARE_NAPI_METHOD("matrix", Matrix),
+                                             DECLARE_NAPI_METHOD("optimizedRoute", OptimizedRoute),
+                                             DECLARE_NAPI_METHOD("isochrone", Isochrone),
+                                             DECLARE_NAPI_METHOD("traceRoute", TraceRoute),
+                                             DECLARE_NAPI_METHOD("traceAttributes", TraceAttributes),
+                                             DECLARE_NAPI_METHOD("height", Height),
+                                             DECLARE_NAPI_METHOD("transitAvailable",
+                                                                 TransitAvailable)};
     // parse config file to get logging config
     size_t argc = 1;
     napi_value argv[1];
@@ -75,7 +83,7 @@ public:
     } catch (...) { napi_throw_error(env, NULL, "Failed to load logging config"); }
 
     napi_value actor_constructor;
-    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 1, properties,
+    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 9, properties,
                                &actor_constructor);
     checkNapiStatus(status, env, "Failed to define class");
 
@@ -192,25 +200,81 @@ private:
     return napiStr;
   }
 
-  static napi_value Route(napi_env env, napi_callback_info info) {
+  static napi_value generic_action(
+      napi_env env,
+      napi_callback_info info,
+      const std::function<std::string(valhalla::tyr::actor_t& actor, const std::string& request)>&
+          func) {
     napi_value jsthis;
     napi_status status;
-    // parse input arg into string
+
     std::string reqString = ParseRequest(env, info, &jsthis);
 
     Actor* obj;
     status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
     checkNapiStatus(status, env, "Failed to unwrap js object");
 
-    // get the actual route
-    std::string route_json;
+    std::string resp_json;
     try {
-      route_json = obj->actor.route(reqString);
+      resp_json = func(obj->actor, reqString);
     } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
-    // wrap route_json in napi value for return
-    auto outStr = WrapString(env, route_json);
+    auto outStr = WrapString(env, resp_json);
     return outStr;
+  }
+
+  static napi_value Route(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.route(request); });
+  }
+
+  static napi_value Locate(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.locate(request); });
+  }
+
+  static napi_value Matrix(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.matrix(request); });
+  }
+
+  static napi_value OptimizedRoute(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.optimized_route(request); });
+  }
+
+  static napi_value Isochrone(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.isochrone(request); });
+  }
+
+  static napi_value TraceRoute(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.trace_route(request); });
+  }
+
+  static napi_value TraceAttributes(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.trace_attributes(request); });
+  }
+
+  static napi_value Height(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.height(request); });
+  }
+
+  static napi_value TransitAvailable(napi_env env, napi_callback_info info) {
+    return generic_action(env, info,
+                          [](valhalla::tyr::actor_t& actor, const std::string& request)
+                              -> std::string { return actor.transit_available(request); });
   }
 
   static napi_ref constructor;

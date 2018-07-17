@@ -139,12 +139,20 @@ if(ENABLE_NODE_BINDINGS)
   find_package(Node)
   add_custom_command(OUTPUT node_valhalla.out
     COMMAND
-      /bin/bash -c "node --expose-gc ${VALHALLA_SOURCE_DIR}/test/nodejs/route.test.js > test/node_valhalla.out"
+      /bin/bash -c "npm test > test/node_valhalla.out"
     WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
     DEPENDS
       copy_node_artifacts
-      ${VALHALLA_SOURCE_DIR}/test/nodejs/route.test.js
-      ${VALHALLA_SOURCE_DIR}/test/nodejs/fixtures/basic_config.json
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/route.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/locate.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/height.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/isochrone.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/matrix.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/optimized_route.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/trace_attributes.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/trace_route.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/transit_available.test.js
+      ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/fixtures/basic_config.json
       ${VALHALLA_SOURCE_DIR}/test/traffic_matcher_tiles
     VERBATIM)
   add_custom_target(run-node_valhalla DEPENDS node_valhalla.out)
