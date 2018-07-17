@@ -1,13 +1,13 @@
 {
   "name": "valhalla",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-rc.1",
   "main": "lib/index.js",
   "directories": {
     "doc": "docs",
     "test": "test"
   },
   "scripts": {
-    "test": "node --expose-gc test/nodejs/*.test.js",
+    "test": "tape test/bindings/nodejs/*.test.js",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh"
   },
   "engines": {
