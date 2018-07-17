@@ -120,6 +120,14 @@ constexpr float kDefaultTruck_TruckHeight = 4.11f;             // Meters (13 fee
 constexpr float kDefaultTruck_TruckWidth = 2.6f;               // Meters (102.36 inches)
 constexpr float kDefaultTruck_TruckLength = 21.64f;            // Meters (71 feet)
 
+// Transit defaults
+constexpr float kDefaultTransit_ModeFactor = 1.0f; // Favor this mode?
+constexpr float kDefaultTransit_TransferCost = 15.0f;
+constexpr float kDefaultTransit_TransferPenalty = 300.0f;
+constexpr float kDefaultTransit_UseBus = 0.3f;
+constexpr float kDefaultTransit_UseRail = 0.6f;
+constexpr float kDefaultTransit_UseTransfers = 0.3f;
+
 ///////////////////////////////////////////////////////////////////////////////
 // validate by type methods
 void validate(const std::string& key, const bool expected_value, const bool pbf_value) {
@@ -734,6 +742,36 @@ void test_default_truck_cost_options(const valhalla::odin::Costing costing,
            request.options.costing_options(static_cast<int>(costing)).width());
   validate("length", kDefaultTruck_TruckLength,
            request.options.costing_options(static_cast<int>(costing)).length());
+}
+
+void test_default_transit_cost_options(const valhalla::odin::Costing costing,
+                                       const valhalla::odin::DirectionsOptions::Action action) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string key = "costing";
+
+  // Get cost request with no cost options
+  valhalla::valhalla_request_t request = get_request(get_request_str(key, costing_str), action);
+
+  validate("mode_factor", kDefaultTransit_ModeFactor,
+           request.options.costing_options(static_cast<int>(costing)).mode_factor());
+  validate("wheelchair", false,
+           request.options.costing_options(static_cast<int>(costing)).wheelchair());
+  validate("bicycle", false, request.options.costing_options(static_cast<int>(costing)).bicycle());
+  validate("use_bus", kDefaultTransit_UseBus,
+           request.options.costing_options(static_cast<int>(costing)).use_bus());
+  validate("use_rail", kDefaultTransit_UseRail,
+           request.options.costing_options(static_cast<int>(costing)).use_rail());
+  validate("use_transfers", kDefaultTransit_UseTransfers,
+           request.options.costing_options(static_cast<int>(costing)).use_transfers());
+  validate("transfer_cost", kDefaultTransit_TransferCost,
+           request.options.costing_options(static_cast<int>(costing)).transfer_cost());
+  validate("transfer_penalty", kDefaultTransit_TransferPenalty,
+           request.options.costing_options(static_cast<int>(costing)).transfer_penalty());
 }
 
 void test_transport_type_parsing(const valhalla::odin::Costing costing,
@@ -1596,6 +1634,110 @@ void test_length_parsing(const valhalla::odin::Costing costing,
   validate(key, expected_value, request.options.costing_options(static_cast<int>(costing)).length());
 }
 
+void test_use_bus_parsing(const valhalla::odin::Costing costing,
+                          const float specified_value,
+                          const float expected_value,
+                          const valhalla::odin::DirectionsOptions::Action action =
+                              valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "use_bus";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value, request.options.costing_options(static_cast<int>(costing)).use_bus());
+}
+
+void test_use_rail_parsing(const valhalla::odin::Costing costing,
+                           const float specified_value,
+                           const float expected_value,
+                           const valhalla::odin::DirectionsOptions::Action action =
+                               valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "use_rail";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).use_rail());
+}
+
+void test_use_transfers_parsing(const valhalla::odin::Costing costing,
+                                const float specified_value,
+                                const float expected_value,
+                                const valhalla::odin::DirectionsOptions::Action action =
+                                    valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "use_transfers";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).use_transfers());
+}
+
+void test_transfer_cost_parsing(const valhalla::odin::Costing costing,
+                                const float specified_value,
+                                const float expected_value,
+                                const valhalla::odin::DirectionsOptions::Action action =
+                                    valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "transfer_cost";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).transfer_cost());
+}
+
+void test_transfer_penalty_parsing(const valhalla::odin::Costing costing,
+                                   const float specified_value,
+                                   const float expected_value,
+                                   const valhalla::odin::DirectionsOptions::Action action =
+                                       valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "transfer_penalty";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).transfer_penalty());
+}
+
 void test_hazmat_parsing(const valhalla::odin::Costing costing,
                          const bool specified_value,
                          const bool expected_value,
@@ -1614,6 +1756,47 @@ void test_hazmat_parsing(const valhalla::odin::Costing costing,
   valhalla::valhalla_request_t request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   validate(key, expected_value, request.options.costing_options(static_cast<int>(costing)).hazmat());
+}
+
+void test_wheelchair_parsing(const valhalla::odin::Costing costing,
+                             const bool specified_value,
+                             const bool expected_value,
+                             const valhalla::odin::DirectionsOptions::Action action =
+                                 valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "wheelchair";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options.costing_options(static_cast<int>(costing)).wheelchair());
+}
+
+void test_bicycle_parsing(const valhalla::odin::Costing costing,
+                          const bool specified_value,
+                          const bool expected_value,
+                          const valhalla::odin::DirectionsOptions::Action action =
+                              valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string grandparent_key = "costing_options";
+  const std::string parent_key = costing_str;
+  const std::string key = "bicycle";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value, request.options.costing_options(static_cast<int>(costing)).bicycle());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1713,6 +1896,11 @@ void test_default_bicycle_cost_options() {
 
 void test_default_truck_cost_options() {
   test_default_truck_cost_options(valhalla::odin::truck, valhalla::odin::DirectionsOptions::route);
+}
+
+void test_default_transit_cost_options() {
+  test_default_transit_cost_options(valhalla::odin::transit,
+                                    valhalla::odin::DirectionsOptions::route);
 }
 
 void test_transport_type() {
@@ -2383,6 +2571,13 @@ void test_mode_factor() {
   test_mode_factor_parsing(costing, 10.f, 10.f);
   test_mode_factor_parsing(costing, -2.f, default_value);
   test_mode_factor_parsing(costing, 200000.f, default_value);
+
+  costing = valhalla::odin::Costing::transit;
+  default_value = kDefaultTransit_ModeFactor;
+  test_mode_factor_parsing(costing, default_value, default_value);
+  test_mode_factor_parsing(costing, 10.f, 10.f);
+  test_mode_factor_parsing(costing, -2.f, default_value);
+  test_mode_factor_parsing(costing, 200000.f, default_value);
 }
 
 void test_walkway_factor() {
@@ -2579,6 +2774,72 @@ void test_hazmat() {
   test_hazmat_parsing(costing, false, false);
 }
 
+void test_wheelchair() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+  bool default_value = false;
+  test_wheelchair_parsing(costing, default_value, default_value);
+  test_wheelchair_parsing(costing, true, true);
+  test_wheelchair_parsing(costing, false, false);
+}
+
+void test_bicycle() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+  bool default_value = false;
+  test_bicycle_parsing(costing, default_value, default_value);
+  test_bicycle_parsing(costing, true, true);
+  test_bicycle_parsing(costing, false, false);
+}
+
+void test_use_bus() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+  float default_value = kDefaultTransit_UseBus;
+  test_use_bus_parsing(costing, default_value, default_value);
+  test_use_bus_parsing(costing, 0.2f, 0.2f);
+  test_use_bus_parsing(costing, 0.4f, 0.4f);
+  test_use_bus_parsing(costing, -2.f, default_value);
+  test_use_bus_parsing(costing, 2.f, default_value);
+}
+
+void test_use_rail() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+  float default_value = kDefaultTransit_UseRail;
+  test_use_rail_parsing(costing, default_value, default_value);
+  test_use_rail_parsing(costing, 0.3f, 0.3f);
+  test_use_rail_parsing(costing, 0.9f, 0.9f);
+  test_use_rail_parsing(costing, -2.f, default_value);
+  test_use_rail_parsing(costing, 2.f, default_value);
+}
+
+void test_use_transfers() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+  float default_value = kDefaultTransit_UseTransfers;
+  test_use_transfers_parsing(costing, default_value, default_value);
+  test_use_transfers_parsing(costing, 0.2f, 0.2f);
+  test_use_transfers_parsing(costing, 0.4f, 0.4f);
+  test_use_transfers_parsing(costing, -2.f, default_value);
+  test_use_transfers_parsing(costing, 2.f, default_value);
+}
+
+void test_transfer_cost() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+  float default_value = kDefaultTransit_TransferCost;
+  test_transfer_cost_parsing(costing, default_value, default_value);
+  test_transfer_cost_parsing(costing, 10.f, 10.f);
+  test_transfer_cost_parsing(costing, 15.f, 15.f);
+  test_transfer_cost_parsing(costing, -2.f, default_value);
+  test_transfer_cost_parsing(costing, 50000.f, default_value);
+}
+
+void test_transfer_penalty() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+  float default_value = kDefaultTransit_TransferPenalty;
+  test_transfer_penalty_parsing(costing, default_value, default_value);
+  test_transfer_penalty_parsing(costing, 150.f, 150.f);
+  test_transfer_penalty_parsing(costing, 600.f, 600.f);
+  test_transfer_penalty_parsing(costing, -2.f, default_value);
+  test_transfer_penalty_parsing(costing, 50000.f, default_value);
+}
+
 } // namespace
 
 int main() {
@@ -2639,6 +2900,9 @@ int main() {
 
   // default truck cost options
   suite.test(TEST_CASE(test_default_truck_cost_options));
+
+  // default transit cost options
+  suite.test(TEST_CASE(test_default_transit_cost_options));
 
   // transport_type
   suite.test(TEST_CASE(test_transport_type));
@@ -2762,6 +3026,27 @@ int main() {
 
   // hazmat
   suite.test(TEST_CASE(test_hazmat));
+
+  // wheelchair
+  suite.test(TEST_CASE(test_wheelchair));
+
+  // bicycle
+  suite.test(TEST_CASE(test_bicycle));
+
+  // use_bus
+  suite.test(TEST_CASE(test_use_bus));
+
+  // use_rail
+  suite.test(TEST_CASE(test_use_rail));
+
+  // use_transfers
+  suite.test(TEST_CASE(test_use_transfers));
+
+  // transfer_cost
+  suite.test(TEST_CASE(test_transfer_cost));
+
+  // transfer_penalty
+  suite.test(TEST_CASE(test_transfer_penalty));
 
   return suite.tear_down();
 }
