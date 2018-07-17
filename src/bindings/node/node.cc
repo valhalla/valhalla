@@ -214,12 +214,12 @@ private:
     status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
     checkNapiStatus(status, env, "Failed to unwrap js object");
 
-    std::string locate_json;
+    std::string resp_json;
     try {
-      locate_json = func(obj->actor, reqString);
+      resp_json = func(obj->actor, reqString);
     } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
 
-    auto outStr = WrapString(env, locate_json);
+    auto outStr = WrapString(env, resp_json);
     return outStr;
   }
 
