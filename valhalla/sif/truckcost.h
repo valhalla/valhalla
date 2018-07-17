@@ -11,6 +11,10 @@ namespace sif {
 
 /**
  * Parses the truck cost options from json and stores values in pbf.
+ * @param doc The json request represented as a DOM tree.
+ * @param costing_options_key A string representing the location in the DOM tree where the costing
+ *                            options are stored.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseTruckCostOptions(const rapidjson::Document& doc,
                            const std::string& costing_options_key,

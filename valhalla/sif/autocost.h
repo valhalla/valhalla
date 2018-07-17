@@ -13,6 +13,10 @@ namespace sif {
 
 /**
  * Parses the auto cost options from json and stores values in pbf.
+ * @param doc The json request represented as a DOM tree.
+ * @param costing_options_key A string representing the location in the DOM tree where the costing
+ *                            options are stored.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
@@ -26,6 +30,10 @@ cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config);
 
 /**
  * Parses the auto_shorter cost options from json and stores values in pbf.
+ * @param doc The json request represented as a DOM tree.
+ * @param costing_options_key A string representing the location in the DOM tree where the costing
+ *                            options are stored.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
@@ -40,6 +48,10 @@ cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config);
 
 /**
  * Parses the auto_data_fix cost options from json and stores values in pbf.
+ * @param doc The json request represented as a DOM tree.
+ * @param costing_options_key A string representing the location in the DOM tree where the costing
+ *                            options are stored.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
@@ -55,6 +67,10 @@ cost_ptr_t CreateAutoDataFixCost(const boost::property_tree::ptree& config);
 
 /**
  * Parses the bus cost options from json and stores values in pbf.
+ * @param doc The json request represented as a DOM tree.
+ * @param costing_options_key A string representing the location in the DOM tree where the costing
+ *                            options are stored.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
@@ -69,6 +85,10 @@ cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config);
 
 /**
  * Parses the hov cost options from json and stores values in pbf.
+ * @param doc The json request represented as a DOM tree.
+ * @param costing_options_key A string representing the location in the DOM tree where the costing
+ *                            options are stored.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
 void ParseHOVCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
