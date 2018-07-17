@@ -610,7 +610,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     switch (options.date_time_type()) {
       case odin::DirectionsOptions::current:
         options.set_date_time("current");
-        options.mutable_locations(0)->set_date_time("current");
+        if (options.locations_size() > 0) {
+          options.mutable_locations(0)->set_date_time("current");
+        }
         break;
       case odin::DirectionsOptions::depart_at:
         if (!date_time_value) {
@@ -620,7 +622,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
           throw valhalla_exception_t{162};
         };
         options.set_date_time(*date_time_value);
-        options.mutable_locations(0)->set_date_time(*date_time_value);
+        if (options.locations_size() > 0) {
+          options.mutable_locations(0)->set_date_time(*date_time_value);
+        }
         break;
       case odin::DirectionsOptions::arrive_by:
         // not yet for transit
@@ -634,7 +638,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
           throw valhalla_exception_t{162};
         };
         options.set_date_time(*date_time_value);
-        options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
+        if (options.locations_size() > 0) {
+          options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
+        }
         break;
       default:
         throw valhalla_exception_t{163};
