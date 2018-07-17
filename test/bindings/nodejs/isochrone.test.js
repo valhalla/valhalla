@@ -28,7 +28,3 @@ test('isochrone: returns an error if request format is wrong', function(assert) 
   assert.end();
 });
 
-test.onFinish(() => {
-    valhalla = null;
-    if (global.gc) global.gc();
-});

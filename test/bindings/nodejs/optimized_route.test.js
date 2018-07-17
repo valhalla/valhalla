@@ -28,7 +28,3 @@ test('optimizedRoute: returns an error if request format is wrong', function(ass
   assert.end();
 });
 
-test.onFinish(() => {
-    valhalla = null;
-    if (global.gc) global.gc();
-});

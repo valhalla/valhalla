@@ -27,7 +27,3 @@ test('traceAttributes: returns an error if request format is wrong', function(as
   assert.end();
 });
 
-test.onFinish(() => {
-    valhalla = null;
-    if (global.gc) global.gc();
-});
