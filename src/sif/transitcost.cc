@@ -684,14 +684,16 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
             .get_value_or(kDefaultTransferPenalty)));
 
     // filter_stop_action
-    auto filter_stop_action_str = rapidjson::get_optional<std::string>(doc, "/filters/stops/action");
+    auto filter_stop_action_str =
+        rapidjson::get_optional<std::string>(*json_costing_options, "/filters/stops/action");
     odin::FilterAction filter_stop_action;
     if (filter_stop_action_str &&
         odin::FilterAction_Parse(*filter_stop_action_str, &filter_stop_action)) {
       pbf_costing_options->set_filter_stop_action(filter_stop_action);
       // filter_stop_ids
       auto filter_stop_ids_json =
-          rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/stops/ids");
+          rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options,
+                                                                "/filters/stops/ids");
       if (filter_stop_ids_json) {
         for (const auto& filter_stop_id_json : *filter_stop_ids_json) {
           pbf_costing_options->add_filter_stop_ids(filter_stop_id_json.GetString());
@@ -701,14 +703,15 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
 
     // filter_operator_action
     auto filter_operator_action_str =
-        rapidjson::get_optional<std::string>(doc, "/filters/operators/action");
+        rapidjson::get_optional<std::string>(*json_costing_options, "/filters/operators/action");
     odin::FilterAction filter_operator_action;
     if (filter_operator_action_str &&
         odin::FilterAction_Parse(*filter_operator_action_str, &filter_operator_action)) {
       pbf_costing_options->set_filter_operator_action(filter_operator_action);
       // filter_operator_ids
       auto filter_operator_ids_json =
-          rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/operators/ids");
+          rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options,
+                                                                "/filters/operators/ids");
       if (filter_operator_ids_json) {
         for (const auto& filter_operator_id_json : *filter_operator_ids_json) {
           pbf_costing_options->add_filter_operator_ids(filter_operator_id_json.GetString());
@@ -718,14 +721,15 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
 
     // filter_route_action
     auto filter_route_action_str =
-        rapidjson::get_optional<std::string>(doc, "/filters/routes/action");
+        rapidjson::get_optional<std::string>(*json_costing_options, "/filters/routes/action");
     odin::FilterAction filter_route_action;
     if (filter_route_action_str &&
         odin::FilterAction_Parse(*filter_route_action_str, &filter_route_action)) {
       pbf_costing_options->set_filter_route_action(filter_route_action);
       // filter_route_ids
       auto filter_route_ids_json =
-          rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/filters/routes/ids");
+          rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options,
+                                                                "/filters/routes/ids");
       if (filter_route_ids_json) {
         for (const auto& filter_route_id_json : *filter_route_ids_json) {
           pbf_costing_options->add_filter_route_ids(filter_route_id_json.GetString());

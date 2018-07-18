@@ -1,6 +1,5 @@
 #include <iostream>
 #include <iterator>
-#include <list>
 #include <string>
 #include <vector>
 
@@ -344,34 +343,51 @@ std::string get_request_str(const std::string& key, const valhalla::odin::ShapeM
   return R"({")" + key + R"(":")" + ShapeMatch_Name(expected_value) + R"("})";
 }
 
+std::string get_kv_str(const std::string& key, const valhalla::odin::FilterAction value) {
+  return R"(")" + key + R"(":")" + FilterAction_Name(value) + R"(")";
+}
+
 std::string get_request_str(const std::string& parent_key,
                             const std::string& key,
                             const valhalla::odin::FilterAction expected_value) {
-  return R"({")" + parent_key + R"(":{")" + key + R"(":")" + FilterAction_Name(expected_value) +
-         R"("}})";
+  return R"({")" + parent_key + R"(":{)" + get_kv_str(key, expected_value) + R"(}})";
+}
+
+std::string get_kv_str(const std::string& key, const std::vector<std::string>& values) {
+  std::string kv_str = R"(")" + key + R"(":[)";
+  bool first = true;
+  for (const auto& value : values) {
+    if (first) {
+      kv_str += R"(")";
+      first = false;
+    } else {
+      kv_str += R"(,")";
+    }
+    kv_str += value + R"(")";
+  }
+  kv_str += R"(])";
+  return kv_str;
 }
 
 std::string get_request_str(const std::string& parent_key,
                             const std::string& key,
                             const std::vector<std::string>& expected_values) {
-  std::string request_str = R"({")" + parent_key + R"(":{")" + key + R"(":[)";
-  bool first = true;
-  for (const auto& expected_value : expected_values) {
-    if (first) {
-      request_str += R"(")";
-      first = false;
-    } else {
-      request_str += R"(,")";
-    }
-    request_str += expected_value + R"(")";
-  }
-  request_str += R"(]}})";
-  return request_str;
+  return R"({")" + parent_key + R"(":{)" + get_kv_str(key, expected_values) + R"(}})";
+}
+
+std::string get_filter_request_str(const std::string& costing,
+                                   const std::string& filter_type,
+                                   const valhalla::odin::FilterAction filter_action,
+                                   const std::vector<std::string>& filter_ids) {
+  return R"({"costing_options":{")" + costing + R"(":{"filters":{")" + filter_type +
+         R"(":{)" + get_kv_str("action", filter_action) +
+         R"(,)" + get_kv_str("ids", filter_ids) +
+         R"(}}}}})";
 }
 
 valhalla::valhalla_request_t get_request(const std::string& request_str,
                                          const valhalla::odin::DirectionsOptions::Action action) {
-  std::cout << ">>>>> request_str=" << request_str << "<<<<<" << std::endl;
+  // std::cout << ">>>>> request_str=" << request_str << "<<<<<" << std::endl;
   valhalla::valhalla_request_t request;
   request.parse(request_str, action);
   return request;
@@ -1796,6 +1812,85 @@ void test_bicycle_parsing(const valhalla::odin::Costing costing,
   validate(key, expected_value, request.options.costing_options(static_cast<int>(costing)).bicycle());
 }
 
+void test_filter_stop_parsing(const valhalla::odin::Costing costing,
+                              const valhalla::odin::FilterAction filter_action,
+                              const std::vector<std::string>& filter_ids,
+                              const valhalla::odin::DirectionsOptions::Action action =
+                                  valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string filter_type = "stops";
+  const std::string action_key = "filter_stop_action";
+  const std::string ids_key = "filter_stop_ids";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
+                  action);
+  validate(action_key, filter_action,
+           request.options.costing_options(static_cast<int>(costing)).has_filter_stop_action(),
+           request.options.costing_options(static_cast<int>(costing)).filter_stop_action());
+  validate(ids_key, filter_ids,
+           (request.options.costing_options(static_cast<int>(costing)).filter_stop_ids_size() > 0),
+           request.options.costing_options(static_cast<int>(costing)).filter_stop_ids());
+}
+
+void test_filter_route_parsing(const valhalla::odin::Costing costing,
+                               const valhalla::odin::FilterAction filter_action,
+                               const std::vector<std::string>& filter_ids,
+                               const valhalla::odin::DirectionsOptions::Action action =
+                                   valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string filter_type = "routes";
+  const std::string action_key = "filter_route_action";
+  const std::string ids_key = "filter_route_ids";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
+                  action);
+  validate(action_key, filter_action,
+           request.options.costing_options(static_cast<int>(costing)).has_filter_route_action(),
+           request.options.costing_options(static_cast<int>(costing)).filter_route_action());
+  validate(ids_key, filter_ids,
+           (request.options.costing_options(static_cast<int>(costing)).filter_route_ids_size() > 0),
+           request.options.costing_options(static_cast<int>(costing)).filter_route_ids());
+}
+
+void test_filter_operator_parsing(const valhalla::odin::Costing costing,
+                                  const valhalla::odin::FilterAction filter_action,
+                                  const std::vector<std::string>& filter_ids,
+                                  const valhalla::odin::DirectionsOptions::Action action =
+                                      valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  const std::string filter_type = "operators";
+  const std::string action_key = "filter_operator_action";
+  const std::string ids_key = "filter_operator_ids";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
+                  action);
+  validate(action_key, filter_action,
+           request.options.costing_options(static_cast<int>(costing)).has_filter_operator_action(),
+           request.options.costing_options(static_cast<int>(costing)).filter_operator_action());
+  validate(ids_key, filter_ids,
+           (request.options.costing_options(static_cast<int>(costing)).filter_operator_ids_size() >
+            0),
+           request.options.costing_options(static_cast<int>(costing)).filter_operator_ids());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // test by key methods
 void test_polygons() {
@@ -1860,7 +1955,7 @@ void test_filter_attributes() {
   test_filter_attributes_parsing({"edge.names", "edge.id", "edge.weighted_grade", "edge.speed"});
 }
 
-std::list<valhalla::odin::Costing> get_base_auto_costing_list() {
+std::vector<valhalla::odin::Costing> get_base_auto_costing_list() {
   return {valhalla::odin::Costing::auto_, valhalla::odin::Costing::auto_shorter,
           valhalla::odin::Costing::auto_data_fix, valhalla::odin::Costing::bus,
           valhalla::odin::Costing::hov};
@@ -2829,6 +2924,42 @@ void test_transfer_penalty() {
   test_transfer_penalty_parsing(costing, 50000.f, default_value);
 }
 
+void test_stops_transit_filter() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+
+  valhalla::odin::FilterAction filter_action = valhalla::odin::FilterAction::exclude;
+  std::vector<std::string> filter_ids = {"stop1", "stop2", "stop3"};
+  test_filter_stop_parsing(costing, filter_action, filter_ids);
+
+  filter_action = valhalla::odin::FilterAction::include;
+  filter_ids = {"stop10", "stop20", "stop30"};
+  test_filter_stop_parsing(costing, filter_action, filter_ids);
+}
+
+void test_routes_transit_filter() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+
+  valhalla::odin::FilterAction filter_action = valhalla::odin::FilterAction::exclude;
+  std::vector<std::string> filter_ids = {"route1", "route2", "route3"};
+  test_filter_route_parsing(costing, filter_action, filter_ids);
+
+  filter_action = valhalla::odin::FilterAction::include;
+  filter_ids = {"route10", "route20", "route30"};
+  test_filter_route_parsing(costing, filter_action, filter_ids);
+}
+
+void test_operators_transit_filter() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+
+  valhalla::odin::FilterAction filter_action = valhalla::odin::FilterAction::exclude;
+  std::vector<std::string> filter_ids = {"operator1", "operator2", "operator3"};
+  test_filter_operator_parsing(costing, filter_action, filter_ids);
+
+  filter_action = valhalla::odin::FilterAction::include;
+  filter_ids = {"operator10", "operator20", "operator30"};
+  test_filter_operator_parsing(costing, filter_action, filter_ids);
+}
+
 } // namespace
 
 int main() {
@@ -3036,6 +3167,15 @@ int main() {
 
   // transfer_penalty
   suite.test(TEST_CASE(test_transfer_penalty));
+
+  // stops_transit_filter
+  suite.test(TEST_CASE(test_stops_transit_filter));
+
+  // routes_transit_filter
+  suite.test(TEST_CASE(test_routes_transit_filter));
+
+  // operators_transit_filter
+  suite.test(TEST_CASE(test_operators_transit_filter));
 
   return suite.tear_down();
 }
