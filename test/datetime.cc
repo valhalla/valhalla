@@ -35,7 +35,9 @@ void TryGetDOW(const std::string& date_time, uint32_t expected_dow) {
   }
 }
 
-void TryGetDuration(const std::string& date_time, uint32_t seconds, const std::string& expected_date_time) {
+void TryGetDuration(const std::string& date_time,
+                    uint32_t seconds,
+                    const std::string& expected_date_time) {
 
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
@@ -91,7 +93,7 @@ void TryIsoDateTime() {
 }
 
 void TryGetServiceDays(const std::string& begin_date,
-    const std::string& end_date,
+                       const std::string& end_date,
                        uint32_t dow_mask,
                        uint64_t value) {
 
@@ -105,8 +107,8 @@ void TryGetServiceDays(const std::string& begin_date,
 }
 
 void TryGetServiceDays(const std::string& tile_date,
-    const std::string& begin_date,
-    const std::string& end_date,
+                       const std::string& begin_date,
+                       const std::string& end_date,
                        uint32_t dow_mask,
                        uint64_t value) {
 
@@ -121,8 +123,8 @@ void TryGetServiceDays(const std::string& tile_date,
 }
 
 void TryIsServiceAvailable(const std::string& begin_date,
-    const std::string& date,
-    const std::string& end_date,
+                           const std::string& date,
+                           const std::string& end_date,
                            uint64_t days,
                            bool value) {
 
@@ -136,8 +138,8 @@ void TryIsServiceAvailable(const std::string& begin_date,
 }
 
 void TryIsServiceDaysUsingShift(const std::string& begin_date,
-    const std::string& date,
-    const std::string& end_date,
+                                const std::string& date,
+                                const std::string& end_date,
                                 uint64_t days,
                                 bool value) {
 
@@ -161,9 +163,9 @@ void TryIsServiceDaysUsingShift(const std::string& begin_date,
 }
 
 void TryGetServiceDays(bool check_b_date,
-    const std::string& begin_date,
-    const std::string& date,
-    const std::string& end_date,
+                       const std::string& begin_date,
+                       const std::string& date,
+                       const std::string& end_date,
                        uint32_t dow_mask,
                        uint64_t value) {
 
@@ -188,7 +190,10 @@ void TryGetServiceDays(bool check_b_date,
   }
 }
 
-void TryRejectFeed(const std::string& begin_date, const std::string& end_date, uint32_t dow_mask, uint64_t value) {
+void TryRejectFeed(const std::string& begin_date,
+                   const std::string& end_date,
+                   uint32_t dow_mask,
+                   uint64_t value) {
 
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
@@ -205,9 +210,9 @@ void TryRejectFeed(const std::string& begin_date, const std::string& end_date, u
 }
 
 void TryAddServiceDays(uint64_t days,
-    const std::string& begin_date,
-    const std::string& end_date,
-    const std::string& added_date,
+                       const std::string& begin_date,
+                       const std::string& end_date,
+                       const std::string& added_date,
                        uint64_t value) {
 
   auto b = DateTime::get_formatted_date(begin_date);
@@ -219,9 +224,9 @@ void TryAddServiceDays(uint64_t days,
 }
 
 void TryRemoveServiceDays(uint64_t days,
-    const std::string& begin_date,
-    const std::string& end_date,
-    const std::string& removed_date,
+                          const std::string& begin_date,
+                          const std::string& end_date,
+                          const std::string& removed_date,
                           uint64_t value) {
 
   auto b = DateTime::get_formatted_date(begin_date);
@@ -233,8 +238,8 @@ void TryRemoveServiceDays(uint64_t days,
 }
 
 void TryTestServiceEndDate(const std::string& begin_date,
-    const std::string& end_date,
-    const std::string& new_end_date,
+                           const std::string& end_date,
+                           const std::string& new_end_date,
                            uint32_t dow_mask) {
 
   auto b = DateTime::get_formatted_date(begin_date);
@@ -1140,15 +1145,6 @@ void TestDayOfWeek() {
   }
 }
 
-void TryInvalidISO(const std::string& iso) {
-  std::tm t = DateTime::iso_to_tm(iso);
-  if (t.tm_year != 0) {
-    throw std::runtime_error("DateTime::iso_to_tm did not return an invalid year for improper string: " + iso +
-        " tm values are: " + std::to_string(t.tm_year) + "," + std::to_string(t.tm_mon) + "," + std::to_string(t.tm_mday) +
-        "," + std::to_string(t.tm_hour) + "," + std::to_string(t.tm_min));
-  }
-}
-
 void TestISOToTm() {
   std::string date = "2018-07-22T10:09";
   std::tm t = DateTime::iso_to_tm(date);
@@ -1157,13 +1153,15 @@ void TestISOToTm() {
   }
   // Remember, tm_mon is 0 based
   if (t.tm_mon != 6) {
-    throw std::runtime_error("DateTime::iso_to_tm month: 6 expected, got: " + std::to_string(t.tm_mon));
+    throw std::runtime_error("DateTime::iso_to_tm month: 6 expected, got: " +
+                             std::to_string(t.tm_mon));
   }
   if (t.tm_mday != 22) {
     throw std::runtime_error("DateTime::iso_to_tm month: 22 expected");
   }
   if (t.tm_hour != 10) {
-    throw std::runtime_error("DateTime::iso_to_tm hour: 10 expected, got: " + std::to_string(t.tm_hour));
+    throw std::runtime_error("DateTime::iso_to_tm hour: 10 expected, got: " +
+                             std::to_string(t.tm_hour));
   }
   if (t.tm_min != 9) {
     throw std::runtime_error("DateTime::iso_to_tm min: 9 expected");
