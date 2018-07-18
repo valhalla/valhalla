@@ -16,6 +16,7 @@
    * ADDED: Initial implementation of turn lanes.
   **Bug Fix**
    * CHANGED: Fix destination only penalty for A* and time dependent cases.
+   * CHANGED: Use the distance from GetOffsetForHeading, based on road classification and road use (e.g. ramp, turn channel, etc.), within tangent_angle function.
 * **Map Matching**
    * FIXED: Fixed trace_route edge_walk server abort [#1365](https://github.com/valhalla/valhalla/pull/1365)
 * **Enhancement**
