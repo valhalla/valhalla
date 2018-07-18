@@ -6,6 +6,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+
 #include <iostream>
 
 #ifdef INLINE_TEST
@@ -603,6 +604,102 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   return {seconds + penalty, seconds};
 }
 
+void ParseAutoCostOptions(const rapidjson::Document& doc,
+                          const std::string& costing_options_key,
+                          odin::CostingOptions* pbf_costing_options) {
+  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+
+  if (json_costing_options) {
+    // If specified, parse json and set pbf values
+
+    // type (transport_type)
+    pbf_costing_options->set_transport_type(
+        rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("car"));
+
+    // maneuver_penalty
+    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
+            .get_value_or(kDefaultManeuverPenalty)));
+
+    // destination_only_penalty
+    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
+            .get_value_or(kDefaultDestinationOnlyPenalty)));
+
+    // gate_cost
+    pbf_costing_options->set_gate_cost(
+        kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
+                           .get_value_or(kDefaultGateCost)));
+
+    // gate_penalty
+    pbf_costing_options->set_gate_penalty(
+        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
+                              .get_value_or(kDefaultGatePenalty)));
+
+    // toll_booth_cost
+    pbf_costing_options->set_toll_booth_cost(
+        kTollBoothCostRange(rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_cost")
+                                .get_value_or(kDefaultTollBoothCost)));
+
+    // toll_booth_penalty
+    pbf_costing_options->set_toll_booth_penalty(kTollBoothPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_penalty")
+            .get_value_or(kDefaultTollBoothPenalty)));
+
+    // alley_penalty
+    pbf_costing_options->set_alley_penalty(
+        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
+                               .get_value_or(kDefaultAlleyPenalty)));
+
+    // country_crossing_cost
+    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
+            .get_value_or(kDefaultCountryCrossingCost)));
+
+    // country_crossing_penalty
+    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
+            .get_value_or(kDefaultCountryCrossingPenalty)));
+
+    // ferry_cost
+    pbf_costing_options->set_ferry_cost(
+        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
+                            .get_value_or(kDefaultFerryCost)));
+
+    // use_ferry
+    pbf_costing_options->set_use_ferry(
+        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
+                           .get_value_or(kDefaultUseFerry)));
+
+    // use_highways
+    pbf_costing_options->set_use_highways(
+        kUseHighwaysRange(rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
+                              .get_value_or(kDefaultUseHighways)));
+
+    // use_tolls
+    pbf_costing_options->set_use_tolls(
+        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
+                           .get_value_or(kDefaultUseTolls)));
+
+  } else {
+    // Set pbf values to defaults
+    pbf_costing_options->set_transport_type("car");
+    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
+    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_gate_cost(kDefaultGateCost);
+    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
+    pbf_costing_options->set_toll_booth_cost(kDefaultTollBoothCost);
+    pbf_costing_options->set_toll_booth_penalty(kDefaultTollBoothPenalty);
+    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
+    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
+    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
+    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
+    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
+    pbf_costing_options->set_use_highways(kDefaultUseHighways);
+    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+  }
+}
+
 cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoCost>(config);
 }
@@ -658,6 +755,12 @@ public:
 protected:
   float adjspeedfactor_[kMaxSpeedKph + 1];
 };
+
+void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
+                                 const std::string& costing_options_key,
+                                 odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
 
 cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoShorterCost>(config);
@@ -854,6 +957,12 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   return true;
+}
+
+void ParseBusCostOptions(const rapidjson::Document& doc,
+                         const std::string& costing_options_key,
+                         odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
 cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config) {
@@ -1069,6 +1178,12 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return true;
 }
 
+void ParseHOVCostOptions(const rapidjson::Document& doc,
+                         const std::string& costing_options_key,
+                         odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
+
 cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config) {
   return std::make_shared<HOVCost>(config);
 }
@@ -1143,6 +1258,12 @@ public:
     };
   }
 };
+
+void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
+                                 const std::string& costing_options_key,
+                                 odin::CostingOptions* pbf_costing_options) {
+  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+}
 
 cost_ptr_t CreateAutoDataFixCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoDataFix>(config);

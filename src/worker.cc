@@ -8,6 +8,13 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/util.h"
+#include "sif/autocost.h"
+#include "sif/bicyclecost.h"
+#include "sif/motorcyclecost.h"
+#include "sif/motorscootercost.h"
+#include "sif/pedestriancost.h"
+#include "sif/transitcost.h"
+#include "sif/truckcost.h"
 #include "worker.h"
 
 using namespace valhalla;
@@ -499,17 +506,81 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto costing_str = rapidjson::get_optional<std::string>(doc, "/costing");
   if (costing_str) {
     // try the string directly, some strings are keywords so add an underscore
-    odin::DirectionsOptions::Costing costing;
-    if (odin::DirectionsOptions::Costing_Parse(*costing_str, &costing)) {
+    odin::Costing costing;
+    if (odin::Costing_Parse(*costing_str, &costing)) {
       options.set_costing(costing);
-    } else if (odin::DirectionsOptions::Costing_Parse(*costing_str + '_', &costing)) {
+    } else if (odin::Costing_Parse(*costing_str + '_', &costing)) {
       options.set_costing(costing);
     } else {
       throw valhalla_exception_t{125, "'" + *costing_str + "'"};
-    };
+    }
   }
 
-  // TODO: costing options
+  // if specified, get the costing options in there
+  // the order of costing must reflect the enum order
+  for (const auto costing : {odin::auto_, odin::auto_shorter, odin::bicycle, odin::bus, odin::hov,
+                             odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
+                             odin::truck, odin::motorcycle, odin::auto_data_fix}) {
+    // Create the costing string
+    auto costing_str = odin::Costing_Name(costing);
+    // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+    if (costing_str.back() == '_') {
+      costing_str.pop_back();
+    }
+    // Create the costing options key
+    const auto costing_options_key = "/costing_options/" + costing_str;
+
+    switch (costing) {
+      case odin::auto_: {
+        sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::auto_shorter: {
+        sif::ParseAutoShorterCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::bicycle: {
+        sif::ParseBicycleCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::bus: {
+        sif::ParseBusCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::hov: {
+        sif::ParseHOVCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::motor_scooter: {
+        sif::ParseMotorScooterCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::multimodal: {
+        options.add_costing_options(); // Nothing to parse for this one
+        break;
+      }
+      case odin::pedestrian: {
+        sif::ParsePedestrianCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::transit: {
+        sif::ParseTransitCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::truck: {
+        sif::ParseTruckCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::motorcycle: {
+        sif::ParseMotorcycleCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case odin::auto_data_fix: {
+        sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+    }
+  }
 
   // get the locations in there
   parse_locations(doc, options.mutable_locations(), "locations", 130, track);
@@ -528,8 +599,8 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   if (date_time_type && odin::DirectionsOptions::DateTimeType_IsValid(*date_time_type)) {
     options.set_date_time_type(static_cast<odin::DirectionsOptions::DateTimeType>(*date_time_type));
   } // not specified but you want transit, then we default to current
-  else if (options.has_costing() && (options.costing() == odin::DirectionsOptions::multimodal ||
-                                     options.costing() == odin::DirectionsOptions::transit)) {
+  else if (options.has_costing() &&
+           (options.costing() == odin::multimodal || options.costing() == odin::transit)) {
     options.set_date_time_type(odin::DirectionsOptions::current);
   }
 
@@ -539,7 +610,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     switch (options.date_time_type()) {
       case odin::DirectionsOptions::current:
         options.set_date_time("current");
-        options.mutable_locations(0)->set_date_time("current");
+        if (options.locations_size() > 0) {
+          options.mutable_locations(0)->set_date_time("current");
+        }
         break;
       case odin::DirectionsOptions::depart_at:
         if (!date_time_value) {
@@ -549,12 +622,13 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
           throw valhalla_exception_t{162};
         };
         options.set_date_time(*date_time_value);
-        options.mutable_locations(0)->set_date_time(*date_time_value);
+        if (options.locations_size() > 0) {
+          options.mutable_locations(0)->set_date_time(*date_time_value);
+        }
         break;
       case odin::DirectionsOptions::arrive_by:
         // not yet for transit
-        if (options.costing() == odin::DirectionsOptions::multimodal ||
-            options.costing() == odin::DirectionsOptions::transit) {
+        if (options.costing() == odin::multimodal || options.costing() == odin::transit) {
           throw valhalla_exception_t{141};
         };
         if (!date_time_value) {
@@ -564,7 +638,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
           throw valhalla_exception_t{162};
         };
         options.set_date_time(*date_time_value);
-        options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
+        if (options.locations_size() > 0) {
+          options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
+        }
         break;
       default:
         throw valhalla_exception_t{163};

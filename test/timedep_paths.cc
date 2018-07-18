@@ -75,8 +75,7 @@ void adjust_scores(valhalla::valhalla_request_t& request) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(
-          valhalla::odin::DirectionsOptions::Costing_Name(request.options.costing()));
+      auto max_score = kMaxDistances.find(valhalla::odin::Costing_Name(request.options.costing()));
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);

@@ -685,6 +685,157 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   return {seconds + penalty, seconds};
 }
 
+void ParsePedestrianCostOptions(const rapidjson::Document& doc,
+                                const std::string& costing_options_key,
+                                odin::CostingOptions* pbf_costing_options) {
+  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+
+  if (json_costing_options) {
+    // If specified, parse json and set pbf values
+
+    // maneuver_penalty
+    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
+            .get_value_or(kDefaultManeuverPenalty)));
+
+    // gate_penalty
+    pbf_costing_options->set_gate_penalty(
+        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
+                              .get_value_or(kDefaultGatePenalty)));
+
+    // country_crossing_cost
+    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
+            .get_value_or(kDefaultCountryCrossingCost)));
+
+    // country_crossing_penalty
+    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
+            .get_value_or(kDefaultCountryCrossingPenalty)));
+
+    // ferry_cost
+    pbf_costing_options->set_ferry_cost(
+        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
+                            .get_value_or(kDefaultFerryCost)));
+
+    // use_ferry
+    pbf_costing_options->set_use_ferry(
+        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
+                           .get_value_or(kDefaultUseFerry)));
+
+    // type (transport_type)
+    pbf_costing_options->set_transport_type(
+        (rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("foot")));
+
+    // Set type specific defaults, override with URL inputs
+    if (pbf_costing_options->transport_type() == "wheelchair") {
+      // max_distance
+      pbf_costing_options->set_max_distance(kMaxDistanceWheelchairRange(
+          rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_distance")
+              .get_value_or(kMaxDistanceWheelchair)));
+
+      // walking_speed
+      pbf_costing_options->set_walking_speed(kSpeedWheelchairRange(
+          rapidjson::get_optional<float>(*json_costing_options, "/walking_speed")
+              .get_value_or(kDefaultSpeedWheelchair)));
+
+      // step_penalty
+      pbf_costing_options->set_step_penalty(kStepPenaltyWheelchairRange(
+          rapidjson::get_optional<float>(*json_costing_options, "/step_penalty")
+              .get_value_or(kDefaultStepPenaltyWheelchair)));
+
+      // max_grade
+      pbf_costing_options->set_max_grade(kMaxGradeWheelchairRange(
+          rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_grade")
+              .get_value_or(kDefaultMaxGradeWheelchair)));
+
+    } else {
+      // Assume type = foot
+      // max_distance
+      pbf_costing_options->set_max_distance(kMaxDistanceFootRange(
+          rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_distance")
+              .get_value_or(kMaxDistanceFoot)));
+
+      // walking_speed
+      pbf_costing_options->set_walking_speed(
+          kSpeedFootRange(rapidjson::get_optional<float>(*json_costing_options, "/walking_speed")
+                              .get_value_or(kDefaultSpeedFoot)));
+
+      // step_penalty
+      pbf_costing_options->set_step_penalty(
+          kStepPenaltyFootRange(rapidjson::get_optional<float>(*json_costing_options, "/step_penalty")
+                                    .get_value_or(kDefaultStepPenaltyFoot)));
+
+      // max_grade
+      pbf_costing_options->set_max_grade(
+          kMaxGradeFootRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_grade")
+                                 .get_value_or(kDefaultMaxGradeFoot)));
+    }
+
+    // max_hiking_difficulty
+    pbf_costing_options->set_max_hiking_difficulty(kMaxHikingDifficultyRange(
+        rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_hiking_difficulty")
+            .get_value_or(kDefaultMaxHikingDifficulty)));
+
+    // mode_factor
+    pbf_costing_options->set_mode_factor(
+        kModeFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/mode_factor")
+                             .get_value_or(kModeFactor)));
+
+    // walkway_factor
+    pbf_costing_options->set_walkway_factor(
+        kWalkwayFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/walkway_factor")
+                                .get_value_or(kDefaultWalkwayFactor)));
+
+    // sidewalk_factor
+    pbf_costing_options->set_sidewalk_factor(
+        kSideWalkFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/sidewalk_factor")
+                                 .get_value_or(kDefaultSideWalkFactor)));
+
+    // alley_factor
+    pbf_costing_options->set_alley_factor(
+        kAlleyFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
+                              .get_value_or(kDefaultAlleyFactor)));
+
+    // driveway_factor
+    pbf_costing_options->set_driveway_factor(
+        kDrivewayFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/driveway_factor")
+                                 .get_value_or(kDefaultDrivewayFactor)));
+
+    // transit_start_end_max_distance
+    pbf_costing_options->set_transit_start_end_max_distance(kTransitStartEndMaxDistanceRange(
+        rapidjson::get_optional<uint32_t>(*json_costing_options, "/transit_start_end_max_distance")
+            .get_value_or(kTransitStartEndMaxDistance)));
+
+    // transit_transfer_max_distance
+    pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistanceRange(
+        rapidjson::get_optional<uint32_t>(*json_costing_options, "/transit_transfer_max_distance")
+            .get_value_or(kTransitTransferMaxDistance)));
+
+  } else {
+    // Set pbf values to defaults
+    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
+    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
+    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
+    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
+    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
+    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
+    pbf_costing_options->set_transport_type("foot");
+    pbf_costing_options->set_max_distance(kMaxDistanceFoot);
+    pbf_costing_options->set_walking_speed(kDefaultSpeedFoot);
+    pbf_costing_options->set_step_penalty(kDefaultStepPenaltyFoot);
+    pbf_costing_options->set_max_grade(kDefaultMaxGradeFoot);
+    pbf_costing_options->set_max_hiking_difficulty(kDefaultMaxHikingDifficulty);
+    pbf_costing_options->set_mode_factor(kModeFactor);
+    pbf_costing_options->set_walkway_factor(kDefaultWalkwayFactor);
+    pbf_costing_options->set_sidewalk_factor(kDefaultSideWalkFactor);
+    pbf_costing_options->set_alley_factor(kDefaultAlleyFactor);
+    pbf_costing_options->set_driveway_factor(kDefaultDrivewayFactor);
+    pbf_costing_options->set_transit_start_end_max_distance(kTransitStartEndMaxDistance);
+    pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistance);
+  }
+}
+
 cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
   return std::make_shared<PedestrianCost>(config);
 }

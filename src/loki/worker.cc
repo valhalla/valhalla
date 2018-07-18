@@ -52,7 +52,7 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
     throw valhalla_exception_t{124};
   };
 
-  auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
+  auto costing = odin::Costing_Name(request.options.costing());
   if (costing.back() == '_') {
     costing.pop_back();
   }
@@ -92,7 +92,8 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
   // See if we have avoids and take care of them
   if (request.options.avoid_locations_size() > max_avoid_locations) {
     throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
-  };
+  }
+
   if (request.options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
@@ -107,9 +108,11 @@ void loki_worker_t::parse_costing(valhalla_request_t& request) {
           }
         }
       }
+      // TODO remove the json assignment after we use values in the pbf
       rapidjson::Value avoid_edges{rapidjson::kArrayType};
       for (auto avoid : avoids) {
         avoid_edges.PushBack(rapidjson::Value(avoid), allocator);
+        request.options.add_avoid_edges(avoid);
       }
       method_options_ptr->AddMember("avoid_edges", avoid_edges, allocator);
     } // swallow all failures on optional avoids

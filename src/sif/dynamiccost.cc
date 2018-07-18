@@ -11,7 +11,7 @@ DynamicCost::DynamicCost(const boost::property_tree::ptree& pt, const TravelMode
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
   for (uint32_t level = 0; level < n_levels; level++) {
-    hierarchy_limits_.emplace_back(HierarchyLimits(pt, level));
+    hierarchy_limits_.emplace_back(HierarchyLimits(level));
   }
 
   // Parse property tree to get avoid edges

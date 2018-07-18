@@ -87,7 +87,7 @@ void loki_worker_t::init_matrix(valhalla_request_t& request) {
 
 void loki_worker_t::matrix(valhalla_request_t& request) {
   init_matrix(request);
-  auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
+  auto costing = odin::Costing_Name(request.options.costing());
   if (costing.back() == '_') {
     costing.pop_back();
   }

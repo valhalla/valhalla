@@ -210,7 +210,7 @@ valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const rapidjson::Document& 
 
 std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
   // Parse out the type of route - this provides the costing method to use
-  auto costing = odin::DirectionsOptions::Costing_Name(request.options.costing());
+  auto costing = odin::Costing_Name(request.options.costing());
   if (costing.back() == '_') {
     costing.pop_back();
   }
@@ -257,8 +257,7 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score =
-          kMaxDistances.find(odin::DirectionsOptions::Costing_Name(request.options.costing()));
+      auto max_score = kMaxDistances.find(odin::Costing_Name(request.options.costing()));
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
