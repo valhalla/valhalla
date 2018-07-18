@@ -2,7 +2,12 @@
 #define VALHALLA_BALDR_DATETIME_H_
 
 #include <cstdint>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <locale>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -278,6 +283,22 @@ DOW get_dow(const std::string& dow);
 MONTH get_month(const std::string& month);
 
 std::vector<uint64_t> get_time_range(const std::string& condition);
+
+/**
+ * Get the day of the week given a time string
+ * @param dt Date time string.
+ */
+static uint32_t day_of_week(const std::string& dt) {
+  // Split the string at T
+  std::stringstream datestring(dt);
+  std::string d;
+  std::getline(datestring, d, 'T');
+  std::tm t = {};
+  std::istringstream ss(d);
+  ss >> std::get_time(&t, "%Y-%m-%d");
+  std::mktime(&t);
+  return t.tm_wday;
+}
 
 } // namespace DateTime
 } // namespace baldr

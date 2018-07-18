@@ -1114,6 +1114,20 @@ void TestConditionalRestrictions() {
   }
 }
 
+void TestDayOfWeek() {
+  std::string date = "2018-07-22T10:00";
+  uint32_t dow = DateTime::day_of_week(date);
+  if (dow != 0) {
+    throw std::runtime_error("DateTime::day_of_week failed: 0 expected");
+  }
+
+  date = "2018-07-26T10:00";
+  dow = DateTime::day_of_week(date);
+  if (dow != 4) {
+    throw std::runtime_error("DateTime::day_of_week failed: 4 expected");
+  }
+}
+
 int main(void) {
   test::suite suite("datetime");
 
@@ -1129,6 +1143,7 @@ int main(void) {
   suite.test(TEST_CASE(TestConditionalRestrictions));
   suite.test(TEST_CASE(TestIsRestricted));
   suite.test(TEST_CASE(TestTimezoneDiff));
+  suite.test(TEST_CASE(TestDayOfWeek));
 
   return suite.tear_down();
 }

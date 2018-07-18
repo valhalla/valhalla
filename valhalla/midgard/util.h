@@ -242,6 +242,23 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
  */
 template <class container_t> container_t trim_front(container_t& pts, const float dist);
 
+/**
+ * Estimate the angle of the tangent at a point along a discretised curve. We attempt
+ * to mostly use the shape coming into the point on the curve but if there
+ * isn't enough there we will use the shape coming out of the it.
+ * @param index Index into the shape.
+ * @param point Point to test for tangent along the curve.
+ * @param shape  Shape / polyline geometry.
+ * @param sample_distance Distance to sample when computing heading.
+ * @param forward Boolean value whether to test in forward or reverse direction.
+ * @return Returns the angle in degrees relative to N.
+ */
+float tangent_angle(size_t index,
+                    const PointLL& point,
+                    const std::vector<PointLL>& shape,
+                    const float sample_distance,
+                    bool forward);
+
 // useful in converting from one iteratable map to another
 // for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
 // >(some_ptree)
