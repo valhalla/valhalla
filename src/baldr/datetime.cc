@@ -850,6 +850,7 @@ std::string get_duration(const std::string& date_time,
   return formatted_date_time;
 }
 
+/**
 // checks if string is in the format of %Y-%m-%dT%H:%M
 bool is_iso_local(const std::string& date_time) {
 
@@ -887,6 +888,7 @@ bool is_iso_local(const std::string& date_time) {
   } catch (std::exception& e) { return false; }
   return is_ok;
 }
+**/
 
 // does this date fall in the begin and end date range?
 bool is_restricted(const bool type,

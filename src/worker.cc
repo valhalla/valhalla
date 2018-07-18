@@ -618,7 +618,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
         if (!date_time_value) {
           throw valhalla_exception_t{160};
         };
-        if (!baldr::DateTime::is_iso_local(*date_time_value)) {
+        if (!baldr::DateTime::is_iso_valid(*date_time_value)) {
           throw valhalla_exception_t{162};
         };
         options.set_date_time(*date_time_value);
@@ -634,7 +634,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
         if (!date_time_value) {
           throw valhalla_exception_t{161};
         };
-        if (!baldr::DateTime::is_iso_local(*date_time_value)) {
+        if (!baldr::DateTime::is_iso_valid(*date_time_value)) {
           throw valhalla_exception_t{162};
         };
         options.set_date_time(*date_time_value);
