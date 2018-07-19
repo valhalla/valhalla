@@ -432,15 +432,15 @@ uint64_t seconds_since_epoch(const std::string& date_time,
   return 0;
 }
 
-// Get the difference between two timezone using the seconds from epoch
+// Get the difference between two timezone using the curent time (seconds from epoch)
 // (taking into account the timezones and dst) and add the difference to the seconds
-void timezone_diff(const bool is_depart_at,
-                   uint64_t& seconds,
-                   const boost::local_time::time_zone_ptr& origin_tz,
-                   const boost::local_time::time_zone_ptr& dest_tz) {
+int timezone_diff(const bool is_depart_at,
+                  const uint64_t seconds,
+                  const boost::local_time::time_zone_ptr& origin_tz,
+                  const boost::local_time::time_zone_ptr& dest_tz) {
 
-  if ((origin_tz == dest_tz) || (seconds == 0) || (!origin_tz || !dest_tz)) {
-    return;
+  if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
+    return 0;
   }
 
   try {
@@ -516,13 +516,9 @@ void timezone_diff(const bool is_depart_at,
 
     boost::posix_time::time_duration td = origin_pt - dest_pt;
     if (origin_tz->base_utc_offset() < dest_tz->base_utc_offset()) {
-      seconds += abs(td.total_seconds());
+      return abs(td.total_seconds());
     } else {
-      // should never happen
-      if (seconds - abs(td.total_seconds()) < 0) {
-        return;
-      }
-      seconds -= abs(td.total_seconds());
+      return -1 * abs(td.total_seconds());
     }
   } catch (std::exception& e) {}
 }

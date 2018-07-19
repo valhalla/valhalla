@@ -160,18 +160,18 @@ uint64_t seconds_since_epoch(const std::string& date_time,
                              const boost::local_time::time_zone_ptr& time_zone);
 
 /**
- * Get the difference between two timezone using the seconds from epoch
- * (taking into account the timezones and dst) and add the difference to the seconds
+ * Get the difference between two timezones using the current time (seconds from epoch
+ * so that DST can be take into account).
  * @param   is_depart_at  is this a depart at or arrive by
- * @param   seconds       seconds since epoch for
+ * @param   seconds       seconds since epoch
  * @param   origin_tz     timezone for origin
  * @param   dest_tz       timezone for dest
- *
+ * @return Returns the seconds difference between the 2 timezones.
  */
-void timezone_diff(const bool is_depart_at,
-                   uint64_t& seconds,
-                   const boost::local_time::time_zone_ptr& origin_tz,
-                   const boost::local_time::time_zone_ptr& dest_tz);
+int timezone_diff(const bool is_depart_at,
+                  const uint64_t seconds,
+                  const boost::local_time::time_zone_ptr& origin_tz,
+                  const boost::local_time::time_zone_ptr& dest_tz);
 
 std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz);
 

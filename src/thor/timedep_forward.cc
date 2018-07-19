@@ -68,11 +68,12 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
 
   // Adjust for time zone (if different from timezone at the start).
   if (nodeinfo->timezone() != origin_tz_index_) {
-    // TODO - why doesn't this return the seconds difference in timezones?
-    DateTime::timezone_diff(true, localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
-                            DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-
-    // TODO - alter seconds of week based on timezone diff
+    // Get the difference in seconds between the origin tz and current tz
+    int tz_diff =
+        DateTime::timezone_diff(true, localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
+                                DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+    localtime += tz_diff;
+    seconds_of_week += tz_diff;
   }
 
   // Expand from end node.

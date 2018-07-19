@@ -311,7 +311,7 @@ void TryTestTimezoneDiff(const bool is_depart,
 
   std::cout << DateTime::seconds_to_date(dt, tz1) << std::endl;
 
-  DateTime::timezone_diff(is_depart, dt, tz1, tz2);
+  dt += DateTime::timezone_diff(is_depart, dt, tz1, tz2);
   if (DateTime::seconds_to_date(dt, tz1) != expected1)
     throw std::runtime_error("Timezone Diff test #1: " + std::to_string(date_time) +
                              " test failed.  Expected: " + expected1 + " but got " +
