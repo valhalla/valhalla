@@ -1,6 +1,5 @@
 #include <iostream>
 #include <iterator>
-#include <list>
 #include <string>
 #include <vector>
 
@@ -344,34 +343,51 @@ std::string get_request_str(const std::string& key, const valhalla::odin::ShapeM
   return R"({")" + key + R"(":")" + ShapeMatch_Name(expected_value) + R"("})";
 }
 
+std::string get_kv_str(const std::string& key, const valhalla::odin::FilterAction value) {
+  return R"(")" + key + R"(":")" + FilterAction_Name(value) + R"(")";
+}
+
 std::string get_request_str(const std::string& parent_key,
                             const std::string& key,
                             const valhalla::odin::FilterAction expected_value) {
-  return R"({")" + parent_key + R"(":{")" + key + R"(":")" + FilterAction_Name(expected_value) +
-         R"("}})";
+  return R"({")" + parent_key + R"(":{)" + get_kv_str(key, expected_value) + R"(}})";
+}
+
+std::string get_kv_str(const std::string& key, const std::vector<std::string>& values) {
+  std::string kv_str = R"(")" + key + R"(":[)";
+  bool first = true;
+  for (const auto& value : values) {
+    if (first) {
+      kv_str += R"(")";
+      first = false;
+    } else {
+      kv_str += R"(,")";
+    }
+    kv_str += value + R"(")";
+  }
+  kv_str += R"(])";
+  return kv_str;
 }
 
 std::string get_request_str(const std::string& parent_key,
                             const std::string& key,
                             const std::vector<std::string>& expected_values) {
-  std::string request_str = R"({")" + parent_key + R"(":{")" + key + R"(":[)";
-  bool first = true;
-  for (const auto& expected_value : expected_values) {
-    if (first) {
-      request_str += R"(")";
-      first = false;
-    } else {
-      request_str += R"(,")";
-    }
-    request_str += expected_value + R"(")";
-  }
-  request_str += R"(]}})";
-  return request_str;
+  return R"({")" + parent_key + R"(":{)" + get_kv_str(key, expected_values) + R"(}})";
+}
+
+std::string get_filter_request_str(const std::string& costing,
+                                   const std::string& filter_type,
+                                   const valhalla::odin::FilterAction filter_action,
+                                   const std::vector<std::string>& filter_ids) {
+  return R"({"costing_options":{")" + costing + R"(":{"filters":{")" + filter_type +
+         R"(":{)" + get_kv_str("action", filter_action) +
+         R"(,)" + get_kv_str("ids", filter_ids) +
+         R"(}}}}})";
 }
 
 valhalla::valhalla_request_t get_request(const std::string& request_str,
                                          const valhalla::odin::DirectionsOptions::Action action) {
-  std::cout << ">>>>> request_str=" << request_str << "<<<<<" << std::endl;
+  // std::cout << ">>>>> request_str=" << request_str << "<<<<<" << std::endl;
   valhalla::valhalla_request_t request;
   request.parse(request_str, action);
   return request;
@@ -379,6 +395,16 @@ valhalla::valhalla_request_t get_request(const std::string& request_str,
 
 ///////////////////////////////////////////////////////////////////////////////
 // test parsing methods
+std::string get_costing_str(valhalla::odin::Costing costing) {
+  // Create the costing string
+  auto costing_str = valhalla::odin::Costing_Name(costing);
+  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
+  if (costing_str.back() == '_') {
+    costing_str.pop_back();
+  }
+  return costing_str;
+}
+
 void test_polygons_parsing(const bool expected_value,
                            const valhalla::odin::DirectionsOptions::Action action =
                                valhalla::odin::DirectionsOptions::isochrone) {
@@ -482,11 +508,7 @@ void test_filter_attributes_parsing(const std::vector<std::string>& expected_val
 void test_default_base_auto_cost_options(const valhalla::odin::Costing costing,
                                          const valhalla::odin::DirectionsOptions::Action action) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string key = "costing";
 
   // Get cost request with no cost options
@@ -523,11 +545,7 @@ void test_default_base_auto_cost_options(const valhalla::odin::Costing costing,
 void test_default_motor_scooter_cost_options(const valhalla::odin::Costing costing,
                                              const valhalla::odin::DirectionsOptions::Action action) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string key = "costing";
 
   // Get cost request with no cost options
@@ -562,11 +580,7 @@ void test_default_motor_scooter_cost_options(const valhalla::odin::Costing costi
 void test_default_motorcycle_cost_options(const valhalla::odin::Costing costing,
                                           const valhalla::odin::DirectionsOptions::Action action) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string key = "costing";
 
   // Get cost request with no cost options
@@ -597,11 +611,7 @@ void test_default_motorcycle_cost_options(const valhalla::odin::Costing costing,
 void test_default_pedestrian_cost_options(const valhalla::odin::Costing costing,
                                           const valhalla::odin::DirectionsOptions::Action action) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string key = "costing";
 
   // Get cost request with no cost options
@@ -654,11 +664,7 @@ void test_default_pedestrian_cost_options(const valhalla::odin::Costing costing,
 void test_default_bicycle_cost_options(const valhalla::odin::Costing costing,
                                        const valhalla::odin::DirectionsOptions::Action action) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string key = "costing";
 
   // Get cost request with no cost options
@@ -698,11 +704,7 @@ void test_default_bicycle_cost_options(const valhalla::odin::Costing costing,
 void test_default_truck_cost_options(const valhalla::odin::Costing costing,
                                      const valhalla::odin::DirectionsOptions::Action action) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string key = "costing";
 
   // Get cost request with no cost options
@@ -744,11 +746,7 @@ void test_default_truck_cost_options(const valhalla::odin::Costing costing,
 void test_default_transit_cost_options(const valhalla::odin::Costing costing,
                                        const valhalla::odin::DirectionsOptions::Action action) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string key = "costing";
 
   // Get cost request with no cost options
@@ -778,11 +776,7 @@ void test_transport_type_parsing(const valhalla::odin::Costing costing,
                                  const valhalla::odin::DirectionsOptions::Action action =
                                      valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
 
@@ -798,11 +792,7 @@ void test_maneuver_penalty_parsing(const valhalla::odin::Costing costing,
                                    const valhalla::odin::DirectionsOptions::Action action =
                                        valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "maneuver_penalty";
@@ -819,11 +809,7 @@ void test_destination_only_penalty_parsing(const valhalla::odin::Costing costing
                                            const valhalla::odin::DirectionsOptions::Action action =
                                                valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "destination_only_penalty";
@@ -840,11 +826,7 @@ void test_gate_cost_parsing(const valhalla::odin::Costing costing,
                             const valhalla::odin::DirectionsOptions::Action action =
                                 valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "gate_cost";
@@ -861,11 +843,7 @@ void test_gate_penalty_parsing(const valhalla::odin::Costing costing,
                                const valhalla::odin::DirectionsOptions::Action action =
                                    valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "gate_penalty";
@@ -882,11 +860,7 @@ void test_toll_booth_cost_parsing(const valhalla::odin::Costing costing,
                                   const valhalla::odin::DirectionsOptions::Action action =
                                       valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "toll_booth_cost";
@@ -903,11 +877,7 @@ void test_toll_booth_penalty_parsing(const valhalla::odin::Costing costing,
                                      const valhalla::odin::DirectionsOptions::Action action =
                                          valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "toll_booth_penalty";
@@ -924,11 +894,7 @@ void test_alley_penalty_parsing(const valhalla::odin::Costing costing,
                                 const valhalla::odin::DirectionsOptions::Action action =
                                     valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "alley_penalty";
@@ -945,11 +911,7 @@ void test_country_crossing_cost_parsing(const valhalla::odin::Costing costing,
                                         const valhalla::odin::DirectionsOptions::Action action =
                                             valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "country_crossing_cost";
@@ -966,11 +928,7 @@ void test_country_crossing_penalty_parsing(const valhalla::odin::Costing costing
                                            const valhalla::odin::DirectionsOptions::Action action =
                                                valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "country_crossing_penalty";
@@ -987,11 +945,7 @@ void test_ferry_cost_parsing(const valhalla::odin::Costing costing,
                              const valhalla::odin::DirectionsOptions::Action action =
                                  valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "ferry_cost";
@@ -1008,11 +962,7 @@ void test_use_ferry_parsing(const valhalla::odin::Costing costing,
                             const valhalla::odin::DirectionsOptions::Action action =
                                 valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_ferry";
@@ -1029,11 +979,7 @@ void test_use_highways_parsing(const valhalla::odin::Costing costing,
                                const valhalla::odin::DirectionsOptions::Action action =
                                    valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_highways";
@@ -1050,11 +996,7 @@ void test_use_tolls_parsing(const valhalla::odin::Costing costing,
                             const valhalla::odin::DirectionsOptions::Action action =
                                 valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_tolls";
@@ -1071,11 +1013,7 @@ void test_use_hills_parsing(const valhalla::odin::Costing costing,
                             const valhalla::odin::DirectionsOptions::Action action =
                                 valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_hills";
@@ -1092,11 +1030,7 @@ void test_use_primary_parsing(const valhalla::odin::Costing costing,
                               const valhalla::odin::DirectionsOptions::Action action =
                                   valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_primary";
@@ -1113,11 +1047,7 @@ void test_top_speed_parsing(const valhalla::odin::Costing costing,
                             const valhalla::odin::DirectionsOptions::Action action =
                                 valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "top_speed";
@@ -1134,11 +1064,7 @@ void test_use_trails_parsing(const valhalla::odin::Costing costing,
                              const valhalla::odin::DirectionsOptions::Action action =
                                  valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_trails";
@@ -1156,11 +1082,7 @@ void test_max_distance_parsing(const valhalla::odin::Costing costing,
                                const valhalla::odin::DirectionsOptions::Action action =
                                    valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string sibling_key = "type";
@@ -1181,11 +1103,7 @@ void test_walking_speed_parsing(const valhalla::odin::Costing costing,
                                 const valhalla::odin::DirectionsOptions::Action action =
                                     valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string sibling_key = "type";
@@ -1206,11 +1124,7 @@ void test_cycling_speed_parsing(const valhalla::odin::Costing costing,
                                 const valhalla::odin::DirectionsOptions::Action action =
                                     valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string sibling_key = "bicycle_type";
@@ -1231,11 +1145,7 @@ void test_step_penalty_parsing(const valhalla::odin::Costing costing,
                                const valhalla::odin::DirectionsOptions::Action action =
                                    valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string sibling_key = "type";
@@ -1256,11 +1166,7 @@ void test_max_grade_parsing(const valhalla::odin::Costing costing,
                             const valhalla::odin::DirectionsOptions::Action action =
                                 valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string sibling_key = "type";
@@ -1280,11 +1186,7 @@ void test_max_hiking_difficulty_parsing(const valhalla::odin::Costing costing,
                                         const valhalla::odin::DirectionsOptions::Action action =
                                             valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "max_hiking_difficulty";
@@ -1301,11 +1203,7 @@ void test_mode_factor_parsing(const valhalla::odin::Costing costing,
                               const valhalla::odin::DirectionsOptions::Action action =
                                   valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "mode_factor";
@@ -1322,11 +1220,7 @@ void test_walkway_factor_parsing(const valhalla::odin::Costing costing,
                                  const valhalla::odin::DirectionsOptions::Action action =
                                      valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "walkway_factor";
@@ -1343,11 +1237,7 @@ void test_sidewalk_factor_parsing(const valhalla::odin::Costing costing,
                                   const valhalla::odin::DirectionsOptions::Action action =
                                       valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "sidewalk_factor";
@@ -1364,11 +1254,7 @@ void test_alley_factor_parsing(const valhalla::odin::Costing costing,
                                const valhalla::odin::DirectionsOptions::Action action =
                                    valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "alley_factor";
@@ -1385,11 +1271,7 @@ void test_driveway_factor_parsing(const valhalla::odin::Costing costing,
                                   const valhalla::odin::DirectionsOptions::Action action =
                                       valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "driveway_factor";
@@ -1406,11 +1288,7 @@ void test_driveway_penalty_parsing(const valhalla::odin::Costing costing,
                                    const valhalla::odin::DirectionsOptions::Action action =
                                        valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "driveway"; // NOTE: key is truncated to 'driveway'
@@ -1427,11 +1305,7 @@ void test_use_roads_parsing(const valhalla::odin::Costing costing,
                             const valhalla::odin::DirectionsOptions::Action action =
                                 valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_roads";
@@ -1448,11 +1322,7 @@ void test_avoid_bad_surfaces_parsing(const valhalla::odin::Costing costing,
                                      const valhalla::odin::DirectionsOptions::Action action =
                                          valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "avoid_bad_surfaces";
@@ -1470,11 +1340,7 @@ void test_transit_start_end_max_distance_parsing(
     const valhalla::odin::DirectionsOptions::Action action =
         valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "transit_start_end_max_distance";
@@ -1493,11 +1359,7 @@ void test_transit_transfer_max_distance_parsing(
     const valhalla::odin::DirectionsOptions::Action action =
         valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "transit_transfer_max_distance";
@@ -1515,11 +1377,7 @@ void test_low_class_penalty_parsing(const valhalla::odin::Costing costing,
                                     const valhalla::odin::DirectionsOptions::Action action =
                                         valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "low_class_penalty";
@@ -1536,11 +1394,7 @@ void test_weight_parsing(const valhalla::odin::Costing costing,
                          const valhalla::odin::DirectionsOptions::Action action =
                              valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "weight";
@@ -1556,11 +1410,7 @@ void test_axle_load_parsing(const valhalla::odin::Costing costing,
                             const valhalla::odin::DirectionsOptions::Action action =
                                 valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "axle_load";
@@ -1577,11 +1427,7 @@ void test_height_parsing(const valhalla::odin::Costing costing,
                          const valhalla::odin::DirectionsOptions::Action action =
                              valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "height";
@@ -1597,11 +1443,7 @@ void test_width_parsing(const valhalla::odin::Costing costing,
                         const valhalla::odin::DirectionsOptions::Action action =
                             valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "width";
@@ -1617,11 +1459,7 @@ void test_length_parsing(const valhalla::odin::Costing costing,
                          const valhalla::odin::DirectionsOptions::Action action =
                              valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "length";
@@ -1637,11 +1475,7 @@ void test_use_bus_parsing(const valhalla::odin::Costing costing,
                           const valhalla::odin::DirectionsOptions::Action action =
                               valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_bus";
@@ -1657,11 +1491,7 @@ void test_use_rail_parsing(const valhalla::odin::Costing costing,
                            const valhalla::odin::DirectionsOptions::Action action =
                                valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_rail";
@@ -1678,11 +1508,7 @@ void test_use_transfers_parsing(const valhalla::odin::Costing costing,
                                 const valhalla::odin::DirectionsOptions::Action action =
                                     valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "use_transfers";
@@ -1699,11 +1525,7 @@ void test_transfer_cost_parsing(const valhalla::odin::Costing costing,
                                 const valhalla::odin::DirectionsOptions::Action action =
                                     valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "transfer_cost";
@@ -1720,11 +1542,7 @@ void test_transfer_penalty_parsing(const valhalla::odin::Costing costing,
                                    const valhalla::odin::DirectionsOptions::Action action =
                                        valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "transfer_penalty";
@@ -1741,11 +1559,7 @@ void test_hazmat_parsing(const valhalla::odin::Costing costing,
                          const valhalla::odin::DirectionsOptions::Action action =
                              valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "hazmat";
@@ -1761,11 +1575,7 @@ void test_wheelchair_parsing(const valhalla::odin::Costing costing,
                              const valhalla::odin::DirectionsOptions::Action action =
                                  valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "wheelchair";
@@ -1782,11 +1592,7 @@ void test_bicycle_parsing(const valhalla::odin::Costing costing,
                           const valhalla::odin::DirectionsOptions::Action action =
                               valhalla::odin::DirectionsOptions::route) {
   // Create the costing string
-  auto costing_str = valhalla::odin::Costing_Name(costing);
-  // Remove the trailing '_' from 'auto_' - this is a work around since 'auto' is a keyword
-  if (costing_str.back() == '_') {
-    costing_str.pop_back();
-  }
+  auto costing_str = get_costing_str(costing);
   const std::string grandparent_key = "costing_options";
   const std::string parent_key = costing_str;
   const std::string key = "bicycle";
@@ -1794,6 +1600,73 @@ void test_bicycle_parsing(const valhalla::odin::Costing costing,
   valhalla::valhalla_request_t request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   validate(key, expected_value, request.options.costing_options(static_cast<int>(costing)).bicycle());
+}
+
+void test_filter_stop_parsing(const valhalla::odin::Costing costing,
+                              const valhalla::odin::FilterAction filter_action,
+                              const std::vector<std::string>& filter_ids,
+                              const valhalla::odin::DirectionsOptions::Action action =
+                                  valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string filter_type = "stops";
+  const std::string action_key = "filter_stop_action";
+  const std::string ids_key = "filter_stop_ids";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
+                  action);
+  validate(action_key, filter_action,
+           request.options.costing_options(static_cast<int>(costing)).has_filter_stop_action(),
+           request.options.costing_options(static_cast<int>(costing)).filter_stop_action());
+  validate(ids_key, filter_ids,
+           (request.options.costing_options(static_cast<int>(costing)).filter_stop_ids_size() > 0),
+           request.options.costing_options(static_cast<int>(costing)).filter_stop_ids());
+}
+
+void test_filter_route_parsing(const valhalla::odin::Costing costing,
+                               const valhalla::odin::FilterAction filter_action,
+                               const std::vector<std::string>& filter_ids,
+                               const valhalla::odin::DirectionsOptions::Action action =
+                                   valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string filter_type = "routes";
+  const std::string action_key = "filter_route_action";
+  const std::string ids_key = "filter_route_ids";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
+                  action);
+  validate(action_key, filter_action,
+           request.options.costing_options(static_cast<int>(costing)).has_filter_route_action(),
+           request.options.costing_options(static_cast<int>(costing)).filter_route_action());
+  validate(ids_key, filter_ids,
+           (request.options.costing_options(static_cast<int>(costing)).filter_route_ids_size() > 0),
+           request.options.costing_options(static_cast<int>(costing)).filter_route_ids());
+}
+
+void test_filter_operator_parsing(const valhalla::odin::Costing costing,
+                                  const valhalla::odin::FilterAction filter_action,
+                                  const std::vector<std::string>& filter_ids,
+                                  const valhalla::odin::DirectionsOptions::Action action =
+                                      valhalla::odin::DirectionsOptions::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string filter_type = "operators";
+  const std::string action_key = "filter_operator_action";
+  const std::string ids_key = "filter_operator_ids";
+
+  valhalla::valhalla_request_t request =
+      get_request(get_filter_request_str(costing_str, filter_type, filter_action, filter_ids),
+                  action);
+  validate(action_key, filter_action,
+           request.options.costing_options(static_cast<int>(costing)).has_filter_operator_action(),
+           request.options.costing_options(static_cast<int>(costing)).filter_operator_action());
+  validate(ids_key, filter_ids,
+           (request.options.costing_options(static_cast<int>(costing)).filter_operator_ids_size() >
+            0),
+           request.options.costing_options(static_cast<int>(costing)).filter_operator_ids());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1860,7 +1733,7 @@ void test_filter_attributes() {
   test_filter_attributes_parsing({"edge.names", "edge.id", "edge.weighted_grade", "edge.speed"});
 }
 
-std::list<valhalla::odin::Costing> get_base_auto_costing_list() {
+std::vector<valhalla::odin::Costing> get_base_auto_costing_list() {
   return {valhalla::odin::Costing::auto_, valhalla::odin::Costing::auto_shorter,
           valhalla::odin::Costing::auto_data_fix, valhalla::odin::Costing::bus,
           valhalla::odin::Costing::hov};
@@ -2829,6 +2702,42 @@ void test_transfer_penalty() {
   test_transfer_penalty_parsing(costing, 50000.f, default_value);
 }
 
+void test_stops_transit_filter() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+
+  valhalla::odin::FilterAction filter_action = valhalla::odin::FilterAction::exclude;
+  std::vector<std::string> filter_ids = {"stop1", "stop2", "stop3"};
+  test_filter_stop_parsing(costing, filter_action, filter_ids);
+
+  filter_action = valhalla::odin::FilterAction::include;
+  filter_ids = {"stop10", "stop20", "stop30"};
+  test_filter_stop_parsing(costing, filter_action, filter_ids);
+}
+
+void test_routes_transit_filter() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+
+  valhalla::odin::FilterAction filter_action = valhalla::odin::FilterAction::exclude;
+  std::vector<std::string> filter_ids = {"route1", "route2", "route3"};
+  test_filter_route_parsing(costing, filter_action, filter_ids);
+
+  filter_action = valhalla::odin::FilterAction::include;
+  filter_ids = {"route10", "route20", "route30"};
+  test_filter_route_parsing(costing, filter_action, filter_ids);
+}
+
+void test_operators_transit_filter() {
+  valhalla::odin::Costing costing = valhalla::odin::Costing::transit;
+
+  valhalla::odin::FilterAction filter_action = valhalla::odin::FilterAction::exclude;
+  std::vector<std::string> filter_ids = {"operator1", "operator2", "operator3"};
+  test_filter_operator_parsing(costing, filter_action, filter_ids);
+
+  filter_action = valhalla::odin::FilterAction::include;
+  filter_ids = {"operator10", "operator20", "operator30"};
+  test_filter_operator_parsing(costing, filter_action, filter_ids);
+}
+
 } // namespace
 
 int main() {
@@ -3036,6 +2945,15 @@ int main() {
 
   // transfer_penalty
   suite.test(TEST_CASE(test_transfer_penalty));
+
+  // stops_transit_filter
+  suite.test(TEST_CASE(test_stops_transit_filter));
+
+  // routes_transit_filter
+  suite.test(TEST_CASE(test_routes_transit_filter));
+
+  // operators_transit_filter
+  suite.test(TEST_CASE(test_operators_transit_filter));
 
   return suite.tear_down();
 }
