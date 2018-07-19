@@ -52,7 +52,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
                                    const uint32_t pred_idx,
                                    const bool from_transition,
                                    uint64_t localtime,
-                                   uint32_t seconds_of_week,
+                                   int32_t seconds_of_week,
                                    const odin::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -74,6 +74,11 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
                                 DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     localtime += tz_diff;
     seconds_of_week += tz_diff;
+    if (seconds_of_week < 0) {
+      seconds_of_week += midgard::kSecondsPerWeek;
+    } else if (seconds_of_week > midgard::kSecondsPerWeek) {
+      seconds_of_week -= midgard::kSecondsPerWeek;
+    }
   }
 
   // Expand from end node.
@@ -301,7 +306,7 @@ std::vector<PathInfo> TimeDepForward::GetBestPath(odin::Location& origin,
 
     // Set local time and seconds of the week.
     uint64_t localtime = start_time + static_cast<uint32_t>(pred.cost().secs);
-    uint32_t seconds_of_week = seconds_of_week_ + static_cast<uint32_t>(pred.cost().secs);
+    int32_t seconds_of_week = seconds_of_week_ + static_cast<uint32_t>(pred.cost().secs);
     if (seconds_of_week > midgard::kSecondsPerWeek) {
       seconds_of_week -= midgard::kSecondsPerWeek;
     }

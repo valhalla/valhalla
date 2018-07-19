@@ -84,7 +84,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    const DirectedEdge* opp_pred_edge,
                                    const bool from_transition,
                                    uint64_t localtime,
-                                   uint32_t seconds_of_week,
+                                   int32_t seconds_of_week,
                                    const odin::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -106,6 +106,11 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                           DateTime::get_tz_db().from_index(dest_tz_index_));
     localtime += tz_diff;
     seconds_of_week += tz_diff;
+    if (seconds_of_week < 0) {
+      seconds_of_week += midgard::kSecondsPerWeek;
+    } else if (seconds_of_week > midgard::kSecondsPerWeek) {
+      seconds_of_week -= midgard::kSecondsPerWeek;
+    }
   }
 
   // Expand from end node.
@@ -351,7 +356,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     // Set local time and seconds of the week.
     uint32_t secs = static_cast<uint32_t>(pred.cost().secs);
     uint64_t localtime = start_time - secs;
-    uint32_t seconds_of_week = (secs < seconds_of_week_)
+    int32_t seconds_of_week = (secs < seconds_of_week_)
                                    ? seconds_of_week_ - secs
                                    : midgard::kSecondsPerWeek - (secs - seconds_of_week_);
 
