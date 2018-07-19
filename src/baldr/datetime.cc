@@ -432,8 +432,8 @@ uint64_t seconds_since_epoch(const std::string& date_time,
   return 0;
 }
 
-// Get the difference between two timezone using the curent time (seconds from epoch)
-// (taking into account the timezones and dst) and add the difference to the seconds
+// Get the difference between two timezones using the current time (seconds from epoch
+// so that DST can be take into account). Returns the difference in seconds.
 int timezone_diff(const bool is_depart_at,
                   const uint64_t seconds,
                   const boost::local_time::time_zone_ptr& origin_tz,
