@@ -37,12 +37,6 @@ protected:
 const tz_db_t& get_tz_db();
 
 /**
- * Get a formatted testing date.  Currently, next Tuesday @ 08:00.
- * @return  Returns the formatted date string.
- */
-std::string get_testing_date_time();
-
-/**
  * Get a formatted date from a string.
  * @param date in the format of 20150516 or 2015-05-06T08:00
  * @return  Returns the formatted date.
@@ -59,59 +53,6 @@ boost::gregorian::date get_formatted_date(const std::string& date);
 boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
                                            const boost::posix_time::time_duration& time_duration,
                                            const boost::local_time::time_zone_ptr& time_zone);
-
-/**
- * Get the days that this transit service is running in 60 days or less
- * @param   start_date start date
- * @param   end_date end date
- * @param   tile_date seconds from epoch
- * @param   dow_mask that this service runs.
- * @return  Returns the number of days.
- */
-uint64_t get_service_days(boost::gregorian::date& start_date,
-                          boost::gregorian::date& end_date,
-                          const uint32_t tile_date,
-                          const uint32_t dow_mask);
-
-/**
- * Adds a service day to the days.
- * @param   days supported by the gtfs feed/service
- * @param   end_date end date
- * @param   tile_date seconds from epoch
- * @param   added_date in the format of 20150516 or 2015-05-06T08:00
- * @return  Returns the updated days.  Days will only be updated if the added date
- *          is in the start and end date range.
- */
-uint64_t add_service_day(const uint64_t& days,
-                         const boost::gregorian::date& end_date,
-                         const uint32_t tile_date,
-                         const boost::gregorian::date& added_date);
-
-/**
- * Removes a service day to the days.
- * @param   days supported by the gtfs feed/service
- * @param   end_date end date
- * @param   tile_date seconds from epoch
- * @param   removed_date in the format of 20150516 or 2015-05-06T08:00
- * @return  Returns the updated days.  Days will only be updated if the removed date
- *          is in the start and end date range.
- */
-uint64_t remove_service_day(const uint64_t& days,
-                            const boost::gregorian::date& end_date,
-                            const uint32_t tile_date,
-                            const boost::gregorian::date& removed_date);
-
-/**
- * Check if service is available for a date.
- * @param   days supported by the gtfs feed/service
- * @param   start_date in the format of days since pivot
- * @param   date the date in question...in the format of days since pivot.
- * @param   end_date in the format of days since pivot
- */
-bool is_service_available(const uint64_t days,
-                          const uint32_t start_date,
-                          const uint32_t date,
-                          const uint32_t end_date);
 
 /**
  * Get the number of days elapsed from the pivot date until
