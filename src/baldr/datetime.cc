@@ -762,24 +762,6 @@ uint32_t day_of_week_mask(const std::string& date_time) {
   return kDOWNone;
 }
 
-// Get the number of seconds midnight that have elapsed.
-uint32_t seconds_from_midnight(const std::string& date_time) {
-  // date_time is in the format of HH:MM:SS or HH:MM or YYYY-MM-DDTHH:MM
-  // hours can be greater than 24.
-  // please see GTFS spec:
-  // https://developers.google.com/transit/gtfs/reference#stop_times_fields
-
-  boost::posix_time::time_duration td;
-  std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
-  if (found != std::string::npos) {
-    td = boost::posix_time::duration_from_string(date_time.substr(found + 1));
-  } else {
-    td = boost::posix_time::duration_from_string(date_time);
-  }
-
-  return static_cast<uint32_t>(td.total_seconds());
-}
-
 // add x seconds to a date_time and return a ISO date_time string.
 // date_time is in the format of 20150516 or 2015-05-06T08:00
 std::string get_duration(const std::string& date_time,

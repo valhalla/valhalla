@@ -49,8 +49,10 @@ void TryGetDuration(const std::string& date_time,
 }
 
 void TryGetSecondsFromMidnight(const std::string& date_time, uint32_t expected_seconds) {
-  if (DateTime::seconds_from_midnight(date_time) != expected_seconds) {
-    throw std::runtime_error(std::string("Incorrect number of seconds from ") + date_time);
+  auto secs = DateTime::seconds_from_midnight(date_time);
+  if (secs != expected_seconds) {
+    throw std::runtime_error(std::string("Incorrect number of seconds from ") + date_time +
+                             " got: " + std::to_string(secs));
   }
 }
 
