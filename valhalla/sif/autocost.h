@@ -26,7 +26,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
  * Create an auto route cost method. This is generally shortest time but uses
  * hierarchies and can avoid "shortcuts" through residential areas.
  */
-cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config);
+cost_ptr_t CreateAutoCost(const odin::DirectionsOptions& options);
 
 /**
  * Parses the auto_shorter cost options from json and stores values in pbf.
@@ -44,7 +44,7 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
  * uses the same rules except the edge cost uses an adjusted speed that
  * (non-linearly) reduces the importance of edge speed.
  */
-cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config);
+cost_ptr_t CreateAutoShorterCost(const odin::DirectionsOptions& options);
 
 /**
  * Parses the auto_data_fix cost options from json and stores values in pbf.
@@ -63,7 +63,7 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
  * it ignores turn restrictions. his can be useful for map-matching traces
  * when trying data that may have incorrect restrictions or oneway information.
  */
-cost_ptr_t CreateAutoDataFixCost(const boost::property_tree::ptree& config);
+cost_ptr_t CreateAutoDataFixCost(const odin::DirectionsOptions& options);
 
 /**
  * Parses the bus cost options from json and stores values in pbf.
@@ -81,7 +81,7 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
  * uses the same rules except for using the bus access flag instead
  * of the auto access flag.
  */
-cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config);
+cost_ptr_t CreateBusCost(const odin::DirectionsOptions& options);
 
 /**
  * Parses the hov cost options from json and stores values in pbf.
@@ -98,7 +98,7 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
  * Create a hov cost method. This is derived from auto costing and
  * uses the same rules except for favoring hov roads
  */
-cost_ptr_t CreateHOVCost(const boost::property_tree::ptree& config);
+cost_ptr_t CreateHOVCost(const odin::DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla
