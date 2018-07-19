@@ -73,12 +73,7 @@ void TimeDepForward::ExpandForward(GraphReader& graphreader,
         DateTime::timezone_diff(true, localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
                                 DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     localtime += tz_diff;
-    seconds_of_week += tz_diff;
-    if (seconds_of_week < 0) {
-      seconds_of_week += midgard::kSecondsPerWeek;
-    } else if (seconds_of_week > midgard::kSecondsPerWeek) {
-      seconds_of_week -= midgard::kSecondsPerWeek;
-    }
+    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
   }
 
   // Expand from end node.

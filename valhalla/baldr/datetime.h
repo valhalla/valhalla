@@ -351,6 +351,21 @@ static uint32_t seconds_from_midnight(const std::string& date_time) {
   return secs;
 }
 
+/**
+ * Returns seconds of week within the range [0, kSecondsPerWeek]
+ * @param  secs  Seconds within the week.
+ * @return Returns the seconds within the week within the valid range.
+ */
+static int32_t normalize_seconds_of_week(const int32_t secs) {
+  if (secs < 0) {
+    return secs + midgard::kSecondsPerWeek;
+  } else if (secs > midgard::kSecondsPerWeek) {
+    return secs - midgard::kSecondsPerWeek;
+  } else {
+    return secs;
+  }
+}
+
 } // namespace DateTime
 } // namespace baldr
 } // namespace valhalla

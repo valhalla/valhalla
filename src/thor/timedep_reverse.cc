@@ -105,12 +105,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                           DateTime::get_tz_db().from_index(nodeinfo->timezone()),
                                           DateTime::get_tz_db().from_index(dest_tz_index_));
     localtime += tz_diff;
-    seconds_of_week += tz_diff;
-    if (seconds_of_week < 0) {
-      seconds_of_week += midgard::kSecondsPerWeek;
-    } else if (seconds_of_week > midgard::kSecondsPerWeek) {
-      seconds_of_week -= midgard::kSecondsPerWeek;
-    }
+    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
   }
 
   // Expand from end node.
@@ -356,9 +351,7 @@ std::vector<PathInfo> TimeDepReverse::GetBestPath(odin::Location& origin,
     // Set local time and seconds of the week.
     uint32_t secs = static_cast<uint32_t>(pred.cost().secs);
     uint64_t localtime = start_time - secs;
-    int32_t seconds_of_week = (secs < seconds_of_week_)
-                                  ? seconds_of_week_ - secs
-                                  : midgard::kSecondsPerWeek - (secs - seconds_of_week_);
+    int32_t seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week_ - secs);
 
     // Get the opposing predecessor directed edge. Need to make sure we get
     // the correct one if a transition occurred
