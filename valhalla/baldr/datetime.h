@@ -219,13 +219,6 @@ std::string get_duration(const std::string& date_time,
                          const boost::local_time::time_zone_ptr& tz);
 
 /**
- * checks if string is in the format of %Y-%m-%dT%H:%M
- * @param   date_time should be in the format of 2015-05-06T08:00
- * @return true or false
- */
-bool is_iso_local(const std::string& date_time);
-
-/**
  * checks if a date is restricted within a begin and end range.
  * @param   type          type of restriction kYMD or kNthDow
  * @param   begin_hrs     begin hours
@@ -285,17 +278,50 @@ MONTH get_month(const std::string& month);
 std::vector<uint64_t> get_time_range(const std::string& condition);
 
 /**
+ * Convert ISO 8601 time into std::tm.
+ * @param iso  ISO time string (YYYY-mm-ddTmi:sec")
+ * @return Returns std::tm time structure. If the input string is not valid this method
+ *         sets tm_year to 0.
+ */
+static std::tm iso_to_tm(const std::string& iso) {
+  // Create an invalid tm, then populate it from the ISO string using get_time
+  std::tm t = {0, -1, -1, -1, -1, 0, 0, 0};
+
+  // Check for invalid string (not the right separators and sizes)
+  if (iso.size() != 16 || iso.at(4) != '-' || iso.at(7) != '-' || iso.at(10) != 'T' ||
+      iso.at(13) != ':') {
+    return t;
+  }
+
+  std::istringstream ss(iso);
+  ss >> std::get_time(&t, "%Y-%m-%dT%H:%M");
+
+  // Validate fields. Set tm_year to 0 if any of the year,month,day,hour,minute are invalid.
+  if (t.tm_year > 200 || t.tm_mon < 0 || t.tm_mon > 11 || t.tm_mday < 0 || t.tm_mday > 31 ||
+      t.tm_hour < 0 || t.tm_hour > 23 || t.tm_min < 0 || t.tm_min > 59) {
+    t.tm_year = 0;
+  }
+  return t;
+}
+
+/**
+ * Checks if string is in the format of %Y-%m-%dT%H:%M
+ * @param   date_time should be in the format of 2015-05-06T08:00
+ * @return true or false
+ */
+static bool is_iso_valid(const std::string& date_time) {
+  return iso_to_tm(date_time).tm_year > 0;
+}
+
+/**
  * Get the day of the week given a time string
  * @param dt Date time string.
  */
 static uint32_t day_of_week(const std::string& dt) {
-  // Split the string at T
-  std::stringstream datestring(dt);
-  std::string d;
-  std::getline(datestring, d, 'T');
-  std::tm t = {};
-  std::istringstream ss(d);
-  ss >> std::get_time(&t, "%Y-%m-%d");
+  // Get the std::tm struct given the ISO string
+  std::tm t = iso_to_tm(dt);
+
+  // Use std::mktime to fill in day of week
   std::mktime(&t);
   return t.tm_wday;
 }

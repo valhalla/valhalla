@@ -850,44 +850,6 @@ std::string get_duration(const std::string& date_time,
   return formatted_date_time;
 }
 
-// checks if string is in the format of %Y-%m-%dT%H:%M
-bool is_iso_local(const std::string& date_time) {
-
-  std::stringstream ss("");
-  bool is_ok = true;
-
-  if (date_time.size() != 16) { // YYYY-MM-DDTHH:MM
-    return false;
-  }
-
-  if (date_time.at(4) != '-' || date_time.at(7) != '-' || date_time.at(10) != 'T' ||
-      date_time.at(13) != ':') {
-    return false;
-  }
-
-  try {
-    boost::local_time::local_time_input_facet* input_facet =
-        new boost::local_time::local_time_input_facet();
-    input_facet->format("%Y-%m-%dT%H:%M");
-
-    ss.imbue(std::locale(ss.getloc(), input_facet));
-    boost::posix_time::ptime pt;
-    ss.str(date_time);
-    is_ok = static_cast<bool>(ss >> pt);
-
-    std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
-    std::string time = date_time.substr(found + 1);
-    uint32_t hour = std::stoi(time.substr(0, 2));
-    uint32_t min = std::stoi(time.substr(3));
-
-    if (hour > 23 || min > 59) {
-      return false;
-    }
-
-  } catch (std::exception& e) { return false; }
-  return is_ok;
-}
-
 // does this date fall in the begin and end date range?
 bool is_restricted(const bool type,
                    const uint8_t begin_hrs,
