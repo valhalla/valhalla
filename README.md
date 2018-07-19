@@ -1,7 +1,7 @@
      ██▒   █▓ ▄▄▄       ██▓     ██░ ██  ▄▄▄       ██▓     ██▓    ▄▄▄      
     ▓██░   █▒▒████▄    ▓██▒    ▓██░ ██▒▒████▄    ▓██▒    ▓██▒   ▒████▄    
      ▓██  █▒░▒██  ▀█▄  ▒██░    ▒██▀▀██░▒██  ▀█▄  ▒██░    ▒██░   ▒██  ▀█▄  
-      ▒██ █░░░██▄▄▄▄██ ▒██░    ░▓█ ░██ ░██▄▄▄▄██ ▒██░    ▒██░   ░██▄▄▄▄██ 
+      ▒██ █░░░██▄▄▄▄██ ▒██░    ░▓█ ░██ ░██▄▄▄▄██ ▒██░    ▒██░   ░██▄▄▄▄██
        ▒▀█░   ▓█   ▓██▒░██████▒░▓█▒░██▓ ▓█   ▓██▒░██████▒░██████▒▓█   ▓██▒
        ░ ▐░   ▒▒   ▓▒█░░ ▒░▓  ░ ▒ ░░▒░▒ ▒▒   ▓▒█░░ ▒░▓  ░░ ▒░▓  ░▒▒   ▓▒█░
        ░ ░░    ▒   ▒▒ ░░ ░ ▒  ░ ▒ ░▒░ ░  ▒   ▒▒ ░░ ░ ▒  ░░ ░ ▒  ░ ▒   ▒▒ ░
@@ -110,6 +110,8 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 sudo make install
+// to install with node bindings
+make copy_node_artifacts
 ```
 
 Important build options include:
@@ -120,6 +122,7 @@ Important build options include:
 | `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
 | `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
 | `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
+| `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
 
 For more build options run the interactive GUI:
 
@@ -172,6 +175,23 @@ If you would like to make an improvement to the code, please be aware that all v
 Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style.
 
 Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/tidy.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/tidy.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `bear make` instead of just `make`.  The `bear` tool is installable on Ubuntu-based systems with `apt-get install bear`, and on macOS with `brew install bear`).
+
+Using the Node.js Bindings
+--------------------------
+
+The Node.js bindings are still under construction. We are working on building binaries for as many environments as possible, but they may not all be available yet. The first functionality that we are exposing is `route`, but we plan on exposing more functionality over time. Right now, the input and the output are both strings - THAT WILL CHANGE. We plan on ingesting and producing protobufs.
+
+The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings via npm install valhalla or from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version.
+
+Example of using in a node project:
+```js
+var Valhalla = require('valhalla');
+var valhalla = new Valhalla(configString);
+var hersheyRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"}, {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"}';
+var route = valhalla.route(hersheyRequest); // returns a string
+```
+
+Please see the releasing docs for information on releasing a new version.
 
 Tests
 -----
