@@ -15,6 +15,80 @@ using namespace valhalla::baldr;
 
 namespace {
 
+// Get the iso date and time from a DOW mask and time.
+std::string test_iso_date_time(const uint8_t dow_mask,
+                               const std::string& time,
+                               const boost::local_time::time_zone_ptr& time_zone) {
+
+  std::string iso_date_time;
+  std::stringstream ss("");
+  if (time.empty() || time.find(':') == std::string::npos || !time_zone) {
+    return iso_date_time;
+  }
+
+  uint8_t dow;
+  switch (dow_mask) {
+    case kSunday:
+      dow = boost::date_time::Sunday;
+      break;
+    case kMonday:
+      dow = boost::date_time::Monday;
+      break;
+    case kTuesday:
+      dow = boost::date_time::Tuesday;
+      break;
+    case kWednesday:
+      dow = boost::date_time::Wednesday;
+      break;
+    case kThursday:
+      dow = boost::date_time::Thursday;
+      break;
+    case kFriday:
+      dow = boost::date_time::Friday;
+      break;
+    case kSaturday:
+      dow = boost::date_time::Saturday;
+      break;
+    default:
+      return iso_date_time;
+      break;
+  }
+
+  try {
+    boost::local_time::local_time_input_facet* input_facet =
+        new boost::local_time::local_time_input_facet();
+    input_facet->format("%H:%M");
+    ss.imbue(std::locale(ss.getloc(), input_facet));
+
+    boost::local_time::local_date_time desired_time(boost::local_time::not_a_date_time);
+    ss.str(time);
+    ss >> desired_time;
+
+    boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
+    boost::local_time::local_date_time local_date_time(pt, time_zone);
+
+    pt = local_date_time.local_time();
+    boost::gregorian::date date = pt.date();
+    uint8_t desired_tod =
+        (3600 * desired_time.time_of_day().hours()) + (60 * desired_time.time_of_day().minutes());
+    uint8_t current_tod = (3600 * pt.time_of_day().hours()) + (60 * pt.time_of_day().minutes());
+
+    // will today work?
+    if (date.day_of_week().as_enum() == dow) {
+      // is the desired time in the past?
+      if (desired_tod < current_tod) {
+        date += boost::gregorian::days(7);
+      }
+    } else {
+      while (date.day_of_week().as_enum() != dow) {
+        date += boost::gregorian::days(1);
+      }
+    }
+    iso_date_time = to_iso_extended_string(date) + "T" + time;
+  } catch (std::exception& e) {}
+  return iso_date_time;
+}
+
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
   boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
@@ -64,7 +138,7 @@ void TryIsoDateTime() {
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
-  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
+  if (test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
       current_date_time) {
     throw std::runtime_error(std::string("Iso date time failed ") + current_date_time);
   }
@@ -75,7 +149,7 @@ void TryIsoDateTime() {
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
-  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
+  if (test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
       current_date_time) {
     throw std::runtime_error(std::string("Iso date time failed ") + current_date_time);
   }
@@ -86,7 +160,7 @@ void TryIsoDateTime() {
   if (found != std::string::npos)
     time = current_date_time.substr(found + 1);
 
-  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
+  if (test_iso_date_time(DateTime::day_of_week_mask(current_date_time), time, tz) !=
       current_date_time) {
     throw std::runtime_error(std::string("Iso date time failed ") + current_date_time);
   }

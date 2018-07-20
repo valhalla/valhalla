@@ -50,6 +50,7 @@ set(sources
   pbfadminparser.cc
   pbfgraphparser.cc
   restrictionbuilder.cc
+  servicedays.cc
   shortcutbuilder.cc
   transitbuilder.cc
   util.cc

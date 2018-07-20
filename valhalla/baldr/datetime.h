@@ -63,17 +63,6 @@ boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
 uint32_t days_from_pivot_date(const boost::gregorian::date& date_time);
 
 /**
- * Get the iso date and time from a DOW mask and time.
- * @param   dow_mask    Day of the week mask.
- * @param   time        Time in the format of 08:00
- * @param   time_zone   Timezone.
- * @return  Returns the formatted date 2015-05-06.
- */
-std::string iso_date_time(const uint8_t dow_mask,
-                          const std::string& time,
-                          const boost::local_time::time_zone_ptr& time_zone);
-
-/**
  * Get the iso date and time from the current date and time.
  * @param   time_zone        Timezone.
  * @return  Returns the formated date 2015-05-06.
@@ -208,15 +197,6 @@ uint8_t get_dow_mask(const std::string& dow);
  * @return DOW
  */
 DOW get_dow(const std::string& dow);
-
-/**
- * get the month from user inputed string.  try to handle most inputs
- * @param   month entered by a user
- * @return MONTH
- */
-MONTH get_month(const std::string& month);
-
-std::vector<uint64_t> get_time_range(const std::string& condition);
 
 /**
  * Convert ISO 8601 time into std::tm.
