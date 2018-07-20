@@ -57,7 +57,7 @@ public:
 
   /**
    * Make a cost from its specified type
-   * @param cost    the type of cost to create
+   * @param costing  the type of cost to create
    * @param options  pbf with request options
    */
   cost_ptr_t Create(const odin::Costing costing, const odin::DirectionsOptions& options) const {
