@@ -124,8 +124,10 @@ void TryGetDuration(const std::string& date_time,
 }
 
 void TryGetSecondsFromMidnight(const std::string& date_time, uint32_t expected_seconds) {
-  if (DateTime::seconds_from_midnight(date_time) != expected_seconds) {
-    throw std::runtime_error(std::string("Incorrect number of seconds from ") + date_time);
+  auto secs = DateTime::seconds_from_midnight(date_time);
+  if (secs != expected_seconds) {
+    throw std::runtime_error(std::string("Incorrect number of seconds from ") + date_time +
+                             " got: " + std::to_string(secs));
   }
 }
 
@@ -223,7 +225,7 @@ void TryTestTimezoneDiff(const bool is_depart,
 
   std::cout << DateTime::seconds_to_date(dt, tz1) << std::endl;
 
-  DateTime::timezone_diff(is_depart, dt, tz1, tz2);
+  dt += DateTime::timezone_diff(is_depart, dt, tz1, tz2);
   if (DateTime::seconds_to_date(dt, tz1) != expected1)
     throw std::runtime_error("Timezone Diff test #1: " + std::to_string(date_time) +
                              " test failed.  Expected: " + expected1 + " but got " +
