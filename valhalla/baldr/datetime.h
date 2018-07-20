@@ -215,6 +215,8 @@ static std::tm iso_to_tm(const std::string& iso) {
   }
 
   std::istringstream ss(iso);
+  std::locale::global(std::locale(""));
+  ss.imbue(std::locale(std::locale()));
   ss >> std::get_time(&t, "%Y-%m-%dT%H:%M");
 
   // Validate fields. Set tm_year to 0 if any of the year,month,day,hour,minute are invalid.
