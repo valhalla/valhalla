@@ -10,7 +10,6 @@
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
-//#include "baldr/reutil.h"
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"
 
@@ -818,68 +817,6 @@ bool is_restricted(const bool type,
     dt_in_range = (dt_in_range && time_in_range);
   } catch (std::exception& e) {}
   return (dow_in_range && dt_in_range);
-}
-
-// get the dow mask from user inputed string.  try to handle most inputs
-uint8_t get_dow_mask(const std::string& dow) {
-
-  std::string str = dow;
-  std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-  str.erase(boost::remove_if(str, boost::is_any_of(":")), str.end());
-
-  if (str == "SUNDAY" || str == "SUN" || str == "SU") {
-    return kSunday;
-
-  } else if (str == "MONDAY" || str == "MON" || str == "MO") {
-    return kMonday;
-
-  } else if (str == "TUESDAY" || str == "TUES" || str == "TUE" || str == "TU") {
-    return kTuesday;
-
-  } else if (str == "WEDNESDAY" || str == "WEDS" || str == "WED" || str == "WE") {
-    return kWednesday;
-
-  } else if (str == "THURSDAY" || str == "THURS" || str == "THUR" || str == "TH") {
-    return kThursday;
-
-  } else if (str == "FRIDAY" || str == "FRI" || str == "FR") {
-    return kFriday;
-
-  } else if (str == "SATURDAY" || str == "SAT" || str == "SA") {
-    return kSaturday;
-  }
-  return kDOWNone;
-}
-
-// get the dow from user inputed string.  try to handle most inputs
-DOW get_dow(const std::string& dow) {
-
-  std::string str = dow;
-  std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-  str.erase(boost::remove_if(str, boost::is_any_of(":")), str.end());
-
-  if (str == "SUNDAY" || str == "SUN" || str == "SU") {
-    return DOW::kSunday;
-
-  } else if (str == "MONDAY" || str == "MON" || str == "MO") {
-    return DOW::kMonday;
-
-  } else if (str == "TUESDAY" || str == "TUES" || str == "TUE" || str == "TU") {
-    return DOW::kTuesday;
-
-  } else if (str == "WEDNESDAY" || str == "WEDS" || str == "WED" || str == "WE") {
-    return DOW::kWednesday;
-
-  } else if (str == "THURSDAY" || str == "THURS" || str == "THUR" || str == "TH") {
-    return DOW::kThursday;
-
-  } else if (str == "FRIDAY" || str == "FRI" || str == "FR") {
-    return DOW::kFriday;
-
-  } else if (str == "SATURDAY" || str == "SAT" || str == "SA") {
-    return DOW::kSaturday;
-  }
-  return DOW::kNone;
 }
 
 } // namespace DateTime

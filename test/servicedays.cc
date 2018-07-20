@@ -1,15 +1,10 @@
 #include "test.h"
 
-#include <algorithm>
-#include <bitset>
 #include <cstdint>
 #include <string>
 
-#include <boost/algorithm/string/split.hpp>
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
-#include "baldr/timedomain.h"
 #include "mjolnir/servicedays.h"
 
 using namespace std;

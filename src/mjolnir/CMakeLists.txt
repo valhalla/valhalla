@@ -52,6 +52,7 @@ set(sources
   restrictionbuilder.cc
   servicedays.cc
   shortcutbuilder.cc
+  timeparsing.cc
   transitbuilder.cc
   util.cc
   validatetransit.cc)

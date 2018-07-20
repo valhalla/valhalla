@@ -185,20 +185,6 @@ bool is_restricted(const bool type,
                    const boost::local_time::time_zone_ptr& time_zone);
 
 /**
- * get the dow mask from user inputed string.  try to handle most inputs
- * @param   dow entered by a user
- * @return dow mask
- */
-uint8_t get_dow_mask(const std::string& dow);
-
-/**
- * get the dow from user inputed string.  try to handle most inputs
- * @param   dow entered by a user
- * @return DOW
- */
-DOW get_dow(const std::string& dow);
-
-/**
  * Convert ISO 8601 time into std::tm.
  * @param iso  ISO time string (YYYY-mm-ddTmi:sec")
  * @return Returns std::tm time structure. If the input string is not valid this method
