@@ -10,10 +10,7 @@ using namespace valhalla::mjolnir;
 namespace valhalla {
 namespace mjolnir {
 
-/**
- * Get a formatted testing date.  Currently, next Tuesday @ 08:00.
- * @return  Returns the formatted date string.
- */
+// Get a formatted testing date.  Currently, next Tuesday @ 08:00.
 std::string get_testing_date_time() {
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   boost::gregorian::date d = DateTime::get_formatted_date(DateTime::iso_date_time(tz));
