@@ -258,7 +258,8 @@ void TryTestIsValid(const std::string& date, bool return_value) {
 
   auto ret = DateTime::is_iso_valid(date);
   if (ret != return_value)
-    throw std::runtime_error("Test is_iso_valid failed: " + date);
+    throw std::runtime_error("Test is_iso_valid failed: " + date +
+                             " locale = " + std::locale("").name());
 }
 
 void TryTestDST(const bool is_depart_at,
