@@ -15,6 +15,7 @@
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/local_time/local_time_io.hpp>
 #include <boost/date_time/local_time/tz_database.hpp>
+
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/constants.h>
 
@@ -49,15 +50,14 @@ boost::gregorian::date get_formatted_date(const std::string& date);
  * @param date            Date
  * @param time_duration   Time
  * @param time_zone       Timezone
- *
+ * @return Returns local date time.
  */
 boost::local_time::local_date_time get_ldt(const boost::gregorian::date& date,
                                            const boost::posix_time::time_duration& time_duration,
                                            const boost::local_time::time_zone_ptr& time_zone);
 
 /**
- * Get the number of days elapsed from the pivot date until
- * inputed date.
+ * Get the number of days elapsed from the pivot date until the input date.
  * @param   date_time date
  * @return  Returns the number of days.
  */
@@ -67,23 +67,13 @@ uint32_t days_from_pivot_date(const boost::gregorian::date& date_time);
  * Get the iso date and time from the current date and time.
  * @param   time_zone        Timezone.
  * @return  Returns the formated date 2015-05-06.
- *
  */
 std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone);
-
-/**
- * Get the seconds from epoch based on timezone.
- * @param   time_zone        Timezone.
- *
- * @return  Returns the seconds from epoch based on timezone.
- */
-uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone);
 
 /**
  * Get the seconds from epoch for a date_time string
  * @param   date_time   date_time.
  * @param   time_zone   Timezone.
- *
  * @return  Returns the seconds from epoch.
  */
 uint64_t seconds_since_epoch(const std::string& date_time,
@@ -102,8 +92,6 @@ int timezone_diff(const bool is_depart_at,
                   const uint64_t seconds,
                   const boost::local_time::time_zone_ptr& origin_tz,
                   const boost::local_time::time_zone_ptr& dest_tz);
-
-std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
@@ -142,7 +130,7 @@ std::string get_duration(const std::string& date_time,
                          const boost::local_time::time_zone_ptr& tz);
 
 /**
- * checks if a date is restricted within a begin and end range.
+ * Checks if a date is restricted within a begin and end range.
  * @param   type          type of restriction kYMD or kNthDow
  * @param   begin_hrs     begin hours
  * @param   begin_mins    begin minutes
@@ -161,7 +149,6 @@ std::string get_duration(const std::string& date_time,
  * @param   time_zone     timezone for the date_time
  * @return true or false
  */
-
 bool is_restricted(const bool type,
                    const uint8_t begin_hrs,
                    const uint8_t begin_mins,
@@ -229,17 +216,14 @@ static uint32_t day_of_week(const std::string& dt) {
 }
 
 /**
- * Get the number of seconds elapsed from midnight.
- * Hours can be greater than 24.
- * @param   date_time in the format of 01:34:15 or 2015-05-06T08:00
+ * Get the number of seconds elapsed from midnight. Hours can be greater than 24
+ * to allow support for transit schedules. See GTFS spec:
+ * https://developers.google.com/transit/gtfs/reference#stop_times_fields
+ * @param   date_time in the format HH:MM:SS or HH:MM or YYYY-MM-DDTHH:MM
+ *          (examples: 01:34:15 or 2015-05-06T08:00)
  * @return  Returns the seconds from midnight.
  */
 static uint32_t seconds_from_midnight(const std::string& date_time) {
-  // date_time is in the format of HH:MM:SS or HH:MM or YYYY-MM-DDTHH:MM
-  // hours can be greater than 24.
-  // please see GTFS spec:
-  // https://developers.google.com/transit/gtfs/reference#stop_times_fields
-
   std::string str;
   std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos) {

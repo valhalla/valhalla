@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bitset>
 #include <fstream>
 #include <iostream>
@@ -6,7 +7,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -62,11 +62,12 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
   boost::gregorian::date d;
   if (date.find('T') != std::string::npos) {
     std::string dt = date;
-    dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
+    dt.erase(std::remove_if(dt.begin(), dt.end(),
+                            [](char x) { return x == '-' || x == ',' || x == ':'; }));
     d = boost::gregorian::date_from_iso_string(dt);
   } else if (date.find('-') != std::string::npos) {
     std::string dt = date;
-    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+    dt.erase(std::remove_if(dt.begin(), dt.end(), [](char x) { return x == '-'; }));
     d = boost::gregorian::from_undelimited_string(dt);
   } else {
     d = boost::gregorian::from_undelimited_string(date);
@@ -143,26 +144,6 @@ std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone) {
   return iso_date_time;
 }
 
-// Get the seconds since epoch based on timezone.
-uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone) {
-
-  if (!time_zone) {
-    return 0;
-  }
-
-  try {
-    boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
-    boost::local_time::local_date_time local_date_time(pt, time_zone);
-
-    const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::time_duration diff = local_date_time.utc_time() - time_epoch;
-
-    return diff.total_seconds();
-
-  } catch (std::exception& e) {}
-  return 0;
-}
-
 // Get the seconds since epoch time is already adjusted based on TZ
 uint64_t seconds_since_epoch(const std::string& date_time,
                              const boost::local_time::time_zone_ptr& time_zone) {
@@ -177,12 +158,13 @@ uint64_t seconds_since_epoch(const std::string& date_time,
     std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
     if (found != std::string::npos) {
       std::string dt = date_time;
-      dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
+      dt.erase(std::remove_if(dt.begin(), dt.end(),
+                              [](char x) { return x == '-' || x == ',' || x == ':'; }));
       date = boost::gregorian::date_from_iso_string(dt);
       td = boost::posix_time::duration_from_string(date_time.substr(found + 1));
     } else if (date_time.find('-') != std::string::npos) { // YYYY-MM-DD
       std::string dt = date_time;
-      dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+      dt.erase(std::remove_if(dt.begin(), dt.end(), [](char x) { return x == '-'; }));
       date = boost::gregorian::date_from_iso_string(dt);
       td = boost::posix_time::duration_from_string("0000");
 
@@ -294,54 +276,6 @@ int timezone_diff(const bool is_depart_at,
       return -1 * abs(td.total_seconds());
     }
   } catch (std::exception& e) {}
-}
-
-std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz) {
-
-  std::string iso_date;
-  if (seconds == 0 || !tz) {
-    return iso_date;
-  }
-
-  try {
-    std::string tz_string;
-    const boost::posix_time::ptime time_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::ptime pt = time_epoch + boost::posix_time::seconds(seconds);
-    boost::local_time::local_date_time date_time(pt, tz);
-    pt = date_time.local_time();
-
-    boost::gregorian::date date = pt.date();
-    std::stringstream ss_time;
-    ss_time << pt.time_of_day();
-    std::string time = ss_time.str();
-
-    std::size_t found = time.find_last_of(':'); // remove seconds.
-    if (found != std::string::npos) {
-      time = time.substr(0, found);
-    }
-
-    ss_time.str("");
-    if (date_time.is_dst()) {
-      ss_time << tz->dst_offset() + tz->base_utc_offset();
-    } else {
-      ss_time << tz->base_utc_offset();
-    }
-
-    // positive tz
-    if (ss_time.str().find('+') == std::string::npos &&
-        ss_time.str().find('-') == std::string::npos) {
-      iso_date = to_iso_extended_string(date) + "T" + time + "+" + ss_time.str();
-    } else {
-      iso_date = to_iso_extended_string(date) + "T" + time + ss_time.str();
-    }
-
-    found = iso_date.find_last_of(':'); // remove seconds.
-    if (found != std::string::npos) {
-      iso_date = iso_date.substr(0, found);
-    }
-
-  } catch (std::exception& e) {}
-  return iso_date;
 }
 
 // Get the date from seconds and timezone.
@@ -541,12 +475,13 @@ std::string get_duration(const std::string& date_time,
   boost::gregorian::date date;
   if (date_time.find('T') != std::string::npos) {
     std::string dt = date_time;
-    dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
+    dt.erase(std::remove_if(dt.begin(), dt.end(),
+                            [](char x) { return x == '-' || x == ',' || x == ':'; }));
     start = boost::posix_time::from_iso_string(dt);
     date = boost::gregorian::date_from_iso_string(dt);
   } else if (date_time.find('-') != std::string::npos) {
     std::string dt = date_time;
-    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+    dt.erase(std::remove_if(dt.begin(), dt.end(), [](char x) { return x == '-'; }));
     start = boost::posix_time::from_iso_string(dt + "T0000");
     date = boost::gregorian::from_undelimited_string(dt);
   } else {
