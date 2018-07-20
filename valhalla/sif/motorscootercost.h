@@ -26,8 +26,11 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
  * Create motor scooter cost method. This is derived from auto costing and
  * uses the same rules except for some different access restrictions
  * and the tendency to avoid hills
+ * @param  costing specified costing type.
+ * @param  options pbf with request options.
  */
-cost_ptr_t CreateMotorScooterCost(const boost::property_tree::ptree& config);
+cost_ptr_t CreateMotorScooterCost(const odin::Costing costing,
+                                  const odin::DirectionsOptions& options);
 
 } // namespace sif
 } // namespace valhalla

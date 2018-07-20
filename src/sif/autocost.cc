@@ -702,8 +702,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateAutoCost(const odin::DirectionsOptions& options) {
-  return std::make_shared<AutoCost>(options);
+cost_ptr_t CreateAutoCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<AutoCost>(costing, options);
 }
 
 /**
@@ -765,8 +765,9 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateAutoShorterCost(const odin::DirectionsOptions& options) {
-  return std::make_shared<AutoShorterCost>(options);
+cost_ptr_t CreateAutoShorterCost(const odin::Costing costing,
+                                 const odin::DirectionsOptions& options) {
+  return std::make_shared<AutoShorterCost>(costing, options);
 }
 
 /**
@@ -969,8 +970,8 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateBusCost(const odin::DirectionsOptions& options) {
-  return std::make_shared<BusCost>(options);
+cost_ptr_t CreateBusCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<BusCost>(costing, options);
 }
 
 /**
@@ -1189,8 +1190,8 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateHOVCost(const odin::DirectionsOptions& options) {
-  return std::make_shared<HOVCost>(options);
+cost_ptr_t CreateHOVCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<HOVCost>(costing, options);
 }
 
 /**
@@ -1271,8 +1272,9 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
 }
 
-cost_ptr_t CreateAutoDataFixCost(const odin::DirectionsOptions& options) {
-  return std::make_shared<AutoDataFix>(options);
+cost_ptr_t CreateAutoDataFixCost(const odin::Costing costing,
+                                 const odin::DirectionsOptions& options) {
+  return std::make_shared<AutoDataFix>(costing, options);
 }
 
 } // namespace sif

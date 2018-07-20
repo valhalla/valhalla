@@ -762,8 +762,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTruckCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<TruckCost>(config);
+cost_ptr_t CreateTruckCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<TruckCost>(costing, options);
 }
 
 } // namespace sif

@@ -827,8 +827,8 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<PedestrianCost>(config);
+cost_ptr_t CreatePedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<PedestrianCost>(costing, options);
 }
 
 } // namespace sif

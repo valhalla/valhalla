@@ -726,8 +726,8 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorcycleCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<MotorcycleCost>(config);
+cost_ptr_t CreateMotorcycleCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<MotorcycleCost>(costing, options);
 }
 
 } // namespace sif

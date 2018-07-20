@@ -1063,8 +1063,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<BicycleCost>(config);
+cost_ptr_t CreateBicycleCost(const odin::Costing costing, const odin::DirectionsOptions& options) {
+  return std::make_shared<BicycleCost>(costing, options);
 }
 
 } // namespace sif
