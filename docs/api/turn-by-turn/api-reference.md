@@ -226,6 +226,7 @@ A multimodal request with a filter for certain Onestop IDs:
 | `pt-PT` | `pt` | Portuguese (Portugal) |
 | `ru-RU` | `ru` | Russian (Russia) |
 | `sl-SI` | `sl` | Slovenian (Slovenia) |
+| `sv-SE` | `sv` | Swedish (Sweden) |
 
 #### Other request options
 
