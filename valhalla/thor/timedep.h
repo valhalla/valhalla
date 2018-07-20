@@ -68,7 +68,7 @@ protected:
                      const uint32_t pred_idx,
                      const bool from_transition,
                      uint64_t localtime,
-                     uint32_t seconds_of_week,
+                     int32_t seconds_of_week,
                      const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
@@ -159,7 +159,7 @@ protected:
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
                      uint64_t localtime,
-                     uint32_t seconds_of_week,
+                     int32_t seconds_of_week,
                      const odin::Location& dest,
                      std::pair<int32_t, float>& best_path);
 

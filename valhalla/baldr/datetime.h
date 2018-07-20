@@ -16,6 +16,7 @@
 #include <boost/date_time/local_time/local_time_io.hpp>
 #include <boost/date_time/local_time/tz_database.hpp>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/constants.h>
 
 namespace valhalla {
 namespace baldr {
@@ -159,18 +160,18 @@ uint64_t seconds_since_epoch(const std::string& date_time,
                              const boost::local_time::time_zone_ptr& time_zone);
 
 /**
- * Get the difference between two timezone using the seconds from epoch
- * (taking into account the timezones and dst) and add the difference to the seconds
+ * Get the difference between two timezones using the current time (seconds from epoch
+ * so that DST can be take into account).
  * @param   is_depart_at  is this a depart at or arrive by
- * @param   seconds       seconds since epoch for
+ * @param   seconds       seconds since epoch
  * @param   origin_tz     timezone for origin
  * @param   dest_tz       timezone for dest
- *
+ * @return Returns the seconds difference between the 2 timezones.
  */
-void timezone_diff(const bool is_depart_at,
-                   uint64_t& seconds,
-                   const boost::local_time::time_zone_ptr& origin_tz,
-                   const boost::local_time::time_zone_ptr& dest_tz);
+int timezone_diff(const bool is_depart_at,
+                  const uint64_t seconds,
+                  const boost::local_time::time_zone_ptr& origin_tz,
+                  const boost::local_time::time_zone_ptr& dest_tz);
 
 std::string seconds_to_date(const uint64_t seconds, const boost::local_time::time_zone_ptr& tz);
 
@@ -198,14 +199,6 @@ void seconds_to_date(const bool is_depart_at,
  * @return  Returns the dow mask.
  */
 uint32_t day_of_week_mask(const std::string& date_time);
-
-/**
- * Get the number of seconds elapsed from midnight.
- * Hours can be greater than 24.
- * @param   date_time in the format of 01:34:15 or 2015-05-06T08:00
- * @return  Returns the seconds from midnight.
- */
-uint32_t seconds_from_midnight(const std::string& date_time);
 
 /**
  * Add x seconds to a date_time and return a ISO date_time string.
@@ -326,6 +319,53 @@ static uint32_t day_of_week(const std::string& dt) {
   // Use std::mktime to fill in day of week
   std::mktime(&t);
   return t.tm_wday;
+}
+
+/**
+ * Get the number of seconds elapsed from midnight.
+ * Hours can be greater than 24.
+ * @param   date_time in the format of 01:34:15 or 2015-05-06T08:00
+ * @return  Returns the seconds from midnight.
+ */
+static uint32_t seconds_from_midnight(const std::string& date_time) {
+  // date_time is in the format of HH:MM:SS or HH:MM or YYYY-MM-DDTHH:MM
+  // hours can be greater than 24.
+  // please see GTFS spec:
+  // https://developers.google.com/transit/gtfs/reference#stop_times_fields
+
+  std::string str;
+  std::size_t found = date_time.find('T'); // YYYY-MM-DDTHH:MM
+  if (found != std::string::npos) {
+    str = date_time.substr(found + 1);
+  } else {
+    str = date_time;
+  }
+
+  // Split the string by the delimiter ':'
+  int secs = 0;
+  int multiplier = static_cast<int>(midgard::kSecondsPerHour);
+  std::string item;
+  std::stringstream ss(str);
+  while (std::getline(ss, item, ':')) {
+    secs += std::stoi(item) * multiplier;
+    multiplier = (multiplier == midgard::kSecondsPerHour) ? midgard::kSecondsPerMinute : 1;
+  }
+  return secs;
+}
+
+/**
+ * Returns seconds of week within the range [0, kSecondsPerWeek]
+ * @param  secs  Seconds within the week.
+ * @return Returns the seconds within the week within the valid range.
+ */
+static int32_t normalize_seconds_of_week(const int32_t secs) {
+  if (secs < 0) {
+    return secs + midgard::kSecondsPerWeek;
+  } else if (secs > midgard::kSecondsPerWeek) {
+    return secs - midgard::kSecondsPerWeek;
+  } else {
+    return secs;
+  }
 }
 
 } // namespace DateTime
