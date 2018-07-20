@@ -121,8 +121,9 @@ constexpr float kSurfaceFactor[] = {
 class MotorcycleCost : public DynamicCost {
 public:
   /**
-   * Construct motorcycle costing. Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * Construct motorcycle costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
   MotorcycleCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 

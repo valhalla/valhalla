@@ -151,9 +151,9 @@ constexpr float kSacScaleCostFactor[] = {
 class PedestrianCost : public DynamicCost {
 public:
   /**
-   * Constructor. Configuration / options for pedestrian costing are provided
-   * via a property tree (JSON).
-   * @param  pt  Property tree with configuration/options.
+   * Construct pedestrian costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
   PedestrianCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 

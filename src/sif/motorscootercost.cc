@@ -157,8 +157,9 @@ constexpr float kSurfaceSpeedFactors[] = {1.0f, 1.0f, 0.9f, 0.6f, 0.1f, 0.0f, 0.
 class MotorScooterCost : public DynamicCost {
 public:
   /**
-   * Construct motor_scooter costing. Pass in configuration using property tree.
-   * @param  config  Property tree with configuration/options.
+   * Construct motor scooter costing. Pass in cost type and options using protocol buffer(pbf).
+   * @param  costing specified costing type.
+   * @param  options pbf with request options.
    */
   MotorScooterCost(const odin::Costing costing, const odin::DirectionsOptions& options);
 

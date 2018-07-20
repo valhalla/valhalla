@@ -212,7 +212,7 @@ std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
   }
 
   // Set travel mode and construct costing
-  if (costing == odin::Costing::multimodal || costing_str == odin::Costing::transit) {
+  if (costing == odin::Costing::multimodal || costing == odin::Costing::transit) {
     // For multi-modal we construct costing for all modes and set the
     // initial mode to pedestrian. (TODO - allow other initial modes)
     mode_costing[0] = get_costing(odin::Costing::auto_, request.options);

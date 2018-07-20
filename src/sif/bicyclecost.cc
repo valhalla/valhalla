@@ -218,7 +218,7 @@ constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadS
 class BicycleCost : public DynamicCost {
 public:
   /**
-   * Construct auto costing. Pass in options using protocol buffer(pbf).
+   * Construct bicycle costing. Pass in cost type and options using protocol buffer(pbf).
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
