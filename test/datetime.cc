@@ -580,7 +580,7 @@ void TestIsValid() {
   TryTestIsValid("2015-05-06T-3:-9", false);
 
   // TODO: This test fails on OSX - says it is a valid ISO time?
-//  TryTestIsValid("2015-05-06T01:0A", false);
+  //  TryTestIsValid("2015-05-06T01:0A", false);
 
   TryTestIsValid("2015-05-06T01", false);
   TryTestIsValid("01:00", false);
