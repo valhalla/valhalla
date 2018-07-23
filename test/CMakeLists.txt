@@ -11,7 +11,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder predictive_traffic
-    idtable matrix names node_search refs search signinfo timedep_paths trivial_paths uniquenames utrecht)
+    idtable matrix names node_search refs search servicedays signinfo timedep_paths timeparsing trivial_paths uniquenames utrecht)
 endif()
 
 if(ENABLE_SERVICES)

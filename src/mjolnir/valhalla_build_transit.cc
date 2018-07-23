@@ -33,6 +33,7 @@
 
 #include "mjolnir/admin.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/servicedays.h"
 #include "mjolnir/validatetransit.h"
 
 #include <valhalla/proto/transit.pb.h>
@@ -1309,7 +1310,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
               boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_start_date()));
           boost::gregorian::date end_date(
               boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
-          uint64_t days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
+          uint64_t days = get_service_days(start_date, end_date, tile_date, dow_mask);
 
           // if this is a service addition for one day, delete the dow_mask.
           if (sp.service_start_date() == sp.service_end_date()) {
@@ -1334,13 +1335,13 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           // if subtractions are between start and end date then turn off bit.
           for (const auto& x : sp.service_except_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            days = DateTime::remove_service_day(days, end_date, tile_date, d);
+            days = remove_service_day(days, end_date, tile_date, d);
           }
 
           // if additions are between start and end date then turn on bit.
           for (const auto& x : sp.service_added_dates()) {
             boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
-            days = DateTime::add_service_day(days, end_date, tile_date, d);
+            days = add_service_day(days, end_date, tile_date, d);
           }
 
           TransitSchedule sched(days, dow_mask, end_day);
