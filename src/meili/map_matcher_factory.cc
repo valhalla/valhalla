@@ -12,7 +12,6 @@
 #include "meili/map_matcher.h"
 
 #include "meili/map_matcher_factory.h"
-#include "meili/universal_cost.h"
 
 namespace {
 
@@ -33,7 +32,6 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root)
                       local_tile_size() / root.get<size_t>("meili.grid.size")),
       max_grid_cache_size_(root.get<float>("meili.grid.cache_size")) {
   cost_factory_.RegisterStandardCostingModels();
-  cost_factory_.Register("multimodal", CreateUniversalCost);
 }
 
 MapMatcherFactory::~MapMatcherFactory() {
