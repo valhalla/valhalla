@@ -139,6 +139,14 @@ public:
   }
 
   /**
+   * Convenience method to get the lat,lon of a node.
+   * @param  nodeid  GraphId of the node.
+   */
+  midgard::PointLL get_node_ll(const GraphId& nodeid) const {
+    return node(nodeid)->latlng(header()->base_ll());
+  }
+
+  /**
    * Get a pointer to a edge.
    * @param  edge  GraphId of the directed edge.
    * @return  Returns a pointer to the edge.
