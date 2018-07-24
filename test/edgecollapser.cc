@@ -5,6 +5,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
 #include "baldr/directededge.h"
 #include "baldr/graphreader.h"
 #include "baldr/merge.h"
