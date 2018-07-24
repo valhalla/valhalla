@@ -97,7 +97,8 @@ public:
   }
 
 private:
-  explicit Actor(const char* config) : actor(make_conf(config)), env_(nullptr), wrapper_(nullptr) {
+  explicit Actor(const char* config)
+      : actor(make_conf(config), true), env_(nullptr), wrapper_(nullptr) {
   }
   ~Actor() {
     napi_delete_reference(env_, wrapper_);
@@ -178,7 +179,7 @@ private:
     checkNapiStatus(status, env, "Failed to get arg string length");
 
     if (request_str_size > 1024 * 1024) {
-      napi_throw_error(env, NULL, "Too large JSON config");
+      napi_throw_error(env, NULL, "The request exceeds the maximum size");
     }
 
     char request_string[++request_str_size];
