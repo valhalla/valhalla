@@ -76,7 +76,7 @@ edge_t opposing(GraphReader& reader, const GraphTile* tile, const DirectedEdge* 
 
   // Check for invalid opposing index
   if (edge->opp_index() == kMaxEdgesPerNode) {
-    PointLL ll = t->node(edge->endnode())->latlng();
+    PointLL ll = t->get_node_ll(edge->endnode());
     LOG_ERROR("Invalid edge opp index = " + std::to_string(edge->opp_index()) +
               " LL = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
     return {id, nullptr};

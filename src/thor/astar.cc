@@ -221,7 +221,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       if (t2 == nullptr) {
         continue;
       }
-      sortcost += astarheuristic_.Get(t2->node(directededge->endnode())->latlng(), dist);
+      sortcost += astarheuristic_.Get(t2->get_node_ll(directededge->endnode()), dist);
     }
 
     // Add to the adjacency list and edge labels.
@@ -386,7 +386,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     nodeinfo = endtile->node(directededge->endnode());
     Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) *
                 (1.0f - edge.percent_along());
-    float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
+    float dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route

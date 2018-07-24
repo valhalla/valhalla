@@ -76,9 +76,9 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
       node = node_info->json(tile);
       node->emplace("node_id", n.json());
     } else {
+      PointLL node_ll = tile->get_node_ll(n);
       node = json::map({
-          {"lon", json::fp_t{node_info->latlng().first, 6}},
-          {"lat", json::fp_t{node_info->latlng().second, 6}},
+          {"lon", json::fp_t{node_ll.first, 6}}, {"lat", json::fp_t{node_ll.second, 6}},
           // TODO: osm_id
       });
     }

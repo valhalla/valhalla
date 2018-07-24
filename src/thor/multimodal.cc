@@ -501,8 +501,7 @@ MultiModalPathAlgorithm::GetBestPath(odin::Location& origin,
         if (endtile == nullptr) {
           continue;
         }
-        const NodeInfo* endnode = endtile->node(directededge->endnode());
-        dist = astarheuristic_.GetDistance(endnode->latlng());
+        dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
         sortcost += astarheuristic_.Get(dist);
       }
 
@@ -555,7 +554,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     nodeinfo = endtile->node(directededge->endnode());
     Cost cost =
         costing->EdgeCost(directededge, tile->GetSpeed(directededge)) * (1.0f - edge.percent_along());
-    float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
+    float dist = astarheuristic_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route

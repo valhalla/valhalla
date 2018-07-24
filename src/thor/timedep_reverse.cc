@@ -217,7 +217,7 @@ void TimeDepReverse::ExpandReverse(GraphReader& graphreader,
       if (t2 == nullptr) {
         continue;
       }
-      sortcost += astarheuristic_.Get(t2->node(directededge->endnode())->latlng(), dist);
+      sortcost += astarheuristic_.Get(t2->get_node_ll(directededge->endnode()), dist);
     }
 
     // Add edge label, add to the adjacency list and set edge status
@@ -416,7 +416,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     Cost cost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge)) * edge.percent_along();
-    float dist = astarheuristic_.GetDistance(tile->node(opp_dir_edge->endnode())->latlng());
+    float dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route

@@ -207,7 +207,7 @@ void Isochrone::ExpandForward(GraphReader& graphreader,
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
     float secs0 = (idx == kInvalidLabel) ? 0 : edgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -334,7 +334,7 @@ void Isochrone::ExpandReverse(GraphReader& graphreader,
   if (!from_transition) {
     uint32_t idx = pred.predecessor();
     float secs0 = (idx == kInvalidLabel) ? 0 : bdedgelabels_[idx].cost().secs;
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
   }
   if (!costing_->Allowed(nodeinfo)) {
     return;
@@ -544,7 +544,7 @@ std::shared_ptr<const GriddedData<PointLL>> Isochrone::ComputeMultiModal(
     uint32_t idx = pred.predecessor();
     float secs0 = (idx == kInvalidLabel) ? 0 : mmedgelabels_[idx].cost().secs;
     const NodeInfo* nodeinfo = tile->node(node);
-    UpdateIsoTile(pred, graphreader, nodeinfo->latlng(), secs0);
+    UpdateIsoTile(pred, graphreader, tile->get_node_ll(node), secs0);
     n++;
 
     // Return after the time interval has been met
@@ -835,11 +835,11 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   if (edge->length() < shape_interval_) {
     // Mark the cell at the begin node
     const auto* de = t2->directededge(opp);
-    const auto* node = tile->node(de->endnode());
-    isotile_->SetIfLessThan(node->latlng(), secs0 * kMinPerSec);
+    PointLL node_ll = tile->get_node_ll(de->endnode());
+    isotile_->SetIfLessThan(node_ll, secs0 * kMinPerSec);
 
     // Mark the cell at the end node (and any intervening cells)
-    auto tiles = isotile_->Intersect(std::list<PointLL>{node->latlng(), ll});
+    auto tiles = isotile_->Intersect(std::list<PointLL>{node_ll, ll});
     for (auto t : tiles) {
       isotile_->SetIfLessThan(t.first, secs1 * kMinPerSec);
     }
