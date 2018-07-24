@@ -1164,8 +1164,7 @@ enum class Properties {
 };
 
 bool isPropertyAbsent(Properties current_property) {
-  return current_property == Properties::Cycle_Lane ||
-         current_property == Properties::Toll ||
+  return current_property == Properties::Toll ||
          current_property == Properties::Bridge ||
          current_property == Properties::Tunnel;
 }
