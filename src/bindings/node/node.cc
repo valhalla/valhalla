@@ -26,7 +26,7 @@ boost::property_tree::ptree make_conf(const char* config) {
   return json_to_pt(config);
 }
 
-// check if napi_status is nap_ok, throw error if not
+// check if napi_status is napi_ok, throw error if not
 void checkNapiStatus(napi_status status, napi_env env, const char* error_message) {
   if (status != napi_ok) {
     napi_throw_error(env, NULL, error_message);
