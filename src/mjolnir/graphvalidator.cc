@@ -253,18 +253,18 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                std::to_string(nodeinfo->stop_index()) + " has " +
                std::to_string(nodeinfo->edge_count())); */
     } else if (startnode.level() != transit_level) {
+      PointLL ll = end_tile->get_node_ll(endnode);
       if (edge.is_shortcut()) {
         LOG_ERROR(
             (boost::format(
                  "No opposing shortcut edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5%") %
-             nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length() % startnode %
-             edge.endnode())
+             ll.lat() % ll.lng() % edge.length() % startnode % edge.endnode())
                 .str());
       } else {
         LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% "
                                  "EndNode %5% WayID %6% EdgeInfoOffset %7%") %
-                   nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length() % startnode %
-                   edge.endnode() % wayid % edge.edgeinfo_offset())
+                   ll.lat() % ll.lng() % edge.length() % startnode % edge.endnode() % wayid %
+                   edge.edgeinfo_offset())
                       .str());
       }
 

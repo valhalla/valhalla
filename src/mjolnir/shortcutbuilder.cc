@@ -163,8 +163,9 @@ GraphId GetOpposingEdge(const GraphId& node,
       return edgeid;
     }
   }
-  LOG_ERROR("Opposing directed edge not found at LL= " + std::to_string(nodeinfo->latlng().lat()) +
-            "," + std::to_string(nodeinfo->latlng().lng()));
+  PointLL ll = nodeinfo->latlng(tile->header()->base_ll());
+  LOG_ERROR("Opposing directed edge not found at LL= " + std::to_string(ll.lat()) + "," +
+            std::to_string(ll.lng()));
   return GraphId(0, 0, 0);
 }
 

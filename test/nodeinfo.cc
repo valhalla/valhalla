@@ -14,7 +14,7 @@ namespace {
 
 class test_node : public NodeInfo {
 public:
-  test_node(float a, float b) {
+  test_node(const PointLL& base_ll, float a, float b) {
     latlng_ = {a, b};
   }
 
@@ -28,21 +28,24 @@ void test_sizeof() {
                              " bytes but is " + std::to_string(sizeof(NodeInfo)));
 }
 void test_ll() {
+  PointLL base_ll(-70.0f, 40.0f);
   NodeInfo n;
-  if (n.latlng().first != 0 || n.latlng().second != 0)
-    throw std::runtime_error("NodeInfo ll should be 0,0");
-  test_node t(3, -2);
-  if (t.latlng().first != 3 || t.latlng().second != -2)
-    throw std::runtime_error("NodeInfo ll should be 3,-2");
-  if (!valhalla::midgard::equal<float>(static_cast<Point2>(t.latlng()).DistanceSquared({8, 8}), 125))
-    throw std::runtime_error("Distance squared is wrong");
-  if (!static_cast<Point2>(t.latlng()).MidPoint({8, 8}).ApproximatelyEqual({5.5f, 3.f}))
-    throw std::runtime_error("Mid point is wrong");
-  if (!valhalla::midgard::equal<float>(Point2(8, 8).DistanceSquared(static_cast<Point2>(t.latlng())),
-                                       125))
-    throw std::runtime_error("Distance squared is wrong");
-  if (!Point2(8, 8).MidPoint(static_cast<Point2>(t.latlng())).ApproximatelyEqual({5.5f, 3.f}))
-    throw std::runtime_error("Mid point is wrong");
+  if (n.latlng(base_ll).first != -70.0f || n.latlng(base_ll).second != 40.0f)
+    throw std::runtime_error("NodeInfo ll should be -70,40");
+
+  test_node t(500000, 250000);
+  if (t.latlng(base_ll).first != -69.5f || t.latlng(base_ll).second != 30.25f)
+    throw std::runtime_error("NodeInfo ll should be -69.5, 30.25");
+  /**
+   if (!valhalla::midgard::equal<float>(static_cast<Point2>(t.latlng()).DistanceSquared({8, 8}), 125))
+     throw std::runtime_error("Distance squared is wrong");
+   if (!static_cast<Point2>(t.latlng()).MidPoint({8, 8}).ApproximatelyEqual({5.5f, 3.f}))
+     throw std::runtime_error("Mid point is wrong");
+   if (!valhalla::midgard::equal<float>(Point2(8, 8).DistanceSquared(static_cast<Point2>(t.latlng())),
+                                        125))
+     throw std::runtime_error("Distance squared is wrong");
+   if (!Point2(8, 8).MidPoint(static_cast<Point2>(t.latlng())).ApproximatelyEqual({5.5f, 3.f}))
+     throw std::runtime_error("Mid point is wrong"); **/
 }
 
 void TestWriteRead() {

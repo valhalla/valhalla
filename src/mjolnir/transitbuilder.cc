@@ -419,11 +419,12 @@ void FindOSMConnection(const PointLL& stop_ll,
     }
 
     // Use distance approximator for all distance checks
+    PointLL base_ll = newtile->header()->base_ll();
     DistanceApproximator approximator(stop_ll);
     for (uint32_t i = 0; i < newtile->header()->nodecount(); i++) {
       const NodeInfo* node = newtile->node(i);
       // Check if within radius
-      if (approximator.DistanceSquared(node->latlng()) < mr2) {
+      if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
         for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
           const DirectedEdge* directededge = newtile->directededge(node->edge_index() + j);
           auto edgeinfo = newtile->edgeinfo(directededge->edgeinfo_offset());
@@ -468,7 +469,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
 
-  const PointLL& stop_ll = transit_node->latlng();
+  const PointLL& stop_ll = transit_node->latlng(tile->header()->base_ll());
   uint64_t wayid = transit_node->connecting_wayid();
 
   float mindist = 10000000.0f;

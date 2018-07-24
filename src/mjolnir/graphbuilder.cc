@@ -442,10 +442,14 @@ void BuildTileSet(const std::string& ways_file,
       graphtile.AddTileCreationDate(tile_creation_date);
       graphtile.header_builder().set_dataset_id(osmdata.max_changeset_id_);
 
+      // Set the base lat,lon of the tile
+      uint32_t id = tile_id.tileid();
+      PointLL base_ll = tiling.Base(id);
+      graphtile.header_builder().set_base_ll(base_ll);
+
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
       bool tile_within_one_admin = false;
-      uint32_t id = tile_id.tileid();
       std::unordered_map<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       if (admin_db_handle) {
@@ -956,7 +960,7 @@ void BuildTileSet(const std::string& ways_file,
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        graphtile.nodes().emplace_back(node_ll, bestclass, node.access_mask(), node.type(),
+        graphtile.nodes().emplace_back(base_ll, node_ll, bestclass, node.access_mask(), node.type(),
                                        node.traffic_signal());
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() -
                                                 bundle.node_edges.size());

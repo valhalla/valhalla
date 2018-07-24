@@ -538,11 +538,12 @@ uint32_t GetDensity(GraphReader& reader,
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
     }
+    PointLL base_ll = newtile->header()->base_ll();
     const auto start_node = newtile->node(0);
     const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
       // Check if within radius
-      if (approximator.DistanceSquared(node->latlng()) < mr2) {
+      if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
@@ -1066,12 +1067,14 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Second pass - add admin information and edge transition information.
+    PointLL base_ll = tilebuilder.header()->base_ll();
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       // Get relative road density and local density
-      uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), stats, tiles, local_level);
+      uint32_t density =
+          GetDensity(reader, lock, nodeinfo.latlng(base_ll), stats, tiles, local_level);
       nodeinfo.set_density(density);
 
       uint32_t admin_index = nodeinfo.admin_index();
