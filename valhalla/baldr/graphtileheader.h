@@ -6,6 +6,7 @@
 #include <string>
 
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace baldr {
@@ -51,6 +52,22 @@ public:
    * @param  graphid  GraphId (tileid and level) of this tile.
    */
   void set_graphid(const baldr::GraphId& graphid);
+
+  /**
+   * Get the base (SW corner) of the tile.
+   * @return Returns the base lat,lon of the tile (degrees).
+   */
+  const midgard::PointLL& base_ll() const {
+    return base_ll_;
+  }
+
+  /**
+   * Sets the base (SW corner) lat,lon of the tile.
+   * @param ll  Base lat,lon of the tile.
+   */
+  void set_base_ll(const midgard::PointLL& ll) {
+    base_ll_ = ll;
+  }
 
   /**
    * Gets the date when this tile was created. Days since pivot date.
@@ -540,6 +557,9 @@ public:
 protected:
   // GraphId (tileid and level) of this tile
   GraphId graphid_;
+
+  // Base lat, lon of the tile
+  midgard::PointLL base_ll_;
 
   // baldr version.
   char version_[kMaxVersionSize];
