@@ -106,7 +106,6 @@ const midgard::Tiles<midgard::PointLL>& TileHierarchy::get_tiling(const uint8_t 
     return tl->second.tiles;
   }
   throw std::runtime_error("Invalid level Id for TileHierarchy::get_tiling");
-
 }
 } // namespace baldr
 } // namespace valhalla

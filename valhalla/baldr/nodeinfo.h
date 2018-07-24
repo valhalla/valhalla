@@ -21,6 +21,10 @@ constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
 constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on
                                                // local level
 
+// Lat,lon precision (TODO - evaluate using 7 digits precision - which may
+// mean we need double precision)
+constexpr float kDegreesPrecision = 0.000001f;
+
 // Heading shrink factor to reduce max heading of 359 to 255
 constexpr float kHeadingShrinkFactor = (255.f / 359.f);
 
@@ -41,13 +45,15 @@ public:
 
   /**
    * Constructor with arguments
-   * @param  ll  Lat,lng position of the node.
+   * @param  tile_corner    Lower left (SW) corner of the tile that contains the node.
+   * @param  ll             Lat,lng position of the node.
    * @param  rc             Best road class / importance of outbound edges.
    * @param  access         Access mask at this node.
    * @param  type           The type of node.
    * @param  traffic_signal Has a traffic signal at this node?
    */
-  NodeInfo(const std::pair<float, float>& ll,
+  NodeInfo(const PointLL& tile_corner,
+           const std::pair<float, float>& ll,
            const baldr::RoadClass rc,
            const uint32_t access,
            const baldr::NodeType type,
@@ -55,17 +61,20 @@ public:
 
   /**
    * Get the latitude, longitude of the node.
+   * @param tile_corner Lower left (SW) corner of the tile.
    * @return  Returns the latitude and longitude of the node.
    */
-  const PointLL& latlng() const {
-    return static_cast<const PointLL&>(latlng_);
+  PointLL latlng(const PointLL& tile_corner) const {
+    return PointLL(tile_corner.lng() + (lon_offset_ * kDegreesPrecision),
+                   tile_corner.lat() + (lat_offset_ * kDegreesPrecision));
   }
 
   /**
    * Sets the latitude and longitude.
+   * @param  tile_corner Lower left (SW) corner of the tile.
    * @param  ll  Lat,lng position of the node.
    */
-  void set_latlng(const std::pair<float, float>& ll);
+  void set_latlng(const PointLL& tile_corner, const std::pair<float, float>& ll);
 
   /**
    * Get the index of the first outbound edge from this node. Since
@@ -330,8 +339,10 @@ public:
   json::MapPtr json(const GraphTile* tile) const;
 
 protected:
-  // Latitude, longitude position of the node.
-  std::pair<float, float> latlng_;
+  // TODO - evaluate how many bits are required based on precision and maximum tile size
+  uint32_t lat_offset_ : 24;
+  uint64_t lon_offset_ : 24;
+  uint64_t spare_ : 16;
 
   // Node attributes and admin information
   uint64_t edge_index_ : 21;      // Index within the node's tile of its
