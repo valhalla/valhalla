@@ -1,5 +1,10 @@
 ## Release Date: UNRELEASED Valhalla 3.0
 
+## Release Date: 2018-07-24 Valhalla 3.0.0-rc.2
+* **Node Bindings**
+   * FIXED: turn on the autocleanup functionality for the actor object.
+   [#1439](https://github.com/valhalla/valhalla/pull/1439)
+
 ## Release Date: 2018-07-16 Valhalla 3.0.0-rc.1
 * **Enhancement**
    * ADDED: exposed the rest of the actions to the node bindings and added tests. [#1415](https://github.com/valhalla/valhalla/pull/1415)
