@@ -3,6 +3,7 @@
 #include "baldr/accessrestriction.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "worker.h"
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -773,10 +774,10 @@ namespace {
 
 TransitCost* make_transitcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new TransitCost(costing_ptree);
+  ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new TransitCost(valhalla::odin::Costing::transit, request.options);
 }
 
 std::uniform_real_distribution<float>*
