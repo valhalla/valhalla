@@ -28,7 +28,12 @@ namespace {
 // copy pasted from AutoCost as it stands when this test was written.
 class SimpleCost final : public DynamicCost {
 public:
-  SimpleCost(const boost::property_tree::ptree& pt) : DynamicCost(pt, TravelMode::kDrive) {
+  /**
+   * Constructor.
+   * @param  options Request options in a pbf
+   */
+  SimpleCost(const valhalla::odin::DirectionsOptions& options)
+      : DynamicCost(options, TravelMode::kDrive) {
   }
 
   ~SimpleCost() {
@@ -110,8 +115,8 @@ public:
   }
 };
 
-cost_ptr_t CreateSimpleCost(const boost::property_tree::ptree& pt) {
-  return std::make_shared<SimpleCost>(pt);
+cost_ptr_t CreateSimpleCost(const odin::DirectionsOptions& options) {
+  return std::make_shared<SimpleCost>(options);
 }
 
 boost::property_tree::ptree json_to_pt(const std::string& json) {
@@ -264,11 +269,9 @@ void test_matrix() {
   loki_worker.matrix(request);
   adjust_scores(request);
 
-  auto request_pt = json_to_pt(test_request);
-
   GraphReader reader(config.get_child("mjolnir"));
 
-  cost_ptr_t costing = CreateSimpleCost(request_pt);
+  cost_ptr_t costing = CreateSimpleCost(request.options);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
@@ -320,11 +323,10 @@ void test_matrix_osrm() {
 
   loki_worker.matrix(request);
   adjust_scores(request);
-  auto request_pt = json_to_pt(test_request_osrm);
 
   GraphReader reader(config.get_child("mjolnir"));
 
-  cost_ptr_t costing = CreateSimpleCost(request_pt);
+  cost_ptr_t costing = CreateSimpleCost(request.options);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
