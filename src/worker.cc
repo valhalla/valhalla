@@ -493,6 +493,11 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   } else {
     parse_locations(doc, options.mutable_shape(), "shape", 134, false);
+
+    // if no shape then try 'trace'
+    if (options.shape().empty()) {
+      parse_locations(doc, options.mutable_trace(), "trace", 135, false);
+    }
   }
 
   // TODO: remove this?
