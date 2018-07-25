@@ -106,7 +106,7 @@ void LogResults(const std::string& matrixtype,
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
   bpo::options_description options(
-      "timedistance_test " VERSION "\n"
+      "timedistance_test " VALHALLA_VERSION "\n"
       "\n"
       " Usage: timedistance_test [options]\n"
       "\n"
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
-    std::cout << "timedistance_test " << VERSION << "\n";
+    std::cout << "timedistance_test " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 

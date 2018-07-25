@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "config.h"
+#include "worker.h"
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -21,7 +22,6 @@
 #include "sif/costfactory.h"
 #include "thor/pathinfo.h"
 #include "thor/route_matcher.h"
-#include "worker.h"
 
 using namespace valhalla::sif;
 using namespace valhalla::meili;
@@ -151,7 +151,7 @@ void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_p
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   bpo::options_description options(
-      "valhalla_path_comparison " VERSION "\n"
+      "valhalla_path_comparison " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_path_comparison [options]\n"
       "\n"
@@ -198,7 +198,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_path_comparison " << VERSION << "\n";
+    std::cout << "valhalla_path_comparison " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 
