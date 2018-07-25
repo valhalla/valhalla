@@ -269,7 +269,7 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
 void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
   // Create a matcher
   try {
-    matcher.reset(matcher_factory.Create(request.document));
+    matcher.reset(matcher_factory.Create(request.options));
   } catch (const std::invalid_argument& ex) { throw std::runtime_error(std::string(ex.what())); }
 
   // we require locations

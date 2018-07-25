@@ -69,7 +69,7 @@ public:
    * @param  request request with data {"trace":[{"lat":0,"lon":0,time:0},...]}
    * @return the list of measurements from the json trace
    */
-  static std::vector<Measurement> parse_measurements(const boost::property_tree::ptree& request,
+  static std::vector<Measurement> parse_measurements(const odin::DirectionsOptions& options,
                                                      float default_accuracy,
                                                      float default_search_radius);
 
