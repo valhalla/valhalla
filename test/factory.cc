@@ -4,6 +4,7 @@
 #include "sif/bicyclecost.h"
 #include "sif/costfactory.h"
 #include "sif/pedestriancost.h"
+#include <valhalla/proto/directions_options.pb.h>
 
 using namespace std;
 using namespace valhalla::sif;
@@ -11,12 +12,12 @@ using namespace valhalla::sif;
 namespace {
 void test_register() {
   CostFactory<DynamicCost> factory;
-  factory.Register("auto", CreateAutoCost);
-  factory.Register("auto_shorter", CreateAutoShorterCost);
-  factory.Register("bicycle", CreateBicycleCost);
-  factory.Register("pedestrian", CreatePedestrianCost);
-  // TODO: then ask for some
-  auto car = factory.Create("auto", boost::property_tree::ptree{});
+  factory.Register(valhalla::odin::Costing::auto_, CreateAutoCost);
+  factory.Register(valhalla::odin::Costing::auto_shorter, CreateAutoShorterCost);
+  factory.Register(valhalla::odin::Costing::bicycle, CreateBicycleCost);
+  factory.Register(valhalla::odin::Costing::pedestrian, CreatePedestrianCost);
+  // TODO: then ask for some odin::DirectionsOptions& options
+  auto car = factory.Create(valhalla::odin::Costing::auto_, valhalla::odin::DirectionsOptions());
 }
 } // namespace
 
