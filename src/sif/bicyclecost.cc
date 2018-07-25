@@ -6,6 +6,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "worker.h"
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -1081,10 +1082,10 @@ namespace {
 
 BicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new BicycleCost(costing_ptree);
+  ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new BicycleCost(valhalla::odin::Costing::bicycle, request.options);
 }
 
 std::uniform_real_distribution<float>*
