@@ -44,7 +44,7 @@ namespace bpo = boost::program_options;
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   bpo::options_description options(
-      "valhalla_run_isochrone " VERSION "\n"
+      "valhalla_run_isochrone " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_run_isochrone [options]\n"
       "\n"
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla_run_isochrone " << VERSION << "\n";
+    std::cout << "valhalla_run_isochrone " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 
