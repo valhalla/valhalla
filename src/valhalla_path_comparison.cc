@@ -21,6 +21,7 @@
 #include "sif/costfactory.h"
 #include "thor/pathinfo.h"
 #include "thor/route_matcher.h"
+#include "worker.h"
 
 using namespace valhalla::sif;
 using namespace valhalla::meili;
@@ -79,20 +80,10 @@ void print_edge(GraphReader& reader,
   std::cout << "------------------------\n\n";
 }
 
-void walk_edges(const std::string& shape,
-                GraphReader& reader,
-                const std::string& routetype,
-                boost::property_tree::ptree& pt) {
-  // Register edge/node costing methods
-  CostFactory<DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
-
-  std::string method_options = "costing_options." + routetype;
-  auto costing_options = pt.get_child(method_options, {});
-  cost_ptr_t cost = factory.Create(routetype, costing_options);
-  TravelMode mode = cost->travel_mode();
+void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_ptr) {
+  TravelMode mode = cost_ptr->travel_mode();
   cost_ptr_t mode_costing[10];
-  mode_costing[static_cast<uint32_t>(mode)] = cost;
+  mode_costing[static_cast<uint32_t>(mode)] = cost_ptr;
 
   // Decode the shape
   std::vector<PointLL> shape_pts = decode<std::vector<PointLL>>(shape);
@@ -111,7 +102,8 @@ void walk_edges(const std::string& shape,
   std::vector<Location> locations;
   locations.push_back({shape_pts.front()});
   locations.push_back({shape_pts.back()});
-  const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  const auto projections =
+      Search(locations, reader, cost_ptr->GetEdgeFilter(), cost_ptr->GetNodeFilter());
   std::vector<PathLocation> path_location;
   valhalla::odin::DirectionsOptions directions_options;
   for (const auto& loc : locations) {
@@ -141,7 +133,7 @@ void walk_edges(const std::string& shape,
     }
 
     current_id = path_info.edgeid;
-    print_edge(reader, cost, current_id, pred_id, edge_total, trans_total, current_osmid);
+    print_edge(reader, cost_ptr, current_id, pred_id, edge_total, trans_total, current_osmid);
   }
 
   std::cout << "+------------------------------------------------------------------------+\n";
@@ -215,10 +207,12 @@ int main(int argc, char* argv[]) {
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
+  valhalla::valhalla_request_t request;
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   bool map_match = true;
   if (vm.count("json")) {
+    request.parse(json, valhalla::odin::DirectionsOptions::trace_route);
     std::stringstream stream(json);
     boost::property_tree::read_json(stream, json_ptree);
     try {
@@ -249,18 +243,22 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
-  // If a shape is entered use edge walking
-  if (!map_match) {
-    walk_edges(shape, reader, routetype, pt);
-    return EXIT_SUCCESS;
-  }
-
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
-  std::string method_options = "costing_options." + routetype;
-  auto costing_options = json_ptree.get_child(method_options, {});
-  cost_ptr_t costing = factory.Create(routetype, costing_options);
+  valhalla::odin::Costing costing;
+  if (valhalla::odin::Costing_Parse(routetype, &costing)) {
+    request.options.set_costing(costing);
+  } else {
+    throw std::runtime_error("No costing method found");
+  }
+  cost_ptr_t cost_ptr = factory.Create(costing, request.options);
+
+  // If a shape is entered use edge walking
+  if (!map_match) {
+    walk_edges(shape, reader, cost_ptr);
+    return EXIT_SUCCESS;
+  }
 
   // If JSON is entered we do map matching
   MapMatcherFactory map_matcher_factory(pt);
@@ -294,7 +292,7 @@ int main(int argc, char* argv[]) {
       }
 
       current_id = result.edgeid;
-      print_edge(reader, costing, current_id, pred_id, edge_total, trans_total, current_osmid);
+      print_edge(reader, cost_ptr, current_id, pred_id, edge_total, trans_total, current_osmid);
     }
     std::cout << "+------------------------------------------------------------------------+\n";
     std::cout << "| Total Edge Cost       : " << std::setw(10) << edge_total.cost

@@ -25,6 +25,7 @@
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
 #include "tyr/serializers.h"
+#include "worker.h"
 
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
@@ -39,17 +40,6 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
-
-// Returns the costing method (created from the dynamic cost factory).
-// Get the costing options. Merge in any request costing options that
-// override those in the config.
-valhalla::sif::cost_ptr_t get_costing(const CostFactory<DynamicCost>& factory,
-                                      boost::property_tree::ptree& request,
-                                      const std::string& costing) {
-  std::string method_options = "costing_options." + costing;
-  auto costing_options = request.get_child(method_options, {});
-  return factory.Create(costing, costing_options);
-}
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
@@ -136,7 +126,9 @@ int main(int argc, char* argv[]) {
 
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
-  if (vm.count("json") == 0) {
+  valhalla::valhalla_request_t request;
+  bool json_request = (vm.count("json") > 0);
+  if (!json_request) {
     for (const auto& arg : std::vector<std::string>{"origin", "type", "config"}) {
       if (vm.count(arg) == 0) {
         std::cerr << "The <" << arg
@@ -153,6 +145,8 @@ int main(int argc, char* argv[]) {
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   else {
+    request.parse(json, valhalla::odin::DirectionsOptions::isochrone);
+
     std::stringstream stream;
     stream << json;
     boost::property_tree::read_json(stream, json_ptree);
@@ -179,7 +173,6 @@ int main(int argc, char* argv[]) {
     } catch (...) { LOG_INFO("No avoid locations"); }
 
     // Parse out the type of route - this provides the costing method to use
-    std::string costing;
     try {
       routetype = json_ptree.get<std::string>("costing");
     } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
@@ -252,6 +245,16 @@ int main(int argc, char* argv[]) {
   }
   LOG_INFO("routetype: " + routetype);
 
+  // Set costing if not json request
+  if (!json_request) {
+    valhalla::odin::Costing costing;
+    if (valhalla::odin::Costing_Parse(routetype, &costing)) {
+      request.options.set_costing(costing);
+    } else {
+      throw std::runtime_error("No costing method found");
+    }
+  }
+
   // Get the costing method - pass the JSON configuration
   valhalla::odin::TripPath trip_path;
   TravelMode mode;
@@ -259,15 +262,15 @@ int main(int argc, char* argv[]) {
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = get_costing(factory, json_ptree, "auto");
-    mode_costing[1] = get_costing(factory, json_ptree, "pedestrian");
-    mode_costing[2] = get_costing(factory, json_ptree, "bicycle");
-    mode_costing[3] = get_costing(factory, json_ptree, "transit");
+    mode_costing[0] = factory.Create(valhalla::odin::Costing::auto_, request.options);
+    mode_costing[1] = factory.Create(valhalla::odin::Costing::pedestrian, request.options);
+    mode_costing[2] = factory.Create(valhalla::odin::Costing::bicycle, request.options);
+    mode_costing[3] = factory.Create(valhalla::odin::Costing::transit, request.options);
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method, override any config options that are in the
     // json request
-    std::shared_ptr<DynamicCost> cost = get_costing(factory, json_ptree, routetype);
+    std::shared_ptr<DynamicCost> cost = factory.Create(request.options.costing(), request.options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
@@ -299,7 +302,9 @@ int main(int argc, char* argv[]) {
     path_location.front().date_time_ = "current";
   }
   // TODO: build real request from options above and call the functions like actor_t does
-  valhalla::valhalla_request_t request;
+  if (json_request) {
+    request.options.mutable_locations()->Clear();
+  }
   for (const auto& pl : path_location) {
     valhalla::baldr::PathLocation::toPBF(pl, request.options.mutable_locations()->Add(), reader);
   }
