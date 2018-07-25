@@ -45,16 +45,6 @@ public:
     factory_funcs_.emplace(costing, function);
   }
 
-  // TODO rm
-  //  cost_ptr_t Create(const std::string& name, const boost::property_tree::ptree& config) const {
-  //    auto itr = factory_funcs_.find(name);
-  //    if (itr == factory_funcs_.end()) {
-  //      throw std::runtime_error("No costing method found for '" + name + "'");
-  //    }
-  //    // create the cost using the function pointer
-  //    return itr->second(config);
-  //  }
-
   /**
    * Make a cost from its specified type
    * @param costing  the type of cost to create
@@ -72,20 +62,6 @@ public:
     // create the cost using the function pointer
     return itr->second(costing, options);
   }
-
-  // TODO rm
-  //  cost_ptr_t Create(const std::string& name, const rapidjson::Value& config) const {
-  //    if (config.IsNull()) {
-  //      return Create(name, boost::property_tree::ptree{});
-  //    }
-  //    rapidjson::StringBuffer buffer;
-  //    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-  //    config.Accept(writer);
-  //    boost::property_tree::ptree pt;
-  //    std::istringstream is(buffer.GetString());
-  //    boost::property_tree::read_json(is, pt);
-  //    return Create(name, pt);
-  //  }
 
   /**
    * Convenience method to register all of the standard costing models.
