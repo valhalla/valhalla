@@ -742,7 +742,6 @@ MotorScooterCost* make_motorscootercost_from_json(const std::string& property, f
   ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
   valhalla::valhalla_request_t request;
   request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
-
   return new MotorScooterCost(valhalla::odin::Costing::motor_scooter, request.options);
 }
 
