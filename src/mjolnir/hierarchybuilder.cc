@@ -202,13 +202,12 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
     // Copy the data version
     tilebuilder->header_builder().set_dataset_id(tile->header()->dataset_id());
 
-    // Copy node information
+    // Copy node information and set the node lat,lon offsets within the new tile
     NodeInfo baseni = *(tile->node(base_node.id()));
-    PointLL nodell = baseni.latlng(tile->header()->base_ll());
     tilebuilder->nodes().push_back(baseni);
     const auto& admin = tile->admininfo(baseni.admin_index());
     NodeInfo& node = tilebuilder->nodes().back();
-    node.set_latlng(base_ll, nodell);
+    node.set_latlng(base_ll, baseni.latlng(tile->header()->base_ll()));
     node.set_edge_index(tilebuilder->directededges().size());
     node.set_timezone(baseni.timezone());
     node.set_admin_index(tilebuilder->AddAdmin(admin.country_text(), admin.state_text(),
@@ -442,16 +441,15 @@ bool CreateNodeAssociations(GraphReader& reader) {
 
       // Associate new nodes to base nodes and base node to new nodes
       GraphId highway_node, arterial_node, local_node;
-      PointLL ll = nodeinfo->latlng(base_ll);
       if (levels[0]) {
         // New node is on the highway level. Associate back to base/local node
-        GraphId new_tile(highway_level.tiles.TileId(ll), hl, 0);
+        GraphId new_tile(highway_level.tiles.TileId(nodeinfo->latlng(base_ll)), hl, 0);
         highway_node = get_new_node(new_tile);
         new_to_old.push_back(std::make_pair(highway_node, basenode));
       }
       if (levels[1]) {
         // New node is on the arterial level. Associate back to base/local node
-        GraphId new_tile(arterial_level.tiles.TileId(ll), al, 0);
+        GraphId new_tile(arterial_level.tiles.TileId(nodeinfo->latlng(base_ll)), al, 0);
         arterial_node = get_new_node(new_tile);
         new_to_old.push_back(std::make_pair(arterial_node, basenode));
       }

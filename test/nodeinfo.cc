@@ -12,16 +12,6 @@ constexpr size_t kNodeInfoExpectedSize = 32;
 
 namespace {
 
-class test_node : public NodeInfo {
-public:
-  test_node(const PointLL& base_ll, float a, float b) {
-    latlng_ = {a, b};
-  }
-
-protected:
-  using NodeInfo::latlng_;
-};
-
 void test_sizeof() {
   if (sizeof(NodeInfo) != kNodeInfoExpectedSize)
     throw std::runtime_error("NodeInfo size should be " + std::to_string(kNodeInfoExpectedSize) +
@@ -31,21 +21,25 @@ void test_ll() {
   PointLL base_ll(-70.0f, 40.0f);
   NodeInfo n;
   if (n.latlng(base_ll).first != -70.0f || n.latlng(base_ll).second != 40.0f)
-    throw std::runtime_error("NodeInfo ll should be -70,40");
+    throw std::runtime_error("NodeInfo ll should be -70, 40");
 
-  test_node t(500000, 250000);
-  if (t.latlng(base_ll).first != -69.5f || t.latlng(base_ll).second != 30.25f)
-    throw std::runtime_error("NodeInfo ll should be -69.5, 30.25");
-  /**
-   if (!valhalla::midgard::equal<float>(static_cast<Point2>(t.latlng()).DistanceSquared({8, 8}), 125))
-     throw std::runtime_error("Distance squared is wrong");
-   if (!static_cast<Point2>(t.latlng()).MidPoint({8, 8}).ApproximatelyEqual({5.5f, 3.f}))
-     throw std::runtime_error("Mid point is wrong");
-   if (!valhalla::midgard::equal<float>(Point2(8, 8).DistanceSquared(static_cast<Point2>(t.latlng())),
-                                        125))
-     throw std::runtime_error("Distance squared is wrong");
-   if (!Point2(8, 8).MidPoint(static_cast<Point2>(t.latlng())).ApproximatelyEqual({5.5f, 3.f}))
-     throw std::runtime_error("Mid point is wrong"); **/
+  NodeInfo t;
+  PointLL nodell(-69.5f, 40.25f);
+  t.set_latlng(base_ll, nodell);
+  if (t.latlng(base_ll).first != nodell.lng() || t.latlng(base_ll).second != nodell.lat())
+    throw std::runtime_error("NodeInfo ll should be -69.5, 40.25");
+
+  // Test lon just outside tile bounds
+  PointLL nodell1(-70.000005f, 40.25f);
+  t.set_latlng(nodell1, base_ll);
+  if (t.latlng(base_ll).first != base_ll.lng() || t.latlng(base_ll).second != nodell.lat())
+    throw std::runtime_error("NodeInfo ll should be -70.0, 40.25");
+
+  // Test lat just outside tile bounds
+  PointLL nodell1(-69.5f, 39.999995f);
+  t.set_latlng(nodell1, base_ll);
+  if (t.latlng(base_ll).first != base_ll.lng() || t.latlng(base_ll).second != nodell.lat())
+    throw std::runtime_error("NodeInfo ll should be -69.5, 40.0");
 }
 
 void TestWriteRead() {
