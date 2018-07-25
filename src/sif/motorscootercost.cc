@@ -6,6 +6,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "worker.h"
 #include <iostream>
 
 #ifdef INLINE_TEST
@@ -738,10 +739,11 @@ namespace {
 
 MotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new MotorScooterCost(costing_ptree);
+  ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+
+  return new MotorScooterCost(valhalla::odin::Costing::motor_scooter, request.options);
 }
 
 template <typename T>
