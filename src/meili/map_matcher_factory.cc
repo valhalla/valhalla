@@ -37,35 +37,24 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root)
 MapMatcherFactory::~MapMatcherFactory() {
 }
 
-MapMatcher* MapMatcherFactory::Create(const rapidjson::Value& preferences) {
-  if (preferences.IsNull())
-    return Create(boost::property_tree::ptree{});
-  rapidjson::StringBuffer buffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-  preferences.Accept(writer);
-  boost::property_tree::ptree pt;
-  std::istringstream is(buffer.GetString());
-  ;
-  boost::property_tree::read_json(is, pt);
-  return Create(pt);
-}
+MapMatcher* MapMatcherFactory::Create(const odin::Costing costing,
+                                      const odin::DirectionsOptions& options) {
+  // TODO figure out how we want to handle
+  //  const auto& config = MergeConfig(costing, preferences);
 
-MapMatcher* MapMatcherFactory::Create(const boost::property_tree::ptree& preferences) {
-  const auto& name = preferences.get<std::string>("costing", config_.get<std::string>("mode"));
-  return Create(name, preferences);
-}
-
-MapMatcher* MapMatcherFactory::Create(const std::string& costing,
-                                      const boost::property_tree::ptree& preferences) {
-  const auto& config = MergeConfig(costing, preferences);
-
-  valhalla::sif::cost_ptr_t cost = get_costing(preferences, costing);
+  valhalla::sif::cost_ptr_t cost = cost_factory_.Create(costing, options);
   valhalla::sif::TravelMode mode = cost->travel_mode();
 
   mode_costing_[static_cast<uint32_t>(mode)] = cost;
 
   // TODO investigate exception safety
-  return new MapMatcher(config, graphreader_, candidatequery_, mode_costing_, mode);
+  //  return new MapMatcher(config, graphreader_, candidatequery_, mode_costing_, mode);
+  return new MapMatcher(config_.get_child("default"), graphreader_, candidatequery_, mode_costing_,
+                        mode);
+}
+
+MapMatcher* MapMatcherFactory::Create(const odin::DirectionsOptions& options) {
+  return Create(options.costing(), options);
 }
 
 boost::property_tree::ptree
@@ -108,13 +97,6 @@ MapMatcherFactory::MergeConfig(const std::string& name,
 
   // Give it back
   return config;
-}
-
-sif::cost_ptr_t MapMatcherFactory::get_costing(const boost::property_tree::ptree& request,
-                                               const std::string& costing) {
-  std::string method_options = "costing_options." + costing;
-  auto costing_options = request.get_child(method_options, {});
-  return cost_factory_.Create(costing, costing_options);
 }
 
 void MapMatcherFactory::ClearFullCache() {
