@@ -214,7 +214,8 @@ void assert_is_trivial_path(vo::Location& origin, vo::Location& dest, uint32_t e
 
   auto mode = vs::TravelMode::kPedestrian;
   vs::cost_ptr_t costs[int(vs::TravelMode::kMaxTravelMode)];
-  auto pedestrian = vs::CreatePedestrianCost(bpt::ptree());
+  auto pedestrian = vs::CreatePedestrianCost(valhalla::odin::Costing::pedestrian,
+                                             valhalla::odin::DirectionsOptions());
   costs[int(mode)] = pedestrian;
   assert(bool(costs[int(mode)]));
 
@@ -335,11 +336,10 @@ void trivial_path_no_uturns(const std::string& config_file) {
   locations.push_back(
       valhalla::baldr::Location::FromCsv("52.096141834552945,5.114506781210365,break"));
 
-  std::string method_options = "costing_options.pedestrian";
-  auto costing_options = conf.get_child(method_options, {});
-
   std::shared_ptr<vs::DynamicCost> mode_costing[4];
-  std::shared_ptr<vs::DynamicCost> cost = vs::CreatePedestrianCost(costing_options);
+  std::shared_ptr<vs::DynamicCost> cost =
+      vs::CreatePedestrianCost(valhalla::odin::Costing::pedestrian,
+                               valhalla::odin::DirectionsOptions());
   auto mode = cost->travel_mode();
   mode_costing[static_cast<uint32_t>(mode)] = cost;
 
