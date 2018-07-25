@@ -43,9 +43,13 @@ int main(int argc, char* argv[]) {
   boost::property_tree::ptree config;
   boost::property_tree::read_json(argv[1], config);
   const std::string modename = config.get<std::string>("meili.mode");
+  valhalla::odin::Costing costing;
+  if (!valhalla::odin::Costing_Parse(modename, &costing)) {
+    throw std::runtime_error("No costing method found");
+  }
 
   MapMatcherFactory matcher_factory(config);
-  auto mapmatcher = matcher_factory.Create(modename);
+  auto mapmatcher = matcher_factory.Create(costing);
 
   const float default_gps_accuracy = mapmatcher->config().get<float>("gps_accuracy"),
               default_search_radius = mapmatcher->config().get<float>("search_radius");
