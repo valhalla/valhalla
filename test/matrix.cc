@@ -115,7 +115,7 @@ public:
   }
 };
 
-cost_ptr_t CreateSimpleCost(const odin::DirectionsOptions& options) {
+cost_ptr_t CreateSimpleCost(const valhalla::odin::DirectionsOptions& options) {
   return std::make_shared<SimpleCost>(options);
 }
 
