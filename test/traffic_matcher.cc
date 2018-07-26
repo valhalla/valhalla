@@ -158,7 +158,7 @@ void test_matcher() {
 int main() {
   test::suite suite("traffic matcher");
 
-  //  suite.test(TEST_CASE(test_matcher));
+  suite.test(TEST_CASE(test_matcher));
 
   return suite.tear_down();
 }
