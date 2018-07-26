@@ -33,7 +33,7 @@ Build Status
 License
 -------
 
-Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).
+Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaydraws.yt/?hl=en)
 
 Overview
 --------

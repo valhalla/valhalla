@@ -3,8 +3,6 @@
 #include "baldr/streetname.h"
 #include "baldr/streetname_us.h"
 
-#include <boost/algorithm/string/predicate.hpp>
-
 namespace valhalla {
 namespace baldr {
 

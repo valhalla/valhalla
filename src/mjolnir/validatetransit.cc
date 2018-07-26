@@ -2,6 +2,7 @@
 #include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
+#include "mjolnir/servicedays.h"
 
 #include <future>
 #include <queue>
@@ -300,7 +301,7 @@ std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
   typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
   boost::char_separator<char> sep{","};
   std::vector<OneStopTest> onestoptests;
-  std::string default_date_time = baldr::DateTime::get_testing_date_time();
+  std::string default_date_time = get_testing_date_time();
 
   // Open file
   std::string line;
