@@ -6,6 +6,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "worker.h"
 
 #include <iostream>
 
@@ -1291,10 +1292,10 @@ namespace {
 
 AutoCost* make_autocost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({")" << property << R"(":)" << testVal << "}";
-  boost::property_tree::ptree costing_ptree;
-  boost::property_tree::read_json(ss, costing_ptree);
-  return new AutoCost(costing_ptree);
+  ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}}";
+  valhalla::valhalla_request_t request;
+  request.parse(ss.str(), valhalla::odin::DirectionsOptions::route);
+  return new AutoCost(valhalla::odin::Costing::auto_, request.options);
 }
 
 std::uniform_real_distribution<float>*

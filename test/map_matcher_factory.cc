@@ -7,7 +7,6 @@
 #include "sif/costconstants.h"
 
 #include "meili/map_matcher_factory.h"
-#include "meili/universal_cost.h"
 #include "test.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -32,7 +31,7 @@ void TestMapMatcherFactory() {
       config.put<std::string>("meili.auto.hello", "world");
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
-      auto matcher = factory.Create("auto");
+      auto matcher = factory.Create(odin::Costing::auto_);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kDrive,
                         "travel mode should be drive");
       test::assert_bool(matcher->config().get<std::string>("hello") == "world",
@@ -45,7 +44,7 @@ void TestMapMatcherFactory() {
       auto config = root;
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
-      auto matcher = factory.Create("bicycle");
+      auto matcher = factory.Create(odin::Costing::bicycle);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
                         "travel mode must be bicycle");
       test::assert_bool(matcher->config().get<std::string>("hello") == "default world",
@@ -57,14 +56,14 @@ void TestMapMatcherFactory() {
     {
       auto config = root;
       meili::MapMatcherFactory factory(config);
-      ptree preferences;
+      odin::DirectionsOptions options;
       int preferred_search_radius = 3;
       int incorrect_search_radius = 2;
       int default_search_radius = 1;
-      preferences.put<int>("trace_options.search_radius", preferred_search_radius);
+      options.set_search_radius(preferred_search_radius);
       config.put<int>("meili.auto.search_radius", incorrect_search_radius);
       config.put<int>("meili.default.search_radius", default_search_radius);
-      auto matcher = factory.Create("pedestrian", preferences);
+      auto matcher = factory.Create(odin::Costing::pedestrian, options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
                         "travel mode should be pedestrian");
       test::assert_bool(matcher->config().get<int>("search_radius") == preferred_search_radius,
@@ -75,12 +74,12 @@ void TestMapMatcherFactory() {
     // Test configuration priority
     {
       meili::MapMatcherFactory factory(root);
-      ptree preferences;
+      odin::DirectionsOptions options;
       int preferred_search_radius = 3;
-      preferences.put<int>("trace_options.search_radius", preferred_search_radius);
-      auto matcher = factory.Create("multimodal", preferences);
-      test::assert_bool(matcher->travelmode() == meili::kUniversalTravelMode,
-                        "travel mode should be universal");
+      options.set_search_radius(preferred_search_radius);
+      auto matcher = factory.Create(odin::Costing::multimodal, options);
+      test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
+                        "travel mode should be pedestrian");
       test::assert_bool(matcher->config().get<int>("search_radius") == preferred_search_radius,
                         "preference for universal should override config");
       delete matcher;
@@ -89,9 +88,8 @@ void TestMapMatcherFactory() {
     // Test default mode
     {
       meili::MapMatcherFactory factory(root);
-      ptree preferences;
-      auto matcher = factory.Create(preferences);
-      test::assert_bool(matcher->travelmode() == meili::kUniversalTravelMode,
+      auto matcher = factory.Create(odin::DirectionsOptions());
+      test::assert_bool(matcher->travelmode() == sif::TravelMode::kDrive,
                         "should read default mode in the meili.mode correctly");
       delete matcher;
     }
@@ -99,47 +97,37 @@ void TestMapMatcherFactory() {
     // Test preferred mode
     {
       meili::MapMatcherFactory factory(root);
-      ptree preferences;
-      preferences.put<std::string>("costing", "pedestrian");
-      auto matcher = factory.Create(preferences);
+      odin::DirectionsOptions options;
+      options.set_costing(odin::Costing::pedestrian);
+      auto matcher = factory.Create(options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
-                        "should read costing in preferences correctly");
+                        "should read costing in options correctly");
       delete matcher;
 
-      preferences.put<std::string>("costing", "bicycle");
-      matcher = factory.Create(preferences);
+      options.set_costing(odin::Costing::bicycle);
+      matcher = factory.Create(options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
-                        "should read costing in preferences correctly again");
+                        "should read costing in options correctly again");
       delete matcher;
     }
 
     // Test custom costing
     {
       meili::MapMatcherFactory factory(root);
-      ptree preferences;
+      odin::DirectionsOptions options;
 
-      preferences.put<std::string>("costing", "pedestrian");
-      auto matcher = factory.Create(preferences);
+      options.set_costing(odin::Costing::pedestrian);
+      auto matcher = factory.Create(options);
       test::assert_bool(matcher->costing()->travel_type() != (int)sif::PedestrianType::kSegway,
                         "should not have custom costing options when not set in preferences");
       delete matcher;
 
-      preferences.put<std::string>("costing_options.pedestrian.type", "segway");
-      matcher = factory.Create(preferences);
+      options.mutable_costing_options(static_cast<int>(odin::Costing::pedestrian))
+          ->set_transport_type("segway");
+      matcher = factory.Create(options);
       test::assert_bool(matcher->costing()->travel_type() == (int)sif::PedestrianType::kSegway,
                         "should read custom costing options in preferences correctly");
       delete matcher;
-    }
-
-    // Invalid transport mode name
-    {
-      meili::MapMatcherFactory factory(root);
-
-      test::assert_throw<std::runtime_error>([&factory]() { factory.Create("invalid_mode"); },
-                                             "invalid_mode shuold be invalid mode");
-
-      test::assert_throw<std::runtime_error>([&factory]() { factory.Create(""); },
-                                             "empty string should be invalid mode");
     }
   }
 }
@@ -151,8 +139,8 @@ void TestMapMatcher() {
   // Nothing special to test for the moment
 
   meili::MapMatcherFactory factory(root);
-  auto auto_matcher = factory.Create("auto");
-  auto pedestrian_matcher = factory.Create("pedestrian");
+  auto auto_matcher = factory.Create(odin::Costing::auto_);
+  auto pedestrian_matcher = factory.Create(odin::Costing::pedestrian);
 
   // Share the same pool
   test::assert_bool(&auto_matcher->graphreader() == &pedestrian_matcher->graphreader(),

@@ -262,7 +262,8 @@ int main(int argc, char* argv[]) {
 
   // If JSON is entered we do map matching
   MapMatcherFactory map_matcher_factory(pt);
-  std::shared_ptr<valhalla::meili::MapMatcher> matcher(map_matcher_factory.Create(routetype, pt));
+  std::shared_ptr<valhalla::meili::MapMatcher> matcher(
+      map_matcher_factory.Create(costing, request.options));
 
   uint32_t i = 0;
   for (const auto& path : paths) {
