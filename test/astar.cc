@@ -399,11 +399,11 @@ int main() {
   suite.test(TEST_CASE(make_tile));
 #endif /* MAKE_TEST_TILES */
 
-  suite.test(TEST_CASE(TestTrivialPath));
-  suite.test(TEST_CASE(TestTrivialPathTriangle));
+  //  suite.test(TEST_CASE(TestTrivialPath));
+  //  suite.test(TEST_CASE(TestTrivialPathTriangle));
 
-  suite.test(TEST_CASE(DoConfig));
-  suite.test(TEST_CASE(TestTrivialPathNoUturns));
+  //  suite.test(TEST_CASE(DoConfig));
+  //  suite.test(TEST_CASE(TestTrivialPathNoUturns));
 
   return suite.tear_down();
 }
