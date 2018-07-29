@@ -13,6 +13,5 @@ valhalla_module(NAME skadi
   DEPENDS
     valhalla::midgard
     Boost::filesystem
-    Boost::regex
     LZ4::LZ4
     ZLIB::ZLIB)
