@@ -10,7 +10,7 @@
 namespace valhalla {
 namespace baldr {
 
-const re::regex kColoradoRegex("(\\bCO)([ -])(\\d{1,3})", re::regex_constants::icase);
+const std::regex kColoradoRegex("(\\bCO)([ -])(\\d{1,3})", std::regex_constants::icase);
 const std::string kColoradoOutPattern = "Colorado $3";
 
 /**
