@@ -182,7 +182,7 @@ void FormTilesInNewLevel(GraphReader& reader, bool has_elevation) {
       current_level = nodea.level();
 
       // Set the base ll for this tile
-      base_ll = TileHierarchy::get_tiling(current_level).Base(tile_id.id());
+      base_ll = TileHierarchy::get_tiling(current_level).Base(tile_id.tileid());
       tilebuilder->header_builder().set_base_ll(base_ll);
 
       // Check if we need to clear the base/local tile cache
