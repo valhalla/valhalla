@@ -8,10 +8,6 @@
 #include "midgard/tiles.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
 #include <cmath>
 #include <ctime>
 #include <fstream>
@@ -69,11 +65,11 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
     size_t filesize = file.tellg();
     graphtile_.reset(new std::vector<char>(filesize));
     file.seekg(0, std::ios::beg);
-    file.read(&(*graphtile_)[0], filesize);
+    file.read(graphtile_->data(), filesize);
     file.close();
 
     // Set pointers to internal data structures
-    Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
+    Initialize(graphid, graphtile_->data(), graphtile_->size());
   } else {
     std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
     if (file.is_open()) {
@@ -85,13 +81,10 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
                           filesize / 4); // TODO: read the gzip footer and get the real size?
 
       // Decompress tile into memory
-      boost::iostreams::filtering_ostream os;
-      os.push(boost::iostreams::gzip_decompressor());
-      os.push(boost::iostreams::back_inserter(*graphtile_));
-      boost::iostreams::copy(file, os);
+      // TODO: use compression utils to read gzipped file into memory
 
       // Set pointers to internal data structures
-      Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
+      Initialize(graphid, graphtile_->data(), graphtile_->size());
     } else {
       LOG_DEBUG("Tile " + file_location + " was not found");
     }
@@ -118,7 +111,7 @@ GraphTile::GraphTile(const std::string& tile_url, const GraphId& graphid, curler
   // If its good try to use it
   if (http_code == 200) {
     graphtile_ = std::make_shared<std::vector<char>>(std::move(tile_data));
-    Initialize(graphid, &(*graphtile_)[0], graphtile_->size());
+    Initialize(graphid, graphtile_->data(), graphtile_->size());
     // TODO: optionally write the tile to disk?
   }
 }

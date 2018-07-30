@@ -72,5 +72,4 @@ valhalla_module(NAME mjolnir
     Spatialite::Spatialite
     SQLite3::SQLite3
     Lua::Lua
-    ZLIB::ZLIB
     Threads::Threads)

@@ -26,6 +26,4 @@ valhalla_module(NAME tyr
     valhalla::loki
     valhalla::thor
     valhalla::odin
-    valhalla::baldr
-    LZ4::LZ4
-    ZLIB::ZLIB)
+    valhalla::baldr)

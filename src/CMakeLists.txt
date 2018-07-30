@@ -75,8 +75,6 @@ if(NOT TARGET protobuf::libprotobuf)
   endif()
 endif()
 
-find_package(ZLIB REQUIRED)
-find_package(LZ4 REQUIRED)
 find_package(Threads REQUIRED)
 
 add_library(libprime_server INTERFACE IMPORTED)
