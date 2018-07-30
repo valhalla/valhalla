@@ -143,10 +143,10 @@ endif()
 
 if(ENABLE_NODE_BINDINGS)
   find_package(Node)
-  add_custom_command(OUTPUT node_valhalla.out
+  add_custom_command(OUTPUT node_valhalla.log
     COMMAND
-      /bin/bash -c "npm test > test/node_valhalla.out"
-    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+      /bin/bash -c "npm test > test/node_valhalla.log"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       copy_node_artifacts
       ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/route.test.js
@@ -161,7 +161,7 @@ if(ENABLE_NODE_BINDINGS)
       ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/fixtures/basic_config.json
       ${VALHALLA_SOURCE_DIR}/test/traffic_matcher_tiles
     VERBATIM)
-  add_custom_target(run-node_valhalla DEPENDS node_valhalla.out)
+  add_custom_target(run-node_valhalla DEPENDS node_valhalla.log)
 endif()
 
 ## High-level targets
