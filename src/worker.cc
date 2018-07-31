@@ -272,22 +272,24 @@ rapidjson::Document from_string(const std::string& json, const std::exception& e
   return d;
 }
 
-std::vector<std::string> split(const std::string delimiter, std::string string_to_split) {
-    std::vector<std::string> strings;
+size_t split(const std::string &txt, std::vector<std::string> &strs, char ch)
+{
+    size_t pos = txt.find( ch );
+    size_t initialPos = 0;
+    strs.clear();
 
-    if (string_to_split.find(delimiter) == std::string::npos) {
-      strings.push_back(string_to_split);
-    } else {
-      size_t position = 0;
-      std::string substring;
-      while ((position = string_to_split.find(delimiter)) != std::string::npos) {
-        substring = string_to_split.substr(0, position);
-        strings.push_back(substring);
-        string_to_split.erase(0, position + delimiter.length());
-      }
+    // Decompose statement
+    while( pos != std::string::npos ) {
+        strs.push_back( txt.substr( initialPos, pos - initialPos ) );
+        initialPos = pos + 1;
+
+        pos = txt.find( ch, initialPos );
     }
 
-    return strings;
+    // Add the last one
+    strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
+
+    return strs.size();
 }
 
 void parse_locations(const rapidjson::Document& doc,
@@ -418,6 +420,7 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto deprecated = get_child_optional(doc, "/directions_options");
   auto& allocator = doc.GetAllocator();
   if (deprecated) {
+
     for (const auto& key : {"/units", "/narrative", "/format", "/language", "/properties"}) {
       auto child = rapidjson::get_child_optional(*deprecated, key);
       if (child) {
@@ -464,12 +467,28 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   }
 
   auto properties = rapidjson::get_optional<std::string>(doc, "/properties");
-  if (properties) {
-    auto property_vector = split("|", *properties);
 
+  if (properties) {
+
+    std::vector<std::string> property_vector;
+
+    split(*properties, property_vector, '|');
+    
     for (auto property: property_vector) {
       if (property == "grades")
         options.set_grades(true);
+      else if (property == "surface")
+        options.set_surface(true);
+      else if (property == "cycle_lane")
+        options.set_cycle_lane(true);
+      else if (property == "use")
+        options.set_use(true);
+      else if (property == "toll")
+        options.set_toll(true);
+      else if (property == "bridge")
+        options.set_bridge(true);
+      else if (property == "tunnel")
+        options.set_tunnel(true);
     }
   }
 
