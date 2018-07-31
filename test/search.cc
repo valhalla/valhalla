@@ -39,6 +39,7 @@ namespace {
 //    c
 std::string tile_dir = "test/search_tiles";
 GraphId tile_id = TileHierarchy::GetGraphId({.125, .125}, 2);
+PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
 std::pair<GraphId, PointLL> b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2});
 std::pair<GraphId, PointLL> a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1});
 std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01});
@@ -59,7 +60,7 @@ void make_tile() {
 
   auto add_node = [&edge_index](const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
     NodeInfo node_builder;
-    node_builder.set_latlng(v.second);
+    node_builder.set_latlng(base_ll, v.second);
     node_builder.set_edge_count(edge_count);
     node_builder.set_edge_index(edge_index);
     edge_index += edge_count;

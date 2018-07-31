@@ -36,8 +36,8 @@ void test_ll() {
     throw std::runtime_error("NodeInfo ll should be -70.0, 40.25");
 
   // Test lat just outside tile bounds
-  PointLL nodell1(-69.5f, 39.999995f);
-  t.set_latlng(nodell1, base_ll);
+  PointLL nodell2(-69.5f, 39.999995f);
+  t.set_latlng(nodell2, base_ll);
   if (t.latlng(base_ll).first != base_ll.lng() || t.latlng(base_ll).second != nodell.lat())
     throw std::runtime_error("NodeInfo ll should be -69.5, 40.0");
 }
