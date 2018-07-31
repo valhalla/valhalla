@@ -16,7 +16,7 @@ jobs:
       - run: mkdir build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
-      - run: ./scripts/tidy.sh && ./scripts/error_on_dirty.sh
+      - run: cd build && ../scripts/tidy.sh && ../scripts/error_on_dirty.sh
 
   build-release-binary-linux:
     docker:
