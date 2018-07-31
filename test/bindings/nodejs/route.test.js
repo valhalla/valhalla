@@ -15,7 +15,7 @@ test('route: can get a route in Hershey', function(assert) {
 
 test('route: returns an error if no edges found', function(assert) {
   var hersheyRequest = '{"locations":[{"lat":5,"lon":-76.385076,"type":"break"}, {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"}';
-  assert.throws(() => { valhalla.route(hersheyRequest) }, /No suitable edges near location/, 'Throws correct error');
+  assert.throws(() => { valhalla.route(hersheyRequest) }, /{ error_code: 171, http_code: 400, message: No suitable edges near location }/, 'Throws error and has error and http code');
   assert.end();
 });
 

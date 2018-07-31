@@ -15,7 +15,7 @@ test('traceAttributes: can return info for locations', function(assert) {
 
 test('traceAttributes: throws error if can\'t match input to map', function(assert) {
   var badRequest = '{"shape": [{"lon": 5, "lat": 40.543564},{"lon": 6, "lat": 40.543939},{"lon": 5, "lat": 40.5442815},{"lon": 5, "lat": 40.5447381}],"costing":"auto", "filters":{"attributes":["edge.names","edge.id", "edge.weighted_grade","edge.speed"],"action":"include"}}';
-  assert.throws(() => { valhalla.traceAttributes(badRequest), /Error: No suitable edges near location/, 'Throws an error when cant match input to map'});
+  assert.throws(() => { valhalla.traceAttributes(badRequest) }, /error_code: 171, http_code: 400, message: No suitable edges near location/, 'Throws an error when cant match input to map');
   assert.end();
 });
 

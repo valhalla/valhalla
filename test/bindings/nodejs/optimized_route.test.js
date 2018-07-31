@@ -16,7 +16,7 @@ test('optimizedRoute: can return info for locations', function(assert) {
 
 test('optimizedRoute: throws error if can\'t match input to map', function(assert) {
   var badRequest = '{"locations":[{"lat":50,"lon":-76.385076}],"costing":"pedestrian","contours":[{"time":15,"color":"ff0000"}]}';
-  assert.throws(() => { valhalla.optimizedRoute(badRequest), /Error: No suitable edges near location/, 'Throws an error when cant match input to map'});
+  assert.throws(() => { valhalla.optimizedRoute(badRequest) }, /error_code: 120, http_code: 400, message: Insufficient number of locations provided/, 'Throws an error when cant match input to map');
   assert.end();
 });
 

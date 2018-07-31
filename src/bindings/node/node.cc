@@ -13,6 +13,8 @@
 #include "valhalla/tyr/actor.h"
 #include "valhalla/midgard/logging.h"
 #include "valhalla/midgard/util.h"
+#include "valhalla/exception.h"
+#include "src/worker.cc"
 
 boost::property_tree::ptree json_to_pt(const char* json) {
   std::stringstream ss;
@@ -218,7 +220,13 @@ private:
     std::string resp_json;
     try {
       resp_json = func(obj->actor, reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
+    } catch (const valhalla::valhalla_exception_t& e) { 
+      auto http_code = ERROR_TO_STATUS.find(e.code)->second;
+      std::string err_message = "{ error_code: " + std::to_string(e.code) + ", http_code: " + std::to_string(http_code) +  ", message: " + e.message + " }";
+      napi_throw_error(env, NULL, err_message.c_str());
+    } catch (const std::exception& e) {
+      napi_throw_error(env, NULL, e.what());
+    }
 
     auto outStr = WrapString(env, resp_json);
     return outStr;
