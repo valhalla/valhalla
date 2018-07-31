@@ -44,11 +44,21 @@ void create_tile() {
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
 
-  // TODO: use compression utils to write gzipped data to/from file
   // write it again but this time gzipped
-  /*auto gzipped = gzip(tile);
+  auto src_func = [&tile](z_stream& s) -> int {
+    s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
+    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(decltype(tile)::value_type));
+    return Z_FINISH;
+  };
+  std::vector<char> dst_buffer(1024);
   std::ofstream gzfile("test/data/samplegz/N40/N40W077.hgt.gz", std::ios::binary | std::ios::trunc);
-  gzfile.write(static_cast<const char*>(static_cast<void*>(gzipped.data())), gzipped.size());*/
+  auto dst_func = [&dst_buffer, &gzfile](z_stream& s) -> void {
+    gzfile.write(static_cast<const char*>(static_cast<void*>(dst_buffer.data())), dst_buffer.size());
+    s.next_out = static_cast<Byte*>(static_cast<void*>(dst_buffer.data()));
+    s.avail_out = dst_buffer.size();
+  };
+  if (!baldr::deflate(src_func, dst_func))
+    throw std::logic_error("Can't write gzipped elevation tile");
 }
 
 void _get(const std::string& location) {

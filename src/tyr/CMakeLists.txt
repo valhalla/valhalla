@@ -25,5 +25,4 @@ valhalla_module(NAME tyr
   DEPENDS
     valhalla::loki
     valhalla::thor
-    valhalla::odin
-    valhalla::baldr)
+    valhalla::odin)

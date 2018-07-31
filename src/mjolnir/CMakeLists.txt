@@ -69,6 +69,7 @@ valhalla_module(NAME mjolnir
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DEPENDS
     valhalla::proto
+    valhalla::baldr
     Spatialite::Spatialite
     SQLite3::SQLite3
     Lua::Lua

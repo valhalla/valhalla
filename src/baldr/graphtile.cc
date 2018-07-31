@@ -1,4 +1,5 @@
 #include "baldr/graphtile.h"
+#include "baldr/compression_utils.h"
 #include "baldr/datetime.h"
 #include "baldr/filesystem_utils.h"
 #include "baldr/tilehierarchy.h"
@@ -70,18 +71,38 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
 
     // Set pointers to internal data structures
     Initialize(graphid, graphtile_->data(), graphtile_->size());
-  } else {
-    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
+  } // try to load a gzipped tile
+  else {
+    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary);
     if (file.is_open()) {
-      // Pre-allocate assuming 3.25:1 compression ratio (based on scanning some large NA tiles)
-      size_t filesize = file.tellg();
-      file.seekg(0, std::ios::beg);
-      graphtile_.reset(new std::vector<char>());
-      graphtile_->reserve(filesize * 3 +
-                          filesize / 4); // TODO: read the gzip footer and get the real size?
+      // read the compressed file into memory
+      std::vector<char> compressed(std::istreambuf_iterator<char>(file),
+                                   (std::istreambuf_iterator<char>()));
+
+      // for setting where to read compressed data from
+      auto src_func = [&compressed](z_stream& s) -> int {
+        s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
+        s.avail_in = static_cast<unsigned int>(compressed.size());
+        return Z_FINISH;
+      };
+
+      // for setting where to write the uncompressed data to
+      graphtile_.reset(new std::vector<char>(0, 0));
+      auto dst_func = [this, &compressed](z_stream& s) -> void {
+        // assume we need 4x the space
+        auto capacity = graphtile_->capacity();
+        graphtile_->reserve(capacity + (compressed.size() * 4));
+        // set the pointer to the next spot
+        s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + capacity));
+        s.avail_out = compressed.size() * 4;
+      };
 
       // Decompress tile into memory
-      // TODO: use compression utils to read gzipped file into memory
+      if (!baldr::inflate(src_func, dst_func)) {
+        LOG_WARN("Failed to gunzip: " + file_location + ".gz");
+        graphtile_.reset();
+        return;
+      }
 
       // Set pointers to internal data structures
       Initialize(graphid, graphtile_->data(), graphtile_->size());
