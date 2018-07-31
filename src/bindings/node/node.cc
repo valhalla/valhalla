@@ -10,6 +10,8 @@
 #include <sstream>
 #include <string>
 
+#include "src/worker.cc"
+#include "valhalla/exception.h"
 #include "valhalla/tyr/actor.h"
 #include "valhalla/midgard/logging.h"
 #include "valhalla/midgard/util.h"
@@ -24,13 +26,6 @@ boost::property_tree::ptree json_to_pt(const char* json) {
 
 boost::property_tree::ptree make_conf(const char* config) {
   return json_to_pt(config);
-}
-
-// check if napi_status is napi_ok, throw error if not
-void checkNapiStatus(napi_status status, napi_env env, const char* error_message) {
-  if (status != napi_ok) {
-    napi_throw_error(env, NULL, error_message);
-  }
 }
 
 #define DECLARE_NAPI_METHOD(name, func)                                                              \
@@ -55,20 +50,32 @@ public:
     napi_value argv[1];
 
     status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    checkNapiStatus(status, env, "Failed to parse arguments");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to parse arguments");
+      return NULL;
+    }
 
     // parse config string passed in
     size_t config_string_size;
     status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &config_string_size);
-    checkNapiStatus(status, env, "Failed to get config string length");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to get config string length");
+      return NULL;
+    }
+
     if (config_string_size > 1024 * 1024) {
       napi_throw_error(env, NULL, "Too large JSON config");
+      return NULL;
     }
 
     char config_string[++config_string_size];
     status = napi_get_value_string_utf8(env, argv[0], config_string, config_string_size,
                                         &config_string_size);
-    checkNapiStatus(status, env, "Failed to get config string");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to get config string");
+      return NULL;
+    }
+
     static boost::optional<boost::property_tree::ptree> pt = make_conf(config_string);
     try {
       // configure logging
@@ -80,15 +87,23 @@ public:
             logging_subtree.get());
         valhalla::midgard::logging::Configure(logging_config);
       }
-    } catch (...) { napi_throw_error(env, NULL, "Failed to load logging config"); }
+    } catch (...) {
+      napi_throw_error(env, NULL, "Failed to load logging config");
+      return NULL;
+    }
 
     napi_value actor_constructor;
     status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 9, properties,
                                &actor_constructor);
-    checkNapiStatus(status, env, "Failed to define class");
-
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to define class");
+      return NULL;
+    }
     status = napi_create_reference(env, actor_constructor, 1, &constructor);
-    checkNapiStatus(status, env, "Failed to create constructor reference");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to create constructor reference");
+      return NULL;
+    }
 
     return actor_constructor;
   }
@@ -109,7 +124,10 @@ private:
 
     napi_value target;
     status = napi_get_new_target(env, info, &target);
-    checkNapiStatus(status, env, "Failed to get 'new' target");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to get 'new' target");
+      return NULL;
+    }
     bool is_constructor = target != nullptr;
 
     if (is_constructor) {
@@ -119,21 +137,31 @@ private:
       napi_value argv[1];
 
       status = napi_get_cb_info(env, info, &argc, argv, &jsthis, NULL);
-      checkNapiStatus(status, env, "Failed to parse arguments");
 
+      if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+      }
       // parse config string passed in
       size_t config_string_size;
       status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &config_string_size);
-      checkNapiStatus(status, env, "Failed to get config string length");
+      if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to get config string length");
+        return NULL;
+      }
 
       if (config_string_size > 1024 * 1024) {
         napi_throw_error(env, NULL, "Too large JSON config");
+        return NULL;
       }
 
       char config_string[++config_string_size];
       status = napi_get_value_string_utf8(env, argv[0], config_string, config_string_size,
                                           &config_string_size);
-      checkNapiStatus(status, env, "Failed to get config string");
+      if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to get config string");
+        return NULL;
+      }
 
       Actor* obj = new Actor(config_string);
 
@@ -141,7 +169,10 @@ private:
       status = napi_wrap(env, jsthis, reinterpret_cast<void*>(obj), Actor::Destructor,
                          nullptr, // finalize_hint
                          &obj->wrapper_);
-      checkNapiStatus(status, env, "Failed to wrap actor object");
+      if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to wrap actor object");
+        return NULL;
+      }
 
       return jsthis;
     } else {
@@ -149,46 +180,65 @@ private:
       size_t argc_ = 1;
       napi_value args[1];
       status = napi_get_cb_info(env, info, &argc_, args, nullptr, nullptr);
-      checkNapiStatus(status, env, "Failed to parse input args");
+      if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to parse input args");
+        return NULL;
+      }
 
       const size_t argc = 1;
       napi_value argv[argc] = {args[0]};
 
       napi_value actor_constructor;
       status = napi_get_reference_value(env, constructor, &actor_constructor);
-      checkNapiStatus(status, env, "Failed to reference the constructor");
+      if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to reference the constructor");
+        return NULL;
+      }
 
       napi_value instance;
       status = napi_new_instance(env, actor_constructor, 0, NULL, &instance);
-      checkNapiStatus(status, env, "Failed to create new instance");
+      if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to create new instance");
+        return NULL;
+      }
 
       return instance;
     }
   }
 
-  static std::string ParseRequest(napi_env env, napi_callback_info info, napi_value* jsthis) {
+  static bool
+  ParseRequest(napi_env env, napi_callback_info info, napi_value* jsthis, std::string& req_string) {
     napi_status status;
     size_t argc = 1;
     napi_value argv[1];
 
     status = napi_get_cb_info(env, info, &argc, argv, jsthis, nullptr);
-    checkNapiStatus(status, env, "Failed to parse input args");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to parse argument(s)");
+      return false;
+    }
 
     size_t request_str_size;
     status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &request_str_size);
-    checkNapiStatus(status, env, "Failed to get arg string length");
-
-    if (request_str_size > 1024 * 1024) {
-      napi_throw_error(env, NULL, "The request exceeds the maximum size");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to get argument string length");
+      return false;
     }
 
+    if (request_str_size > 1024 * 1024) {
+      status = napi_throw_error(env, NULL, "The request exceeds the maximum size");
+      return false;
+    }
     char request_string[++request_str_size];
     status =
         napi_get_value_string_utf8(env, argv[0], request_string, request_str_size, &request_str_size);
-    checkNapiStatus(status, env, "Unable to parse arg string");
-    std::string reqString(request_string, request_str_size);
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Unable to parse argument string");
+      return false;
+    }
+    req_string = std::string(request_string, request_str_size);
 
-    return reqString;
+    return true;
   }
 
   static napi_value WrapString(napi_env env, std::string cppStr) {
@@ -197,7 +247,10 @@ private:
     const char* outBuff = cppStr.c_str();
     const auto nchars = cppStr.size();
     status = napi_create_string_utf8(env, outBuff, nchars, &napiStr);
-    checkNapiStatus(status, env, "Failed to turn c++ string into napi_value");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to turn c++ string into napi_value");
+      return NULL;
+    }
     return napiStr;
   }
 
@@ -208,17 +261,31 @@ private:
           func) {
     napi_value jsthis;
     napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
+    std::string reqString;
+    if (!ParseRequest(env, info, &jsthis, reqString)) {
+      return NULL;
+    }
     Actor* obj;
     status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "Failed to unwrap js object");
+      return NULL;
+    }
 
     std::string resp_json;
     try {
       resp_json = func(obj->actor, reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
+    } catch (const valhalla::valhalla_exception_t& e) {
+      auto http_code = ERROR_TO_STATUS.find(e.code)->second;
+      std::string err_message = "{ error_code: " + std::to_string(e.code) +
+                                ", http_code: " + std::to_string(http_code) +
+                                ", message: " + e.message + " }";
+      napi_throw_error(env, NULL, err_message.c_str());
+      return NULL;
+    } catch (const std::exception& e) {
+      napi_throw_error(env, NULL, e.what());
+      return NULL;
+    }
 
     auto outStr = WrapString(env, resp_json);
     return outStr;
@@ -291,7 +358,10 @@ napi_value Init(napi_env env, napi_value exports) {
   napi_value new_exports;
   napi_status status =
       napi_create_function(env, "", NAPI_AUTO_LENGTH, Actor::Init, nullptr, &new_exports);
-  checkNapiStatus(status, env, "Failed to wrap init function");
+  if (status != napi_ok) {
+    napi_throw_error(env, NULL, "Failed to wrap init function");
+    return NULL;
+  }
   return new_exports;
 }
 

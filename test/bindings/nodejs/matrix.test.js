@@ -17,7 +17,7 @@ test('matrix: can return matrix info info for locations', function(assert) {
 
 test('matrix: returns error if no edges found', function(assert) {
   var hersheyRequest = '{"sources":[{"lat":-40.546115,"lon":-76.385076}],"targets":[{"lat":-40.544232,"lon":-76.385752},{"lat":-40.54424,"lon":-76.38574}],"costing":"pedestrian"}';
-  assert.throws(() => { valhalla.matrix(hersheyRequest)}, /No suitable edges near location/, 'No edges found');
+  assert.throws(() => { valhalla.matrix(hersheyRequest) }, /error_code: 171, http_code: 400, message: No suitable edges near location/, 'Throws an error when cant match input to map');
   assert.end();
 });
 

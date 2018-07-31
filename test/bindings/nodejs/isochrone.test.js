@@ -16,7 +16,7 @@ test('isochrone: can return info for locations', function(assert) {
 
 test('isochrone: throws error if can\'t match input to map', function(assert) {
   var badRequest = '{"locations":[{"lat":50,"lon":-76.385076}],"costing":"pedestrian","contours":[{"time":15,"color":"ff0000"}]}';
-  assert.throws(() => { valhalla.isochrone(badRequest), /Error: No suitable edges near location/, 'Throws an error when cant match input to map'});
+  assert.throws(() => { valhalla.isochrone(badRequest) }, /error_code: 171, http_code: 400, message: No suitable edges near location/, 'Throws an error when cant match input to map');
   assert.end();
 });
 

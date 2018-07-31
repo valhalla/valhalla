@@ -16,7 +16,8 @@ test('traceRoute: can return info for locations', function(assert) {
 
 test('traceRoute: throws error if can\'t match input to map', function(assert) {
   var badRequest = '{"shape": [{"lon": 5, "lat": 40.543564},{"lon": 6, "lat": 40.543939},{"lon": 5, "lat": 40.5442815},{"lon": 5, "lat": 40.5447381}],"costing":"auto", "directions_options":{"units":"miles"}}';
-  assert.throws(() => { valhalla.traceRoute(badRequest), /Error: No suitable edges near location/, 'Throws an error when cant match input to map'});
+  assert.throws(() => { valhalla.traceRoute(badRequest) }, /error_code: 171, http_code: 400, message: No suitable edges near location/, 'Throws an error when cant match input to map');
+
   assert.end();
 });
 
