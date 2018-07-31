@@ -197,7 +197,7 @@ public:
   void set_weighted_grade(const uint32_t factor);
 
   /**
-   * Get the road curvature factor. TODO
+   * Get the road curvature factor.
    * @return  Returns the curvature factor (0-15).
    */
   uint32_t curvature() const {
@@ -205,7 +205,7 @@ public:
   }
 
   /**
-   * Sets the curvature factor (0-16) for the edge. TODO.
+   * Sets the curvature factor (0-16) for the edge.
    * @param  factor  Curvature factor.
    */
   void set_curvature(const uint32_t factor);
@@ -868,7 +868,7 @@ public:
    * Sets the turn type given the prior edge's local index
    * (index of the inbound edge).
    * @param  localidx  Local index at the node of the inbound edge.
-   * @param  turntype  Turn type (see TODO)
+   * @param  turntype  Turn type
    */
   void set_turntype(const uint32_t localidx, const Turn::Type turntype);
 
