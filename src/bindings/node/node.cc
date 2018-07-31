@@ -10,11 +10,11 @@
 #include <sstream>
 #include <string>
 
+#include "src/worker.cc"
+#include "valhalla/exception.h"
 #include "valhalla/tyr/actor.h"
 #include "valhalla/midgard/logging.h"
 #include "valhalla/midgard/util.h"
-#include "valhalla/exception.h"
-#include "src/worker.cc"
 
 boost::property_tree::ptree json_to_pt(const char* json) {
   std::stringstream ss;
@@ -87,8 +87,8 @@ public:
             logging_subtree.get());
         valhalla::midgard::logging::Configure(logging_config);
       }
-    } catch (...) { 
-      napi_throw_error(env, NULL, "Failed to load logging config"); 
+    } catch (...) {
+      napi_throw_error(env, NULL, "Failed to load logging config");
       return NULL;
     }
 
@@ -206,7 +206,8 @@ private:
     }
   }
 
-  static bool ParseRequest(napi_env env, napi_callback_info info, napi_value* jsthis, std::string& req_string) {
+  static bool
+  ParseRequest(napi_env env, napi_callback_info info, napi_value* jsthis, std::string& req_string) {
     napi_status status;
     size_t argc = 1;
     napi_value argv[1];
@@ -274,9 +275,11 @@ private:
     std::string resp_json;
     try {
       resp_json = func(obj->actor, reqString);
-    } catch (const valhalla::valhalla_exception_t& e) { 
+    } catch (const valhalla::valhalla_exception_t& e) {
       auto http_code = ERROR_TO_STATUS.find(e.code)->second;
-      std::string err_message = "{ error_code: " + std::to_string(e.code) + ", http_code: " + std::to_string(http_code) +  ", message: " + e.message + " }";
+      std::string err_message = "{ error_code: " + std::to_string(e.code) +
+                                ", http_code: " + std::to_string(http_code) +
+                                ", message: " + e.message + " }";
       napi_throw_error(env, NULL, err_message.c_str());
       return NULL;
     } catch (const std::exception& e) {
