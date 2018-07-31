@@ -1,5 +1,10 @@
 ## Release Date: UNRELEASED Valhalla 3.0
 
+## Release Date: 2018-07-24 Valhalla 3.0.0-rc.3
+* **Node Bindings**
+   * FIXED: properly return errors using napi
+   [#1456](https://github.com/valhalla/valhalla/pull/1456)
+
 ## Release Date: 2018-07-24 Valhalla 3.0.0-rc.2
 * **Node Bindings**
    * FIXED: turn on the autocleanup functionality for the actor object.

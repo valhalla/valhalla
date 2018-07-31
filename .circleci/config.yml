@@ -16,7 +16,7 @@ jobs:
       - run: mkdir build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
-      - run: run-clang-tidy-5.0.py -p build -header-filter "^$(pwd)/(src|valhalla/(baldr|midgard|sif|odin|thor|skadi|tyr|loki|mjolnir|bindings)/.*" && ./scripts/error_on_dirty.sh
+      - run: ./scripts/tidy.sh && ./scripts/error_on_dirty.sh
 
   build-release-binary-linux:
     docker:
