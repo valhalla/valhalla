@@ -8,8 +8,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace baldr {
 
@@ -52,7 +50,7 @@ public:
    * @param  type           The type of node.
    * @param  traffic_signal Has a traffic signal at this node?
    */
-  NodeInfo(const PointLL& tile_corner,
+  NodeInfo(const midgard::PointLL& tile_corner,
            const std::pair<float, float>& ll,
            const baldr::RoadClass rc,
            const uint32_t access,
@@ -64,8 +62,8 @@ public:
    * @param tile_corner Lower left (SW) corner of the tile.
    * @return  Returns the latitude and longitude of the node.
    */
-  PointLL latlng(const PointLL& tile_corner) const {
-    return PointLL(tile_corner.lng() + (lon_offset_ * kDegreesPrecision),
+  midgard::PointLL latlng(const midgard::PointLL& tile_corner) const {
+    return midgard::PointLL(tile_corner.lng() + (lon_offset_ * kDegreesPrecision),
                    tile_corner.lat() + (lat_offset_ * kDegreesPrecision));
   }
 
@@ -74,7 +72,7 @@ public:
    * @param  tile_corner Lower left (SW) corner of the tile.
    * @param  ll  Lat,lng position of the node.
    */
-  void set_latlng(const PointLL& tile_corner, const std::pair<float, float>& ll);
+  void set_latlng(const midgard::PointLL& tile_corner, const std::pair<float, float>& ll);
 
   /**
    * Get the index of the first outbound edge from this node. Since
