@@ -5,8 +5,8 @@
 using namespace std;
 using namespace valhalla::baldr;
 
-// Expected size is 264 bytes. We want to alert if somehow any change grows
-// this structure size as that indicates incompatible tiles.
+// Expected size is 272 (was 264 before adding base_ll) bytes. We want to alert if
+// somehow any change grows this structure size as that indicates incompatible tiles.
 constexpr size_t kGraphTileHeaderExpectedSize = 272;
 
 namespace {

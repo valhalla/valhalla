@@ -58,7 +58,7 @@ public:
    * @return Returns the base lat,lon of the tile (degrees).
    */
   const midgard::PointLL& base_ll() const {
-    return base_ll_;
+    return static_cast<const midgard::PointLL&>(base_ll_);
   }
 
   /**
@@ -66,7 +66,8 @@ public:
    * @param ll  Base lat,lon of the tile.
    */
   void set_base_ll(const midgard::PointLL& ll) {
-    base_ll_ = ll;
+    base_ll_.first = ll.lng();
+    base_ll_.second = ll.lat();
   }
 
   /**
@@ -560,7 +561,7 @@ protected:
 
   // Base lat, lon of the tile
   // NOTE - THIS IS A BREAKING CHANGE - requires synchronizing data and server updates
-  midgard::PointLL base_ll_;
+  std::pair<float, float> base_ll_;
 
   // baldr version.
   char version_[kMaxVersionSize];
