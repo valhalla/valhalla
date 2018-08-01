@@ -34,8 +34,8 @@ struct graph_writer {
   vj::GraphTileBuilder& builder(vb::GraphId tile_id);
 
   inline vm::PointLL node_latlng(vb::GraphId node_id) {
-    PointLL base_ll = builder(node_id.Tile_Base()).header()->base_ll();
-    return builder(node_id.Tile_Base()).nodes()[node_id.id()].latlng(base_ll);
+    auto& b = builder(node_id.Tile_Base());
+    return b.nodes()[node_id.id()].latlng(b.header_builder().base_ll());
   }
 
   void write_tiles();
@@ -72,6 +72,10 @@ void graph_writer::write_tiles() {
   for (auto& entry : m_builders) {
     auto tile_id = entry.first;
     auto& tile = entry.second;
+
+    // set the base lat,lng in the header builder
+    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
+    tile->header_builder().set_base_ll(base_ll);
 
     // write the tile
     tile->StoreTileData();

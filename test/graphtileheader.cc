@@ -31,6 +31,10 @@ void TestWriteRead() {
   if (hdr.date_created() != 12345) {
     throw runtime_error("Header date created test failed");
   }
+  hdr.set_base_ll({-76.5f, 39.5f});
+  if (hdr.base_ll().lng() != -76.5f && hdr.base_ll().lat() != 39.5f) {
+    throw runtime_error("Header base LL test failed");
+  }
   std::string ver = "v1.5";
   hdr.set_version(ver);
   if (hdr.version() != ver) {
