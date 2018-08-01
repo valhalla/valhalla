@@ -23,8 +23,8 @@ bool deflate(const std::function<int(z_stream&)>& src_func,
  * @param dst_func  function which modifies the stream to write more output
  * @return          returns true if the stream was successfully inflated, false otherwise
  */
-bool inflate(const std::function<int(z_stream&)>& src_func,
-             const std::function<void(z_stream&)>& dst_func);
+bool inflate(const std::function<void(z_stream&)>& src_func,
+             const std::function<int(z_stream&)>& dst_func);
 
 } // namespace baldr
 } // namespace valhalla

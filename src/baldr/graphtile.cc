@@ -80,21 +80,21 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
                                    (std::istreambuf_iterator<char>()));
 
       // for setting where to read compressed data from
-      auto src_func = [&compressed](z_stream& s) -> int {
+      auto src_func = [&compressed](z_stream& s) -> void {
         s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
         s.avail_in = static_cast<unsigned int>(compressed.size());
-        return Z_FINISH;
       };
 
       // for setting where to write the uncompressed data to
       graphtile_.reset(new std::vector<char>(0, 0));
-      auto dst_func = [this, &compressed](z_stream& s) -> void {
+      auto dst_func = [this, &compressed](z_stream& s) -> int {
         // assume we need 4x the space
         auto capacity = graphtile_->capacity();
         graphtile_->reserve(capacity + (compressed.size() * 4));
         // set the pointer to the next spot
         s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + capacity));
         s.avail_out = compressed.size() * 4;
+        return Z_NO_FLUSH;
       };
 
       // Decompress tile into memory

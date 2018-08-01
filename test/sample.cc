@@ -44,19 +44,28 @@ void create_tile() {
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
 
-  // write it again but this time gzipped
+  // input for gzip
   auto src_func = [&tile](z_stream& s) -> int {
     s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
     s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(decltype(tile)::value_type));
     return Z_FINISH;
   };
-  std::vector<char> dst_buffer(1024);
+
+  // output for gzip
+  std::vector<char> dst_buffer(13000, 0);
   std::ofstream gzfile("test/data/samplegz/N40/N40W077.hgt.gz", std::ios::binary | std::ios::trunc);
   auto dst_func = [&dst_buffer, &gzfile](z_stream& s) -> void {
-    gzfile.write(static_cast<const char*>(static_cast<void*>(dst_buffer.data())), dst_buffer.size());
-    s.next_out = static_cast<Byte*>(static_cast<void*>(dst_buffer.data()));
-    s.avail_out = dst_buffer.size();
+    // move these bytes to their final resting place
+    auto chunk = s.total_out - gzfile.tellp();
+    gzfile.write(static_cast<const char*>(static_cast<void*>(dst_buffer.data())), chunk);
+    // if more input is coming
+    if (s.avail_in > 0) {
+      s.next_out = static_cast<Byte*>(static_cast<void*>(dst_buffer.data()));
+      s.avail_out = dst_buffer.size();
+    }
   };
+
+  // gzip it
   if (!baldr::deflate(src_func, dst_func))
     throw std::logic_error("Can't write gzipped elevation tile");
 }

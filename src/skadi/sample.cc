@@ -164,16 +164,16 @@ const int16_t* sample::source(uint16_t index) const {
   }
 
   // for setting where to read compressed data from
-  auto src_func = [&mapped](z_stream& s) -> int {
+  auto src_func = [&mapped](z_stream& s) -> void {
     s.next_in = static_cast<Byte*>(static_cast<void*>(mapped.second.get()));
     s.avail_in = static_cast<unsigned int>(mapped.second.size());
-    return Z_FINISH;
   };
 
   // for setting where to write the uncompressed data to
-  auto dst_func = [this](z_stream& s) -> void {
+  auto dst_func = [this](z_stream& s) -> int {
     s.next_out = static_cast<Byte*>(static_cast<void*>(unzipped_cache.second.data()));
     s.avail_out = HGT_BYTES;
+    return Z_FINISH; // we know the output will hold all the input
   };
 
   // we have to unzip it
