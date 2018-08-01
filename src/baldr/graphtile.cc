@@ -88,12 +88,17 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
       // for setting where to write the uncompressed data to
       graphtile_.reset(new std::vector<char>(0, 0));
       auto dst_func = [this, &compressed](z_stream& s) -> int {
-        // assume we need 4x the space
-        auto capacity = graphtile_->capacity();
-        graphtile_->reserve(capacity + (compressed.size() * 4));
-        // set the pointer to the next spot
-        s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + capacity));
-        s.avail_out = compressed.size() * 4;
+        // we need more space
+        if (s.avail_in > 0) {
+          // assume we need 3.5x the space
+          auto size = graphtile_->size();
+          graphtile_->resize(size + (compressed.size() * 3.5));
+          // set the pointer to the next spot
+          s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
+          s.avail_out = compressed.size() * 4;
+        } // we are done
+        else
+          graphtile_->resize(s.total_out);
         return Z_NO_FLUSH;
       };
 
@@ -103,6 +108,9 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid) : head
         graphtile_.reset();
         return;
       }
+      std::ofstream foo(file_location + ".foobar", std::ios::binary | std::ios::trunc);
+      foo.write(graphtile_->data(), graphtile_->size());
+      foo.close();
 
       // Set pointers to internal data structures
       Initialize(graphid, graphtile_->data(), graphtile_->size());
