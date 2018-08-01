@@ -339,10 +339,12 @@ public:
   json::MapPtr json(const GraphTile* tile) const;
 
 protected:
-  // TODO - evaluate how many bits are required based on precision and maximum tile size
-  uint32_t lat_offset_ : 24;
-  uint64_t lon_offset_ : 24;
-  uint64_t spare_ : 16;
+  // 26 bits for lat,lon offset allows 7 digit precision within 4 degree tiles. Note that
+  // this would require using double precision to actually achieve this precision.
+  // NOTE - THIS IS A BREAKING CHANGE - requires synchronizing data and server updates
+  uint64_t lat_offset_ : 26;
+  uint64_t lon_offset_ : 26;
+  uint64_t spare_ : 12;
 
   // Node attributes and admin information
   uint64_t edge_index_ : 21;      // Index within the node's tile of its

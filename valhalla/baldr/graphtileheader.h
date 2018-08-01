@@ -559,6 +559,7 @@ protected:
   GraphId graphid_;
 
   // Base lat, lon of the tile
+  // NOTE - THIS IS A BREAKING CHANGE - requires synchronizing data and server updates
   midgard::PointLL base_ll_;
 
   // baldr version.
