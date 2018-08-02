@@ -661,6 +661,7 @@ int main(void) {
   suite.test(TEST_CASE(TestDuration));
   suite.test(TEST_CASE(TestIsoDateTime));
   suite.test(TEST_CASE(TestIsValid));
+  suite.test(TEST_CASE(TestIsRestricted));
   suite.test(TEST_CASE(TestDST));
   suite.test(TEST_CASE(TestTimezoneDiff));
   suite.test(TEST_CASE(TestDayOfWeek));
