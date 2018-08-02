@@ -31,6 +31,10 @@ struct tile_cache {
     return m_nodes[id.id()];
   }
 
+  inline vm::PointLL node_ll(const vb::GraphId id) {
+    return m_tile->get_node_ll(id);
+  }
+
   inline const vb::DirectedEdge& edge(vb::GraphId id) {
     return m_edges[id.id()];
   }
@@ -256,9 +260,7 @@ struct node_collector {
       const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
-      // TODO - get node LL
-      vm::PointLL nodeLL;
-      m_nodes.push_back(node_id, nodeLL);
+      m_nodes.push_back(node_id, m_cache.node_ll(node_id));
 
       if (opp_index < node.edge_count()) {
         // assert(opp_index < node.edge_count());
@@ -284,9 +286,7 @@ struct node_collector {
       const auto& node = m_cache.node(node_id);
 
       // node is in this tile, so add it to the collection
-      // TODO - get node LL
-      vm::PointLL nodeLL;
-      m_nodes.push_back(node_id, nodeLL);
+      m_nodes.push_back(node_id,  m_cache.node_ll(node_id));
     }
     // node is not in this tile, so save it for later
     else {
