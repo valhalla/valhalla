@@ -32,7 +32,6 @@ set(boost_components
   date_time
   filesystem
   iostreams
-  regex
   system)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   list(APPEND boost_components zlib)
@@ -83,8 +82,12 @@ find_package(Threads REQUIRED)
 add_library(libprime_server INTERFACE IMPORTED)
 if(ENABLE_SERVICES)
   pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
+  # workaround for https://gitlab.kitware.com/cmake/cmake/issues/15804
+  find_library(libprime_server_LIBRARY
+    NAME ${libprime_server_LIBRARIES}
+    HINTS ${libprime_server_LIBRARY_DIRS})
   set_target_properties(libprime_server PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARIES}"
+    INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARY}"
     INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
     INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
 endif()
@@ -116,7 +119,6 @@ function(valhalla_module)
       RAPIDJSON_HAS_STDSTRING
       $<$<BOOL:${REQUIRES_SPIRIT_THREADSAFE}>:BOOST_SPIRIT_THREADSAFE>
     PRIVATE
-      $<$<BOOL:${USE_STD_REGEX}>:USE_STD_REGEX=1>
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE

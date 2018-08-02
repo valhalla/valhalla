@@ -9,7 +9,21 @@
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 find_path(LZ4_INCLUDE_DIR NAMES lz4.h)
+
+if( LZ4_USE_STATIC_LIBS )
+  set( _lz4_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  if(WIN32)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  else()
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .a )
+  endif()
+endif()
+
 find_library(LZ4_LIBRARY NAMES lz4)
+
+if( LZ4_USE_STATIC_LIBS )
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ${_lz4_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+endif()
 
 # We require LZ4_compress_default() which was added in v1.7.0
 if (LZ4_LIBRARY)

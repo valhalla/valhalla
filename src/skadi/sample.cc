@@ -7,6 +7,7 @@
 #include <list>
 #include <lz4.h>
 #include <lz4hc.h>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
@@ -16,7 +17,6 @@
 #include <boost/optional.hpp>
 
 #include "baldr/filesystem_utils.h"
-#include "baldr/reutil.h"
 
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -80,9 +80,9 @@ std::string name_hgt(int16_t index) {
 }
 
 template <typename fmt_t> uint16_t is_hgt(const std::string& name, fmt_t& fmt) {
-  valhalla::baldr::re::smatch m;
-  valhalla::baldr::re::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz|\\.lz4)?$");
-  if (valhalla::baldr::re::regex_search(name, m, e)) {
+  std::smatch m;
+  std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz|\\.lz4)?$");
+  if (std::regex_search(name, m, e)) {
     // enum class format_t{ UNKNOWN = 0, GZIP = 1, LZ4 = 2, RAW = 3 };
     fmt = static_cast<fmt_t>(m[5].length() ? (m[5] == ".lz4" ? 2 : (m[5] == ".gz" ? 1 : 0)) : 3);
     auto lon = std::stoi(m[4]) * (m[3] == "E" ? 1 : -1) + 180;

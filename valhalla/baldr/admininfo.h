@@ -1,7 +1,6 @@
 #ifndef VALHALLA_BALDR_ADMININFO_H_
 #define VALHALLA_BALDR_ADMININFO_H_
 
-#include <boost/functional/hash.hpp>
 #include <iostream>
 #include <valhalla/baldr/admin.h>
 
@@ -73,12 +72,7 @@ public:
 
   struct AdminInfoHasher {
     std::size_t operator()(const AdminInfo& ai) const {
-      std::size_t seed = 13;
-      boost::hash_combine(seed, string_hasher(ai.country_iso_));
-      boost::hash_combine(seed, string_hasher(ai.country_text_));
-      boost::hash_combine(seed, string_hasher(ai.state_iso_));
-      boost::hash_combine(seed, string_hasher(ai.state_text_));
-      return seed;
+      return string_hasher(ai.country_iso_ + ai.country_text_ + ai.state_iso_ + ai.state_text_);
     }
     // function to hash string
     std::hash<std::string> string_hasher;

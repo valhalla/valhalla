@@ -2,8 +2,6 @@
 
 #include "baldr/streetname.h"
 
-#include <boost/algorithm/string/predicate.hpp>
-
 namespace valhalla {
 namespace baldr {
 
@@ -22,11 +20,13 @@ bool StreetName::operator==(const StreetName& rhs) const {
 }
 
 bool StreetName::StartsWith(const std::string& prefix) const {
-  return boost::algorithm::starts_with(value_, prefix);
+  size_t n = prefix.size();
+  return (value_.size() < n) ? false : prefix == value_.substr(0, n);
 }
 
 bool StreetName::EndsWith(const std::string& suffix) const {
-  return boost::algorithm::ends_with(value_, suffix);
+  size_t n = suffix.size();
+  return (value_.size() < n) ? false : suffix == value_.substr(value_.size() - n);
 }
 
 std::string StreetName::GetPreDir() const {
