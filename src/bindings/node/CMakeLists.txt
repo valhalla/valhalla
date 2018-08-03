@@ -17,6 +17,9 @@ add_nodejs_module(node_valhalla node.cc)
 set_target_properties(node_valhalla PROPERTIES CXX_STANDARD 11)
 target_link_libraries(node_valhalla valhalla)
 
+# Include N-API wrappers
+target_include_directories(node_valhalla PRIVATE "${CMAKE_SOURCE_DIR}/node_modules/node-addon-api")
+
 # node_valhalla artifacts in ${BINDING_DIR} to depend targets on
 set(ARTIFACTS "")
 
