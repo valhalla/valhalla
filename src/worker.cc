@@ -272,6 +272,26 @@ rapidjson::Document from_string(const std::string& json, const std::exception& e
   return d;
 }
 
+size_t split(const std::string &txt, std::vector<std::string> &strs, char ch)
+{
+    size_t pos = txt.find( ch );
+    size_t initialPos = 0;
+    strs.clear();
+
+    // Decompose statement
+    while( pos != std::string::npos ) {
+        strs.push_back( txt.substr( initialPos, pos - initialPos ) );
+        initialPos = pos + 1;
+
+        pos = txt.find( ch, initialPos );
+    }
+
+    // Add the last one
+    strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
+
+    return strs.size();
+}
+
 void parse_locations(const rapidjson::Document& doc,
                      google::protobuf::RepeatedPtrField<odin::Location>* locations,
                      const std::string& node,
@@ -400,7 +420,8 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto deprecated = get_child_optional(doc, "/directions_options");
   auto& allocator = doc.GetAllocator();
   if (deprecated) {
-    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/grades"}) {
+
+    for (const auto& key : {"/units", "/narrative", "/format", "/language", "/properties"}) {
       auto child = rapidjson::get_child_optional(*deprecated, key);
       if (child) {
         doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
@@ -445,9 +466,31 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_narrative(*narrative);
   }
 
-    auto grades = rapidjson::get_optional<bool>(doc, "/grades");
-    if(grades)
-      options.set_grades(*grades);
+  auto properties = rapidjson::get_optional<std::string>(doc, "/properties");
+
+  if (properties) {
+
+    std::vector<std::string> property_vector;
+
+    split(*properties, property_vector, '|');
+    
+    for (auto property: property_vector) {
+      if (property == "grades")
+        options.set_grades(true);
+      else if (property == "surface")
+        options.set_surface(true);
+      else if (property == "cycle_lane")
+        options.set_cycle_lane(true);
+      else if (property == "use")
+        options.set_use(true);
+      else if (property == "toll")
+        options.set_toll(true);
+      else if (property == "bridge")
+        options.set_bridge(true);
+      else if (property == "tunnel")
+        options.set_tunnel(true);
+    }
+  }
 
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
