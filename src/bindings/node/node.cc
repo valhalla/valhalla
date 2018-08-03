@@ -6,10 +6,14 @@
 #include <boost/shared_ptr.hpp>
 #include <functional>
 #include <iostream>
-#include <node_api.h>
+#include <napi.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <sstream>
 #include <string>
 
+#include "src/worker.cc"
+#include "valhalla/exception.h"
 #include "valhalla/tyr/actor.h"
 #include "valhalla/midgard/logging.h"
 #include "valhalla/midgard/util.h"
@@ -26,52 +30,79 @@ boost::property_tree::ptree make_conf(const char* config) {
   return json_to_pt(config);
 }
 
-// check if napi_status is nap_ok, throw error if not
-void checkNapiStatus(napi_status status, napi_env env, const char* error_message) {
-  if (status != napi_ok) {
-    napi_throw_error(env, NULL, error_message);
-  }
-}
-
-#define DECLARE_NAPI_METHOD(name, func)                                                              \
-  { name, 0, func, 0, 0, 0, napi_default, 0 }
-
-class Actor {
+class ActorWorker : public Napi::AsyncWorker {
 public:
-  static napi_value Init(napi_env env, napi_callback_info info) {
-    napi_status status;
-    napi_property_descriptor properties[] = {DECLARE_NAPI_METHOD("route", Route),
-                                             DECLARE_NAPI_METHOD("locate", Locate),
-                                             DECLARE_NAPI_METHOD("matrix", Matrix),
-                                             DECLARE_NAPI_METHOD("optimizedRoute", OptimizedRoute),
-                                             DECLARE_NAPI_METHOD("isochrone", Isochrone),
-                                             DECLARE_NAPI_METHOD("traceRoute", TraceRoute),
-                                             DECLARE_NAPI_METHOD("traceAttributes", TraceAttributes),
-                                             DECLARE_NAPI_METHOD("height", Height),
-                                             DECLARE_NAPI_METHOD("transitAvailable",
-                                                                 TransitAvailable)};
-    // parse config file to get logging config
-    size_t argc = 1;
-    napi_value argv[1];
+  ActorWorker(Napi::Function& callback,
+              const std::string request,
+              valhalla::tyr::actor_t& actor,
+              const std::function<std::string(valhalla::tyr::actor_t& actor,
+                                              const std::string& request)>& func)
+      : Napi::AsyncWorker(callback), request(request), actor(actor), func(func) {
+  }
+  ~ActorWorker() {
+  }
 
-    status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    checkNapiStatus(status, env, "Failed to parse arguments");
+  void Execute() {
+    try {
+      response = func(actor, request);
+    } catch (const valhalla::valhalla_exception_t& e) {
+      auto http_code = ERROR_TO_STATUS.find(e.code)->second;
+      rapidjson::StringBuffer err_message;
+      rapidjson::Writer<rapidjson::StringBuffer> writer(err_message);
 
-    // parse config string passed in
-    size_t config_string_size;
-    status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &config_string_size);
-    checkNapiStatus(status, env, "Failed to get config string length");
-    if (config_string_size > 1024 * 1024) {
-      napi_throw_error(env, NULL, "Too large JSON config");
+      writer.StartObject();
+      writer.Key("error_code");
+      writer.Uint(e.code);
+      writer.Key("http_code");
+      writer.Uint(http_code);
+      writer.Key("message");
+      writer.String(e.message);
+      writer.EndObject();
+      throw std::runtime_error(err_message.GetString());
+    } catch (const std::exception& e) { throw std::runtime_error(e.what()); }
+  }
+
+  void OnOK() {
+    Napi::HandleScope scope(Env());
+    Callback().Call({Env().Undefined(), Napi::String::New(Env(), response)});
+  }
+
+  valhalla::tyr::actor_t actor;
+  std::function<std::string(valhalla::tyr::actor_t& actor, std::string& request)> func;
+
+private:
+  std::string request;
+  std::string response;
+};
+
+class Actor : public Napi::ObjectWrap<Actor> {
+public:
+  static Napi::Function Init(const Napi::CallbackInfo& info) {
+    Napi::Env my_env = info.Env();
+    Napi::HandleScope scope(my_env);
+
+    Napi::Function func =
+        DefineClass(my_env, "Actor",
+                    {InstanceMethod("route", &Actor::Route), InstanceMethod("locate", &Actor::Locate),
+                     InstanceMethod("matrix", &Actor::Matrix),
+                     InstanceMethod("optimizedRoute", &Actor::OptimizedRoute),
+                     InstanceMethod("isochrone", &Actor::Isochrone),
+                     InstanceMethod("traceRoute", &Actor::TraceRoute),
+                     InstanceMethod("traceAttributes", &Actor::TraceAttributes),
+                     InstanceMethod("height", &Actor::Height),
+                     InstanceMethod("transitAvailable", &Actor::TransitAvailable)});
+
+    int length = info.Length();
+
+    if (length <= 0 || !info[0].IsString()) {
+      Napi::TypeError::New(my_env, "config string expected");
     }
 
-    char config_string[++config_string_size];
-    status = napi_get_value_string_utf8(env, argv[0], config_string, config_string_size,
-                                        &config_string_size);
-    checkNapiStatus(status, env, "Failed to get config string");
-    static boost::optional<boost::property_tree::ptree> pt = make_conf(config_string);
+    static boost::optional<boost::property_tree::ptree> pt;
+
     try {
       // configure logging
+      pt = make_conf(std::string(info[0].As<Napi::String>()).c_str());
       boost::optional<boost::property_tree::ptree&> logging_subtree =
           pt->get_child_optional("tyr.logging");
       if (logging_subtree) {
@@ -80,218 +111,114 @@ public:
             logging_subtree.get());
         valhalla::midgard::logging::Configure(logging_config);
       }
-    } catch (...) { napi_throw_error(env, NULL, "Failed to load logging config"); }
+    } catch (...) { throw Napi::Error::New(my_env, "Failed to load logging config"); }
 
-    napi_value actor_constructor;
-    status = napi_define_class(env, "Actor", NAPI_AUTO_LENGTH, New, nullptr, 9, properties,
-                               &actor_constructor);
-    checkNapiStatus(status, env, "Failed to define class");
+    constructor = Napi::Persistent(func);
+    constructor.SuppressDestruct();
+    return func;
+  };
 
-    status = napi_create_reference(env, actor_constructor, 1, &constructor);
-    checkNapiStatus(status, env, "Failed to create constructor reference");
+  Actor(const Napi::CallbackInfo& info)
+      : actor(get_conf_from_info(info), true), Napi::ObjectWrap<Actor>(info) {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
 
-    return actor_constructor;
-  }
-  static void Destructor(napi_env env, void* nativeObject, void* finalize_hint) {
-    delete reinterpret_cast<Actor*>(nativeObject);
+    int length = info.Length();
+
+    if (length <= 0 || !info[0].IsString()) {
+      Napi::TypeError::New(env, "config string expected").ThrowAsJavaScriptException();
+    }
   }
 
 private:
-  explicit Actor(const char* config) : actor(make_conf(config)), env_(nullptr), wrapper_(nullptr) {
-  }
-  ~Actor() {
-    napi_delete_reference(env_, wrapper_);
-  }
+  static Napi::FunctionReference constructor;
 
-  static napi_value New(napi_env env, napi_callback_info info) {
-    napi_status status;
+  static boost::property_tree::ptree get_conf_from_info(const Napi::CallbackInfo& info) {
+    static boost::property_tree::ptree pt;
 
-    napi_value target;
-    status = napi_get_new_target(env, info, &target);
-    checkNapiStatus(status, env, "Failed to get 'new' target");
-    bool is_constructor = target != nullptr;
-
-    if (is_constructor) {
-      // Invoked as constructor: `new Actor(...)`
-      size_t argc = 1;
-      napi_value jsthis;
-      napi_value argv[1];
-
-      status = napi_get_cb_info(env, info, &argc, argv, &jsthis, NULL);
-      checkNapiStatus(status, env, "Failed to parse arguments");
-
-      // parse config string passed in
-      size_t config_string_size;
-      status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &config_string_size);
-      checkNapiStatus(status, env, "Failed to get config string length");
-
-      if (config_string_size > 1024 * 1024) {
-        napi_throw_error(env, NULL, "Too large JSON config");
-      }
-
-      char config_string[++config_string_size];
-      status = napi_get_value_string_utf8(env, argv[0], config_string, config_string_size,
-                                          &config_string_size);
-      checkNapiStatus(status, env, "Failed to get config string");
-
-      Actor* obj = new Actor(config_string);
-
-      obj->env_ = env;
-      status = napi_wrap(env, jsthis, reinterpret_cast<void*>(obj), Actor::Destructor,
-                         nullptr, // finalize_hint
-                         &obj->wrapper_);
-      checkNapiStatus(status, env, "Failed to wrap actor object");
-
-      return jsthis;
-    } else {
-      // Invoked as plain function `Actor(...)`, turn into construct call.
-      size_t argc_ = 1;
-      napi_value args[1];
-      status = napi_get_cb_info(env, info, &argc_, args, nullptr, nullptr);
-      checkNapiStatus(status, env, "Failed to parse input args");
-
-      const size_t argc = 1;
-      napi_value argv[argc] = {args[0]};
-
-      napi_value actor_constructor;
-      status = napi_get_reference_value(env, constructor, &actor_constructor);
-      checkNapiStatus(status, env, "Failed to reference the constructor");
-
-      napi_value instance;
-      status = napi_new_instance(env, actor_constructor, 0, NULL, &instance);
-      checkNapiStatus(status, env, "Failed to create new instance");
-
-      return instance;
-    }
-  }
-
-  static std::string ParseRequest(napi_env env, napi_callback_info info, napi_value* jsthis) {
-    napi_status status;
-    size_t argc = 1;
-    napi_value argv[1];
-
-    status = napi_get_cb_info(env, info, &argc, argv, jsthis, nullptr);
-    checkNapiStatus(status, env, "Failed to parse input args");
-
-    size_t request_str_size;
-    status = napi_get_value_string_utf8(env, argv[0], nullptr, 0, &request_str_size);
-    checkNapiStatus(status, env, "Failed to get arg string length");
-
-    if (request_str_size > 1024 * 1024) {
-      napi_throw_error(env, NULL, "Too large JSON config");
-    }
-
-    char request_string[++request_str_size];
-    status =
-        napi_get_value_string_utf8(env, argv[0], request_string, request_str_size, &request_str_size);
-    checkNapiStatus(status, env, "Unable to parse arg string");
-    std::string reqString(request_string, request_str_size);
-
-    return reqString;
-  }
-
-  static napi_value WrapString(napi_env env, std::string cppStr) {
-    napi_value napiStr;
-    napi_status status;
-    const char* outBuff = cppStr.c_str();
-    const auto nchars = cppStr.size();
-    status = napi_create_string_utf8(env, outBuff, nchars, &napiStr);
-    checkNapiStatus(status, env, "Failed to turn c++ string into napi_value");
-    return napiStr;
-  }
-
-  static napi_value generic_action(
-      napi_env env,
-      napi_callback_info info,
-      const std::function<std::string(valhalla::tyr::actor_t& actor, const std::string& request)>&
-          func) {
-    napi_value jsthis;
-    napi_status status;
-
-    std::string reqString = ParseRequest(env, info, &jsthis);
-
-    Actor* obj;
-    status = napi_unwrap(env, jsthis, reinterpret_cast<void**>(&obj));
-    checkNapiStatus(status, env, "Failed to unwrap js object");
-
-    std::string resp_json;
     try {
-      resp_json = func(obj->actor, reqString);
-    } catch (const std::exception& e) { napi_throw_error(env, NULL, e.what()); }
+      pt = make_conf(std::string(info[0].As<Napi::String>()).c_str());
+    } catch (...) { throw Napi::Error::New(info.Env(), "Unable to parse config"); }
 
-    auto outStr = WrapString(env, resp_json);
-    return outStr;
+    return pt;
   }
 
-  static napi_value Route(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value generic_action(const Napi::CallbackInfo& info,
+                             const std::function<std::string(valhalla::tyr::actor_t& actor,
+                                                             const std::string& req)>& actor_func) {
+    if (info.Length() <= 0 || !info[0].IsString() || !info[1].IsFunction()) {
+      throw Napi::Error::New(info.Env(), "method must be called with string and callback");
+    }
+    const std::string req = std::string(info[0].As<Napi::String>());
+    Napi::Function callback = info[1].As<Napi::Function>();
+
+    ActorWorker* actorWorker = new ActorWorker(callback, req, actor, actor_func);
+    actorWorker->Queue();
+    return info.Env().Undefined();
+  }
+
+  Napi::Value Route(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.route(request); });
   }
 
-  static napi_value Locate(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value Locate(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.locate(request); });
   }
 
-  static napi_value Matrix(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value Matrix(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.matrix(request); });
   }
 
-  static napi_value OptimizedRoute(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value OptimizedRoute(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.optimized_route(request); });
   }
 
-  static napi_value Isochrone(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value Isochrone(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.isochrone(request); });
   }
 
-  static napi_value TraceRoute(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value TraceRoute(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.trace_route(request); });
   }
 
-  static napi_value TraceAttributes(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value TraceAttributes(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.trace_attributes(request); });
   }
 
-  static napi_value Height(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value Height(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.height(request); });
   }
 
-  static napi_value TransitAvailable(napi_env env, napi_callback_info info) {
-    return generic_action(env, info,
+  Napi::Value TransitAvailable(const Napi::CallbackInfo& info) {
+    return generic_action(info,
                           [](valhalla::tyr::actor_t& actor, const std::string& request)
                               -> std::string { return actor.transit_available(request); });
   }
 
-  static napi_ref constructor;
-
   valhalla::tyr::actor_t actor;
-  napi_env env_;
-  napi_ref wrapper_;
 };
 
-napi_ref Actor::constructor;
+Napi::FunctionReference Actor::constructor;
 
-napi_value Init(napi_env env, napi_value exports) {
-  napi_value new_exports;
-  napi_status status =
-      napi_create_function(env, "", NAPI_AUTO_LENGTH, Actor::Init, nullptr, &new_exports);
-  checkNapiStatus(status, env, "Failed to wrap init function");
-  return new_exports;
-}
+Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
+  return Napi::Function::New(env, Actor::Init, "init");
+};
 
-NAPI_MODULE(NODE_GYP_MODULE_NAME, Init)
+NODE_API_MODULE(node, InitAll)
+
