@@ -823,7 +823,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Roundabout
   if (prev_edge->roundabout()) {
     maneuver.set_roundabout(true);
-    maneuver.set_roundabout_exit_count(1);
+    maneuver.set_roundabout_exit_count(0);
   }
 
   if (prev_edge->drive_on_right()) {
@@ -967,12 +967,14 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
     maneuver.set_roundabout_clockwise(!prev_edge->drive_on_right());
 
-    if (prev_edge->drive_on_right()) {
-      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
-                                         xedge_counts.right_traversable_outbound);
+    if (prev_edge->has_two_roundabout_exits()) {
+      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + 1);
+    } else if (prev_edge->drive_on_right()) {
+        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
+                                           xedge_counts.right_traversable_outbound);
     } else {
-      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
-                                         xedge_counts.left_traversable_outbound);
+        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
+                                           xedge_counts.left_traversable_outbound);
     }
   }
 

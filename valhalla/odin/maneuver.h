@@ -157,6 +157,9 @@ public:
   uint32_t roundabout_exit_count() const;
   void set_roundabout_exit_count(uint32_t roundabout_exit_count);
 
+  uint32_t roundabout_way_id() const;
+  void set_roundabout_way_id(uint32_t roundabout_way_id);
+
   bool fork() const;
   void set_fork(bool fork);
 
@@ -301,6 +304,7 @@ protected:
   uint32_t internal_right_turn_count_;
   uint32_t internal_left_turn_count_;
   uint32_t roundabout_exit_count_;
+  uint32_t roundabout_way_id_;
   bool fork_;
   bool begin_intersecting_edge_name_consistency_;
   bool intersecting_forward_edge_;
