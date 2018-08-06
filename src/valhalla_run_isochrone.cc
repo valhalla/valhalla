@@ -41,6 +41,28 @@ using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
 
+void create_costing_options(valhalla::odin::DirectionsOptions& directions_options) {
+  // Add options in the order specified
+//  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov,
+//                              motor_scooter, multimodal, pedestrian, transit,
+//                              truck, motorcycle, auto_data_fix}) {
+  // TODO - accept RapidJSON as argument.
+  const rapidjson::Document doc;
+  ParseAutoCostOptions(doc, "/costing_options/auto", directions_options.add_costing_options());
+  ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", directions_options.add_costing_options());
+  ParseBicycleCostOptions(doc, "/costing_options/bicycle", directions_options.add_costing_options());
+  ParseBusCostOptions(doc, "/costing_options/bus", directions_options.add_costing_options());
+  ParseHOVCostOptions(doc, "/costing_options/hov", directions_options.add_costing_options());
+  ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter", directions_options.add_costing_options());
+  directions_options.add_costing_options();
+  ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", directions_options.add_costing_options());
+  ParseTransitCostOptions(doc, "/costing_options/transit", directions_options.add_costing_options());
+  ParseTruckCostOptions(doc, "/costing_options/truck", directions_options.add_costing_options());
+  ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", directions_options.add_costing_options());
+  ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", directions_options.add_costing_options());
+  ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix", directions_options.add_costing_options());
+}
+
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   bpo::options_description options(
@@ -235,6 +257,9 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
+  // Create costing options. TODO - add add request JSON as RapidJSON doc
+  create_costing_options(request.options);
+
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
@@ -245,7 +270,8 @@ int main(int argc, char* argv[]) {
   }
   LOG_INFO("routetype: " + routetype);
 
-  // Set costing if not json request
+  // Set costing if not json request.
+  // NOTE - auto must be entered as auto_ for this to work!
   if (!json_request) {
     valhalla::odin::Costing costing;
     if (valhalla::odin::Costing_Parse(routetype, &costing)) {
