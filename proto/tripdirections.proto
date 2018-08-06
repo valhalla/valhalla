@@ -161,6 +161,7 @@ message TripDirections {
     optional uint32 begin_path_index = 29;                   // Index in TripPath for first node of maneuver
     optional uint32 end_path_index = 30;                     // Index in TripPath for last node of maneuver
     optional bool roundabout_clockwise = 31 [default = false];
+    repeated uint32 roundabout_exit_angles = 32;
   }
   
   optional uint64 trip_id = 1;

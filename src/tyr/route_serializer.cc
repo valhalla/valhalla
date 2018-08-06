@@ -1374,8 +1374,7 @@ json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
   return properties;
 }
 
-json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
-                    const std::map<int, std::vector<uint32_t>> angles_map) {
+json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs) {
   // TODO: multiple legs.
   auto legs = json::array({});
   for (const auto& directions_leg : directions_legs) {
@@ -1539,12 +1538,10 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 
         man->emplace("roundabout_clockwise", static_cast<bool>(maneuver.roundabout_clockwise()));
 
-        std::vector<uint32_t> angles = angles_map.at(maneuver.begin_shape_index());
-
         auto roundabout_exit_angles_json = json::array({});
 
-        for (int i = 0; i < angles.size(); i++) {
-          roundabout_exit_angles_json->emplace_back(static_cast<uint64_t>(angles.at(i)));
+        for (auto roundabout_exit_angle: maneuver.roundabout_exit_angles()) {
+          roundabout_exit_angles_json->emplace_back(static_cast<uint64_t>(roundabout_exit_angle));
         }
 
         man->emplace("roundabout_exit_angle", roundabout_exit_angles_json);
@@ -1701,7 +1698,6 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
 
   std::vector<valhalla::odin::TripPath_Edge> edges;
   float total_length = 0;
-  std::map<int, std::vector<uint32_t>> angles_map;
 
   for (auto path = trip_paths.begin(); path != trip_paths.end(); ++path) {
     for (auto node: path->node()) {
@@ -1710,19 +1706,6 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
       total_length += edge.length();
 
       edges.push_back(edge);
-
-      if (edge.roundabout())
-        direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});
-
-      if (edge.roundabout_exit_angles_size() > 0) {
-        std::vector<uint32_t> angles;
-
-        for (auto angle: edge.roundabout_exit_angles()) {
-          angles.push_back(angle);
-        }
-
-        angles_map.insert({edge.begin_shape_index(), angles});
-      }
     }
   }
 
@@ -1732,7 +1715,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
        ({
         {"locations", locations(directions_legs)},
         {"summary", summary(directions_legs)},
-        {"legs", legs(directions_legs, angles_map)},
+        {"legs", legs(directions_legs)},
         {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
         {"status", static_cast<uint64_t>(0)}, //0 success
         {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
