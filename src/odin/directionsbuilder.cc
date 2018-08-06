@@ -232,6 +232,10 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
     // Roundabout exit count
     if (maneuver.roundabout_exit_count() > 0) {
       trip_maneuver->set_roundabout_exit_count(maneuver.roundabout_exit_count());
+
+      for (auto roundabout_exit_angle: maneuver.roundabout_exit_angles()) {
+        trip_maneuver->add_roundabout_exit_angles(roundabout_exit_angle);
+      }
     }
 
     // Depart instructions

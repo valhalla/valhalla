@@ -1312,6 +1312,16 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       if (maneuver.has_roundabout_exit_count()) {
         man->emplace("roundabout_exit_count",
                      static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+
+        man->emplace("roundabout_clockwise", static_cast<bool>(maneuver.roundabout_clockwise()));
+
+        auto roundabout_exit_angles_json = json::array({});
+
+        for (auto roundabout_exit_angle: maneuver.roundabout_exit_angles()) {
+          roundabout_exit_angles_json->emplace_back(static_cast<uint64_t>(roundabout_exit_angle));
+        }
+
+        man->emplace("roundabout_exit_angle", roundabout_exit_angles_json);
       }
 
       // Depart and arrive instructions
@@ -1461,20 +1471,21 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
 std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
                       const std::list<valhalla::odin::TripDirections>& directions_legs) {
   // build up the json object
-  auto json = json::map(
-      {{"trip", json::map({{"locations", locations(directions_legs)},
-                           {"summary", summary(directions_legs)},
-                           {"legs", legs(directions_legs)},
-                           {"status_message",
-                            string("Found route between points")}, // found route between points OR
-                                                                   // cannot find route between points
-                           {"status", static_cast<uint64_t>(0)},   // 0 success
-                           {"units", valhalla::odin::DirectionsOptions::Units_Name(
-                                         directions_options.units())},
-                           {"language", directions_options.language()}})}});
-  if (directions_options.has_id()) {
-    json->emplace("id", directions_options.id());
-  }
+
+  auto json = json::map
+  ({
+    {"trip", json::map
+       ({
+        {"locations", locations(directions_legs)},
+        {"summary", summary(directions_legs)},
+        {"legs", legs(directions_legs)},
+        {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
+        {"status", static_cast<uint64_t>(0)}, //0 success
+        {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},
+        {"language", directions_options.language()}
+      })
+    }
+  });
 
   std::stringstream ss;
   ss << *json;

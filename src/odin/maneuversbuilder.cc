@@ -957,15 +957,20 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     }
     // TODO might have to adjust for pedestrian too
 
-    IntersectingEdgeCounts xedge_counts;
-    trip_path_->GetEnhancedNode(node_index)
-        ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), mode, xedge_counts);
-    if (prev_edge->drive_on_right()) {
-      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
-                                         xedge_counts.right_traversable_outbound);
-    } else {
-      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
-                                         xedge_counts.left_traversable_outbound);
+    maneuver.set_roundabout_clockwise(!prev_edge->drive_on_right());
+
+    if (prev_edge->unique_roundabout_edge()) {
+      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() + 1);
+    }
+
+    if (prev_edge->roundabout_exit_angles_size() > 0) {
+      std::vector<uint32_t> roundabout_exit_angles;
+
+      for (auto roundabout_exit_angle: prev_edge->roundabout_exit_angles()) {
+        roundabout_exit_angles.push_back(roundabout_exit_angle);
+      }
+
+      maneuver.set_roundabout_exit_angles(roundabout_exit_angles);
     }
   }
 
