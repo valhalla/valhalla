@@ -41,7 +41,7 @@ Maneuver::Maneuver()
       end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
       roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
       internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      roundabout_exit_count_(0), travel_mode_(TripPath_TravelMode_kDrive),
+      roundabout_exit_count_(0), roundabout_clockwise_(false), travel_mode_(TripPath_TravelMode_kDrive),
       vehicle_type_(TripPath_VehicleType_kCar), pedestrian_type_(TripPath_PedestrianType_kFoot),
       bicycle_type_(TripPath_BicycleType_kRoad), transit_type_(TripPath_TransitType_kRail),
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
@@ -299,6 +299,14 @@ bool Maneuver::roundabout() const {
 
 void Maneuver::set_roundabout(bool roundabout) {
   roundabout_ = roundabout;
+}
+
+void Maneuver::set_roundabout_clockwise(bool roundabout_clockwise) {
+  roundabout_clockwise_ = roundabout_clockwise;
+}
+
+bool Maneuver::roundabout_clockwise() const {
+  return roundabout_clockwise_;
 }
 
 bool Maneuver::portions_toll() const {

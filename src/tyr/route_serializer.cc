@@ -1374,8 +1374,7 @@ json::MapPtr properties(const std::vector<valhalla::odin::TripPath_Edge> edges,
   return properties;
 }
 
-json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs,
-                    const std::map<int, bool> direction_map) {
+json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs) {
 
   // TODO: multiple legs.
   auto legs = json::array({});
@@ -1538,7 +1537,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
         man->emplace("roundabout_exit_count",
                      static_cast<uint64_t>(maneuver.roundabout_exit_count()));
 
-        man->emplace("counter_clockwise", static_cast<bool>(direction_map.at(maneuver.begin_shape_index())));
+        man->emplace("roundabout_clockwise", static_cast<bool>(maneuver.roundabout_clockwise()));
       }
 
       // Depart and arrive instructions
@@ -1690,7 +1689,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
                       const std::list<valhalla::odin::TripPath>& trip_paths) {
   // build up the json object
 
-  std::map<int, bool> direction_map;
+  // std::map<int, bool> direction_map;
   std::vector<valhalla::odin::TripPath_Edge> edges;
   float total_length = 0;
 
@@ -1699,11 +1698,6 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
       auto edge = node.edge();
 
       total_length += edge.length();
-
-      edges.push_back(edge);
-
-      if (edge.roundabout())
-        direction_map.insert({edge.begin_shape_index(), edge.drive_on_right()});
     }
   }
 
@@ -1713,7 +1707,7 @@ std::string serialize(const valhalla::odin::DirectionsOptions& directions_option
        ({
         {"locations", locations(directions_legs)},
         {"summary", summary(directions_legs)},
-        {"legs", legs(directions_legs, direction_map)},
+        {"legs", legs(directions_legs)},
         {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
         {"status", static_cast<uint64_t>(0)}, //0 success
         {"units", valhalla::odin::DirectionsOptions::Units_Name(directions_options.units())},

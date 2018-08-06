@@ -123,6 +123,9 @@ public:
   bool roundabout() const;
   void set_roundabout(bool roundabout);
 
+  bool roundabout_clockwise() const;
+  void set_roundabout_clockwise(bool roundabout_clockwise);
+
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
 
@@ -289,6 +292,7 @@ protected:
   bool ferry_;
   bool rail_ferry_;
   bool roundabout_;
+  bool roundabout_clockwise_;
   bool portions_toll_;
   bool portions_unpaved_;
   bool portions_highway_;

@@ -234,6 +234,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(const DirectionsOptions
       trip_maneuver->set_roundabout_exit_count(maneuver.roundabout_exit_count());
     }
 
+    trip_maneuver->set_roundabout_clockwise(maneuver.roundabout_clockwise());
+
     // Depart instructions
     if (!maneuver.depart_instruction().empty()) {
       trip_maneuver->set_depart_instruction(maneuver.depart_instruction());

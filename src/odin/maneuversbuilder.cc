@@ -826,6 +826,10 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_roundabout_exit_count(1);
   }
 
+  if (prev_edge->drive_on_right()) {
+    maneuver.set_roundabout_clockwise(true);
+  }
+
   // Internal Intersection
   if (prev_edge->internal_intersection()) {
     maneuver.set_internal_intersection(true);
@@ -960,6 +964,9 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     IntersectingEdgeCounts xedge_counts;
     trip_path_->GetEnhancedNode(node_index)
         ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), mode, xedge_counts);
+
+    maneuver.set_roundabout_clockwise(!prev_edge->drive_on_right());
+
     if (prev_edge->drive_on_right()) {
       maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count() +
                                          xedge_counts.right_traversable_outbound);
