@@ -16,7 +16,6 @@ valhalla_build_statistics
 valhalla_benchmark_adjacency_list
 valhalla_benchmark_loki
 valhalla_benchmark_skadi
-valhalla_elevation_service
 valhalla_export_edges
 valhalla_loki_worker
 valhalla_odin_worker
@@ -64,3 +63,5 @@ scripts/gdal-2.0.0.tar.gz
 # nodejs
 node_modules
 lib/binding/node_valhalla.node
+
+.DS_Store

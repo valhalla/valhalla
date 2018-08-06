@@ -99,7 +99,8 @@ if [[ $(grep -cF xenial /etc/lsb-release) > 0 ]]; then sudo apt-get install -y l
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
 #if you plan to compile with node bindings, run
-nvm use 10 # must use node 8.11.1 and up because of N-API
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+nvm use install 10 && nvm use 10 # must use node 8.11.1 and up because of N-API
 npm install --ignore-scripts
 ```
 
@@ -108,6 +109,7 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 ```bash
 # install dependencies (czmq is required by prime_server)
 brew install cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 lua jq curl wget czmq lz4 node@10 npm
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
 nvm use 10 # must use node 8.11.1 and up because of N-API
 npm install --ignore-scripts
 ```
