@@ -823,7 +823,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Roundabout
   if (prev_edge->roundabout()) {
     maneuver.set_roundabout(true);
-    maneuver.set_roundabout_exit_count(1);
+    maneuver.set_roundabout_exit_count(0);
   }
 
   // Internal Intersection
