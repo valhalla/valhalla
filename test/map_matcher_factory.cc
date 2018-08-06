@@ -5,6 +5,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "sif/costconstants.h"
+#include "sif/costfactory.h"
 
 #include "meili/map_matcher_factory.h"
 #include "test.h"
@@ -17,9 +18,34 @@ using namespace valhalla;
 
 using ptree = boost::property_tree::ptree;
 
+void create_costing_options(valhalla::odin::DirectionsOptions& directions_options) {
+  // Add options in the order specified
+//  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov,
+//                              motor_scooter, multimodal, pedestrian, transit,
+//                              truck, motorcycle, auto_data_fix}) {
+  // TODO - accept RapidJSON as argument.
+  const rapidjson::Document doc;
+  sif::ParseAutoCostOptions(doc, "/costing_options/auto", directions_options.add_costing_options());
+  sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", directions_options.add_costing_options());
+  sif::ParseBicycleCostOptions(doc, "/costing_options/bicycle", directions_options.add_costing_options());
+  sif::ParseBusCostOptions(doc, "/costing_options/bus", directions_options.add_costing_options());
+  sif::ParseHOVCostOptions(doc, "/costing_options/hov", directions_options.add_costing_options());
+  sif::ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter", directions_options.add_costing_options());
+  directions_options.add_costing_options();
+  sif::ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", directions_options.add_costing_options());
+  sif::ParseTransitCostOptions(doc, "/costing_options/transit", directions_options.add_costing_options());
+  sif::ParseTruckCostOptions(doc, "/costing_options/truck", directions_options.add_costing_options());
+  sif::ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", directions_options.add_costing_options());
+  sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", directions_options.add_costing_options());
+  sif::ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix", directions_options.add_costing_options());
+}
+
 void TestMapMatcherFactory() {
   ptree root;
   boost::property_tree::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
+
+  odin::DirectionsOptions options;
+  create_costing_options(options);
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {
@@ -31,7 +57,7 @@ void TestMapMatcherFactory() {
       config.put<std::string>("meili.auto.hello", "world");
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
-      auto matcher = factory.Create(odin::Costing::auto_);
+      auto matcher = factory.Create(odin::Costing::auto_, options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kDrive,
                         "travel mode should be drive");
       test::assert_bool(matcher->config().get<std::string>("hello") == "world",
@@ -44,7 +70,7 @@ void TestMapMatcherFactory() {
       auto config = root;
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
-      auto matcher = factory.Create(odin::Costing::bicycle);
+      auto matcher = factory.Create(odin::Costing::bicycle, options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kBicycle,
                         "travel mode must be bicycle");
       test::assert_bool(matcher->config().get<std::string>("hello") == "default world",
@@ -56,7 +82,6 @@ void TestMapMatcherFactory() {
     {
       auto config = root;
       meili::MapMatcherFactory factory(config);
-      odin::DirectionsOptions options;
       int preferred_search_radius = 3;
       int incorrect_search_radius = 2;
       int default_search_radius = 1;
@@ -74,7 +99,6 @@ void TestMapMatcherFactory() {
     // Test configuration priority
     {
       meili::MapMatcherFactory factory(root);
-      odin::DirectionsOptions options;
       int preferred_search_radius = 3;
       options.set_search_radius(preferred_search_radius);
       auto matcher = factory.Create(odin::Costing::multimodal, options);
@@ -88,7 +112,7 @@ void TestMapMatcherFactory() {
     // Test default mode
     {
       meili::MapMatcherFactory factory(root);
-      auto matcher = factory.Create(odin::DirectionsOptions());
+      auto matcher = factory.Create(options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kDrive,
                         "should read default mode in the meili.mode correctly");
       delete matcher;
@@ -97,7 +121,6 @@ void TestMapMatcherFactory() {
     // Test preferred mode
     {
       meili::MapMatcherFactory factory(root);
-      odin::DirectionsOptions options;
       options.set_costing(odin::Costing::pedestrian);
       auto matcher = factory.Create(options);
       test::assert_bool(matcher->travelmode() == sif::TravelMode::kPedestrian,
@@ -114,8 +137,6 @@ void TestMapMatcherFactory() {
     // Test custom costing
     {
       meili::MapMatcherFactory factory(root);
-      odin::DirectionsOptions options;
-
       options.set_costing(odin::Costing::pedestrian);
       auto matcher = factory.Create(options);
       test::assert_bool(matcher->costing()->travel_type() != (int)sif::PedestrianType::kSegway,
@@ -139,8 +160,10 @@ void TestMapMatcher() {
   // Nothing special to test for the moment
 
   meili::MapMatcherFactory factory(root);
-  auto auto_matcher = factory.Create(odin::Costing::auto_);
-  auto pedestrian_matcher = factory.Create(odin::Costing::pedestrian);
+  odin::DirectionsOptions options;
+  create_costing_options(options);
+  auto auto_matcher = factory.Create(odin::Costing::auto_, options);
+  auto pedestrian_matcher = factory.Create(odin::Costing::pedestrian, options);
 
   // Share the same pool
   test::assert_bool(&auto_matcher->graphreader() == &pedestrian_matcher->graphreader(),
