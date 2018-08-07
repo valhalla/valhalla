@@ -43,6 +43,13 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
   return {0.0f, 0.0f};
 }
 
+// Get the cost to traverse the specified directed edge and gather/pass
+// the speed along for use within costing in the PathAlgorithm. Cost
+// includes the time (seconds) to traverse the edge.
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
+  return {0.0f, 0.0f};
+}
+
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.

@@ -1451,7 +1451,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const AttributesController& controll
 
   // Set speed if requested
   if (controller.attributes.at(kEdgeSpeed)) {
-    trip_edge->set_speed(directededge->speed());
+    trip_edge->set_speed(graphtile->GetSpeed(directededge));
   }
 
   uint8_t kAccess = 0;

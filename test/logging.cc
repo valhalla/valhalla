@@ -58,7 +58,7 @@ void ThreadFileLoggerTest() {
   }
 
   // dont really care about the results but we can pretend
-  bool exit_code = 0;
+  int exit_code = 0;
   for (auto& result : results) {
     try {
       size_t count = result.get();

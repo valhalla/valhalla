@@ -22,17 +22,20 @@ namespace sif {
 // Default options/values
 namespace {
 
-constexpr float kDefaultManeuverPenalty = 5.0f;        // Seconds
-constexpr float kDefaultAlleyPenalty = 5.0f;           // Seconds
-constexpr float kDefaultGateCost = 30.0f;              // Seconds
-constexpr float kDefaultGatePenalty = 300.0f;          // Seconds
-constexpr float kDefaultFerryCost = 300.0f;            // Seconds
-constexpr float kDefaultCountryCrossingCost = 600.0f;  // Seconds
-constexpr float kDefaultCountryCrossingPenalty = 0.0f; // Seconds
-constexpr float kDefaultUseFerry = 0.5f;               // Factor between 0 and 1
-constexpr float kDefaultUseHighways = 1.0f;            // Factor between 0 and 1
-constexpr float kDefaultUsePrimary = 0.5f;             // Factor between 0 and 1
-constexpr float kDefaultUseTrails = 0.0f;              // Factor between 0 and 1
+constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
+constexpr float kDefaultAlleyPenalty = 5.0f;             // Seconds
+constexpr float kDefaultGateCost = 30.0f;                // Seconds
+constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
+constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
+constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
+constexpr float kDefaultFerryCost = 300.0f;              // Seconds
+constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
+constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultUseFerry = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultUseHighways = 0.5f;              // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultUseTrails = 0.0f;                // Factor between 0 and 1
+constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
 
@@ -67,6 +70,8 @@ constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenal
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxSeconds};
 constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxSeconds};
+constexpr ranged_default_t<float> kTollBoothCostRange{0, kDefaultTollBoothCost, kMaxSeconds};
+constexpr ranged_default_t<float> kTollBoothPenaltyRange{0, kDefaultTollBoothPenalty, kMaxSeconds};
 constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxSeconds};
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost,
                                                             kMaxSeconds};
@@ -74,28 +79,13 @@ constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountr
                                                                kMaxSeconds};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
-constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
+constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
+constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
+                                                               kMaxSeconds};
 
-// Additional penalty to avoid destination only
-constexpr float kDestinationOnlyFactor = 0.2f;
-
-// Weighting factor based on road class. These apply penalties to higher class
-// roads. These penalties are modulated by the road factor - further
-// avoiding higher class roads for those with low propensity for using
-// primary roads.
-constexpr float kRoadClassFactor[] = {
-    1.0f,  // Motorway
-    0.5f,  // Trunk
-    0.2f,  // Primary
-    0.1f,  // Secondary
-    0.05f, // Tertiary
-    0.05f, // Unclassified
-    0.0f,  // Residential
-    0.5f   // Service, other
-};
-
-constexpr uint32_t kMaxGradeFactor = 15;
+// Maximum highway avoidance bias (modulates the highway factors based on road class)
+constexpr float kMaxHighwayBiasFactor = 8.0f;
 
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
@@ -107,6 +97,8 @@ constexpr float kHighwayFactor[] = {
     0.0f, // Residential
     0.0f  // Service, other
 };
+
+constexpr float kMaxTrailBiasFactor = 8.0f;
 
 constexpr float kSurfaceFactor[] = {
     0.0f, // kPavedSmooth
@@ -139,13 +131,17 @@ public:
    * limits).
    * @return  Returns true if the costing model allows multiple passes.
    */
-  virtual bool AllowMultiPass() const;
+  virtual bool AllowMultiPass() const {
+    return true;
+  }
 
   /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const {
+    return kMotorcycleAccess;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -201,15 +197,18 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & kMotorcycleAccess);
+  }
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   speed A speed for a road segment/edge.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -246,13 +245,17 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const;
+  virtual float AStarCostFactor() const {
+    return speedfactor_[kMaxSpeedKph];
+  }
 
   /**
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const;
+  virtual uint8_t travel_type() const {
+    return static_cast<uint8_t>(VehicleType::kMotorcycle);
+  }
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -291,8 +294,11 @@ public:
   float speedfactor_[kMaxSpeedKph + 1];
   float density_factor_[16];       // Density factor
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
+  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
   float gate_cost_;                // Cost (seconds) to go through gate
   float gate_penalty_;             // Penalty (seconds) to go through gate
+  float tollbooth_cost_;           // Cost (seconds) to go through toll booth
+  float tollbooth_penalty_;        // Penalty (seconds) to go through a toll booth
   float ferry_cost_;               // Cost (seconds) to enter a ferry
   float ferry_penalty_;            // Penalty (seconds) to enter a ferry
   float ferry_factor_;             // Weighting to apply to ferry edges
@@ -301,19 +307,14 @@ public:
   float country_crossing_penalty_; // Penalty (seconds) to go across a country border
   float use_ferry_;
   float use_highways_;   // Preference to use highways. Is a value from 0 to 1
+  float use_tolls_;      // Preference to use tolls. Is a value from 0 to 1
+  float toll_factor_;    // Factor applied when road has a toll
+  float surface_factor_; // How much the surface factors are applied when using trails
   float highway_factor_; // Factor applied when road is a motorway or trunk
-  float surface_factor_; // How much the surface factors are applied
   float use_trails_;     // Preference to use trails/tracks/bad surface types. Is a value from 0 to 1
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
-
-  float use_primary_; // Scale from 0 (avoid primary roads) to 1 (don't avoid primary roads)
-  float road_factor_; // Road factor based on use_primary_
-
-  // Elevation/grade penalty (weighting applied based on the edge's weighted
-  // grade (relative value from 0-15)
-  float grade_penalty_[16];
 };
 
 // Constructor
@@ -321,28 +322,18 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
                                                                  1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                                  2.5f, 2.8f, 3.1f, 3.5f} {
-
-  surface_factor_ = 0.5f;
-  // Get the vehicle type - enter as string and convert to enum
-  std::string type = pt.get<std::string>("type", "car");
-  if (type == "motorcycle") {
-    type_ = VehicleType::kMotorcycle;
-    surface_factor_ = 1.0f;
-  } else if (type == "bus") {
-    type_ = VehicleType::kBus;
-  } else if (type == "tractor_trailer") {
-    type_ = VehicleType::kTractorTrailer;
-  } else if (type == "four_wheel_drive") {
-    type_ = VehicleType::kFourWheelDrive;
-    surface_factor_ = 0.0f;
-  } else {
-    type_ = VehicleType::kCar;
-  }
+  // Vehicle type is motorcycle
+  type_ = VehicleType::kMotorcycle;
 
   maneuver_penalty_ =
       kManeuverPenaltyRange(pt.get<float>("maneuver_penalty", kDefaultManeuverPenalty));
+  destination_only_penalty_ = kDestinationOnlyPenaltyRange(
+      pt.get<float>("destination_only_penalty", kDefaultDestinationOnlyPenalty));
   gate_cost_ = kGateCostRange(pt.get<float>("gate_cost", kDefaultGateCost));
   gate_penalty_ = kGatePenaltyRange(pt.get<float>("gate_penalty", kDefaultGatePenalty));
+  tollbooth_cost_ = kTollBoothCostRange(pt.get<float>("toll_booth_cost", kDefaultTollBoothCost));
+  tollbooth_penalty_ =
+      kTollBoothPenaltyRange(pt.get<float>("toll_booth_penalty", kDefaultTollBoothPenalty));
   alley_penalty_ = kAlleyPenaltyRange(pt.get<float>("alley_penalty", kDefaultAlleyPenalty));
   country_crossing_cost_ =
       kCountryCrossingCostRange(pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost));
@@ -370,11 +361,41 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
     ferry_factor_ = 1.5f - use_ferry_;
   }
 
+  // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
+  // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
+  // highways) while values between 0.5 to 0 slowly increase to a maximum of kMaxHighwayBiasFactor
+  // to avoid/penalize highways.
   use_highways_ = kUseHighwaysRange(pt.get<float>("use_highways", kDefaultUseHighways));
+  if (use_highways_ >= 0.5f) {
+    float f = (0.5f - use_highways_);
+    highway_factor_ = f * f * f;
+  } else {
+    float f = 1.0f - (use_highways_ * 2.0f);
+    highway_factor_ = kMaxHighwayBiasFactor * (f * f);
+  }
 
-  highway_factor_ = 1.0f - use_highways_;
+  // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
+  // use_tolls = 1 would reduce weighting slightly (a negative delta) while
+  // use_tolls = 0 would penalize (positive delta to weighting factor).
+  use_tolls_ = kUseTollsRange(pt.get<float>("use_tolls", kDefaultUseTolls));
+  toll_factor_ = use_tolls_ < 0.5f ? (2.0f - 4 * use_tolls_) : // ranges from 2 to 0
+                     (0.5f - use_tolls_) * 0.03f;              // ranges from 0 to -0.15
 
+  // Set the surface factor based on the use trails value
   use_trails_ = kUseTrailsRange(pt.get<float>("use_trails", kDefaultUseTrails));
+
+  // Factor for trail use - use a non-linear factor with values at 0.5 being neutral (factor
+  // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
+  // trails) while values between 0.5 to 0 slowly increase to a maximum of the surfact_factor_
+  // to avoid/penalize trails.
+  // modulates surface factor based on use_trails
+  if (use_trails_ >= 0.5f) {
+    float f = (0.5f - use_trails_);
+    surface_factor_ = f * f * f;
+  } else {
+    float f = 1.0f - use_trails_ * 2.0f;
+    surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
+  }
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
@@ -386,29 +407,11 @@ MotorcycleCost::MotorcycleCost(const boost::property_tree::ptree& pt)
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.018f);
   }
-
-  use_primary_ = kUsePrimaryRange(pt.get<float>("use_primary", kDefaultUsePrimary));
-
-  // Set the road classification factor. use_roads factors above 0.5 start to
-  // reduce the weight difference between road classes while factors below 0.5
-  // start to increase the differences.
-  road_factor_ = (use_primary_ >= 0.5f) ? 1.5f - use_primary_ : 3.0f - use_primary_ * 5.0f;
 }
 } // namespace
 
 // Destructor
 MotorcycleCost::~MotorcycleCost() {
-}
-
-// Does the costing method allow multiple passes (with relaxed hierarchy
-// limits).
-bool MotorcycleCost::AllowMultiPass() const {
-  return true;
-}
-
-// Get the access mode for motorcycle
-uint32_t MotorcycleCost::access_mode() const {
-  return kMotorcycleAccess;
 }
 
 // Check if access is allowed on the specified edge.
@@ -488,28 +491,22 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   return opp_edge->surface() <= kMinimumMotorcycleSurface;
 }
 
-// Check if access is allowed at the specified node.
-bool MotorcycleCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & kMotorcycleAccess);
-}
-
-Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
-
+Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
+  // Special case for travel on a ferry
   if (edge->use() == Use::kFerry) {
+    // Use the edge speed (should be the speed of the ferry)
     float sec = (edge->length() * speedfactor_[edge->speed()]);
     return {sec * ferry_factor_, sec};
   }
 
-  float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
-
-  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
-
-  if (edge->destonly()) {
-    factor += kDestinationOnlyFactor;
+  float factor = density_factor_[edge->density()] +
+                 highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+                 surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+  if (edge->toll()) {
+    factor += toll_factor_;
   }
 
-  float sec = (edge->length() * speedfactor_[edge->speed()]);
+  float sec = (edge->length() * speedfactor_[speed]);
   return {sec * factor, sec};
 }
 
@@ -521,8 +518,8 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing
-  // and gate
+  // Special cases with both time and penalty: country crossing, ferry,
+  // gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
@@ -530,18 +527,26 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     seconds += gate_cost_;
     penalty += gate_penalty_;
   }
-  // Additional penalties without any time cost
-  uint32_t idx = pred.opp_local_idx();
-  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
+  if (node->type() == NodeType::kTollBooth || (!pred.toll() && edge->toll())) {
+    seconds += tollbooth_cost_;
+    penalty += tollbooth_penalty_;
   }
-  if (pred.use() != Use::kFerry && edge->use() == Use::kFerry) {
+  if (edge->use() == Use::kFerry && pred.use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+
+  // Additional penalties without any time cost
+  uint32_t idx = pred.opp_local_idx();
+  if (!pred.destonly() && edge->destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
@@ -574,8 +579,8 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
   float seconds = 0.0f;
   float penalty = 0.0f;
 
-  // Special cases with both time and penalty: country crossing
-  // andgate
+  // Special cases with both time and penalty: country crossing, ferry,
+  // gate, toll booth
   if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
@@ -583,18 +588,25 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
     seconds += gate_cost_;
     penalty += gate_penalty_;
   }
-
-  // Additional penalties without any time cost
-  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
-    penalty += alley_penalty_;
+  if (node->type() == NodeType::kTollBooth || (!pred->toll() && edge->toll())) {
+    seconds += tollbooth_cost_;
+    penalty += tollbooth_penalty_;
   }
-  if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
+  if (edge->use() == Use::kFerry && pred->use() != Use::kFerry) {
     seconds += ferry_cost_;
     penalty += ferry_penalty_;
   }
-  // Ignore name inconsistency when entering a link to avoid double penalizing.
+
+  // Additional penalties without any time cost
+  if (edge->destonly() && !pred->destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (edge->use() == Use::kAlley && pred->use() != Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+
+  // Maneuver penalty, ignore when entering a link to avoid double penalizing
   if (!edge->link() && !node->name_consistency(idx, edge->localedgeidx())) {
-    // Slight maneuver penalty
     penalty += maneuver_penalty_;
   }
 
@@ -613,21 +625,6 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
 
   // Return cost (time and penalty)
   return {seconds + penalty, seconds};
-}
-
-// Get the cost factor for A* heuristics. This factor is multiplied
-// with the distance to the destination to produce an estimate of the
-// minimum cost to the destination. The A* heuristic must underestimate the
-// cost to the destination. So a time based estimate based on speed should
-// assume the maximum speed is used to the destination such that the time
-// estimate is less than the least possible time along roads.
-float MotorcycleCost::AStarCostFactor() const {
-  return speedfactor_[kMaxSpeedKph];
-}
-
-// Returns the current travel type.
-uint8_t MotorcycleCost::travel_type() const {
-  return static_cast<uint8_t>(VehicleType::kMotorcycle);
 }
 
 cost_ptr_t CreateMotorcycleCost(const boost::property_tree::ptree& config) {
@@ -703,6 +700,26 @@ void testMotorcycleCostParams() {
     }
   }
 
+  // tollbooth_cost_
+  distributor.reset(make_distributor_from_range(kTollBoothCostRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_autocost_from_json("toll_booth_cost", (*distributor)(generator)));
+    if (ctorTester->tollbooth_cost_ < kTollBoothCostRange.min ||
+        ctorTester->tollbooth_cost_ > kTollBoothCostRange.max) {
+      throw std::runtime_error("tollbooth_cost_ is not within it's range");
+    }
+  }
+
+  // tollbooth_penalty_
+  distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_autocost_from_json("toll_booth_penalty", (*distributor)(generator)));
+    if (ctorTester->tollbooth_penalty_ < kTollBoothPenaltyRange.min ||
+        ctorTester->tollbooth_penalty_ > kTollBoothPenaltyRange.max) {
+      throw std::runtime_error("tollbooth_penalty_ is not within it's range");
+    }
+  }
+
   // alley_penalty_
   fDistributor.reset(make_real_distributor_from_range(kAlleyPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
@@ -754,13 +771,32 @@ void testMotorcycleCostParams() {
     }
   }
 
-  // use_primary_
-  fDistributor.reset(make_real_distributor_from_range(kUsePrimaryRange));
+  // use_highways_
+  fDistributor.reset(make_real_distributor_from_range(kUseHighwaysRange));
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_motorcyclecost_from_json("use_primary", (*fDistributor)(generator)));
-    if (ctorTester->use_primary_ < kUsePrimaryRange.min ||
-        ctorTester->use_primary_ > kUsePrimaryRange.max) {
-      throw std::runtime_error("use_hills_ is not within it's range");
+    ctorTester.reset(make_motorcyclecost_from_json("use_highways", (*fDistributor)(generator)));
+    if (ctorTester->use_highways_ < kUseHighwaysRange.min ||
+        ctorTester->use_highways_ > kUseHighwaysRange.max) {
+      throw std::runtime_error("use_highways_ is not within it's range");
+    }
+  }
+
+  // use_trails_
+  fDistributor.reset(make_real_distributor_from_range(kUseTrailsRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorcyclecost_from_json("use_trails", (*fDistributor)(generator)));
+    if (ctorTester->use_trails_ < kUseTrailsRange.min ||
+        ctorTester->use_trails_ > kUseTrailsRange.max) {
+      throw std::runtime_error("use_trails_ is not within it's range");
+    }
+  }
+
+  // use_tolls_
+  fDistributor.reset(make_real_distributor_from_range(kUseTollsRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_motorcyclecost_from_json("use_tolls", (*fDistributor)(generator)));
+    if (ctorTester->use_tolls_ < kUseTollsRange.min || ctorTester->use_tolls_ > kUseTollsRange.max) {
+      throw std::runtime_error("use_tolls_ is not within it's range");
     }
   }
 }
