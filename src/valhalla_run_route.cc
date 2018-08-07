@@ -400,28 +400,6 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
   return trip_directions;
 }
 
-void create_costing_options(DirectionsOptions& directions_options) {
-  // Add options in the order specified
-//  for (const auto costing : {auto_, auto_shorter, bicycle, bus, hov,
-//                              motor_scooter, multimodal, pedestrian, transit,
-//                              truck, motorcycle, auto_data_fix}) {
-  // TODO - accept RapidJSON as argument.
-  const rapidjson::Document doc;
-  ParseAutoCostOptions(doc, "/costing_options/auto", directions_options.add_costing_options());
-  ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", directions_options.add_costing_options());
-  ParseBicycleCostOptions(doc, "/costing_options/bicycle", directions_options.add_costing_options());
-  ParseBusCostOptions(doc, "/costing_options/bus", directions_options.add_costing_options());
-  ParseHOVCostOptions(doc, "/costing_options/hov", directions_options.add_costing_options());
-  ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter", directions_options.add_costing_options());
-  directions_options.add_costing_options();
-  ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", directions_options.add_costing_options());
-  ParseTransitCostOptions(doc, "/costing_options/transit", directions_options.add_costing_options());
-  ParseTruckCostOptions(doc, "/costing_options/truck", directions_options.add_costing_options());
-  ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", directions_options.add_costing_options());
-  ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", directions_options.add_costing_options());
-  ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix", directions_options.add_costing_options());
-}
-
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   bpo::options_description options(
@@ -431,27 +409,17 @@ int main(int argc, char* argv[]) {
       "\n"
       "valhalla_run_route is a simple command line test tool for shortest path routing. "
       "\n"
-      "Use the -o and -d options OR the -j option for specifying the locations. "
+      "Use -j option for specifying the locations and costing method and options. "
       "\n"
       "\n");
 
-  std::string origin, destination, routetype, json, config;
+  std::string json, config;
   bool connectivity, multi_run, match_test;
   connectivity = multi_run = match_test = false;
   uint32_t iterations;
 
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "origin,o", boost::program_options::value<std::string>(&origin),
-      "Origin: "
-      "lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/"
-      "region/department...],[zip code],[country].")(
-      "destination,d", boost::program_options::value<std::string>(&destination),
-      "Destination: "
-      "lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/"
-      "region/department...],[zip code],[country].")(
-      "type,t", boost::program_options::value<std::string>(&routetype),
-      "Route Type: auto|bicycle|pedestrian|auto-shorter")(
       "json,j", boost::program_options::value<std::string>(&json),
       "JSON Example: "
       "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
@@ -506,74 +474,54 @@ int main(int argc, char* argv[]) {
     multi_run = true;
   }
 
-  // Directions options - set defaults
-  DirectionsOptions directions_options;
+  // Verify JSON request exists.
+  boost::property_tree::ptree json_ptree;
+  if (vm.count("json") == 0) {
+    std::cerr << "A JSON format request must be present." << "\n";
+    return EXIT_FAILURE;
+  }
+
+  // Process json input
+  std::stringstream stream;
+  stream << json;
+  boost::property_tree::read_json(stream, json_ptree);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
-
-  // argument checking and verification
-  boost::property_tree::ptree json_ptree;
-  if (vm.count("json") == 0) {
-    for (const auto& arg : std::vector<std::string>{"origin", "destination", "type", "config"}) {
-      if (vm.count(arg) == 0) {
-        std::cerr << "The <" << arg
-                  << "> argument was not provided, but is mandatory when json is not provided\n\n";
-        std::cerr << options << "\n";
-        return EXIT_FAILURE;
-      }
+  try {
+    for (const auto& location : json_ptree.get_child("locations")) {
+      locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
     }
-    locations.push_back(valhalla::baldr::Location::FromCsv(origin));
-    locations.push_back(valhalla::baldr::Location::FromCsv(destination));
-
-    // Create costing options.
-    create_costing_options(directions_options);
+    if (locations.size() < 2) {
+      throw;
+    }
+  } catch (...) {
+    throw std::runtime_error("insufficiently specified required parameter 'locations'");
   }
-  ////////////////////////////////////////////////////////////////////////////
-  // Process json input
-  else {
-    std::stringstream stream;
-    stream << json;
-    boost::property_tree::read_json(stream, json_ptree);
 
-    try {
-      for (const auto& location : json_ptree.get_child("locations")) {
-        locations.emplace_back(std::move(valhalla::baldr::Location::FromPtree(location.second)));
-      }
-      if (locations.size() < 2) {
-        throw;
-      }
-    } catch (...) {
-      throw std::runtime_error("insufficiently specified required parameter 'locations'");
-    }
+  // Parse out the type of route - this provides the costing method to use
+  std::string routetype;
+  try {
+    routetype = json_ptree.get<std::string>("costing");
+  } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
 
-    // Parse out the type of route - this provides the costing method to use
-    std::string costing;
-    try {
-      routetype = json_ptree.get<std::string>("costing");
-    } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
+  // Grab the directions options, if they exist
+  valhalla::valhalla_request_t request;
+  request.parse(json, valhalla::odin::DirectionsOptions::route);
+  DirectionsOptions directions_options = request.options;
 
-    // Grab the directions options, if they exist
-    valhalla::valhalla_request_t request;
-    request.parse(json, valhalla::odin::DirectionsOptions::route);
-    directions_options = request.options;
+  // Grab the date_time, if is exists
+  auto date_time_ptr = json_ptree.get_child_optional("date_time");
+  if (date_time_ptr) {
+    auto date_time_type = (*date_time_ptr).get<int>("type");
+    auto date_time_value = (*date_time_ptr).get_optional<std::string>("value");
 
-    // Create costing options. TODO - parse JSON costing options?
-    create_costing_options(directions_options);
-
-    // Grab the date_time, if is exists
-    auto date_time_ptr = json_ptree.get_child_optional("date_time");
-    if (date_time_ptr) {
-      auto date_time_type = (*date_time_ptr).get<int>("type");
-      auto date_time_value = (*date_time_ptr).get_optional<std::string>("value");
-
-      if (date_time_type == 0) { // current
-        locations.front().date_time_ = "current";
-      } else if (date_time_type == 1) { // depart at
-        locations.front().date_time_ = date_time_value;
-      } else if (date_time_type == 2) { // arrive by
-        locations.back().date_time_ = date_time_value;
-      }
+    if (date_time_type == 0) { // current
+      locations.front().date_time_ = "current";
+    } else if (date_time_type == 1) { // depart at
+      locations.front().date_time_ = date_time_value;
+    } else if (date_time_type == 2) { // arrive by
+      locations.back().date_time_ = date_time_value;
     }
   }
 
