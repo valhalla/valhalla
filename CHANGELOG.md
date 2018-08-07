@@ -1,4 +1,7 @@
-## Release Date: UNRELEASED Valhalla 2.7.0
+## Release Date: 2018-08-06 Valhalla 2.6.1
+* **Routing**
+   * CHANGED: Getting roundabout exit counts
+   * ADDED: Getting angles for exits within a roundabout
 
 ## Release Date: 2018-05-28 Valhalla 2.6.0
 * **Infrastructure**:
