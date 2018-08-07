@@ -72,47 +72,25 @@ int main(int argc, char* argv[]) {
       "\n"
       "valhalla_run_isochrone is a simple command line test tool for generating an isochrone. "
       "\n"
-      "Use the -o option OR the -j option for specifying the origin location. "
+      "Use the -j option for specifying the location and isocrhone options "
       "\n"
       "\n");
 
   bool reverse = false, polygons = false, show_locations = false;
   size_t n_contours = 4;
   unsigned int max_minutes = 60;
-  std::string origin, routetype, json, config, filename;
+  std::string json, config, filename;
   float denoise = 1.f;
   float generalize = kOptimalGeneralization;
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "origin,o", boost::program_options::value<std::string>(&origin),
-      "Origin: "
-      "lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/"
-      "region/department...],[zip code],[country].")(
-      "type,t", boost::program_options::value<std::string>(&routetype),
-      "Route Type: auto|bicycle|pedestrian|auto-shorter")(
       "json,j", boost::program_options::value<std::string>(&json),
       "JSON Example: "
-      "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
-      "\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New "
-      "York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40."
-      "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
-      "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
-      "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
-      "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
+      "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984}],\"costing\":"
+      "\"auto\",\"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}'")
       // positional arguments
-      ("reverse,r", bpo::value<bool>(&reverse),
-       "Reverse direction.")("ncontours,n", bpo::value<size_t>(&n_contours), "Number of contours.")(
-          "minutes,m", bpo::value<unsigned int>(&max_minutes),
-          "Maximum minutes.")("config,c", bpo::value<std::string>(&config),
-                              "Valhalla configuration file")("file,f",
-                                                             bpo::value<std::string>(&filename),
-                                                             "Geojson output file name.")(
-          "polygons,p", bpo::value<bool>(&polygons),
-          "Return as polygons or lines.")("show_locations,l", bpo::value<bool>(&show_locations),
-                                          "Include locations in the final geojson.")(
-          "denoise,d", bpo::value<float>(&denoise),
-          "Denoise value. Must be between 0 and 1.")("generalize,g", bpo::value<float>(&generalize),
-                                                     "Generalize value.");
+      ("config", bpo::value<std::string>(&config), "Valhalla configuration file")
+      ("file,f", bpo::value<std::string>(&filename), "Geojson output file name.");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
@@ -138,107 +116,94 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
   }
 
-  // Locations
-  std::vector<Location> locations;
-  std::vector<Location> avoid_locations;
+  // Verify JSON request exists.
+  boost::property_tree::ptree json_ptree;
+  if (vm.count("json") == 0) {
+    std::cerr << "A JSON format request must be present." << "\n";
+    return EXIT_FAILURE;
+  }
 
   // Isochrone parameters
   std::unordered_map<float, std::string> colors{};
   std::vector<float> contour_times;
 
-  // argument checking and verification
-  boost::property_tree::ptree json_ptree;
-  valhalla::valhalla_request_t request;
-  bool json_request = (vm.count("json") > 0);
-  if (!json_request) {
-    for (const auto& arg : std::vector<std::string>{"origin", "type", "config"}) {
-      if (vm.count(arg) == 0) {
-        std::cerr << "The <" << arg
-                  << "> argument was not provided, but is mandatory when json is not provided\n\n";
-        std::cerr << options << "\n";
-        return EXIT_FAILURE;
-      }
-    }
-    locations.push_back(Location::FromCsv(origin));
-    for (size_t i = 1; i <= n_contours; i++) {
-      contour_times.push_back((max_minutes * i) / n_contours);
-    }
-  }
-  ////////////////////////////////////////////////////////////////////////////
   // Process json input
-  else {
-    request.parse(json, valhalla::odin::DirectionsOptions::isochrone);
+  valhalla::valhalla_request_t request;
+  request.parse(json, valhalla::odin::DirectionsOptions::isochrone);
 
-    std::stringstream stream;
-    stream << json;
-    boost::property_tree::read_json(stream, json_ptree);
+  std::stringstream stream;
+  stream << json;
+  boost::property_tree::read_json(stream, json_ptree);
 
-    if (vm.count("minutes")) {
-      LOG_WARN("minutes parameter is being overwritten by JSON contours");
-    }
-
-    if (vm.count("ncontours")) {
-      LOG_WARN("ncontours parameter is being overwritten by JSON contours");
-    }
-
-    try {
-      for (const auto& location : json_ptree.get_child("locations")) {
-        locations.emplace_back(std::move(Location::FromPtree(location.second)));
-      }
-    } catch (...) { throw std::runtime_error("Requires a single location"); }
-
-    // Process avoid locations
-    try {
-      for (const auto& location : json_ptree.get_child("avoid_locations")) {
-        avoid_locations.emplace_back(std::move(Location::FromPtree(location.second)));
-      }
-    } catch (...) { LOG_INFO("No avoid locations"); }
-
-    // Parse out the type of route - this provides the costing method to use
-    try {
-      routetype = json_ptree.get<std::string>("costing");
-    } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
-
-    // Get denoise parameter
-    try {
-      denoise = json_ptree.get<float>("denoise");
-      if (vm.count("denoise")) {
-        LOG_WARN("denoise parameter is being overwritten by JSON denoise parameter");
-      }
-    } catch (...) {}
-
-    // Get generalize parameter
-    try {
-      generalize = json_ptree.get<float>("generalize");
-      if (vm.count("generalize")) {
-        LOG_WARN("generalize parameter is being overwritten by JSON generalize parameter");
-      }
-    } catch (...) {}
-
-    // Get polygons
-    try {
-      polygons = json_ptree.get<bool>("polygons");
-      if (vm.count("polygons")) {
-        LOG_WARN("polygons parameter is being overwritten by JSON polygons parameter");
-      }
-    } catch (...) {}
-
-    // Get show_locations
-    try {
-      show_locations = json_ptree.get<bool>("show_locations");
-      if (vm.count("show_locations")) {
-        LOG_WARN("show_locations parameter is being overwritten by JSON show_locations parameter");
-      }
-    } catch (...) {}
-
-    // Get Contours
-    try {
-      for (const auto& contour : json_ptree.get_child("contours")) {
-        contour_times.push_back(contour.second.get<float>("time"));
-        colors[contour_times.back()] = contour.second.get<std::string>("color", "");
-      }
-    } catch (...) { throw std::runtime_error("Contours failed to parse."); }
+  if (vm.count("minutes")) {
+    LOG_WARN("minutes parameter is being overwritten by JSON contours");
   }
+
+  if (vm.count("ncontours")) {
+    LOG_WARN("ncontours parameter is being overwritten by JSON contours");
+  }
+
+  // Process locations
+  std::vector<Location> locations;
+  try {
+    for (const auto& location : json_ptree.get_child("locations")) {
+      locations.emplace_back(std::move(Location::FromPtree(location.second)));
+    }
+  } catch (...) { throw std::runtime_error("Requires a single location"); }
+
+  // Process avoid locations
+  std::vector<Location> avoid_locations;
+  try {
+    for (const auto& location : json_ptree.get_child("avoid_locations")) {
+      avoid_locations.emplace_back(std::move(Location::FromPtree(location.second)));
+    }
+  } catch (...) { LOG_INFO("No avoid locations"); }
+
+  // Parse out the type of route - this provides the costing method to use
+  std::string routetype;
+  try {
+    routetype = json_ptree.get<std::string>("costing");
+  } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
+
+  // Get denoise parameter
+  try {
+    denoise = json_ptree.get<float>("denoise");
+    if (vm.count("denoise")) {
+      LOG_WARN("denoise parameter is being overwritten by JSON denoise parameter");
+    }
+  } catch (...) {}
+
+  // Get generalize parameter
+  try {
+    generalize = json_ptree.get<float>("generalize");
+    if (vm.count("generalize")) {
+      LOG_WARN("generalize parameter is being overwritten by JSON generalize parameter");
+    }
+  } catch (...) {}
+
+  // Get polygons
+  try {
+    polygons = json_ptree.get<bool>("polygons");
+    if (vm.count("polygons")) {
+      LOG_WARN("polygons parameter is being overwritten by JSON polygons parameter");
+    }
+  } catch (...) {}
+
+  // Get show_locations
+  try {
+    show_locations = json_ptree.get<bool>("show_locations");
+    if (vm.count("show_locations")) {
+      LOG_WARN("show_locations parameter is being overwritten by JSON show_locations parameter");
+    }
+  } catch (...) {}
+
+  // Get Contours
+  try {
+    for (const auto& contour : json_ptree.get_child("contours")) {
+      contour_times.push_back(contour.second.get<float>("time"));
+      colors[contour_times.back()] = contour.second.get<std::string>("color", "");
+    }
+  } catch (...) { throw std::runtime_error("Contours failed to parse. JSON requires a contours object"); }
 
   // parse the config
   boost::property_tree::ptree pt;
@@ -269,17 +234,6 @@ int main(int argc, char* argv[]) {
     c = std::tolower(c);
   }
   LOG_INFO("routetype: " + routetype);
-
-  // Set costing if not json request.
-  // NOTE - auto must be entered as auto_ for this to work!
-  if (!json_request) {
-    valhalla::odin::Costing costing;
-    if (valhalla::odin::Costing_Parse(routetype, &costing)) {
-      request.options.set_costing(costing);
-    } else {
-      throw std::runtime_error("No costing method found");
-    }
-  }
 
   // Get the costing method - pass the JSON configuration
   valhalla::odin::TripPath trip_path;
@@ -328,9 +282,7 @@ int main(int argc, char* argv[]) {
     path_location.front().date_time_ = "current";
   }
   // TODO: build real request from options above and call the functions like actor_t does
-  if (json_request) {
-    request.options.mutable_locations()->Clear();
-  }
+  request.options.mutable_locations()->Clear();
   for (const auto& pl : path_location) {
     valhalla::baldr::PathLocation::toPBF(pl, request.options.mutable_locations()->Add(), reader);
   }
